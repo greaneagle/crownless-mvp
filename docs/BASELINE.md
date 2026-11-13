@@ -17,7 +17,7 @@
 | Version footer | "PRE-ALPHA 0.3.0 · AUTO-SAVES IN THIS BROWSER" | `index.html:3` |
 | Save key | `crownless_v03_party` | `game.js:2` |
 
-**Entry point.** `index.html` loads `style.css` in `<head>` and `game.js` with `defer`. The game renders to a single `<canvas id="game" width="960" height="540">` (16:9, `image-rendering: pixelated`). It is a self-contained vanilla HTML5 Canvas 2D app: no bundler, server process, or runtime dependency.
+**Entry point.** `index.html` loads `style.css` in `<head>` and `game.js` with `defer`. The game renders to a single `<canvas id="game" width="960" height="540">` (16:9, `image-rendering: pixelated`). It is a self-contained vanilla HTML5 Canvas 2D app: no bundler, server process, or runtime dependency. The `#stage` wrapper letterboxes the canvas to `min(100vw, 177.7778vh)` × `min(100vh, 56.25vw)` so the 16:9 ratio is preserved on any viewport (`style.css:1`).
 
 ---
 
@@ -27,19 +27,19 @@
 
 | Action | Binding | Notes |
 |---|---|---|
-| Move | `W A S D` or arrow keys (held) | Combined with joystick input; hero speed 142 px/s |
-| Attack | `Space` (held) or left mouse button | Blocked while guarding; hero cooldown ~0.49 s |
+| Move | `W A S D` or arrow keys (held) | Combined additively with joystick input; hero speed 142 px/s |
+| Attack | `Space` (held) or left mouse button | Blocked while guarding; hero cooldown 0.49 s |
 | Block | `Shift` (Left/Right, held) or right mouse button | Frontal guard; movement slows to 65% |
 | Select infantry group | `1` | Sets active order group to infantry |
 | Select archer group | `2` | Sets active order group to archers |
 | Follow order | `F` | Applies to active group |
 | Hold order | `H` | Snapshots current positions as hold points |
 | Charge order | `C` | Applies to active group (see [Orders](#orders)) |
-| Pause | `Esc` | Closes the Orders panel first if open, otherwise toggles pause |
+| Pause | `Esc` | Closes the Orders panel first if open, otherwise toggles pause (`togglePause` no-ops outside battle mode) |
 | Diagnostics | `F3` | Toggles the diagnostics panel |
 | Menu select | primary button on overlays | title → camp → battle → result → camp |
 
-`Space`, arrow keys, `F3` have `preventDefault`. Key state is tracked in `game.hold[code]` on `keydown` and cleared on `keyup`; window `blur` clears all held input plus attack/block.
+`Space`, arrow keys, and `F3` call `preventDefault`. Key state is tracked in `game.hold[code]` on `keydown` and cleared on `keyup`; `F3` and `Esc` return early and never register in `game.hold`. Window `blur` clears all held keys plus `attackHeld`/`blockHeld`.
 
 Mouse attack/block are only read on canvas `pointerdown` when `pointerType === 'mouse'` (button 0 = attack, button 2 = block); context menu is suppressed. `pointerup` anywhere clears attack/block.
 
@@ -47,41 +47,43 @@ Mouse attack/block are only read on canvas `pointerdown` when `pointerType === '
 
 | Control | Element | Behavior |
 |---|---|---|
-| Move | `#joystick` + `#knob` | Pointer-captured virtual stick; normalized x/y feeds `game.joystick` |
-| Attack | `#attackBtn` | Press-and-hold sets `attackHeld` |
-| Block | `#blockBtn` | Press-and-hold sets `blockHeld` |
-| Orders | `#ordersBtn` | Toggles `#ordersPanel` |
+| Move | `#joystick` + `#knob` | Pointer-captured virtual stick; clamped unit vector feeds `game.joystick` (added to keyboard axes) |
+| Attack | `#attackBtn` | Press-and-hold sets `attackHeld` (pointer capture; releases on `pointerup`/`pointercancel`/`lostpointercapture`) |
+| Block | `#blockBtn` | Press-and-hold sets `blockHeld` (same release semantics) |
+| Orders | `#ordersBtn` | Toggles `#ordersPanel` and re-prints the selected-group label |
 | Group select | `[data-group]` buttons (1 Infantry / 2 Archers) | Same as keys `1`/`2` |
 | Order select | `[data-order]` buttons (F Follow / H Hold / C Charge) | Same as `F`/`H`/`C` |
-| Pause | `#pauseBtn` | Toggles pause |
-| Diagnostics | `#debugBtn` | Toggles diagnostics panel |
+| Pause | `#pauseBtn` | Toggles pause; label flips Pause ⇄ Resume |
+| Diagnostics | `#debugBtn` | Toggles diagnostics panel (also `#closeDebug`) |
 
-On fine-pointer/hover devices the joystick and right control cluster render at reduced opacity (0.29) and become fully opaque on hover.
+On fine-pointer/hover devices (`@media (hover:hover) and (pointer:fine)`) `#joystick` and `#rightControls` render at opacity 0.29 and become fully opaque on hover. Disabled buttons use opacity 0.45.
 
 ---
 
 ## 3. Mode / flow state machine
 
-`game.mode` starts at `'title'`. Transitions are driven entirely by the single `#primaryBtn` plus the battle-end logic.
+`game.mode` starts at `'title'` (`game.js:5`; initialized by `changeMode('title')` at boot, `game.js:48`). Transitions are driven entirely by the single `#primaryBtn` plus the battle-end logic. There is **no path back to `title`** once the player leaves it.
 
 ```
 title ──(Prepare Party)──▶ camp ──(Begin Battle)──▶ battle
-  ▲                          ▲                        │
-  │                          │                        ├─(all enemies dead, wave 2 cleared)──▶ result (VICTORY)
-  │                          │                        └─(hero + all allies dead)────────────▶ result (CAPTURED)
-  │                          └──(Return to Camp: recover())──────────── result ◀────────────┘
+                              ▲                        │
+                              │                        ├─(all enemies dead, wave 2 cleared)──▶ result (VICTORY)
+                              │                        └─(hero + all allies dead)────────────▶ result (CAPTURED)
+                              └──(Return to Camp: recover() first)──── result ◀────────────┘
 ```
 
 | Mode | Overlay | What is shown |
 |---|---|---|
 | `title` | visible | "CROWNLESS" + Gate B blurb; button "Prepare Party" |
 | `camp` | visible | "THE CAPTAIN'S CAMP", roster summary, recruit buttons; button "Begin Battle" |
-| `battle` | hidden | Live canvas play; Orders panel available; `#prep`/`#result` hidden |
+| `battle` | hidden | Live canvas play; Orders panel available; `startBattle` hides the overlay directly — `#prep`/`#result` keep whatever state they had but sit inside the hidden overlay |
 | `result` | visible | "VICTORY" or "CAPTURED" + result breakdown; button "Return to Camp" |
 
-`changeMode()` (`game.js:18`) shows/hides `#overlay`, toggles `#prep` only in `camp` and `#result` only in `result`, and keeps `#secondaryBtn` permanently hidden. `startBattle()` (`game.js:16`) sets `mode='battle'` directly and hides the overlay + Orders panel. `endBattle()` sets `mode='result'`, computes results, then calls `changeMode('result')`.
+`changeMode()` (`game.js:18`) shows `#overlay`, toggles `#prep` only in `camp` and `#result` only in `result`, and keeps `#secondaryBtn` permanently hidden. `startBattle()` (`game.js:16`) sets `mode='battle'` directly and hides the overlay + Orders panel. `endBattle()` (`game.js:21`) early-returns unless `mode==='battle'`, sets `mode='result'`, computes results, then calls `changeMode('result')`.
 
 > Note: the result screen's "Return to Camp" runs `recover()` *before* switching to camp, so wounded troops are restored on that transition.
+
+Transient center-screen messages (`#message`) are set by `message()` (`game.js:15`) and auto-clear after 2.5 s.
 
 ---
 
@@ -97,20 +99,21 @@ title ──(Prepare Party)──▶ camp ──(Begin Battle)──▶ battle
 | `brute` | enemy | 85 | 77 | 13 |
 | `reaver` | enemy (default) | 52 | 103 | 11 |
 
-Melee attack cooldown is ~0.86 s for all non-hero melee roles, hero ~0.49 s, archer 1.2 s. Attack animation lasts 0.31 s for every role. Initial cooldowns are randomized `0–0.4 s` to de-sync units.
+Melee attack cooldown is 0.86 s for all non-hero melee roles, hero 0.49 s, archer 1.2 s. Attack animation lasts 0.31 s for every role. Initial cooldowns are randomized `0–0.4 s` to de-sync units. `aiTimer` retarget intervals are randomized `0.05–0.4 s` initially, then `0.17–0.41 s`.
 
 ### Hero movement & facing
 
-- 4-direction movement with bounds `x ∈ [47, 908]`, `y ∈ [65, 490]`.
-- Facing is set from the dominant movement axis (`left`/`right`/`up`/`down`), and from aim when stationary in contact.
-- Guarding multiplies speed by 0.65 and disables attacking that frame.
+- 4-direction movement with bounds `x ∈ [47, 908]`, `y ∈ [65, 490]`; speed is 142 px/s (×0.65 while guarding).
+- The hero's facing changes **only while moving**, from the dominant movement axis (`left`/`right`/`up`/`down`). The hero never re-faces on its own while stationary.
+- (AI units, by contrast, call `aim()` to face their target once within their goal distance — see [Enemy AI basics](#enemy-ai-basics).)
+- Guarding multiplies speed by 0.65 for that frame and disables attacking while the guard input is held.
 
 ### Attack arc & block
 
 - **Melee reach:** hero 67 px, all other melee 48 px.
 - **Facing check:** `facingToward()` (`game.js:25`) uses a dot-product threshold of `0.38` (≈ ±67.7°, a ~135° frontal arc). This same check gates both hits and blocks.
 - **Melee:** on attack, the first living target within reach that is inside the frontal arc is hit, then the loop breaks (one target per swing). No armor mitigation; damage is flat.
-- **Block:** `hit()` (`game.js:24`) negates the hit entirely when `target.guard` is true and the attacker is within `facingToward`. Block is infinite and frontal (attacks from behind still land). Only the hero ever sets `guard = true` — allied and enemy units keep `guard = false`.
+- **Block:** `hit()` (`game.js:24`) negates the hit entirely when `target.guard` is true and the attacker is within `facingToward`. There is no block meter or one-hit limit — a blocked hit costs nothing and the guard holds for as long as the input is held (frontal only; attacks from behind still land). Only the hero ever sets `guard = true` — allied and enemy units keep `guard = false`.
 - **Ranged:** archers fire when the AI calls an attack at `< 225 px`; `doAttack` then spawns an arrow if the target is `< 245 px`. Arrows travel at 240 px/s, live 1.6 s, carry the archer's damage (8), and hit any opposing unit whose center is within 19 px of the arrow (measured at target `y-16`).
 
 ### Enemy AI basics
@@ -135,8 +138,10 @@ Melee attack cooldown is ~0.86 s for all non-hero melee roles, hero ~0.49 s, arc
 
 ### Hit feedback
 
-- Target flashes for 0.14 s; a colored impact ring (`#f4bb72` ally / `#f77864` enemy) fades over 0.35 s.
-- Attacking units draw a swing arc; guarding units draw a ring; damaged units show an HP bar; all units get a shadow and a small team-colored dot.
+- Target flashes for 0.14 s; a colored impact ring (`#f4bb72` ally / `#f77864` enemy) fades over 0.35 s. A **blocked** hit instead spawns a brief `#f6daa6` spark (0.2 s) and no damage.
+- Attacking units draw a swing arc (±0.45 rad, radius 42 px for the hero / 27 px otherwise); guarding units draw a ring (radius 23 px); damaged units (`hp < maxhp`) show an HP bar.
+- Every unit draws a shadow ellipse; non-hero units also draw a small team-colored dot (`#4bc4dc` ally / `#e76860` enemy). The hero has no dot.
+- Characters are depth-sorted by `y` before drawing; arrows and effect rings render above units.
 
 ---
 
@@ -155,19 +160,21 @@ The total roster cap is 15; both recruit buttons disable under the same conditio
 
 ### Deployment (`game.js:16`)
 
-`startBattle()` deploys `min(12, campaign.infantry)` infantry and `min(8, campaign.archer)` archers, plus the hero at `(330, 270)` facing right. Un-deployed recruits stay in the campaign count. Orders reset to `{ infantry: 'follow', archer: 'hold' }` and active group resets to `infantry` each battle.
+`startBattle()` deploys `min(12, campaign.infantry)` infantry and `min(8, campaign.archer)` archers, plus the hero at `(330, 270)` facing right. Un-deployed recruits stay in the campaign count. Orders reset to `{ infantry: 'follow', archer: 'hold' }` and active group resets to `infantry` each battle. Allies' `holdX/holdY` are initialized to their spawn positions.
 
-### Orders (`game.js:23, 29–30`)
+### Orders (`game.js:23, 29–31`)
 
 Active group is `game.group` (`infantry` or `archer`). `1`/`2` select a group; `F`/`H`/`C` (or panel buttons) set that group's order.
 
-- **Follow:** move toward the hero (goal: archer 98 px, melee 62 px); if a nearby enemy is within archer 205 px / melee 75 px, switch to chasing it.
-- **Hold:** if an enemy is within archer 218 px / melee 85 px, chase it (goal: archer 150 / melee 37); otherwise return to the group's snapshotted hold point (goal 5 px). Issuing Hold snapshots each living member's current position.
+- **Follow:** move toward the hero (goal: archer 98 px, melee 62 px); if the current target is within archer 205 px / melee 75 px, switch to chasing it (goal: archer 143 px / melee 37 px).
+- **Hold:** if an enemy is within archer 218 px / melee 85 px, chase it (goal: archer 150 / melee 37); otherwise return to the group's snapshotted hold point (goal 5 px, stops within ~10 px). Issuing Hold snapshots each living member's current position.
 - **Charge:** there is no dedicated charge branch, so it falls through to the default *nearest-enemy advance* (goal: archer 145 / melee 38). There is **no damage or speed bonus** — this is the behavior the GDD audit calls "charge inert."
+
+Movement only starts when `dist > goal + 5`; at/inside the goal the unit instead `aim()`s at its target (AI units only).
 
 ### Casualties & recovery (`game.js:21–22`)
 
-For every **friendly unit that died** in battle, `endBattle()` rolls `Math.random() < 0.35`:
+For every **deployed ally who died** in battle (the hero is not in `game.allies` and is never rolled — a lost hero does not reduce the roster), `endBattle()` rolls `Math.random() < 0.35`:
 
 - `35%` → **killed** (lost permanently from the roster),
 - `65%` → **wounded** (removed from active roster, added to `woundedInfantry`/`woundedArcher`).
@@ -177,7 +184,7 @@ For every **friendly unit that died** in battle, `endBattle()` rolls `Math.rando
 ### Rewards, capture, and loot (`game.js:21`)
 
 - **Victory:** `victories++`, `renown += 4`, `gold += 52 + kills*3`. Result text shows "+{reward} crowns · +4 renown."
-- **Defeat / capture:** `gold = floor(gold * 0.8)` — a **20% gold loss**. Result title "CAPTURED," text "20% crowns lost."
+- **Defeat / capture:** `gold = max(0, floor(gold * 0.8))` — a **20% gold loss**, floored at 0. Result title "CAPTURED," text "20% crowns lost."
 - `campaign.battles++` on every battle end (win or loss).
 - **Loot:** there is **no field-loot or pickup mechanic**. All spoils are abstracted into the victory gold bonus (and the "gather the spoils" flavor text). No items, no drop tables.
 - Result breakdown also reports enemies defeated, killed/wounded counts, surviving allies, and waves reached (`game.wave`/2).
@@ -204,22 +211,22 @@ For every **friendly unit that died** in battle, `endBattle()` rolls `Math.rando
 ```
 
 - **Load rules (`loadSave`):** parses JSON; accepts only if `d.version === 1`. Starting from `starter()`, it copies each key only when the stored value is a finite number `>= 0`, floored and clamped to `≤ 99999`. Missing/invalid fields fall back to starter defaults. Read errors log a `warn` and fall back to starter.
-- **Save points (`save()`):** called after `recruit()`, after `endBattle()`, and after `recover()`. There is no save at boot, but nothing mutates `campaign` before those actions.
+- **Save points (`save()`):** called after `recruit()`, after `endBattle()`, and after `recover()`. There is no save at boot, but nothing mutates `campaign` before those actions. Successful saves log `info`; write failures log `error`.
 - Clearing browser storage resets the campaign to the starter state.
 
 ---
 
 ## 7. Diagnostics panel
 
-Toggle via `F3` or `#debugBtn`; close via `#closeDebug`. (`game.js:39–43`)
+Toggle via `F3` (`game.js:44`) or `#debugBtn`; close via `#closeDebug` (`toggleDebug`, `game.js:42–43`).
 
-- **Stats block (`#debugStats`):** pretty-printed JSON of `{ build, mode, hero, units:{allies,enemies}, fps, assets, campaign }`.
+- **Stats block (`#debugStats`):** pretty-printed JSON of `{ build, mode, hero, units:{allies,enemies}, fps, assets, campaign }` — the `units` counts are *live* (alive-only) allies/enemies.
 - **Event log (`#debugEvents`):** the most recent 150 diagnostics entries (`date`, `level`, `msg`, optional `data`). The in-memory buffer holds up to 800 events.
 - **`diag` object:** `events[]`, `errors[]` (declared), `assets {requested, loaded, failed[]}`, `fps`, `frames`, `lastFps`, `started`, and `log(level,msg,data)`. Global `error` and `unhandledrejection` handlers log into the same event stream.
 - **Asset counters:** `requested` increments per `loadImg`; `loaded` increments on `onload`; failed keys are pushed to `failed[]` and logged as errors. At boot the game requests **53** images (36 unit frames + 17 terrain).
-- **Export buttons:** `Export JSON` (application/json) and `Export TXT` (text/plain) both download `JSON.stringify(report(), null, 2)` as `crownless-debug-<timestamp>`. `Copy` writes the same report to the clipboard; `Clear` empties the event log.
-- **`report()`** also includes build, ISO time, page URL, user agent, viewport/DPR, live game state, orders, campaign, asset status, and FPS.
-- **FPS** is recomputed once per second from the requestAnimationFrame loop.
+- **Export buttons:** `Export JSON` (application/json) and `Export TXT` (text/plain) both download `JSON.stringify(report(), null, 2)` as `crownless-debug-<timestamp>`. `Copy` writes the same report to the clipboard (warns to the log if unavailable); `Clear` empties the event log.
+- **`report()`** also includes build, ISO time, page URL, user agent, viewport/DPR, live game state, orders, campaign, asset status, FPS, and the full event buffer.
+- **FPS** is recomputed once per second from the requestAnimationFrame loop; while the panel is open, the stats/log blocks re-render on that same once-per-second tick (`game.js:47`). Frame exceptions are caught and logged rather than crashing the loop.
 
 ---
 
@@ -230,12 +237,13 @@ Toggle via `F3` or `#debugBtn`; close via `#closeDebug`. (`game.js:39–43`)
 - **17** `w####` terrain/prop sprites: `w0000, w0001, w0002, w0003, w0007, w0012, w0020, w0034, w0050, w0061, w0091, w0110, w0121, w0132, w0147, w0167, w0174`.
 - Sprites are extracted from the supplied Sprite Studio assets and are cropped from larger sheets; some animations are not hand-aligned.
 
-**Unit frames actually referenced (`game.js:11`):**
+**Unit frames actually referenced (`game.js:11–12`):**
 - Hero: `0–3` (down), `16–19` (left), `32–35` (right), `48–51` (up).
 - Ally infantry: `72–75`; ally archer: `85–88`.
-- Enemies: `92–95`, `120–123`, `200–203` (assigned cyclically to spawned enemies).
+- Enemies: `92–95`, `120–123`, `200–203` (12 frames assigned cyclically to spawned enemies via `i % 12`). Each enemy renders as a **single static frame** (`frames = [u.art]`), so enemies have no walk-cycle animation — only the hero and allies animate through their 4-frame sets.
+- Exactly **36** unique unit frames are loaded, plus 17 terrain = 53 boot requests.
 
-**Terrain usage (`game.js:35`):** ground tiling uses `w0000/w0001/w0002`; static props use `w0091, w0034, w0050, w0110, w0121`. All 17 terrain images are loaded regardless. Ground/terrain sprites may be adapted or cut in later phases, so treat the current ground rendering as placeholder.
+**Terrain usage (`game.js:12, 35`):** ground tiling uses `w0000/w0001/w0002` (chosen by a position hash, drawn at 65×65 on a 64 px grid at 24% alpha over `#71904e`); static props use `w0091` (×2), `w0034`, `w0050`, `w0110`, `w0121` at 75% alpha. All 17 terrain images are loaded regardless of use. Ground/terrain sprites may be adapted or cut in later tasks, so treat the current ground rendering as placeholder.
 
 ---
 
@@ -259,6 +267,7 @@ This is a summary of the existing audit, not new analysis.
 - **§7 Troops & AI — ABSENT/PARTIAL:** no 15 data-driven troops, factions, tiers, armor, wages, upgrade trees, or XP; cavalry absent; charge has no bonus; no obstacle avoidance/separation; no explicit AI state machine; wounded don't count toward cap/wages; no auto-resolve/Tactics; only two waves (no 30/40 scaling or reserve stacks).
 - **§3/4/8/9/10 World, story, settlements, economy, reputation — ABSENT:** no strategic map/travel, 10 named locations, patrols/caravans/bandits, encounter options, story quests/branching/endings, contracts, trade goods/market/food/wages/items, faction reputation, Mara companion, or post-ending sandbox.
 - **§11/12/13 UI, art, tech — PARTIAL/ABSENT:** ~4 of 12 MVP screens; touch layout not 35% zone / 48 dp; no world layout; no audio; no JSON content layer; services unseparated; no scene flow beyond title/camp/battle/result; no manual export/import; no proximity grid; device QA undocumented.
+- **§15 Definition of Done (audit tally):** 1 NOT DONE · 2 DONE · 3 NOT DONE · 4 NOT DONE · 5 PARTIAL · 6 PARTIAL · 7 PARTIAL (unverified) · 8–12 NOT DONE · 13 PARTIAL · 14 PARTIAL · 15 UNVERIFIED.
 
 ---
 
@@ -282,10 +291,10 @@ Run this against a fresh browser profile (or after clearing `localStorage`) to c
 
 **Gate A mechanics**
 - [ ] WASD/arrows move the hero and change facing; joystick does the same on touch.
-- [ ] Space/left-click swings an arc and damages a frontal enemy in reach (~0.49 s cooldown).
+- [ ] Space/left-click swings an arc and damages a frontal enemy in reach (0.49 s cooldown).
 - [ ] Shift/right-click/hold Block shows a guard ring, slows movement, and negates frontal hits; attacks from behind still land; attack is disabled while blocking.
 - [ ] Ally archers fire arrows that travel and damage enemies.
-- [ ] Damaged units show HP bars; deaths flash/fall; impact rings render.
+- [ ] Damaged units show HP bars; deaths flash/fall; impact rings render (blocked hits show the pale spark instead).
 
 **Gate B party slice**
 - [ ] `1`/`2` switch groups; `F`/`H`/`C` (and panel buttons) issue orders; message confirms; Hold units return to their hold point when no enemy is near.
@@ -312,8 +321,10 @@ Run this against a fresh browser profile (or after clearing `localStorage`) to c
 | Diagnostics object + global error handlers | `game.js:3–4` |
 | Game state object | `game.js:5` |
 | Campaign starter / load / save | `game.js:6–9` |
-| Sprite loading + frame tables | `game.js:10–12` |
+| Sprite loading + frame tables + boot asset requests | `game.js:10–12` |
+| Math/geometry helpers (`rand`/`clamp`/`dist`/`normalize`), uid | `game.js:13` |
 | Unit stats factory | `game.js:14` |
+| Toast message helper (2.5 s) | `game.js:15` |
 | Battle start, deployment, reset | `game.js:16` |
 | Wave spawn composition | `game.js:17` |
 | Mode transitions / overlay copy | `game.js:18` |
@@ -332,4 +343,5 @@ Run this against a fresh browser profile (or after clearing `localStorage`) to c
 | Main loop / boot | `game.js:47–48` |
 | Canvas element + HUD markup | `index.html:3` |
 | Layout + responsive styles | `style.css:1` |
+| Player-facing controls & limits | `README.md` |
 | GDD compliance audit | `.swarm/GDD-AUDIT.md` |
