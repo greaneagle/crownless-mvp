@@ -1,0 +1,14 @@
+{
+  "execution_mode": "balanced",
+  "agents": {
+    "coder": {
+      "model": "opencode/mimo-v2.6-flash-free"
+    },
+    "reviewer": {
+      "model": "opencode/big-pickle"
+    },
+    "test_engineer": {
+      "model": "opencode/mimo-v2.6-flash-free"
+    }
+  }
+}
