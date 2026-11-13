@@ -1,4 +1,4 @@
-# Crownless — Combat Prototype 0.2
+# Crownless — Combat Prototype 0.2.1
 
 A playable single-player, top-down medieval combat prototype. Mobile landscape controls and desktop keyboard/mouse controls. This repository is a **static website**; no Godot export, server, npm, or build command is required.
 
@@ -33,3 +33,19 @@ From this folder, run `python -m http.server 8000` (or `python3 -m http.server 8
 Gate A combat demo: three enemies, sword and shield, HP and victory/defeat. No campaign world, recruitment, saves, or quests in this version. Progress from the match is not saved. Target compatibility is modern browsers, with landscape mobile recommended. This has not been validated on your own phone yet.
 
 Source art was provided by the game creator. Before publishing the repository publicly, ensure you have the necessary rights to publish and redistribute all included sprite art.
+
+## Debugging and bug reports (v0.2.1)
+
+- Press **F3** or click **Debug / Logs** (top-right) to open the built-in diagnostic panel.
+- The panel displays FPS, game mode, loaded/missing assets, player state, number of enemies, page path, viewport dimensions, and recent logged events.
+- Click **Export JSON log** to save a machine-readable bug report, or **Export text log** for a readable text file. **Copy report** copies the JSON if browser clipboard permissions permit it.
+- Error and unhandled promise-rejection events are captured, as are missing sprite files. The diagnostic history is capped at 500 events per session and is not transmitted anywhere.
+- Debug exports include your browser user-agent, page origin/path, gameplay coordinates and input state. **Review any report before sharing it.** No account, saved data, or analytics backend is used.
+- To force the latest deploy after committing, use Ctrl+Shift+R (Windows/Linux) or Cmd+Shift+R (Mac). Check that the screen displays **PRE-ALPHA 0.2.1**.
+
+### Fixes in 0.2.1
+
+- Fixed title-screen crash: renderer now skips the uninitialized hero rather than dereferencing `hero.alive`.
+- Added error containment in the game loop, runtime error capture, sprite load logging, and a diagnostic UI with downloadable reports.
+- Added an inline favicon so browsers no longer request missing `favicon.ico`.
+- Browser extension logs such as `contentscript.js`/`ObjectMultiplex` are generated outside the game and are not evidence of a Crownless crash.
