@@ -576,7 +576,7 @@
     }
     ctx.restore();
     if (!crowded) {
-      const name = p.contractId ? 'Contract target' : p.questTag ? 'Quest: Reavers' : t.kind === 'bandit' ? 'Reavers' : t.kind === 'patrol' ? 'Patrol' : 'Caravan';
+      const name = p.contractId ? 'Contract target' : p.questTag ? (t.kind === 'bandit' ? 'Quest: Reavers' : 'Quest: Column') : t.kind === 'bandit' ? 'Reavers' : t.kind === 'patrol' ? 'Patrol' : 'Caravan';
       label(`${name} ${n}`, x, y + 20, p.contractId || p.questTag ? '#ffd34d' : hostile ? '#ffb3a1' : '#e8f0ff');
     }
   }
@@ -698,7 +698,7 @@
     const food = CL.upkeep.foodDays(c);
     $('#summary').textContent =
       `${CL.world.clockLabel()} · ${c.gold} crowns · ${c.roster.length} soldiers${wounded ? ` (${wounded} wounded)` : ''}` +
-      (c.companion ? ` + ${CL.companion.def(c.companion.id).name}${CL.companion.fit(c) ? '' : ' (wounded)'}` : '') +
+      (c.companion ? ` + ${CL.companion.def(c.companion.id).name}${c.companion.away ? ' (scouting ahead)' : CL.companion.fit(c) ? '' : ' (wounded)'}` : '') +
       ` · food ${food >= 10 ? Math.floor(food) : food.toFixed(1)}d · morale ${Math.round(c.morale)}` +
       (Object.keys(c.cargo).length ? ` · cargo ${CL.trade.cargoWeight(c)}/${CL.trade.capacity(c)}` : '') +
       (c.contract

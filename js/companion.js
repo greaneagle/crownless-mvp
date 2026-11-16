@@ -4,7 +4,8 @@
  * couple of days. Her one story consequence (the Q3 incident) is decided by quest data through the
  * `companion` / `part` story effects.
  *
- * State: campaign.companion = null | { id, woundedUntil, equipment: { slot: itemId | null } }
+ * State: campaign.companion = null | { id, woundedUntil, away, equipment: { slot: itemId | null } }
+ *        away: sent ahead by the story (Q3 scouting); out of battle and lends no skills until recalled.
  *        campaign.story.flags.<id>_gone is set when she leaves for good. */
 (function (root) {
   'use strict';
@@ -16,7 +17,7 @@
   const get = (c = camp()) => c?.companion || null;
   const has = (c = camp(), id = null) => Boolean(get(c) && (!id || get(c).id === id));
   /** Fit to fight and to lend her skills: present and not wounded. */
-  const fit = (c = camp()) => has(c) && get(c).woundedUntil === null;
+  const fit = (c = camp()) => has(c) && get(c).woundedUntil === null && !get(c).away;
   /** Party slots she takes (GDD §5: "companion consumes one slot"). */
   const slots = (c = camp()) => (has(c) ? 1 : 0);
 
@@ -110,9 +111,26 @@
     return true;
   }
 
+  /** The story sends her ahead (scouting) or calls her back. */
+  function send(c, id) {
+    const m = get(c);
+    if (!m || m.id !== id) return false;
+    m.away = true;
+    CL.diag.log('info', 'Companion sent ahead', { id });
+    return true;
+  }
+
+  function recall(c, id) {
+    const m = get(c);
+    if (!m || m.id !== id || !m.away) return false;
+    m.away = false;
+    CL.diag.log('info', 'Companion back', { id });
+    return true;
+  }
+
   /** After a battle (fought or auto-resolved): down or captured means wounded. */
   function afterBattle(c, { win, down }) {
-    if (!has(c)) return;
+    if (!has(c) || get(c).away) return;
     if (!win || down) wound(c, win ? 'down' : 'captured');
   }
 
@@ -128,7 +146,8 @@
     }
     const w = m.woundedUntil;
     s.companion = { id: cd.id, woundedUntil: typeof w === 'number' && Number.isFinite(w) && w >= 0 ? w : null, equipment };
+    if (m.away === true) s.companion.away = true;
   }
 
-  CL.companion = { def, get, has, fit, slots, join, part, wound, heal, skillBonus, combat, power, give, takeBack, afterBattle, sanitize };
+  CL.companion = { def, get, has, fit, slots, join, part, send, recall, wound, heal, skillBonus, combat, power, give, takeBack, afterBattle, sanitize };
 })(typeof window !== 'undefined' ? window : globalThis);

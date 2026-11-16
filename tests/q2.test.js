@@ -132,7 +132,7 @@ test('choice A: show it to Captain Aldric — Valedorn +25, Aurelian −10', () 
   // Dialogue remembers.
   assert.match(CL.story.talk('caravan_master').text, /Crown’s men walk taller/);
   for (let i = 0; i < 6; i++) {
-    const t = CL.story.talk('aurelian_agent').text;
+    const t = CL.story.view('aurelian_agent', 'talk', c, i).text; // her small talk (Q3 offers come first now)
     if (/handed that packet to the Crown/.test(t)) return;
   }
   assert.fail('the magistrate never mentions it');
@@ -161,7 +161,7 @@ test('choice C: keep it — no reputation change, the evidence flag for the Q4 c
   assert.equal(c.inventory.courier_packet, 1, 'still carried, protected from sale');
   assert.equal(CL.story.state(c).flags.has_evidence, true);
   assert.equal(CL.trade.sellGear(c, 'eastwatch', 'courier_packet').ok, false);
-  assert.equal(CL.story.talk('valedorn_agent').node, 'talk', 'Aldric no longer asks for it as a quest');
+  assert.notEqual(CL.story.talk('valedorn_agent').node, 'q2', 'Aldric no longer asks for it as a quest');
 });
 
 test('the agents only take the packet while you carry it', () => {

@@ -113,7 +113,7 @@
           action: 'talk',
           dialogue: 'mara',
           // She turns up after Q2, until she joins (or is gone for good).
-          visible: [{ quest: 'q2', is: 'done' }, { not: { companion: 'mara' } }, { not: { flag: 'mara_gone' } }],
+          visible: [{ quest: 'q2', is: 'done' }, { not: { companion: 'mara' } }, { not: { flag: 'mara_gone' } }, { not: { flag: 'mara_scouting' } }],
           lines: ['I have walked every road between the forts.']
         },
         {

@@ -123,6 +123,14 @@
   function chooseTarget(c, p) {
     const t = tpl(p.template);
     p.chasing = null;
+    if (p.questTag && t.kind !== 'bandit') {
+      // A story column (a kingdom's patrol) keeps to its post; the player comes to it.
+      if (reached(p)) {
+        p.tx = clamp(p.anchor.x + (A().next(c) * 2 - 1) * 3, 2, 98);
+        p.ty = clamp(p.anchor.y + (A().next(c) * 2 - 1) * 3, 2, 98);
+      }
+      return;
+    }
     if (t.kind === 'patrol' && wantsPlayer(c, p)) {
       // A Hostile kingdom's patrols ride the player down.
       p.chasing = 'player';
@@ -219,7 +227,7 @@
       if (!c.parties.includes(a) || a.questTag || tpl(a.template).kind !== 'bandit') continue;
       for (const b of [...c.parties]) {
         const kb = tpl(b.template).kind;
-        if (b === a || !c.parties.includes(b) || (kb !== 'caravan' && kb !== 'patrol')) continue;
+        if (b === a || b.questTag || !c.parties.includes(b) || (kb !== 'caravan' && kb !== 'patrol')) continue;
         if (dist(a, b) > CONTACT) continue;
         const r = A().resolveParties(c, a, b);
         if (tpl(r.loser.template).kind === 'caravan') {
@@ -290,9 +298,9 @@
       const t = tpl(p.template);
       const map = W().battleMapAt(c.world.x, c.world.y);
       const hostile = hostileTo(c, t);
-      const story = p.questTag ? CL.story.bandSpec(p.questTag, c)?.text : null;
-      const text = story || (hostile && t.hostileText ? t.hostileText : t.text);
-      return { kind: 'party', name: t.name, text, troops: p.troops, hostile, def: battleDef(t, p.troops, map), party: p, t };
+      const spec = p.questTag ? CL.story.bandSpec(p.questTag, c) : null;
+      const text = spec?.text || (hostile && t.hostileText ? t.hostileText : t.text);
+      return { kind: 'party', name: spec?.name || t.name, text, troops: p.troops, hostile, def: battleDef(t, p.troops, map), party: p, t };
     }
     if (g.siteId) {
       const st = W().map().sites[g.siteId];

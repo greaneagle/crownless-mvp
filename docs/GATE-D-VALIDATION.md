@@ -13,10 +13,50 @@ _Spec: GDD §3–§10 and §14 Gate D._
 | 4.5 AI cavalry; all 15 troop roles | ✅ 0.18.0 |
 | 4.6 Faction reputation and fort ownership | ✅ 0.19.0 |
 | 4.7 Quest and dialogue interpreter | ✅ 0.20.0 |
-| 4.8–4.12 Q1–Q4 and the companion Mara | 🟡 Q1 ✅ 0.21.0 · Q2 ✅ 0.22.0 · Mara ✅ 0.23.0 |
+| 4.8–4.12 Q1–Q4 and the companion Mara | 🟡 Q1 ✅ 0.21.0 · Q2 ✅ 0.22.0 · Mara ✅ 0.23.0 · Q3 ✅ 0.24.0 |
 | 4.13 Escort and delivery contracts | ⬜ |
 | 4.14 Trade-world interactions and regional news | ⬜ |
 | 4.15 Gate D acceptance | ⬜ |
+
+---
+
+## Slice 10 — 0.24.0: Q3 "Two Banners" (2026-11-17)
+
+### What's in (GDD §4 Q3: "Both claimants offer a short mercenary contract. Support one, sell information to the other, or refuse both and protect the road. The world spawns a linked patrol battle or caravan defense. One named story NPC's survival depends on whether the player intervenes (visible, understandable consequence)." §10: Mara's "one unique narrative consequence concerns whether she survives the Q3 caravan/patrol incident".)
+- **Offers:** once Q2 is done, **Captain Aldric** (Stonebridge streets) and **Magistrate Vell** (Eastwatch menu) each open with a contract. Each notices if you've already heard the other.
+- **Four ways through:**
+  - **Ride for the Crown:** break the *Aurelian Supply Column*, 10 troops camped on the Ashgate road. Win: Valedorn +25, plus the usual −15 with Aurelian for attacking their troops.
+  - **Ride for the Remnant:** break the *Valedorn Column* on the Greywall road. Win: Aurelian +25, Valedorn −15.
+  - **Sell one side's plans to the other:** this only appears once you've heard the other side's offer. 100 crowns up front, buyer +10, betrayed −25. Then the road erupts: save a caravan from Reavers.
+  - **Guard the road:** save the caravan from 8 *Caravan Raiders* on the Eastwatch road. Win: both kingdoms +10, and `road_protector` is set. That flag, with Q2's kept packet, is the GDD's condition for the Q4 compromise ending.
+  - Every route finishes on the linked battle with 120 crowns, +15 renown and +100 XP.
+- **Mara's fate:**
+  - When the clash begins, Mara rides ahead to scout. This happens even if she isn't recruited yet (she leaves the inn) and even if she's wounded, covering the GDD edge case.
+  - The HUD says "Mara (scouting ahead)", the message warns *Reach the clash within 3 days, or she will be caught alone*, and the journal counts the days down.
+  - **In time:** she rides back unhurt (`mara_saved`). An unrecruited Mara then trusts you, even after a lie, and joins free, and her lines remember it.
+  - **Too late:** she is gone for good. Her gear comes back to your pack, she never rejoins, and the quest can still be finished.
+- **Interpreter additions:**
+  - Stage `begin` effects; stage `deadline` with one-shot `expire` effects (saved, so a reload never repeats them); per-effect `if` conditions.
+  - `send` and `recall` for a companion (*away*: out of battle and lending no skills).
+  - Kingdom-patrol quest bands that keep to their post, and quest band `name`s.
+  - Quest bands are never attacked off-screen by other bands. The map labels a kingdom column "Quest: Column".
+
+### Checks
+- `tests/q3.test.js` (9 tests) covers:
+  - offers only after Q2
+  - the Crown route with Mara saved (column holds its post, she sits out the fight, exact reputation and pay)
+  - the Remnant route arriving too late (she's lost once, gear returned, quest still finishable, no rejoin)
+  - the road route's compromise flag, and the sell route (hidden until both are heard; pay, reputation, no road flag)
+  - an unrecruited Mara leaving the inn, coming back, and joining free after a lie
+  - an unrecruited Mara lost, a wounded Mara still riding ahead
+  - saves keeping the stage clock, the expiry and her absence
+- 253 tests pass; lint clean.
+- Browser, with real clicks:
+  - With Q2 done and Mara in the company, talked to Captain Aldric and rode for the Crown. The scouting warning showed, the HUD read "+ Mara (scouting ahead)" and the journal showed the deadline.
+  - Left town and clicked the gold-ringed column on the map; its own encounter text and the attack choices with their reputation cost appeared.
+  - Attacked; Mara was not in the line-up. After the debug win: "Quest complete · +120 crowns · +15 renown", Mara back and saved, Valedorn 25 / Aurelian −15.
+  - That run led to the column's map label and encounter name, both fixed. The preview save was then restored.
+  - **Note:** tapping Captain Aldric while he paces needed a couple of tries in the automated browser, though tap-to-talk works when driven directly. Worth a look during your phone playtest.
 
 ---
 

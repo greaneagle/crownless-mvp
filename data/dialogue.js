@@ -213,12 +213,41 @@
     valedorn_agent: {
       id: 'valedorn_agent',
       speaker: 'Captain Aldric',
-      start: [{ if: [{ quest: 'q2', stage: 'q2_choose' }, { has: 'courier_packet' }], node: 'q2' }, 'talk'],
+      start: [{ if: [{ quest: 'q2', stage: 'q2_choose' }, { has: 'courier_packet' }], node: 'q2' }, { if: [{ quest: 'q2', is: 'done' }, { any: [{ quest: 'q3', is: 'unstarted' }, { quest: 'q3', stage: 'q3_choose' }] }], node: 'q3_offer' }, 'talk'],
       nodes: {
         q2: {
           services: false,
           text: ['They say you have Oswin’s packet. The Crown would be grateful to see it, {name} — and the Crown remembers its friends.'],
           options: [{ text: 'Show the packet to the Crown.', if: [{ quest: 'q2', stage: 'q2_choose' }, { has: 'courier_packet' }], do: [{ take: 'courier_packet' }, { set: 'q2_choice', to: 'valedorn' }, { rep: 'valedorn', by: 25 }, { rep: 'aurelian', by: -10 }, { complete: 'q2' }], next: 'q2_thanks' }, { text: 'Not yet.' }]
+        },
+
+        q3_offer: {
+          services: false,
+          text: [
+            'An Aurelian supply column is camped on the Ashgate road, feeding their garrison. Break it, and Greywall stays blue. A hundred and twenty crowns, and the Crown’s gratitude.',
+            { if: { flag: 'q3_heard_aurelian' }, text: 'I hear the magistrate has made you an offer too. Choose wisely — or profitably.' }
+          ],
+          options: [
+            { text: 'I’ll ride for the Crown.', do: [{ start: 'q3' }, { set: 'q3_side', to: 'valedorn' }, { stage: 'q3_strike_aurelian', quest: 'q3' }], next: 'q3_go' },
+            { text: 'Sell the magistrate’s plans to the Crown (100 crowns).', if: { flag: 'q3_heard_aurelian' }, do: [{ start: 'q3' }, { set: 'q3_side', to: 'sold_to_valedorn' }, { gold: 100 }, { rep: 'valedorn', by: 10 }, { rep: 'aurelian', by: -25 }, { stage: 'q3_road', quest: 'q3' }], next: 'q3_sold' },
+            { text: 'I’ll fight for neither banner. I’ll guard the road.', do: [{ start: 'q3' }, { set: 'q3_side', to: 'road' }, { stage: 'q3_road', quest: 'q3' }], next: 'q3_refused' },
+            { text: 'Let me think about it.', do: [{ start: 'q3' }, { set: 'q3_heard_valedorn' }] }
+          ]
+        },
+        q3_go: {
+          services: false,
+          text: ['Good. Your journal has the road. Be quick — columns do not wait.'],
+          options: [{ text: 'On my way.' }]
+        },
+        q3_sold: {
+          services: false,
+          text: ['A hundred crowns for knowing where they mean to strike. A fair trade — and the magistrate will never know who told us. While both banners chase shadows, the road is anyone’s. Watch yourself out there.'],
+          options: [{ text: 'Pleasure doing business.' }]
+        },
+        q3_refused: {
+          services: false,
+          text: ['Neither banner? Then may the road thank you, because I will not.'],
+          options: [{ text: 'Someone has to.' }]
         },
         q2_thanks: {
           services: false,
@@ -232,7 +261,10 @@
             'Keep the roads clear and the Crown keeps your purse full. Simple.',
             { if: { flag: 'q2_choice', is: 'valedorn' }, text: 'The packet you brought us has the Aurelians scrambling. Well done.' },
             { if: { flag: 'q2_choice', is: 'aurelian' }, text: 'You gave that packet to the magistrate. I hope her gold was worth it.' },
-            { if: { flag: 'q2_choice', is: 'kept' }, text: 'You still have that packet, I hear. The Crown would pay well for it — if you ever tire of carrying it.' }
+            { if: { flag: 'q2_choice', is: 'kept' }, text: 'You still have that packet, I hear. The Crown would pay well for it — if you ever tire of carrying it.' },
+            { if: [{ quest: 'q3', is: 'done' }, { flag: 'q3_side', is: 'valedorn' }], text: 'The Aurelian column will not trouble Greywall again. Good work.' },
+            { if: [{ quest: 'q3', is: 'done' }, { flag: 'q3_side', is: 'aurelian' }], text: 'You broke a Crown column. I will not forget whose side you chose.' },
+            { if: [{ quest: 'q3', is: 'done' }, { flag: 'q3_side', is: 'road' }], text: 'Neither banner, eh? The carters sing your name. The King does not.' }
           ]
         }
       }
@@ -241,12 +273,41 @@
       id: 'aurelian_agent',
       speaker: 'Magistrate Vell',
       place: 'eastwatch',
-      start: [{ if: [{ quest: 'q2', stage: 'q2_choose' }, { has: 'courier_packet' }], node: 'q2' }, 'talk'],
+      start: [{ if: [{ quest: 'q2', stage: 'q2_choose' }, { has: 'courier_packet' }], node: 'q2' }, { if: [{ quest: 'q2', is: 'done' }, { any: [{ quest: 'q3', is: 'unstarted' }, { quest: 'q3', stage: 'q3_choose' }] }], node: 'q3_offer' }, 'talk'],
       nodes: {
         q2: {
           services: false,
           text: ['Oswin tells me you recovered his packet. Imperial law belongs to those who keep it, {name}. Let me see it.'],
           options: [{ text: 'Show the packet to the magistrate.', if: [{ quest: 'q2', stage: 'q2_choose' }, { has: 'courier_packet' }], do: [{ take: 'courier_packet' }, { set: 'q2_choice', to: 'aurelian' }, { rep: 'aurelian', by: 25 }, { rep: 'valedorn', by: -10 }, { complete: 'q2' }], next: 'q2_thanks' }, { text: 'Not yet.' }]
+        },
+
+        q3_offer: {
+          services: false,
+          text: [
+            'A Valedorn column holds the Greywall road, choking our couriers. Break it, and the law will have room to breathe. A hundred and twenty crowns, and the Remnant’s thanks.',
+            { if: { flag: 'q3_heard_valedorn' }, text: 'I hear Captain Aldric has made you an offer too. Choose wisely — or profitably.' }
+          ],
+          options: [
+            { text: 'I’ll ride for the Remnant.', do: [{ start: 'q3' }, { set: 'q3_side', to: 'aurelian' }, { stage: 'q3_strike_valedorn', quest: 'q3' }], next: 'q3_go' },
+            { text: 'Sell the Crown’s plans to the magistrate (100 crowns).', if: { flag: 'q3_heard_valedorn' }, do: [{ start: 'q3' }, { set: 'q3_side', to: 'sold_to_aurelian' }, { gold: 100 }, { rep: 'aurelian', by: 10 }, { rep: 'valedorn', by: -25 }, { stage: 'q3_road', quest: 'q3' }], next: 'q3_sold' },
+            { text: 'I’ll fight for neither banner. I’ll guard the road.', do: [{ start: 'q3' }, { set: 'q3_side', to: 'road' }, { stage: 'q3_road', quest: 'q3' }], next: 'q3_refused' },
+            { text: 'Let me think about it.', do: [{ start: 'q3' }, { set: 'q3_heard_aurelian' }] }
+          ]
+        },
+        q3_go: {
+          services: false,
+          text: ['Good. Your journal has the road. Be quick — columns do not wait.'],
+          options: [{ text: 'On my way.' }]
+        },
+        q3_sold: {
+          services: false,
+          text: ['A hundred crowns for knowing where they mean to strike. A fair trade — and Captain Aldric will never know who told us. While both banners chase shadows, the road is anyone’s. Watch yourself out there.'],
+          options: [{ text: 'Pleasure doing business.' }]
+        },
+        q3_refused: {
+          services: false,
+          text: ['Neither banner? Then may the road thank you, because I will not.'],
+          options: [{ text: 'Someone has to.' }]
         },
         q2_thanks: {
           services: false,
@@ -260,7 +321,10 @@
             'Eastwatch remembers the empire’s order. The roads were safe then.',
             { if: { flag: 'q2_choice', is: 'aurelian' }, text: 'The packet you brought me is in the court archive. Valedorn’s claim is crumbling.' },
             { if: { flag: 'q2_choice', is: 'valedorn' }, text: 'You handed that packet to the Crown. I hope you know what you have done.' },
-            { if: { flag: 'q2_choice', is: 'kept' }, text: 'You still keep that packet. The court would welcome it — whenever you choose.' }
+            { if: { flag: 'q2_choice', is: 'kept' }, text: 'You still keep that packet. The court would welcome it — whenever you choose.' },
+            { if: [{ quest: 'q3', is: 'done' }, { flag: 'q3_side', is: 'aurelian' }], text: 'The Greywall road is open to our couriers again. The court is grateful.' },
+            { if: [{ quest: 'q3', is: 'done' }, { flag: 'q3_side', is: 'valedorn' }], text: 'You cut down our column for the Crown. The law has a long memory.' },
+            { if: [{ quest: 'q3', is: 'done' }, { flag: 'q3_side', is: 'road' }], text: 'You guarded the road for everyone. Perhaps there is a third way after all.' }
           ]
         }
       }
@@ -280,7 +344,8 @@
           services: false,
           text: [
             'You are the one who found Oswin’s packet. I am Mara. I scouted these roads for the empire, back when there was an empire.',
-            'I have been looking for someone worth riding with. I do not ride with fools, and I do not ride with liars.'
+            'I have been looking for someone worth riding with. I do not ride with fools, and I do not ride with liars.',
+            { if: { flag: 'mara_saved' }, text: 'And you rode into that clash for me before you even knew my name. I owe you.' }
           ],
           options: [
             { text: 'Then ask me what you want to know.', do: [{ set: 'mara_met' }], next: 'packet' },
@@ -317,11 +382,12 @@
           services: false,
           text: [
             { if: [{ flag: 'mara_trust', gte: 1 }, { not: { flag: 'mara_lied' } }], text: 'You told me the truth when it would have been easy not to. That is enough. I will ride with you — no coin.' },
-            { if: { not: [{ flag: 'mara_trust', gte: 1 }, { not: { flag: 'mara_lied' } }] }, text: 'I do not know you well enough to work for nothing. A hundred crowns, and I will ride with you and earn every one.' }
+            { if: [{ flag: 'mara_saved' }, { not: [{ flag: 'mara_trust', gte: 1 }, { not: { flag: 'mara_lied' } }] }], text: 'You came for me on the road. That buys more trust than any answer. I will ride with you — no coin.' },
+            { if: { not: { any: [{ flag: 'mara_saved' }, [{ flag: 'mara_trust', gte: 1 }, { not: { flag: 'mara_lied' } }]] } }, text: 'I do not know you well enough to work for nothing. A hundred crowns, and I will ride with you and earn every one.' }
           ],
           options: [
-            { text: 'Welcome to the company, Mara.', if: [{ flag: 'mara_trust', gte: 1 }, { not: { flag: 'mara_lied' } }, { room: 1 }], do: [{ companion: 'mara' }], next: 'joined' },
-            { text: 'Pay 100 crowns.', if: [{ not: [{ flag: 'mara_trust', gte: 1 }, { not: { flag: 'mara_lied' } }] }, { gold: 100 }, { room: 1 }], do: [{ gold: -100 }, { companion: 'mara' }], next: 'joined' },
+            { text: 'Welcome to the company, Mara.', if: [{ any: [{ flag: 'mara_saved' }, [{ flag: 'mara_trust', gte: 1 }, { not: { flag: 'mara_lied' } }]] }, { room: 1 }], do: [{ companion: 'mara' }], next: 'joined' },
+            { text: 'Pay 100 crowns.', if: [{ not: { any: [{ flag: 'mara_saved' }, [{ flag: 'mara_trust', gte: 1 }, { not: { flag: 'mara_lied' } }]] } }, { gold: 100 }, { room: 1 }], do: [{ gold: -100 }, { companion: 'mara' }], next: 'joined' },
             { text: 'My company is full. Later.', if: { not: { room: 1 } } },
             { text: 'Not now.' }
           ]
@@ -336,6 +402,7 @@
           text: [
             'The river road floods in spring. Keep to the high track past Highmere.',
             'Both crowns want Greywall. Neither asked the people who live under it.',
+            { if: { flag: 'mara_saved' }, text: 'I have not forgotten that you came for me on the road. I never will.' },
             { if: { companion: 'mara', is: 'fit' }, text: 'I am ready when you are.' },
             { if: { not: { companion: 'mara', is: 'fit' } }, text: 'Give me a day or two. That last fight took more out of me than I let on.' }
           ]

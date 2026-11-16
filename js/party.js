@@ -128,6 +128,7 @@
     }
     if (healed.length) CL.diag.log('info', 'Wounded recovered', { soldiers: healed, day: camp.day });
     CL.companion.heal(camp);
+    CL.story.tick(camp); // quest stage deadlines
     return healed;
   }
 

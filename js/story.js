@@ -20,6 +20,11 @@
  *    { start: 'q1' }  { stage: 's', quest: 'q1' }  { complete: 'q1' }  { fail: 'q1' }
  *    { owner: 'greywall_fort', to: 'aurelian' }  { message: 'text' }  { note: 'text', quest: 'q1' }
  *    { companion: 'mara' } (joins)  { part: 'mara', reason: 'fell' } (leaves for good)
+ *    { send: 'mara' } (rides ahead; out of the company until recalled)  { recall: 'mara' }
+ *    Any effect may carry its own `if` condition and is skipped when it fails.
+ *
+ *  Stages may also have: begin (effects when the stage starts), deadline (days) with expire
+ *  (effects once, if the stage is still current when the time runs out).
  *
  *  Events: game code calls `emit(name, payload)`; quest stages react with
  *    on: [{ event, match: { key: value | [values] }, if, do }]
@@ -27,7 +32,7 @@
  *    settlement}, trade {settlement, good, side}, contract {template, giver}, talk {dialogue, node},
  *    parley {party, tag, outcome: 'intimidate' | 'toll'}.
  *
- * A stage may also need a band on the map: band: { template, tag, troops, text?, camp?, near | between: [a, b] }
+ * A stage may also need a band on the map: band: { template, tag, troops, name?, text?, camp?, near | between: [a, b] }
  * (camp: true holds its ground and only fights if the player goes to it; otherwise it ambushes)
  * (settlement or site ids). It is spawned when the stage begins, re-spawned if lost while the stage
  * is active (so nothing soft-locks), and removed once no active stage needs it. Battles against it
@@ -43,7 +48,7 @@
   const MAX_FLAGS = 200;
   const MAX_NOTES = 20;
   const COND_KEYS = ['flag', 'not', 'all', 'any', 'quest', 'gold', 'renown', 'level', 'soldiers', 'rep', 'standing', 'skill', 'attribute', 'background', 'has', 'owner', 'at', 'companion', 'room'];
-  const EFFECT_KEYS = ['set', 'clear', 'add', 'gold', 'renown', 'xp', 'food', 'rep', 'give', 'take', 'recruit', 'start', 'stage', 'complete', 'fail', 'owner', 'message', 'note', 'companion', 'part'];
+  const EFFECT_KEYS = ['set', 'clear', 'add', 'gold', 'renown', 'xp', 'food', 'rep', 'give', 'take', 'recruit', 'start', 'stage', 'complete', 'fail', 'owner', 'message', 'note', 'companion', 'part', 'send', 'recall'];
 
   const camp = () => CL.campaign;
   const quest = (id) => CL.content.table('quests')[id] || null;
@@ -111,7 +116,7 @@
   // ---- Effects ----
 
   function apply(effects, c = camp(), ctx = {}) {
-    for (const e of effects || []) applyOne(e, c, ctx);
+    for (const e of effects || []) if (!e.if || test(e.if, c)) applyOne(e, c, ctx);
   }
 
   function applyOne(e, c, ctx) {
@@ -140,6 +145,8 @@
     else if ('note' in e) note(c, e.quest || ctx.quest, format(e.note, c));
     else if ('companion' in e) CL.companion.join(c, e.companion);
     else if ('part' in e) CL.companion.part(c, e.part, e.reason || 'parted');
+    else if ('send' in e) CL.companion.send(c, e.send);
+    else if ('recall' in e) CL.companion.recall(c, e.recall);
   }
 
   // ---- Quests ----
@@ -147,8 +154,9 @@
   function start(c, id) {
     const q = quest(id);
     if (!q || questStatus(c, id) !== 'unstarted') return false;
-    state(c).quests[id] = { status: 'active', stage: q.stages[0].id, notes: [], startedDay: c.day };
+    state(c).quests[id] = { status: 'active', stage: q.stages[0].id, notes: [], startedDay: c.day, stageDay: c.day };
     CL.diag.log('info', 'Quest started', { quest: id });
+    apply(q.stages[0].begin, c, { quest: id, reason: `quest ${id}` });
     ensureBands(c);
     CL.ui.message(`New quest: ${q.title}`);
     return true;
@@ -159,7 +167,10 @@
     const r = state(c).quests[id];
     if (!q || r?.status !== 'active' || !q.stages.some((st) => st.id === stageId)) return false;
     r.stage = stageId;
+    r.stageDay = c.day;
+    delete r.expired;
     CL.diag.log('info', 'Quest stage', { quest: id, stage: stageId });
+    apply(q.stages.find((st) => st.id === stageId).begin, c, { quest: id, reason: `quest ${id}` });
     ensureBands(c);
     return true;
   }
@@ -233,6 +244,27 @@
       const at = bandSpot(spec);
       CL.parties.spawnQuestBand(c, spec, at.x, at.y);
     }
+  }
+
+  /** As the clock moves: a stage whose deadline has passed runs its expire effects, once. */
+  function tick(c = camp()) {
+    if (!c?.story) return;
+    for (const [id, r] of Object.entries(c.story.quests)) {
+      if (r.status !== 'active' || r.expired === r.stage) continue;
+      const st = quest(id)?.stages.find((x) => x.id === r.stage);
+      if (!st?.deadline || c.day < (r.stageDay ?? r.startedDay) + st.deadline) continue;
+      r.expired = r.stage;
+      CL.diag.log('info', 'Quest deadline passed', { quest: id, stage: r.stage });
+      apply(st.expire, c, { quest: id, reason: `quest ${id}` });
+    }
+  }
+
+  /** Days left on the current stage's deadline, or null. */
+  function deadlineLeft(c, id) {
+    const r = state(c).quests[id];
+    const st = r?.status === 'active' && quest(id)?.stages.find((x) => x.id === r.stage);
+    if (!st?.deadline || r.expired === r.stage) return null;
+    return (r.stageDay ?? r.startedDay) + st.deadline - c.day;
   }
 
   const matches = (match, payload) =>
@@ -339,7 +371,9 @@
       const q = quest(id);
       if (!q) continue;
       const stage = q.stages.find((st) => st.id === r.stage);
-      rows.push({ id, title: q.title, status: r.status, objective: stage ? format(stage.journal, c) : null, notes: r.notes.slice(), summary: q.summary });
+      const left = deadlineLeft(c, id);
+      const objective = stage ? format(stage.journal, c) + (left !== null ? ` (${Math.max(0, left).toFixed(1)} days left)` : '') : null;
+      rows.push({ id, title: q.title, status: r.status, objective, notes: r.notes.slice(), summary: q.summary });
     }
     const order = { active: 0, done: 1, failed: 2 };
     return rows.sort((a, b) => order[a.status] - order[b.status]);
@@ -352,7 +386,9 @@
     active.sort((a, b) => b[1].startedDay - a[1].startedDay);
     const [id, r] = active[0];
     const q = quest(id);
-    return { id, title: q.title, objective: format(q.stages.find((st) => st.id === r.stage)?.journal || '', c) };
+    const left = deadlineLeft(c, id);
+    const objective = format(q.stages.find((st) => st.id === r.stage)?.journal || '', c) + (left !== null ? ` (${Math.max(0, left).toFixed(1)} days left)` : '');
+    return { id, title: q.title, objective };
   }
 
   // ---- Content checks (called by ContentDB.validate) ----
@@ -416,7 +452,8 @@
         else if (!q.stages.some((s) => s.id === e.stage)) err(`${where}: unknown stage ${e.stage}`);
       }
       if (k === 'owner' && (C.settlements?.[e.owner]?.type !== 'fort' || !C.factions?.[e.to])) err(`${where}: bad owner effect`);
-      if ((k === 'companion' || k === 'part') && !C.companions?.[e[k]]) err(`${where}: unknown companion ${e[k]}`);
+      if (['companion', 'part', 'send', 'recall'].includes(k) && !C.companions?.[e[k]]) err(`${where}: unknown companion ${e[k]}`);
+      if (e.if) checkCond(e.if, C, where, err);
     }
   }
 
@@ -464,11 +501,14 @@
         if (!st.id || ids.has(st.id)) err(`${w}: missing or repeated stage id ${st.id}`);
         ids.add(st.id);
         if (!st.journal) err(`${w}.${st.id}: needs a journal line`);
+        checkEffects(st.begin, C, `${w}.${st.id} begin`, err, id);
+        checkEffects(st.expire, C, `${w}.${st.id} expire`, err, id);
+        if (st.expire && !(st.deadline > 0)) err(`${w}.${st.id}: expire needs a deadline`);
         if (st.band) {
           const b = st.band;
           const map = Object.values(C.world_map || {})[0];
           const known = (x) => Boolean(C.settlements?.[x] || map?.sites?.[x]);
-          if (C.party_templates?.[b.template]?.kind !== 'bandit') err(`${w}.${st.id}: band needs a bandit template`);
+          if (!['bandit', 'patrol'].includes(C.party_templates?.[b.template]?.kind)) err(`${w}.${st.id}: band needs a bandit or patrol template`);
           if (!/^[a-z0-9_]{1,40}$/.test(b.tag || '')) err(`${w}.${st.id}: band needs a tag`);
           if (b.between ? !(b.between.length === 2 && b.between.every(known)) : !known(b.near)) err(`${w}.${st.id}: band needs a known place`);
           for (const [tid, n] of Object.entries(b.troops || {})) {
@@ -504,7 +544,9 @@
         stage,
         notes: Array.isArray(r.notes) ? r.notes.filter((n) => typeof n === 'string').slice(-MAX_NOTES).map((n) => n.slice(0, 300)) : [],
         startedDay: day(r.startedDay),
+        stageDay: day(r.stageDay ?? r.startedDay),
       };
+      if (r.status === 'active' && r.expired === stage) s.story.quests[id].expired = stage;
       if (r.status !== 'active') s.story.quests[id].endedDay = day(r.endedDay);
     }
     for (const [id, n] of Object.entries(src.visits || {})) {
@@ -524,6 +566,8 @@
     questStatus,
     ensureBands,
     bandSpec,
+    tick,
+    deadlineLeft,
     emit,
     format,
     nodeText,

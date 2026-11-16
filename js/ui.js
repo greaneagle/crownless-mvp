@@ -595,7 +595,7 @@
       };
       return b;
     };
-    const status = M.fit(c) ? 'fit to fight' : `wounded — back in ${Math.max(0, m.woundedUntil - c.day).toFixed(1)} days`;
+    const status = m.away ? 'scouting ahead' : M.fit(c) ? 'fit to fight' : `wounded — back in ${Math.max(0, m.woundedUntil - c.day).toFixed(1)} days`;
     const bonus = Object.entries(d.skills || {})
       .map(([k, n]) => `+${n} ${CL.content.get('skills', k).name}`)
       .join(', ');

@@ -92,17 +92,64 @@
       ],
       rewards: { gold: 80, renown: 15, xp: 80 }
     },
+    // GDD §4 Q3 (commitment): both claimants offer a short mercenary contract. Support one, sell
+    // information to the other, or refuse both and protect the road. Each spawns a linked battle:
+    // a column to break or a caravan to save. Mara scouts ahead of it; she lives if you get there
+    // within 3 days (GDD §10: her one narrative consequence).
     q3: {
       id: 'q3',
       title: 'Two Banners',
       giver: 'valedorn_agent',
-      summary: 'Both claimants want your sword for a short contract.',
+      summary: 'Captain Aldric and Magistrate Vell both want your sword. Whatever you choose, the roads will burn somewhere.',
       stages: [
-        { id: 'q3_choose_contract', journal: 'Support one claimant, sell information to the other, or refuse both.' },
-        { id: 'q3_linked_encounter', journal: 'Resolve the clash on the road.' },
-        { id: 'q3_mara_survival', journal: 'Make sure Mara survives.' }
+        { id: 'q3_choose', journal: 'Hear the offers: Captain Aldric in Stonebridge (Valedorn) and Magistrate Vell in Eastwatch (Aurelian). Support one, sell one’s plans to the other, or refuse both and guard the road.' },
+        {
+          id: 'q3_strike_aurelian',
+          journal: 'For the Crown: break the Aurelian supply column camped on the Ashgate road, south-east of Stonebridge.',
+          band: { template: 'aurelian_patrol', name: 'Aurelian Supply Column', tag: 'q3_column', between: ['stonebridge', 'ashgate_fort'], troops: { spearman: 4, skirmisher: 3, recruit: 3 }, camp: true, text: 'The Aurelian supply column has made camp, wagons in a ring and spears out. They have seen your banner.' },
+          begin: [{ set: 'mara_scouting' }, { send: 'mara' }, { message: 'Mara rides ahead to scout. Reach the clash within 3 days, or she will be caught alone.' }],
+          deadline: 3,
+          expire: [
+            { part: 'mara', reason: 'fell', if: { companion: 'mara' } },
+            { set: 'mara_gone', to: 'fell', if: { not: { flag: 'mara_gone' } } },
+            { clear: 'mara_scouting' },
+            { note: 'You came too late. Mara was caught scouting alone and did not come back.' },
+            { message: 'Word comes back from the road: Mara was caught alone. She is gone.' }
+          ],
+          on: [{ event: 'battle', match: { win: true, tag: 'q3_column' }, do: [{ recall: 'mara' }, { set: 'mara_saved', if: { flag: 'mara_scouting' } }, { note: 'You reached the clash in time. Mara rode out of the smoke unhurt.', if: { flag: 'mara_scouting' } }, { clear: 'mara_scouting' }, { rep: 'valedorn', by: 25 }, { note: 'The Aurelian column is broken. The Crown is in your debt.' }, { complete: 'q3' }] }]
+        },
+        {
+          id: 'q3_strike_valedorn',
+          journal: 'For the Remnant: break the Valedorn column camped on the Greywall road, north of Stonebridge.',
+          band: { template: 'valedorn_patrol', name: 'Valedorn Column', tag: 'q3_column', between: ['stonebridge', 'greywall_fort'], troops: { footman: 4, hunter: 3, levy: 3 }, camp: true, text: 'The Crown’s column holds the Greywall road behind a wall of shields, blue pennants snapping.' },
+          begin: [{ set: 'mara_scouting' }, { send: 'mara' }, { message: 'Mara rides ahead to scout. Reach the clash within 3 days, or she will be caught alone.' }],
+          deadline: 3,
+          expire: [
+            { part: 'mara', reason: 'fell', if: { companion: 'mara' } },
+            { set: 'mara_gone', to: 'fell', if: { not: { flag: 'mara_gone' } } },
+            { clear: 'mara_scouting' },
+            { note: 'You came too late. Mara was caught scouting alone and did not come back.' },
+            { message: 'Word comes back from the road: Mara was caught alone. She is gone.' }
+          ],
+          on: [{ event: 'battle', match: { win: true, tag: 'q3_column' }, do: [{ recall: 'mara' }, { set: 'mara_saved', if: { flag: 'mara_scouting' } }, { note: 'You reached the clash in time. Mara rode out of the smoke unhurt.', if: { flag: 'mara_scouting' } }, { clear: 'mara_scouting' }, { rep: 'aurelian', by: 25 }, { note: 'The Valedorn column is broken. The Remnant is in your debt.' }, { complete: 'q3' }] }]
+        },
+        {
+          id: 'q3_road',
+          journal: 'While the banners circle each other, Reavers have a caravan pinned on the Eastwatch road. Save it.',
+          band: { template: 'bandits', name: 'Caravan Raiders', tag: 'q3_raiders', between: ['stonebridge', 'eastwatch'], troops: { looter: 5, reaver: 3 }, camp: true, text: 'Reavers swarm a stranded caravan, cutting at the harness ropes. The drivers are fighting back with cudgels.' },
+          begin: [{ set: 'mara_scouting' }, { send: 'mara' }, { message: 'Mara rides ahead to scout. Reach the clash within 3 days, or she will be caught alone.' }],
+          deadline: 3,
+          expire: [
+            { part: 'mara', reason: 'fell', if: { companion: 'mara' } },
+            { set: 'mara_gone', to: 'fell', if: { not: { flag: 'mara_gone' } } },
+            { clear: 'mara_scouting' },
+            { note: 'You came too late. Mara was caught scouting alone and did not come back.' },
+            { message: 'Word comes back from the road: Mara was caught alone. She is gone.' }
+          ],
+          on: [{ event: 'battle', match: { win: true, tag: 'q3_raiders' }, do: [{ recall: 'mara' }, { set: 'mara_saved', if: { flag: 'mara_scouting' } }, { note: 'You reached the clash in time. Mara rode out of the smoke unhurt.', if: { flag: 'mara_scouting' } }, { clear: 'mara_scouting' }, { rep: 'valedorn', by: 10 }, { rep: 'aurelian', by: 10 }, { set: 'road_protector', if: { flag: 'q3_side', is: 'road' } }, { note: 'The caravan is safe. Both banners hear that someone still guards the road.' }, { complete: 'q3' }] }]
+        }
       ],
-      rewards: { gold: 120, renown: 15 }
+      rewards: { gold: 120, renown: 15, xp: 100 }
     },
     q4: {
       id: 'q4',
