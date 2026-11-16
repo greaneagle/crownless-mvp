@@ -33,15 +33,20 @@
     };
     $('#pauseBtn').onclick = ui.togglePause;
     $('#primaryBtn').onclick = () => {
-      if (game.mode === 'title') ui.changeMode('camp');
-      else if (game.mode === 'camp') combat.startBattle();
-      else if (game.mode === 'result') {
-        ui.changeMode('camp');
-      }
+      const { world } = CL;
+      if (game.mode === 'title') ui.changeMode(party.currentSettlement() ? 'settlement' : 'map');
+      else if (game.mode === 'settlement') world.leaveSettlement();
+      else if (game.mode === 'encounter') world.attackSite();
+      else if (game.mode === 'result') world.returnToMap();
     };
-    $('#recruitInf').onclick = () => party.recruit(party.RECRUITABLE[0]);
-    $('#recruitArch').onclick = () => party.recruit(party.RECRUITABLE[1]);
-    $('#restBtn').onclick = () => party.rest();
+    $('#secondaryBtn').onclick = () => {
+      if (game.mode === 'encounter') ui.changeMode('map');
+    };
+    for (const sel of ['#recruitA', '#recruitB']) $(sel).onclick = (e) => party.recruit(e.currentTarget.dataset.troop);
+    $('#restBtn').onclick = () => {
+      party.rest();
+      ui.changeMode('settlement'); // refresh the clock line too
+    };
     $('#ordersBtn').onclick = () => {
       $('#ordersPanel').classList.toggle('hidden');
       combat.order(game.group, null);
@@ -67,7 +72,10 @@
       }
       const o = KEY_ORDERS[e.code];
       if (o) CL.combat.order(o[0], o[1]);
-      if (e.code === 'Space' && !e.repeat) CL.combat.queueAttack();
+      if (e.code === 'Space' && !e.repeat) {
+        if (g.mode === 'map') CL.world.stop();
+        else CL.combat.queueAttack();
+      }
       g.hold[e.code] = true;
     });
     root.addEventListener('keyup', (e) => {
@@ -75,6 +83,12 @@
     });
     root.addEventListener('blur', releaseAll);
     canvas.addEventListener('pointerdown', (e) => {
+      if (g.mode === 'map') {
+        // Click/tap a destination on the strategic map (GDD §3).
+        const r = canvas.getBoundingClientRect();
+        CL.world.click(((e.clientX - r.left) * CL.W) / r.width, ((e.clientY - r.top) * CL.H) / r.height);
+        return;
+      }
       if (e.pointerType !== 'mouse') return;
       if (e.button === 0) {
         g.attackHeld = true;

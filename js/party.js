@@ -4,8 +4,6 @@
   'use strict';
   const CL = root.Crownless;
 
-  // Troops the captain's camp can hire (Stonebridge is the Valedorn starting hub).
-  const RECRUITABLE = ['levy', 'hunter'];
   const PARTY_CAP = 15; // all soldiers, wounded included (GDD §7). Formula arrives in Gate C.
   const DEATH_CHANCE = 0.35; // otherwise wounded (GDD §7)
   const BATTLE_DAYS = 0.25; // a battle and its aftermath take about six hours
@@ -18,12 +16,29 @@
   const woundedSoldiers = () => c().roster.filter(isWounded);
   const dayNumber = (day = c().day) => Math.floor(day) + 1;
 
+  /** The settlement the party is standing in, or null on the open map. */
+  function currentSettlement(camp = c()) {
+    const id = camp.world?.location;
+    return id ? CL.content.get('settlements', id) : null;
+  }
+
+  const offers = (s, service) => Boolean(s?.services.includes(service));
+
+  /** Troops for hire here: the owner faction's recruits, if the settlement offers recruiting. */
+  function recruitsHere(camp = c()) {
+    const s = currentSettlement(camp);
+    if (!offers(s, 'recruit')) return [];
+    return CL.content.get('factions', s.ownerFaction).recruits || [];
+  }
+
+  const canRest = (camp = c()) => offers(currentSettlement(camp), 'rest');
+
   function canRecruit(camp, troopId) {
     return camp.gold >= CL.content.troop(troopId).recruitCost && camp.roster.length < PARTY_CAP;
   }
 
   function recruit(troopId) {
-    if (!RECRUITABLE.includes(troopId) || !canRecruit(c(), troopId)) return false;
+    if (!recruitsHere().includes(troopId) || !canRecruit(c(), troopId)) return false;
     const price = CL.content.troop(troopId).recruitCost;
     c().gold -= price;
     CL.save.addSoldier(c(), troopId);
@@ -48,6 +63,7 @@
   }
 
   function rest() {
+    if (!canRest()) return [];
     const healed = advanceDays(1);
     CL.save.write();
     CL.ui.refreshRoster();
@@ -145,6 +161,7 @@
     const { killed, wounded } = rollCasualties(g.allies);
     const outcome = { battleId: g.battleId, encounterId: g.encounter, win, kills: g.kills, killed, wounded };
     const r = applyBattleResult(CL.campaign, outcome);
+    if (r) CL.world?.onBattleResolved(win, g.siteId);
     CL.save.write();
     const recoverDay = dayNumber(CL.campaign.day + CL.save.WOUND_DAYS);
     const lines = [
@@ -157,7 +174,7 @@
     else if (r.lostItem) lines.push(`Taken by your captors: ${CL.content.item(r.lostItem).name}`);
     lines.push(
       wounded.length
-        ? `<small>Wounded soldiers can't fight until day ${recoverDay}. Rest at camp to pass the time.</small>`
+        ? `<small>Wounded soldiers can't fight until day ${recoverDay}. Travel or rest in a settlement to pass the time.</small>`
         : '<small>No soldiers wounded.</small>',
     );
     g.result = { win, html: lines.join('<br>'), ...r };
@@ -166,8 +183,10 @@
   }
 
   CL.party = {
-    RECRUITABLE,
     PARTY_CAP,
+    currentSettlement,
+    recruitsHere,
+    canRest,
     BATTLE_DAYS,
     canRecruit,
     recruit,

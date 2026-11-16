@@ -183,9 +183,225 @@
       `Enemies ${g.enemies.filter((x) => x.alive).length} · Wave ${g.wave}/${g.totalWaves}`;
   }
 
+  // ---- Strategic map ----
+
+  const FACTION_EMBLEM = { valedorn: 'V', aurelian: 'A', neutral: 'R' };
+
+  function polyPath(points) {
+    const { toPx } = CL.world;
+    ctx.beginPath();
+    points.forEach(([x, y], i) => {
+      const [px, py] = toPx(x, y);
+      if (i) ctx.lineTo(px, py);
+      else ctx.moveTo(px, py);
+    });
+  }
+
+  function label(text, x, y, color = '#f8ecd0') {
+    ctx.font = 'bold 14px Georgia'; // stays legible when the canvas is scaled down on phones
+    ctx.textAlign = 'center';
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = '#1b2417';
+    ctx.strokeText(text, x, y);
+    ctx.fillStyle = color;
+    ctx.fillText(text, x, y);
+    ctx.textAlign = 'left';
+  }
+
+  /** Settlement icon: shape by type, faction colour plus a letter emblem (not colour alone). */
+  function drawSettlement(s, here) {
+    const [x, y] = CL.world.toPx(s.mapX, s.mapY);
+    const color = CL.content.get('factions', s.ownerFaction).color;
+    ctx.save();
+    ctx.fillStyle = '#00000044';
+    ctx.beginPath();
+    ctx.ellipse(x, y + 9, 15, 5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#e9dcc0';
+    ctx.strokeStyle = '#2a2116';
+    ctx.lineWidth = 2;
+    if (s.type === 'fort') {
+      ctx.fillRect(x - 11, y - 12, 22, 20);
+      ctx.strokeRect(x - 11, y - 12, 22, 20);
+      for (const dx of [-11, -4, 3]) ctx.fillRect(x + dx, y - 17, 5, 5);
+    } else {
+      const houses = s.type === 'town' ? [[-9, 0], [3, -4], [-2, 4]] : [[-5, 0]];
+      for (const [dx, dy] of houses) {
+        ctx.fillRect(x + dx, y + dy - 5, 11, 9);
+        ctx.strokeRect(x + dx, y + dy - 5, 11, 9);
+        ctx.beginPath();
+        ctx.moveTo(x + dx - 1, y + dy - 5);
+        ctx.lineTo(x + dx + 5.5, y + dy - 11);
+        ctx.lineTo(x + dx + 12, y + dy - 5);
+        ctx.closePath();
+        ctx.fillStyle = '#8b4a32';
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = '#e9dcc0';
+      }
+    }
+    // Banner with faction letter.
+    ctx.fillStyle = color;
+    ctx.fillRect(x + 10, y - 22, 11, 9);
+    ctx.fillStyle = '#2a2116';
+    ctx.fillRect(x + 9, y - 22, 2, 18);
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 8px system-ui';
+    ctx.fillText(FACTION_EMBLEM[s.ownerFaction] || '?', x + 13, y - 14.5);
+    if (here) {
+      ctx.strokeStyle = '#ffe7a8';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(x, y, 19, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.restore();
+    label(s.name, x, y + 24);
+  }
+
+  function drawSite(st) {
+    const [x, y] = CL.world.toPx(st.mapX, st.mapY);
+    const active = CL.world.siteActive(st.id);
+    ctx.save();
+    ctx.globalAlpha = active ? 1 : 0.45;
+    ctx.fillStyle = '#5b2a20';
+    ctx.beginPath();
+    ctx.moveTo(x - 12, y + 7);
+    ctx.lineTo(x, y - 12);
+    ctx.lineTo(x + 12, y + 7);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = active ? '#ff6a4a' : '#9b8a78';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(x - 6, y - 4);
+    ctx.lineTo(x + 6, y + 6);
+    ctx.moveTo(x + 6, y - 4);
+    ctx.lineTo(x - 6, y + 6);
+    ctx.stroke();
+    ctx.restore();
+    label(active ? st.name : `${st.name} (cleared)`, x, y + 22, active ? '#ffb3a1' : '#c9bda8');
+  }
+
+  function drawWorld() {
+    const { toPx, map } = CL.world;
+    const m = map();
+    const w = CL.campaign.world;
+    const g = CL.game;
+
+    ctx.fillStyle = '#6f8f4e';
+    ctx.fillRect(0, 0, W, H);
+    // Grass mottling.
+    ctx.fillStyle = '#7d9a59';
+    for (let i = 0; i < 140; i++) ctx.fillRect((i * 211 + 37) % W, (i * 97 + 11) % H, 7, 3);
+
+    // Forests.
+    for (const poly of m.forests) {
+      polyPath(poly);
+      ctx.closePath();
+      ctx.fillStyle = '#3f6334';
+      ctx.fill();
+      ctx.fillStyle = '#2f5128';
+      const xs = poly.map((p) => p[0]);
+      const ys = poly.map((p) => p[1]);
+      for (let x = Math.min(...xs); x <= Math.max(...xs); x += 3.2) {
+        for (let y = Math.min(...ys); y <= Math.max(...ys); y += 5) {
+          if (CL.world.terrainAt(x, y) !== 'forest') continue;
+          const [px, py] = toPx(x + ((y * 7) % 2), y);
+          ctx.beginPath();
+          ctx.arc(px, py, 6, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    }
+    // Hills.
+    ctx.strokeStyle = '#5b5236';
+    ctx.lineWidth = 3;
+    for (const [hx, hy] of m.hills) {
+      const [px, py] = toPx(hx, hy);
+      ctx.beginPath();
+      ctx.arc(px, py + 8, 14, Math.PI * 1.15, Math.PI * 1.85);
+      ctx.stroke();
+    }
+    // River.
+    polyPath(m.river);
+    ctx.strokeStyle = '#3c6f93';
+    ctx.lineWidth = 9;
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+    ctx.strokeStyle = '#5d93b5';
+    ctx.lineWidth = 4;
+    ctx.stroke();
+    // Roads.
+    for (const road of m.roads) {
+      const pts = road.map((id) => {
+        const s = CL.content.get('settlements', id);
+        return [s.mapX, s.mapY];
+      });
+      polyPath(pts);
+      ctx.strokeStyle = '#4a3a24';
+      ctx.lineWidth = 7;
+      ctx.stroke();
+      ctx.strokeStyle = '#b39a6a';
+      ctx.lineWidth = 4;
+      ctx.setLineDash([]);
+      ctx.stroke();
+    }
+
+    for (const st of Object.values(m.sites)) drawSite(st);
+    for (const s of Object.values(CL.content.table('settlements'))) drawSettlement(s, s.id === w.location);
+
+    // Journey line.
+    const [px, py] = toPx(w.x, w.y);
+    if (g.travel) {
+      const [tx, ty] = toPx(g.travel.x, g.travel.y);
+      ctx.save();
+      ctx.strokeStyle = '#fff3cf';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([6, 5]);
+      ctx.beginPath();
+      ctx.moveTo(px, py);
+      ctx.lineTo(tx, ty);
+      ctx.stroke();
+      ctx.restore();
+      ctx.strokeStyle = '#fff3cf';
+      ctx.beginPath();
+      ctx.arc(tx, ty, 5, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    // Party marker: the hero sprite, walking while travelling; stands beside a settlement's icon.
+    const [mx, my] = w.location ? [px - 22, py + 4] : [px, py];
+    const frames = CL.assets.heroFrames[g.travel ? g.travelFace : 'down'];
+    const frame = g.travel ? frames[Math.floor(performance.now() / 160) % frames.length] : frames[0];
+    ctx.fillStyle = '#00000055';
+    ctx.beginPath();
+    ctx.ellipse(mx, my + 2, 10, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+    drawImage(CL.assets.key('u', frame), mx - 13, my - 32, 26, 33);
+
+    updateMapHud();
+  }
+
+  function updateMapHud() {
+    const c = CL.campaign;
+    const w = c.world;
+    const $ = CL.ui.$;
+    const here = w.location ? CL.content.get('settlements', w.location).name : null;
+    const ground = { road: 'on the road', grass: 'open country', forest: 'in the forest' }[CL.world.terrainAt(w.x, w.y)];
+    $('#hptext').textContent = here ? `At ${here}` : CL.game.travel ? `Travelling, ${ground}` : `Camped, ${ground}`;
+    const wounded = CL.party.woundedSoldiers().length;
+    $('#summary').textContent =
+      `${CL.world.clockLabel()} · ${c.gold} crowns · ${c.roster.length} soldiers${wounded ? ` (${wounded} wounded)` : ''}`;
+  }
+
   function draw() {
     const g = CL.game;
     ctx.clearRect(0, 0, W, H);
+    if (g.mode !== 'battle' && g.mode !== 'result') {
+      drawWorld();
+      if (performance.now() > g.messageUntil) CL.ui.$('#message').textContent = '';
+      return;
+    }
     drawGround();
 
     const chars = [...g.allies, ...g.enemies];

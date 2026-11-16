@@ -1,4 +1,4 @@
-# Crownless 0.5.0 — Gate B: The Captain's Trial
+# Crownless 0.6.0 — The Border March
 
 A single-player, top-down party-battle prototype in plain HTML5 Canvas and classic JavaScript. There's no bundler, no runtime dependencies and no server. It's published to GitHub Pages straight from `main`.
 
@@ -8,21 +8,24 @@ A single-player, top-down party-battle prototype in plain HTML5 Canvas and class
 
 ## What is playable
 
-- Hire Valedorn Levies (15 crowns) and Hunters (25 crowns), up to 15 soldiers in total, including wounded ones. Every troop's stats come from `data/troops.js`.
+- Travel the Border March, a strategic map with 10 settlements. Click or tap to travel; roads are faster and forests slower, and time passes as you go.
+- Enter settlements to hire troops and rest. Valedorn towns train Levies and Hunters, Aurelian towns train Recruits and Skirmishers. You can have up to 15 soldiers, wounded ones included, and every troop's stats come from `data/troops.js`.
+- Attack the Reaver Hideout from the map. Clearing it keeps it empty for 3 days.
 - Real-time four-direction hero movement. Sword swings have a visible windup, a strike window and a recovery, and hit everything in a 90° arc in front of you.
 - A frontal shield block that covers 120°. It can't cancel a swing you've already started, and enemy windups are drawn in red so you know when to block.
 - Allied infantry and archers fight alongside you, and archers fire arrows.
 - Pick a group with **1** (infantry) or **2** (archers), then give an order: **F** Follow, **H** Hold or **C** Charge.
-- Two waves of Road Reavers (Looters and Reavers, defined in `data/encounters.js`), ending in victory or capture. Armor reduces damage, and archers sometimes miss.
-- Win gold, renown and loot, which goes into your pack. If you're captured you lose 20% of your crowns and one item.
-- Casualties: 35% of fallen soldiers are killed and the rest are wounded for 2 campaign days. Rest at camp to pass the time.
+- The battle is two waves of Road Reavers (Looters and Reavers, defined in `data/encounters.js`) and ends in victory or capture. Armor reduces damage, and archers sometimes miss.
+- Win gold, renown and loot, which goes into your pack. If you're captured you lose 20% of your crowns and one item, then you're released near a settlement half a day later.
+- Casualties: 35% of fallen soldiers are killed and the rest are wounded for 2 campaign days. Travelling or resting passes the time.
 - The game auto-saves in the browser and keeps a backup of the previous save. Saves from 0.3 and 0.4 are converted automatically. A diagnostics panel (F3) shows logs and can export them as JSON or TXT.
 - Landscape phone controls: joystick, Attack, Block and an Orders menu above them. The game pauses when you switch away and asks you to rotate in portrait.
-- Gate details and playtest checklists: [`docs/GATE-A-VALIDATION.md`](docs/GATE-A-VALIDATION.md), [`docs/GATE-B-VALIDATION.md`](docs/GATE-B-VALIDATION.md)
+- Gate details and playtest checklists: [`docs/GATE-A-VALIDATION.md`](docs/GATE-A-VALIDATION.md), [`docs/GATE-B-VALIDATION.md`](docs/GATE-B-VALIDATION.md), [`docs/GATE-C-VALIDATION.md`](docs/GATE-C-VALIDATION.md)
 
 | Action | Desktop | Touch |
 |---|---|---|
-| Move | WASD / arrows | Left joystick |
+| Travel (map) | Click a place; Space halts | Tap a place |
+| Move (battle) | WASD / arrows | Left joystick |
 | Attack | Space / left click | Attack |
 | Block | Shift / right click | Hold Block |
 | Orders | 1 or 2 group, F/H/C order | Orders |
@@ -43,11 +46,12 @@ js/               game runtime, attached to window.Crownless
   units.js        units built from troop data, swing phases, facing, movement
   combat.js       waves, attacks, AI, arrows, win/loss
   party.js        recruiting, day clock, wounded recovery, battle results and loot
+  world.js        strategic map: travel, terrain, settlements, sites, capture release
   ui.js           overlays, roster, pause, diagnostics panel
-  render.js       canvas drawing and HUD
+  render.js       canvas drawing (battle and world map) and HUD
   input.js        keyboard, mouse, touch buttons, joystick
   main.js         boot and main loop (loads last)
-data/             content definitions (window.CROWNLESS_CONTENT): troops, encounters, items…
+data/             content definitions (window.CROWNLESS_CONTENT): troops, encounters, world map, items…
 assets/           sprite PNGs (u#### units, w#### world tiles)
 tests/            node:test suite (no dependencies)
 ```
@@ -80,4 +84,4 @@ On every push to `main`, [`.github/workflows/deploy.yml`](.github/workflows/depl
 
 ## Known limits
 
-This is Gate B, not the full campaign. There is no strategic map, trading, food or wages, quests or save export/import yet, and no cavalry. Loot can be collected but not used or sold until inventory and trading arrive in Gate C. Ally commands are simple, not a formation system. The sprite crops come from the Sprite Studio assets, and some animations are not yet hand-aligned. Browser saves can be cleared by the browser.
+This is the first slice of Gate C, not the full campaign. There is no trading, food or wages, character creation, moving bandit or patrol parties, quests or save export/import yet, and no cavalry. Loot can be collected but not used or sold until inventory and trading arrive. Ally commands are simple, not a formation system. The sprite crops come from the Sprite Studio assets, and some animations are not yet hand-aligned. Browser saves can be cleared by the browser.

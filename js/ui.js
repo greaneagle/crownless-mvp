@@ -6,18 +6,45 @@
 
   const MESSAGE_MS = 2500;
 
-  const SCREENS = {
-    camp: {
-      title: 'THE CAPTAIN’S CAMP',
-      text: 'Hire soldiers, rest your wounded, then lead your party against the Road Reavers. Gold, soldiers and loot persist between battles.',
-      button: 'Begin Battle',
-    },
-    title: {
+  const TYPE_LABEL = { town: 'Market town', fort: 'Fortress', village: 'Village' };
+
+  /** Overlay copy for each mode. Map and battle hide the overlay entirely. */
+  function screenFor(mode) {
+    const g = CL.game;
+    if (mode === 'result') {
+      return {
+        title: g.result.win ? 'VICTORY' : 'CAPTURED',
+        text: g.result.win
+          ? 'The reavers have been routed. Your surviving soldiers gather the spoils.'
+          : 'Your party was broken. You were held for half a day, then released without some of your crowns and gear.',
+        button: 'Continue',
+      };
+    }
+    if (mode === 'settlement') {
+      const s = CL.party.currentSettlement();
+      const owner = CL.content.get('factions', s.ownerFaction);
+      return {
+        title: s.name.toUpperCase(),
+        text: `${TYPE_LABEL[s.type] || s.type} of the ${owner.name}. ${CL.world.clockLabel()}.`,
+        button: 'Leave',
+      };
+    }
+    if (mode === 'encounter') {
+      const st = CL.world.map().sites[g.siteId];
+      const ready = CL.party.healthySoldiers().length;
+      return {
+        title: st.name.toUpperCase(),
+        text: `${st.text} You have ${ready} soldier${ready === 1 ? '' : 's'} fit to fight.`,
+        button: 'Attack',
+        secondary: 'Leave',
+      };
+    }
+    return {
       title: 'CROWNLESS',
-      text: 'Gate B: Lead a band of infantry and archers, issue tactical commands, and win two waves of battle.',
-      button: 'Prepare Party',
-    },
-  };
+      text: 'The Border March: travel between towns, hire soldiers, and break the Road Reavers who prey on the roads.',
+      button: CL.campaign.battles || CL.campaign.day ? 'Continue' : 'Set out',
+    };
+  }
 
   function message(text) {
     CL.game.message = text;
@@ -29,28 +56,25 @@
   function changeMode(mode) {
     const g = CL.game;
     g.mode = mode;
-    $('#overlay').classList.remove('hidden');
-    $('#prep').classList.toggle('hidden', mode !== 'camp');
-    $('#result').classList.toggle('hidden', mode !== 'result');
-    $('#secondaryBtn').classList.add('hidden');
-
-    let screen;
-    if (mode === 'result') {
-      screen = {
-        title: g.result.win ? 'VICTORY' : 'CAPTURED',
-        text: g.result.win
-          ? 'The reavers have been routed. Your surviving soldiers gather the spoils.'
-          : 'Your party was broken. You escaped captivity, but lost supplies and crowns.',
-        button: 'Return to Camp',
-      };
-      $('#result').innerHTML = g.result.html;
-    } else {
-      screen = SCREENS[mode] || SCREENS.title;
+    $('#stage').dataset.mode = mode;
+    $('#ordersPanel').classList.add('hidden');
+    if (mode === 'map') {
+      $('#overlay').classList.add('hidden');
+      g.messageUntil = 0; // drop leftover battle/menu messages
+      $('#message').textContent = '';
+      return;
     }
+    $('#overlay').classList.remove('hidden');
+    $('#prep').classList.toggle('hidden', mode !== 'settlement');
+    $('#result').classList.toggle('hidden', mode !== 'result');
+    const screen = screenFor(mode);
+    if (mode === 'result') $('#result').innerHTML = g.result.html;
     $('#overlayTitle').textContent = screen.title;
     $('#overlayText').textContent = screen.text;
     $('#primaryBtn').textContent = screen.button;
-    if (mode === 'camp') refreshRoster();
+    $('#secondaryBtn').classList.toggle('hidden', !screen.secondary);
+    if (screen.secondary) $('#secondaryBtn').textContent = screen.secondary;
+    if (mode === 'settlement') refreshRoster();
   }
 
   function refreshRoster() {
@@ -83,15 +107,24 @@
     const items = p.describeItems(c.inventory);
     $('#inventory').textContent = items ? `Pack: ${items}` : 'Pack: empty';
 
-    const [levy, hunter] = p.RECRUITABLE.map((id) => CL.content.troop(id));
-    $('#recruitInf').textContent = `Recruit ${levy.name.toLowerCase()} · ${levy.recruitCost} crowns`;
-    $('#recruitArch').textContent = `Recruit ${hunter.name.toLowerCase()} · ${hunter.recruitCost} crowns`;
-    $('#recruitInf').disabled = !p.canRecruit(c, levy.id);
-    $('#recruitArch').disabled = !p.canRecruit(c, hunter.id);
-    $('#restBtn').disabled = !c.roster.some((s) => s.woundedUntil !== null);
+    // Recruit buttons: one per troop the settlement's owner offers (hidden when none).
+    const offers = p.recruitsHere();
+    ['#recruitA', '#recruitB'].forEach((sel, i) => {
+      const b = $(sel);
+      const id = offers[i];
+      b.classList.toggle('hidden', !id);
+      if (!id) return;
+      const t = CL.content.troop(id);
+      b.dataset.troop = id;
+      b.textContent = `Hire ${t.name} · ${t.recruitCost} crowns`;
+      b.disabled = !p.canRecruit(c, id);
+    });
+    $('#restBtn').classList.toggle('hidden', !p.canRest());
+    $('#serviceNote').textContent = offers.length ? '' : 'No one here is looking to take up arms.';
   }
 
   function hideBattleOverlays() {
+    $('#stage').dataset.mode = 'battle';
     $('#overlay').classList.add('hidden');
     $('#ordersPanel').classList.add('hidden');
   }

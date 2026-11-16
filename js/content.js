@@ -14,6 +14,7 @@
     'dialogue',
     'battle_maps',
     'encounters',
+    'world_map',
   ];
 
   const raw = () => root.CROWNLESS_CONTENT || {};
@@ -61,6 +62,20 @@
 
     for (const s of Object.values(C.settlements || {})) {
       if (!C.factions?.[s.ownerFaction]) err(`settlement ${s.id}: unknown owner ${s.ownerFaction}`);
+    }
+    for (const f of Object.values(C.factions || {})) {
+      for (const t of f.recruits || []) if (!C.troops?.[t]) err(`faction ${f.id}: unknown recruit ${t}`);
+    }
+    for (const m of Object.values(C.world_map || {})) {
+      if (!C.settlements?.[m.startSettlement]) err(`world_map ${m.id}: unknown start ${m.startSettlement}`);
+      for (const road of m.roads || []) {
+        for (const id of road) if (!C.settlements?.[id]) err(`world_map ${m.id}: road through unknown ${id}`);
+      }
+      for (const k of ['road', 'grass', 'forest']) if (!(m.terrain?.[k] > 0)) err(`world_map ${m.id}: bad terrain ${k}`);
+      for (const [key, st] of Object.entries(m.sites || {})) {
+        if (st.id !== key) err(`world_map ${m.id}: site ${key} has id ${st.id}`);
+        if (!C.encounters?.[st.encounter]) err(`world_map ${m.id}: site ${key} unknown encounter ${st.encounter}`);
+      }
     }
     for (const q of Object.values(C.quests || {})) {
       if (!C.dialogue?.[q.giver]) err(`quest ${q.id}: no dialogue for giver ${q.giver}`);

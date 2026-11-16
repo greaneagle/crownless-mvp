@@ -20,3 +20,9 @@
 #rosterSummary{font-weight:bold}
 #rosterList{list-style:none;margin:8px auto;padding:0;font-size:clamp(12px,1.25vw,15px);line-height:1.5}
 #inventory{font-size:clamp(11px,1.15vw,14px);color:#d9c8a2;margin-bottom:4px}
+
+/* 0.6.0 — Gate C world map: battle-only HUD pieces hide outside battle */
+#stage:not([data-mode="battle"]) #touch,#stage:not([data-mode="battle"]) #pauseBtn,#stage:not([data-mode="battle"]) #ordersPanel{display:none}
+#stage:not([data-mode="battle"]) #hpbar{display:none}
+#stage[data-mode="map"] #game{cursor:pointer}
+#serviceNote{font-size:12px;color:#c9ae7a;min-height:0}

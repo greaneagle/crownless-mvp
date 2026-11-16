@@ -1,6 +1,6 @@
 # Crownless — Project Status & Roadmap
 
-_Last reviewed: 2026-11-16 · Build 0.5.0 · Spec: `Crownless_MVP_GDD_v1.md` (engine overridden: HTML5 Canvas + classic JS, no bundler, GitHub Pages)._
+_Last reviewed: 2026-11-16 · Build 0.6.0 · Spec: `Crownless_MVP_GDD_v1.md` (engine overridden: HTML5 Canvas + classic JS, no bundler, GitHub Pages)._
 
 This replaces the opencode-swarm plan (`.swarm/plan.md`, removed). The gate structure (A→E) is kept from the GDD; the task list is condensed and re-ordered around what the code actually needs.
 
@@ -19,7 +19,7 @@ This replaces the opencode-swarm plan (`.swarm/plan.md`, removed). The gate stru
 ### Gate status vs GDD
 - **Gate A (combat feel)** — implemented to GDD §6 in 0.4.0 (phased swings, 90°/120° arcs, input buffer, telegraphs, auto-pause, portrait prompt). Awaiting a real-phone playtest; see `docs/GATE-A-VALIDATION.md`.
 - **Gate B (party battle)** — done in 0.5.0: troops, waves and loot come from `data/`, armor formula, archer accuracy, per-soldier save v2 with migration/backup, 2-day wound recovery on a day clock. Only return-to-map is left, and it opens Gate C.
-- **Gates C–E** — not started (no world map, character, inventory, trade, upkeep, quests, export/import, audio, tutorial).
+- **Gate C** — in progress: world map, travel and settlement menus done (0.6.0). **Gates D–E** — not started.
 
 ### Problems to fix early
 1. **`game.js` is minified source.** Every feature from here touches it; it is unreadable for review and hostile to AI-assisted edits. De-minify and split before adding systems.
@@ -56,10 +56,10 @@ Each step should leave the game deployable. Bold items are the critical path.
 - [x] 2.5 Minimal campaign clock (days) so wounded recover after 2 days, not on "Return to Camp".
 - [x] 2.6 Record `docs/GATE-B-VALIDATION.md`. (Return-to-map moves to Gate C step 1.)
 
-### Phase 3 — Gate C (two-town campaign loop) — the big one
+### Phase 3 — Gate C (two-town campaign loop) — in progress, see `docs/GATE-C-VALIDATION.md`
 Order chosen so each step is playable:
-1. World map screen: Stonebridge + Eastwatch + a few villages, click/tap travel, time advancing (`Speed = 4 × terrain × load`).
-2. Settlement menu (Recruit / Trade / Rest / Contracts / Leave).
+1. ✅ (0.6.0) World map screen: all 10 settlements, click/tap travel, time advancing (`Speed = 4 × terrain × load`), Reaver hideout site, return to map after battle.
+2. 🟡 (0.6.0) Settlement menu: Recruit (by owner faction), Rest, Leave done; Trade and Contracts arrive with steps 5 and 9.
 3. Character creation (name, look, 3 backgrounds) + inventory/equipment using `data/items.js`.
 4. Food & weekly wages, morale/desertion.
 5. Trading with scarcity formula (6 goods).

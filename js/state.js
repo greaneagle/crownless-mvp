@@ -27,6 +27,10 @@
     message: '',
     messageUntil: 0,
     nextEnemyId: 1,
+    travel: null, // current journey target on the world map
+    travelFace: 'down',
+    siteId: null, // map site whose encounter is open or being fought
+    releasedAt: null, // settlement id after a capture, for the release message
   };
 
   CL.campaign = null;

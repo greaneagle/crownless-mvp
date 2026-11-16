@@ -7,7 +7,7 @@ const vm = require('node:vm');
 const ROOT = path.join(__dirname, '..', '..');
 
 // Logic modules only (no render/input/main — those need a real DOM).
-const LOGIC_MODULES = ['core', 'content', 'state', 'save', 'assets', 'units', 'combat', 'party'];
+const LOGIC_MODULES = ['core', 'content', 'state', 'save', 'assets', 'units', 'combat', 'party', 'world'];
 const CONTENT_MODULES = [
   'factions',
   'settlements',
@@ -18,6 +18,7 @@ const CONTENT_MODULES = [
   'dialogue',
   'battle_maps',
   'encounters',
+  'world_map',
 ];
 
 function memoryStorage(initial = {}) {

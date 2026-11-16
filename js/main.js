@@ -18,6 +18,7 @@
       const dt = (ts - last) / 1000;
       last = ts;
       CL.combat.update(dt);
+      CL.world.update(dt);
       CL.render.draw();
       diag.frames++;
       if (ts - diag.lastFps > 1000) {

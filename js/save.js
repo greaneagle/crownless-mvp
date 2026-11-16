@@ -34,6 +34,7 @@
       roster: [],
       inventory: {},
       lastResolvedBattle: 0,
+      world: CL.world.defaultState(), // map position, current settlement, site timers
     };
     for (const t of ['levy', 'levy', 'levy', 'hunter', 'hunter']) addSoldier(c, t);
     return c;
@@ -70,6 +71,7 @@
     }
     const maxId = s.roster.reduce((m, e) => Math.max(m, e.id), 0);
     s.nextSoldierId = Math.max(maxId + 1, count(d.nextSoldierId, 1));
+    s.world = CL.world.sanitize(d.world);
     s.inventory = {};
     if (d.inventory && typeof d.inventory === 'object') {
       for (const [id, n] of Object.entries(d.inventory)) {
