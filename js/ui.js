@@ -49,6 +49,14 @@
         secondary: g.newGame ? 'Back' : null,
       };
     }
+    if (mode === 'trade') {
+      const s = CL.party.currentSettlement();
+      return {
+        title: `${s.name.toUpperCase()} MARKET`,
+        text: 'Buy where goods are cheap, sell where they are dear. Prices move as you trade and settle back over the days.',
+        button: 'Back',
+      };
+    }
     if (mode === 'character') {
       const ch = CL.campaign.character;
       const bg = CL.content.get('backgrounds', ch.background);
@@ -86,6 +94,7 @@
     $('#result').classList.toggle('hidden', mode !== 'result');
     $('#create').classList.toggle('hidden', mode !== 'create');
     $('#sheet').classList.toggle('hidden', mode !== 'character');
+    $('#tradeScreen').classList.toggle('hidden', mode !== 'trade');
     const screen = screenFor(mode);
     if (mode === 'result') $('#result').innerHTML = g.result.html;
     $('#overlayTitle').textContent = screen.title;
@@ -96,6 +105,71 @@
     if (mode === 'settlement') refreshRoster();
     if (mode === 'create') renderCreator();
     if (mode === 'character') renderSheet();
+    if (mode === 'trade') renderTrade();
+  }
+
+  // ---- Market ----
+
+  function tradeAction(fn) {
+    const r = fn();
+    if (r.ok) CL.save.write();
+    else message(r.reason);
+    renderTrade();
+  }
+
+  function renderTrade() {
+    const c = CL.campaign;
+    const T = CL.trade;
+    const sid = c.world.location;
+    const weight = T.cargoWeight(c);
+    const cap = T.capacity(c);
+    const slow = Math.round((1 - T.loadFactor(c)) * 100);
+    $('#tradeHeader').textContent =
+      `${c.gold} crowns · Cargo ${weight}/${cap} weight${slow ? ` (travel ${slow}% slower)` : ''}`;
+
+    const btn = (label, disabled, onClick) => {
+      const b = Object.assign(document.createElement('button'), { type: 'button', textContent: label, disabled });
+      b.onclick = onClick;
+      return b;
+    };
+    $('#tradeGoods').replaceChildren(
+      ...T.goods().map((g) => {
+        const have = c.cargo[g.id] || 0;
+        const buyP = T.unitBuyPrice(c, sid, g.id);
+        const sellP = T.unitSellPrice(c, sid, g.id);
+        const card = Object.assign(document.createElement('div'), { className: 'tradeCard' });
+        const word = T.priceWord(T.scarcity(c, sid, g.id));
+        const head = Object.assign(document.createElement('div'), { className: 'tradeHead' });
+        head.append(
+          Object.assign(document.createElement('b'), { textContent: `${g.icon} ${g.name}` }),
+          Object.assign(document.createElement('span'), { className: `tag ${word}`, textContent: word }),
+        );
+        const info = Object.assign(document.createElement('div'), {
+          className: 'tradeInfo',
+          textContent: `Buy ${buyP} · Sell ${sellP} · You have ${have} (wt ${g.weight} each)`,
+        });
+        const row = Object.assign(document.createElement('div'), { className: 'tradeBtns' });
+        row.append(
+          btn('Buy 1', c.gold < buyP, () => tradeAction(() => T.buy(c, sid, g.id, 1))),
+          btn('Buy 5', c.gold < T.quote(c, sid, g.id, 5, 'buy').total, () => tradeAction(() => T.buy(c, sid, g.id, 5))),
+          btn('Sell 1', !have, () => tradeAction(() => T.sell(c, sid, g.id, 1))),
+          btn(`Sell all`, !have, () => tradeAction(() => T.sell(c, sid, g.id, have))),
+        );
+        card.append(head, info, row);
+        return card;
+      }),
+    );
+
+    const gear = Object.entries(c.inventory).filter(([id]) => T.gearPrice(c, id) > 0);
+    $('#tradeGear').replaceChildren(
+      ...(gear.length
+        ? gear.map(([id, n]) =>
+            li(`${n > 1 ? `${n}× ` : ''}${CL.content.item(id).name}`, `Sell · ${T.gearPrice(c, id)}`, () =>
+              tradeAction(() => T.sellGear(c, sid, id)),
+            ),
+          )
+        : [li('Nothing to sell. Equipped gear must be removed first; quest items cannot be sold.')]),
+    );
   }
 
   /** Re-render whichever menu screen is open (after a debug change, equip, etc.). */
@@ -309,6 +383,7 @@
       b.disabled = !p.canRecruit(c, id);
     });
     $('#restBtn').classList.toggle('hidden', !p.canRest());
+    $('#tradeBtn').classList.toggle('hidden', !CL.trade.hasMarket(c.world.location));
     $('#serviceNote').textContent = offers.length ? '' : 'No one here is looking to take up arms.';
   }
 

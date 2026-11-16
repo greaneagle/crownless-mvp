@@ -65,6 +65,15 @@
     for (const s of Object.values(C.settlements || {})) {
       if (!C.factions?.[s.ownerFaction]) err(`settlement ${s.id}: unknown owner ${s.ownerFaction}`);
     }
+    const tradeGoods = Object.values(C.markets || {}).filter((g) => g.tradeGood);
+    if (tradeGoods.length !== 6) err(`markets: expected 6 trade goods, found ${tradeGoods.length}`);
+    for (const s of Object.values(C.settlements || {})) {
+      if (!s.services?.includes('trade')) continue;
+      for (const g of tradeGoods) {
+        const v = s.market?.[g.id];
+        if (!(v >= 0.8 && v <= 1.4)) err(`settlement ${s.id}: market scarcity for ${g.id} must be 0.8–1.4`);
+      }
+    }
     for (const f of Object.values(C.factions || {})) {
       for (const t of f.recruits || []) if (!C.troops?.[t]) err(`faction ${f.id}: unknown recruit ${t}`);
     }

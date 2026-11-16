@@ -9,10 +9,10 @@ Gate C is delivered in slices. This file records each one.
 | Roadmap step | Status |
 |---|---|
 | 1. World map, click/tap travel, time advancing | ✅ 0.6.0 |
-| 2. Settlement menu (Recruit / Trade / Rest / Contracts / Leave) | 🟡 0.6.0: Recruit, Rest and Leave work. Trade (step 5) and Contracts (step 9) are still to come. |
+| 2. Settlement menu (Recruit / Trade / Rest / Contracts / Leave) | 🟡 Recruit, Rest and Leave (0.6.0), and Market (0.9.0) work. Contracts (step 9) is still to come. |
 | 3. Character creation + inventory/equipment | ✅ 0.7.0. Hairstyles wait for art. |
 | 4. Food & weekly wages, morale/desertion | ✅ 0.8.0 |
-| 5. Trading (6 goods, scarcity) | ⬜ |
+| 5. Trading (6 goods, scarcity) | ✅ 0.9.0. Caravans moving prices arrive with step 6. |
 | 6. World parties + encounter options (Attack / Negotiate / Retreat / Auto-resolve) | ⬜ The static Reaver hideout stands in for now |
 | 7. Capture on defeat | 🟡 0.6.0: released near a settlement after half a day. Loss of crowns and an item came in Gate B. |
 | 8. Player XP/levels/skills; troop upgrades; party-cap formula | ⬜ |
@@ -21,6 +21,50 @@ Gate C is delivered in slices. This file records each one.
 | 11. Gate C acceptance | ⬜ |
 
 ---
+
+## Slice 4 — 0.9.0: Trading (2026-11-16)
+
+### Rules (GDD §9)
+- **Goods:** six trade goods (grain, salt, wool, iron, cloth, tools), with base prices and weight from `data/markets.js`. The emoji icons are placeholders until the art pass.
+- **Markets:**
+  - The 8 settlements with the trade service (both towns and all six villages; forts have none) each get a baseline **scarcity** per good in `data/settlements.js`, between 0.8 (plentiful) and 1.4 (scarce).
+  - The baselines follow each place's character: farm villages have cheap grain and wool, Highmere's hills cheap iron, Saltmere cheap salt, and the Eastwatch river port cheap cloth and tools.
+- **Prices:**
+  - Buy = `round(Base × Scarcity × (1 − 0.01 × Trade))`.
+  - Sell = `round(Base × Scarcity × 0.75 × (1 + 0.01 × Trade))`.
+  - **Deviation:** the GDD bases the sell price on the discounted buy price, which would make Trade *lower* sale prices. Here Trade helps both ways.
+  - The market labels each price **cheap, fair or dear**.
+- **No same-town exploit:**
+  - Each unit bought raises that town's scarcity by 0.003, and each unit sold lowers it, clamped to 0.8–1.4.
+  - A **rounding guard** keeps a unit's sell price at least 1 crown below what buying it one step earlier cost. So a buy-then-sell round trip in one town loses money, whatever the good, town, quantity or Trade level. This was proven by a brute-force test, which caught a break-even case before the guard existed.
+- **Restock:** markets close 10% of the gap to their baseline each day. Caravan arrivals and bandit losses moving prices come with step 6.
+- **Cargo:**
+  - Carrying capacity is 20, plus 10 per soldier, plus 30 with a horse.
+  - The GDD's **PartyLoadFactor** slows travel linearly, down to 70% speed at full load.
+  - The map HUD shows cargo, and the market header shows the slowdown.
+- **Selling gear:** pack items sell for half their value, adjusted by Trade. **Quest items can't be sold** (GDD §9), and equipped gear has to be removed first.
+- **Atomic and save-safe:** each purchase or sale is checked in full (gold, carrying capacity, stock) before anything changes, then saved.
+- **Saves:** `markets` and `cargo` are sanitized (values clamped, unknown towns and goods dropped). Older saves get the baseline markets.
+- **Debug:** a **Trade** section with "+5 of each good" and "Reset prices".
+
+### Tuning done during this slice
+The first per-unit price impact (0.01) made trading pointless: the best routes earned 12–14 crowns, and anything over about 15 units lost money. A route simulator showed this, so the impact was lowered to 0.003. Now the best 30-unit run (salt from Saltmere to Oakford or Brackenfield) earns about 51 crowns, roughly one Looter Camp fight. Trading is worthwhile without beating combat.
+
+### Verification
+- **Automated:** `npm test` → 102/102. The new `tests/trade.test.js` (10 tests) covers:
+  - the goods list and which places have markets
+  - the price formula with Trade
+  - **no round-trip exploit**: 8 towns × 6 goods × 3 quantities × 3 Trade levels
+  - a profitable cross-town route
+  - price movement, clamping and daily restock, and restock driven by the clock
+  - all-or-nothing transactions
+  - capacity and the load factor's effect on map speed
+  - gear sales and quest-item protection
+  - save validation
+- **Browser:**
+  - **Desktop:** at the Eastwatch market, buying 15 cloth moved its price from 27 to 32 (the old tuning). Cargo showed 15/20 and "travel 23% slower", and the worn sword sold for 6.
+  - **At 812×375:** bought 20 salt in Saltmere for 298, which loaded the party to 20/20 (30% slower). The trip to Oakford took 17.1 h, and selling there earned 342, **+44 profit**.
+  - The market cards stay readable, and the modal scrolls on a phone. No errors were logged.
 
 ## Slice 3 — 0.8.0: Food, wages, morale (2026-11-16)
 

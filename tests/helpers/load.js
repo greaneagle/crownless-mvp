@@ -7,7 +7,7 @@ const vm = require('node:vm');
 const ROOT = path.join(__dirname, '..', '..');
 
 // Logic modules only (no render/input/main — those need a real DOM).
-const LOGIC_MODULES = ['core', 'content', 'state', 'save', 'assets', 'units', 'combat', 'party', 'upkeep', 'world', 'character', 'debug'];
+const LOGIC_MODULES = ['core', 'content', 'state', 'save', 'assets', 'units', 'combat', 'party', 'upkeep', 'trade', 'world', 'character', 'debug'];
 const CONTENT_MODULES = [
   'factions',
   'settlements',

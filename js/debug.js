@@ -156,6 +156,14 @@
       case 'item':
         addItem($('#cheatItem').value);
         break;
+      case 'cargo':
+        for (const g of CL.trade.goods()) c().cargo[g.id] = (c().cargo[g.id] || 0) + 5;
+        log('cargo', { added: 5 });
+        break;
+      case 'markets':
+        c().markets = CL.trade.defaultMarkets();
+        log('markets reset');
+        break;
       case 'food':
         addFood(n);
         break;

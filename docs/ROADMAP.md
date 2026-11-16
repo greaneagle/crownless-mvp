@@ -1,6 +1,6 @@
 # Crownless — Project Status & Roadmap
 
-_Last reviewed: 2026-11-16 · Build 0.8.0 · Spec: `Crownless_MVP_GDD_v1.md` (engine overridden: HTML5 Canvas + classic JS, no bundler, GitHub Pages)._
+_Last reviewed: 2026-11-16 · Build 0.9.0 · Spec: `Crownless_MVP_GDD_v1.md` (engine overridden: HTML5 Canvas + classic JS, no bundler, GitHub Pages)._
 
 This replaces the opencode-swarm plan (`.swarm/plan.md`, removed). The gate structure (A→E) is kept from the GDD; the task list is condensed and re-ordered around what the code actually needs.
 
@@ -19,7 +19,7 @@ This replaces the opencode-swarm plan (`.swarm/plan.md`, removed). The gate stru
 ### Gate status vs GDD
 - **Gate A (combat feel)** — implemented to GDD §6 in 0.4.0 (phased swings, 90°/120° arcs, input buffer, telegraphs, auto-pause, portrait prompt). Awaiting a real-phone playtest; see `docs/GATE-A-VALIDATION.md`.
 - **Gate B (party battle)** — done in 0.5.0: troops, waves and loot come from `data/`, armor formula, archer accuracy, per-soldier save v2 with migration/backup, 2-day wound recovery on a day clock. Only return-to-map is left, and it opens Gate C.
-- **Gate C** — in progress: world map, travel and settlement menus (0.6.0); character creation, equipment and debug tools (0.7.0); food, wages and morale (0.8.0). **Gates D–E** — not started.
+- **Gate C** — in progress: world map, travel and settlement menus (0.6.0); character creation, equipment and debug tools (0.7.0); food, wages and morale (0.8.0); trading (0.9.0). **Gates D–E** — not started.
 
 ### Problems to fix early
 1. **`game.js` is minified source.** Every feature from here touches it; it is unreadable for review and hostile to AI-assisted edits. De-minify and split before adding systems.
@@ -62,7 +62,7 @@ Order chosen so each step is playable:
 2. 🟡 (0.6.0) Settlement menu: Recruit (by owner faction), Rest, Leave done; Trade and Contracts arrive with steps 5 and 9.
 3. ✅ (0.7.0) Character creation (name, presentation, cloak colour, 3 backgrounds) + 8-slot equipment and pack; HP/damage/armor/shield/travel take effect. Debug tools panel added for testing.
 4. ✅ (0.8.0) Food rations, weekly wages, morale and desertion, with HUD/menu warnings.
-5. Trading with scarcity formula (6 goods).
+5. ✅ (0.9.0) Trading: 6 goods, per-town scarcity, exploit-proof pricing, cargo weight slowing travel, selling gear.
 6. World parties (patrols, caravan, bandits) + encounter screen: Attack / Negotiate / Retreat / Auto-resolve (seeded).
 7. Capture on defeat (−20 % crowns, release near settlement).
 8. Player XP/levels/skills; troop XP upgrades; party cap formula.

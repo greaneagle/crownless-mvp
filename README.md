@@ -1,4 +1,4 @@
-# Crownless 0.8.0 — The Border March
+# Crownless 0.9.0 — The Border March
 
 A single-player, top-down party-battle prototype in plain HTML5 Canvas and classic JavaScript. There's no bundler, no runtime dependencies and no server. It's published to GitHub Pages straight from `main`.
 
@@ -20,8 +20,9 @@ A single-player, top-down party-battle prototype in plain HTML5 Canvas and class
 - The battle is two waves of Road Reavers (Looters and Reavers, defined in `data/encounters.js`) and ends in victory or capture. Armor reduces damage, and archers sometimes miss.
 - Win gold, renown and loot, which goes into your pack. If you're captured you lose 20% of your crowns and one item, then you're released near a settlement half a day later.
 - Casualties: 35% of fallen soldiers are killed and the rest are wounded for 2 campaign days. Travelling or resting passes the time.
+- **Trade:** buy goods where they're cheap and sell them where they're dear. There are six goods, every market prices them differently, prices move as you trade and settle back over time, and a heavy cargo slows you down. You can also sell spare gear from your pack.
 - **Upkeep:** your party eats a ration a day for every 5 people, so buy food in towns and villages. Wages are due every 7 days. Running out of food or missing wages lowers morale, and below 25 soldiers start to desert.
-- A **Debug** button next to Logs gives testing shortcuts: crowns, food and morale, soldiers, items, stats, god mode, time, teleport, win or lose a battle, and wiping the save. Every use is logged.
+- A **Debug** button next to Logs gives testing shortcuts: crowns, trade goods and prices, food and morale, soldiers, items, stats, god mode, time, teleport, win or lose a battle, and wiping the save. Every use is logged.
 - The game auto-saves in the browser and keeps a backup of the previous save. Saves from 0.3 and 0.4 are converted automatically. A diagnostics panel (F3) shows logs and can export them as JSON or TXT.
 - Landscape phone controls: joystick, Attack, Block and an Orders menu above them. The game pauses when you switch away and asks you to rotate in portrait.
 - Gate details and playtest checklists: [`docs/GATE-A-VALIDATION.md`](docs/GATE-A-VALIDATION.md), [`docs/GATE-B-VALIDATION.md`](docs/GATE-B-VALIDATION.md), [`docs/GATE-C-VALIDATION.md`](docs/GATE-C-VALIDATION.md)
@@ -51,6 +52,7 @@ js/               game runtime, attached to window.Crownless
   combat.js       waves, attacks, AI, arrows, win/loss
   party.js        recruiting, day clock, wounded recovery, battle results and loot
   upkeep.js       food rations, weekly wages, morale, desertion
+  trade.js        markets, prices, cargo, selling gear
   world.js        strategic map: travel, terrain, settlements, sites, capture release
   character.js    hero creation, attributes/skills, equipment, derived stats
   debug.js        Debug panel testing tools
@@ -91,4 +93,4 @@ On every push to `main`, [`.github/workflows/deploy.yml`](.github/workflows/depl
 
 ## Known limits
 
-This is the first slice of Gate C, not the full campaign. There is no trading of goods, levelling, moving bandit or patrol parties, quests or save export/import yet, and no cavalry. Loot can be equipped but not sold until trading arrives, and hairstyles wait for sprite art. Ally commands are simple, not a formation system. The sprite crops come from the Sprite Studio assets, and some animations are not yet hand-aligned. Browser saves can be cleared by the browser.
+This is the first slice of Gate C, not the full campaign. There is no levelling, moving bandit or patrol parties, quests or save export/import yet, and no cavalry. Hairstyles wait for sprite art. Ally commands are simple, not a formation system. The sprite crops come from the Sprite Studio assets, and some animations are not yet hand-aligned. Browser saves can be cleared by the browser.

@@ -68,3 +68,21 @@
 #supplies{font-size:clamp(12px,1.25vw,15px);margin-top:4px}
 .warn{color:#ff9f86;font-weight:bold}
 #topLeft.warn{border-color:#e0664f;box-shadow:0 0 0 2px #e0664f66}
+
+/* 0.9.0 — market */
+#tradeScreen{text-align:left;font-size:clamp(12px,1.25vw,15px)}
+#tradeHeader{font-weight:bold;margin-bottom:6px}
+.tradeGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px}
+.tradeCard{border:1px solid #5c4a28;border-radius:6px;padding:6px 8px;background:#0c1823}
+.tradeHead{display:flex;justify-content:space-between;align-items:center}
+.tradeInfo{font-size:12px;color:#d9c8a2;margin:3px 0 5px}
+.tradeBtns{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.tradeBtns button{min-height:44px;padding:4px 2px;font-size:12px}
+.tag{font-size:11px;padding:1px 6px;border-radius:8px;border:1px solid}
+.tag.cheap{color:#9fe0a5;border-color:#4f8a55}
+.tag.fair{color:#d9c8a2;border-color:#6d5a3a}
+.tag.dear{color:#ffb3a1;border-color:#a0503e}
+#tradeScreen h3{margin:10px 0 4px;font-size:15px;color:#ecd6a4}
+#tradeGear{list-style:none;margin:0;padding:0}
+#tradeGear li{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:3px 0;border-bottom:1px solid #ffffff14}
+#tradeGear li button{min-height:40px}

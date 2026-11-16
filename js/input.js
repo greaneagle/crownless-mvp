@@ -40,6 +40,7 @@
         else ui.changeMode(party.currentSettlement() ? 'settlement' : 'map');
       } else if (game.mode === 'create') CL.character.begin(ui.creatorChoices());
       else if (game.mode === 'character') ui.changeMode(game.returnMode);
+      else if (game.mode === 'trade') ui.changeMode('settlement');
       else if (game.mode === 'settlement') world.leaveSettlement();
       else if (game.mode === 'encounter') world.attackSite();
       else if (game.mode === 'result') world.returnToMap();
@@ -62,6 +63,7 @@
       }
     };
     $('#partyBtn').onclick = ui.openSheet;
+    $('#tradeBtn').onclick = () => ui.changeMode('trade');
     $('#gearBtn').onclick = ui.openSheet;
     for (const sel of ['#recruitA', '#recruitB']) $(sel).onclick = (e) => party.recruit(e.currentTarget.dataset.troop);
     for (const sel of ['#buyFoodA', '#buyFoodB']) {

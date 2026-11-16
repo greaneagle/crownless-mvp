@@ -45,6 +45,8 @@
       morale: CL.upkeep.MORALE.start,
       nextWagesDay: CL.upkeep.WAGE_INTERVAL,
       starving: false,
+      markets: CL.trade.defaultMarkets(), // current scarcity per settlement and good
+      cargo: {}, // trade goods carried
     };
     CL.character.applyKit(c, background);
     CL.upkeep.stowFood(c);
@@ -92,6 +94,7 @@
       }
     }
     CL.upkeep.sanitize(s, d); // food, morale, payday (and stows any food items)
+    CL.trade.sanitize(s, d); // market scarcity and cargo
     return s;
   }
 
