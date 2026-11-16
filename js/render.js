@@ -48,6 +48,29 @@
       ctx.ellipse(gr.patch.x, gr.patch.y, gr.patch.rx, gr.patch.ry, 0, 0, Math.PI * 2);
       ctx.fill();
     }
+    for (const r of gr.roads || []) {
+      // Packed-earth streets.
+      ctx.fillStyle = '#a58c62';
+      ctx.fillRect(r.x, r.y, r.w, r.h);
+      ctx.fillStyle = '#00000014';
+      for (let i = 0; i < (r.w * r.h) / 900; i++) ctx.fillRect(r.x + ((i * 53) % r.w), r.y + ((i * 31) % r.h), 5, 3);
+    }
+    if (gr.plaza) {
+      // Cobbled market square.
+      const p = gr.plaza;
+      ctx.fillStyle = '#9c9583';
+      ctx.beginPath();
+      ctx.ellipse(p.x, p.y, p.rx, p.ry, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#00000022';
+      ctx.lineWidth = 1;
+      for (let a = 0; a < Math.PI * 2; a += Math.PI / 10) {
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y);
+        ctx.lineTo(p.x + Math.cos(a) * p.rx, p.y + Math.sin(a) * p.ry);
+        ctx.stroke();
+      }
+    }
     if (gr.stone) {
       // Flagstones inside the courtyard.
       const st = gr.stone;
@@ -77,7 +100,89 @@
   /** Where an obstacle sits in the depth order: its base line. */
   const obstacleBase = (o) => (o.shape === 'circle' ? o.y + o.r * 0.5 : o.y + o.h);
 
+  /** Town buildings: walls, a pitched roof, a door, and an optional sign. */
+  const BUILDING = {
+    tavern: { wall: '#c9b48a', roof: '#7a3b2a', door: '#4a2e1c' },
+    barracks: { wall: '#9a937f', roof: '#3b5a7a', door: '#2e2a22' },
+    house: { wall: '#d7c7a0', roof: '#6f4a2a', door: '#4a2e1c' },
+  };
+
+  function drawBuilding(o) {
+    const s = BUILDING[o.look];
+    const roofH = Math.min(46, o.h * 0.5);
+    const wallTop = o.y + roofH - 6;
+    ctx.fillStyle = '#00000033';
+    ctx.fillRect(o.x + 6, o.y + o.h - 4, o.w, 10);
+    ctx.fillStyle = s.wall;
+    ctx.fillRect(o.x, wallTop, o.w, o.y + o.h - wallTop);
+    ctx.fillStyle = s.roof;
+    ctx.beginPath();
+    ctx.moveTo(o.x - 8, wallTop + 4);
+    ctx.lineTo(o.x + o.w * 0.15, o.y);
+    ctx.lineTo(o.x + o.w * 0.85, o.y);
+    ctx.lineTo(o.x + o.w + 8, wallTop + 4);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = '#1b1208';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.strokeRect(o.x, wallTop, o.w, o.y + o.h - wallTop);
+    // Door and two windows.
+    ctx.fillStyle = s.door;
+    ctx.fillRect(o.x + o.w / 2 - 11, o.y + o.h - 30, 22, 30);
+    ctx.fillStyle = '#f2d98a';
+    ctx.fillRect(o.x + o.w * 0.2, wallTop + 14, 16, 12);
+    ctx.fillRect(o.x + o.w * 0.8 - 16, wallTop + 14, 16, 12);
+    if (o.label) {
+      ctx.fillStyle = '#3a2614';
+      ctx.fillRect(o.x + o.w / 2 - 60, o.y + o.h - 52, 120, 18);
+      label(o.label, o.x + o.w / 2, o.y + o.h - 38, '#f3e3b5');
+    }
+  }
+
+  function drawStall(o) {
+    ctx.fillStyle = '#8a6a3c';
+    ctx.fillRect(o.x, o.y + 20, o.w, o.h - 20);
+    for (let i = 0; i < 6; i++) {
+      ctx.fillStyle = i % 2 ? '#e9dcc0' : '#b5452f';
+      ctx.fillRect(o.x - 6 + (i * (o.w + 12)) / 6, o.y, (o.w + 12) / 6, 22);
+    }
+    ctx.strokeStyle = '#1b1208';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(o.x - 6, o.y, o.w + 12, 22);
+    ctx.strokeRect(o.x, o.y + 22, o.w, o.h - 22);
+    // Wares on the counter.
+    for (const [dx, c] of [[12, '#d9b04f'], [36, '#e9e3d0'], [60, '#7f5a3b'], [84, '#4f6f9a']]) {
+      ctx.fillStyle = c;
+      ctx.fillRect(o.x + dx, o.y + 26, 14, 10);
+    }
+    if (o.label) label(o.label, o.x + o.w / 2, o.y + o.h + 14, '#f3e3b5');
+  }
+
+  function drawWell(o) {
+    ctx.fillStyle = '#7d7a70';
+    ctx.beginPath();
+    ctx.arc(o.x, o.y, o.r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#2f4f6a';
+    ctx.beginPath();
+    ctx.arc(o.x, o.y, o.r - 7, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#1b1208';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(o.x, o.y, o.r, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.fillStyle = '#6b4a2a';
+    ctx.fillRect(o.x - o.r, o.y - o.r - 18, 4, 20);
+    ctx.fillRect(o.x + o.r - 4, o.y - o.r - 18, 4, 20);
+    ctx.fillRect(o.x - o.r, o.y - o.r - 20, o.r * 2, 4);
+  }
+
   function drawObstacle(o) {
+    if (BUILDING[o.look]) return drawBuilding(o);
+    if (o.look === 'stall') return drawStall(o);
+    if (o.look === 'well') return drawWell(o);
     if (o.look === 'wall' || o.look === 'crate') {
       const wall = o.look === 'wall';
       // Front face plus a lighter top edge, with block/plank lines.
@@ -233,6 +338,52 @@
     $('#summary').textContent =
       `Allies ${g.allies.filter((x) => x.alive).length} · ` +
       `Enemies ${g.enemies.filter((x) => x.alive).length} · Wave ${g.wave}/${g.totalWaves}`;
+  }
+
+  // ---- Walkable town (Stonebridge) ----
+
+  const TALK_VERB = { trade: 'Trade', recruit: 'Hire troops', tavern: 'Inn', talk: 'Talk', leave: 'Leave town' };
+
+  function drawNpc(n) {
+    const sw = 37;
+    const sh = 43;
+    ctx.fillStyle = '#172b1f66';
+    ctx.beginPath();
+    ctx.ellipse(n.x, n.y + 4, sw * 0.4, 7, 0, 0, Math.PI * 2);
+    ctx.fill();
+    const frame = n.frames[Math.floor(n.anim) % n.frames.length];
+    drawImage(CL.assets.key('u', frame), n.x - sw / 2, n.y - sh + 8, sw, sh);
+  }
+
+  function drawTown() {
+    const g = CL.game;
+    const t = g.town;
+    drawGround();
+    const scene = [
+      [t.hero.y, () => drawUnit(t.hero)],
+      ...t.npcs.map((n) => [n.y, () => drawNpc(n)]),
+      ...t.hub.obstacles.map((o) => [obstacleBase(o), () => drawObstacle(o)]),
+    ].sort((p, q) => p[0] - q[0]);
+    for (const [, paint] of scene) paint();
+    // Short titles under people's feet (clear of building signs); full name + action for whoever is in reach.
+    for (const n of t.npcs) {
+      label(n.tag || n.name, n.x, n.y + 20, '#e8f0ff');
+      if (t.near === n) {
+        const text = `${n.name} — TALK: ${TALK_VERB[n.action]}`;
+        ctx.font = 'bold 14px Georgia';
+        const w = ctx.measureText(text).width + 16;
+        const x = Math.max(w / 2 + 14, Math.min(W - w / 2 - 14, n.x));
+        ctx.fillStyle = '#0c1a26e8';
+        ctx.fillRect(x - w / 2, n.y - 74, w, 22);
+        ctx.strokeStyle = '#ffe7a8';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(x - w / 2, n.y - 74, w, 22);
+        label(text, x, n.y - 58, '#ffe7a8');
+      }
+    }
+    const z = t.hub.exitZone;
+    label('◀ To the road', z.x + 44, z.y + z.h + 16, '#ffe7a8');
+    updateMapHud();
   }
 
   // ---- Strategic map ----
@@ -555,6 +706,11 @@
   function draw() {
     const g = CL.game;
     ctx.clearRect(0, 0, W, H);
+    if (g.town && ['town', 'talk', 'trade', 'contracts', 'saves', 'character', 'settlement'].includes(g.mode)) {
+      drawTown();
+      if (performance.now() > g.messageUntil) CL.ui.$('#message').textContent = '';
+      return;
+    }
     if ((g.mode !== 'battle' && g.mode !== 'result') || (g.mode === 'result' && g.result?.auto)) {
       drawWorld();
       if (performance.now() > g.messageUntil) CL.ui.$('#message').textContent = '';

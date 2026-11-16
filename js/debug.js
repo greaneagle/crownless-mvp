@@ -241,7 +241,7 @@
         if (mode === 'battle' || mode === 'result') return CL.ui.message('Finish the battle first');
         teleport($('#cheatPlace').value);
         CL.save.write();
-        CL.ui.changeMode('settlement');
+        CL.town.enterPlace();
         return;
       case 'win':
       case 'lose':

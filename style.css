@@ -22,7 +22,7 @@
 #inventory{font-size:clamp(11px,1.15vw,14px);color:#d9c8a2;margin-bottom:4px}
 
 /* 0.6.0 — Gate C world map: battle-only HUD pieces hide outside battle */
-#stage:not([data-mode="battle"]) #touch,#stage:not([data-mode="battle"]) #pauseBtn,#stage:not([data-mode="battle"]) #ordersPanel{display:none}
+#stage:not([data-mode="battle"]):not([data-mode="town"]) #touch,#stage:not([data-mode="battle"]) #pauseBtn,#stage:not([data-mode="battle"]) #ordersPanel{display:none}
 #stage:not([data-mode="battle"]) #hpbar{display:none}
 #stage[data-mode="map"] #game{cursor:pointer}
 #serviceNote{font-size:12px;color:#c9ae7a;min-height:0}
@@ -119,3 +119,12 @@
 #importResult ul{margin:4px 0;padding-left:18px}
 #titleExtras{margin-top:8px}
 #titleExtras button{font-size:13px;background:none;border-color:#6d5a3a}
+
+/* 0.16.0 — walkable town */
+#stage[data-mode="town"] #blockBtn,#stage[data-mode="town"] #ordersBtn{display:none}
+#stage:not([data-mode="town"]) #townMenuBtn{display:none}
+#stage[data-mode="town"] #partyBtn{display:inline-block}
+#stage[data-mode="town"] #game{cursor:pointer}
+#talkOptions{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;margin-top:10px}
+#talkOptions button{min-height:52px;display:flex;flex-direction:column;align-items:center;gap:2px}
+#talkOptions small{font-weight:normal;font-size:12px;color:#d9c8a2}

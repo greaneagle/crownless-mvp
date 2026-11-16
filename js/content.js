@@ -19,6 +19,7 @@
     'backgrounds',
     'party_templates',
     'contracts',
+    'town_hubs',
   ];
 
   const raw = () => root.CROWNLESS_CONTENT || {};
@@ -128,6 +129,16 @@
       for (const o of m.obstacles || []) {
         const ok = o.shape === 'circle' ? o.r > 0 : o.shape === 'rect' && o.w > 0 && o.h > 0;
         if (!ok) err(`battle_map ${m.id}: bad obstacle`);
+      }
+    }
+    for (const h of Object.values(C.town_hubs || {})) {
+      if (!C.settlements?.[h.settlement]?.explorable) err(`town_hub ${h.id}: settlement ${h.settlement} is not explorable`);
+      if (!h.spawn || !h.exitZone) err(`town_hub ${h.id}: needs a spawn and an exit`);
+      for (const n of h.npcs || []) {
+        if (!['trade', 'recruit', 'tavern', 'talk', 'leave'].includes(n.action)) err(`town_hub ${h.id}: ${n.id} has unknown action ${n.action}`);
+        if (!n.frames?.length) err(`town_hub ${h.id}: ${n.id} needs sprite frames`);
+        if (n.dialogue && !C.dialogue?.[n.dialogue]) err(`town_hub ${h.id}: ${n.id} unknown dialogue ${n.dialogue}`);
+        if (!n.dialogue && !n.lines?.length) err(`town_hub ${h.id}: ${n.id} has nothing to say`);
       }
     }
     for (const k of Object.values(C.contracts || {})) {

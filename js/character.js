@@ -195,7 +195,8 @@
     CL.save.existed = true;
     CL.save.write();
     CL.diag.log('info', 'Character created', { name: CL.campaign.character.name, background: choices.background });
-    CL.ui.changeMode(CL.party.currentSettlement() ? 'settlement' : 'map');
+    if (CL.party.currentSettlement()) CL.town.enterPlace();
+    else CL.ui.changeMode('map');
   }
 
   // ---- Save validation ----

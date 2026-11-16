@@ -165,7 +165,7 @@ function makeBot(CL, { log = () => {} } = {}) {
       const m = g.mode;
       if (m === 'result') CL.world.returnToMap();
       else if (m === 'encounter') encounterTurn();
-      else if (m === 'settlement') settlementTurn();
+      else if (m === 'settlement' || m === 'town' || m === 'talk') settlementTurn(); // Stonebridge's streets too
       else if (m === 'map') {
         if (!g.travel) chooseDestination();
         CL.world.update(0.1);

@@ -7,7 +7,7 @@ _Spec: GDD §3–§10 and §14 Gate D._
 | Roadmap step | Status |
 |---|---|
 | 4.1 All ten settlements with their services | ✅ All 10 enterable since 0.6.0 (recruit, trade, rest, contracts where listed); **fort garrisons** shown since 0.15.0 |
-| 4.2 Stonebridge walkable town hub | ⬜ |
+| 4.2 Stonebridge walkable town hub | ✅ 0.16.0 |
 | 4.3 Three battle maps as distinct environments | ✅ 0.15.0 |
 | 4.4 Complete the item catalogue (~30) | ⬜ |
 | 4.5 AI cavalry; all 15 troop roles | ⬜ |
@@ -19,6 +19,51 @@ _Spec: GDD §3–§10 and §14 Gate D._
 | 4.15 Gate D acceptance | ⬜ |
 
 ---
+
+## Slice 2 — 0.16.0: Walkable Stonebridge (2026-11-16)
+
+### What's in (GDD §8: "One small top-down town scene containing market stall, tavern, recruiter and exit. NPCs stand in place or pace on short loops; interaction opens dialogue menus.")
+- **`data/town_hubs.js`:** Stonebridge's streets and plaza with a well:
+  - **The Grey Ford Inn**, the **Market** stall, the **Muster Hall**, the **Elder's House**, a cottage and trees.
+  - The buildings use the battle-map obstacle format, so collision and drawing are shared with battles.
+  - Each person has an action, a few lines, and a short title shown under their feet.
+- **People:**
+
+  | Person | Behaviour | Talking opens |
+  |---|---|---|
+  | **Hilde the Innkeeper** | stands still | buy food, rest a day, the notice board (contracts, "collect pay!" when due), Save & export |
+  | **Ottmar the Merchant** | paces by his stall | the market |
+  | **Sergeant Brun** | paces | hire the local troops, review troops |
+  | **Elder Maren** | stands still | her lines from `data/dialogue.js`; the hook for Q1 later |
+  | **Gate Guard** | stands still | leave town |
+
+  Each conversation shows the next of that person's lines.
+- **Controls:**
+  - WASD or the joystick, the same as in battle. **TALK** (the Attack button, relabelled), or **Space / E / Enter**, talks to whoever is in reach. A prompt shows over them: "Hilde the Innkeeper — TALK: Inn".
+  - **Tap** a spot to walk there, or **tap a person** to walk up and talk; the walk follows them if they're pacing. Any manual movement cancels it.
+  - Walk out through the west gate, or talk to the guard, to return to the map.
+  - Block and Orders are hidden in town; Party and **Town menu** are shown. Town menu opens the classic list, which offers **"Walk the streets"** to come back.
+- **Flow:** arriving at Stonebridge, Continue from the title, starting a new game, importing a save and Debug teleport all go "to the place": Stonebridge's streets, or the menu elsewhere. The market, notice board, Save & export and the Party screen all return to wherever you came from. Time doesn't pass in town.
+- **Content validation:** hubs must belong to an explorable settlement, people need known actions, sprites and something to say, and spawn, people and pacing ends must be clear of buildings.
+
+### Verification
+- **Automated:** `npm test` → 176/176. The new `tests/town.test.js` (9 tests) covers:
+  - Stonebridge being walkable while Eastwatch stays a menu, and buildings blocking movement
+  - the pacing loop, the talk range and lines rotating
+  - tap-to-talk with a pacing person, and tap-to-walk cancelled by manual input
+  - the gate exit and the guard, sub-menus returning to the streets, and content clear of buildings
+  - The campaign bot also handles town mode, and the 30-day simulation still shows no stalls.
+- **Browser:**
+  - A new game starts in the streets, with the TALK button.
+  - Walked with held keys; the prompt appears in reach.
+  - **Real tap** on the Innkeeper: walked over and opened her options. The **real click** on the notice board, then Back, returned to the streets.
+  - **Real tap** on the pacing Recruiter. This first failed because the walk aimed at where he'd been; it now follows him. Hired a Levy (45 crowns, 1/8), then walked out through the gate to the map.
+  - At 812×375: joystick and TALK showing, Block and Orders hidden.
+  - **Fixed along the way:** name tags over people's heads covered building signs, so they're now under their feet, with a boxed prompt for whoever's in reach.
+
+### For the owner's playtest
+- [ ] Is walking the town pleasant, or do you reach for the Town menu?
+- [ ] Are tapping and the TALK button reliable on a phone?
 
 ## Slice 1 — 0.15.0: Three battle maps and fort garrisons (2026-11-16)
 

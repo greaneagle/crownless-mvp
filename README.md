@@ -1,4 +1,4 @@
-# Crownless 0.15.0 — The Border March
+# Crownless 0.16.0 — The Border March
 
 A single-player, top-down party-battle prototype in plain HTML5 Canvas and classic JavaScript. There's no bundler, no runtime dependencies and no server. It's published to GitHub Pages straight from `main`.
 
@@ -20,6 +20,7 @@ A single-player, top-down party-battle prototype in plain HTML5 Canvas and class
 - A frontal shield block that covers 120°. It can't cancel a swing you've already started, and enemy windups are drawn in red so you know when to block.
 - Allied infantry and archers fight alongside you, and archers fire arrows.
 - Pick a group with **1** (infantry) or **2** (archers), then give an order: **F** Follow, **H** Hold or **C** Charge.
+- **Walk Stonebridge:** stroll the streets and talk to the innkeeper (food, rest, contracts, saving), the merchant (market), the sergeant (hire troops) and the elder. Tap a person to walk over and talk; the classic menu is a tap away.
 - **Three battlefields:** you fight on an open field, in a forest clearing (trees block movement and arrows) or at a walled fort courtyard, depending on where the fight happens. Forts show their garrison.
 - The battle is two waves of Road Reavers (Looters and Reavers, defined in `data/encounters.js`) and ends in victory or capture. Armor reduces damage, and archers sometimes miss.
 - Win gold, renown and loot, which goes into your pack. If you're captured you lose 20% of your crowns and one item, then you're released near a settlement half a day later.
@@ -59,6 +60,7 @@ js/               game runtime, attached to window.Crownless
   upkeep.js       food rations, weekly wages, morale, desertion
   trade.js        markets, prices, cargo, selling gear
   world.js        strategic map: travel, terrain, settlements, sites, capture release
+  town.js         walkable Stonebridge: walking, townsfolk, talking
   autoresolve.js  seeded RNG and GDD auto-resolve (power, odds, casualties)
   parties.js      patrols, caravans, bandit bands; encounter choices
   contracts.js    contract lifecycle (offer, accept, complete, collect, fail)

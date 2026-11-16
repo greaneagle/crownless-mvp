@@ -37,17 +37,24 @@
       if (game.mode === 'title') {
         if (!CL.save.existed) game.newGame = true;
         if (game.newGame || !CL.campaign.character) ui.changeMode('create');
-        else ui.changeMode(party.currentSettlement() ? 'settlement' : 'map');
+        else if (party.currentSettlement()) CL.town.enterPlace();
+        else ui.changeMode('map');
       } else if (game.mode === 'create') CL.character.begin(ui.creatorChoices());
-      else if (game.mode === 'character') ui.changeMode(game.returnMode);
-      else if (game.mode === 'trade' || game.mode === 'contracts') ui.changeMode('settlement');
-      else if (game.mode === 'saves') ui.changeMode(game.savesReturn || 'title');
+      else if (game.mode === 'character') {
+        if (game.returnMode === 'map') ui.changeMode('map');
+        else CL.town.backToPlace();
+      } else if (game.mode === 'trade' || game.mode === 'contracts') CL.town.backToPlace();
+      else if (game.mode === 'saves') {
+        if (game.savesReturn === 'title') ui.changeMode('title');
+        else CL.town.backToPlace();
+      } else if (game.mode === 'talk') ui.changeMode('town');
       else if (game.mode === 'settlement') world.leaveSettlement();
       else if (game.mode === 'encounter') world.attackSite();
       else if (game.mode === 'result') world.returnToMap();
     };
     $('#secondaryBtn').onclick = () => {
       if (game.mode === 'encounter') ui.changeMode('map');
+      else if (game.mode === 'settlement') CL.town.enter(); // "Walk the streets"
       else if (game.mode === 'create') {
         game.newGame = false;
         ui.changeMode('title');
@@ -64,6 +71,10 @@
       }
     };
     $('#partyBtn').onclick = ui.openSheet;
+    $('#townMenuBtn').onclick = () => {
+      CL.game.placeMode = 'town';
+      ui.changeMode('settlement'); // the classic list, for anyone who prefers menus
+    };
     $('#waitBtn').onclick = () => CL.world.toggleWait();
     $('#tradeBtn').onclick = () => ui.changeMode('trade');
     $('#contractsBtn').onclick = () => ui.changeMode('contracts');
@@ -78,7 +89,7 @@
     }
     $('#restBtn').onclick = () => {
       party.rest();
-      ui.changeMode('settlement'); // refresh the clock line too
+      ui.refresh(); // refresh the clock line too
     };
     $('#ordersBtn').onclick = () => {
       $('#ordersPanel').classList.toggle('hidden');
@@ -158,6 +169,10 @@
       }
       const o = KEY_ORDERS[e.code];
       if (o) CL.combat.order(o[0], o[1]);
+      if (g.mode === 'town' && ['Space', 'Enter', 'KeyE'].includes(e.code) && !e.repeat) {
+        CL.town.interact();
+        return;
+      }
       if (e.code === 'Space' && !e.repeat) {
         if (g.mode === 'map') {
           if (g.travel) CL.world.stop();
@@ -172,6 +187,12 @@
     });
     root.addEventListener('blur', releaseAll);
     canvas.addEventListener('pointerdown', (e) => {
+      if (g.mode === 'town') {
+        // Tap a spot to walk there, or a person to walk up and talk.
+        const r = canvas.getBoundingClientRect();
+        CL.town.tap(((e.clientX - r.left) * CL.W) / r.width, ((e.clientY - r.top) * CL.H) / r.height);
+        return;
+      }
       if (g.mode === 'map') {
         // Click/tap a destination on the strategic map (GDD §3).
         const r = canvas.getBoundingClientRect();
@@ -294,6 +315,10 @@
       $,
       '#attackBtn',
       () => {
+        if (g.mode === 'town') {
+          CL.town.interact(); // the ATTACK button reads TALK in town
+          return;
+        }
         g.attackHeld = true;
         CL.combat.queueAttack();
       },

@@ -20,6 +20,7 @@
       last = ts;
       CL.combat.update(dt);
       CL.world.update(dt);
+      CL.town.update(dt);
       CL.render.draw();
       diag.frames++;
       if (ts - diag.lastFps > 1000) {

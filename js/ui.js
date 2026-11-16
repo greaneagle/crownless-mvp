@@ -33,6 +33,7 @@
         title: s.name.toUpperCase(),
         text: `${TYPE_LABEL[s.type] || s.type} of the ${owner.name}. ${CL.world.clockLabel()}.${garrison}`,
         button: 'Leave',
+        secondary: CL.town.hubFor(s.id) ? 'Walk the streets' : null,
       };
     }
     if (mode === 'encounter') {
@@ -55,6 +56,10 @@
         button: 'Begin',
         secondary: g.newGame ? 'Back' : null,
       };
+    }
+    if (mode === 'talk') {
+      const t = g.talk;
+      return { title: t.npc.name.toUpperCase(), text: `“${t.line}”`, button: null };
     }
     if (mode === 'saves') {
       return { title: 'SAVE & EXPORT', text: '', button: 'Back' };
@@ -100,8 +105,9 @@
     const g = CL.game;
     g.mode = mode;
     $('#stage').dataset.mode = mode;
+    $('#attackBtn').textContent = mode === 'town' ? 'TALK' : 'ATTACK';
     $('#ordersPanel').classList.add('hidden');
-    if (mode === 'map') {
+    if (mode === 'map' || mode === 'town') {
       $('#overlay').classList.add('hidden');
       g.messageUntil = 0; // drop leftover battle/menu messages
       $('#message').textContent = '';
@@ -116,6 +122,7 @@
     $('#encounterOptions').classList.toggle('hidden', mode !== 'encounter');
     $('#contractsScreen').classList.toggle('hidden', mode !== 'contracts');
     $('#savesScreen').classList.toggle('hidden', mode !== 'saves');
+    $('#talkOptions').classList.toggle('hidden', mode !== 'talk');
     $('#titleExtras').classList.toggle('hidden', mode !== 'title');
     $('#overlayText').classList.toggle('hidden', mode === 'saves');
     const screen = screenFor(mode);
@@ -133,6 +140,56 @@
     if (mode === 'encounter') renderEncounter();
     if (mode === 'contracts') renderContracts();
     if (mode === 'saves') renderSaves();
+    if (mode === 'talk') renderTalk();
+  }
+
+  // ---- Talking to people in town (GDD §8: interaction opens dialogue menus) ----
+
+  function renderTalk() {
+    const c = CL.campaign;
+    const P = CL.party;
+    const U = CL.upkeep;
+    const n = CL.game.talk.npc;
+    const opts = [];
+    const opt = (label, onClick, disabled = false, note = '') => {
+      const b = Object.assign(document.createElement('button'), { type: 'button', disabled });
+      b.append(Object.assign(document.createElement('b'), { textContent: label }));
+      if (note) b.append(Object.assign(document.createElement('small'), { textContent: note }));
+      b.onclick = onClick;
+      opts.push(b);
+    };
+    const redo = () => {
+      CL.save.write();
+      changeMode('talk');
+    };
+    if (n.action === 'trade') {
+      opt('See my wares', () => changeMode('trade'), false, `${c.gold} crowns · cargo ${CL.trade.cargoWeight(c)}/${CL.trade.capacity(c)}`);
+    } else if (n.action === 'recruit') {
+      for (const id of P.recruitsHere()) {
+        const t = CL.content.troop(id);
+        opt(`Hire a ${t.name} · ${t.recruitCost} crowns`, () => P.recruit(id) && redo(), !P.canRecruit(c, id), `${t.tier} ${t.role} · wage ${t.wage}/week`);
+      }
+      opt('Review my troops', () => openSheet(), false, `${c.roster.length}/${P.partyCap()} soldiers`);
+    } else if (n.action === 'tavern') {
+      const price = U.rationPrice(c);
+      for (const [days, label] of [
+        [3, "3 days' food"],
+        [7, "a week's food"],
+      ]) {
+        const rations = U.dailyRations(c) * days;
+        opt(`Buy ${label} · ${rations * price} crowns`, () => U.buyFood(c, rations) && redo(), c.gold < rations * price);
+      }
+      opt('Rest a day by the fire', () => {
+        P.rest();
+        redo();
+      }, false, `${P.woundedSoldiers().length} wounded · food ${U.foodDays(c).toFixed(1)} days`);
+      const k = c.contract;
+      const pay = k?.status === 'done' && k.giver === c.world.location;
+      opt(pay ? 'Notice board — collect pay!' : 'Read the notice board', () => changeMode('contracts'));
+      opt('Save & export', () => openSaves());
+    }
+    opt('Goodbye', () => changeMode('town'));
+    $('#talkOptions').replaceChildren(...opts);
   }
 
   // ---- Save & export (GDD §13) ----
@@ -171,7 +228,7 @@
 
   function openSaves() {
     const m = CL.game.mode;
-    CL.game.savesReturn = m === 'title' ? 'title' : 'settlement';
+    CL.game.savesReturn = m === 'title' ? 'title' : 'place';
     changeMode('saves');
   }
 
@@ -180,7 +237,9 @@
     $('#importText').value = '';
     $('#pasteBox').open = false;
     message(r.migrated ? 'Old save converted and loaded.' : 'Save imported.');
-    changeMode(CL.campaign.character ? (CL.party.currentSettlement() ? 'settlement' : 'map') : 'create');
+    if (!CL.campaign.character) changeMode('create');
+    else if (CL.party.currentSettlement()) CL.town.enterPlace();
+    else changeMode('map');
   }
 
   // ---- Contracts board ----
@@ -604,7 +663,7 @@
   function openSheet() {
     if (!CL.campaign.character) return;
     const m = CL.game.mode;
-    if (m === 'map' || m === 'settlement') CL.game.returnMode = m;
+    if (m === 'map' || m === 'settlement' || m === 'town' || m === 'talk') CL.game.returnMode = m === 'map' ? 'map' : 'place';
     changeMode('character');
   }
 
@@ -696,6 +755,7 @@
 
   function hideBattleOverlays() {
     $('#stage').dataset.mode = 'battle';
+    $('#attackBtn').textContent = 'ATTACK';
     $('#blockBtn').disabled = CL.game.hero?.canBlock === false; // no shield, no block
     $('#overlay').classList.add('hidden');
     $('#ordersPanel').classList.add('hidden');
