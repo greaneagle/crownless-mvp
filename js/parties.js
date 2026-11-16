@@ -417,6 +417,7 @@
     g.battleId = c.battles + 1;
     const outcome = { battleId: g.battleId, encounter: e.def, win, kills: enemyFallen.length, killed, wounded, participants: healthy };
     const r = CL.party.applyBattleResult(c, outcome);
+    CL.companion.afterBattle(c, { win, down: false });
     W().onBattleResolved(win, g.siteId);
     onBattleResolved(win, g.partyId, enemyFallen);
     CL.save.write();

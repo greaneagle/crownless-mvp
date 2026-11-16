@@ -265,17 +265,79 @@
         }
       }
     },
+    // GDD §10: Mara joins after Q2 "for a modest cost or through a short trust dialogue". She already
+    // knows where Oswin's packet went; an honest answer earns her trust, a lie costs it.
     mara: {
       id: 'mara',
       speaker: 'Mara',
-      start: 'talk',
+      start: [
+        { if: { companion: 'mara' }, node: 'with_us' },
+        { if: { flag: 'mara_met' }, node: 'verdict' },
+        'meet'
+      ],
       nodes: {
-        talk: {
+        meet: {
+          services: false,
+          text: [
+            'You are the one who found Oswin’s packet. I am Mara. I scouted these roads for the empire, back when there was an empire.',
+            'I have been looking for someone worth riding with. I do not ride with fools, and I do not ride with liars.'
+          ],
+          options: [
+            { text: 'Then ask me what you want to know.', do: [{ set: 'mara_met' }], next: 'packet' },
+            { text: 'I’m not looking for company.' }
+          ]
+        },
+        packet: {
+          services: false,
+          text: ['So. Where did the packet go?'],
+          options: [
+            { text: 'To Captain Aldric and the Crown.', if: { flag: 'q2_choice', is: 'valedorn' }, do: [{ add: 'mara_trust' }], next: 'why' },
+            { text: 'To Captain Aldric and the Crown.', if: { not: { flag: 'q2_choice', is: 'valedorn' } }, do: [{ set: 'mara_lied' }], next: 'why' },
+            { text: 'To Magistrate Vell.', if: { flag: 'q2_choice', is: 'aurelian' }, do: [{ add: 'mara_trust' }], next: 'why' },
+            { text: 'To Magistrate Vell.', if: { not: { flag: 'q2_choice', is: 'aurelian' } }, do: [{ set: 'mara_lied' }], next: 'why' },
+            { text: 'I kept it.', if: { flag: 'q2_choice', is: 'kept' }, do: [{ add: 'mara_trust' }], next: 'why' },
+            { text: 'I kept it.', if: { not: { flag: 'q2_choice', is: 'kept' } }, do: [{ set: 'mara_lied' }], next: 'why' },
+            { text: 'That’s my business.', next: 'why' }
+          ]
+        },
+        why: {
+          services: false,
+          text: [
+            { if: { flag: 'mara_lied' }, text: 'Hm. Wenna sells stories as well as secrets, and that is not the one I bought.' },
+            { if: { flag: 'mara_trust' }, text: 'That matches what I heard. Good.' },
+            'One more. Why do you fight, {name}?'
+          ],
+          options: [
+            { text: 'For coin. Someone has to pay for the bread.', do: [{ set: 'mara_why', to: 'coin' }], next: 'verdict' },
+            { text: 'For the people on these roads.', do: [{ set: 'mara_why', to: 'people' }], next: 'verdict' },
+            { text: 'For a name people will remember.', do: [{ set: 'mara_why', to: 'name' }], next: 'verdict' }
+          ]
+        },
+        verdict: {
+          services: false,
+          text: [
+            { if: [{ flag: 'mara_trust', gte: 1 }, { not: { flag: 'mara_lied' } }], text: 'You told me the truth when it would have been easy not to. That is enough. I will ride with you — no coin.' },
+            { if: { not: [{ flag: 'mara_trust', gte: 1 }, { not: { flag: 'mara_lied' } }] }, text: 'I do not know you well enough to work for nothing. A hundred crowns, and I will ride with you and earn every one.' }
+          ],
+          options: [
+            { text: 'Welcome to the company, Mara.', if: [{ flag: 'mara_trust', gte: 1 }, { not: { flag: 'mara_lied' } }, { room: 1 }], do: [{ companion: 'mara' }], next: 'joined' },
+            { text: 'Pay 100 crowns.', if: [{ not: [{ flag: 'mara_trust', gte: 1 }, { not: { flag: 'mara_lied' } }] }, { gold: 100 }, { room: 1 }], do: [{ gold: -100 }, { companion: 'mara' }], next: 'joined' },
+            { text: 'My company is full. Later.', if: { not: { room: 1 } } },
+            { text: 'Not now.' }
+          ]
+        },
+        joined: {
+          services: false,
+          text: ['Then let us go. I know a few roads the Reavers do not — you will travel faster with me.'],
+          options: [{ text: 'Lead on.' }]
+        },
+        with_us: {
           cycle: true,
           text: [
-            'I have walked every road between the forts.',
-            'A token of mine has gone missing — I would like it back.',
-            'Do not let the Reavers put me in the ground.'
+            'The river road floods in spring. Keep to the high track past Highmere.',
+            'Both crowns want Greywall. Neither asked the people who live under it.',
+            { if: { companion: 'mara', is: 'fit' }, text: 'I am ready when you are.' },
+            { if: { not: { companion: 'mara', is: 'fit' } }, text: 'Give me a day or two. That last fight took more out of me than I let on.' }
           ]
         }
       }

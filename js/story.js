@@ -11,6 +11,7 @@
  *    { rep: 'valedorn', gte: n }  { standing: 'aurelian', is: 'friendly' }
  *    { skill: 'trade', gte: n }  { attribute: 'cha', gte: n }  { background: 'scout' }
  *    { has: 'item' }  { owner: 'greywall_fort', is: 'valedorn' }  { at: 'stonebridge' }
+ *    { companion: 'mara' } (with you)  { companion: 'mara', is: 'fit' }  { room: 1 } (free party slots)
  *
  *  Effects (`do`): a list, applied in order.
  *    { set: 'flag', to: v = true }  { clear: 'flag' }  { add: 'counter', by: 1 }
@@ -18,6 +19,7 @@
  *    { give: 'item', n = 1 }  { take: 'item', n = 1 }  { recruit: 'levy', n = 1 }
  *    { start: 'q1' }  { stage: 's', quest: 'q1' }  { complete: 'q1' }  { fail: 'q1' }
  *    { owner: 'greywall_fort', to: 'aurelian' }  { message: 'text' }  { note: 'text', quest: 'q1' }
+ *    { companion: 'mara' } (joins)  { part: 'mara', reason: 'fell' } (leaves for good)
  *
  *  Events: game code calls `emit(name, payload)`; quest stages react with
  *    on: [{ event, match: { key: value | [values] }, if, do }]
@@ -40,8 +42,8 @@
   const QUEST_STATUS = ['active', 'done', 'failed'];
   const MAX_FLAGS = 200;
   const MAX_NOTES = 20;
-  const COND_KEYS = ['flag', 'not', 'all', 'any', 'quest', 'gold', 'renown', 'level', 'soldiers', 'rep', 'standing', 'skill', 'attribute', 'background', 'has', 'owner', 'at'];
-  const EFFECT_KEYS = ['set', 'clear', 'add', 'gold', 'renown', 'xp', 'food', 'rep', 'give', 'take', 'recruit', 'start', 'stage', 'complete', 'fail', 'owner', 'message', 'note'];
+  const COND_KEYS = ['flag', 'not', 'all', 'any', 'quest', 'gold', 'renown', 'level', 'soldiers', 'rep', 'standing', 'skill', 'attribute', 'background', 'has', 'owner', 'at', 'companion', 'room'];
+  const EFFECT_KEYS = ['set', 'clear', 'add', 'gold', 'renown', 'xp', 'food', 'rep', 'give', 'take', 'recruit', 'start', 'stage', 'complete', 'fail', 'owner', 'message', 'note', 'companion', 'part'];
 
   const camp = () => CL.campaign;
   const quest = (id) => CL.content.table('quests')[id] || null;
@@ -101,6 +103,8 @@
     if ('has' in cond) return (c.inventory[cond.has] || 0) > 0 || Object.values(c.equipment || {}).includes(cond.has);
     if ('owner' in cond) return CL.realm.owner(cond.owner, c) === cond.is;
     if ('at' in cond) return c.world.location === cond.at;
+    if ('companion' in cond) return cond.is === 'fit' ? CL.companion.fit(c) && CL.companion.has(c, cond.companion) : CL.companion.has(c, cond.companion);
+    if ('room' in cond) return CL.party.partyCap(c) - c.roster.length - CL.companion.slots(c) >= cond.room;
     return false;
   }
 
@@ -126,7 +130,7 @@
       if (left > 0) c.inventory[e.take] = left;
       else delete c.inventory[e.take];
     } else if ('recruit' in e) {
-      for (let i = 0; i < (e.n || 1) && c.roster.length < CL.party.partyCap(c); i++) CL.save.addSoldier(c, e.recruit);
+      for (let i = 0; i < (e.n || 1) && c.roster.length + CL.companion.slots(c) < CL.party.partyCap(c); i++) CL.save.addSoldier(c, e.recruit);
     } else if ('start' in e) start(c, e.start);
     else if ('stage' in e) setStage(c, e.quest || ctx.quest, e.stage);
     else if ('complete' in e) finish(c, e.complete, 'done');
@@ -134,6 +138,8 @@
     else if ('owner' in e) CL.realm.setOwner(c, e.owner, e.to, ctx.reason || 'story');
     else if ('message' in e) CL.ui.message(format(e.message, c));
     else if ('note' in e) note(c, e.quest || ctx.quest, format(e.note, c));
+    else if ('companion' in e) CL.companion.join(c, e.companion);
+    else if ('part' in e) CL.companion.part(c, e.part, e.reason || 'parted');
   }
 
   // ---- Quests ----
@@ -385,6 +391,7 @@
     if ((k === 'owner' || k === 'at') && !C.settlements?.[cond[k]]) err(`${where}: unknown settlement ${cond[k]}`);
     if (k === 'background' && !C.backgrounds?.[cond.background]) err(`${where}: unknown background ${cond.background}`);
     if (k === 'skill' && !C.skills?.[cond.skill]) err(`${where}: unknown skill ${cond.skill}`);
+    if (k === 'companion' && !C.companions?.[cond.companion]) err(`${where}: unknown companion ${cond.companion}`);
   }
 
   function checkEffects(list, C, where, err, questId) {
@@ -409,6 +416,7 @@
         else if (!q.stages.some((s) => s.id === e.stage)) err(`${where}: unknown stage ${e.stage}`);
       }
       if (k === 'owner' && (C.settlements?.[e.owner]?.type !== 'fort' || !C.factions?.[e.to])) err(`${where}: bad owner effect`);
+      if ((k === 'companion' || k === 'part') && !C.companions?.[e[k]]) err(`${where}: unknown companion ${e[k]}`);
     }
   }
 
@@ -526,6 +534,7 @@
     journal,
     currentQuest,
     validate,
+    checkCondition: checkCond,
     sanitize,
   };
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -42,6 +42,7 @@
       ...enemyArt,
       // Townsfolk in walkable town hubs.
       ...Object.values(CL.content?.table('town_hubs') || {}).flatMap((h) => h.npcs.flatMap((n) => n.frames)),
+      ...Object.values(CL.content?.table('companions') || {}).flatMap((m) => m.frames),
     ]);
     for (const i of used) loadImg(key('u', i));
     for (const i of worldTiles) loadImg(key('w', i));

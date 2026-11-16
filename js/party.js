@@ -48,7 +48,7 @@
   }
 
   function canRecruit(camp, troopId) {
-    return camp.gold >= CL.content.troop(troopId).recruitCost && camp.roster.length < partyCap(camp);
+    return camp.gold >= CL.content.troop(troopId).recruitCost && camp.roster.length + CL.companion.slots(camp) < partyCap(camp);
   }
 
   // ---- Troop upgrades (GDD §7) ----
@@ -127,6 +127,7 @@
       }
     }
     if (healed.length) CL.diag.log('info', 'Wounded recovered', { soldiers: healed, day: camp.day });
+    CL.companion.heal(camp);
     return healed;
   }
 
@@ -246,6 +247,7 @@
       soldierKills: Object.fromEntries(deployed.map((a) => [a.soldierId, a.kills || 0])),
     };
     const r = applyBattleResult(CL.campaign, outcome);
+    if (r) CL.companion.afterBattle(CL.campaign, { win, down: g.allies.some((a) => a.companion && !a.alive) });
     if (r) {
       CL.world?.onBattleResolved(win, g.siteId);
       const fallenEnemies = g.enemies.filter((e) => !e.alive).map((e) => e.troop);

@@ -221,6 +221,7 @@
 
   function unitFrames(u) {
     const { heroFrames, allyArt } = CL.assets;
+    if (u.frames) return u.frames; // the companion's own look
     if (u.role === 'hero') return heroFrames[u.face];
     if (u.role === 'infantry') return allyArt.infantry;
     if (u.role === 'archer') return allyArt.archer;
@@ -697,6 +698,7 @@
     const food = CL.upkeep.foodDays(c);
     $('#summary').textContent =
       `${CL.world.clockLabel()} · ${c.gold} crowns · ${c.roster.length} soldiers${wounded ? ` (${wounded} wounded)` : ''}` +
+      (c.companion ? ` + ${CL.companion.def(c.companion.id).name}${CL.companion.fit(c) ? '' : ' (wounded)'}` : '') +
       ` · food ${food >= 10 ? Math.floor(food) : food.toFixed(1)}d · morale ${Math.round(c.morale)}` +
       (Object.keys(c.cargo).length ? ` · cargo ${CL.trade.cargoWeight(c)}/${CL.trade.capacity(c)}` : '') +
       (c.contract

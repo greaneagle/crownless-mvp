@@ -90,6 +90,14 @@
       CL.units.resolveObstacles(u); // form up around trees and walls
       g.allies.push(u);
     }
+    // The companion fights beside the hero (GDD §10), with the infantry's orders.
+    if (CL.companion.fit()) {
+      const m = CL.companion.get();
+      const u = makeUnit(anchor.x - 40, anchor.y + 34, 'ally', 'mercenary');
+      Object.assign(u, CL.companion.combat(), { companion: m.id, frames: CL.companion.def(m.id).frames, role: 'infantry' });
+      CL.units.resolveObstacles(u);
+      g.allies.push(u);
+    }
     for (const a of g.allies) {
       a.holdX = a.x;
       a.holdY = a.y;

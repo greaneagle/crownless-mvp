@@ -194,7 +194,7 @@
         const t = CL.content.troop(id);
         opt(`Hire a ${t.name} · ${t.recruitCost} crowns`, () => P.recruit(id) && redo(), !P.canRecruit(c, id), `${t.tier} ${t.role} · wage ${t.wage}/week`);
       }
-      opt('Review my troops', () => openSheet(), false, `${c.roster.length}/${P.partyCap()} soldiers`);
+      opt('Review my troops', () => openSheet(), false, `${c.roster.length + CL.companion.slots(c)}/${P.partyCap()} in the company`);
     } else if (n.action === 'tavern') {
       const price = U.rationPrice(c);
       for (const [days, label] of [
@@ -575,6 +575,46 @@
     return bits.length ? ` (${bits.join(', ')})` : '';
   }
 
+  /** The companion's card on the Party sheet: her numbers, her gear, and what you can give her. */
+  function renderCompanion() {
+    const c = CL.campaign;
+    const M = CL.companion;
+    const m = M.get(c);
+    $('#companionHead').classList.toggle('hidden', !m);
+    $('#sheetCompanion').classList.toggle('hidden', !m);
+    if (!m) return;
+    const d = M.def(m.id);
+    const s = M.combat(c);
+    const el = (tag, text) => Object.assign(document.createElement(tag), { textContent: text || '' });
+    const btn = (label, onClick) => {
+      const b = Object.assign(document.createElement('button'), { type: 'button', textContent: label });
+      b.onclick = () => {
+        onClick();
+        CL.save.write();
+        renderSheet();
+      };
+      return b;
+    };
+    const status = M.fit(c) ? 'fit to fight' : `wounded — back in ${Math.max(0, m.woundedUntil - c.day).toFixed(1)} days`;
+    const bonus = Object.entries(d.skills || {})
+      .map(([k, n]) => `+${n} ${CL.content.get('skills', k).name}`)
+      .join(', ');
+    const rows = [el('p', `${d.name}, ${d.title} · ${status} · HP ${s.hp} · Damage ${Math.round(s.damage * 10) / 10} · Armor ${s.armor}${bonus ? ` · ${bonus} while fit` : ''}`)];
+    for (const slot of d.gearSlots) {
+      const id = m.equipment[slot];
+      const row = el('div', `${CL.character.SLOT_NAMES[slot]}: ${id ? CL.content.item(id).name + itemSummary(CL.content.item(id)) : '—'}`);
+      row.className = 'statLine';
+      if (id) row.append(btn('Take back', () => M.takeBack(c, slot)));
+      for (const [pid] of Object.entries(c.inventory)) {
+        const it = CL.content.item(pid);
+        if (it.slot === slot) row.append(btn(`Give ${it.name}`, () => M.give(c, pid)));
+      }
+      rows.push(row);
+    }
+    rows.push(btn(`Talk to ${d.name}`, () => talkTo(m.id)));
+    $('#sheetCompanion').replaceChildren(...rows);
+  }
+
   function renderSheet() {
     const c = CL.campaign;
     const C = CL.character;
@@ -637,7 +677,7 @@
         ),
       ),
       line([
-        `Party size ${c.roster.length}/${cap} (8 + 2×Leadership ${lead} + Renown ${c.renown}/40${CL.realm.capBonus(c) ? ` + ${CL.realm.capBonus(c)} Friendly` : ''}${cap === 20 ? ', max 20' : ''})`,
+        `Party size ${c.roster.length + CL.companion.slots(c)}/${cap} (8 + 2×Leadership ${lead} + Renown ${c.renown}/40${CL.realm.capBonus(c) ? ` + ${CL.realm.capBonus(c)} Friendly` : ''}${cap === 20 ? ', max 20' : ''})`,
       ]),
       line(
         CL.realm.kingdoms().map((f) => {
@@ -648,6 +688,7 @@
       Object.assign(document.createElement('div'), { className: 'statLine' }),
     );
     renderTroops();
+    renderCompanion();
     stats.lastChild.append(...supplyParts(c));
     $('#sheetEquip').replaceChildren(
       ...C.SLOTS.map((slot) => {
@@ -738,7 +779,7 @@
     const p = CL.party;
     $('#rosterSummary').textContent =
       `Day ${p.dayNumber()} · ${c.gold} crowns · ${c.renown} renown · ` +
-      `${c.roster.length}/${p.partyCap()} soldiers · ${c.victories} wins`;
+      `${c.roster.length + CL.companion.slots(c)}/${p.partyCap()} in the company · ${c.victories} wins`;
 
     // One line per troop type: ready count, plus wounded and when they return.
     const groups = {};

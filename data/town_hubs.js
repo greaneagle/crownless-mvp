@@ -7,7 +7,8 @@
  *   npcs[].pace:   optional [x, y] the NPC walks to and back from
  *   npcs[].action: 'trade' | 'recruit' | 'tavern' | 'talk' | 'leave'
  *   npcs[].lines:  what they say (one is picked each time you talk)
- *   npcs[].tag:    short title shown under their feet */
+ *   npcs[].tag:    short title shown under their feet
+ *   npcs[].visible: optional story condition for appearing at all (js/story.js vocabulary) */
 (function (root) {
   root.CROWNLESS_CONTENT = root.CROWNLESS_CONTENT || {};
   var C = root.CROWNLESS_CONTENT;
@@ -101,6 +102,19 @@
           action: 'talk',
           dialogue: 'valedorn_agent',
           lines: ['Keep the roads clear and the Crown keeps your purse full.']
+        },
+        {
+          id: 'mara',
+          name: 'Mara',
+          tag: 'Scout',
+          frames: [124, 125, 126, 127],
+          x: 300,
+          y: 238,
+          action: 'talk',
+          dialogue: 'mara',
+          // She turns up after Q2, until she joins (or is gone for good).
+          visible: [{ quest: 'q2', is: 'done' }, { not: { companion: 'mara' } }, { not: { flag: 'mara_gone' } }],
+          lines: ['I have walked every road between the forts.']
         },
         {
           id: 'guard',

@@ -59,6 +59,7 @@
   function playerPower(c = CL.campaign) {
     let p = heroPower(c);
     for (const s of c.roster) if (s.woundedUntil === null) p += TIER_POWER[CL.content.troop(s.troop).tier];
+    p += CL.companion?.power(c) || 0; // Mara, if she is fit
     return p * (1 + TACTICS * CL.character.skill('tactics', c));
   }
 

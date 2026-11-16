@@ -24,7 +24,8 @@
     g().town = {
       hub,
       hero,
-      npcs: hub.npcs.map((n) => ({ ...n, home: { x: n.x, y: n.y }, face: 'down', anim: 0, leg: 0, wait: 0, lineIndex: 0 })),
+      // People with a `visible` condition only appear when the story allows (e.g. Mara after Q2).
+      npcs: hub.npcs.filter((n) => CL.story.test(n.visible)).map((n) => ({ ...n, home: { x: n.x, y: n.y }, face: 'down', anim: 0, leg: 0, wait: 0, lineIndex: 0 })),
       near: null,
       walkTo: null,
     };
@@ -153,7 +154,10 @@
 
   /** Back to the place you were in: the town streets or the settlement menu. */
   function backToPlace() {
-    if (g().placeMode === 'town' && g().town) CL.ui.changeMode('town');
+    if (g().placeMode === 'town' && g().town) {
+      g().town.npcs = g().town.npcs.filter((n) => CL.story.test(n.visible)); // e.g. Mara, once she has joined
+      CL.ui.changeMode('town');
+    }
     else if (g().placeMode === 'town') enter();
     else CL.ui.changeMode('settlement');
   }

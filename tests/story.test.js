@@ -193,8 +193,8 @@ test('Elder Maren: background lines compose, choices set flags, the start node f
 
 test('cycling nodes rotate through their matching lines', () => {
   const { CL } = loadGame();
-  const a = CL.story.talk('mara').text;
-  const b = CL.story.talk('mara').text;
+  const a = CL.story.talk('valedorn_agent').text;
+  const b = CL.story.talk('valedorn_agent').text;
   assert.notEqual(a, b);
 });
 

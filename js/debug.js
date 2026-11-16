@@ -223,6 +223,10 @@
         CL.story.finish(c(), $('#cheatQuest').value, 'done');
         log('quest completed', { quest: $('#cheatQuest').value });
         break;
+      case 'mara':
+        if (!CL.companion.join(c(), 'mara')) CL.ui.message('Mara cannot join (already here, gone, or no room)');
+        log('companion', { mara: CL.companion.has(c()) });
+        break;
       case 'storyReset':
         c().story = CL.story.blank();
         log('story reset');

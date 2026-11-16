@@ -130,7 +130,7 @@
   /** Skill level including bonuses from equipped items (e.g. Ring of Roads → pathfinding). */
   function skill(id, c = camp()) {
     const base = c.character?.skills?.[id] ?? 0;
-    return base + equippedItems(c).reduce((sum, it) => sum + (it.stats[id] || 0), 0);
+    return base + equippedItems(c).reduce((sum, it) => sum + (it.stats[id] || 0), 0) + (CL.companion?.skillBonus(id, c) || 0);
   }
 
   function attribute(id, c = camp()) {

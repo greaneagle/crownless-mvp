@@ -13,10 +13,55 @@ _Spec: GDD §3–§10 and §14 Gate D._
 | 4.5 AI cavalry; all 15 troop roles | ✅ 0.18.0 |
 | 4.6 Faction reputation and fort ownership | ✅ 0.19.0 |
 | 4.7 Quest and dialogue interpreter | ✅ 0.20.0 |
-| 4.8–4.12 Q1–Q4 and the companion Mara | 🟡 Q1 ✅ 0.21.0 · Q2 ✅ 0.22.0 |
+| 4.8–4.12 Q1–Q4 and the companion Mara | 🟡 Q1 ✅ 0.21.0 · Q2 ✅ 0.22.0 · Mara ✅ 0.23.0 |
 | 4.13 Escort and delivery contracts | ⬜ |
 | 4.14 Trade-world interactions and regional news | ⬜ |
 | 4.15 Gate D acceptance | ⬜ |
+
+---
+
+## Slice 9 — 0.23.0: Mara, the companion (2026-11-17)
+
+### What's in (GDD §10: "One named companion: Mara, a former imperial scout. Recruitable after Q2 for a modest cost or through a short trust dialogue. She fights autonomously, equips a weapon and armor, and contributes +1 Pathfinding while conscious." §5: "Troops share party slots; companion consumes one slot.")
+- **Where:** once Q2 is finished, Mara (the green-hooded scout) waits by the Grey Ford Inn in Stonebridge. Town people can now have a `visible` condition.
+- **The trust dialogue:**
+  - She already knows where Oswin's packet went and asks you. Tell the truth (each answer checks your real Q2 choice) and she joins for free.
+  - Lie, or say *That's my business*, and she asks a modest 100 crowns.
+  - A second question (*Why do you fight?*) is remembered as a flag for later dialogue.
+  - If your company is full, she waits; the offer stands and she remembers the interview.
+- **In the company:**
+  - She takes one party slot and eats like anyone else.
+  - She shows in the map HUD as "+ Mara" and in the party-size counts.
+  - She adds +1 Pathfinding while fit, which speeds travel.
+  - Her strength counts in auto-resolve (about one T3 soldier).
+- **Gear:** she carries a weapon and body armour.
+  - Her damage is 75% of her weapon's (12.8 with the Worn Sword, 15.8 with an Arming Sword).
+  - Her armour is 1 plus her body armour.
+  - A new **Companion** card on the Party sheet shows her stats and status, with *Give …* and *Take back* buttons (gear moves between her and your pack) and *Talk to Mara*.
+- **Battle:**
+  - She deploys beside the hero in her own sprite and follows the infantry's orders.
+  - She is never killed in an ordinary battle: going down, or a capture, wounds her for 2 days. While wounded she stays out of battle and adds no Pathfinding, and she's announced when she's back on her feet.
+- **For Q3:** story effects `{ companion: 'mara' }` (join) and `{ part: 'mara', reason }` (leave for good, gear returned, never rejoins), and conditions `{ companion }` and `{ room }`. Q3's survival outcome will use these.
+- **Saves:** companion and gear are validated, and wrong-slot or unknown gear is dropped. New content table: `data/companions.js`.
+- **Debug panel:** *Mara joins*.
+
+### Checks
+- `tests/mara.test.js` (11 tests) covers:
+  - she appears only after Q2 and leaves the street on joining
+  - an honest answer means she joins free; a lie or "my business" costs 100
+  - no money or no room means she waits
+  - the party slot and food
+  - Pathfinding while fit only, and healing after 2 days
+  - gear rules, numbers and deployment with her sprite
+  - wounds instead of death, and staying in camp while wounded
+  - auto-resolve power, saves and junk, and parting for good
+- 244 tests pass; lint clean.
+- Browser, with real clicks:
+  - Once Q2 was marked done in the preview save, Mara appeared by the inn. I tapped her and answered truthfully ("I kept it."); she joined free and left the street.
+  - The HUD showed "+ Mara" and Pathfinding went to 1.
+  - On the Party sheet's Companion card I gave her the Leather Jerkin (armour 4, gambeson back in the pack).
+  - In a battle she deployed beside the hero in her scout sprite.
+  - The preview save was then restored.
 
 ---
 

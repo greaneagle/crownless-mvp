@@ -25,7 +25,7 @@
   const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
 
   /** Hero + every soldier, wounded included (they still eat). */
-  const partySize = (c) => 1 + c.roster.length;
+  const partySize = (c) => 1 + c.roster.length + CL.companion.slots(c); // hero, soldiers and companion all eat
   const dailyRations = (c) => Math.ceil(partySize(c) / PEOPLE_PER_RATION);
   const foodDays = (c) => c.food / dailyRations(c);
   /** GDD §7: wounded troops still count toward wages. */

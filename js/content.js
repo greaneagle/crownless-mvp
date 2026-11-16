@@ -21,6 +21,7 @@
     'contracts',
     'town_hubs',
     'loot_tables',
+    'companions',
   ];
 
   const raw = () => root.CROWNLESS_CONTENT || {};
@@ -158,6 +159,16 @@
       for (const id of k.troopPool || []) if (!C.troops?.[id]) err(`contract ${k.id}: unknown troop ${id}`);
       if (!(k.timeLimitDays > 0) || !(k.minTroops >= 1 && k.maxTroops >= k.minTroops)) err(`contract ${k.id}: bad limits`);
       if (!(k.reward?.goldBase >= 0)) err(`contract ${k.id}: needs a reward`);
+    }
+    for (const m of Object.values(C.companions || {})) {
+      if (!m.frames?.length || !(m.hp > 0) || !(m.weaponFactor > 0)) err(`companion ${m.id}: needs frames, hp and weaponFactor`);
+      for (const [slot, id] of Object.entries(m.startGear || {})) {
+        if (!m.gearSlots.includes(slot) || C.items?.[id]?.slot !== slot) err(`companion ${m.id}: bad start gear ${id}`);
+      }
+      for (const sk of Object.keys(m.skills || {})) if (!C.skills?.[sk]) err(`companion ${m.id}: unknown skill ${sk}`);
+    }
+    for (const h of Object.values(C.town_hubs || {})) {
+      for (const n of h.npcs || []) if (n.visible) CL.story?.checkCondition(n.visible, C, `town_hub ${h.id}: ${n.id}`, err);
     }
     // Dialogue trees and quests: node links, conditions, effects and triggers (js/story.js).
     CL.story?.validate(C, err);
