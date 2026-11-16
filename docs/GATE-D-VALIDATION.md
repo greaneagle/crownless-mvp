@@ -13,10 +13,42 @@ _Spec: GDD §3–§10 and §14 Gate D._
 | 4.5 AI cavalry; all 15 troop roles | ✅ 0.18.0 |
 | 4.6 Faction reputation and fort ownership | ✅ 0.19.0 |
 | 4.7 Quest and dialogue interpreter | ✅ 0.20.0 |
-| 4.8–4.12 Q1–Q4 and the companion Mara | ⬜ |
+| 4.8–4.12 Q1–Q4 and the companion Mara | 🟡 Q1 ✅ 0.21.0 |
 | 4.13 Escort and delivery contracts | ⬜ |
 | 4.14 Trade-world interactions and regional news | ⬜ |
 | 4.15 Gate D acceptance | ⬜ |
+
+---
+
+## Slice 7 — 0.21.0: Q1 "A Stranger's Wage" (2026-11-16)
+
+### What's in (GDD §4 Q1: "The player chooses between escorting a grain wagon, clearing nearby bandits or helping a recruiter. Introduces movement, settlement menu, first battle, money and recruitment. All choices lead to learning of the disputed charter; no branch locks later story.")
+- **Start:** ask Elder Maren *Is there work for me?*. Her offer has a line suited to your background, and you take one of three jobs or say *Let me think on it*. The quest then waits in the journal, and *About that work…* brings the offer back.
+- **Route 1, the grain wagon:**
+  - Travel to Oakford, and the wagon joins you.
+  - On the road home a three-Looter ambush, marked in gold on the map, springs whatever your strength, with its own encounter line.
+  - Win and the drivers praise your fight. Slip past (by retreating, paying or intimidating) and the wagon still gets home, with a different line from the Elder.
+- **Route 2, the Reavers:** win against any Road Reaver band or clear the Looter Camp.
+- **Route 3, the recruiter:**
+  - Sergeant Brun now has a conversation. He pays a 15-crown advance once.
+  - Hire three soldiers, anywhere, so a Hostile Stonebridge can't block it. The journal counts them.
+  - Then win any fight with them.
+- **Report:** the Elder's words change with your route. You receive **50 crowns, +15 renown** (the GDD's story-resolution figure), **+60 XP**, **+10 Valedorn reputation** (helping a faction) and the protected **Charter Fragment**. She explains the disputed charter and sends you to the caravan master in Eastwatch, which is where Q2 will pick up.
+- **New interpreter support:**
+  - Stage `band`: a quest band is spawned when the stage begins, comes back if it's lost (for example from an old save), and is removed when the stage ends.
+    - It is left alone by patrols and off-screen fights, keeps its tag through saves, and battles against it carry that tag.
+  - `add` counters and numeric flag checks.
+  - `{flag:x}` in text.
+- **Optional:** Q1 is never forced. The sandbox runs without it, and there's no time limit.
+
+### Checks
+- `tests/q1.test.js` (7 tests) plays every route through the real game: travel, encounters, battles, recruiting and dialogue. That includes the wagon fight and the slip-past variant, losing to the ambush, the band being lost and coming back, patrols leaving it alone, the quest tag surviving a save, both ways to finish the Reaver route, the recruiter route with Brun's one-time advance, and "think on it". 223 tests pass; lint clean.
+- Browser, with real clicks, on the wagon route:
+  - Asked the Elder for work and took the wagon; the HUD showed the quest.
+  - Clicked Oakford and travelled there; the ambush appeared on the road.
+  - Clicked Stonebridge; the Reavers stopped the party, and I won the fight with the debug win.
+  - Returned and tapped the Elder: the report line about the ambush, then "Quest complete · +50 crowns · +15 renown", the fragment, and Valedorn at 10.
+  - The preview save was then reset so the quest can be played fresh.
 
 ---
 

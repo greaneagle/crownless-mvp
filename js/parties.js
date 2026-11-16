@@ -64,7 +64,7 @@
   function remove(c, p) {
     const i = c.parties.indexOf(p);
     if (i >= 0) c.parties.splice(i, 1);
-    if (p.contractId) return; // contract bands are extra; they don't hold up regular respawns
+    if (p.contractId || p.questTag) return; // contract and quest bands are extra; they don't hold up regular respawns
     const t = tpl(p.template);
     c.partySpawns[t.id] = Math.max(c.partySpawns[t.id] || 0, now(c) + t.respawnDays);
   }
@@ -72,13 +72,26 @@
   /** Keep each template at its target count once its respawn timer has passed. */
   function ensure(c, ignoreTimers = false) {
     for (const t of Object.values(CL.content.table('party_templates'))) {
-      let active = c.parties.filter((p) => p.template === t.id && !p.contractId).length;
+      let active = c.parties.filter((p) => p.template === t.id && !p.contractId && !p.questTag).length;
       while (active < t.count && (ignoreTimers || now(c) >= (c.partySpawns[t.id] || 0))) {
         spawn(c, t.id);
         active++;
         if (!ignoreTimers) c.partySpawns[t.id] = now(c) + t.respawnDays;
       }
     }
+    CL.story?.ensureBands(c); // bands the story needs right now (re-spawned if lost)
+  }
+
+  /**
+   * A band the story needs (data/quests.js stage `band`): fixed troops at a fixed spot, keeping
+   * near it. Tagged so quest triggers can recognise it; story.js keeps it alive while needed.
+   */
+  function spawnQuestBand(c, spec, x, y) {
+    const p = spawn(c, spec.template);
+    if (spec.troops) p.troops = { ...spec.troops };
+    Object.assign(p, { x, y, tx: null, ty: null, anchor: { x, y }, questTag: spec.tag });
+    CL.diag.log('info', 'Quest band spawned', { tag: spec.tag, troops: p.troops });
+    return p;
   }
 
   // ---- Behaviour ----
@@ -89,13 +102,15 @@
     const t = tpl(p.template);
     if (!hostileTo(c, t) || !playerOnMap(c) || now(c) < p.ignoreUntil) return false;
     if (dist(p, c.world) > t.detection) return false;
+    if (p.questTag) return true; // a story ambush springs whatever the odds
     return A().troopsPower(p.troops) >= CHASE_RATIO * A().playerPower(c);
   }
 
   function nearest(c, p, kind, range) {
     let best = null;
     for (const o of c.parties) {
-      if (o === p || tpl(o.template).kind !== kind) continue;
+      // Quest bands are the story's: patrols leave them be and they leave caravans alone.
+      if (o === p || o.questTag || tpl(o.template).kind !== kind) continue;
       const d = dist(p, o);
       if (d <= range && (!best || d < best.d)) best = { o, d };
     }
@@ -128,15 +143,15 @@
         return;
       }
       p.alerted = false;
-      // Bands keep clear of patrols they can see.
-      const threat = nearest(c, p, 'patrol', t.detection);
+      // Bands keep clear of patrols they can see (quest bands hold their ground).
+      const threat = p.questTag ? null : nearest(c, p, 'patrol', t.detection);
       if (threat && A().troopsPower(threat.troops) > A().troopsPower(p.troops)) {
         p.chasing = 'fleeing';
         p.tx = clamp(p.x * 2 - threat.x, 2, 98);
         p.ty = clamp(p.y * 2 - threat.y, 2, 98);
         return;
       }
-      const prey = nearest(c, p, 'caravan', t.detection);
+      const prey = p.questTag ? null : nearest(c, p, 'caravan', t.detection);
       if (prey) {
         p.chasing = prey.id;
         [p.tx, p.ty] = [prey.x, prey.y];
@@ -200,7 +215,7 @@
   /** Bandits vs caravans and patrols vs bandits fight it out off-screen. */
   function resolveContacts(c) {
     for (const a of [...c.parties]) {
-      if (!c.parties.includes(a) || tpl(a.template).kind !== 'bandit') continue;
+      if (!c.parties.includes(a) || a.questTag || tpl(a.template).kind !== 'bandit') continue;
       for (const b of [...c.parties]) {
         const kb = tpl(b.template).kind;
         if (b === a || !c.parties.includes(b) || (kb !== 'caravan' && kb !== 'patrol')) continue;
@@ -274,7 +289,8 @@
       const t = tpl(p.template);
       const map = W().battleMapAt(c.world.x, c.world.y);
       const hostile = hostileTo(c, t);
-      const text = hostile && t.hostileText ? t.hostileText : t.text;
+      const story = p.questTag ? CL.story.bandSpec(p.questTag, c)?.text : null;
+      const text = story || (hostile && t.hostileText ? t.hostileText : t.text);
       return { kind: 'party', name: t.name, text, troops: p.troops, hostile, def: battleDef(t, p.troops, map), party: p, t };
     }
     if (g.siteId) {
@@ -461,6 +477,7 @@
       };
       if (t.kind === 'bandit') q.lair = t.lairs.includes(p.lair) ? p.lair : t.lairs[0];
       if (Number.isInteger(p.contractId)) q.contractId = p.contractId;
+      if (typeof p.questTag === 'string' && /^[a-z0-9_]{1,40}$/.test(p.questTag)) q.questTag = p.questTag;
       if (num(p.anchor?.x) && num(p.anchor?.y)) q.anchor = { x: clamp(p.anchor.x, 0, 100), y: clamp(p.anchor.y, 0, 100) };
       if (t.kind === 'caravan') {
         q.routeIndex = Number.isInteger(p.routeIndex) ? clamp(p.routeIndex, 0, t.route.length - 1) : 0;
@@ -482,6 +499,7 @@
     INTIMIDATE_RATIO,
     CARAVAN_EFFECT,
     spawn,
+    spawnQuestBand,
     remove,
     ensure,
     find,

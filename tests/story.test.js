@@ -173,9 +173,9 @@ test('Elder Maren: background lines compose, choices set flags, the start node f
   assert.doesNotMatch(v.text, /peddler/);
   assert.deepEqual(
     Array.from(v.options.map((o) => o.text)),
-    ['What troubles Stonebridge?', 'Only passing through.'],
+    ['Is there work for me?', 'What troubles Stonebridge?', 'Only passing through.'],
   );
-  v = S.choose(v, 0);
+  v = S.choose(v, 1);
   assert.equal(v.node, 'troubles');
   assert.equal(v.services, false, 'no shop menu during the story beat');
   assert.equal(S.state(c).flags.met_elder, true);

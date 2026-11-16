@@ -5,7 +5,7 @@
  * This module only interprets them. Three small vocabularies:
  *
  *  Conditions (`if`): an object with one test, or an array meaning "all of these".
- *    { flag: 'x' }  { flag: 'x', is: v }  { not: cond }  { all: [..] }  { any: [..] }
+ *    { flag: 'x' }  { flag: 'x', is: v }  { flag: 'n', gte: 3 }  { not: cond }  { all: [..] }  { any: [..] }
  *    { quest: 'q1', is: 'unstarted'|'active'|'done'|'failed' }  { quest: 'q1', stage: 's' }
  *    { gold: n }  { renown: n }  { level: n }  { soldiers: n }  — "at least n", or { gte, lte }
  *    { rep: 'valedorn', gte: n }  { standing: 'aurelian', is: 'friendly' }
@@ -13,7 +13,7 @@
  *    { has: 'item' }  { owner: 'greywall_fort', is: 'valedorn' }  { at: 'stonebridge' }
  *
  *  Effects (`do`): a list, applied in order.
- *    { set: 'flag', to: v = true }  { clear: 'flag' }
+ *    { set: 'flag', to: v = true }  { clear: 'flag' }  { add: 'counter', by: 1 }
  *    { gold: n }  { renown: n }  { xp: n }  { food: n }  { rep: 'valedorn', by: n }
  *    { give: 'item', n = 1 }  { take: 'item', n = 1 }  { recruit: 'levy', n = 1 }
  *    { start: 'q1' }  { stage: 's', quest: 'q1' }  { complete: 'q1' }  { fail: 'q1' }
@@ -24,7 +24,12 @@
  *    Events: battle {win, encounter, site, party, contract}, enter {settlement}, recruit {troop,
  *    settlement}, trade {settlement, good, side}, contract {template, giver}, talk {dialogue, node}.
  *
- * Text may use {name}, {gold}, {renown}, {settlement}. Story state lives in `campaign.story`. */
+ * A stage may also need a band on the map: band: { template, tag, troops, text?, near | between: [a, b] }
+ * (settlement or site ids). It is spawned when the stage begins, re-spawned if lost while the stage
+ * is active (so nothing soft-locks), and removed once no active stage needs it. Battles against it
+ * carry its tag: match: { tag: 'q1_ambush' }.
+ *
+ * Text may use {name}, {gold}, {renown}, {settlement} and {flag:some_flag}. Story state lives in `campaign.story`. */
 (function (root) {
   'use strict';
   const CL = root.Crownless;
@@ -34,7 +39,7 @@
   const MAX_FLAGS = 200;
   const MAX_NOTES = 20;
   const COND_KEYS = ['flag', 'not', 'all', 'any', 'quest', 'gold', 'renown', 'level', 'soldiers', 'rep', 'standing', 'skill', 'attribute', 'background', 'has', 'owner', 'at'];
-  const EFFECT_KEYS = ['set', 'clear', 'gold', 'renown', 'xp', 'food', 'rep', 'give', 'take', 'recruit', 'start', 'stage', 'complete', 'fail', 'owner', 'message', 'note'];
+  const EFFECT_KEYS = ['set', 'clear', 'add', 'gold', 'renown', 'xp', 'food', 'rep', 'give', 'take', 'recruit', 'start', 'stage', 'complete', 'fail', 'owner', 'message', 'note'];
 
   const camp = () => CL.campaign;
   const quest = (id) => CL.content.table('quests')[id] || null;
@@ -73,7 +78,11 @@
     if ('all' in cond) return cond.all.every((x) => test(x, c));
     if ('any' in cond) return cond.any.some((x) => test(x, c));
     if ('not' in cond) return !test(cond.not, c);
-    if ('flag' in cond) return 'is' in cond ? s.flags[cond.flag] === cond.is : Boolean(s.flags[cond.flag]);
+    if ('flag' in cond) {
+      if ('is' in cond) return s.flags[cond.flag] === cond.is;
+      if ('gte' in cond || 'lte' in cond || 'eq' in cond) return compare(Number(s.flags[cond.flag]) || 0, cond);
+      return Boolean(s.flags[cond.flag]);
+    }
     if ('quest' in cond) {
       if ('stage' in cond) return s.quests[cond.quest]?.status === 'active' && s.quests[cond.quest].stage === cond.stage;
       return questStatus(c, cond.quest) === (cond.is || 'active');
@@ -103,6 +112,7 @@
     const s = state(c);
     if ('set' in e) s.flags[e.set] = 'to' in e ? e.to : true;
     else if ('clear' in e) delete s.flags[e.clear];
+    else if ('add' in e) s.flags[e.add] = (Number(s.flags[e.add]) || 0) + ('by' in e ? e.by : 1);
     else if ('gold' in e) c.gold = Math.max(0, c.gold + e.gold);
     else if ('renown' in e) c.renown = Math.max(0, c.renown + e.renown);
     else if ('xp' in e) CL.character.gainXp(e.xp, c);
@@ -131,6 +141,7 @@
     if (!q || questStatus(c, id) !== 'unstarted') return false;
     state(c).quests[id] = { status: 'active', stage: q.stages[0].id, notes: [], startedDay: c.day };
     CL.diag.log('info', 'Quest started', { quest: id });
+    ensureBands(c);
     CL.ui.message(`New quest: ${q.title}`);
     return true;
   }
@@ -141,6 +152,7 @@
     if (!q || r?.status !== 'active' || !q.stages.some((st) => st.id === stageId)) return false;
     r.stage = stageId;
     CL.diag.log('info', 'Quest stage', { quest: id, stage: stageId });
+    ensureBands(c);
     return true;
   }
 
@@ -161,6 +173,7 @@
       CL.ui.message(`Quest complete: ${q.title}${w.gold ? ` · +${w.gold} crowns` : ''}${w.renown ? ` · +${w.renown} renown` : ''}`);
     } else CL.ui.message(`Quest failed: ${q.title}`);
     CL.diag.log('info', 'Quest ended', { quest: id, status });
+    ensureBands(c);
     return true;
   }
 
@@ -169,6 +182,49 @@
     if (!r || !text) return;
     r.notes.push(text);
     if (r.notes.length > MAX_NOTES) r.notes.shift();
+  }
+
+  /** Where a stage band stands: beside a settlement or site, or halfway between two of them. */
+  function placeOf(id) {
+    const s = CL.content.table('settlements')[id] || CL.world.map().sites[id];
+    return s ? { x: s.mapX, y: s.mapY } : null;
+  }
+
+  function bandSpot(spec) {
+    if (spec.between) {
+      const [a, b] = spec.between.map(placeOf);
+      return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+    }
+    const p = placeOf(spec.near);
+    return { x: Math.min(98, p.x + 3), y: Math.min(98, p.y + 2) };
+  }
+
+  /** The stage band spec behind a quest band's tag (for its encounter text). */
+  function bandSpec(tag, c = camp()) {
+    for (const [id, r] of Object.entries(state(c).quests)) {
+      const band = r.status === 'active' && quest(id)?.stages.find((st) => st.id === r.stage)?.band;
+      if (band?.tag === tag) return band;
+    }
+    return null;
+  }
+
+  /** Keep exactly the bands that active quest stages need on the map. */
+  function ensureBands(c = camp()) {
+    if (!c?.parties || !c.story) return;
+    const wanted = new Map();
+    for (const [id, r] of Object.entries(c.story.quests)) {
+      if (r.status !== 'active') continue;
+      const band = quest(id)?.stages.find((st) => st.id === r.stage)?.band;
+      if (band) wanted.set(band.tag, band);
+    }
+    for (const p of [...c.parties]) {
+      if (p.questTag && !wanted.has(p.questTag)) c.parties.splice(c.parties.indexOf(p), 1);
+    }
+    for (const [tag, spec] of wanted) {
+      if (c.parties.some((p) => p.questTag === tag)) continue;
+      const at = bandSpot(spec);
+      CL.parties.spawnQuestBand(c, spec, at.x, at.y);
+    }
   }
 
   const matches = (match, payload) =>
@@ -201,7 +257,8 @@
       .replace(/\{name\}/g, c.character?.name || 'wanderer')
       .replace(/\{gold\}/g, String(c.gold))
       .replace(/\{renown\}/g, String(c.renown))
-      .replace(/\{settlement\}/g, here);
+      .replace(/\{settlement\}/g, here)
+      .replace(/\{flag:([a-z0-9_]+)\}/g, (_, f) => String(state(c).flags[f] ?? 0));
   }
 
   /**
@@ -338,6 +395,7 @@
         continue;
       }
       if (k === 'set' && 'to' in e && !isFlagValue(e.to)) err(`${where}: flag ${e.set} needs a simple value`);
+      if (k === 'add' && 'by' in e && !Number.isFinite(e.by)) err(`${where}: add needs a number`);
       if (['gold', 'renown', 'xp', 'food'].includes(k) && !Number.isFinite(e[k])) err(`${where}: ${k} needs a number`);
       if (k === 'rep' && (!C.factions?.[e.rep] || !Number.isFinite(e.by))) err(`${where}: bad rep effect`);
       if ((k === 'give' || k === 'take') && !C.items?.[e[k]]) err(`${where}: unknown item ${e[k]}`);
@@ -396,6 +454,17 @@
         if (!st.id || ids.has(st.id)) err(`${w}: missing or repeated stage id ${st.id}`);
         ids.add(st.id);
         if (!st.journal) err(`${w}.${st.id}: needs a journal line`);
+        if (st.band) {
+          const b = st.band;
+          const map = Object.values(C.world_map || {})[0];
+          const known = (x) => Boolean(C.settlements?.[x] || map?.sites?.[x]);
+          if (C.party_templates?.[b.template]?.kind !== 'bandit') err(`${w}.${st.id}: band needs a bandit template`);
+          if (!/^[a-z0-9_]{1,40}$/.test(b.tag || '')) err(`${w}.${st.id}: band needs a tag`);
+          if (b.between ? !(b.between.length === 2 && b.between.every(known)) : !known(b.near)) err(`${w}.${st.id}: band needs a known place`);
+          for (const [tid, n] of Object.entries(b.troops || {})) {
+            if (!C.troops?.[tid] || !(Number.isInteger(n) && n > 0)) err(`${w}.${st.id}: bad band troop ${tid}`);
+          }
+        }
         for (const t of st.on || []) {
           if (!EVENTS.includes(t.event)) err(`${w}.${st.id}: unknown event ${t.event}`);
           checkCond(t.if, C, `${w}.${st.id}`, err);
@@ -443,6 +512,8 @@
     setStage,
     finish,
     questStatus,
+    ensureBands,
+    bandSpec,
     emit,
     format,
     nodeText,

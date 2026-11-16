@@ -76,6 +76,7 @@
           y: 238,
           pace: [850, 238],
           action: 'recruit',
+          dialogue: 'sergeant_brun',
           lines: ['Strong backs and steady hands wanted. Coin up front.', 'A levy with a full belly fights twice as hard.']
         },
         {

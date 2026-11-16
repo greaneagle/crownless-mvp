@@ -494,8 +494,8 @@
   function drawParty(p) {
     const t = CL.content.get('party_templates', p.template);
     const { x, y, crowded } = CL.world.partyDrawPos(p); // beside a landmark, not on its name
-    if (p.contractId) {
-      // Contract target: pulsing gold ring.
+    if (p.contractId || p.questTag) {
+      // Contract or quest target: pulsing gold ring.
       const pulse = 17 + Math.sin(performance.now() / 250) * 2;
       ctx.save();
       ctx.strokeStyle = '#ffd34d';
@@ -575,8 +575,8 @@
     }
     ctx.restore();
     if (!crowded) {
-      const name = p.contractId ? 'Contract target' : t.kind === 'bandit' ? 'Reavers' : t.kind === 'patrol' ? 'Patrol' : 'Caravan';
-      label(`${name} ${n}`, x, y + 20, p.contractId ? '#ffd34d' : hostile ? '#ffb3a1' : '#e8f0ff');
+      const name = p.contractId ? 'Contract target' : p.questTag ? 'Quest: Reavers' : t.kind === 'bandit' ? 'Reavers' : t.kind === 'patrol' ? 'Patrol' : 'Caravan';
+      label(`${name} ${n}`, x, y + 20, p.contractId || p.questTag ? '#ffd34d' : hostile ? '#ffb3a1' : '#e8f0ff');
     }
   }
 

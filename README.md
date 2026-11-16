@@ -1,4 +1,4 @@
-# Crownless 0.20.0 — The Border March
+# Crownless 0.21.0 — The Border March
 
 A single-player, top-down party-battle prototype in plain HTML5 Canvas and classic JavaScript. There's no bundler, no runtime dependencies and no server. It's published to GitHub Pages straight from `main`.
 
@@ -21,6 +21,7 @@ A single-player, top-down party-battle prototype in plain HTML5 Canvas and class
 - A frontal shield block that covers 120°. It can't cancel a swing you've already started, and enemy windups are drawn in red so you know when to block.
 - Allied infantry, archers and cavalry fight alongside you. Archers fire arrows; riders charge, hit 1.2× harder at full gallop, ride through and wheel round.
 - Pick a group with **1** (infantry), **2** (archers) or **3** (cavalry), then give an order: **F** Follow, **H** Hold or **C** Charge.
+- **Q1 — A Stranger's Wage:** ask Elder Maren in Stonebridge for work. Fetch the grain wagon from Oakford (and survive the ambush), break the Reavers, or help Sergeant Brun raise three recruits. Every route ends with the charter fragment and the first hint of who should hold Greywall.
 - **Story system:** quests and conversations are data (`data/quests.js`, `data/dialogue.js`) run by an interpreter with conditions, effects and event triggers. Talk to Elder Maren for a conversation that changes with your background, renown, reputation and who holds Greywall. The **Journal** lists your quests and objectives.
 - **Walk Stonebridge:** stroll the streets and talk to the innkeeper (food, rest, contracts, saving), the merchant (market), the sergeant (hire troops) and the elder. Tap a person to walk over and talk; the classic menu is a tap away.
 - **Three battlefields:** you fight on an open field, in a forest clearing (trees block movement and arrows) or at a walled fort courtyard, depending on where the fight happens. Forts show their garrison.

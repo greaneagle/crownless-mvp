@@ -220,7 +220,7 @@
     }
     const g = CL.game;
     const band = g.partyId != null ? CL.parties?.find(camp, g.partyId) : null;
-    CL.story?.emit('battle', { win, encounter: enc.id, site: g.siteId || null, party: band?.template || null, contract: Boolean(band?.contractId) }, camp);
+    CL.story?.emit('battle', { win, encounter: enc.id, site: g.siteId || null, party: band?.template || null, tag: band?.questTag || null, contract: Boolean(band?.contractId) }, camp);
     return result;
   }
 
