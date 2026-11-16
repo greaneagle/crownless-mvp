@@ -4,7 +4,11 @@
   'use strict';
   const CL = root.Crownless;
 
-  const PARTY_CAP = 15; // all soldiers, wounded included (GDD §7). Formula arrives in Gate C.
+  // XP a soldier needs before it can be upgraded from its tier (gold cost comes from data).
+  const UPGRADE_XP = { T1: 40, T2: 100 };
+  // Battle XP. Hero: per battle + per enemy defeated. Soldiers: per battle they fought in (half if
+  // wounded) + per enemy they personally felled in a real battle.
+  const XP = { heroWin: 25, heroLoss: 5, heroPerKill: 8, heroPerKillLoss: 4, troopWin: 20, troopLoss: 8, troopPerKill: 5 };
   const DEATH_CHANCE = 0.35; // otherwise wounded (GDD §7)
   const BATTLE_DAYS = 0.25; // a battle and its aftermath take about six hours
   const DEFEAT_GOLD_KEPT = 0.8; // GDD §6: lose ~20% of carried crowns
@@ -33,8 +37,67 @@
 
   const canRest = (camp = c()) => offers(currentSettlement(camp), 'rest');
 
+  /**
+   * GDD §5 party cap: min(20, 8 + 2×Leadership + floor(Renown/40) + faction_bonus). The faction bonus
+   * (+2 when Friendly) arrives with reputation. Wounded soldiers take slots too (GDD §7).
+   */
+  function partyCap(camp = c()) {
+    return Math.min(20, 8 + 2 * CL.character.skill('leadership', camp) + Math.floor(camp.renown / 40));
+  }
+
   function canRecruit(camp, troopId) {
-    return camp.gold >= CL.content.troop(troopId).recruitCost && camp.roster.length < PARTY_CAP;
+    return camp.gold >= CL.content.troop(troopId).recruitCost && camp.roster.length < partyCap(camp);
+  }
+
+  // ---- Troop upgrades (GDD §7) ----
+
+  /** Upgrade paths from a troop: main and alternate branch. Cavalry stays locked until mounted AI. */
+  function upgradeOptions(troopId) {
+    const t = CL.content.troop(troopId);
+    return [
+      [t.upgradeTo, t.upgradeCost],
+      [t.altUpgradeTo, t.altUpgradeCost],
+    ]
+      .filter(([to]) => to)
+      .map(([to, cost]) => {
+        const target = CL.content.troop(to);
+        return { to, cost, xp: UPGRADE_XP[t.tier], locked: target.role === 'cavalry' ? 'Cavalry training comes later' : null };
+      });
+  }
+
+  const readyFor = (s) => s.woundedUntil === null && s.xp >= (UPGRADE_XP[CL.content.troop(s.troop).tier] ?? Infinity);
+
+  /** Upgrade up to max ready soldiers of one troop type along one branch. All-or-nothing per soldier. */
+  function upgrade(fromId, toId, max = Infinity, camp = c()) {
+    const opt = upgradeOptions(fromId).find((o) => o.to === toId);
+    if (!opt || opt.locked) return 0;
+    let done = 0;
+    for (const s of camp.roster) {
+      if (done >= max || camp.gold < opt.cost) break;
+      if (s.troop !== fromId || !readyFor(s)) continue;
+      camp.gold -= opt.cost;
+      s.xp -= opt.xp;
+      s.troop = toId;
+      done++;
+    }
+    if (done) CL.diag.log('info', 'Troops upgraded', { from: fromId, to: toId, count: done, cost: done * opt.cost });
+    return done;
+  }
+
+  /** Award battle XP to the hero and to the soldiers who took part. */
+  function awardXp(camp, { win, kills, wounded, participants = [], soldierKills = {} }) {
+    const heroXp = win ? XP.heroWin + XP.heroPerKill * kills : XP.heroLoss + XP.heroPerKillLoss * kills;
+    const levels = CL.character.gainXp(heroXp, camp);
+    let troopXp = 0;
+    for (const s of camp.roster) {
+      if (!participants.includes(s.id)) continue;
+      let xp = win ? XP.troopWin : XP.troopLoss;
+      if (wounded.includes(s.id)) xp = Math.round(xp / 2);
+      xp += XP.troopPerKill * (soldierKills[s.id] || 0);
+      s.xp += xp;
+      troopXp += xp;
+    }
+    return { heroXp, levels, troopXp, ready: camp.roster.filter(readyFor).length };
   }
 
   function recruit(troopId) {
@@ -127,7 +190,8 @@
    * Apply one battle's outcome to the campaign. Pure with respect to the DOM.
    * Guarded by battleId so a battle can never pay out twice.
    */
-  function applyBattleResult(camp, { battleId, encounterId, encounter, win, kills, killed, wounded }) {
+  function applyBattleResult(camp, outcome) {
+    const { battleId, encounterId, encounter, win, kills, killed, wounded } = outcome;
     if (battleId <= camp.lastResolvedBattle) return null;
     const enc = encounter || CL.content.encounter(encounterId);
     camp.lastResolvedBattle = battleId;
@@ -136,7 +200,7 @@
     for (const s of camp.roster) if (wounded.includes(s.id)) s.woundedUntil = camp.day + CL.save.WOUND_DAYS;
     camp.battles++;
     CL.upkeep.onBattle(camp, win);
-    const result = { gold: 0, renown: 0, loot: {}, lostItem: null };
+    const result = { gold: 0, renown: 0, loot: {}, lostItem: null, xp: awardXp(camp, outcome) };
     if (win) {
       result.gold = enc.reward.goldBase + kills * enc.reward.goldPerKill;
       result.renown = enc.reward.renown;
@@ -165,7 +229,17 @@
     if (g.mode !== 'battle') return;
     g.mode = 'result';
     const { killed, wounded } = rollCasualties(g.allies);
-    const outcome = { battleId: g.battleId, encounter: g.encounterDef, win, kills: g.kills, killed, wounded };
+    const deployed = g.allies.filter((a) => a.soldierId != null);
+    const outcome = {
+      battleId: g.battleId,
+      encounter: g.encounterDef,
+      win,
+      kills: g.kills,
+      killed,
+      wounded,
+      participants: deployed.map((a) => a.soldierId),
+      soldierKills: Object.fromEntries(deployed.map((a) => [a.soldierId, a.kills || 0])),
+    };
     const r = applyBattleResult(CL.campaign, outcome);
     if (r) {
       CL.world?.onBattleResolved(win, g.siteId);
@@ -199,6 +273,11 @@
     }
     lines.push(`Enemies defeated: ${kills}`, `Killed: ${killed.length} · Wounded: ${wounded.length}`);
     lines.push(`Survivors: ${survivors}${waves ? ` · Battle waves reached: ${waves}` : ''}`);
+    if (r.xp) {
+      const lv = r.xp.levels ? ` · <strong>Level up! Now level ${CL.campaign.character.level}</strong>` : '';
+      const ready = r.xp.ready ? ` · ${r.xp.ready} soldier${r.xp.ready === 1 ? '' : 's'} ready to upgrade` : '';
+      lines.push(`+${r.xp.heroXp} XP${lv}${r.xp.troopXp ? ` · troops +${r.xp.troopXp} XP` : ''}${ready}`);
+    }
     if (win) lines.push(`Loot: ${describeItems(r.loot) || 'nothing of value'}`);
     else if (r.lostItem) lines.push(`Taken by your captors: ${CL.content.item(r.lostItem).name}`);
     lines.push(
@@ -210,7 +289,13 @@
   }
 
   CL.party = {
-    PARTY_CAP,
+    UPGRADE_XP,
+    XP,
+    partyCap,
+    upgradeOptions,
+    readyFor,
+    upgrade,
+    awardXp,
     resultHtml,
     currentSettlement,
     recruitsHere,

@@ -15,12 +15,53 @@ Gate C is delivered in slices. This file records each one.
 | 5. Trading (6 goods, scarcity) | ✅ 0.9.0, with caravans moving prices since 0.10.0 |
 | 6. World parties + encounter options (Attack / Negotiate / Retreat / Auto-resolve) | ✅ 0.10.0. Patrols and caravans can be talked to but not attacked until reputation (Gate D). |
 | 7. Capture on defeat | 🟡 0.6.0: released near a settlement after half a day. Loss of crowns and an item came in Gate B. |
-| 8. Player XP/levels/skills; troop upgrades; party-cap formula | ⬜ |
+| 8. Player XP/levels/skills; troop upgrades; party-cap formula | ✅ 0.11.0. Cavalry upgrades unlock with mounted AI (Gate D). |
 | 9. Bandit-hunt contract | ⬜ |
 | 10. Save export/import | ⬜ |
 | 11. Gate C acceptance | ⬜ |
 
 ---
+
+## Slice 6 — 0.11.0: Levels, troop upgrades, party cap (2026-11-16)
+
+### Rules (GDD §5, §7)
+- **Hero XP:**
+  - Victory: 25 + 8 per enemy defeated. Defeat: 5 + 4 per enemy defeated. Fought or auto-resolved battles both count.
+  - **Intelligence** adds 2% per point above 5 (GDD: "INT modestly influences XP").
+- **Levels:**
+  - Next level needs `round(100 × L^1.35)` XP (100, 255, 441, 650, …), with a **cap of level 10**.
+  - Each level gives **+1 skill point**; every 2nd level gives **+1 attribute point**.
+  - Points are spent with **+** buttons on the Party screen: skills cap at 10, attributes at 20. Strength raises HP straight away.
+- **Troop XP:**
+  - Every soldier who fought earns 20 for a win or 8 for a loss, halved if wounded, plus 5 per enemy they felled in a real battle (kills are now credited per unit).
+  - Soldiers who weren't deployed earn nothing.
+- **Upgrades:**
+  - The GDD trees: Levy → Footman → Guard or Levy → Hunter → Longbowman (Valedorn); Recruit → Spearman → Legionary or Recruit → Skirmisher → Marksman (Aurelian). `data/troops.js` gained the Levy → Hunter and Recruit → Skirmisher branches.
+  - **Cost:** gold from data (25 for T1→T2, 60 for T2→T3, as in the GDD) plus XP (40 at T1, 100 at T2, our starting values). Wounded soldiers can't upgrade.
+  - **The Footman → Rider and Spearman → Horse Scout branches are locked**, marked "Cavalry training comes later", until mounted AI arrives (Gate D 4.5).
+- **Party cap:**
+  - `min(20, 8 + 2×Leadership + floor(Renown/40))`, replacing the flat 15. The GDD's +2 faction bonus arrives with reputation.
+  - Wounded soldiers take slots. The Party screen shows the breakdown, and older saves over the new cap keep their soldiers but can't hire more.
+- **Battle result:** shows hero and troop XP, "Level up!", and how many soldiers are ready to upgrade.
+- **Party screen:**
+  - Level and XP, unspent points, attribute and skill **+** buttons, and the party-size breakdown.
+  - A new **Troops** section lists each troop type with count, wounded, best XP against the requirement, and how many are ready, plus one upgrade button per branch with its price.
+- **Debug:** a new **Progress** section with Hero +100 / +1000 XP, Troops +50 XP and Renown +40.
+
+### Verification
+- **Automated:** `npm test` → 131/131. The new `tests/progression.test.js` (11 tests) covers:
+  - the XP curve, level-ups and points (including several levels at once), the Intelligence bonus and level cap
+  - point spending with caps and STR → HP
+  - the party-cap formula and recruiting being blocked at the cap
+  - upgrade trees and the cavalry lock, upgrade rules (XP, gold, wounded, running out of gold)
+  - battle XP for the hero and soldiers (wins, losses, wounded, non-participants), with real-battle kills credited per soldier
+  - auto-resolve XP, and save validation
+- **Browser (desktop):**
+  - +1000 XP took a Farmhand to level 4 with 3 skill and 2 attribute points.
+  - **Real clicks** on the Leadership "+" raised the party cap from 8 to 10, and on the Strength "+" raised Strength to 7 and HP to 95.
+  - A **real click** on "→ Footman · 25 each" upgraded 4 Levies for 100 crowns; the Guard branch then waited for 100 XP and Rider showed as locked.
+  - Upgraded 2 Recruits to Skirmishers, which caught and fixed a "Levys" plural bug.
+  - The Looter Camp victory screen showed "+49 XP · troops +120 XP". No errors were logged.
 
 ## Slice 5 — 0.10.0: A living map and encounter choices (2026-11-16)
 

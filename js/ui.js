@@ -310,9 +310,45 @@
       d.append(...parts.map((t) => Object.assign(document.createElement('span'), { textContent: t })));
       return d;
     };
-    const skills = Object.values(CL.content.table('skills')).map((sk) => `${sk.name} ${C.skill(sk.id)}`);
+    const ch = c.character;
+    // A stat with a "+" button while there are points to spend.
+    const spendable = (label, canSpend, onSpend) => {
+      const span = Object.assign(document.createElement('span'), { textContent: label });
+      if (canSpend) {
+        const b = Object.assign(document.createElement('button'), { type: 'button', className: 'plus', textContent: '+' });
+        b.setAttribute('aria-label', `Raise ${label}`);
+        b.onclick = () => {
+          onSpend();
+          CL.save.write();
+          renderSheet();
+        };
+        span.append(b);
+      }
+      return span;
+    };
+    const spendLine = (parts) => {
+      const d = Object.assign(document.createElement('div'), { className: 'statLine' });
+      d.append(...parts);
+      return d;
+    };
+    const next = C.xpToNext(ch.level);
+    const levelText =
+      ch.level >= C.MAX_LEVEL ? `Level ${ch.level} (max)` : `Level ${ch.level} · XP ${ch.xp}/${next}`;
+    const points = [
+      ch.skillPoints ? `${ch.skillPoints} skill point${ch.skillPoints > 1 ? 's' : ''} to spend` : '',
+      ch.attributePoints ? `${ch.attributePoints} attribute point${ch.attributePoints > 1 ? 's' : ''} to spend` : '',
+    ].filter(Boolean);
+    const cap = CL.party.partyCap(c);
+    const lead = C.skill('leadership', c);
     stats.replaceChildren(
-      line(C.ATTRIBUTES.map((a) => `${C.ATTRIBUTE_NAMES[a]} ${C.attribute(a)}`)),
+      line([levelText, ...points]),
+      spendLine(
+        C.ATTRIBUTES.map((a) =>
+          spendable(`${C.ATTRIBUTE_NAMES[a]} ${C.attribute(a)}`, ch.attributePoints > 0 && C.attribute(a) < C.MAX_ATTRIBUTE, () =>
+            C.spendAttribute(a),
+          ),
+        ),
+      ),
       line([
         `HP ${hero.hp}`,
         `Damage ${Math.round(hero.damage * 10) / 10}`,
@@ -320,9 +356,15 @@
         hero.canBlock ? 'Can block' : 'No shield — cannot block',
         `Travel ×${C.travelFactor().toFixed(2)}`,
       ]),
-      line(skills),
+      spendLine(
+        Object.values(CL.content.table('skills')).map((sk) =>
+          spendable(`${sk.name} ${C.skill(sk.id)}`, ch.skillPoints > 0 && ch.skills[sk.id] < C.MAX_SKILL, () => C.spendSkill(sk.id)),
+        ),
+      ),
+      line([`Party size ${c.roster.length}/${cap} (8 + 2×Leadership ${lead} + Renown ${c.renown}/40${cap === 20 ? ', max 20' : ''})`]),
       Object.assign(document.createElement('div'), { className: 'statLine' }),
     );
+    renderTroops();
     stats.lastChild.append(...supplyParts(c));
     $('#sheetEquip').replaceChildren(
       ...C.SLOTS.map((slot) => {
@@ -351,6 +393,56 @@
     );
   }
 
+  /** Levy → Levies, Footman → Footmen, Hunter → Hunters. */
+  function plural(name, n) {
+    if (n === 1) return name;
+    if (name.endsWith('man')) return `${name.slice(0, -3)}men`;
+    if (/[^aeiou]y$/.test(name)) return `${name.slice(0, -1)}ies`;
+    return `${name}s`;
+  }
+
+  /** Troops grouped by type, with XP progress and upgrade buttons (GDD §7). */
+  function renderTroops() {
+    const c = CL.campaign;
+    const P = CL.party;
+    const groups = {};
+    for (const s of c.roster) {
+      groups[s.troop] ||= [];
+      groups[s.troop].push(s);
+    }
+    const rows = Object.entries(groups).map(([id, list]) => {
+      const t = CL.content.troop(id);
+      const need = P.UPGRADE_XP[t.tier];
+      const ready = list.filter(P.readyFor).length;
+      const wounded = list.filter((s) => s.woundedUntil !== null).length;
+      const best = Math.max(...list.map((s) => s.xp));
+      const row = Object.assign(document.createElement('div'), { className: 'troopRow' });
+      const info = need
+        ? `${list.length}× ${t.name} (${t.tier} ${t.role})${wounded ? ` · ${wounded} wounded` : ''} · best XP ${best}/${need}${ready ? ` · ${ready} ready` : ''}`
+        : `${list.length}× ${t.name} (${t.tier} ${t.role})${wounded ? ` · ${wounded} wounded` : ''} · top tier`;
+      row.append(Object.assign(document.createElement('span'), { textContent: info }));
+      for (const o of P.upgradeOptions(id)) {
+        const to = CL.content.troop(o.to);
+        const b = Object.assign(document.createElement('button'), { type: 'button' });
+        b.textContent = o.locked ? `→ ${to.name}: ${o.locked}` : `→ ${to.name} · ${o.cost} each`;
+        b.disabled = Boolean(o.locked) || !ready || c.gold < o.cost;
+        b.onclick = () => {
+          const n = P.upgrade(id, o.to);
+          if (n) {
+            CL.save.write();
+            message(`Upgraded ${n} ${plural(t.name, n)} to ${plural(to.name, n)}`);
+          }
+          renderSheet();
+        };
+        row.append(b);
+      }
+      return row;
+    });
+    $('#sheetTroops').replaceChildren(
+      ...(rows.length ? rows : [Object.assign(document.createElement('p'), { textContent: 'No soldiers yet. Hire some in a town.' })]),
+    );
+  }
+
   function openSheet() {
     if (!CL.campaign.character) return;
     const m = CL.game.mode;
@@ -363,7 +455,7 @@
     const p = CL.party;
     $('#rosterSummary').textContent =
       `Day ${p.dayNumber()} · ${c.gold} crowns · ${c.renown} renown · ` +
-      `${c.roster.length}/${p.PARTY_CAP} soldiers · ${c.victories} wins`;
+      `${c.roster.length}/${p.partyCap()} soldiers · ${c.victories} wins`;
 
     // One line per troop type: ready count, plus wounded and when they return.
     const groups = {};

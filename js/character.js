@@ -27,6 +27,8 @@
   const UNARMED_DAMAGE = 6;
   const SKILL_DAMAGE = 0.03; // GDD §6: × (1 + 0.03 × WeaponSkill)
   const PATHFINDING_SPEED = 0.03; // per point; GDD names the skill, the rate is our starting value
+  const MAX_LEVEL = 10; // GDD §5 MVP cap
+  const INT_XP = 0.02; // GDD: INT modestly influences XP — +2% per point above 5
 
   const camp = () => CL.campaign;
   const skillIds = () => Object.keys(CL.content.table('skills'));
@@ -57,8 +59,52 @@
       attributes,
       skills,
       level: 1,
-      xp: 0,
+      xp: 0, // toward the next level
+      skillPoints: 0,
+      attributePoints: 0,
     };
+  }
+
+  // ---- Levels (GDD §5) ----
+
+  /** XP needed to go from level L to L + 1: round(100 × L^1.35). */
+  const xpToNext = (level) => Math.round(100 * level ** 1.35);
+
+  /**
+   * Add XP (scaled by Intelligence). Each level: +1 skill point; every 2nd level: +1 attribute
+   * point. Returns the number of levels gained.
+   */
+  function gainXp(amount, c = camp()) {
+    const ch = c.character;
+    if (!ch || amount <= 0) return 0;
+    ch.xp += Math.round(amount * (1 + INT_XP * (attribute('int', c) - BASE_ATTRIBUTE)));
+    let gained = 0;
+    while (ch.level < MAX_LEVEL && ch.xp >= xpToNext(ch.level)) {
+      ch.xp -= xpToNext(ch.level);
+      ch.level++;
+      ch.skillPoints++;
+      if (ch.level % 2 === 0) ch.attributePoints++;
+      gained++;
+    }
+    if (ch.level >= MAX_LEVEL) ch.xp = 0;
+    if (gained) CL.diag.log('info', 'Level up', { level: ch.level, skillPoints: ch.skillPoints, attributePoints: ch.attributePoints });
+    return gained;
+  }
+
+  function spendSkill(id, c = camp()) {
+    const ch = c.character;
+    if (!ch?.skillPoints || !(id in ch.skills) || ch.skills[id] >= MAX_SKILL) return false;
+    ch.skills[id]++;
+    ch.skillPoints--;
+    return true;
+  }
+
+  function spendAttribute(id, c = camp()) {
+    const ch = c.character;
+    if (!ch?.attributePoints || !ATTRIBUTES.includes(id) || ch.attributes[id] >= MAX_ATTRIBUTE) return false;
+    ch.attributes[id]++;
+    ch.attributePoints--;
+    return true;
   }
 
   /** Apply a background's starting kit to a fresh campaign (gold, equipped gear, pack items). */
@@ -161,8 +207,10 @@
     const ch = create({ name: d.name, gender: d.gender, cloak: d.cloak, background: d.background });
     for (const a of ATTRIBUTES) if (isInt(d.attributes?.[a], 1, MAX_ATTRIBUTE)) ch.attributes[a] = d.attributes[a];
     for (const s of skillIds()) if (isInt(d.skills?.[s], 0, MAX_SKILL)) ch.skills[s] = d.skills[s];
-    if (isInt(d.level, 1, 99)) ch.level = d.level;
+    if (isInt(d.level, 1, MAX_LEVEL)) ch.level = d.level;
     if (isInt(d.xp, 0, 1e9)) ch.xp = d.xp;
+    if (isInt(d.skillPoints, 0, 99)) ch.skillPoints = d.skillPoints;
+    if (isInt(d.attributePoints, 0, 99)) ch.attributePoints = d.attributePoints;
     return ch;
   }
 
@@ -185,7 +233,14 @@
     GENDERS,
     CLOAKS,
     MAX_NAME,
+    MAX_LEVEL,
+    MAX_SKILL,
+    MAX_ATTRIBUTE,
     UNARMED_DAMAGE,
+    xpToNext,
+    gainXp,
+    spendSkill,
+    spendAttribute,
     create,
     begin,
     applyKit,

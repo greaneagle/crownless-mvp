@@ -360,7 +360,7 @@
     const wounded = [];
     for (const id of fallen) (A().next(c) < 0.35 ? killed : wounded).push(id);
     g.battleId = c.battles + 1;
-    const outcome = { battleId: g.battleId, encounter: e.def, win, kills: enemyFallen.length, killed, wounded };
+    const outcome = { battleId: g.battleId, encounter: e.def, win, kills: enemyFallen.length, killed, wounded, participants: healthy };
     const r = CL.party.applyBattleResult(c, outcome);
     W().onBattleResolved(win, g.siteId);
     onBattleResolved(win, g.partyId, enemyFallen);

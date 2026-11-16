@@ -179,6 +179,18 @@
         CL.parties.ensure(c(), true);
         log('parties repopulated');
         break;
+      case 'xp':
+        CL.character.gainXp(n);
+        log('hero xp', { added: n, level: c().character?.level });
+        break;
+      case 'troopxp':
+        for (const s of c().roster) s.xp += n;
+        log('troop xp', { added: n });
+        break;
+      case 'renown':
+        c().renown += n;
+        log('renown', { added: n, renown: c().renown });
+        break;
       case 'cargo':
         for (const g of CL.trade.goods()) c().cargo[g.id] = (c().cargo[g.id] || 0) + 5;
         log('cargo', { added: 5 });

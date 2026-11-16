@@ -92,3 +92,11 @@
 #encounterOptions{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:10px}
 #encounterOptions button{min-height:56px;display:flex;flex-direction:column;align-items:center;gap:2px}
 #encounterOptions small{font-weight:normal;font-size:12px;color:#d9c8a2}
+
+/* 0.11.0 — progression */
+#sheet .plus{min-height:28px;min-width:28px;padding:0 6px;margin-left:4px;font-size:14px;line-height:1}
+@media(pointer:coarse){#sheet .plus{min-height:40px;min-width:40px}}
+.sheetH{margin:10px 0 4px;font-size:15px;color:#ecd6a4}
+.troopRow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid #ffffff14}
+.troopRow span{flex:1 1 220px}
+.troopRow button{min-height:40px;font-size:12px}

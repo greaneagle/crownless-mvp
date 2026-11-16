@@ -128,6 +128,7 @@
     target.swing = null;
     target.guard = false;
     if (target.team === 'enemy') g.kills++;
+    if (source) source.kills = (source.kills || 0) + 1; // soldier XP for their own kills
     CL.diag.log('info', 'Unit down', { role: target.role, team: target.team, id: target.id });
     return 'down';
   }
