@@ -1,0 +1,24 @@
+
+{
+  "files": {
+    "includes": [
+      "**/*.js",
+      "!!**/.opencode",
+      "!!**/.swarm",
+      "!!**/dist",
+      "!!**/build"
+    ]
+  },
+  "formatter": {
+    "enabled": false
+  },
+  "assist": {
+    "enabled": false
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "recommended"
+    }
+  }
+}
