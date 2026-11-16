@@ -41,6 +41,7 @@
       } else if (game.mode === 'create') CL.character.begin(ui.creatorChoices());
       else if (game.mode === 'character') ui.changeMode(game.returnMode);
       else if (game.mode === 'trade' || game.mode === 'contracts') ui.changeMode('settlement');
+      else if (game.mode === 'saves') ui.changeMode(game.savesReturn || 'title');
       else if (game.mode === 'settlement') world.leaveSettlement();
       else if (game.mode === 'encounter') world.attackSite();
       else if (game.mode === 'result') world.returnToMap();
@@ -66,6 +67,7 @@
     $('#waitBtn').onclick = () => CL.world.toggleWait();
     $('#tradeBtn').onclick = () => ui.changeMode('trade');
     $('#contractsBtn').onclick = () => ui.changeMode('contracts');
+    bindSaves($);
     $('#gearBtn').onclick = ui.openSheet;
     for (const sel of ['#recruitA', '#recruitB']) $(sel).onclick = (e) => party.recruit(e.currentTarget.dataset.troop);
     for (const sel of ['#buyFoodA', '#buyFoodB']) {
@@ -85,6 +87,57 @@
     $('#closeOrders').onclick = () => $('#ordersPanel').classList.add('hidden');
     for (const b of document.querySelectorAll('[data-group]')) b.onclick = () => combat.order(b.dataset.group, null);
     for (const b of document.querySelectorAll('[data-order]')) b.onclick = () => combat.order(null, b.dataset.order);
+  }
+
+  /** Save & export screen: manual save, export file, copy text, import file/text, restore. */
+  function bindSaves($) {
+    const { ui } = CL;
+    const P = () => CL.portable;
+    $('#savesBtn').onclick = ui.openSaves;
+    $('#titleSavesBtn').onclick = ui.openSaves;
+    $('#saveNowBtn').onclick = () => {
+      const ok = CL.save.write();
+      ui.renderSaves({ ok, text: ok ? 'Saved.' : 'Saving failed — export your game instead.' });
+    };
+    $('#exportBtn').onclick = () => {
+      ui.download(P().fileName(), 'application/json', P().serialize());
+      ui.renderSaves({ ok: true, text: 'Save file exported. Keep it somewhere safe, or open it in Crownless on another device.' });
+    };
+    $('#copySaveBtn').onclick = () => {
+      const text = P().serialize();
+      const fallback = () => {
+        $('#pasteBox').open = true;
+        $('#importText').value = text;
+        $('#importText').select();
+        ui.renderSaves({ ok: true, text: 'Clipboard unavailable — the save text is in the box below; copy it from there.' });
+      };
+      if (!navigator.clipboard) return fallback();
+      navigator.clipboard
+        .writeText(text)
+        .then(() => ui.renderSaves({ ok: true, text: 'Save text copied. Paste it into "Paste save text" on the other device.' }))
+        .catch(fallback);
+    };
+    const tryImport = (text) => {
+      const r = P().importText(text);
+      if (r.ok) ui.importDone(r);
+      else ui.renderSaves({ ok: false, text: `Import failed: ${r.reason} Your current game was not changed.`, problems: r.problems });
+    };
+    $('#importFileBtn').onclick = () => $('#importFile').click();
+    $('#importFile').onchange = (e) => {
+      const file = e.target.files?.[0];
+      e.target.value = '';
+      if (!file) return;
+      file
+        .text()
+        .then(tryImport)
+        .catch((err) => ui.renderSaves({ ok: false, text: `Could not read the file (${err}).` }));
+    };
+    $('#importTextBtn').onclick = () => tryImport($('#importText').value);
+    $('#restoreBtn').onclick = () => {
+      const r = P().restorePreImport();
+      if (r.ok) ui.importDone({});
+      else ui.renderSaves({ ok: false, text: r.reason });
+    };
   }
 
   function bindKeyboardAndMouse($, canvas) {

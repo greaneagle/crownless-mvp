@@ -17,10 +17,55 @@ Gate C is delivered in slices. This file records each one.
 | 7. Capture on defeat | 🟡 0.6.0: released near a settlement after half a day. Loss of crowns and an item came in Gate B. |
 | 8. Player XP/levels/skills; troop upgrades; party-cap formula | ✅ 0.11.0. Cavalry upgrades unlock with mounted AI (Gate D). |
 | 9. Bandit-hunt contract | ✅ 0.12.0 |
-| 10. Save export/import | ⬜ |
+| 10. Save export/import | ✅ 0.13.0 |
 | 11. Gate C acceptance | ⬜ |
 
 ---
+
+## Slice 8 — 0.13.0: Save export and import (2026-11-16)
+
+### What's in (GDD §13)
+- **Save & export screen**, from any settlement ("Save & export") or the title screen ("Import or export a save"):
+  - **The GDD's storage warning**, explained in plain words: browsers can clear storage (private browsing, clearing site data, low space), so export now and then and to move devices.
+  - **Status:** your name, the game clock and when it was last saved. If the browser refused a save, it says so in red.
+  - **Save now:** a manual save from a safe menu (GDD).
+  - **Export save file:** downloads `crownless-<name>-day<N>-<date>.json`.
+  - **Copy save text:** when the clipboard is blocked, the text appears in a box to copy by hand.
+  - **Import from file**, and **Paste save text instead** (for phones where files are awkward).
+  - **Restore save from before the last import:** one click, then the slot is cleared.
+- **The file:** `{ format: 'crownless-save', version: 2, game: <build>, exportedAt, checksum, campaign }`. The checksum is FNV-1a over the campaign JSON, which catches damaged or hand-edited files (it's an integrity check, not security).
+- **Strict import, never destructive.** Each of these is rejected with a plain reason and "Your current game was not changed":
+  - empty, non-JSON, over-2 MB or wrong-shape files
+  - a **checksum mismatch**
+  - **a newer save version** ("made by a newer version of Crownless (x.y.z). Update the game first.")
+  - **any unknown ID**, listed: troops, items, gear in the wrong slot, settlements, sites, backgrounds, skills, trade goods, markets, party types, contracts and contract givers. The GDD says unknown IDs must be rejected; normal loading quietly drops them instead.
+  - A raw save object, without the envelope, is also accepted, and an **old 0.3 save** converts on import.
+- **Backup:** a successful import first keeps the current save in its own slot (`crownless_save_pre_import`), alongside the existing rolling backup.
+- **After an import:** the game goes straight into the imported campaign, and leftover state from the previous one (travel, open encounter, waiting, god mode) is cleared.
+- **Save failures:** `CL.save.write()` returns whether it worked. The first failure shows "Could not save in this browser — use Save & export to keep your progress", and the screen keeps showing the error.
+
+### Verification
+- **Automated:** `npm test` → 153/153. The new `tests/portable.test.js` (11 tests) covers:
+  - **Round trip:** a campaign with soldiers, gear, cargo, an active contract and world parties, exported and imported into a *different* browser, comes back byte-identical after load validation.
+  - **The envelope's fields.**
+  - **Every rejection path**, with the current save confirmed unchanged and no pre-import copy made.
+  - **Raw and 0.3 imports.**
+  - **Pre-import backup** and restore (one time only).
+  - **Leftover state** cleared on import.
+  - **Safe file names.**
+  - **The quota-error warning.**
+- **Browser:**
+  - Made a game (Edda, 381 crowns, 3 Levies, Day 3). A **real click** on Save & export showed the warning and status.
+  - A **real click** on Copy save text: the pane blocks the clipboard, so the fallback put the 4.5 KB save text in the paste box.
+  - **Wiped all storage and reloaded**, like a new device; the title offered New game and "Import or export a save".
+  - Pasting a **tampered** copy (gold edited) was rejected with the checksum message.
+  - Pasting the genuine copy restored Edda in Stonebridge, Day 3, 381 crowns and 3 soldiers, and saved it.
+  - The screen also works at 812×375. Fixed leftover text staying in the paste box after an import.
+  - I deliberately didn't click **Export save file**, because it downloads a file to the machine. Its content is the same tested `serialize()` output.
+
+### For the owner to try on a phone
+- [ ] Export on desktop, then import the file on Android Chrome and on iPhone Safari (Files app).
+- [ ] Copy save text on a phone, paste it on another device, and import.
 
 ## Slice 7 — 0.12.0: Contracts — the bandit hunt (2026-11-16)
 

@@ -167,9 +167,16 @@
       const previous = root.localStorage.getItem(KEY);
       if (previous) root.localStorage.setItem(BACKUP_KEY, previous);
       root.localStorage.setItem(KEY, JSON.stringify(CL.campaign));
+      CL.save.lastSavedAt = Date.now();
+      CL.save.lastError = null;
       CL.diag.log('info', 'Campaign saved', { day: CL.campaign.day, soldiers: CL.campaign.roster.length });
+      return true;
     } catch (e) {
+      // GDD §13: browser storage can fail or be cleared — tell the player to export.
+      if (!CL.save.lastError) CL.ui?.message?.('Could not save in this browser — use Save & export to keep your progress.');
+      CL.save.lastError = String(e);
       CL.diag.log('error', 'Save failed', { error: String(e) });
+      return false;
     }
   }
 
@@ -184,6 +191,8 @@
     sanitize,
     migrateV1,
     existed: false,
+    lastSavedAt: null,
+    lastError: null,
     load,
     write,
   };

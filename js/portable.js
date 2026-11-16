@@ -1,0 +1,205 @@
+/* Crownless portable saves (GDD §13): manual export/import between browsers and devices.
+ *
+ * File: { format: 'crownless-save', version, game, exportedAt, checksum, campaign }.
+ * The checksum (FNV-1a over the campaign JSON) catches damaged or hand-edited files.
+ * Import is strict: malformed files, saves from a newer version and ANY unknown ID are rejected
+ * with a list of problems, and the current save is never touched by a failed import. Before a
+ * successful import the current save is set aside in its own slot so it can be restored. */
+(function (root) {
+  'use strict';
+  const CL = root.Crownless;
+
+  const FORMAT = 'crownless-save';
+  const PRE_IMPORT_KEY = 'crownless_save_pre_import';
+  const MAX_BYTES = 2_000_000;
+  const MAX_PROBLEMS = 8;
+
+  /** FNV-1a 32-bit, as 8 hex digits. Integrity only, not security. */
+  function checksum(text) {
+    let h = 0x811c9dc5;
+    for (let i = 0; i < text.length; i++) {
+      h ^= text.charCodeAt(i);
+      h = Math.imul(h, 0x01000193) >>> 0;
+    }
+    return h.toString(16).padStart(8, '0');
+  }
+
+  function serialize(c = CL.campaign) {
+    const body = JSON.stringify(c);
+    return JSON.stringify(
+      {
+        format: FORMAT,
+        version: CL.save.VERSION,
+        game: CL.BUILD,
+        exportedAt: new Date().toISOString(),
+        checksum: checksum(body),
+        campaign: c,
+      },
+      null,
+      1,
+    );
+  }
+
+  /** A safe download name: crownless-edda-day12-2026-11-16.json */
+  function fileName(c = CL.campaign, date = new Date()) {
+    const who = (c.character?.name || 'wanderer')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '')
+      .slice(0, 20);
+    return `crownless-${who || 'wanderer'}-day${CL.party.dayNumber(c.day)}-${date.toISOString().slice(0, 10)}.json`;
+  }
+
+  // ---- Strict validation: every ID must exist in the content ----
+
+  function unknownIds(raw) {
+    const problems = [];
+    const has = (table, id) => Boolean(CL.content.table(table)[id]);
+    const bad = (what) => problems.length < MAX_PROBLEMS && problems.push(what);
+    const obj = (v) => v && typeof v === 'object' && !Array.isArray(v);
+
+    for (const s of Array.isArray(raw.roster) ? raw.roster : []) {
+      if (!has('troops', s?.troop) || s.troop === 'hero') bad(`unknown troop "${s?.troop}"`);
+    }
+    for (const id of Object.keys(obj(raw.inventory) ? raw.inventory : {})) if (!has('items', id)) bad(`unknown item "${id}"`);
+    for (const [slot, id] of Object.entries(obj(raw.equipment) ? raw.equipment : {})) {
+      if (id != null && CL.content.table('items')[id]?.slot !== slot) bad(`"${id}" cannot be worn as ${slot}`);
+    }
+    if (raw.world?.location != null && !has('settlements', raw.world.location)) bad(`unknown settlement "${raw.world.location}"`);
+    const sites = CL.world.map().sites;
+    for (const id of Object.keys(obj(raw.world?.sites) ? raw.world.sites : {})) if (!sites[id]) bad(`unknown site "${id}"`);
+    if (raw.character) {
+      if (!has('backgrounds', raw.character.background)) bad(`unknown background "${raw.character.background}"`);
+      for (const id of Object.keys(obj(raw.character.skills) ? raw.character.skills : {})) if (!has('skills', id)) bad(`unknown skill "${id}"`);
+    }
+    for (const id of Object.keys(obj(raw.cargo) ? raw.cargo : {})) {
+      if (!CL.content.table('markets')[id]?.tradeGood) bad(`unknown trade good "${id}"`);
+    }
+    for (const sid of Object.keys(obj(raw.markets) ? raw.markets : {})) if (!has('settlements', sid)) bad(`unknown market "${sid}"`);
+    for (const p of Array.isArray(raw.parties) ? raw.parties : []) {
+      if (!has('party_templates', p?.template)) bad(`unknown party type "${p?.template}"`);
+      for (const id of Object.keys(obj(p?.troops) ? p.troops : {})) if (!has('troops', id)) bad(`unknown troop "${id}" in a party`);
+    }
+    for (const k of [raw.contract, ...Object.values(obj(raw.contractOffers) ? raw.contractOffers : {})]) {
+      if (!k) continue;
+      if (!has('contracts', k.template)) bad(`unknown contract "${k.template}"`);
+      if (!has('settlements', k.giver)) bad(`unknown contract giver "${k.giver}"`);
+    }
+    return problems;
+  }
+
+  /**
+   * Parse and check an exported file (or a raw save object). Never touches storage.
+   * Returns { ok: true, campaign } or { ok: false, reason, problems }.
+   */
+  function parse(text) {
+    if (typeof text !== 'string' || !text.trim()) return { ok: false, reason: 'The file is empty.' };
+    if (text.length > MAX_BYTES) return { ok: false, reason: 'The file is too large to be a Crownless save.' };
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      return { ok: false, reason: 'This is not a Crownless save file (it could not be read).' };
+    }
+    if (!data || typeof data !== 'object') return { ok: false, reason: 'This is not a Crownless save file.' };
+
+    let raw = data;
+    if (data.format === FORMAT) {
+      if (!Number.isInteger(data.version)) return { ok: false, reason: 'The save file has no version.' };
+      if (data.version > CL.save.VERSION) {
+        return { ok: false, reason: `This save was made by a newer version of Crownless (${data.game || `save v${data.version}`}). Update the game first.` };
+      }
+      if (!data.campaign || typeof data.campaign !== 'object') return { ok: false, reason: 'The save file has no campaign in it.' };
+      if (data.checksum !== checksum(JSON.stringify(data.campaign))) {
+        return { ok: false, reason: 'The save file is damaged or has been edited (checksum mismatch).' };
+      }
+      raw = data.campaign;
+    }
+
+    if (raw.version === 1) {
+      const migrated = CL.save.migrateV1(raw);
+      return migrated ? { ok: true, campaign: migrated, migrated: true } : { ok: false, reason: 'The old save could not be read.' };
+    }
+    if (raw.version !== CL.save.VERSION) {
+      return raw.version > CL.save.VERSION
+        ? { ok: false, reason: 'This save was made by a newer version of Crownless. Update the game first.' }
+        : { ok: false, reason: 'This is not a Crownless save file.' };
+    }
+    const problems = unknownIds(raw);
+    if (problems.length) return { ok: false, reason: 'The save mentions things this version of the game does not know.', problems };
+    const campaign = CL.save.sanitize(raw);
+    if (!campaign) return { ok: false, reason: 'The save could not be read.' };
+    return { ok: true, campaign };
+  }
+
+  /** Apply a parsed import: set the current save aside, then switch to the imported campaign. */
+  function importText(text) {
+    const r = parse(text);
+    if (!r.ok) {
+      CL.diag.log('warn', 'Import rejected', { reason: r.reason, problems: r.problems });
+      return r;
+    }
+    try {
+      const current = root.localStorage.getItem(CL.save.KEY);
+      if (current) root.localStorage.setItem(PRE_IMPORT_KEY, current);
+    } catch (e) {
+      CL.diag.log('warn', 'Could not keep a pre-import copy', { error: String(e) });
+    }
+    CL.campaign = r.campaign;
+    CL.save.existed = true;
+    resetTransient();
+    CL.save.write();
+    CL.diag.log('info', 'Save imported', { day: r.campaign.day, migrated: Boolean(r.migrated) });
+    return r;
+  }
+
+  function hasPreImport() {
+    try {
+      return Boolean(root.localStorage.getItem(PRE_IMPORT_KEY));
+    } catch {
+      return false;
+    }
+  }
+
+  /** Bring back the save that was replaced by the last import. */
+  function restorePreImport() {
+    let text = null;
+    try {
+      text = root.localStorage.getItem(PRE_IMPORT_KEY);
+    } catch {
+      return { ok: false, reason: 'Browser storage is unavailable.' };
+    }
+    if (!text) return { ok: false, reason: 'There is no earlier save to restore.' };
+    let s = null;
+    try {
+      s = CL.save.sanitize(JSON.parse(text));
+    } catch {
+      s = null;
+    }
+    if (!s) return { ok: false, reason: 'The earlier save could not be read.' };
+    CL.campaign = s;
+    resetTransient();
+    CL.save.write();
+    root.localStorage.removeItem(PRE_IMPORT_KEY);
+    CL.diag.log('info', 'Pre-import save restored');
+    return { ok: true };
+  }
+
+  /** Clear per-session state that belonged to the previous campaign. */
+  function resetTransient() {
+    Object.assign(CL.game, { travel: null, siteId: null, partyId: null, contactParty: null, waiting: false, godMode: false, newGame: false });
+  }
+
+  CL.portable = {
+    FORMAT,
+    PRE_IMPORT_KEY,
+    checksum,
+    serialize,
+    fileName,
+    unknownIds,
+    parse,
+    importText,
+    hasPreImport,
+    restorePreImport,
+  };
+})(typeof window !== 'undefined' ? window : globalThis);

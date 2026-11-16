@@ -107,3 +107,15 @@
 .contractCard h3{margin:0 0 4px;font-size:15px;color:#ecd6a4}
 .contractCard p{margin:3px 0}
 .contractCard .row{justify-content:flex-start;margin-top:6px}
+
+/* 0.13.0 — save & export */
+#savesScreen{text-align:left;font-size:clamp(12px,1.25vw,15px)}
+.storageWarn{border-left:3px solid #e0a64f;padding-left:8px;color:#f0dcb0}
+#savesScreen .row{justify-content:flex-start}
+#importText{width:100%;font:12px ui-monospace,monospace;background:#0c1823;color:#f7e8c5;border:1px solid #b89b64;border-radius:6px;margin:6px 0}
+#pasteBox{margin-top:8px}
+#pasteBox summary{cursor:pointer;min-height:32px}
+#importResult.ok{color:#9fe0a5}
+#importResult ul{margin:4px 0;padding-left:18px}
+#titleExtras{margin-top:8px}
+#titleExtras button{font-size:13px;background:none;border-color:#6d5a3a}

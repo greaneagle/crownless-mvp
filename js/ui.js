@@ -50,6 +50,9 @@
         secondary: g.newGame ? 'Back' : null,
       };
     }
+    if (mode === 'saves') {
+      return { title: 'SAVE & EXPORT', text: '', button: 'Back' };
+    }
     if (mode === 'contracts') {
       const s = CL.party.currentSettlement();
       return {
@@ -106,6 +109,9 @@
     $('#tradeScreen').classList.toggle('hidden', mode !== 'trade');
     $('#encounterOptions').classList.toggle('hidden', mode !== 'encounter');
     $('#contractsScreen').classList.toggle('hidden', mode !== 'contracts');
+    $('#savesScreen').classList.toggle('hidden', mode !== 'saves');
+    $('#titleExtras').classList.toggle('hidden', mode !== 'title');
+    $('#overlayText').classList.toggle('hidden', mode === 'saves');
     const screen = screenFor(mode);
     if (mode === 'result') $('#result').innerHTML = g.result.html;
     $('#overlayTitle').textContent = screen.title;
@@ -120,6 +126,55 @@
     if (mode === 'trade') renderTrade();
     if (mode === 'encounter') renderEncounter();
     if (mode === 'contracts') renderContracts();
+    if (mode === 'saves') renderSaves();
+  }
+
+  // ---- Save & export (GDD §13) ----
+
+  function ago(ms) {
+    const s = Math.round((Date.now() - ms) / 1000);
+    if (s < 60) return 'just now';
+    if (s < 3600) return `${Math.round(s / 60)} min ago`;
+    return `${Math.round(s / 3600)} h ago`;
+  }
+
+  function renderSaves(result) {
+    const S = CL.save;
+    const inGame = S.existed && Boolean(CL.campaign.character);
+    const status = $('#saveStatus');
+    status.className = S.lastError ? 'warn' : '';
+    status.textContent = S.lastError
+      ? `This browser refused the last save (${S.lastError}). Export your game to keep it.`
+      : inGame
+        ? `${CL.campaign.character.name}, ${CL.world.clockLabel()}. Last saved ${S.lastSavedAt ? ago(S.lastSavedAt) : 'when this session started'}.`
+        : 'No game in progress — you can import a save from another browser or device.';
+    for (const id of ['#saveNowBtn', '#exportBtn', '#copySaveBtn']) $(id).disabled = !inGame;
+    $('#restoreBtn').classList.toggle('hidden', !CL.portable.hasPreImport());
+    const box = $('#importResult');
+    box.replaceChildren();
+    if (result) {
+      box.className = result.ok ? 'ok' : 'warn';
+      box.append(Object.assign(document.createElement('p'), { textContent: result.text }));
+      if (result.problems?.length) {
+        const ul = document.createElement('ul');
+        for (const p of result.problems) ul.append(Object.assign(document.createElement('li'), { textContent: p }));
+        box.append(ul);
+      }
+    }
+  }
+
+  function openSaves() {
+    const m = CL.game.mode;
+    CL.game.savesReturn = m === 'title' ? 'title' : 'settlement';
+    changeMode('saves');
+  }
+
+  /** After a successful import: go straight into the imported game. */
+  function importDone(r) {
+    $('#importText').value = '';
+    $('#pasteBox').open = false;
+    message(r.migrated ? 'Old save converted and loaded.' : 'Save imported.');
+    changeMode(CL.campaign.character ? (CL.party.currentSettlement() ? 'settlement' : 'map') : 'create');
   }
 
   // ---- Contracts board ----
@@ -747,6 +802,9 @@
     supplyParts,
     creatorChoices,
     openSheet,
+    openSaves,
+    renderSaves,
+    importDone,
     hideBattleOverlays,
     showSelectedGroup,
     setPaused,
