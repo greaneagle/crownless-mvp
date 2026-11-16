@@ -17,6 +17,7 @@
     'world_map',
     'skills',
     'backgrounds',
+    'party_templates',
   ];
 
   const raw = () => root.CROWNLESS_CONTENT || {};
@@ -101,6 +102,21 @@
         if (C.items?.[id]?.slot !== slot) err(`background ${b.id}: kit item ${id} does not fit ${slot}`);
       }
       for (const id of Object.keys(b.kit?.items || {})) if (!C.items?.[id]) err(`background ${b.id}: unknown kit item ${id}`);
+    }
+    for (const t of Object.values(C.party_templates || {})) {
+      if (!['bandit', 'patrol', 'caravan'].includes(t.kind)) err(`party_template ${t.id}: bad kind ${t.kind}`);
+      if (!C.factions?.[t.faction]) err(`party_template ${t.id}: unknown faction ${t.faction}`);
+      if (!(t.speed > 0) || !(t.count >= 1)) err(`party_template ${t.id}: needs speed and count`);
+      for (const [id, range] of Object.entries(t.troops || {})) {
+        if (!C.troops?.[id]) err(`party_template ${t.id}: unknown troop ${id}`);
+        if (!Array.isArray(range) || !(range[0] >= 0 && range[1] >= range[0])) err(`party_template ${t.id}: bad range for ${id}`);
+      }
+      const sites = Object.values(C.world_map || {})[0]?.sites || {};
+      for (const l of t.lairs || []) if (!sites[l]) err(`party_template ${t.id}: unknown lair ${l}`);
+      if (t.home && !C.settlements?.[t.home]) err(`party_template ${t.id}: unknown home ${t.home}`);
+      for (const s of t.route || []) if (!C.settlements?.[s]) err(`party_template ${t.id}: unknown route stop ${s}`);
+      for (const g of t.goods || []) if (!C.markets?.[g]?.tradeGood) err(`party_template ${t.id}: unknown good ${g}`);
+      if (t.kind === 'bandit' && !(t.toll && t.reward && t.loot)) err(`party_template ${t.id}: bandits need toll, reward and loot`);
     }
     for (const q of Object.values(C.quests || {})) {
       if (!C.dialogue?.[q.giver]) err(`quest ${q.id}: no dialogue for giver ${q.giver}`);

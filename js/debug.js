@@ -94,7 +94,12 @@
   function endBattleNow(win) {
     const g = CL.game;
     if (g.mode !== 'battle') return false;
-    if (win) for (const e of g.enemies) e.alive = false;
+    if (win) {
+      for (const e of g.enemies) {
+        if (e.alive) g.kills++; // credit the kills so rewards and loot match a real win
+        e.alive = false;
+      }
+    }
     else {
       g.hero.alive = false;
       for (const a of g.allies) a.alive = false;
@@ -155,6 +160,24 @@
         break;
       case 'item':
         addItem($('#cheatItem').value);
+        break;
+      case 'bandits': {
+        const p = CL.parties.spawn(c(), 'bandits');
+        [p.x, p.y] = [Math.min(98, c().world.x + 5), c().world.y];
+        p.ignoreUntil = 0;
+        log('bandits spawned', { id: p.id, troops: p.troops });
+        break;
+      }
+      case 'clearParties':
+        c().parties = [];
+        for (const id of Object.keys(CL.content.table('party_templates'))) c().partySpawns[id] = c().day + 1;
+        log('parties cleared');
+        break;
+      case 'repopulate':
+        c().parties = [];
+        c().partySpawns = {};
+        CL.parties.ensure(c(), true);
+        log('parties repopulated');
         break;
       case 'cargo':
         for (const g of CL.trade.goods()) c().cargo[g.id] = (c().cargo[g.id] || 0) + 5;

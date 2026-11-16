@@ -12,8 +12,8 @@ Gate C is delivered in slices. This file records each one.
 | 2. Settlement menu (Recruit / Trade / Rest / Contracts / Leave) | 🟡 Recruit, Rest and Leave (0.6.0), and Market (0.9.0) work. Contracts (step 9) is still to come. |
 | 3. Character creation + inventory/equipment | ✅ 0.7.0. Hairstyles wait for art. |
 | 4. Food & weekly wages, morale/desertion | ✅ 0.8.0 |
-| 5. Trading (6 goods, scarcity) | ✅ 0.9.0. Caravans moving prices arrive with step 6. |
-| 6. World parties + encounter options (Attack / Negotiate / Retreat / Auto-resolve) | ⬜ The static Reaver hideout stands in for now |
+| 5. Trading (6 goods, scarcity) | ✅ 0.9.0, with caravans moving prices since 0.10.0 |
+| 6. World parties + encounter options (Attack / Negotiate / Retreat / Auto-resolve) | ✅ 0.10.0. Patrols and caravans can be talked to but not attacked until reputation (Gate D). |
 | 7. Capture on defeat | 🟡 0.6.0: released near a settlement after half a day. Loss of crowns and an item came in Gate B. |
 | 8. Player XP/levels/skills; troop upgrades; party-cap formula | ⬜ |
 | 9. Bandit-hunt contract | ⬜ |
@@ -21,6 +21,67 @@ Gate C is delivered in slices. This file records each one.
 | 11. Gate C acceptance | ⬜ |
 
 ---
+
+## Slice 5 — 0.10.0: A living map and encounter choices (2026-11-16)
+
+### World parties (GDD §8)
+- **Who's out there** (`data/world_parties.js`):
+  - **2 patrols per kingdom** (Valedorn footmen, hunters and levies; Aurelian spearmen, skirmishers and recruits).
+  - **1 caravan per kingdom** on a route through its towns and villages.
+  - **Up to 3 Road Reaver bands** (3–6 Looters plus 0–3 Reavers) operating from the Looter Camp and Reaver Hideout.
+  - Each kind respawns on a timer once destroyed.
+- **What they do:**
+  - **Patrols** move between their kingdom's settlements and hunt bands they spot.
+  - **Caravans** travel their route. Each arrival lowers the price of the good they carry at that stop by 0.08 (GDD ±0.05–0.1).
+  - **Bands** roam near their lair, flee from stronger patrols, rob caravans, and **hunt the player** when they're out on the map and at most twice the bands' strength. Then a "!" appears and a message: "Road Reavers have spotted you!"
+  - A **robbed caravan** makes its good scarcer (+0.08) at the stop it was heading for.
+- **Off-screen fights** (patrol vs band, band vs caravan) use **auto-resolve**: the loser is destroyed and the winner always takes losses.
+- **Time:** parties move whenever campaign time passes: travelling, resting, battles, captivity, and the new **Wait** button on the map (Space toggles it when you're not travelling). A band catching you stops travel or waiting and opens the encounter.
+- **On the map:**
+  - Each kind has its own icon: shield for patrols, wagon for caravans, jagged red pennant for bands. Each carries a faction letter and a troop count.
+  - A party standing on a town or lair sits beside it with a count badge, so names stay readable.
+  - Click or tap a party to go and meet it; your travel follows it as it moves.
+- **Seeded randomness:** the world and auto-resolve use `campaign.rngSeed` (mulberry32), which is saved, so a save reproduces its world.
+
+### Encounter choices (GDD §7–8), for bands and the two lair sites
+- **Attack:** a real battle against exactly that band, in waves of up to 8. A win destroys the band; a loss weakens it by the soldiers you killed.
+- **Auto-resolve:**
+  - Power = Σ troops × tier power (T1 1, T2 1.7, T3 2.5; the hero counts 2.5; wounded excluded) × (1 + 0.03 × Tactics).
+  - Win chance = clamp(P/(P+E), 0.1, 0.9).
+  - **A winner always loses at least one soldier** if it has any, so there are no guaranteed casualty-free wins. A beaten player is captured, as in a real battle.
+  - The buttons show your odds, and the result shows strength vs strength.
+- **Negotiate:**
+  - Pay a toll of 20 + 4 per bandit, and they leave you alone for a day.
+  - Or, if you're 2.5× stronger, **Intimidate** them away for free.
+- **Retreat:** `clamp(0.5 + 0.1 × (your speed − their speed), 0.15, 0.85)`, using the current terrain, your load, Pathfinding and horse. Success means a 6-hour head start; failure forces the battle.
+- **Patrols and caravans** have a short talk scene and Leave. Attacking them waits for faction reputation (Gate D).
+
+### Tuning from simulation
+A 30-day headless world simulation found two problems, both fixed:
+- **Bands went extinct.** The sim ran in steps after the clock had already jumped to the end of the period, so every respawn timer used the end time. The sim now keeps its own step-by-step clock.
+- **Patrols wiped out bands at their lairs.** Bands now flee stronger patrols, and patrols are heavier (speed 3.6 vs the bands' 3.8, sight 7 vs 9), so a band that spots them first can get away.
+
+Result over 3 seeds × 30 days: 2–3 bands alive at any time, about one off-screen battle a day, 150–200 caravan deliveries, and **a lone hero on the road ambushed 1–6 times per 72 hours**. The sim runs 30 days in about 250 ms.
+
+### Verification
+- **Automated:** `npm test` → 120/120. The new `tests/parties.test.js` (18 tests) covers:
+  - the world's makeup and seed reproducibility, the power formula, Tactics and clamps
+  - winners always taking losses, caravan price effects both ways
+  - when bands chase the player, and when they leave them alone (too strong, in town, cooldown)
+  - an ambush interrupting travel
+  - the toll and intimidation, the retreat formula and a failed retreat forcing a battle with exactly that band
+  - waves of 8
+  - auto-resolve wins (band destroyed, casualties, exactly once) and losses (captured, band survives weakened)
+  - auto-resolve at lair sites, a real-battle win removing the band
+  - save validation and older saves getting a populated world, and waiting
+  - Test worlds use a fixed seed and are empty unless a test asks for parties.
+- **Browser (desktop):**
+  - A new world showed all 9 parties, with badges beside landmarks.
+  - Waiting in real time passed 5 hours, then a band ambushed us. The encounter screen offered Attack, Auto-resolve (45%), Pay 32 crowns and Retreat (52%).
+  - Auto-resolve with a **real click**: lost the roll and was captured, with the result drawn over the map.
+  - A **real click** on a patrol started an intercept, and a Looter band ambushed us on the way.
+  - **Retreat** with a real click failed (52%), which forced a battle against exactly 3 Looters and 2 Reavers. After the win the band was gone from the map.
+  - No errors were logged.
 
 ## Slice 4 — 0.9.0: Trading (2026-11-16)
 

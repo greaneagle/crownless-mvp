@@ -54,6 +54,7 @@
     camp.day += days;
     CL.upkeep.tick(camp, from, camp.day); // eat, morale, desertion, weekly wages
     CL.trade.drift(camp, days); // markets restock toward their baseline
+    CL.parties.tick(camp, days * 24); // patrols, caravans and bands move; may catch the player
     const healed = [];
     for (const s of camp.roster) {
       if (isWounded(s) && s.woundedUntil <= camp.day + 1e-9) {
@@ -126,9 +127,9 @@
    * Apply one battle's outcome to the campaign. Pure with respect to the DOM.
    * Guarded by battleId so a battle can never pay out twice.
    */
-  function applyBattleResult(camp, { battleId, encounterId, win, kills, killed, wounded }) {
+  function applyBattleResult(camp, { battleId, encounterId, encounter, win, kills, killed, wounded }) {
     if (battleId <= camp.lastResolvedBattle) return null;
-    const enc = CL.content.encounter(encounterId);
+    const enc = encounter || CL.content.encounter(encounterId);
     camp.lastResolvedBattle = battleId;
     camp.roster = camp.roster.filter((s) => !killed.includes(s.id));
     advanceDays(BATTLE_DAYS, camp);
@@ -164,17 +165,40 @@
     if (g.mode !== 'battle') return;
     g.mode = 'result';
     const { killed, wounded } = rollCasualties(g.allies);
-    const outcome = { battleId: g.battleId, encounterId: g.encounter, win, kills: g.kills, killed, wounded };
+    const outcome = { battleId: g.battleId, encounter: g.encounterDef, win, kills: g.kills, killed, wounded };
     const r = applyBattleResult(CL.campaign, outcome);
-    if (r) CL.world?.onBattleResolved(win, g.siteId);
+    if (r) {
+      CL.world?.onBattleResolved(win, g.siteId);
+      const fallenEnemies = g.enemies.filter((e) => !e.alive).map((e) => e.troop);
+      CL.parties?.onBattleResolved(win, g.partyId, fallenEnemies);
+    }
     CL.save.write();
+    const html = resultHtml({
+      win,
+      r,
+      kills: g.kills,
+      killed,
+      wounded,
+      survivors: g.allies.filter((u) => u.alive).length,
+      waves: `${g.wave}/${g.totalWaves}`,
+    });
+    g.result = { win, html, ...r };
+    CL.diag.log('info', 'Battle ended', { ...outcome, result: r, day: CL.campaign.day });
+    CL.ui.changeMode('result');
+  }
+
+  /** Result screen text for a fought or auto-resolved battle. Only numbers and data names are interpolated. */
+  function resultHtml({ win, r, kills, killed, wounded, survivors, waves, auto }) {
     const recoverDay = dayNumber(CL.campaign.day + CL.save.WOUND_DAYS);
     const lines = [
       `<strong>${win ? `+${r.gold} crowns · +${r.renown} renown` : `${-r.gold} crowns lost (20%)`}</strong>`,
-      `Enemies defeated: ${g.kills}`,
-      `Killed: ${killed.length} · Wounded: ${wounded.length}`,
-      `Survivors: ${g.allies.filter((u) => u.alive).length} · Battle waves reached: ${g.wave}/${g.totalWaves}`,
     ];
+    if (auto) {
+      const odds = Math.round(CL.autoresolve.winChance(auto.pp, auto.pe) * 100);
+      lines.push(`Auto-resolved: your strength ${auto.pp.toFixed(1)} vs ${auto.pe.toFixed(1)} (${odds}% odds)`);
+    }
+    lines.push(`Enemies defeated: ${kills}`, `Killed: ${killed.length} · Wounded: ${wounded.length}`);
+    lines.push(`Survivors: ${survivors}${waves ? ` · Battle waves reached: ${waves}` : ''}`);
     if (win) lines.push(`Loot: ${describeItems(r.loot) || 'nothing of value'}`);
     else if (r.lostItem) lines.push(`Taken by your captors: ${CL.content.item(r.lostItem).name}`);
     lines.push(
@@ -182,13 +206,12 @@
         ? `<small>Wounded soldiers can't fight until day ${recoverDay}. Travel or rest in a settlement to pass the time.</small>`
         : '<small>No soldiers wounded.</small>',
     );
-    g.result = { win, html: lines.join('<br>'), ...r };
-    CL.diag.log('info', 'Battle ended', { ...outcome, result: r, day: CL.campaign.day });
-    CL.ui.changeMode('result');
+    return lines.join('<br>');
   }
 
   CL.party = {
     PARTY_CAP,
+    resultHtml,
     currentSettlement,
     recruitsHere,
     canRest,

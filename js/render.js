@@ -290,6 +290,83 @@
     label(active ? st.name : `${st.name} (cleared)`, x, y + 22, active ? '#ffb3a1' : '#c9bda8');
   }
 
+  /** A world party: banner in its faction colour, a shape by kind, and its size. */
+  function drawParty(p) {
+    const t = CL.content.get('party_templates', p.template);
+    const { x, y, crowded } = CL.world.partyDrawPos(p); // beside a landmark, not on its name
+    const color = t.kind === 'bandit' ? '#7a1e16' : CL.content.get('factions', t.faction).color;
+    const n = CL.parties.troopCount(p);
+    ctx.save();
+    ctx.fillStyle = '#00000055';
+    ctx.beginPath();
+    ctx.ellipse(x, y + 7, 11, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#1b1208';
+    ctx.lineWidth = 2;
+    if (t.kind === 'caravan') {
+      // Wagon with two wheels.
+      ctx.fillStyle = '#8a6a3c';
+      ctx.fillRect(x - 10, y - 6, 20, 9);
+      ctx.strokeRect(x - 10, y - 6, 20, 9);
+      ctx.fillStyle = '#e9dcc0';
+      ctx.fillRect(x - 8, y - 12, 16, 6);
+      for (const dx of [-6, 6]) {
+        ctx.beginPath();
+        ctx.arc(x + dx, y + 4, 3, 0, Math.PI * 2);
+        ctx.fillStyle = '#3b2a18';
+        ctx.fill();
+      }
+    } else {
+      // Shield for patrols, jagged pennant for bandits.
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      if (t.kind === 'patrol') {
+        ctx.moveTo(x - 8, y - 10);
+        ctx.lineTo(x + 8, y - 10);
+        ctx.lineTo(x + 8, y - 1);
+        ctx.lineTo(x, y + 6);
+        ctx.lineTo(x - 8, y - 1);
+      } else {
+        ctx.moveTo(x - 9, y - 10);
+        ctx.lineTo(x + 9, y - 10);
+        ctx.lineTo(x + 4, y - 3);
+        ctx.lineTo(x + 9, y + 5);
+        ctx.lineTo(x - 9, y + 5);
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 9px system-ui';
+      ctx.textAlign = 'center';
+      ctx.fillText(t.kind === 'bandit' ? 'R' : FACTION_EMBLEM[t.faction], x - 1, y - 1);
+      ctx.textAlign = 'left';
+    }
+    if (p.chasing === 'player') {
+      ctx.fillStyle = '#ffd34d';
+      ctx.font = 'bold 16px Georgia';
+      ctx.textAlign = 'center';
+      ctx.fillText('!', x, y - 16);
+      ctx.textAlign = 'left';
+    }
+    if (crowded) {
+      // Count badge instead of a full label.
+      ctx.fillStyle = t.hostile ? '#7a1e16' : '#1b2a3a';
+      ctx.beginPath();
+      ctx.arc(x + 11, y + 4, 7, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 9px system-ui';
+      ctx.textAlign = 'center';
+      ctx.fillText(String(n), x + 11, y + 7);
+      ctx.textAlign = 'left';
+    }
+    ctx.restore();
+    if (!crowded) {
+      label(`${t.kind === 'bandit' ? 'Reavers' : t.kind === 'patrol' ? 'Patrol' : 'Caravan'} ${n}`, x, y + 20, t.hostile ? '#ffb3a1' : '#e8f0ff');
+    }
+  }
+
   function drawWorld() {
     const { toPx, map } = CL.world;
     const m = map();
@@ -357,6 +434,7 @@
 
     for (const st of Object.values(m.sites)) drawSite(st);
     for (const s of Object.values(CL.content.table('settlements'))) drawSettlement(s, s.id === w.location);
+    for (const p of CL.campaign.parties || []) drawParty(p);
 
     // Journey line.
     const [px, py] = toPx(w.x, w.y);
@@ -395,7 +473,13 @@
     const $ = CL.ui.$;
     const here = w.location ? CL.content.get('settlements', w.location).name : null;
     const ground = { road: 'on the road', grass: 'open country', forest: 'in the forest' }[CL.world.terrainAt(w.x, w.y)];
-    $('#hptext').textContent = here ? `At ${here}` : CL.game.travel ? `Travelling, ${ground}` : `Camped, ${ground}`;
+    $('#hptext').textContent = here
+      ? `At ${here}`
+      : CL.game.travel
+        ? `Travelling, ${ground}`
+        : CL.game.waiting
+          ? `Waiting, ${ground}`
+          : `Camped, ${ground}`;
     const wounded = CL.party.woundedSoldiers().length;
     const food = CL.upkeep.foodDays(c);
     $('#summary').textContent =
@@ -403,12 +487,13 @@
       ` · food ${food >= 10 ? Math.floor(food) : food.toFixed(1)}d · morale ${Math.round(c.morale)}` +
       (Object.keys(c.cargo).length ? ` · cargo ${CL.trade.cargoWeight(c)}/${CL.trade.capacity(c)}` : '');
     $('#topLeft').classList.toggle('warn', food < 1 || c.morale < CL.upkeep.MORALE.desertBelow);
+    $('#waitBtn').textContent = CL.game.waiting ? 'Stop waiting' : 'Wait';
   }
 
   function draw() {
     const g = CL.game;
     ctx.clearRect(0, 0, W, H);
-    if (g.mode !== 'battle' && g.mode !== 'result') {
+    if ((g.mode !== 'battle' && g.mode !== 'result') || (g.mode === 'result' && g.result?.auto)) {
       drawWorld();
       if (performance.now() > g.messageUntil) CL.ui.$('#message').textContent = '';
       return;

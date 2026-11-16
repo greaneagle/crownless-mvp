@@ -86,3 +86,9 @@
 #tradeGear{list-style:none;margin:0;padding:0}
 #tradeGear li{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:3px 0;border-bottom:1px solid #ffffff14}
 #tradeGear li button{min-height:40px}
+
+/* 0.10.0 — encounters and world parties */
+#stage:not([data-mode="map"]) #waitBtn{display:none}
+#encounterOptions{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:10px}
+#encounterOptions button{min-height:56px;display:flex;flex-direction:column;align-items:center;gap:2px}
+#encounterOptions small{font-weight:normal;font-size:12px;color:#d9c8a2}

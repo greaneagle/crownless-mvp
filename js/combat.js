@@ -39,10 +39,12 @@
   }
 
   /** Deploy the hero plus healthy roster soldiers and start the encounter's first wave. */
-  function startBattle(encounterId = DEFAULT_ENCOUNTER) {
+  /** Start a battle from an encounter id (data/encounters.js) or a ready-made definition (a band). */
+  function startBattle(encounter = DEFAULT_ENCOUNTER) {
     const g = game();
-    const enc = CL.content.encounter(encounterId);
+    const enc = typeof encounter === 'string' ? CL.content.encounter(encounter) : encounter;
     g.encounter = enc.id;
+    g.encounterDef = enc;
     g.battleId = CL.campaign.battles + 1;
     g.totalWaves = enc.waves.length;
     g.mode = 'battle';
@@ -84,7 +86,7 @@
     const g = game();
     const art = CL.assets.enemyArt;
     g.wave++;
-    const wave = CL.content.encounter(g.encounter).waves[g.wave - 1];
+    const wave = g.encounterDef.waves[g.wave - 1];
     const troops = Object.entries(wave).flatMap(([id, n]) => Array(n).fill(id));
     troops.forEach((troopId, i) => {
       const e = makeUnit(rand(735, 887), rand(91, 450), 'enemy', troopId);

@@ -30,6 +30,9 @@
     travel: null, // current journey target on the world map
     travelFace: 'down',
     siteId: null, // map site whose encounter is open or being fought
+    partyId: null, // world party whose encounter is open or being fought
+    contactParty: null, // set by the world sim when a band catches the player
+    waiting: false, // map: time passes without travelling
     releasedAt: null, // settlement id after a capture, for the release message
     godMode: false, // debug panel: the hero takes no damage
     newGame: false, // true while the creator is making a fresh campaign

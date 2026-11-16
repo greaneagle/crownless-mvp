@@ -30,13 +30,14 @@
       };
     }
     if (mode === 'encounter') {
-      const st = CL.world.map().sites[g.siteId];
+      const e = CL.parties.current();
       const ready = CL.party.healthySoldiers().length;
+      const count = Object.values(e.troops).reduce((a, b) => a + b, 0);
+      const them = e.hostile ? ` They number ${count}.` : '';
       return {
-        title: st.name.toUpperCase(),
-        text: `${st.text} You have ${ready} soldier${ready === 1 ? '' : 's'} fit to fight.`,
-        button: 'Attack',
-        secondary: 'Leave',
+        title: e.name.toUpperCase(),
+        text: `${e.text}${them} You have ${ready} soldier${ready === 1 ? '' : 's'} fit to fight.`,
+        button: null,
       };
     }
     if (mode === 'create') {
@@ -95,17 +96,52 @@
     $('#create').classList.toggle('hidden', mode !== 'create');
     $('#sheet').classList.toggle('hidden', mode !== 'character');
     $('#tradeScreen').classList.toggle('hidden', mode !== 'trade');
+    $('#encounterOptions').classList.toggle('hidden', mode !== 'encounter');
     const screen = screenFor(mode);
     if (mode === 'result') $('#result').innerHTML = g.result.html;
     $('#overlayTitle').textContent = screen.title;
     $('#overlayText').textContent = screen.text;
-    $('#primaryBtn').textContent = screen.button;
+    $('#primaryBtn').classList.toggle('hidden', !screen.button);
+    if (screen.button) $('#primaryBtn').textContent = screen.button;
     $('#secondaryBtn').classList.toggle('hidden', !screen.secondary);
     if (screen.secondary) $('#secondaryBtn').textContent = screen.secondary;
     if (mode === 'settlement') refreshRoster();
     if (mode === 'create') renderCreator();
     if (mode === 'character') renderSheet();
     if (mode === 'trade') renderTrade();
+    if (mode === 'encounter') renderEncounter();
+  }
+
+  // ---- Encounter choices (GDD §8): Attack, Auto-resolve, Negotiate, Retreat ----
+
+  function renderEncounter() {
+    const c = CL.campaign;
+    const P = CL.parties;
+    const A = CL.autoresolve;
+    const e = P.current();
+    const box = $('#encounterOptions');
+    const choice = (label, note, onClick, disabled = false) => {
+      const b = Object.assign(document.createElement('button'), { type: 'button', disabled });
+      b.append(Object.assign(document.createElement('b'), { textContent: label }));
+      if (note) b.append(Object.assign(document.createElement('small'), { textContent: note }));
+      b.onclick = onClick;
+      return b;
+    };
+    const buttons = [];
+    if (e.hostile) {
+      const odds = Math.round(A.winChance(A.playerPower(c), A.troopsPower(e.troops)) * 100);
+      buttons.push(choice('Attack', 'Fight the battle yourself', () => P.attack()));
+      buttons.push(choice('Auto-resolve', `About ${odds}% to win`, () => P.autoResolve()));
+      const n = P.negotiation(c, e);
+      if (n?.kind === 'intimidate') buttons.push(choice('Intimidate', 'They are badly outmatched', () => P.negotiate()));
+      else if (n) buttons.push(choice(`Pay ${n.cost} crowns`, 'They let you pass', () => P.negotiate(), c.gold < n.cost));
+      const r = P.retreatChance(c, e);
+      if (r != null) buttons.push(choice('Retreat', `${Math.round(r * 100)}% to get away`, () => P.retreat()));
+      else buttons.push(choice('Leave', 'Come back another time', () => changeMode('map')));
+    } else {
+      buttons.push(choice('Leave', 'Go on your way', () => changeMode('map')));
+    }
+    box.replaceChildren(...buttons);
   }
 
   // ---- Market ----

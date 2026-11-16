@@ -7,7 +7,7 @@ const vm = require('node:vm');
 const ROOT = path.join(__dirname, '..', '..');
 
 // Logic modules only (no render/input/main — those need a real DOM).
-const LOGIC_MODULES = ['core', 'content', 'state', 'save', 'assets', 'units', 'combat', 'party', 'upkeep', 'trade', 'world', 'character', 'debug'];
+const LOGIC_MODULES = ['core', 'content', 'state', 'save', 'assets', 'units', 'combat', 'party', 'upkeep', 'trade', 'autoresolve', 'parties', 'world', 'character', 'debug'];
 const CONTENT_MODULES = [
   'factions',
   'settlements',
@@ -20,6 +20,7 @@ const CONTENT_MODULES = [
   'encounters',
   'world_map',
   'character',
+  'world_parties',
 ];
 
 function memoryStorage(initial = {}) {
@@ -41,7 +42,7 @@ function memoryStorage(initial = {}) {
  * With `party` (default) a brand-new campaign gets a test fixture: a Farmhand hero, 130 crowns,
  * 3 Levies and 2 Hunters (soldier ids 1–5). Pass { party: false } to see the real GDD new game.
  */
-function loadGame({ storage = memoryStorage(), random, party = true } = {}) {
+function loadGame({ storage = memoryStorage(), random, party = true, worldParties = false, seed = 12345 } = {}) {
   const uiCalls = [];
   const sandbox = {
     console,
@@ -73,6 +74,13 @@ function loadGame({ storage = memoryStorage(), random, party = true } = {}) {
     showSelectedGroup: record('showSelectedGroup'),
   };
   CL.campaign = CL.save.load();
+  // Deterministic world: fixed seed, and (unless asked for) no moving parties to interfere.
+  CL.campaign.rngSeed = seed;
+  CL.campaign.parties = [];
+  CL.campaign.partySpawns = {};
+  CL.campaign.nextPartyId = 1;
+  if (worldParties) CL.parties.ensure(CL.campaign, true);
+  else for (const id of Object.keys(CL.content.table('party_templates'))) CL.campaign.partySpawns[id] = 1e9;
   if (party && !CL.save.existed) {
     const c = CL.campaign;
     c.gold = 130;

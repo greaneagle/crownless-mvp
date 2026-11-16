@@ -1,4 +1,4 @@
-# Crownless 0.9.0 — The Border March
+# Crownless 0.10.0 — The Border March
 
 A single-player, top-down party-battle prototype in plain HTML5 Canvas and classic JavaScript. There's no bundler, no runtime dependencies and no server. It's published to GitHub Pages straight from `main`.
 
@@ -12,7 +12,8 @@ A single-player, top-down party-battle prototype in plain HTML5 Canvas and class
 - Equip loot from the **Party** screen. Strength sets your HP, your weapon and One-Handed skill set your damage, armor reduces hits, a shield is needed to block, and Pathfinding or a horse speeds up travel.
 - Travel the Border March, a strategic map with 10 settlements. Click or tap to travel; roads are faster and forests slower, and time passes as you go.
 - Enter settlements to hire troops and rest. Valedorn towns train Levies and Hunters, Aurelian towns train Recruits and Skirmishers. You can have up to 15 soldiers, wounded ones included, and every troop's stats come from `data/troops.js`.
-- Attack the Looter Camp (an easy first fight) or the Reaver Hideout from the map. A cleared site stays empty for a few days.
+- **A living map:** kingdom patrols hunt bandits, caravans haul goods (which moves prices), and Road Reaver bands rob caravans and hunt travellers who look weak. Use **Wait** (or Space) to let time pass.
+- **Encounters:** when bandits catch you, or you attack their camps, choose **Attack** (fight it yourself), **Auto-resolve** (the odds are shown), **Negotiate** (pay their toll, or intimidate them if you're much stronger) or **Retreat** (faster parties get away more often).
 - Real-time four-direction hero movement. Sword swings have a visible windup, a strike window and a recovery, and hit everything in a 90° arc in front of you.
 - A frontal shield block that covers 120°. It can't cancel a swing you've already started, and enemy windups are drawn in red so you know when to block.
 - Allied infantry and archers fight alongside you, and archers fire arrows.
@@ -22,14 +23,14 @@ A single-player, top-down party-battle prototype in plain HTML5 Canvas and class
 - Casualties: 35% of fallen soldiers are killed and the rest are wounded for 2 campaign days. Travelling or resting passes the time.
 - **Trade:** buy goods where they're cheap and sell them where they're dear. There are six goods, every market prices them differently, prices move as you trade and settle back over time, and a heavy cargo slows you down. You can also sell spare gear from your pack.
 - **Upkeep:** your party eats a ration a day for every 5 people, so buy food in towns and villages. Wages are due every 7 days. Running out of food or missing wages lowers morale, and below 25 soldiers start to desert.
-- A **Debug** button next to Logs gives testing shortcuts: crowns, trade goods and prices, food and morale, soldiers, items, stats, god mode, time, teleport, win or lose a battle, and wiping the save. Every use is logged.
+- A **Debug** button next to Logs gives testing shortcuts: crowns, trade goods and prices, spawning or clearing world parties, food and morale, soldiers, items, stats, god mode, time, teleport, win or lose a battle, and wiping the save. Every use is logged.
 - The game auto-saves in the browser and keeps a backup of the previous save. Saves from 0.3 and 0.4 are converted automatically. A diagnostics panel (F3) shows logs and can export them as JSON or TXT.
 - Landscape phone controls: joystick, Attack, Block and an Orders menu above them. The game pauses when you switch away and asks you to rotate in portrait.
 - Gate details and playtest checklists: [`docs/GATE-A-VALIDATION.md`](docs/GATE-A-VALIDATION.md), [`docs/GATE-B-VALIDATION.md`](docs/GATE-B-VALIDATION.md), [`docs/GATE-C-VALIDATION.md`](docs/GATE-C-VALIDATION.md)
 
 | Action | Desktop | Touch |
 |---|---|---|
-| Travel (map) | Click a place; Space halts | Tap a place |
+| Travel (map) | Click a place or party; Space halts or waits | Tap a place or party; Wait button |
 | Move (battle) | WASD / arrows | Left joystick |
 | Attack | Space / left click | Attack |
 | Block | Shift / right click | Hold Block |
@@ -54,6 +55,8 @@ js/               game runtime, attached to window.Crownless
   upkeep.js       food rations, weekly wages, morale, desertion
   trade.js        markets, prices, cargo, selling gear
   world.js        strategic map: travel, terrain, settlements, sites, capture release
+  autoresolve.js  seeded RNG and GDD auto-resolve (power, odds, casualties)
+  parties.js      patrols, caravans, bandit bands; encounter choices
   character.js    hero creation, attributes/skills, equipment, derived stats
   debug.js        Debug panel testing tools
   ui.js           overlays, roster, pause, diagnostics panel
@@ -93,4 +96,4 @@ On every push to `main`, [`.github/workflows/deploy.yml`](.github/workflows/depl
 
 ## Known limits
 
-This is the first slice of Gate C, not the full campaign. There is no levelling, moving bandit or patrol parties, quests or save export/import yet, and no cavalry. Hairstyles wait for sprite art. Ally commands are simple, not a formation system. The sprite crops come from the Sprite Studio assets, and some animations are not yet hand-aligned. Browser saves can be cleared by the browser.
+This is the first slice of Gate C, not the full campaign. There is no levelling, contracts, faction reputation, quests or save export/import yet, and no cavalry. Hairstyles wait for sprite art. Ally commands are simple, not a formation system. The sprite crops come from the Sprite Studio assets, and some animations are not yet hand-aligned. Browser saves can be cleared by the browser.

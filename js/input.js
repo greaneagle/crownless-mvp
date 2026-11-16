@@ -63,6 +63,7 @@
       }
     };
     $('#partyBtn').onclick = ui.openSheet;
+    $('#waitBtn').onclick = () => CL.world.toggleWait();
     $('#tradeBtn').onclick = () => ui.changeMode('trade');
     $('#gearBtn').onclick = ui.openSheet;
     for (const sel of ['#recruitA', '#recruitB']) $(sel).onclick = (e) => party.recruit(e.currentTarget.dataset.troop);
@@ -104,7 +105,10 @@
       const o = KEY_ORDERS[e.code];
       if (o) CL.combat.order(o[0], o[1]);
       if (e.code === 'Space' && !e.repeat) {
-        if (g.mode === 'map') CL.world.stop();
+        if (g.mode === 'map') {
+          if (g.travel) CL.world.stop();
+          else CL.world.toggleWait();
+        }
         else CL.combat.queueAttack();
       }
       g.hold[e.code] = true;

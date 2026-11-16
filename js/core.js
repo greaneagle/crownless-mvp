@@ -5,7 +5,7 @@
   root.Crownless = root.Crownless || {};
   const CL = root.Crownless;
 
-  CL.BUILD = '0.9.0';
+  CL.BUILD = '0.10.0';
   CL.SAVEKEY = 'crownless_v03_party';
   CL.W = 960;
   CL.H = 540;

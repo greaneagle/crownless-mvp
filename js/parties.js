@@ -1,0 +1,458 @@
+/* Crownless world parties (GDD §8): patrols, caravans and Road Reaver bands moving on the map,
+ * off-screen fights between them, caravans shifting market prices, and the player's encounter
+ * choices — Attack, Auto-resolve, Negotiate, Retreat — for both bands and lair sites.
+ * State: CL.campaign.parties (saved). Time advances through CL.party.advanceDays → tick(). */
+(function (root) {
+  'use strict';
+  const CL = root.Crownless;
+  const A = () => CL.autoresolve;
+
+  const STEP_HOURS = 0.25;
+  const CONTACT = 1.6; // map units: parties this close meet
+  const ARRIVE = 0.3;
+  const CHASE_RATIO = 0.5; // bandits only hunt a player at least this weak relative to them
+  const INTIMIDATE_RATIO = 2.5; // a player this much stronger scares bandits off
+  const IGNORE_AFTER = { retreat: 0.25, toll: 1, intimidate: 1, capture: 1 }; // days
+  const CARAVAN_EFFECT = 0.08; // scarcity change at the destination (GDD: ±0.05–0.1)
+  const WAVE_SIZE = 8;
+
+  // The world sim runs in steps inside a span of time the clock has already advanced, so it keeps
+  // its own "now" for spawn timers, deaths and cooldowns (null outside a tick → the campaign day).
+  let simDay = null;
+  const now = (c) => simDay ?? c.day;
+
+  const tpl = (id) => CL.content.get('party_templates', id);
+  const settlement = (id) => CL.content.get('settlements', id);
+  const W = () => CL.world;
+  const dist = (a, b) => W().mapDist(a.x, a.y, b.x, b.y);
+  const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
+  const pick = (c, list) => list[A().int(c, 0, list.length - 1)];
+  const troopCount = (p) => Object.values(p.troops).reduce((a, b) => a + b, 0);
+  const find = (c, id) => c.parties.find((p) => p.id === id) || null;
+
+  // ---- Spawning ----
+
+  function spawn(c, templateId) {
+    const t = tpl(templateId);
+    const troops = {};
+    for (const [id, [lo, hi]] of Object.entries(t.troops)) {
+      const n = A().int(c, lo, hi);
+      if (n > 0) troops[id] = n;
+    }
+    if (!Object.keys(troops).length) troops[Object.keys(t.troops)[0]] = 1;
+    const p = { id: c.nextPartyId++, template: t.id, x: 50, y: 50, troops, tx: null, ty: null, ignoreUntil: 0, alerted: false };
+    if (t.kind === 'bandit') {
+      p.lair = pick(c, t.lairs);
+      const s = W().map().sites[p.lair];
+      Object.assign(p, { x: s.mapX, y: s.mapY });
+    } else if (t.kind === 'patrol') {
+      const h = settlement(t.home);
+      Object.assign(p, { x: h.mapX, y: h.mapY });
+    } else {
+      p.routeIndex = A().int(c, 0, t.route.length - 1);
+      const s = settlement(t.route[p.routeIndex]);
+      Object.assign(p, { x: s.mapX, y: s.mapY, good: pick(c, t.goods) });
+    }
+    c.parties.push(p);
+    CL.diag.log('info', 'Party spawned', { id: p.id, template: t.id, troops: p.troops });
+    return p;
+  }
+
+  function remove(c, p) {
+    const i = c.parties.indexOf(p);
+    if (i >= 0) c.parties.splice(i, 1);
+    const t = tpl(p.template);
+    c.partySpawns[t.id] = Math.max(c.partySpawns[t.id] || 0, now(c) + t.respawnDays);
+  }
+
+  /** Keep each template at its target count once its respawn timer has passed. */
+  function ensure(c, ignoreTimers = false) {
+    for (const t of Object.values(CL.content.table('party_templates'))) {
+      let active = c.parties.filter((p) => p.template === t.id).length;
+      while (active < t.count && (ignoreTimers || now(c) >= (c.partySpawns[t.id] || 0))) {
+        spawn(c, t.id);
+        active++;
+        if (!ignoreTimers) c.partySpawns[t.id] = now(c) + t.respawnDays;
+      }
+    }
+  }
+
+  // ---- Behaviour ----
+
+  const playerOnMap = (c) => !c.world.location && CL.game.mode === 'map';
+
+  function wantsPlayer(c, p) {
+    const t = tpl(p.template);
+    if (!t.hostile || !playerOnMap(c) || now(c) < p.ignoreUntil) return false;
+    if (dist(p, c.world) > t.detection) return false;
+    return A().troopsPower(p.troops) >= CHASE_RATIO * A().playerPower(c);
+  }
+
+  function nearest(c, p, kind, range) {
+    let best = null;
+    for (const o of c.parties) {
+      if (o === p || tpl(o.template).kind !== kind) continue;
+      const d = dist(p, o);
+      if (d <= range && (!best || d < best.d)) best = { o, d };
+    }
+    return best?.o || null;
+  }
+
+  const reached = (p) => p.tx === null || W().mapDist(p.x, p.y, p.tx, p.ty) <= ARRIVE;
+
+  function chooseTarget(c, p) {
+    const t = tpl(p.template);
+    p.chasing = null;
+    if (t.kind === 'bandit') {
+      if (wantsPlayer(c, p)) {
+        p.chasing = 'player';
+        [p.tx, p.ty] = [c.world.x, c.world.y];
+        if (!p.alerted) {
+          p.alerted = true;
+          CL.ui.message(`${t.name} have spotted you!`);
+        }
+        return;
+      }
+      p.alerted = false;
+      // Bands keep clear of patrols they can see.
+      const threat = nearest(c, p, 'patrol', t.detection);
+      if (threat && A().troopsPower(threat.troops) > A().troopsPower(p.troops)) {
+        p.chasing = 'fleeing';
+        p.tx = clamp(p.x * 2 - threat.x, 2, 98);
+        p.ty = clamp(p.y * 2 - threat.y, 2, 98);
+        return;
+      }
+      const prey = nearest(c, p, 'caravan', t.detection);
+      if (prey) {
+        p.chasing = prey.id;
+        [p.tx, p.ty] = [prey.x, prey.y];
+        return;
+      }
+      if (reached(p)) {
+        const lair = W().map().sites[p.lair];
+        p.tx = clamp(lair.mapX + (A().next(c) * 2 - 1) * t.roam, 2, 98);
+        p.ty = clamp(lair.mapY + (A().next(c) * 2 - 1) * t.roam, 2, 98);
+      }
+    } else if (t.kind === 'patrol') {
+      const quarry = nearest(c, p, 'bandit', t.detection);
+      if (quarry) {
+        p.chasing = quarry.id;
+        [p.tx, p.ty] = [quarry.x, quarry.y];
+        return;
+      }
+      if (reached(p)) {
+        const own = Object.values(CL.content.table('settlements')).filter((s) => s.ownerFaction === t.faction);
+        const s = pick(c, own);
+        [p.tx, p.ty] = [s.mapX, s.mapY];
+      }
+    } else {
+      const s = settlement(t.route[(p.routeIndex + 1) % t.route.length]);
+      [p.tx, p.ty] = [s.mapX, s.mapY];
+      if (reached(p)) caravanArrives(c, p);
+    }
+  }
+
+  /** GDD §9: caravan deliveries lower scarcity of the good they carry at the destination. */
+  function caravanArrives(c, p) {
+    const t = tpl(p.template);
+    p.routeIndex = (p.routeIndex + 1) % t.route.length;
+    const sid = t.route[p.routeIndex];
+    if (c.markets[sid]) {
+      c.markets[sid][p.good] = clamp(c.markets[sid][p.good] - CARAVAN_EFFECT, CL.trade.SCARCITY.min, CL.trade.SCARCITY.max);
+    }
+    CL.diag.log('info', 'Caravan arrived', { at: sid, good: p.good });
+    p.good = pick(c, t.goods);
+    p.tx = null;
+  }
+
+  function move(p, hours) {
+    if (p.tx === null) return;
+    const t = tpl(p.template);
+    const m = W().map();
+    const speed = t.speed * m.terrain[W().terrainAt(p.x, p.y)];
+    const d = W().mapDist(p.x, p.y, p.tx, p.ty);
+    const step = speed * hours;
+    if (step >= d) [p.x, p.y] = [p.tx, p.ty];
+    else {
+      p.x += ((p.tx - p.x) * step) / d;
+      p.y += ((p.ty - p.y) * step) / d;
+    }
+  }
+
+  /** Bandits vs caravans and patrols vs bandits fight it out off-screen. */
+  function resolveContacts(c) {
+    for (const a of [...c.parties]) {
+      if (!c.parties.includes(a) || tpl(a.template).kind !== 'bandit') continue;
+      for (const b of [...c.parties]) {
+        const kb = tpl(b.template).kind;
+        if (b === a || !c.parties.includes(b) || (kb !== 'caravan' && kb !== 'patrol')) continue;
+        if (dist(a, b) > CONTACT) continue;
+        const r = A().resolveParties(c, a, b);
+        if (tpl(r.loser.template).kind === 'caravan') {
+          // GDD §9: bandit losses make the caravan's goods scarcer where it was heading.
+          const t = tpl(r.loser.template);
+          const sid = t.route[(r.loser.routeIndex + 1) % t.route.length];
+          if (c.markets[sid]) {
+            c.markets[sid][r.loser.good] = clamp(c.markets[sid][r.loser.good] + CARAVAN_EFFECT, CL.trade.SCARCITY.min, CL.trade.SCARCITY.max);
+          }
+        }
+        CL.diag.log('info', 'Off-screen battle', { winner: r.winner.template, loser: r.loser.template, losses: r.winnerLosses });
+        remove(c, r.loser);
+        if (r.loser === a) break;
+      }
+    }
+  }
+
+  /**
+   * Advance the world parties by `hours`. Returns the id of a band that has caught the player
+   * (also stored in CL.game.contactParty), or null.
+   */
+  function tick(c, hours) {
+    if (!c.parties || hours <= 0) return null;
+    const steps = Math.ceil(hours / STEP_HOURS);
+    const h = hours / steps;
+    const start = c.day - hours / 24; // advanceDays has already moved the clock to the end
+    try {
+      return runSteps(c, steps, h, start);
+    } finally {
+      simDay = null;
+    }
+  }
+
+  function runSteps(c, steps, h, start) {
+    for (let i = 0; i < steps; i++) {
+      simDay = start + ((i + 1) * h) / 24;
+      ensure(c);
+      for (const p of c.parties) {
+        chooseTarget(c, p);
+        move(p, h);
+      }
+      resolveContacts(c);
+      for (const p of c.parties) {
+        if (wantsPlayer(c, p) && dist(p, c.world) <= CONTACT) {
+          CL.game.contactParty = p.id;
+          return p.id;
+        }
+      }
+    }
+    return null;
+  }
+
+  // ---- Encounters with the player (bands and lair sites share one flow) ----
+
+  /** The open encounter: { kind: 'site'|'party', name, text, troops, hostile, def, party? }. */
+  function current(c = CL.campaign) {
+    const g = CL.game;
+    if (g.partyId != null) {
+      const p = find(c, g.partyId);
+      if (!p) return null;
+      const t = tpl(p.template);
+      return { kind: 'party', name: t.name, text: t.text, troops: p.troops, hostile: t.hostile, def: battleDef(t, p.troops), party: p, t };
+    }
+    if (g.siteId) {
+      const st = W().map().sites[g.siteId];
+      const enc = CL.content.encounter(st.encounter);
+      const troops = {};
+      for (const w of enc.waves) for (const [id, n] of Object.entries(w)) troops[id] = (troops[id] || 0) + n;
+      return { kind: 'site', name: st.name, text: st.text, troops, hostile: true, def: enc };
+    }
+    return null;
+  }
+
+  /** A battle definition for a band: its actual troops, in waves of up to 8. */
+  function battleDef(t, troops) {
+    const list = A().expand(troops);
+    const waves = [];
+    for (let i = 0; i < list.length; i += WAVE_SIZE) waves.push(A().collapse(list.slice(i, i + WAVE_SIZE)));
+    return { id: `party_${t.id}`, name: t.name, map: 'grass_field', waves, reward: t.reward, loot: t.loot };
+  }
+
+  function open(partyId) {
+    const g = CL.game;
+    g.partyId = partyId;
+    g.siteId = null;
+    g.travel = null;
+    CL.ui.changeMode('encounter');
+  }
+
+  function negotiation(c, e) {
+    if (e.kind !== 'party' || !e.hostile) return null;
+    if (A().playerPower(c) >= INTIMIDATE_RATIO * A().troopsPower(e.troops)) return { kind: 'intimidate' };
+    return { kind: 'toll', cost: e.t.toll.base + e.t.toll.perTroop * troopCount(e.party) };
+  }
+
+  /** GDD §8: clamp(0.5 + 0.1 × (SpeedPlayer − SpeedEnemy), 0.15, 0.85). */
+  function retreatChance(c, e) {
+    if (e.kind !== 'party') return null;
+    const w = c.world;
+    const enemy = e.t.speed * W().map().terrain[W().terrainAt(e.party.x, e.party.y)];
+    return clamp(0.5 + 0.1 * (W().speedAt(w.x, w.y) - enemy), 0.15, 0.85);
+  }
+
+  function leaveAlone(e, days) {
+    e.party.ignoreUntil = CL.campaign.day + days;
+    e.party.alerted = false;
+  }
+
+  function negotiate() {
+    const c = CL.campaign;
+    const e = current(c);
+    const n = e && negotiation(c, e);
+    if (!n) return false;
+    if (n.kind === 'intimidate') {
+      leaveAlone(e, IGNORE_AFTER.intimidate);
+      // Send them scurrying away from the player.
+      [e.party.tx, e.party.ty] = [clamp(e.party.x * 2 - c.world.x, 2, 98), clamp(e.party.y * 2 - c.world.y, 2, 98)];
+      CL.ui.changeMode('map');
+      CL.ui.message(`The ${e.name} take one look at your company and melt away.`);
+    } else {
+      if (c.gold < n.cost) return false;
+      c.gold -= n.cost;
+      leaveAlone(e, IGNORE_AFTER.toll);
+      CL.save.write();
+      CL.ui.changeMode('map');
+      CL.ui.message(`You pay ${n.cost} crowns. The ${e.name} let you pass.`);
+    }
+    CL.diag.log('info', 'Negotiated', { party: e.party.id, outcome: n.kind, cost: n.cost || 0 });
+    return true;
+  }
+
+  function retreat() {
+    const c = CL.campaign;
+    const e = current(c);
+    if (e?.kind !== 'party') return false;
+    const chance = retreatChance(c, e);
+    const ok = A().next(c) < chance;
+    CL.diag.log('info', 'Retreat', { party: e.party.id, chance, ok });
+    if (ok) {
+      leaveAlone(e, IGNORE_AFTER.retreat);
+      CL.ui.changeMode('map');
+      CL.ui.message('You slip away before they can close in.');
+    } else {
+      CL.ui.message('They cut off your escape — you must fight!');
+      attack();
+    }
+    return ok;
+  }
+
+  function attack() {
+    const e = current();
+    if (!e) return;
+    CL.combat.startBattle(e.def);
+  }
+
+  /** GDD §7 auto-resolve for the player's encounter, applied through the normal result path. */
+  function autoResolve() {
+    const c = CL.campaign;
+    const g = CL.game;
+    const e = current(c);
+    if (!e) return null;
+    const pp = A().playerPower(c);
+    const pe = A().troopsPower(e.troops);
+    const win = A().next(c) < A().winChance(pp, pe);
+    const healthy = CL.party.healthySoldiers().map((s) => s.id);
+    const enemyList = A().expand(e.troops);
+    const fallen = win
+      ? A().rollFallen(c, healthy, A().lossChance(A().WINNER_LOSS, pp, pe), true)
+      : A().rollFallen(c, healthy, A().lossChance(A().LOSER_LOSS, pp, pe), false);
+    const enemyFallen = win ? enemyList : A().rollFallen(c, enemyList, A().lossChance(A().WINNER_LOSS, pe, pp), true);
+    const killed = [];
+    const wounded = [];
+    for (const id of fallen) (A().next(c) < 0.35 ? killed : wounded).push(id);
+    g.battleId = c.battles + 1;
+    const outcome = { battleId: g.battleId, encounter: e.def, win, kills: enemyFallen.length, killed, wounded };
+    const r = CL.party.applyBattleResult(c, outcome);
+    W().onBattleResolved(win, g.siteId);
+    onBattleResolved(win, g.partyId, enemyFallen);
+    CL.save.write();
+    g.result = {
+      win,
+      auto: true, // drawn over the world map, not a battlefield
+      ...r,
+      html: CL.party.resultHtml({ win, r, kills: enemyFallen.length, killed, wounded, survivors: healthy.length - fallen.length, auto: { pp, pe } }),
+    };
+    CL.diag.log('info', 'Auto-resolved', { ...outcome, encounter: e.def.id, pp, pe });
+    CL.ui.changeMode('result');
+    return g.result;
+  }
+
+  /** After a battle with a band: a win destroys it; a loss leaves it weakened but alive. */
+  function onBattleResolved(win, partyId, fallenEnemyTroops) {
+    const c = CL.campaign;
+    const p = partyId != null ? find(c, partyId) : null;
+    if (!p) return;
+    if (win) remove(c, p);
+    else {
+      A().removeTroops(p.troops, fallenEnemyTroops);
+      if (!troopCount(p)) remove(c, p);
+      else p.ignoreUntil = c.day + IGNORE_AFTER.capture;
+    }
+  }
+
+  // ---- Save ----
+
+  function sanitize(s, d) {
+    s.rngSeed = Number.isInteger(d?.rngSeed) && d.rngSeed >= 0 ? d.rngSeed >>> 0 : A().newSeed();
+    s.parties = [];
+    s.partySpawns = {};
+    s.nextPartyId = 1;
+    const num = (n) => typeof n === 'number' && Number.isFinite(n);
+    for (const p of Array.isArray(d?.parties) ? d.parties : []) {
+      const t = CL.content.table('party_templates')[p?.template];
+      if (!t || !Number.isInteger(p.id) || !num(p.x) || !num(p.y)) continue;
+      const troops = {};
+      for (const [id, n] of Object.entries(p.troops || {})) {
+        if (CL.content.table('troops')[id] && Number.isInteger(n) && n > 0) troops[id] = Math.min(n, 99);
+      }
+      if (!Object.keys(troops).length) continue;
+      const q = {
+        id: p.id,
+        template: t.id,
+        x: clamp(p.x, 0, 100),
+        y: clamp(p.y, 0, 100),
+        troops,
+        tx: num(p.tx) ? clamp(p.tx, 0, 100) : null,
+        ty: num(p.ty) ? clamp(p.ty, 0, 100) : null,
+        ignoreUntil: num(p.ignoreUntil) ? p.ignoreUntil : 0,
+        alerted: false,
+      };
+      if (t.kind === 'bandit') q.lair = t.lairs.includes(p.lair) ? p.lair : t.lairs[0];
+      if (t.kind === 'caravan') {
+        q.routeIndex = Number.isInteger(p.routeIndex) ? clamp(p.routeIndex, 0, t.route.length - 1) : 0;
+        q.good = t.goods.includes(p.good) ? p.good : t.goods[0];
+      }
+      if (q.tx === null || q.ty === null) [q.tx, q.ty] = [null, null];
+      s.parties.push(q);
+      s.nextPartyId = Math.max(s.nextPartyId, q.id + 1);
+    }
+    for (const [tid, day] of Object.entries(d?.partySpawns || {})) {
+      if (CL.content.table('party_templates')[tid] && num(day)) s.partySpawns[tid] = day;
+    }
+    if (!Array.isArray(d?.parties)) ensure(s, true); // older saves: populate the world
+  }
+
+  CL.parties = {
+    CONTACT,
+    CHASE_RATIO,
+    INTIMIDATE_RATIO,
+    CARAVAN_EFFECT,
+    spawn,
+    remove,
+    ensure,
+    find,
+    troopCount,
+    wantsPlayer,
+    tick,
+    current,
+    battleDef,
+    open,
+    negotiation,
+    retreatChance,
+    negotiate,
+    retreat,
+    attack,
+    autoResolve,
+    onBattleResolved,
+    sanitize,
+  };
+})(typeof window !== 'undefined' ? window : globalThis);

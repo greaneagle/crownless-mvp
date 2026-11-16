@@ -47,9 +47,14 @@
       starving: false,
       markets: CL.trade.defaultMarkets(), // current scarcity per settlement and good
       cargo: {}, // trade goods carried
+      rngSeed: CL.autoresolve.newSeed(), // seeded randomness for the world and auto-resolve
+      parties: [], // patrols, caravans and bands on the map
+      partySpawns: {}, // template id → day its next party may appear
+      nextPartyId: 1,
     };
     CL.character.applyKit(c, background);
     CL.upkeep.stowFood(c);
+    CL.parties.ensure(c, true);
     return c;
   }
 
@@ -95,6 +100,7 @@
     }
     CL.upkeep.sanitize(s, d); // food, morale, payday (and stows any food items)
     CL.trade.sanitize(s, d); // market scarcity and cargo
+    CL.parties.sanitize(s, d); // world parties and the RNG seed
     return s;
   }
 

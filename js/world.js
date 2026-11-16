@@ -92,7 +92,24 @@
   // ---- Travel ----
 
   /** Choose what was clicked at canvas pixel (px, py): a settlement, a site or open ground. */
+  /** True when a map point sits on a settlement or site (whose label would collide). */
+  function onLandmark(mx, my) {
+    const near = (x, y) => mapDist(mx, my, x, y) < 3;
+    return settlements().some((s) => near(s.mapX, s.mapY)) || Object.values(map().sites).some((s) => near(s.mapX, s.mapY));
+  }
+
+  /** Where a party is drawn: beside a landmark it stands on, otherwise at its position. */
+  function partyDrawPos(p) {
+    const [x, y] = toPx(p.x, p.y);
+    return onLandmark(p.x, p.y) ? { x: x + 20, y: y - 14, crowded: true } : { x, y, crowded: false };
+  }
+
   function targetAt(px, py) {
+    // Moving parties first: they can stand on top of places.
+    for (const p of CL.campaign.parties || []) {
+      const { x: sx, y: sy } = partyDrawPos(p);
+      if (Math.hypot(px - sx, py - sy) <= HIT_RADIUS_PX * 0.8) return { type: 'party', id: p.id, x: p.x, y: p.y };
+    }
     for (const s of settlements()) {
       const [sx, sy] = toPx(s.mapX, s.mapY);
       if (Math.hypot(px - sx, py - sy) <= HIT_RADIUS_PX) return { type: 'settlement', id: s.id, x: s.mapX, y: s.mapY };
@@ -109,6 +126,7 @@
   function travelTo(target) {
     const w = world();
     w.location = null;
+    CL.game.waiting = false;
     CL.game.travel = target;
     if (mapDist(w.x, w.y, target.x, target.y) <= ARRIVE_EPSILON) arrive(target);
   }
@@ -126,11 +144,43 @@
   }
 
   /** Advance travel by dt real seconds. Returns game hours spent. */
+  /** A band caught the player during the last stretch of time: stop and face them. */
+  function checkContact() {
+    const g = CL.game;
+    if (g.contactParty == null) return false;
+    const id = g.contactParty;
+    g.contactParty = null;
+    g.waiting = false;
+    CL.parties.open(id);
+    return true;
+  }
+
   function update(dt) {
     const g = CL.game;
-    if (g.mode !== 'map' || !g.travel) return 0;
+    if (g.mode !== 'map') return 0;
+    if (!g.travel) {
+      if (!g.waiting) return 0;
+      const hours = Math.min(dt, 0.1) * HOURS_PER_SECOND;
+      CL.party.advanceDays(hours / 24);
+      checkContact();
+      return hours;
+    }
     const w = world();
     const t = g.travel;
+    if (t.type === 'party') {
+      // Chase a moving party: aim at where it is now.
+      const p = CL.parties.find(CL.campaign, t.id);
+      if (!p) {
+        g.travel = null;
+        CL.ui.message('They have moved on.');
+        return 0;
+      }
+      [t.x, t.y] = [p.x, p.y];
+      if (mapDist(w.x, w.y, p.x, p.y) <= CL.parties.CONTACT) {
+        arrive(t);
+        return 0;
+      }
+    }
     const remaining = mapDist(w.x, w.y, t.x, t.y);
     const speed = speedAt(w.x, w.y);
     let hours = Math.min(dt, 0.1) * HOURS_PER_SECOND;
@@ -146,6 +196,7 @@
     }
     g.travelFace = Math.abs(t.x - w.x) > Math.abs((t.y - w.y) * Y_ASPECT) ? (t.x < w.x ? 'left' : 'right') : t.y < w.y ? 'up' : 'down';
     CL.party.advanceDays(hours / 24);
+    if (checkContact()) return hours;
     if (w.x === t.x && w.y === t.y) arrive(t);
     return hours;
   }
@@ -172,9 +223,12 @@
       CL.save.write(); // GDD §13: autosave when entering a settlement
       CL.diag.log('info', 'Entered settlement', { id: t.id, day: CL.campaign.day });
       CL.ui.changeMode('settlement');
+    } else if (t.type === 'party') {
+      CL.parties.open(t.id);
     } else if (t.type === 'site') {
       if (siteActive(t.id)) {
         g.siteId = t.id;
+        g.partyId = null;
         CL.ui.changeMode('encounter');
       } else {
         const back = CL.party.dayNumber(world().sites[t.id].clearedUntil);
@@ -189,9 +243,15 @@
   }
 
   function attackSite() {
+    CL.parties.attack(); // shared encounter flow for sites and bands
+  }
+
+  function toggleWait() {
     const g = CL.game;
-    const st = site(g.siteId);
-    CL.combat.startBattle(st.encounter);
+    if (g.mode !== 'map') return;
+    g.travel = null;
+    g.waiting = !g.waiting;
+    CL.ui.message(g.waiting ? 'Waiting… time passes.' : 'You break camp.');
   }
 
   function nearestSettlement(x, y, predicate = () => true) {
@@ -226,6 +286,7 @@
   function returnToMap() {
     const g = CL.game;
     g.siteId = null;
+    g.partyId = null;
     CL.ui.changeMode('map');
     if (g.releasedAt) {
       CL.ui.message(`Your captors release you outside ${settlement(g.releasedAt).name}.`);
@@ -263,6 +324,7 @@
     map,
     toPx,
     fromPx,
+    partyDrawPos,
     mapDist,
     defaultState,
     sanitize,
@@ -277,6 +339,8 @@
     estimateHours,
     leaveSettlement,
     attackSite,
+    toggleWait,
+    checkContact,
     nearestSettlement,
     onBattleResolved,
     returnToMap,
