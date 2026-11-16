@@ -286,7 +286,10 @@
     }
     if (!win) {
       CL.party.advanceDays(CAPTURE_DAYS);
-      const s = nearestSettlement(w.x, w.y, (x) => x.ownerFaction !== 'neutral');
+      const c = CL.campaign;
+      const s =
+        nearestSettlement(w.x, w.y, (x) => CL.realm.owner(x.id, c) !== 'neutral' && CL.realm.welcomes(c, x.id)) ||
+        nearestSettlement(w.x, w.y, (x) => CL.realm.owner(x.id, c) !== 'neutral');
       w.x = s.mapX;
       w.y = s.mapY;
       w.location = null;

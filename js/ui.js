@@ -15,23 +15,28 @@
       return {
         title: g.result.win ? 'VICTORY' : 'CAPTURED',
         text: g.result.win
-          ? 'The reavers have been routed. Your surviving soldiers gather the spoils.'
+          ? 'The enemy has been routed. Your surviving soldiers gather the spoils.'
           : 'Your party was broken. You were held for half a day, then released without some of your crowns and gear.',
         button: 'Continue',
       };
     }
     if (mode === 'settlement') {
       const s = CL.party.currentSettlement();
-      const owner = CL.content.get('factions', s.ownerFaction);
-      // GDD §8: forts show their garrison.
-      const garrison = s.garrison
-        ? ` Garrison: ${Object.values(s.garrison).reduce((a, b) => a + b, 0)} (${Object.entries(s.garrison)
+      const c = CL.campaign;
+      const holder = CL.realm.owner(s.id, c);
+      const owner = CL.content.get('factions', holder);
+      const st = CL.realm.standing(c, holder);
+      const mood = st ? ` They are ${CL.realm.STANDING_LABEL[st].toLowerCase()} to you.` : '';
+      // GDD §8: forts show their garrison (the holder's troops).
+      const gar = CL.realm.garrison(s.id, c);
+      const garrison = gar
+        ? ` Garrison: ${Object.values(gar).reduce((a, b) => a + b, 0)} (${Object.entries(gar)
             .map(([id, n]) => `${n} ${plural(CL.content.troop(id).name, n)}`)
             .join(', ')}).`
         : '';
       return {
         title: s.name.toUpperCase(),
-        text: `${TYPE_LABEL[s.type] || s.type} of the ${owner.name}. ${CL.world.clockLabel()}.${garrison}`,
+        text: `${TYPE_LABEL[s.type] || s.type} of the ${owner.name}.${mood} ${CL.world.clockLabel()}.${garrison}`,
         button: 'Leave',
         secondary: CL.town.hubFor(s.id) ? 'Walk the streets' : null,
       };
@@ -325,6 +330,11 @@
       );
     } else if (offer && k) {
       cards.push(contractCard('More work posted', ['Finish your current contract before taking another.'], []));
+    } else if (!CL.realm.welcomes(c, sid)) {
+      const f = CL.content.get('factions', CL.realm.owner(sid, c));
+      cards.push(
+        contractCard('No work for enemies', [`The ${f.name} count you Hostile and post nothing for you. Win back their favour by fighting Road Reavers on their land.`], []),
+      );
     }
     $('#contractsScreen').replaceChildren(...cards);
   }
@@ -356,7 +366,15 @@
       if (r != null) buttons.push(choice('Retreat', `${Math.round(r * 100)}% to get away`, () => P.retreat()));
       else buttons.push(choice('Leave', 'Come back another time', () => changeMode('map')));
     } else {
+      // A kingdom's patrol or caravan: you may still fall on them, at a price (GDD §10).
+      const f = e.kind === 'party' && e.t.faction && e.t.kind !== 'bandit' ? CL.content.get('factions', e.t.faction) : null;
       buttons.push(choice('Leave', 'Go on your way', () => changeMode('map')));
+      if (f) {
+        const odds = Math.round(A.winChance(A.playerPower(c), A.troopsPower(e.troops)) * 100);
+        const cost = `−${-CL.realm.REP.attack} reputation with the ${f.name}`;
+        buttons.push(choice('Attack them', cost, () => P.attack()));
+        buttons.push(choice('Attack (auto-resolve)', `About ${odds}% to win · ${cost}`, () => P.autoResolve()));
+      }
     }
     box.replaceChildren(...buttons);
   }
@@ -598,7 +616,15 @@
           spendable(`${sk.name} ${C.skill(sk.id)}`, ch.skillPoints > 0 && ch.skills[sk.id] < C.MAX_SKILL, () => C.spendSkill(sk.id)),
         ),
       ),
-      line([`Party size ${c.roster.length}/${cap} (8 + 2×Leadership ${lead} + Renown ${c.renown}/40${cap === 20 ? ', max 20' : ''})`]),
+      line([
+        `Party size ${c.roster.length}/${cap} (8 + 2×Leadership ${lead} + Renown ${c.renown}/40${CL.realm.capBonus(c) ? ` + ${CL.realm.capBonus(c)} Friendly` : ''}${cap === 20 ? ', max 20' : ''})`,
+      ]),
+      line(
+        CL.realm.kingdoms().map((f) => {
+          const st = CL.realm.standing(c, f.id);
+          return `${f.name}: ${CL.realm.STANDING_LABEL[st]} (${CL.realm.score(c, f.id)})`;
+        }),
+      ),
       Object.assign(document.createElement('div'), { className: 'statLine' }),
     );
     renderTroops();
@@ -753,7 +779,12 @@
     $('#contractsBtn').classList.toggle('hidden', !board);
     const payday = c.contract?.status === 'done' && c.contract.giver === c.world.location;
     $('#contractsBtn').textContent = payday ? 'Contracts — collect pay!' : 'Contracts';
-    $('#serviceNote').textContent = offers.length ? '' : 'No one here is looking to take up arms.';
+    const barred = !CL.realm.welcomes(c, c.world.location);
+    $('#serviceNote').textContent = barred
+      ? `The ${CL.content.get('factions', CL.realm.owner(c.world.location, c)).name} will not hire out soldiers or work to an enemy.`
+      : offers.length
+        ? ''
+        : 'No one here is looking to take up arms.';
   }
 
   /** Food / morale / wages readout, with warnings highlighted (GDD §11). */

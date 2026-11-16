@@ -11,12 +11,43 @@ _Spec: GDD §3–§10 and §14 Gate D._
 | 4.3 Three battle maps as distinct environments | ✅ 0.15.0 |
 | 4.4 Complete the item catalogue (~30) | ✅ 0.17.0 |
 | 4.5 AI cavalry; all 15 troop roles | ✅ 0.18.0 |
-| 4.6 Faction reputation and fort ownership | ⬜ |
+| 4.6 Faction reputation and fort ownership | ✅ 0.19.0 |
 | 4.7 Quest and dialogue interpreter | ⬜ |
 | 4.8–4.12 Q1–Q4 and the companion Mara | ⬜ |
 | 4.13 Escort and delivery contracts | ⬜ |
 | 4.14 Trade-world interactions and regional news | ⬜ |
 | 4.15 Gate D acceptance | ⬜ |
+
+---
+
+## Slice 5 — 0.19.0: Faction reputation and fort ownership (2026-11-16)
+
+### What's in (GDD §10: "Three visible states per faction: Friendly / Neutral / Hostile. Store hidden score [-100, 100]"; §12: "Two forts have owner IDs. One story quest can change Greywall's owner.")
+- **Reputation:** each kingdom (Valedorn and Aurelian) has a hidden score from −100 to 100. Below −25 it's **Hostile**, above +24 **Friendly**, otherwise Neutral. The Road Reavers are always hostile and have no score. The game announces when your standing changes. All of this lives in the new `js/realm.js`.
+- **What changes it:**
+  - Collecting a contract: +10 with the giver's kingdom.
+  - Beating Road Reavers (a band or a camp): +2 with whoever holds the nearest settlement.
+  - Attacking a kingdom's patrol or caravan that wasn't after you: −15.
+  - Story decisions (±25) arrive with the quests.
+- **What it does:**
+  - **Friendly** with either kingdom: +2 party slots (the GDD's `faction_bonus`). The Character screen shows both standings and the bonus.
+  - **Hostile:**
+    - That kingdom's settlements won't let you recruit and post no contracts. Their board says why and how to make amends. The market and rest stay open, so you can't get stuck.
+    - Their patrols ride you down, with their own lines and no toll to pay.
+    - After a capture you're released at a settlement that will have you, if there is one.
+  - **Attacking a patrol or caravan:** a neutral one now offers *Attack them* and *Attack (auto-resolve)*, each showing the reputation cost. A patrol win pays +6 renown (GDD) and mid-tier loot; a caravan pays crowns.
+- **Fort ownership:** Greywall and Ashgate store their owner in the save. When a fort changes hands:
+  - Its map banner and recruits follow the new owner.
+  - Its garrison becomes the new owner's standard garrison (`garrison` in `data/factions.js`).
+  - Patrols switch their waypoints, and a kingdom that loses its home fort musters its patrols where it still holds ground.
+  - The Q4 ending will call `CL.realm.setOwner`. Until then the Debug panel can flip either fort.
+- **Saves:** reputation and owners are saved and validated. Unknown factions, non-kingdom owners and bad numbers are rejected, and saves from before this build start Neutral with the original owners.
+- **Debug panel:** Valedorn/Aurelian ±10 and Flip Greywall/Ashgate.
+
+### Checks
+- `tests/realm.test.js` (11 tests): thresholds and clamping, the standing-change message, the party-cap bonus, the contract and bandit rewards, the patrol-attack penalty and hostile pursuit, refusal at hostile settlements, Greywall changing hands, save round-trip and junk rejection, and the release point after capture. 205 tests pass; lint clean.
+- 30-day simulation on 4 seeds: campaigns progress normally (6–22 contracts, nobody stuck).
+- Browser, with real clicks: the Debug panel flipped Greywall and set Valedorn to Hostile. Stonebridge then said "hostile to you", hid recruiting and explained the empty board. Both settings survived a page reload. Greywall showed the red Aurelian banner on the map. A Valedorn patrol confronted the hero with its hostile line. A neutral Aurelian patrol offered to be attacked; attacking cost 15 reputation and started a battle with a +6 renown reward.
 
 ---
 

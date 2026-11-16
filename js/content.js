@@ -90,6 +90,9 @@
     }
     for (const f of Object.values(C.factions || {})) {
       for (const t of f.recruits || []) if (!C.troops?.[t]) err(`faction ${f.id}: unknown recruit ${t}`);
+      for (const [id, n] of Object.entries(f.garrison || {})) {
+        if (!C.troops?.[id] || !(Number.isInteger(n) && n > 0)) err(`faction ${f.id}: bad garrison entry ${id}`);
+      }
     }
     for (const m of Object.values(C.world_map || {})) {
       if (!C.settlements?.[m.startSettlement]) err(`world_map ${m.id}: unknown start ${m.startSettlement}`);

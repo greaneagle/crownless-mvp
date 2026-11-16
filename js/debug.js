@@ -203,6 +203,17 @@
         log('contract target defeated', { id: k.id });
         break;
       }
+      case 'rep':
+        CL.realm.adjust(c(), btn.dataset.f, n, 'debug');
+        log('reputation', { faction: btn.dataset.f, score: CL.realm.score(c(), btn.dataset.f) });
+        break;
+      case 'flipFort': {
+        const fort = btn.dataset.fort;
+        const to = CL.realm.owner(fort, c()) === 'valedorn' ? 'aurelian' : 'valedorn';
+        CL.realm.setOwner(c(), fort, to, 'debug');
+        log('fort owner', { fort, owner: to });
+        break;
+      }
       case 'contractOffers':
         c().contractOffers = {};
         log('contract offers refreshed');

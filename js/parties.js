@@ -29,6 +29,8 @@
   const pick = (c, list) => list[A().int(c, 0, list.length - 1)];
   const troopCount = (p) => Object.values(p.troops).reduce((a, b) => a + b, 0);
   const find = (c, id) => c.parties.find((p) => p.id === id) || null;
+  /** Bands are always hostile; a kingdom's parties turn on the player once that kingdom is Hostile. */
+  const hostileTo = (c, t) => t.hostile || CL.realm.isHostile(c, t.faction);
 
   // ---- Spawning ----
 
@@ -46,7 +48,8 @@
       const s = W().map().sites[p.lair];
       Object.assign(p, { x: s.mapX, y: s.mapY });
     } else if (t.kind === 'patrol') {
-      const h = settlement(t.home);
+      // Patrols muster at their home fort, or wherever their kingdom still holds if it has fallen.
+      const h = CL.realm.owner(t.home, c) === t.faction ? settlement(t.home) : CL.realm.holdings(c, t.faction)[0] || settlement(t.home);
       Object.assign(p, { x: h.mapX, y: h.mapY });
     } else {
       p.routeIndex = A().int(c, 0, t.route.length - 1);
@@ -84,7 +87,7 @@
 
   function wantsPlayer(c, p) {
     const t = tpl(p.template);
-    if (!t.hostile || !playerOnMap(c) || now(c) < p.ignoreUntil) return false;
+    if (!hostileTo(c, t) || !playerOnMap(c) || now(c) < p.ignoreUntil) return false;
     if (dist(p, c.world) > t.detection) return false;
     return A().troopsPower(p.troops) >= CHASE_RATIO * A().playerPower(c);
   }
@@ -104,6 +107,16 @@
   function chooseTarget(c, p) {
     const t = tpl(p.template);
     p.chasing = null;
+    if (t.kind === 'patrol' && wantsPlayer(c, p)) {
+      // A Hostile kingdom's patrols ride the player down.
+      p.chasing = 'player';
+      [p.tx, p.ty] = [c.world.x, c.world.y];
+      if (!p.alerted) {
+        p.alerted = true;
+        CL.ui.message(`A ${t.name} is riding for you!`);
+      }
+      return;
+    }
     if (t.kind === 'bandit') {
       if (wantsPlayer(c, p)) {
         p.chasing = 'player';
@@ -145,7 +158,8 @@
         return;
       }
       if (reached(p)) {
-        const own = Object.values(CL.content.table('settlements')).filter((s) => s.ownerFaction === t.faction);
+        p.alerted = false;
+        const own = CL.realm.holdings(c, t.faction);
         const s = pick(c, own);
         [p.tx, p.ty] = [s.mapX, s.mapY];
       }
@@ -259,7 +273,9 @@
       if (!p) return null;
       const t = tpl(p.template);
       const map = W().battleMapAt(c.world.x, c.world.y);
-      return { kind: 'party', name: t.name, text: t.text, troops: p.troops, hostile: t.hostile, def: battleDef(t, p.troops, map), party: p, t };
+      const hostile = hostileTo(c, t);
+      const text = hostile && t.hostileText ? t.hostileText : t.text;
+      return { kind: 'party', name: t.name, text, troops: p.troops, hostile, def: battleDef(t, p.troops, map), party: p, t };
     }
     if (g.siteId) {
       const st = W().map().sites[g.siteId];
@@ -289,7 +305,7 @@
   }
 
   function negotiation(c, e) {
-    if (e.kind !== 'party' || !e.hostile) return null;
+    if (e.kind !== 'party' || !e.hostile || !e.t.toll) return null; // only Reavers take tolls
     if (A().playerPower(c) >= INTIMIDATE_RATIO * A().troopsPower(e.troops)) return { kind: 'intimidate' };
     return { kind: 'toll', cost: e.t.toll.base + e.t.toll.perTroop * troopCount(e.party) };
   }
@@ -348,9 +364,16 @@
     return ok;
   }
 
+  /** Attacking a kingdom's patrol or caravan that wasn't after you: GDD §10 −15 reputation. */
+  function assaultPenalty(c, e) {
+    if (e.kind !== 'party' || e.hostile || !e.t.faction || e.t.kind === 'bandit') return;
+    CL.realm.adjust(c, e.t.faction, CL.realm.REP.attack, `attacked ${e.t.id}`);
+  }
+
   function attack() {
     const e = current();
     if (!e) return;
+    assaultPenalty(CL.campaign, e);
     CL.combat.startBattle(e.def);
   }
 
@@ -360,6 +383,7 @@
     const g = CL.game;
     const e = current(c);
     if (!e) return null;
+    assaultPenalty(c, e);
     const pp = A().playerPower(c);
     const pe = A().troopsPower(e.troops);
     const win = A().next(c) < A().winChance(pp, pe);
@@ -393,6 +417,8 @@
   function onBattleResolved(win, partyId, fallenEnemyTroops) {
     const c = CL.campaign;
     const p = partyId != null ? find(c, partyId) : null;
+    // GDD §10: beating Road Reavers helps whoever holds the land.
+    if (win && (CL.game.siteId || (p && tpl(p.template).kind === 'bandit'))) CL.realm.onBanditsBeaten(c);
     if (!p) return;
     if (win && p.contractId) CL.contracts.onTargetDefeated(c, p);
     if (win) remove(c, p);
@@ -460,6 +486,7 @@
     ensure,
     find,
     troopCount,
+    hostileTo,
     wantsPlayer,
     tick,
     current,

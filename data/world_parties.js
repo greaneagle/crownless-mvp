@@ -37,7 +37,11 @@
       detection: 7,
       home: 'greywall_fort',
       troops: { footman: [3, 4], hunter: [2, 3], levy: [2, 3] },
-      text: '"Keep to the roads, wanderer. Reavers have been seen in the hills, and the Crown wants them gone."'
+      // Attacking a kingdom's patrol or caravan costs 15 reputation with it (GDD §10); a Hostile kingdom's patrols hunt you.
+      reward: { goldBase: 20, goldPerKill: 4, renown: 6 },
+      lootBySize: [[99, 'mid']],
+      text: '"Keep to the roads, wanderer. Reavers have been seen in the hills, and the Crown wants them gone."',
+      hostileText: '"That is the one the Crown wants. Take them!" The patrol closes in, lances lowered.'
     },
     aurelian_patrol: {
       id: 'aurelian_patrol',
@@ -51,7 +55,10 @@
       detection: 7,
       home: 'ashgate_fort',
       troops: { spearman: [3, 4], skirmisher: [2, 3], recruit: [2, 3] },
-      text: '"Imperial law still holds east of the river. Travel peacefully and you will have no trouble from us."'
+      reward: { goldBase: 20, goldPerKill: 4, renown: 6 },
+      lootBySize: [[99, 'mid']],
+      text: '"Imperial law still holds east of the river. Travel peacefully and you will have no trouble from us."',
+      hostileText: '"By imperial law, you are under arrest." The patrol spreads out to cut off your road.'
     },
     valedorn_caravan: {
       id: 'valedorn_caravan',
@@ -66,7 +73,10 @@
       route: ['stonebridge', 'oakford', 'highmere', 'brackenfield'],
       goods: ['grain', 'wool'],
       troops: { levy: [2, 4] },
-      text: 'Wagons heavy with grain and wool creak along under a few nervous guards.'
+      reward: { goldBase: 60, goldPerKill: 2, renown: 1 },
+      lootBySize: [[99, 'low']],
+      text: 'Wagons heavy with grain and wool creak along under a few nervous guards.',
+      hostileText: 'The guards draw steel as soon as they see your banner.'
     },
     aurelian_caravan: {
       id: 'aurelian_caravan',
@@ -81,7 +91,10 @@
       route: ['eastwatch', 'redfield', 'saltmere', 'dunmarsh'],
       goods: ['salt', 'cloth'],
       troops: { recruit: [2, 4] },
-      text: 'A string of mules laden with salt and bolts of cloth, watched over by a handful of recruits.'
+      reward: { goldBase: 60, goldPerKill: 2, renown: 1 },
+      lootBySize: [[99, 'low']],
+      text: 'A string of mules laden with salt and bolts of cloth, watched over by a handful of recruits.',
+      hostileText: 'The recruits form a nervous line in front of the mules.'
     }
   };
 })(typeof window !== 'undefined' ? window : globalThis);

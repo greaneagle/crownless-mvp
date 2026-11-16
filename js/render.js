@@ -417,7 +417,8 @@
   /** Settlement icon: shape by type, faction colour plus a letter emblem (not colour alone). */
   function drawSettlement(s, here) {
     const [x, y] = CL.world.toPx(s.mapX, s.mapY);
-    const color = CL.content.get('factions', s.ownerFaction).color;
+    const holder = CL.realm.owner(s.id);
+    const color = CL.content.get('factions', holder).color;
     ctx.save();
     ctx.fillStyle = '#00000044';
     ctx.beginPath();
@@ -453,7 +454,7 @@
     ctx.fillRect(x + 9, y - 22, 2, 18);
     ctx.fillStyle = '#fff';
     ctx.font = 'bold 8px system-ui';
-    ctx.fillText(FACTION_EMBLEM[s.ownerFaction] || '?', x + 13, y - 14.5);
+    ctx.fillText(FACTION_EMBLEM[holder] || '?', x + 13, y - 14.5);
     if (here) {
       ctx.strokeStyle = '#ffe7a8';
       ctx.lineWidth = 2;
@@ -506,6 +507,7 @@
     }
     const color = t.kind === 'bandit' ? '#7a1e16' : CL.content.get('factions', t.faction).color;
     const n = CL.parties.troopCount(p);
+    const hostile = CL.parties.hostileTo(CL.campaign, t);
     ctx.save();
     ctx.fillStyle = '#00000055';
     ctx.beginPath();
@@ -561,7 +563,7 @@
     }
     if (crowded) {
       // Count badge instead of a full label.
-      ctx.fillStyle = t.hostile ? '#7a1e16' : '#1b2a3a';
+      ctx.fillStyle = hostile ? '#7a1e16' : '#1b2a3a';
       ctx.beginPath();
       ctx.arc(x + 11, y + 4, 7, 0, Math.PI * 2);
       ctx.fill();
@@ -574,7 +576,7 @@
     ctx.restore();
     if (!crowded) {
       const name = p.contractId ? 'Contract target' : t.kind === 'bandit' ? 'Reavers' : t.kind === 'patrol' ? 'Patrol' : 'Caravan';
-      label(`${name} ${n}`, x, y + 20, p.contractId ? '#ffd34d' : t.hostile ? '#ffb3a1' : '#e8f0ff');
+      label(`${name} ${n}`, x, y + 20, p.contractId ? '#ffd34d' : hostile ? '#ffb3a1' : '#e8f0ff');
     }
   }
 

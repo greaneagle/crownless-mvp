@@ -31,8 +31,8 @@
   /** Troops for hire here: the owner faction's recruits, if the settlement offers recruiting. */
   function recruitsHere(camp = c()) {
     const s = currentSettlement(camp);
-    if (!offers(s, 'recruit')) return [];
-    const own = CL.content.get('factions', s.ownerFaction).recruits || [];
+    if (!offers(s, 'recruit') || !CL.realm.welcomes(camp, s.id)) return []; // Hostile owners won't let you recruit
+    const own = CL.content.get('factions', CL.realm.owner(s.id, camp)).recruits || [];
     // Towns also have sell-swords for hire: the neutral Mercenary (the 15th troop type).
     return s.type === 'town' ? [...own, 'mercenary'] : own;
   }
@@ -40,11 +40,11 @@
   const canRest = (camp = c()) => offers(currentSettlement(camp), 'rest');
 
   /**
-   * GDD §5 party cap: min(20, 8 + 2×Leadership + floor(Renown/40) + faction_bonus). The faction bonus
-   * (+2 when Friendly) arrives with reputation. Wounded soldiers take slots too (GDD §7).
+   * GDD §5 party cap: min(20, 8 + 2×Leadership + floor(Renown/40) + faction_bonus), the faction bonus
+   * being +2 while Friendly with a kingdom. Wounded soldiers take slots too (GDD §7).
    */
   function partyCap(camp = c()) {
-    return Math.min(20, 8 + 2 * CL.character.skill('leadership', camp) + Math.floor(camp.renown / 40));
+    return Math.min(20, 8 + 2 * CL.character.skill('leadership', camp) + Math.floor(camp.renown / 40) + CL.realm.capBonus(camp));
   }
 
   function canRecruit(camp, troopId) {

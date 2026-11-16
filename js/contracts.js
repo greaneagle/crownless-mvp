@@ -58,7 +58,7 @@
 
   /** The offer posted at a settlement, refreshed when stale. Null where there is no contracts board. */
   function offerAt(c, sid) {
-    if (!offersContracts(sid)) return null;
+    if (!offersContracts(sid) || !CL.realm.welcomes(c, sid)) return null; // no work for enemies
     let o = c.contractOffers[sid];
     if (!o || c.day >= o.offeredUntil) {
       o = makeOffer(c, sid);
@@ -148,6 +148,7 @@
     c.renown += k.reward.renown;
     const levels = CL.character.gainXp(k.reward.xp, c);
     c.contractsDone += 1;
+    CL.realm.adjust(c, CL.realm.owner(k.giver, c), CL.realm.REP.help, 'contract'); // GDD §10: helping a faction
     end(c, 'collected');
     return { ...k.reward, levels };
   }
