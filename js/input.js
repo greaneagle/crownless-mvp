@@ -48,7 +48,8 @@
       else if (game.mode === 'saves') {
         if (game.savesReturn === 'title') ui.changeMode('title');
         else CL.town.backToPlace();
-      } else if (game.mode === 'talk') ui.changeMode('town');
+      } else if (game.mode === 'talk') CL.town.backToPlace();
+      else if (game.mode === 'journal') ui.closeJournal();
       else if (game.mode === 'settlement') world.leaveSettlement();
       else if (game.mode === 'encounter') world.attackSite();
       else if (game.mode === 'result') world.returnToMap();
@@ -72,6 +73,8 @@
       }
     };
     $('#partyBtn').onclick = ui.openSheet;
+    $('#journalBtn').onclick = ui.openJournal;
+    $('#placeJournalBtn').onclick = ui.openJournal;
     $('#townMenuBtn').onclick = () => {
       CL.game.placeMode = 'town';
       ui.changeMode('settlement'); // the classic list, for anyone who prefers menus

@@ -57,6 +57,7 @@
       contractsDone: 0,
       reputation: CL.realm.defaultReputation(), // kingdom → score [-100, 100] (GDD §10)
       owners: CL.realm.defaultOwners(), // fort → owning kingdom (GDD §12 territory)
+      story: CL.story.blank(), // quest progress, story flags, conversation visits (GDD §13)
     };
     CL.character.applyKit(c, background);
     CL.upkeep.stowFood(c);
@@ -107,6 +108,7 @@
     CL.upkeep.sanitize(s, d); // food, morale, payday (and stows any food items)
     CL.trade.sanitize(s, d); // market scarcity and cargo
     CL.realm.sanitize(s, d); // reputation and fort owners
+    CL.story.sanitize(s, d); // quests and flags: unknown quests and stages are dropped
     CL.parties.sanitize(s, d); // world parties and the RNG seed
     CL.contracts.sanitize(s, d); // after parties: an active hunt needs its band
     return s;

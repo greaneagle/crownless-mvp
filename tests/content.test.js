@@ -18,7 +18,6 @@ test('every content module loads and every table is non-empty', () => {
 
 test('record keys match their id fields', () => {
   for (const m of Object.keys(C)) {
-    if (m === 'dialogue') continue; // dialogue is keyed by speaker, values are line arrays
     for (const [key, rec] of Object.entries(C[m])) {
       assert.equal(rec.id, key, `${m}.${key} has id '${rec.id}'`);
     }

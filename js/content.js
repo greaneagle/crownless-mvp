@@ -50,7 +50,7 @@
     for (const t of TABLES) if (!C[t] || !Object.keys(C[t]).length) err(`missing table: ${t}`);
 
     for (const t of TABLES) {
-      if (t === 'dialogue' || !C[t]) continue;
+      if (!C[t]) continue;
       for (const [key, rec] of Object.entries(C[t])) if (rec.id !== key) err(`${t}.${key}: id is '${rec.id}'`);
     }
 
@@ -150,6 +150,7 @@
         if (!n.frames?.length) err(`town_hub ${h.id}: ${n.id} needs sprite frames`);
         if (n.dialogue && !C.dialogue?.[n.dialogue]) err(`town_hub ${h.id}: ${n.id} unknown dialogue ${n.dialogue}`);
         if (!n.dialogue && !n.lines?.length) err(`town_hub ${h.id}: ${n.id} has nothing to say`);
+        if (n.dialogue && n.action === 'leave') err(`town_hub ${h.id}: ${n.id} leaves, so cannot hold a conversation`);
       }
     }
     for (const k of Object.values(C.contracts || {})) {
@@ -158,9 +159,8 @@
       if (!(k.timeLimitDays > 0) || !(k.minTroops >= 1 && k.maxTroops >= k.minTroops)) err(`contract ${k.id}: bad limits`);
       if (!(k.reward?.goldBase >= 0)) err(`contract ${k.id}: needs a reward`);
     }
-    for (const q of Object.values(C.quests || {})) {
-      if (!C.dialogue?.[q.giver]) err(`quest ${q.id}: no dialogue for giver ${q.giver}`);
-    }
+    // Dialogue trees and quests: node links, conditions, effects and triggers (js/story.js).
+    CL.story?.validate(C, err);
     for (const e of Object.values(C.encounters || {})) {
       if (!C.battle_maps?.[e.map]) err(`encounter ${e.id}: unknown map ${e.map}`);
       if (!e.waves?.length) err(`encounter ${e.id}: no waves`);

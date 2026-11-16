@@ -12,11 +12,58 @@ _Spec: GDD §3–§10 and §14 Gate D._
 | 4.4 Complete the item catalogue (~30) | ✅ 0.17.0 |
 | 4.5 AI cavalry; all 15 troop roles | ✅ 0.18.0 |
 | 4.6 Faction reputation and fort ownership | ✅ 0.19.0 |
-| 4.7 Quest and dialogue interpreter | ⬜ |
+| 4.7 Quest and dialogue interpreter | ✅ 0.20.0 |
 | 4.8–4.12 Q1–Q4 and the companion Mara | ⬜ |
 | 4.13 Escort and delivery contracts | ⬜ |
 | 4.14 Trade-world interactions and regional news | ⬜ |
 | 4.15 Gate D acceptance | ⬜ |
+
+---
+
+## Slice 6 — 0.20.0: Quest and dialogue interpreter (2026-11-16)
+
+### What's in (GDD §4: "use conditional lines, shared scenes and 3–5 quest flags"; §13: "Event-driven updates notify quest flags when battles, trades and conversations resolve"; screen 10, the Quest Journal)
+- **`js/story.js`**, the QuestTracker: it reads quests and conversations from data and runs them. All story content lives in `data/quests.js` and `data/dialogue.js`; the code holds no story text. It has three small vocabularies, documented at the top of the file:
+  - **Conditions:** flags, quest state and stage, crowns, renown, level, fit soldiers, reputation and standing, skills, attributes, background, items held, fort owner and current location. They combine with `all`, `any` and `not`.
+  - **Effects:**
+    - set or clear flags
+    - crowns, renown, XP, food and reputation
+    - give or take items, add soldiers (up to the party cap)
+    - start a quest, set its stage, complete or fail it
+    - change a fort's owner
+    - show a message or add a journal note
+  - **Events:** `battle`, `enter`, `recruit`, `trade`, `contract` and `talk`, sent by the game as things happen. Each quest stage lists triggers (`on: [{ event, match, if, do }]`), and the first matching trigger of the current stage fires.
+- **Dialogue trees:**
+  - The opening line can depend on conditions.
+  - A node's lines are shown together when their conditions hold, or one per visit with `cycle`.
+  - Options can be hidden behind a condition and carry effects.
+  - Text can use `{name}`, `{gold}`, `{renown}` and `{settlement}`.
+  - `services: false` hides the speaker's shop or recruit menu during a story moment.
+  - A dialogue with a `place` appears as **Talk to …** on that settlement's menu. This is how quests can continue at towns other than Stonebridge, as the GDD requires.
+- **Elder Maren** is the first real conversation:
+  - A greeting with one line for each background.
+  - The town's troubles, then a question about Greywall whose answer changes with the fort's current owner.
+  - Lines that appear at 20+ renown and with Valedorn Friendly or Hostile.
+  - Three story flags: `met_elder`, `asked_troubles` and `heard_charter`.
+  - The other five dialogues are converted to the tree format, ready for Q1–Q4.
+- **Quests:** Q1–Q4 are now in the stage-and-journal format. Their triggers will be written with each quest (4.8–4.12), and finishing a quest pays its rewards once.
+- **Quest Journal:** opened with the **Journal** button on the map, in town and on every settlement menu. It lists active quests with their current objective and notes, then finished ones. The map's top-left panel shows the newest active quest.
+- **Saves:** story state (`flags`, `quests`, `visits`) is saved and validated. Unknown quests are dropped and unknown stages fall back to the first stage. Only simple flag values are kept, and older saves start blank.
+- **Content checks at boot:** every node link, condition, effect, quest, stage, event, item, faction and settlement named in story data is checked, with errors in the Logs panel. Shipped content is clean.
+- **Debug panel:** Story section with Start, Next stage, Complete and Reset story for any quest.
+
+### Checks
+- `tests/story.test.js` (11 tests) covers:
+  - every condition and effect
+  - quest start, stages and paying rewards once
+  - triggers firing only on the right event, place and condition, including a real battle at the Looter Camp
+  - the game sending recruit, trade and contract events
+  - Elder Maren's branches and flags, rotating lines, and hidden options that can't be chosen
+  - **Talk to …** at a settlement, the journal and the map panel
+  - save round-trip and junk rejection, and the content checks catching broken data
+- 216 tests pass; lint clean.
+- Browser, with real clicks: tapped Elder Maren in Stonebridge. The greeting used the hero's name and Farmhand line, and *What troubles Stonebridge?* → *Tell me about Greywall* showed the right line for Greywall's owner and set the three flags. The Journal button showed an empty journal with a hint. After starting Q1 from the Debug panel, the Journal showed the quest and current objective over the town scene, and the map panel showed "▸ A Stranger's Wage". The test quest was then cleared from the preview save.
+- **Fixed during the check:** the town scene now stays visible behind the Journal.
 
 ---
 

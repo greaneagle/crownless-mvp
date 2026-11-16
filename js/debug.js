@@ -134,6 +134,7 @@
       ...CL.character.ATTRIBUTES.map((a) => [a, CL.character.ATTRIBUTE_NAMES[a]]),
       ...Object.values(CL.content.table('skills')).map((s) => [s.id, `Skill: ${s.name}`]),
     ]);
+    fillSelect('#cheatQuest', Object.values(CL.content.table('quests')).map((q) => [q.id, q.title]));
     fillSelect('#cheatPlace', Object.values(CL.content.table('settlements')).map((s) => [s.id, s.name]));
     document.querySelector('#cheatGod').textContent = `God mode: ${CL.game.godMode ? 'on' : 'off'}`;
   }
@@ -203,6 +204,29 @@
         log('contract target defeated', { id: k.id });
         break;
       }
+      case 'questStart':
+        CL.story.start(c(), $('#cheatQuest').value);
+        log('quest started', { quest: $('#cheatQuest').value });
+        break;
+      case 'questNext': {
+        const id = $('#cheatQuest').value;
+        const r = CL.story.state(c()).quests[id];
+        const stages = CL.content.get('quests', id).stages;
+        const i = stages.findIndex((s) => s.id === r?.stage);
+        if (i < 0) CL.ui.message('That quest is not active');
+        else if (i + 1 < stages.length) CL.story.setStage(c(), id, stages[i + 1].id);
+        else CL.story.finish(c(), id, 'done');
+        log('quest stage', { quest: id, stage: CL.story.state(c()).quests[id]?.stage });
+        break;
+      }
+      case 'questDone':
+        CL.story.finish(c(), $('#cheatQuest').value, 'done');
+        log('quest completed', { quest: $('#cheatQuest').value });
+        break;
+      case 'storyReset':
+        c().story = CL.story.blank();
+        log('story reset');
+        break;
       case 'rep':
         CL.realm.adjust(c(), btn.dataset.f, n, 'debug');
         log('reputation', { faction: btn.dataset.f, score: CL.realm.score(c(), btn.dataset.f) });

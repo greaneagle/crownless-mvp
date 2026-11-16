@@ -233,6 +233,7 @@
       world().location = t.id;
       CL.save.write(); // GDD §13: autosave when entering a settlement
       CL.diag.log('info', 'Entered settlement', { id: t.id, day: CL.campaign.day });
+      CL.story.emit('enter', { settlement: t.id });
       CL.town.enterPlace(); // Stonebridge's streets, or the settlement menu elsewhere
     } else if (t.type === 'party') {
       CL.parties.open(t.id);

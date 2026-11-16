@@ -66,6 +66,9 @@
       const t = g.talk;
       return { title: t.npc.name.toUpperCase(), text: `“${t.line}”`, button: null };
     }
+    if (mode === 'journal') {
+      return { title: 'QUEST JOURNAL', text: '', button: 'Back' };
+    }
     if (mode === 'saves') {
       return { title: 'SAVE & EXPORT', text: '', button: 'Back' };
     }
@@ -126,10 +129,11 @@
     $('#tradeScreen').classList.toggle('hidden', mode !== 'trade');
     $('#encounterOptions').classList.toggle('hidden', mode !== 'encounter');
     $('#contractsScreen').classList.toggle('hidden', mode !== 'contracts');
+    $('#journalScreen').classList.toggle('hidden', mode !== 'journal');
     $('#savesScreen').classList.toggle('hidden', mode !== 'saves');
     $('#talkOptions').classList.toggle('hidden', mode !== 'talk');
     $('#titleExtras').classList.toggle('hidden', mode !== 'title');
-    $('#overlayText').classList.toggle('hidden', mode === 'saves');
+    $('#overlayText').classList.toggle('hidden', mode === 'saves' || mode === 'journal');
     const screen = screenFor(mode);
     if (mode === 'result') $('#result').innerHTML = g.result.html;
     $('#overlayTitle').textContent = screen.title;
@@ -146,6 +150,7 @@
     if (mode === 'contracts') renderContracts();
     if (mode === 'saves') renderSaves();
     if (mode === 'talk') renderTalk();
+    if (mode === 'journal') renderJournal();
   }
 
   // ---- Talking to people in town (GDD §8: interaction opens dialogue menus) ----
@@ -167,7 +172,22 @@
       CL.save.write();
       changeMode('talk');
     };
-    if (n.action === 'trade') {
+    // The conversation's own choices come first (data/dialogue.js via the story interpreter).
+    const conv = CL.game.talk.conv;
+    for (const o of conv?.options || []) {
+      opt(o.text, () => {
+        const next = CL.story.choose(conv, o.index);
+        CL.save.write();
+        if (next) {
+          CL.game.talk = { ...CL.game.talk, conv: next, line: next.text };
+          changeMode('talk');
+        } else CL.town.backToPlace();
+      });
+    }
+    const services = !conv || conv.services;
+    if (!services) {
+      // a story moment: no shop menu here
+    } else if (n.action === 'trade') {
       opt('See my wares', () => changeMode('trade'), false, `${c.gold} crowns · cargo ${CL.trade.cargoWeight(c)}/${CL.trade.capacity(c)}`);
     } else if (n.action === 'recruit') {
       for (const id of P.recruitsHere()) {
@@ -193,7 +213,7 @@
       opt(pay ? 'Notice board — collect pay!' : 'Read the notice board', () => changeMode('contracts'));
       opt('Save & export', () => openSaves());
     }
-    opt('Goodbye', () => changeMode('town'));
+    opt('Goodbye', () => CL.town.backToPlace());
     $('#talkOptions').replaceChildren(...opts);
   }
 
@@ -779,6 +799,14 @@
     $('#contractsBtn').classList.toggle('hidden', !board);
     const payday = c.contract?.status === 'done' && c.contract.giver === c.world.location;
     $('#contractsBtn').textContent = payday ? 'Contracts — collect pay!' : 'Contracts';
+    // People to talk to at menu-only settlements (dialogues with a place).
+    $('#peopleHere').replaceChildren(
+      ...CL.story.peopleAt(c.world.location, c).map((t) => {
+        const b = Object.assign(document.createElement('button'), { type: 'button', textContent: `Talk to ${t.speaker}` });
+        b.onclick = () => talkTo(t.id);
+        return b;
+      }),
+    );
     const barred = !CL.realm.welcomes(c, c.world.location);
     $('#serviceNote').textContent = barred
       ? `The ${CL.content.get('factions', CL.realm.owner(c.world.location, c)).name} will not hire out soldiers or work to an enemy.`
@@ -914,7 +942,55 @@
     if (isDebugOpen()) renderDebug();
   }
 
+  // ---- Conversations from a settlement menu, and the Quest Journal (GDD screen 10) ----
+
+  function talkTo(dialogueId) {
+    const conv = CL.story.talk(dialogueId);
+    if (!conv) return;
+    CL.game.talk = { npc: { id: dialogueId, name: conv.speaker, action: 'talk' }, conv, line: conv.text };
+    changeMode('talk');
+  }
+
+  function openJournal() {
+    if (!CL.campaign.character) return;
+    const m = CL.game.mode;
+    CL.game.journalReturn = m === 'map' ? 'map' : 'place';
+    changeMode('journal');
+  }
+
+  function closeJournal() {
+    if (CL.game.journalReturn === 'map') changeMode('map');
+    else CL.town.backToPlace();
+  }
+
+  function renderJournal() {
+    const rows = CL.story.journal();
+    const el = (tag, cls, text) => Object.assign(document.createElement(tag), { className: cls || '', textContent: text || '' });
+    if (!rows.length) {
+      $('#journalScreen').replaceChildren(el('p', '', 'No quests yet. People in Stonebridge may have work for a stranger — try the Elder.'));
+      return;
+    }
+    const label = { active: 'In progress', done: 'Complete', failed: 'Failed' };
+    $('#journalScreen').replaceChildren(
+      ...rows.map((r) => {
+        const card = el('div', `questCard ${r.status}`);
+        card.append(el('h3', '', `${r.title} — ${label[r.status]}`));
+        if (r.summary) card.append(el('p', '', r.summary));
+        if (r.objective) card.append(el('p', 'objective', `▸ ${r.objective}`));
+        if (r.notes.length) {
+          const ul = el('ul');
+          for (const n of r.notes) ul.append(el('li', '', n));
+          card.append(ul);
+        }
+        return card;
+      }),
+    );
+  }
+
   CL.ui = {
+    talkTo,
+    openJournal,
+    closeJournal,
     $,
     message,
     changeMode,

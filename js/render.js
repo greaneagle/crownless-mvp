@@ -703,7 +703,8 @@
         ? c.contract.status === 'done'
           ? ' · contract done — collect pay'
           : ` · contract ${Math.max(0, CL.contracts.daysLeft(c)).toFixed(1)}d left`
-        : '');
+        : '') +
+      (CL.story.currentQuest(c) ? ` · ▸ ${CL.story.currentQuest(c).title}` : '');
     $('#topLeft').classList.toggle('warn', food < 1 || c.morale < CL.upkeep.MORALE.desertBelow);
     $('#waitBtn').textContent = CL.game.waiting ? 'Stop waiting' : 'Wait';
   }
@@ -711,7 +712,7 @@
   function draw() {
     const g = CL.game;
     ctx.clearRect(0, 0, W, H);
-    if (g.town && ['town', 'talk', 'trade', 'contracts', 'saves', 'character', 'settlement'].includes(g.mode)) {
+    if (g.town && ['town', 'talk', 'trade', 'contracts', 'saves', 'character', 'settlement', 'journal'].includes(g.mode)) {
       drawTown();
       if (performance.now() > g.messageUntil) CL.ui.$('#message').textContent = '';
       return;

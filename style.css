@@ -29,6 +29,7 @@
 
 /* 0.7.0 — character creator, character sheet, Party/Debug buttons, debug panel */
 #stage:not([data-mode="map"]) #partyBtn{display:none}
+#stage:not([data-mode="map"]):not([data-mode="town"]) #journalBtn{display:none}
 #cheatBtn{background:linear-gradient(#6b5a2e,#3d321a)}
 #create,#sheet{text-align:left;font-size:clamp(12px,1.25vw,15px)}
 .createTop{display:flex;gap:12px;align-items:center}
@@ -133,3 +134,12 @@
 #tradeArmoury{list-style:none;margin:0;padding:0}
 #tradeArmoury li{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:3px 0;border-bottom:1px solid #ffffff14}
 #tradeArmoury li button{min-height:40px;white-space:nowrap}
+
+#journalScreen{text-align:left;max-height:52vh;overflow:auto;margin-top:8px}
+.questCard{border:1px solid #6b5a3a;border-radius:6px;padding:8px 10px;margin:6px 0;background:#0f1a26}
+.questCard.done,.questCard.failed{opacity:.75}
+.questCard h3{margin:0 0 4px;font-size:15px}
+.questCard p{margin:3px 0;font-size:13px}
+.questCard .objective{color:#ffd34d}
+.questCard ul{margin:4px 0 0 18px;padding:0;font-size:12px;color:#d9c8a2}
+#peopleHere:empty{display:none}

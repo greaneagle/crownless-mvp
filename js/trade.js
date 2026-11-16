@@ -93,6 +93,7 @@
     c.cargo[good] = (c.cargo[good] || 0) + qty;
     c.markets[sid][good] = q.scarcity;
     CL.diag.log('info', 'Bought goods', { at: sid, good, qty, cost: q.total });
+    CL.story.emit('trade', { settlement: sid, good, side: 'buy', qty }, c);
     return { ok: true, total: q.total };
   }
 
@@ -105,6 +106,7 @@
     if (!c.cargo[good]) delete c.cargo[good];
     c.markets[sid][good] = q.scarcity;
     CL.diag.log('info', 'Sold goods', { at: sid, good, qty, earned: q.total });
+    CL.story.emit('trade', { settlement: sid, good, side: 'sell', qty }, c);
     return { ok: true, total: q.total };
   }
 

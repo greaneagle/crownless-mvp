@@ -107,6 +107,7 @@
     CL.save.write();
     CL.ui.refreshRoster();
     CL.diag.log('info', 'Soldier recruited', { troop: troopId, cost: price });
+    CL.story.emit('recruit', { troop: troopId, settlement: c().world.location });
     return true;
   }
 
@@ -217,6 +218,9 @@
       camp.gold = kept;
       result.lostItem = loseItemOnCapture(camp);
     }
+    const g = CL.game;
+    const band = g.partyId != null ? CL.parties?.find(camp, g.partyId) : null;
+    CL.story?.emit('battle', { win, encounter: enc.id, site: g.siteId || null, party: band?.template || null, contract: Boolean(band?.contractId) }, camp);
     return result;
   }
 

@@ -148,6 +148,7 @@
     c.renown += k.reward.renown;
     const levels = CL.character.gainXp(k.reward.xp, c);
     c.contractsDone += 1;
+    CL.story.emit('contract', { template: k.template, giver: k.giver }, c);
     CL.realm.adjust(c, CL.realm.owner(k.giver, c), CL.realm.REP.help, 'contract'); // GDD §10: helping a faction
     end(c, 'collected');
     return { ...k.reward, levels };

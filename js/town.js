@@ -131,10 +131,15 @@
 
   function open(n) {
     if (n.action === 'leave') return leave();
-    const lines = n.dialogue ? CL.content.get('dialogue', n.dialogue) : n.lines;
-    const line = lines[n.lineIndex % lines.length];
-    n.lineIndex++;
-    g().talk = { npc: n, line };
+    if (n.dialogue) {
+      // A dialogue tree, run by the story interpreter.
+      const conv = CL.story.talk(n.dialogue);
+      g().talk = { npc: n, conv, line: conv.text };
+    } else {
+      const line = n.lines[n.lineIndex % n.lines.length];
+      n.lineIndex++;
+      g().talk = { npc: n, line };
+    }
     CL.diag.log('info', 'Talk', { npc: n.id });
     CL.ui.changeMode('talk');
   }
