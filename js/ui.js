@@ -50,6 +50,14 @@
         secondary: g.newGame ? 'Back' : null,
       };
     }
+    if (mode === 'contracts') {
+      const s = CL.party.currentSettlement();
+      return {
+        title: `${s.name.toUpperCase()} — CONTRACTS`,
+        text: 'Paid work for a sword and a band of soldiers. One contract at a time.',
+        button: 'Back',
+      };
+    }
     if (mode === 'trade') {
       const s = CL.party.currentSettlement();
       return {
@@ -97,6 +105,7 @@
     $('#sheet').classList.toggle('hidden', mode !== 'character');
     $('#tradeScreen').classList.toggle('hidden', mode !== 'trade');
     $('#encounterOptions').classList.toggle('hidden', mode !== 'encounter');
+    $('#contractsScreen').classList.toggle('hidden', mode !== 'contracts');
     const screen = screenFor(mode);
     if (mode === 'result') $('#result').innerHTML = g.result.html;
     $('#overlayTitle').textContent = screen.title;
@@ -110,6 +119,94 @@
     if (mode === 'character') renderSheet();
     if (mode === 'trade') renderTrade();
     if (mode === 'encounter') renderEncounter();
+    if (mode === 'contracts') renderContracts();
+  }
+
+  // ---- Contracts board ----
+
+  function describeTroops(troops) {
+    return Object.entries(troops)
+      .map(([id, n]) => `${n} ${CL.content.troop(id).name}${n > 1 ? 's' : ''}`)
+      .join(', ');
+  }
+
+  function contractCard(title, lines, buttons) {
+    const card = Object.assign(document.createElement('div'), { className: 'contractCard' });
+    card.append(Object.assign(document.createElement('h3'), { textContent: title }));
+    for (const l of lines) card.append(Object.assign(document.createElement('p'), { textContent: l }));
+    const row = Object.assign(document.createElement('div'), { className: 'row' });
+    for (const [label, onClick, disabled] of buttons) {
+      const b = Object.assign(document.createElement('button'), { type: 'button', textContent: label, disabled: Boolean(disabled) });
+      b.onclick = onClick;
+      row.append(b);
+    }
+    if (buttons.length) card.append(row);
+    return card;
+  }
+
+  function renderContracts() {
+    const c = CL.campaign;
+    const K = CL.contracts;
+    const sid = c.world.location;
+    const cards = [];
+    const k = c.contract;
+    const after = (fn) => () => {
+      const r = fn();
+      if (r?.ok === false) message(r.reason);
+      CL.save.write();
+      renderContracts();
+    };
+    if (k) {
+      const t = CL.content.get('contracts', k.template);
+      const giver = CL.content.get('settlements', k.giver).name;
+      const reward = `Reward: ${k.reward.gold} crowns · +${k.reward.renown} renown · +${k.reward.xp} XP`;
+      if (k.status === 'done') {
+        const here = sid === k.giver;
+        cards.push(
+          contractCard(`${t.name} — complete`, [here ? 'The band is broken. Your employer counts out your pay.' : `Return to ${giver} to collect.`, reward], [
+            [
+              'Collect payment',
+              after(() => {
+                const r = K.collect(c);
+                if (r) message(`Paid ${r.gold} crowns${r.levels ? ' — level up!' : ''}`);
+              }),
+              !here,
+            ],
+          ]),
+        );
+      } else {
+        const left = K.daysLeft(c);
+        cards.push(
+          contractCard(
+            `${t.name} — for ${giver}`,
+            [
+              `Destroy the marked band (${describeTroops(k.troops)}). It is camped about ${Math.round(CL.world.mapDist(CL.content.get('settlements', k.giver).mapX, CL.content.get('settlements', k.giver).mapY, k.x, k.y))} leagues from ${giver}.`,
+              `Time left: ${left.toFixed(1)} days.`,
+              reward,
+            ],
+            [['Abandon (−2 renown)', after(() => K.abandon(c))]],
+          ),
+        );
+      }
+    }
+    const offer = K.offerAt(c, sid);
+    if (offer && !k) {
+      const t = CL.content.get('contracts', offer.template);
+      cards.push(
+        contractCard(
+          `Offer: ${t.name}`,
+          [
+            t.offer,
+            `Target: ${describeTroops(offer.troops)}. Time limit: ${offer.days} days.`,
+            `Reward: ${offer.reward.gold} crowns · +${offer.reward.renown} renown · +${offer.reward.xp} XP`,
+          ],
+          [['Accept contract', after(() => K.accept(c, sid))]],
+        ),
+      );
+    } else if (offer && k) {
+      cards.push(contractCard('More work posted', ['Finish your current contract before taking another.'], []));
+    }
+    $('#contractsScreen').replaceChildren(...cards);
   }
 
   // ---- Encounter choices (GDD §8): Attack, Auto-resolve, Negotiate, Retreat ----
@@ -512,6 +609,10 @@
     });
     $('#restBtn').classList.toggle('hidden', !p.canRest());
     $('#tradeBtn').classList.toggle('hidden', !CL.trade.hasMarket(c.world.location));
+    const board = CL.contracts.offersContracts(c.world.location);
+    $('#contractsBtn').classList.toggle('hidden', !board);
+    const payday = c.contract?.status === 'done' && c.contract.giver === c.world.location;
+    $('#contractsBtn').textContent = payday ? 'Contracts — collect pay!' : 'Contracts';
     $('#serviceNote').textContent = offers.length ? '' : 'No one here is looking to take up arms.';
   }
 

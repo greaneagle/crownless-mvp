@@ -294,6 +294,17 @@
   function drawParty(p) {
     const t = CL.content.get('party_templates', p.template);
     const { x, y, crowded } = CL.world.partyDrawPos(p); // beside a landmark, not on its name
+    if (p.contractId) {
+      // Contract target: pulsing gold ring.
+      const pulse = 17 + Math.sin(performance.now() / 250) * 2;
+      ctx.save();
+      ctx.strokeStyle = '#ffd34d';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(x, y - 2, pulse, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
     const color = t.kind === 'bandit' ? '#7a1e16' : CL.content.get('factions', t.faction).color;
     const n = CL.parties.troopCount(p);
     ctx.save();
@@ -363,7 +374,8 @@
     }
     ctx.restore();
     if (!crowded) {
-      label(`${t.kind === 'bandit' ? 'Reavers' : t.kind === 'patrol' ? 'Patrol' : 'Caravan'} ${n}`, x, y + 20, t.hostile ? '#ffb3a1' : '#e8f0ff');
+      const name = p.contractId ? 'Contract target' : t.kind === 'bandit' ? 'Reavers' : t.kind === 'patrol' ? 'Patrol' : 'Caravan';
+      label(`${name} ${n}`, x, y + 20, p.contractId ? '#ffd34d' : t.hostile ? '#ffb3a1' : '#e8f0ff');
     }
   }
 
@@ -485,7 +497,12 @@
     $('#summary').textContent =
       `${CL.world.clockLabel()} · ${c.gold} crowns · ${c.roster.length} soldiers${wounded ? ` (${wounded} wounded)` : ''}` +
       ` · food ${food >= 10 ? Math.floor(food) : food.toFixed(1)}d · morale ${Math.round(c.morale)}` +
-      (Object.keys(c.cargo).length ? ` · cargo ${CL.trade.cargoWeight(c)}/${CL.trade.capacity(c)}` : '');
+      (Object.keys(c.cargo).length ? ` · cargo ${CL.trade.cargoWeight(c)}/${CL.trade.capacity(c)}` : '') +
+      (c.contract
+        ? c.contract.status === 'done'
+          ? ' · contract done — collect pay'
+          : ` · contract ${Math.max(0, CL.contracts.daysLeft(c)).toFixed(1)}d left`
+        : '');
     $('#topLeft').classList.toggle('warn', food < 1 || c.morale < CL.upkeep.MORALE.desertBelow);
     $('#waitBtn').textContent = CL.game.waiting ? 'Stop waiting' : 'Wait';
   }

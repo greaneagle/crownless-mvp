@@ -9,18 +9,51 @@ Gate C is delivered in slices. This file records each one.
 | Roadmap step | Status |
 |---|---|
 | 1. World map, click/tap travel, time advancing | ✅ 0.6.0 |
-| 2. Settlement menu (Recruit / Trade / Rest / Contracts / Leave) | 🟡 Recruit, Rest and Leave (0.6.0), and Market (0.9.0) work. Contracts (step 9) is still to come. |
+| 2. Settlement menu (Recruit / Trade / Rest / Contracts / Leave) | ✅ Recruit, Rest, Leave (0.6.0), Market (0.9.0), Contracts (0.12.0) |
 | 3. Character creation + inventory/equipment | ✅ 0.7.0. Hairstyles wait for art. |
 | 4. Food & weekly wages, morale/desertion | ✅ 0.8.0 |
 | 5. Trading (6 goods, scarcity) | ✅ 0.9.0, with caravans moving prices since 0.10.0 |
 | 6. World parties + encounter options (Attack / Negotiate / Retreat / Auto-resolve) | ✅ 0.10.0. Patrols and caravans can be talked to but not attacked until reputation (Gate D). |
 | 7. Capture on defeat | 🟡 0.6.0: released near a settlement after half a day. Loss of crowns and an item came in Gate B. |
 | 8. Player XP/levels/skills; troop upgrades; party-cap formula | ✅ 0.11.0. Cavalry upgrades unlock with mounted AI (Gate D). |
-| 9. Bandit-hunt contract | ⬜ |
+| 9. Bandit-hunt contract | ✅ 0.12.0 |
 | 10. Save export/import | ⬜ |
 | 11. Gate C acceptance | ⬜ |
 
 ---
+
+## Slice 7 — 0.12.0: Contracts — the bandit hunt (2026-11-16)
+
+### Lifecycle (GDD §4 repeatable work)
+- **Offers:** settlements with the contracts service (Stonebridge, Eastwatch) post **one offer at a time**, refreshed every 3 days. Templates live in `data/contracts.js`.
+- **Bandit Hunt:**
+  - The target band is built from Looters and Reavers to **0.7–1.2× the player's strength** when offered (3–14 troops). It camps 10–17 leagues from the town.
+  - **Reward:** 40 + 6 crowns per bandit, +5 renown, and 40 + 5 hero XP per bandit, shown on the offer. **Time limit:** 4 days.
+- **Accept → active:** a **marked band** spawns at the camp. It roams within 4 leagues of the camp so you can find it, and doesn't take one of the 3 regular bandit slots.
+  - **On the map** it shows a pulsing gold ring and the label "Contract target"; the HUD shows "contract N.Nd left". Click it to hunt it down.
+  - It behaves like any band: you can Attack, Auto-resolve, Negotiate or Retreat.
+- **Done:** beating it, in a real battle or by auto-resolve, completes the contract and shows "Return to Stonebridge to collect your pay". Defeating a *different* band doesn't count.
+- **Collect:** only at the town that hired you; its button reads "Contracts — collect pay!". Pays gold, renown and XP, which can level you up, and `contractsDone` goes up.
+- **Fail:** missing the deadline or abandoning costs −2 renown. The band stays in the world as an ordinary band.
+- **Void (GDD edge case "quest courier's party removed offscreen"):** if a patrol destroys your target first, the contract is cancelled with **no penalty**.
+- **One contract at a time.** The lifecycle is generic (template → offer → start → on target defeated or lost → collect), ready for the escort and delivery templates in Gate D.
+- **Saves:** the contract, offers, `nextContractId` and `contractsDone` are validated on load. A saved hunt whose band is missing is voided.
+- **Debug:** a **Contracts** section with "Defeat contract target" and "New offers".
+
+### Verification
+- **Automated:** `npm test` → 142/142. The new `tests/contracts.test.js` (11 tests) covers:
+  - offer locations and refresh, band sizing and reward formula, accept, the slot not counting
+  - the marked band staying near camp, completing by battle and by auto-resolve, collecting only at the giver
+  - deadline failure, abandoning, the off-screen void edge case, and save validation
+- **Browser (desktop), with real clicks** on Contracts, Accept contract, the gold-ringed target and Collect payment:
+  - **Caught and fixed a UI bug the unit tests can't see:** after removing an unused parameter, two multi-line calls still passed the old first argument. The board rendered "[object Object]" and a letter-per-line description.
+  - The full loop then worked:
+    - The offer was sized for a lone hero (2 Looters and 1 Reaver for 58 crowns).
+    - After accepting, the HUD showed "contract 4.0d left" and the map showed the gold-ringed target.
+    - Clicking it started an intercept. A lost auto-resolve meant capture, with the contract still active.
+    - A different band then ambushed us, and correctly didn't complete the contract.
+    - Beating the real target showed "Return to Stonebridge…" and the button changed to "Contracts — collect pay!". Collecting paid 58 crowns, +5 renown and XP.
+  - The contract cleared, a new offer appeared, and the save recorded it. No errors were logged.
 
 ## Slice 6 — 0.11.0: Levels, troop upgrades, party cap (2026-11-16)
 

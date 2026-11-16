@@ -18,6 +18,7 @@
     'skills',
     'backgrounds',
     'party_templates',
+    'contracts',
   ];
 
   const raw = () => root.CROWNLESS_CONTENT || {};
@@ -117,6 +118,12 @@
       for (const s of t.route || []) if (!C.settlements?.[s]) err(`party_template ${t.id}: unknown route stop ${s}`);
       for (const g of t.goods || []) if (!C.markets?.[g]?.tradeGood) err(`party_template ${t.id}: unknown good ${g}`);
       if (t.kind === 'bandit' && !(t.toll && t.reward && t.loot)) err(`party_template ${t.id}: bandits need toll, reward and loot`);
+    }
+    for (const k of Object.values(C.contracts || {})) {
+      if (!C.party_templates?.[k.band]) err(`contract ${k.id}: unknown band ${k.band}`);
+      for (const id of k.troopPool || []) if (!C.troops?.[id]) err(`contract ${k.id}: unknown troop ${id}`);
+      if (!(k.timeLimitDays > 0) || !(k.minTroops >= 1 && k.maxTroops >= k.minTroops)) err(`contract ${k.id}: bad limits`);
+      if (!(k.reward?.goldBase >= 0)) err(`contract ${k.id}: needs a reward`);
     }
     for (const q of Object.values(C.quests || {})) {
       if (!C.dialogue?.[q.giver]) err(`quest ${q.id}: no dialogue for giver ${q.giver}`);

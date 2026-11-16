@@ -51,6 +51,10 @@
       parties: [], // patrols, caravans and bands on the map
       partySpawns: {}, // template id → day its next party may appear
       nextPartyId: 1,
+      contract: null, // the one active contract
+      contractOffers: {}, // settlement id → posted offer
+      nextContractId: 1,
+      contractsDone: 0,
     };
     CL.character.applyKit(c, background);
     CL.upkeep.stowFood(c);
@@ -101,6 +105,7 @@
     CL.upkeep.sanitize(s, d); // food, morale, payday (and stows any food items)
     CL.trade.sanitize(s, d); // market scarcity and cargo
     CL.parties.sanitize(s, d); // world parties and the RNG seed
+    CL.contracts.sanitize(s, d); // after parties: an active hunt needs its band
     return s;
   }
 

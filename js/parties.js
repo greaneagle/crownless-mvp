@@ -61,6 +61,7 @@
   function remove(c, p) {
     const i = c.parties.indexOf(p);
     if (i >= 0) c.parties.splice(i, 1);
+    if (p.contractId) return; // contract bands are extra; they don't hold up regular respawns
     const t = tpl(p.template);
     c.partySpawns[t.id] = Math.max(c.partySpawns[t.id] || 0, now(c) + t.respawnDays);
   }
@@ -68,7 +69,7 @@
   /** Keep each template at its target count once its respawn timer has passed. */
   function ensure(c, ignoreTimers = false) {
     for (const t of Object.values(CL.content.table('party_templates'))) {
-      let active = c.parties.filter((p) => p.template === t.id).length;
+      let active = c.parties.filter((p) => p.template === t.id && !p.contractId).length;
       while (active < t.count && (ignoreTimers || now(c) >= (c.partySpawns[t.id] || 0))) {
         spawn(c, t.id);
         active++;
@@ -129,9 +130,12 @@
         return;
       }
       if (reached(p)) {
+        // Contract bands keep close to their camp so the player can find them.
         const lair = W().map().sites[p.lair];
-        p.tx = clamp(lair.mapX + (A().next(c) * 2 - 1) * t.roam, 2, 98);
-        p.ty = clamp(lair.mapY + (A().next(c) * 2 - 1) * t.roam, 2, 98);
+        const [ax, ay] = p.anchor ? [p.anchor.x, p.anchor.y] : [lair.mapX, lair.mapY];
+        const roam = p.anchor ? 4 : t.roam;
+        p.tx = clamp(ax + (A().next(c) * 2 - 1) * roam, 2, 98);
+        p.ty = clamp(ay + (A().next(c) * 2 - 1) * roam, 2, 98);
       }
     } else if (t.kind === 'patrol') {
       const quarry = nearest(c, p, 'bandit', t.detection);
@@ -197,6 +201,7 @@
           }
         }
         CL.diag.log('info', 'Off-screen battle', { winner: r.winner.template, loser: r.loser.template, losses: r.winnerLosses });
+        if (r.loser.contractId) CL.contracts.onTargetLost(c, r.loser);
         remove(c, r.loser);
         if (r.loser === a) break;
       }
@@ -381,6 +386,7 @@
     const c = CL.campaign;
     const p = partyId != null ? find(c, partyId) : null;
     if (!p) return;
+    if (win && p.contractId) CL.contracts.onTargetDefeated(c, p);
     if (win) remove(c, p);
     else {
       A().removeTroops(p.troops, fallenEnemyTroops);
@@ -417,6 +423,8 @@
         alerted: false,
       };
       if (t.kind === 'bandit') q.lair = t.lairs.includes(p.lair) ? p.lair : t.lairs[0];
+      if (Number.isInteger(p.contractId)) q.contractId = p.contractId;
+      if (num(p.anchor?.x) && num(p.anchor?.y)) q.anchor = { x: clamp(p.anchor.x, 0, 100), y: clamp(p.anchor.y, 0, 100) };
       if (t.kind === 'caravan') {
         q.routeIndex = Number.isInteger(p.routeIndex) ? clamp(p.routeIndex, 0, t.route.length - 1) : 0;
         q.good = t.goods.includes(p.good) ? p.good : t.goods[0];

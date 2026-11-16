@@ -118,6 +118,7 @@
     CL.upkeep.tick(camp, from, camp.day); // eat, morale, desertion, weekly wages
     CL.trade.drift(camp, days); // markets restock toward their baseline
     CL.parties.tick(camp, days * 24); // patrols, caravans and bands move; may catch the player
+    CL.contracts.tick(camp); // deadlines
     const healed = [];
     for (const s of camp.roster) {
       if (isWounded(s) && s.woundedUntil <= camp.day + 1e-9) {

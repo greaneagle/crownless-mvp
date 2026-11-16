@@ -191,6 +191,22 @@
         c().renown += n;
         log('renown', { added: n, renown: c().renown });
         break;
+      case 'contractDone': {
+        const k = c().contract;
+        const p = k && CL.parties.find(c(), k.partyId);
+        if (!p) {
+          CL.ui.message('No active contract target');
+          return;
+        }
+        CL.contracts.onTargetDefeated(c(), p);
+        CL.parties.remove(c(), p);
+        log('contract target defeated', { id: k.id });
+        break;
+      }
+      case 'contractOffers':
+        c().contractOffers = {};
+        log('contract offers refreshed');
+        break;
       case 'cargo':
         for (const g of CL.trade.goods()) c().cargo[g.id] = (c().cargo[g.id] || 0) + 5;
         log('cargo', { added: 5 });

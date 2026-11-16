@@ -100,3 +100,10 @@
 .troopRow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid #ffffff14}
 .troopRow span{flex:1 1 220px}
 .troopRow button{min-height:40px;font-size:12px}
+
+/* 0.12.0 — contracts */
+#contractsScreen{text-align:left;font-size:clamp(12px,1.25vw,15px)}
+.contractCard{border:1px solid #5c4a28;border-radius:6px;padding:8px 10px;margin-top:8px;background:#0c1823}
+.contractCard h3{margin:0 0 4px;font-size:15px;color:#ecd6a4}
+.contractCard p{margin:3px 0}
+.contractCard .row{justify-content:flex-start;margin-top:6px}
