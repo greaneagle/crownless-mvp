@@ -1,6 +1,7 @@
 /* Crownless content: battle_maps. Plain classic script; no modules, no fetch. */
 (function (root) {
-  var C = (root.CROWNLESS_CONTENT = root.CROWNLESS_CONTENT || {});
+  root.CROWNLESS_CONTENT = root.CROWNLESS_CONTENT || {};
+  var C = root.CROWNLESS_CONTENT;
   C.battle_maps = {
     grass_field: {
       id:'grass_field',

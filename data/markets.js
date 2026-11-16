@@ -1,6 +1,7 @@
 /* Crownless content: markets. Plain classic script; no modules, no fetch. */
 (function (root) {
-  var C = (root.CROWNLESS_CONTENT = root.CROWNLESS_CONTENT || {});
+  root.CROWNLESS_CONTENT = root.CROWNLESS_CONTENT || {};
+  var C = root.CROWNLESS_CONTENT;
   C.markets = {
     grain: {id:'grain',name:'Grain',basePrice:10,weight:1},
     salt: {id:'salt',name:'Salt',basePrice:18,weight:1},

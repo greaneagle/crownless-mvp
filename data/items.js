@@ -1,6 +1,7 @@
 /* Crownless content: items. Plain classic script; no modules, no fetch. */
 (function (root) {
-  var C = (root.CROWNLESS_CONTENT = root.CROWNLESS_CONTENT || {});
+  root.CROWNLESS_CONTENT = root.CROWNLESS_CONTENT || {};
+  var C = root.CROWNLESS_CONTENT;
   C.items = {
     worn_sword: {id:'worn_sword',name:'Worn Sword',type:'weapon',slot:'weapon',rarity:'common',value:12,weight:2,stats:{damage:1},questItem:false},
     clothing: {id:'clothing',name:'Clothing',type:'armor',slot:'body',rarity:'common',value:5,weight:1,stats:{armor:1},questItem:false},

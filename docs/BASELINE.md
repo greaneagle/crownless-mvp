@@ -4,6 +4,8 @@
 
 **Audited:** 2026-11-14 · **Build:** `0.3.0` · **Scope:** documentation only (no source files modified).
 
+> **2026-11-16 — source moved.** The minified `game.js` was split into `js/*.js` without behavior changes (verified in-browser and by `npm test`). Inline `game.js:N` references below point at the old single file; use the [Source map](#source-map) to find the same code in the new modules. Automated checks of this baseline live in `tests/combat.test.js`, `tests/party.test.js` and `tests/save.test.js`.
+
 ---
 
 ## 1. Build identity
@@ -247,7 +249,7 @@ Toggle via `F3` (`game.js:44`) or `#debugBtn`; close via `#closeDebug` (`toggleD
 
 ---
 
-## 9. Known gaps vs the GDD (from `.swarm/GDD-AUDIT.md`)
+## 9. Known gaps vs the GDD (from the former opencode-swarm GDD audit, no longer in the repo)
 
 This is a summary of the existing audit, not new analysis.
 
@@ -315,33 +317,19 @@ Run this against a fresh browser profile (or after clearing `localStorage`) to c
 
 ## Source map
 
-| Concern | Location |
+| Concern | Location (old `game.js` line → new module) |
 |---|---|
-| Build/save constants, canvas setup | `game.js:2` |
-| Diagnostics object + global error handlers | `game.js:3–4` |
-| Game state object | `game.js:5` |
-| Campaign starter / load / save | `game.js:6–9` |
-| Sprite loading + frame tables + boot asset requests | `game.js:10–12` |
-| Math/geometry helpers (`rand`/`clamp`/`dist`/`normalize`), uid | `game.js:13` |
-| Unit stats factory | `game.js:14` |
-| Toast message helper (2.5 s) | `game.js:15` |
-| Battle start, deployment, reset | `game.js:16` |
-| Wave spawn composition | `game.js:17` |
-| Mode transitions / overlay copy | `game.js:18` |
-| Roster UI / recruit | `game.js:19–20` |
-| Battle end, casualties, rewards/capture | `game.js:21` |
-| Wounded recovery | `game.js:22` |
-| Orders | `game.js:23` |
-| Hit/block resolution | `game.js:24–25` |
-| Attack + projectiles | `game.js:26` |
-| Facing / movement | `game.js:27–28` |
-| AI + order behavior | `game.js:29–31` |
-| Update loop (input, arrows, wave/end checks) | `game.js:32–33` |
-| Ground / unit / frame rendering | `game.js:34–37` |
-| Pause / report / exports / debug render | `game.js:38–42` |
-| Event wiring (buttons, keys, joystick) | `game.js:43–46` |
-| Main loop / boot | `game.js:47–48` |
-| Canvas element + HUD markup | `index.html:3` |
-| Layout + responsive styles | `style.css:1` |
+| Build/save constants, math helpers, diagnostics + global error handlers | 2–4, 13 → `js/core.js` |
+| Game state object | 5 → `js/state.js` |
+| Campaign starter / load / save | 6–9 → `js/save.js` |
+| Sprite loading + frame tables + boot asset requests | 10–12 → `js/assets.js` |
+| Unit stats factory, facing, movement | 14, 25, 27–28 → `js/units.js` |
+| Battle start, waves, hit/block, attacks, projectiles, AI, update loop, orders | 16–17, 23–24, 26, 29–33 → `js/combat.js` |
+| Recruit, battle end (casualties, rewards/capture), wounded recovery | 20–22 → `js/party.js` |
+| Toast message, mode transitions, roster UI, pause, report/exports/debug panel | 15, 18–19, 38–42 → `js/ui.js` |
+| Ground / unit / frame rendering, HUD text | 34–37 → `js/render.js` |
+| Event wiring (buttons, keys, joystick) | 43–46 → `js/input.js` |
+| Main loop / boot | 47–48 → `js/main.js` |
+| Canvas element + HUD markup | `index.html` |
+| Layout + responsive styles | `style.css` |
 | Player-facing controls & limits | `README.md` |
-| GDD compliance audit | `.swarm/GDD-AUDIT.md` |

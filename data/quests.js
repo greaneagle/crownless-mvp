@@ -1,6 +1,7 @@
 /* Crownless content: quests. Plain classic script; no modules, no fetch. */
 (function (root) {
-  var C = (root.CROWNLESS_CONTENT = root.CROWNLESS_CONTENT || {});
+  root.CROWNLESS_CONTENT = root.CROWNLESS_CONTENT || {};
+  var C = root.CROWNLESS_CONTENT;
   C.quests = {
     q1: {
       id:'q1',

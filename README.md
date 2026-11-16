@@ -1,19 +1,21 @@
 # Crownless 0.3.0 — Gate B: The Captain's Trial
 
-An offline-capable *after initial asset load* single-player party-battle prototype using the source sprites supplied for Crownless. No bundler, server process, or dependencies are required on GitHub Pages.
+A single-player, top-down party-battle prototype in plain HTML5 Canvas and classic JavaScript. There's no bundler, no runtime dependencies and no server. It's published to GitHub Pages straight from `main`.
+
+- **Design spec:** [`Crownless_MVP_GDD_v1.md`](Crownless_MVP_GDD_v1.md). The engine is HTML5 Canvas, not the Godot the spec recommends.
+- **Current behavior (regression reference):** [`docs/BASELINE.md`](docs/BASELINE.md)
+- **Status and plan:** [`docs/ROADMAP.md`](docs/ROADMAP.md)
 
 ## What is playable
 
-- Recruit infantry (20 crowns) and archers (25 crowns), limited to 15 total
-- Real-time four-direction hero movement, sword attacks and frontal shield block
-- Friendly infantry and archers fight alongside the player; archers fire projectiles
-- Choose infantry (1) or archers (2), then **F** Follow, **H** Hold, **C** Charge
-- Two waves of Road Reavers (6 then 8 enemies), victory/defeat, gold rewards and renown
-- Casualties: 35% killed / 65% wounded, wounded recover on returning to camp
-- Local campaign auto-save, battle event logging, FPS, asset/error diagnostics, JSON and TXT log exports
-- Landscape phone controls: joystick, Attack, Block, Orders menu
-
-### Controls
+- Recruit infantry (20 crowns) and archers (25 crowns), up to 15 troops in total.
+- Real-time four-direction hero movement, sword attacks and a frontal shield block.
+- Allied infantry and archers fight alongside you, and archers fire arrows.
+- Pick a group with **1** (infantry) or **2** (archers), then give an order: **F** Follow, **H** Hold or **C** Charge.
+- Two waves of Road Reavers (6, then 8), ending in victory or capture, with gold and renown rewards.
+- Casualties: 35% of fallen troops are killed and 65% are wounded. Wounded troops recover when you return to camp.
+- The game auto-saves in the browser. A diagnostics panel (F3) shows logs and can export them as JSON or TXT.
+- Landscape phone controls: joystick, Attack, Block and an Orders menu.
 
 | Action | Desktop | Touch |
 |---|---|---|
@@ -24,15 +26,54 @@ An offline-capable *after initial asset load* single-player party-battle prototy
 | Pause | Esc | Pause |
 | Diagnostics | F3 | Logs |
 
-## Publish on GitHub Pages
+## Project layout
 
-1. Extract this archive. Upload the **contents** of this folder to the root of your existing repository, replacing older files. Keep `.github/`, `assets/`, `index.html`, `style.css` and `game.js` together. Old unused assets from version 0.2 can be deleted.
-2. Commit to `main`.
-3. Under Settings → Pages, select **GitHub Actions** as the source.
-4. Open the published site and hard-refresh (Ctrl+Shift+R) if an older copy appears.
+```
+index.html        page shell; loads data/ (later) and js/ as classic deferred scripts
+style.css         layout, HUD and touch controls
+js/               game runtime, attached to window.Crownless
+  core.js         constants, math helpers, diagnostics log
+  state.js        live game state (CL.game)
+  save.js         localStorage save (schema v1)
+  assets.js       sprite preloading and frame tables
+  units.js        unit stats, facing, movement
+  combat.js       waves, attacks, AI, arrows, win/loss
+  party.js        recruiting, battle results, recovery
+  ui.js           overlays, roster, pause, diagnostics panel
+  render.js       canvas drawing and HUD
+  input.js        keyboard, mouse, touch buttons, joystick
+  main.js         boot and main loop (loads last)
+data/             content definitions (window.CROWNLESS_CONTENT), not yet used by the runtime
+assets/           sprite PNGs (u#### units, w#### world tiles)
+tests/            node:test suite (no dependencies)
+```
 
-Assets use paths relative to `index.html` and work from a project URL such as `https://username.github.io/crownless-mvp/`.
+Script order in `index.html` matters, because each module uses the ones loaded before it.
+
+## Develop
+
+You need Node 22 or later, and only for the dev tools. The game itself needs nothing.
+
+```bash
+npm run serve
+```
+
+Then open http://localhost:8123. Opening `index.html` directly from disk also works.
+
+```bash
+npm test
+```
+
+```bash
+npm run lint
+```
+
+The tests load the logic modules (`core` → `party`) and the `data/` files into a Node `vm` sandbox with the UI stubbed out, so no browser is needed. The rendering and input code is checked by playing the game.
+
+## Deploy
+
+On every push to `main`, [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) runs the tests and lint, then publishes the repository root to GitHub Pages. Pull requests run the checks only. In the repository settings, under **Pages**, set the source to **GitHub Actions**. If the browser shows an old copy after a deploy, hard-refresh with Ctrl+Shift+R.
 
 ## Known limits
 
-This is **Gate B**, not the complete campaign. There is no strategic map, trading, quests, saves export/import, or cavalry yet. Ally command behavior is simple and not a formation simulator. The sprite crops are extracted from the Sprite Studio assets; some animations are not yet hand-aligned. Local browser saves can be cleared. Playtesting on your browser and phone remains necessary.
+This is Gate B, not the full campaign. There is no strategic map, trading, quests or save export/import yet, and no cavalry. Ally commands are simple, not a formation system. The sprite crops come from the Sprite Studio assets, and some animations are not yet hand-aligned. Browser saves can be cleared by the browser.

@@ -1,6 +1,7 @@
 /* Crownless content: troops. Plain classic script; no modules, no fetch. */
 (function (root) {
-  var C = (root.CROWNLESS_CONTENT = root.CROWNLESS_CONTENT || {});
+  root.CROWNLESS_CONTENT = root.CROWNLESS_CONTENT || {};
+  var C = root.CROWNLESS_CONTENT;
   C.troops = {
     levy: {id:'levy',name:'Levy',faction:'valedorn',role:'infantry',tier:'T1',hp:45,damage:7,armor:1,speed:90,reach:48,wage:3,recruitCost:15,upgradeTo:'footman',upgradeCost:25},
     footman: {id:'footman',name:'Footman',faction:'valedorn',role:'infantry',tier:'T2',hp:60,damage:10,armor:3,speed:90,reach:48,wage:6,recruitCost:25,upgradeTo:'guard',upgradeCost:60,altUpgradeTo:'rider',altUpgradeCost:90},

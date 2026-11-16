@@ -1,6 +1,7 @@
 /* Crownless content: dialogue. Plain classic script; no modules, no fetch. */
 (function (root) {
-  var C = (root.CROWNLESS_CONTENT = root.CROWNLESS_CONTENT || {});
+  root.CROWNLESS_CONTENT = root.CROWNLESS_CONTENT || {};
+  var C = root.CROWNLESS_CONTENT;
   C.dialogue = {
     stonebridge_elder: [
       "The road from the north has been anything but quiet.",
