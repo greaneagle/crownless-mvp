@@ -43,15 +43,20 @@ test('the seeded RNG makes worlds reproducible', () => {
   assert.notEqual(JSON.stringify(a), JSON.stringify(c));
 });
 
-test('GDD §7 power: tier powers, the hero, and Tactics', () => {
-  const { CL } = loadGame(); // fixture: 3 levies (T1) + 2 hunters (T2)
+test('GDD §7 power: tier powers, the hero (from real stats), and Tactics', () => {
+  const { CL } = loadGame(); // fixture: Farmhand + 3 levies (T1) + 2 hunters (T2)
   const A = CL.autoresolve;
   assert.ok(Math.abs(A.troopsPower({ looter: 3, reaver: 2 }) - (3 + 2 * 1.7)) < 1e-9);
-  assert.ok(Math.abs(A.playerPower() - (2.5 + 3 + 3.4)) < 1e-9);
+  const hero = ((90 * 17 * 1.03) / (45 * 7)) * 1.5; // HP 90, damage 17×1.03, shield
+  assert.ok(Math.abs(A.heroPower() - hero) < 1e-9);
+  assert.ok(Math.abs(A.playerPower() - (hero + 3 + 3.4)) < 1e-9);
   CL.campaign.roster[0].woundedUntil = 5;
-  assert.ok(Math.abs(A.playerPower() - (2.5 + 2 + 3.4)) < 1e-9, 'wounded do not fight');
+  assert.ok(Math.abs(A.playerPower() - (hero + 2 + 3.4)) < 1e-9, 'wounded do not fight');
+  CL.character.unequip('offhand');
+  assert.ok(Math.abs(A.heroPower() - hero / 1.5) < 1e-9, 'no shield, less power');
+  CL.character.equip('oak_shield');
   CL.campaign.character.skills.tactics = 10;
-  assert.ok(Math.abs(A.playerPower() - (2.5 + 2 + 3.4) * 1.3) < 1e-9);
+  assert.ok(Math.abs(A.playerPower() - (hero + 2 + 3.4) * 1.3) < 1e-9);
   assert.equal(A.winChance(1, 100), 0.1);
   assert.equal(A.winChance(100, 1), 0.9);
   assert.equal(A.winChance(5, 5), 0.5);

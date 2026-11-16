@@ -1,4 +1,4 @@
-# Crownless 0.13.0 — The Border March
+# Crownless 0.14.0 — The Border March
 
 A single-player, top-down party-battle prototype in plain HTML5 Canvas and classic JavaScript. There's no bundler, no runtime dependencies and no server. It's published to GitHub Pages straight from `main`.
 
@@ -93,6 +93,12 @@ npm test
 npm run lint
 ```
 
+```bash
+npm run simulate
+```
+
+`simulate` plays brand-new campaigns headlessly with a simple bot (30 days, 8 seeds by default) and prints how each went, as a quick check that the campaign loop doesn't stall.
+
 The tests load the logic modules (`core` → `party`) and the `data/` files into a Node `vm` sandbox with the UI stubbed out, so no browser is needed. The rendering and input code is checked by playing the game.
 
 ## Deploy
@@ -101,4 +107,4 @@ On every push to `main`, [`.github/workflows/deploy.yml`](.github/workflows/depl
 
 ## Known limits
 
-This is the first slice of Gate C, not the full campaign. There is no faction reputation or quest content yet, and no cavalry. Hairstyles wait for sprite art. Ally commands are simple, not a formation system. The sprite crops come from the Sprite Studio assets, and some animations are not yet hand-aligned. Browser saves can be cleared by the browser.
+Gate C (the two-town campaign loop) is complete; Gate D (the full region and story) is next. There is no faction reputation or quest content yet, and no cavalry. Hairstyles wait for sprite art. Ally commands are simple, not a formation system. The sprite crops come from the Sprite Studio assets, and some animations are not yet hand-aligned. Browser saves can be cleared by the browser.

@@ -4,7 +4,75 @@ _Spec: GDD §3 (map, travel), §8 (encounters, settlements), §14 Gate C._
 
 **Gate C pass criteria (GDD §14):** a player can complete a contract, buy food, recruit, fight, level and reload with all state intact.
 
-Gate C is delivered in slices. This file records each one.
+Gate C was delivered in slices, recorded below. **Verdict: Gate C passes**: the GDD criterion is met by an automated end-to-end test, a 30-day simulation over 8 seeds, and a playthrough with real clicks in the browser. A real-phone pass is still owner-pending (see the end).
+
+---
+
+## Acceptance — 0.14.0 (2026-11-16)
+
+### The GDD Gate C criterion
+
+| Criterion | Automated (`tests/acceptance.test.js`) | Browser, real clicks |
+|---|---|---|
+| Complete a contract | the bot completes ≥1 on a fresh GDD start (60 crowns, no soldiers) | accepted a Bandit Hunt (5 Looters, 2 Reavers), fought it, collected 82 crowns at Stonebridge |
+| Buy food | ✓ | Buy 3 days' food, 24 crowns |
+| Recruit | ✓ | hired 2 Levies |
+| Fight | ✓ (wins counted) | Attack, then a real-time battle won 7–0 with no losses |
+| Level | reaches level 2 or more | "Paid 82 crowns — level up!", then spent a point on Leadership (party cap 8 → 10) |
+| Reload with all state intact | every gameplay field is identical after reloading from storage **and** after importing an exported file on another "device" | after a **real page reload** and Continue, all 16 compared fields were identical |
+
+The scope items are all in place: the region, travel, encounters, trading, food and wages, progression, both kingdoms' moving patrols, and save/load.
+
+### The loop holds up over time: headless campaign simulation
+`npm run simulate` (`scripts/simulate-campaign.js`) plays brand-new games on the real game logic with a simple bot (`tests/helpers/campaign-bot.js`). The bot buys food, hires within a budget, upgrades, spends points, takes contracts it can win, auto-resolves good fights, pays tolls or retreats from bad ones, and rests its wounded. Results for 30 days × 8 seeds:
+
+| | min | typical | max |
+|---|---|---|---|
+| Hero level | 4 | 6 | 9 |
+| Contracts completed | 3 | 11 | 24 |
+| Soldiers at day 30 | 2 | 10 | 17 |
+| Stalls (no progress) | 0 | 0 | 0 |
+| Desertions | 0 | 0 | 0 |
+| Times out of food | 0 | 0 | 1 |
+
+**The simulation found a real balance problem, now fixed.** Before the fix, **7 of 8 new campaigns stalled**: still level 1 after 30 days, broke, with no contracts done.
+- **Cause:** auto-resolve valued the hero like one T3 soldier (power 2.5), while in a real battle a fresh hero alone beats the 7-looter camp. So auto-resolve showed every early fight as hopeless.
+- **Fix:** the hero's auto-resolve power now comes from their **real stats**: HP × damage relative to a T1 soldier, ×1.5 with a shield. A new Farmhand counts as about 7.5, and the value grows with levels and gear. It stays below the hero's real-battle worth, so fighting it out yourself still pays off.
+- **Result:** a lone new hero has about a 50% auto-resolve chance against the Looter Camp and under 35% against the Reaver Hideout. Both are covered by a test.
+
+A regression test also runs 3 seeds for 15 days and fails if any campaign stalls or never levels up.
+
+### GDD §15 edge cases — where each is covered
+
+| Edge case | Covered by |
+|---|---|
+| Hero captured with zero surviving troops | `parties.test` (lone hero loses an auto-resolve: captured and released) |
+| All food consumed during travel | `upkeep.test` "food runs out partway through travel" |
+| No gold for wages | `upkeep.test` "short pay costs morale" |
+| Player joins a hostile encounter | `parties.test` (ambush interrupts travel; attack/retreat/toll) |
+| Quest courier's party removed off-screen | `contracts.test` (target destroyed off-screen → contract void, no penalty) |
+| A fort changes owner before Q4 | Gate D (fort ownership arrives with reputation and quests) |
+| Companion wounded at story trigger | Gate D (companion) |
+| User loses browser storage | `portable.test` round trip into a fresh browser; Save & export warning; browser wipe-and-import run (0.13.0) |
+| Import invalid or future-version save | `portable.test` (malformed, checksum, newer version, unknown IDs; current save untouched) |
+| Battle ends during reinforcement spawn | `combat.test` "waves come from the encounter" (the end is checked after a wave spawns; a wave can't spawn after victory) |
+| Low-end phone with 30+ units | owner phone check (Gate E battle scaling) |
+| User rotates device | Gate A (portrait prompt and pause), browser-verified |
+| App pauses mid-battle | Gate A (`visibilitychange` auto-pause), browser-verified |
+| Tap commands overlap the Attack button | Gate A (Orders panel moved above the controls), browser-verified |
+
+### Balance observations for playtesting (not blockers)
+- A bot that grinds can reach level 9 and 24 contracts in 30 days. Offers come back as soon as one is accepted, so a cooldown may be worth adding once human pacing is known.
+- The bot loses about 40% of its fights because it auto-resolves at 55% odds. Humans who fight battles themselves should do much better.
+- Renown climbs fast enough to max the party cap (20) by about day 20–30 in good runs.
+
+### Deferred to Gate D (by design)
+Faction reputation, plus attacking patrols and caravans; the other 8 settlements' full services and the Stonebridge walkable hub; the forest and courtyard battle maps; cavalry; quests Q1–Q4 and the companion Mara; escort and delivery contracts; regional news.
+
+### Owner phone pass (to close Gate C fully)
+- [ ] Play the browser acceptance loop above on a phone: hire, buy food, contract, fight, collect, level, then close and reopen the browser.
+- [ ] Export the save on the phone and import it on desktop, and the other way round.
+- [ ] Note anything that felt grindy or punishing in the first 30 minutes.
 
 | Roadmap step | Status |
 |---|---|
@@ -18,7 +86,7 @@ Gate C is delivered in slices. This file records each one.
 | 8. Player XP/levels/skills; troop upgrades; party-cap formula | ✅ 0.11.0. Cavalry upgrades unlock with mounted AI (Gate D). |
 | 9. Bandit-hunt contract | ✅ 0.12.0 |
 | 10. Save export/import | ✅ 0.13.0 |
-| 11. Gate C acceptance | ⬜ |
+| 11. Gate C acceptance | ✅ 0.14.0 — see Acceptance below |
 
 ---
 

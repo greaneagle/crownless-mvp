@@ -12,7 +12,12 @@
   const CL = root.Crownless;
 
   const TIER_POWER = { T1: 1, T2: 1.7, T3: 2.5 };
-  const HERO_POWER = 2.5;
+  // The hero is worth far more than one soldier in a real battle (a fresh hero alone reliably beats
+  // seven looters), so their auto-resolve power comes from their actual stats: HP × damage relative
+  // to a T1 soldier (45 HP × 7 damage), ×1.5 with a shield. A new Farmhand ≈ 7.5; grows with
+  // levels and gear. Deliberately below the hero's real-battle worth so playing it out still pays.
+  const T1_BASELINE = 45 * 7;
+  const SHIELD_FACTOR = 1.5;
   const TACTICS = 0.03;
   const WIN_CLAMP = [0.1, 0.9];
   // Winner's per-troop chance to fall: 0.35 × (loser power / winner power), within these bounds.
@@ -45,9 +50,14 @@
     return p;
   }
 
+  function heroPower(c = CL.campaign) {
+    const h = CL.character.heroCombat(c);
+    return ((h.hp * h.damage) / T1_BASELINE) * (h.canBlock ? SHIELD_FACTOR : 1);
+  }
+
   /** The player's fighting power: healthy soldiers plus the hero, boosted by Tactics. */
   function playerPower(c = CL.campaign) {
-    let p = HERO_POWER;
+    let p = heroPower(c);
     for (const s of c.roster) if (s.woundedUntil === null) p += TIER_POWER[CL.content.troop(s.troop).tier];
     return p * (1 + TACTICS * CL.character.skill('tactics', c));
   }
@@ -96,7 +106,7 @@
 
   CL.autoresolve = {
     TIER_POWER,
-    HERO_POWER,
+    heroPower,
     WINNER_LOSS,
     LOSER_LOSS,
     next,
