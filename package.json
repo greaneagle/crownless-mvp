@@ -1,6 +1,6 @@
 {
   "name": "crownless-mvp",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "description": "Crownless — HTML5 Canvas party-battle RPG prototype. No runtime dependencies; this file only defines dev scripts.",
   "scripts": {

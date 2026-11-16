@@ -1,4 +1,4 @@
-# Crownless 0.3.0 — Gate B: The Captain's Trial
+# Crownless 0.4.0 — Gate B: The Captain's Trial
 
 A single-player, top-down party-battle prototype in plain HTML5 Canvas and classic JavaScript. There's no bundler, no runtime dependencies and no server. It's published to GitHub Pages straight from `main`.
 
@@ -9,13 +9,15 @@ A single-player, top-down party-battle prototype in plain HTML5 Canvas and class
 ## What is playable
 
 - Recruit infantry (20 crowns) and archers (25 crowns), up to 15 troops in total.
-- Real-time four-direction hero movement, sword attacks and a frontal shield block.
+- Real-time four-direction hero movement. Sword swings have a visible windup, a strike window and a recovery, and hit everything in a 90° arc in front of you.
+- A frontal shield block that covers 120°. It can't cancel a swing you've already started, and enemy windups are drawn in red so you know when to block.
 - Allied infantry and archers fight alongside you, and archers fire arrows.
 - Pick a group with **1** (infantry) or **2** (archers), then give an order: **F** Follow, **H** Hold or **C** Charge.
 - Two waves of Road Reavers (6, then 8), ending in victory or capture, with gold and renown rewards.
 - Casualties: 35% of fallen troops are killed and 65% are wounded. Wounded troops recover when you return to camp.
 - The game auto-saves in the browser. A diagnostics panel (F3) shows logs and can export them as JSON or TXT.
-- Landscape phone controls: joystick, Attack, Block and an Orders menu.
+- Landscape phone controls: joystick, Attack, Block and an Orders menu above them. The game pauses when you switch away and asks you to rotate in portrait.
+- Gate A details and phone-test checklist: [`docs/GATE-A-VALIDATION.md`](docs/GATE-A-VALIDATION.md)
 
 | Action | Desktop | Touch |
 |---|---|---|

@@ -67,19 +67,19 @@
       }
       const o = KEY_ORDERS[e.code];
       if (o) CL.combat.order(o[0], o[1]);
+      if (e.code === 'Space' && !e.repeat) CL.combat.queueAttack();
       g.hold[e.code] = true;
     });
     root.addEventListener('keyup', (e) => {
       g.hold[e.code] = false;
     });
-    root.addEventListener('blur', () => {
-      g.hold = {};
-      g.attackHeld = false;
-      g.blockHeld = false;
-    });
+    root.addEventListener('blur', releaseAll);
     canvas.addEventListener('pointerdown', (e) => {
       if (e.pointerType !== 'mouse') return;
-      if (e.button === 0) g.attackHeld = true;
+      if (e.button === 0) {
+        g.attackHeld = true;
+        CL.combat.queueAttack();
+      }
       if (e.button === 2) g.blockHeld = true;
     });
     root.addEventListener('pointerup', () => {
@@ -137,6 +137,49 @@
     joy.addEventListener('pointermove', joyMove);
     joy.addEventListener('pointerup', joyEnd);
     joy.addEventListener('pointercancel', joyEnd);
+    joy.addEventListener('lostpointercapture', joyEnd);
+    resetJoystick = () => {
+      joyPointer = null;
+      g.joystick = { x: 0, y: 0 };
+      setKnob();
+    };
+  }
+
+  let resetJoystick = () => {};
+
+  /** Drop every held input — used on blur, tab hide and orientation change. */
+  function releaseAll() {
+    const g = CL.game;
+    g.hold = {};
+    g.attackHeld = false;
+    g.blockHeld = false;
+    g.attackQueuedAt = null;
+    resetJoystick();
+  }
+
+  /** Pause when the page is hidden; pause and ask to rotate when a touch device is portrait. */
+  function bindLifecycle() {
+    const coarse = root.matchMedia?.('(pointer: coarse)');
+    const onHidden = () => {
+      releaseAll();
+      CL.ui.autoPause('page hidden');
+    };
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) onHidden();
+    });
+    root.addEventListener('pagehide', onHidden);
+
+    const checkOrientation = () => {
+      const portrait = Boolean(coarse?.matches) && root.innerHeight > root.innerWidth;
+      CL.ui.showRotatePrompt(portrait);
+      if (portrait) {
+        releaseAll();
+        CL.ui.autoPause('portrait orientation');
+      }
+    };
+    root.addEventListener('resize', checkOrientation);
+    root.addEventListener('orientationchange', checkOrientation);
+    checkOrientation();
   }
 
   function bind(canvas) {
@@ -149,6 +192,7 @@
       '#attackBtn',
       () => {
         g.attackHeld = true;
+        CL.combat.queueAttack();
       },
       () => {
         g.attackHeld = false;
@@ -165,7 +209,8 @@
       },
     );
     bindJoystick($);
+    bindLifecycle();
   }
 
-  CL.input = { bind };
+  CL.input = { bind, releaseAll };
 })(typeof window !== 'undefined' ? window : globalThis);

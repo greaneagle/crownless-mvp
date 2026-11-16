@@ -67,16 +67,33 @@
     $('#ordersPanel').classList.add('hidden');
   }
 
+  /** Show the selected group and highlight it plus that group's current order. */
   function showSelectedGroup(group) {
     $('#selectedGroup').textContent = group === 'infantry' ? 'Infantry' : 'Archers';
+    const current = CL.game.orders[group];
+    for (const b of document.querySelectorAll('[data-group]')) b.classList.toggle('active', b.dataset.group === group);
+    for (const b of document.querySelectorAll('[data-order]')) b.classList.toggle('active', b.dataset.order === current);
+  }
+
+  function setPaused(paused, reason) {
+    const g = CL.game;
+    if (g.mode !== 'battle' || g.paused === paused) return;
+    g.paused = paused;
+    $('#pauseBtn').textContent = paused ? 'Resume' : 'Pause';
+    CL.diag.log('info', paused ? 'Paused' : 'Resumed', reason ? { reason } : undefined);
   }
 
   function togglePause() {
-    const g = CL.game;
-    if (g.mode !== 'battle') return;
-    g.paused = !g.paused;
-    $('#pauseBtn').textContent = g.paused ? 'Resume' : 'Pause';
-    CL.diag.log('info', g.paused ? 'Paused' : 'Resumed');
+    setPaused(!CL.game.paused);
+  }
+
+  /** Pause for a lifecycle reason (tab hidden, rotation). Never auto-resumes. */
+  function autoPause(reason) {
+    setPaused(true, reason);
+  }
+
+  function showRotatePrompt(show) {
+    $('#rotate').classList.toggle('hidden', !show);
   }
 
   // ---- Diagnostics panel ----
@@ -155,7 +172,10 @@
     refreshRoster,
     hideBattleOverlays,
     showSelectedGroup,
+    setPaused,
     togglePause,
+    autoPause,
+    showRotatePrompt,
     report,
     download,
     renderDebug,

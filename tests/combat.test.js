@@ -1,4 +1,4 @@
-// Combat regression tests pinned to the 0.3.0 behavior in docs/BASELINE.md.
+// Combat tests: 0.3.0 baseline behavior plus the Gate A rules from GDD §6.
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { loadGame } = require('./helpers/load');
@@ -30,15 +30,17 @@ test('unit stats match the 0.3.0 baseline', () => {
   }
 });
 
-test('facingToward uses a ~135° frontal arc', () => {
+test('attack arc is 90° and block arc is 120° (GDD §6)', () => {
   const { CL } = setup();
+  const { inArc, ARC } = CL.units;
   const a = { x: 0, y: 0, face: 'right' };
-  const at = (x, y) => CL.units.facingToward(a, { x, y });
-  assert.equal(at(10, 0), true, 'straight ahead');
-  assert.equal(at(10, 20), true, '~63° off-axis');
-  assert.equal(at(10, 30), false, '~72° off-axis');
-  assert.equal(at(-10, 0), false, 'behind');
-  assert.equal(at(0, 10), false, 'side');
+  const deg = (d) => ({ x: Math.cos((d * Math.PI) / 180) * 10, y: Math.sin((d * Math.PI) / 180) * 10 });
+  assert.equal(inArc(a, deg(0), ARC.attack), true);
+  assert.equal(inArc(a, deg(44), ARC.attack), true);
+  assert.equal(inArc(a, deg(46), ARC.attack), false);
+  assert.equal(inArc(a, deg(59), ARC.block), true);
+  assert.equal(inArc(a, deg(61), ARC.block), false);
+  assert.equal(inArc(a, deg(180), ARC.block), false);
 });
 
 test('move clamps to arena bounds and faces the dominant axis', () => {
@@ -54,43 +56,155 @@ test('move clamps to arena bounds and faces the dominant axis', () => {
   assert.deepEqual({ x: u.x, y: u.y }, before);
 });
 
-test('a frontal block absorbs the hit; a hit from behind lands', () => {
+test('a guarding unit absorbs frontal hits; flank and rear hits land', () => {
   const { CL } = setup();
   const defender = CL.units.makeUnit(100, 100, 'ally', 'hero');
   defender.face = 'right';
   defender.guard = true;
-  const front = CL.units.makeUnit(130, 100, 'enemy', 'reaver');
-  const back = CL.units.makeUnit(70, 100, 'enemy', 'reaver');
-  CL.combat.hit(defender, 20, front);
+  const at = (x, y) => CL.units.makeUnit(x, y, 'enemy', 'reaver');
+  assert.equal(CL.combat.hit(defender, 20, at(130, 115)), 'blocked', '~27° off-axis');
   assert.equal(defender.hp, 85);
-  CL.combat.hit(defender, 20, back);
-  assert.equal(defender.hp, 65);
+  assert.equal(CL.combat.hit(defender, 20, at(110, 130)), 'hit', '~72° flank');
+  assert.equal(CL.combat.hit(defender, 20, at(70, 100)), 'hit', 'behind');
+  assert.equal(defender.hp, 45);
 });
 
-test('a lethal hit downs the unit and counts an enemy kill once', () => {
+test('a lethal hit downs the unit, cancels its swing and counts one kill', () => {
   const { CL } = setup();
   const e = CL.units.makeUnit(0, 0, 'enemy', 'reaver');
-  CL.combat.hit(e, 999, null);
+  e.swing = { t: 0.05, hit: [] };
+  CL.game.t = 3;
+  assert.equal(CL.combat.hit(e, 999, null), 'down');
   assert.equal(e.alive, false);
-  assert.equal(e.hp, 0);
-  CL.combat.hit(e, 999, null); // hitting a downed unit is a no-op
+  assert.equal(e.swing, null);
+  assert.equal(e.downAt, 3);
+  assert.equal(CL.combat.hit(e, 999, null), null, 'hitting a downed unit is a no-op');
   assert.equal(CL.game.kills, 1);
 });
 
-test('a melee swing hits only one target and respects cooldown', () => {
+test('melee hits push the target back', () => {
   const { CL } = setup();
-  const hero = CL.units.makeUnit(100, 100, 'ally', 'hero');
-  hero.face = 'right';
-  hero.attackCooldown = 0;
-  CL.game.hero = hero;
-  const e1 = CL.units.makeUnit(130, 100, 'enemy', 'reaver');
-  const e2 = CL.units.makeUnit(140, 105, 'enemy', 'reaver');
-  CL.game.enemies = [e1, e2];
-  CL.combat.doAttack(hero);
-  assert.equal(e1.hp + e2.hp, 52 * 2 - 18, 'exactly one target damaged');
-  assert.equal(hero.attackCooldown, 0.49);
-  CL.combat.doAttack(hero); // still cooling down
-  assert.equal(e1.hp + e2.hp, 52 * 2 - 18);
+  const src = CL.units.makeUnit(100, 100, 'ally', 'hero');
+  const v = CL.units.makeUnit(130, 100, 'enemy', 'reaver');
+  CL.combat.hit(v, 5, src);
+  assert.equal(v.x, 136);
+});
+
+/** Hero facing right at (100,100) with enemies placed relative to it. */
+function swingSetup(...offsets) {
+  const env = setup();
+  const { CL } = env;
+  CL.combat.startBattle();
+  const hero = CL.game.hero;
+  Object.assign(hero, { x: 100, y: 100, face: 'right', attackCooldown: 0 });
+  CL.game.allies = [];
+  CL.game.enemies = offsets.map(([dx, dy]) => {
+    const e = CL.units.makeUnit(100 + dx, 100 + dy, 'enemy', 'reaver');
+    e.aiTimer = 99; // keep AI still
+    e.attackCooldown = 99;
+    return e;
+  });
+  return env;
+}
+
+const step = (CL, seconds, dt = 0.02) => {
+  for (let t = 0; t < seconds - 1e-9; t += dt) CL.combat.update(dt);
+};
+
+test('swing lifecycle: windup 0.16 → active 0.12 → recovery 0.24', () => {
+  const { CL } = swingSetup([40, 0]);
+  const hero = CL.game.hero;
+  const e = CL.game.enemies[0];
+  CL.combat.queueAttack();
+  step(CL, 0.02);
+  assert.equal(CL.units.swingPhase(hero), 'windup');
+  step(CL, 0.12);
+  assert.equal(e.hp, 52, 'no damage during windup');
+  step(CL, 0.04);
+  assert.equal(CL.units.swingPhase(hero), 'active');
+  assert.equal(e.hp, 52 - 18, 'damage lands in the active window');
+  step(CL, 0.14);
+  assert.equal(CL.units.swingPhase(hero), 'recovery');
+  assert.equal(e.hp, 52 - 18, 'one hit per target per swing');
+  step(CL, 0.22);
+  assert.equal(hero.swing, null, 'swing finished');
+});
+
+test('one swing hits every enemy in the 90° arc, each once; not those outside it', () => {
+  const { CL } = swingSetup([40, 0], [35, 20], [10, 50], [-40, 0]);
+  CL.combat.queueAttack();
+  step(CL, 0.4);
+  const hp = CL.game.enemies.map((e) => e.hp);
+  assert.deepEqual(hp, [34, 34, 52, 52]);
+});
+
+test('facing locks while the swing is committed', () => {
+  const { CL } = swingSetup([40, 0]);
+  const hero = CL.game.hero;
+  CL.combat.queueAttack();
+  step(CL, 0.02);
+  CL.game.hold.KeyW = true;
+  step(CL, 0.1);
+  assert.equal(hero.face, 'right', 'moving up during windup keeps facing right');
+  step(CL, 0.3);
+  assert.equal(hero.face, 'up', 'facing follows movement after the commit window');
+});
+
+test('block cannot interrupt a committed swing but works in recovery', () => {
+  const { CL } = swingSetup([200, 0]);
+  const hero = CL.game.hero;
+  CL.combat.queueAttack();
+  step(CL, 0.02);
+  CL.game.blockHeld = true;
+  step(CL, 0.1);
+  assert.equal(hero.guard, false, 'windup');
+  step(CL, 0.1);
+  assert.equal(CL.units.swingPhase(hero), 'active');
+  assert.equal(hero.guard, false, 'active');
+  step(CL, 0.1);
+  assert.equal(CL.units.swingPhase(hero), 'recovery');
+  assert.equal(hero.guard, true, 'recovery');
+});
+
+test('guarding prevents starting an attack', () => {
+  const { CL } = swingSetup([40, 0]);
+  CL.game.blockHeld = true;
+  CL.game.attackHeld = true;
+  step(CL, 0.4);
+  assert.equal(CL.game.hero.swing, null);
+  assert.equal(CL.game.enemies[0].hp, 52);
+});
+
+test('a tap within 100 ms of recovery ending is buffered; an earlier tap is dropped', () => {
+  const { CL } = swingSetup([200, 0]);
+  const hero = CL.game.hero;
+  CL.combat.queueAttack();
+  step(CL, 0.46); // swing began on the first frame (t=0.02): 0.08 s left
+  CL.combat.queueAttack();
+  step(CL, 0.1);
+  assert.ok(hero.swing && hero.swing.t < 0.1, 'buffered press started a new swing');
+
+  step(CL, 0.6); // let it finish
+  CL.combat.queueAttack();
+  step(CL, 0.02);
+  const second = hero.swing;
+  assert.ok(second);
+  step(CL, 0.1);
+  CL.combat.queueAttack(); // ~0.4 s before recovery ends → too early
+  step(CL, 0.6);
+  assert.equal(hero.swing, null, 'early press was dropped');
+});
+
+test('AI swings turn toward their target at windup', () => {
+  const { CL } = setup();
+  const u = CL.units.makeUnit(100, 100, 'enemy', 'reaver');
+  u.face = 'down';
+  u.attackCooldown = 0;
+  u.target = CL.units.makeUnit(60, 100, 'ally', 'infantry');
+  CL.game.hero = u.target;
+  assert.equal(CL.combat.startAttack(u), true);
+  assert.equal(u.face, 'left');
+  assert.equal(CL.combat.startAttack(u), false, 'cannot start while swinging');
 });
 
 test('archers spawn an arrow only within 245px', () => {
@@ -98,13 +212,14 @@ test('archers spawn an arrow only within 245px', () => {
   const archer = CL.units.makeUnit(100, 100, 'ally', 'archer');
   archer.attackCooldown = 0;
   CL.game.enemies = [CL.units.makeUnit(400, 100, 'enemy', 'reaver')];
-  CL.combat.doAttack(archer);
+  CL.combat.startAttack(archer);
   assert.equal(CL.game.arrows.length, 0);
   archer.attackCooldown = 0;
   CL.game.enemies[0].x = 300;
-  CL.combat.doAttack(archer);
+  CL.combat.startAttack(archer);
   assert.equal(CL.game.arrows.length, 1);
   assert.equal(CL.game.arrows[0].damage, 8);
+  assert.equal(archer.attackCooldown, 1.2);
 });
 
 test('startBattle caps the deployed party at 12 infantry and 8 archers', () => {

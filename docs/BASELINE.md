@@ -4,6 +4,8 @@
 
 **Audited:** 2026-11-14 · **Build:** `0.3.0` · **Scope:** documentation only (no source files modified).
 
+> **0.4.0 note:** combat timing, arcs, block rules, feedback and the Orders panel layout changed in Gate A — see `docs/GATE-A-VALIDATION.md`. This document still describes 0.3.0.
+>
 > **2026-11-16 — source moved.** The minified `game.js` was split into `js/*.js` without behavior changes (verified in-browser and by `npm test`). Inline `game.js:N` references below point at the old single file; use the [Source map](#source-map) to find the same code in the new modules. Automated checks of this baseline live in `tests/combat.test.js`, `tests/party.test.js` and `tests/save.test.js`.
 
 ---

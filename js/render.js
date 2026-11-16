@@ -71,6 +71,55 @@
     return [u.art || 92];
   }
 
+  /** Fallen unit: sprite laid on its side, faded. */
+  function drawDowned(u) {
+    const hero = u.role === 'hero';
+    const sh = hero ? 74 : 43;
+    const sw = hero ? 58 : 37;
+    const frames = unitFrames(u);
+    const age = CL.game.t - u.downAt;
+    ctx.save();
+    ctx.globalAlpha = age < 0.25 ? 0.9 - age * 1.6 : 0.5;
+    ctx.translate(u.x, u.y - 6);
+    ctx.rotate(u.face === 'left' ? -Math.PI / 2 : Math.PI / 2);
+    drawImage(CL.assets.key('u', frames[0]), -sh / 2, -sw / 2, sw, sh);
+    ctx.restore();
+  }
+
+  /** Swing arc: thin telegraph in windup, bright slash when active, fading in recovery. */
+  function drawSwing(u, hero) {
+    const phase = CL.units.swingPhase(u);
+    if (!phase) return;
+    const { SWING } = CL.units;
+    const a = FACE_ANGLE[u.face];
+    const half = Math.PI / 4; // 90° arc
+    const r = hero ? 42 : 27;
+    const ally = u.team === 'ally';
+    ctx.save();
+    ctx.beginPath();
+    if (phase === 'windup') {
+      const k = u.swing.t / SWING.windup;
+      // Enemy windups are the player's cue to block, so they read strongest.
+      ctx.globalAlpha = ally ? 0.35 + 0.35 * k : 0.6 + 0.4 * k;
+      ctx.strokeStyle = ally ? '#f9e4b3' : '#ff5a3c';
+      ctx.lineWidth = ally ? 2 : 4;
+      ctx.setLineDash([6, 3]);
+      ctx.arc(u.x, u.y - 18, r * (1 + 0.3 * k), a - half, a + half);
+    } else if (phase === 'active') {
+      ctx.strokeStyle = ally ? '#fff3cf' : '#ff9d84';
+      ctx.lineWidth = 6;
+      ctx.arc(u.x, u.y - 18, r, a - half, a + half);
+    } else {
+      const k = (u.swing.t - SWING.windup - SWING.active) / SWING.recovery;
+      ctx.globalAlpha = 0.5 * (1 - k);
+      ctx.strokeStyle = ally ? '#f9e4b3' : '#f0a18c';
+      ctx.lineWidth = 3;
+      ctx.arc(u.x, u.y - 18, r, a - half, a + half);
+    }
+    ctx.stroke();
+    ctx.restore();
+  }
+
   function drawUnit(u) {
     if (!u?.alive) return;
     const hero = u.role === 'hero';
@@ -94,19 +143,20 @@
     drawImage(CL.assets.key('u', frame), x, y, sw, sh);
     if (u.flash > 0) ctx.restore();
 
-    if (u.attack > 0) {
-      ctx.strokeStyle = u.team === 'ally' ? '#f9e4b3' : '#f0a18c';
-      ctx.lineWidth = 5;
-      ctx.beginPath();
+    drawSwing(u, hero);
+    if (u.shot > 0) {
+      // Archer release flash toward facing.
       const a = FACE_ANGLE[u.face];
-      ctx.arc(u.x, u.y - 18, hero ? 42 : 27, a - 0.45, a + 0.45);
-      ctx.stroke();
+      ctx.fillStyle = '#f6e8b4';
+      ctx.fillRect(u.x + Math.cos(a) * 14 - 2, u.y - 20 + Math.sin(a) * 14 - 2, 4, 4);
     }
     if (u.guard) {
+      // Frontal 120° shield cover.
+      const a = FACE_ANGLE[u.face];
       ctx.strokeStyle = '#e5bd83';
-      ctx.lineWidth = 4;
+      ctx.lineWidth = 5;
       ctx.beginPath();
-      ctx.arc(u.x, u.y - 13, 23, 0, Math.PI * 2);
+      ctx.arc(u.x, u.y - 13, 26, a - Math.PI / 3, a + Math.PI / 3);
       ctx.stroke();
     }
     if (u.hp < u.maxhp) {
@@ -141,6 +191,7 @@
     const chars = [...g.allies, ...g.enemies];
     if (g.hero) chars.push(g.hero);
     chars.sort((a, b) => a.y - b.y); // painter's order by depth
+    for (const u of chars) if (u.ground) drawDowned(u);
     for (const u of chars) drawUnit(u);
 
     for (const a of g.arrows) {

@@ -1,15 +1,18 @@
-/* Crownless battle simulation: waves, attacks, AI, arrows, win/loss checks.
+/* Crownless battle simulation: waves, swings, blocks, AI, arrows, win/loss checks.
  * Touches the DOM only through CL.ui hooks so it can run under Node tests. */
 (function (root) {
   'use strict';
   const CL = root.Crownless;
   const { rand, dist, normalize } = CL.util;
-  const { makeUnit, facingToward, aim, move } = CL.units;
+  const { ARC, SWING, makeUnit, inArc, swingPhase, isCommitted, aim, move, push } = CL.units;
 
-  const ATTACK_ANIM = 0.31;
-  const COOLDOWN = { hero: 0.49, archer: 1.2, melee: 0.86 };
+  // Time from one attack start to the next. Melee swings can't restart before SWING.total.
+  const COOLDOWN = { hero: SWING.total, archer: 1.2, melee: 0.86 };
   const REACH = { hero: 67, melee: 48 };
   const ARROW = { speed: 240, life: 1.6, hitRadius: 19, maxRange: 245, aimHeight: 16 };
+  const SHOT_FLASH = 0.2;
+  const KNOCKBACK = 6;
+  const INPUT_BUFFER = 0.1; // GDD §6: a press up to 100 ms before recovery ends still swings
   const WAVE_SIZES = [6, 8];
   const GUARD_SPEED = 0.65;
   const MAX_DT = 0.05;
@@ -37,6 +40,7 @@
     g.enemies = [];
     g.arrows = [];
     g.effects = [];
+    g.attackQueuedAt = null;
     g.group = 'infantry';
     g.orders = { infantry: 'follow', archer: 'hold' };
     g.hero = makeUnit(330, 270, 'ally', 'hero');
@@ -75,57 +79,83 @@
     CL.diag.log('info', 'Enemy wave spawned', { wave: g.wave, enemies: count });
   }
 
-  /** Apply damage, or absorb it entirely if the target is guarding toward the source. */
+  /**
+   * Apply damage. A guarding target absorbs it entirely when the source is inside its
+   * 120° shield arc (GDD §6); hits from behind or the flanks land.
+   * Returns 'blocked' | 'hit' | 'down' | null.
+   */
   function hit(target, damage, source) {
     const g = game();
-    if (!target.alive) return;
-    if (target.guard && source && facingToward(target, source)) {
-      g.effects.push({ x: target.x, y: target.y - 17, t: 0.2, color: '#f6daa6' });
-      return;
+    if (!target.alive) return null;
+    if (target.guard && source && inArc(target, source, ARC.block)) {
+      g.effects.push({ x: target.x, y: target.y - 17, t: 0.2, color: '#f6daa6', kind: 'block' });
+      return 'blocked';
     }
     target.hp = Math.max(0, target.hp - damage);
     target.flash = 0.14;
+    if (source) push(target, source.x, source.y, KNOCKBACK);
     g.effects.push({
       x: target.x,
       y: target.y - 23,
       t: 0.35,
       color: target.team === 'ally' ? '#f4bb72' : '#f77864',
+      kind: 'hit',
     });
-    if (!target.hp) {
-      target.alive = false;
-      target.ground = true;
-      if (target.team === 'enemy') g.kills++;
-      CL.diag.log('info', 'Unit down', { role: target.role, team: target.team, id: target.id });
-    }
+    if (target.hp) return 'hit';
+    target.alive = false;
+    target.ground = true;
+    target.downAt = g.t;
+    target.swing = null;
+    target.guard = false;
+    if (target.team === 'enemy') g.kills++;
+    CL.diag.log('info', 'Unit down', { role: target.role, team: target.team, id: target.id });
+    return 'down';
   }
 
-  function doAttack(u) {
-    if (!u.alive || u.attackCooldown > 0) return;
-    u.attack = ATTACK_ANIM;
-    u.attackCooldown = u.role === 'hero' ? COOLDOWN.hero : u.role === 'archer' ? COOLDOWN.archer : COOLDOWN.melee;
-    const targets = opponentsOf(u);
+  /** Begin an attack if the unit is ready. Returns true when an attack started. */
+  function startAttack(u) {
+    if (!u.alive || u.attackCooldown > 1e-6 || u.swing) return false;
     if (u.role === 'archer') {
-      const target = nearestAlive(u, targets);
+      u.attackCooldown = COOLDOWN.archer;
+      u.shot = SHOT_FLASH;
+      const target = nearestAlive(u, opponentsOf(u));
       if (target && dist(u, target) < ARROW.maxRange) {
         const [dx, dy] = normalize(target.x - u.x, target.y - u.y);
         game().arrows.push({ x: u.x, y: u.y - 20, dx, dy, team: u.team, life: ARROW.life, source: u, damage: u.damage });
       }
-      return;
+      return true;
     }
+    // AI soldiers turn to their target as they wind up; the hero swings where they face.
+    if (u.role !== 'hero' && u.target?.alive) aim(u, u.target);
+    u.attackCooldown = u.role === 'hero' ? COOLDOWN.hero : COOLDOWN.melee;
+    u.swing = { t: 0, hit: [] };
+    return true;
+  }
+
+  /** During the active window, hit every opponent in reach and arc — each at most once per swing. */
+  function resolveSwing(u) {
     const reach = u.role === 'hero' ? REACH.hero : REACH.melee;
-    for (const v of targets) {
-      if (!v?.alive || dist(u, v) > reach) continue;
-      if (facingToward(u, v)) {
-        hit(v, u.damage, u);
-        break; // one target per swing
-      }
+    for (const v of opponentsOf(u)) {
+      if (!v?.alive || u.swing.hit.includes(v.id)) continue;
+      if (dist(u, v) > reach || !inArc(u, v, ARC.attack)) continue;
+      u.swing.hit.push(v.id);
+      hit(v, u.damage, u);
     }
+  }
+
+  function advanceSwing(u, dt) {
+    if (!u.swing) return;
+    u.swing.t += dt;
+    const phase = swingPhase(u);
+    if (phase === 'active') resolveSwing(u);
+    else if (phase === null) u.swing = null;
   }
 
   function tickTimers(u, dt) {
     u.attackCooldown = Math.max(0, u.attackCooldown - dt);
-    u.attack = Math.max(0, u.attack - dt);
+    u.shot = Math.max(0, u.shot - dt);
     u.flash = Math.max(0, u.flash - dt);
+    if (u.alive) advanceSwing(u, dt);
   }
 
   function ai(u, dt) {
@@ -166,7 +196,12 @@
     const d = dist(u, dest);
     if (d > goal + 5) move(u, dest.x - u.x, dest.y - u.y, dt);
     else if (dest === target) aim(u, target);
-    if (dist(u, target) < p.fire) doAttack(u);
+    if (dist(u, target) < p.fire) startAttack(u);
+  }
+
+  /** Record an attack press so a tap during late recovery is not lost. */
+  function queueAttack() {
+    game().attackQueuedAt = game().t;
   }
 
   function updateHero(h, dt) {
@@ -175,7 +210,10 @@
     tickTimers(h, dt);
     const x = (k.KeyD || k.ArrowRight ? 1 : 0) - (k.KeyA || k.ArrowLeft ? 1 : 0) + g.joystick.x;
     const y = (k.KeyS || k.ArrowDown ? 1 : 0) - (k.KeyW || k.ArrowUp ? 1 : 0) + g.joystick.y;
-    h.guard = g.blockHeld || k.ShiftLeft || k.ShiftRight;
+    // Block input cannot interrupt a committed swing (GDD §6); it takes effect in recovery.
+    const blockInput = Boolean(g.blockHeld || k.ShiftLeft || k.ShiftRight);
+    h.guard = h.alive && blockInput && !isCommitted(h);
+    if (g.attackQueuedAt !== null && g.t - g.attackQueuedAt > INPUT_BUFFER) g.attackQueuedAt = null;
     if (!h.alive) return;
     if (x || y) {
       const old = h.speed;
@@ -183,7 +221,8 @@
       move(h, x, y, dt);
       h.speed = old;
     }
-    if ((g.attackHeld || k.Space) && !h.guard) doAttack(h);
+    const wantsAttack = g.attackHeld || k.Space || g.attackQueuedAt !== null;
+    if (wantsAttack && !h.guard && startAttack(h)) g.attackQueuedAt = null;
   }
 
   function updateArrows(h, dt) {
@@ -242,5 +281,17 @@
     CL.ui.showSelectedGroup(g.group);
   }
 
-  CL.combat = { startBattle, spawnWave, hit, doAttack, ai, update, order };
+  CL.combat = {
+    COOLDOWN,
+    REACH,
+    INPUT_BUFFER,
+    startBattle,
+    spawnWave,
+    hit,
+    startAttack,
+    queueAttack,
+    ai,
+    update,
+    order,
+  };
 })(typeof window !== 'undefined' ? window : globalThis);

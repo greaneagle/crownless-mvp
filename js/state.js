@@ -22,6 +22,7 @@
     hold: {}, // keyboard codes currently held
     joystick: { x: 0, y: 0 },
     attackHeld: false,
+    attackQueuedAt: null, // battle time of the last attack press (input buffer)
     blockHeld: false,
     message: '',
     messageUntil: 0,

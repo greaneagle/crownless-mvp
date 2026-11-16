@@ -1,6 +1,6 @@
 # Crownless — Project Status & Roadmap
 
-_Last reviewed: 2026-11-16 · Build 0.3.0 · Spec: `Crownless_MVP_GDD_v1.md` (engine overridden: HTML5 Canvas + classic JS, no bundler, GitHub Pages)._
+_Last reviewed: 2026-11-16 · Build 0.4.0 · Spec: `Crownless_MVP_GDD_v1.md` (engine overridden: HTML5 Canvas + classic JS, no bundler, GitHub Pages)._
 
 This replaces the opencode-swarm plan (`.swarm/plan.md`, removed). The gate structure (A→E) is kept from the GDD; the task list is condensed and re-ordered around what the code actually needs.
 
@@ -17,7 +17,7 @@ This replaces the opencode-swarm plan (`.swarm/plan.md`, removed). The gate stru
 | **Tooling** | `npm test` (node:test, 34 tests), `npm run lint` (Biome via npx), `npm run serve`. CI runs both before the Pages deploy. |
 
 ### Gate status vs GDD
-- **Gate A (combat feel)** — mostly there: 4-dir movement, swing, frontal block, flash/KO, touch + keyboard. Gaps: no windup/active/recovery timing (instant hit on press), 135° arc instead of 90°, block is unlimited & can interrupt swings, no pause on tab blur/visibility change, no orientation handling.
+- **Gate A (combat feel)** — implemented to GDD §6 in 0.4.0 (phased swings, 90°/120° arcs, input buffer, telegraphs, auto-pause, portrait prompt). Awaiting a real-phone playtest; see `docs/GATE-A-VALIDATION.md`.
 - **Gate B (party battle)** — partial: recruit infantry/archers, F/H/C orders, archers shoot, 35/65 dead/wounded split. Gaps: stats hardcoded (not from `data/troops.js`), no armor/damage formula, no loot, wounded heal instantly on "Return to Camp" instead of after 2 campaign days, no return-to-map.
 - **Gates C–E** — not started (no world map, character, inventory, trade, upkeep, quests, export/import, audio, tutorial).
 
@@ -42,11 +42,11 @@ Each step should leave the game deployable. Bold items are the critical path.
 - [x] 0.3 Add a CI job that runs tests + lint before the Pages deploy.
 - [x] 0.4 Fix the settlement data defects in §1.3; rewrite README.
 
-### Phase 1 — Finish Gate A (combat feel)
-- [ ] 1.1 Attack lifecycle per GDD: windup 0.16 → active 0.12 → recovery 0.24 s, one hit per target per swing, 90° arc, 100 ms input buffer.
-- [ ] 1.2 Block rules: 120° frontal arc, cannot start during an active swing, block/hit SFX-ready feedback hooks.
-- [ ] 1.3 Lifecycle: auto-pause on `visibilitychange`/blur, orientation/resize handling, touch-target ≥48 px check.
-- [ ] 1.4 Playtest on a real phone → record `docs/GATE-A-VALIDATION.md`.
+### Phase 1 — Finish Gate A (combat feel) — code done in 0.4.0, phone playtest pending
+- [x] 1.1 Attack lifecycle per GDD: windup 0.16 → active 0.12 → recovery 0.24 s, one hit per target per swing, 90° arc, 100 ms input buffer.
+- [x] 1.2 Block rules: 120° frontal arc, cannot start during an active swing, block/hit SFX-ready feedback hooks.
+- [x] 1.3 Lifecycle: auto-pause on `visibilitychange`/blur, orientation/resize handling, touch-target ≥48 px check.
+- [ ] 1.4 Playtest on a real phone → fill in the checklist in `docs/GATE-A-VALIDATION.md` (desktop validation already recorded there).
 
 ### Phase 2 — Finish Gate B (party battle slice)
 - [ ] 2.1 **Load `data/*.js` in `index.html`; build a small `ContentDB` with load-time validation.**
