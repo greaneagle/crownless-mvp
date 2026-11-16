@@ -16,7 +16,7 @@
     stonebridge_elder: {
       id: 'stonebridge_elder',
       speaker: 'Elder Maren',
-      start: [{ if: { quest: 'q1', stage: 'q1_report' }, node: 'q1_report' }, { if: { not: { flag: 'met_elder' } }, node: 'first' }, 'again'],
+      start: [{ if: { quest: 'q1', stage: 'q1_report' }, node: 'q1_report' }, { if: { quest: 'q4', stage: 'q4_declare' }, node: 'q4_road' }, { if: { not: { flag: 'met_elder' } }, node: 'first' }, 'again'],
       nodes: {
         first: {
           text: [
@@ -37,7 +37,10 @@
             'Stonebridge has stood at this ford since before the empire. It will stand after.',
             { if: { renown: 20 }, text: 'People in the square speak of your band, {name}. Kindly, mostly.' },
             { if: { standing: 'valedorn', is: 'hostile' }, text: 'The Crown’s riders were asking after you. I told them nothing — but be careful here.' },
-            { if: { standing: 'valedorn', is: 'friendly' }, text: 'The Crown’s captains speak well of you. That opens doors in this town.' }
+            { if: { standing: 'valedorn', is: 'friendly' }, text: 'The Crown’s captains speak well of you. That opens doors in this town.' },
+            { if: { flag: 'ending', is: 'compromise' }, text: 'The Warden of the Road! Sit, sit — the children want to hear about the parley again.' },
+            { if: { flag: 'ending', is: 'valedorn' }, text: 'Greywall stays blue, and Stonebridge breathes easier. You did that.' },
+            { if: { flag: 'ending', is: 'aurelian' }, text: 'Red over Greywall. Strange days. But the war is over, and that is something.' }
           ],
           options: [
             { text: 'Is there work for me?', if: { quest: 'q1', is: 'unstarted' }, next: 'q1_work' },
@@ -89,6 +92,24 @@
             'You have earned your wage. But there is something else — something that came back with you.'
           ],
           options: [{ text: 'What is it?', do: [{ give: 'charter_fragment' }, { set: 'knows_charter' }, { complete: 'q1' }], next: 'q1_charter' }]
+        },
+        q4_road: {
+          services: false,
+          text: [
+            'Both armies are marching on Greywall, {name}, and Stonebridge sits between them. Whoever wins, we bury our sons.',
+            'There are hard men on both sides who want this war, and they have hired blades to start it. Break those blades, and the envoys will have to talk instead.',
+            { if: [{ has: 'courier_packet' }, { flag: 'has_evidence' }], text: 'And you still carry Oswin’s packet. Two charters, both sealed — lay that on the parley table and neither crown can claim the law is theirs alone.' },
+            { if: { not: [{ has: 'courier_packet' }, { flag: 'has_evidence' }] }, text: 'Without proof that neither claim is clean, though, they may only listen to the winner of the field.' }
+          ],
+          options: [
+            { text: 'I’ll stand for the road — for neither crown.', do: [{ set: 'q4_side', to: 'road' }, { stage: 'q4_field_road', quest: 'q4' }], next: 'q4_road_sworn' },
+            { text: 'I have not decided yet.' }
+          ]
+        },
+        q4_road_sworn: {
+          services: false,
+          text: ['Then the road thanks you. Ride for Greywall — and come home.'],
+          options: [{ text: 'I will.' }]
         },
         q1_charter: {
           services: false,
@@ -143,6 +164,32 @@
             'A levy with a full belly fights twice as hard.',
             { if: { quest: 'q1', stage: 'q1_recruits' }, text: 'Three, Maren said. You have hired {flag:q1_hired} so far.' },
             { if: { quest: 'q1', stage: 'q1_drill' }, text: 'Now take them out and win a fight. Nothing teaches like the first one.' }
+          ]
+        }
+      }
+    },
+    // GDD §4 Q4: "a short negotiation scene" at Greywall after the deciding battle.
+    greywall_parley: {
+      id: 'greywall_parley',
+      speaker: 'The Parley at Greywall',
+      place: 'greywall_fort',
+      visible: { quest: 'q4', stage: 'q4_terms' },
+      start: 'terms',
+      nodes: {
+        terms: {
+          services: false,
+          text: [
+            'In a tent below Greywall’s walls, Captain Aldric and Magistrate Vell sit across a trestle table. Both look at you.',
+            { if: { flag: 'q4_side', is: 'valedorn' }, text: 'Aldric smiles; Vell does not. The field was the Crown’s, and everyone in the tent knows who won it.' },
+            { if: { flag: 'q4_side', is: 'aurelian' }, text: 'Vell inclines her head; Aldric stares at the table. The field was the Remnant’s, and everyone in the tent knows who won it.' },
+            { if: { flag: 'q4_side', is: 'road' }, text: 'Neither army fired a shot. They are here because you made them talk — and they are waiting to see what you will say.' },
+            { if: [{ flag: 'q4_side', is: 'road' }, { not: [{ has: 'courier_packet' }, { flag: 'has_evidence' }] }], text: 'Without proof, neither will yield the law to the other. One of them must have the fort.' }
+          ],
+          options: [
+            { text: 'Greywall stays with the Crown.', if: { any: [{ flag: 'q4_side', is: 'valedorn' }, [{ flag: 'q4_side', is: 'road' }, { not: [{ has: 'courier_packet' }, { flag: 'has_evidence' }] }]] }, do: [{ owner: 'greywall_fort', to: 'valedorn' }, { rep: 'valedorn', by: 25 }, { rep: 'aurelian', by: -25, if: { flag: 'q4_side', is: 'valedorn' } }, { complete: 'q4' }, { ending: 'valedorn', quest: 'q4' }] },
+            { text: 'Greywall passes to the Remnant.', if: { any: [{ flag: 'q4_side', is: 'aurelian' }, [{ flag: 'q4_side', is: 'road' }, { not: [{ has: 'courier_packet' }, { flag: 'has_evidence' }] }]] }, do: [{ owner: 'greywall_fort', to: 'aurelian' }, { rep: 'aurelian', by: 25 }, { rep: 'valedorn', by: -25, if: { flag: 'q4_side', is: 'aurelian' } }, { complete: 'q4' }, { ending: 'aurelian', quest: 'q4' }] },
+            { text: 'Lay both charters on the table: neither claim is clean.', if: [{ flag: 'q4_side', is: 'road' }, { has: 'courier_packet' }, { flag: 'has_evidence' }], do: [{ take: 'courier_packet' }, { rep: 'valedorn', by: 25 }, { rep: 'aurelian', by: 25 }, { complete: 'q4' }, { ending: 'compromise', quest: 'q4' }] },
+            { text: 'Not yet. I need a moment.' }
           ]
         }
       }
@@ -213,7 +260,7 @@
     valedorn_agent: {
       id: 'valedorn_agent',
       speaker: 'Captain Aldric',
-      start: [{ if: [{ quest: 'q2', stage: 'q2_choose' }, { has: 'courier_packet' }], node: 'q2' }, { if: [{ quest: 'q2', is: 'done' }, { any: [{ quest: 'q3', is: 'unstarted' }, { quest: 'q3', stage: 'q3_choose' }] }], node: 'q3_offer' }, 'talk'],
+      start: [{ if: [{ quest: 'q2', stage: 'q2_choose' }, { has: 'courier_packet' }], node: 'q2' }, { if: [{ quest: 'q2', is: 'done' }, { any: [{ quest: 'q3', is: 'unstarted' }, { quest: 'q3', stage: 'q3_choose' }] }], node: 'q3_offer' }, { if: { quest: 'q4', stage: 'q4_declare' }, node: 'q4_declare' }, 'talk'],
       nodes: {
         q2: {
           services: false,
@@ -249,6 +296,20 @@
           text: ['Neither banner? Then may the road thank you, because I will not.'],
           options: [{ text: 'Someone has to.' }]
         },
+
+        q4_declare: {
+          services: false,
+          text: ['The Remnant has marched on Greywall. One battle will settle it. Stand with the Crown, {name}, and the Crown will stand with you.'],
+          options: [
+            { text: 'I stand with the Crown at Greywall.', do: [{ set: 'q4_side', to: 'valedorn' }, { stage: 'q4_field_valedorn', quest: 'q4' }], next: 'q4_sworn' },
+            { text: 'Not yet.' }
+          ]
+        },
+        q4_sworn: {
+          services: false,
+          text: ['Then ride for Greywall. Win the field, and the parley will listen to you.'],
+          options: [{ text: 'To Greywall.' }]
+        },
         q2_thanks: {
           services: false,
           text: ['Two charters… and only one of them true. The King’s lawyers will know which. You have done Valedorn a service it will not forget.'],
@@ -273,7 +334,7 @@
       id: 'aurelian_agent',
       speaker: 'Magistrate Vell',
       place: 'eastwatch',
-      start: [{ if: [{ quest: 'q2', stage: 'q2_choose' }, { has: 'courier_packet' }], node: 'q2' }, { if: [{ quest: 'q2', is: 'done' }, { any: [{ quest: 'q3', is: 'unstarted' }, { quest: 'q3', stage: 'q3_choose' }] }], node: 'q3_offer' }, 'talk'],
+      start: [{ if: [{ quest: 'q2', stage: 'q2_choose' }, { has: 'courier_packet' }], node: 'q2' }, { if: [{ quest: 'q2', is: 'done' }, { any: [{ quest: 'q3', is: 'unstarted' }, { quest: 'q3', stage: 'q3_choose' }] }], node: 'q3_offer' }, { if: { quest: 'q4', stage: 'q4_declare' }, node: 'q4_declare' }, 'talk'],
       nodes: {
         q2: {
           services: false,
@@ -308,6 +369,20 @@
           services: false,
           text: ['Neither banner? Then may the road thank you, because I will not.'],
           options: [{ text: 'Someone has to.' }]
+        },
+
+        q4_declare: {
+          services: false,
+          text: ['The Crown has drawn up its host before Greywall. One battle will decide whether the law comes home. Stand with us, {name}.'],
+          options: [
+            { text: 'I stand with the Remnant at Greywall.', do: [{ set: 'q4_side', to: 'aurelian' }, { stage: 'q4_field_aurelian', quest: 'q4' }], next: 'q4_sworn' },
+            { text: 'Not yet.' }
+          ]
+        },
+        q4_sworn: {
+          services: false,
+          text: ['Then ride for Greywall. Win the field, and the parley will listen to you.'],
+          options: [{ text: 'To Greywall.' }]
         },
         q2_thanks: {
           services: false,

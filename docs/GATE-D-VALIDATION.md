@@ -13,10 +13,56 @@ _Spec: GDD §3–§10 and §14 Gate D._
 | 4.5 AI cavalry; all 15 troop roles | ✅ 0.18.0 |
 | 4.6 Faction reputation and fort ownership | ✅ 0.19.0 |
 | 4.7 Quest and dialogue interpreter | ✅ 0.20.0 |
-| 4.8–4.12 Q1–Q4 and the companion Mara | 🟡 Q1 ✅ 0.21.0 · Q2 ✅ 0.22.0 · Mara ✅ 0.23.0 · Q3 ✅ 0.24.0 |
+| 4.8–4.12 Q1–Q4 and the companion Mara | ✅ Q1 0.21.0 · Q2 0.22.0 · Mara 0.23.0 · Q3 0.24.0 · Q4 0.25.0 |
 | 4.13 Escort and delivery contracts | ⬜ |
 | 4.14 Trade-world interactions and regional news | ⬜ |
 | 4.15 Gate D acceptance | ⬜ |
+
+---
+
+## Slice 11 — 0.25.0: Q4 "The Greywall Verdict" and the three endings (2026-11-17)
+
+### What's in (GDD §4 Q4: "One deciding field battle near Greywall, followed by a short negotiation scene. Outcome uses quest flags plus combat result: Valedorn victory, Aurelian victory, or compromise/independent road peace if the player refused full allegiance and met an optional evidence condition. Set fort ownership and faction status, show a brief ending panel, return to sandbox.")
+- **Start:** finishing Q3 begins Q4 ("Both banners march on Greywall").
+- **Declare:**
+  - for the Crown (Captain Aldric)
+  - for the Remnant (Magistrate Vell)
+  - for the road and neither crown (Elder Maren, who also tells you whether you hold the evidence)
+- **The deciding battle,** fought on the **Greywall courtyard** map (stage bands can now name their battlefield):
+  - **Aurelian Host** (17: spearmen, legionaries, skirmishers, marksmen, horse scouts) for the Crown
+  - **Valedorn Host** (17: footmen, guards, hunters, longbowmen, riders) for the Remnant
+  - **Hired Blades** (13 mercenaries and Reavers paid to start the war) for the road
+  - A lost battle can be fought again; the host waits.
+- **The parley:** *The Parley at Greywall* appears on Greywall's menu after the battle.
+  - **Crown:** Greywall goes to (or back to) Valedorn. Valedorn +25, Aurelian −25.
+  - **Remnant:** Greywall goes to Aurelian (recruits, banner and garrison follow). Aurelian +25, Valedorn −25.
+  - **Road peace (compromise):** only for a hero who declared for the road *and* kept Oswin's packet (Q2 `has_evidence`). The packet is laid on the table, both kingdoms +25, and Greywall keeps its garrison with its gates open to both.
+  - **Road without evidence:** the envoys make you pick a crown. That crown gets +25 with no betrayal penalty, so there's no soft-lock.
+  - Every ending pays 200 crowns, +15 renown and +150 XP.
+- **Ending panel:**
+  - A titled summary with lines that remember Q2 (the King's hall or the court archive) and Mara (at your side, or the place left for her at the fire).
+  - *Return to the March* puts you back where you were.
+  - The `ending` flag persists: the Elder, Aldric and Vell remember it, contracts continue, and the parley packs up.
+- **Interpreter additions:** an `ending` effect with per-quest `endings` (title plus conditional text, checked at boot), and stage band `map`.
+- **Edge cases:**
+  - *A fort changes owner before Q4:* the Crown ending retakes a Greywall flipped to Aurelian.
+  - *Companion wounded at story trigger:* covered in Q3.
+
+### Checks
+- `tests/q4.test.js` (8 tests) covers:
+  - Q3 starting Q4, and all three declarations
+  - **all three endings**, each with exact owner, reputation, ending flag and panel title, including the GDD edge case of Greywall changing hands first
+  - the road route without evidence (no soft-lock)
+  - retrying a lost battle and "not yet" at the parley
+  - Mara's fate in the ending text
+  - the sandbox after the ending (contracts, the Elder remembering, saves)
+- 261 tests pass; lint clean.
+- Browser, with real clicks:
+  - The preview save was set to the start of Q4 with the packet kept, the road route in Q3 and Mara saved.
+  - Tapped Elder Maren; her appeal mentioned the packet. Declared for the road, then left town and clicked the gold "Quest: Reavers 13" camp by Greywall.
+  - The *Hired Blades* encounter used its own text, and the battle was on the Greywall courtyard (2 waves, Mara in the line). After the debug win, rode into Greywall and opened *The Parley at Greywall*.
+  - *Lay both charters on the table* showed **"The Road Peace"** panel with Mara's line, and "Quest complete · +200 crowns · +15 renown".
+  - *Return to the March* went back to Greywall's menu, with the parley gone and both kingdoms at 25. The preview save was then restored.
 
 ---
 

@@ -116,7 +116,7 @@
             { note: 'You came too late. Mara was caught scouting alone and did not come back.' },
             { message: 'Word comes back from the road: Mara was caught alone. She is gone.' }
           ],
-          on: [{ event: 'battle', match: { win: true, tag: 'q3_column' }, do: [{ recall: 'mara' }, { set: 'mara_saved', if: { flag: 'mara_scouting' } }, { note: 'You reached the clash in time. Mara rode out of the smoke unhurt.', if: { flag: 'mara_scouting' } }, { clear: 'mara_scouting' }, { rep: 'valedorn', by: 25 }, { note: 'The Aurelian column is broken. The Crown is in your debt.' }, { complete: 'q3' }] }]
+          on: [{ event: 'battle', match: { win: true, tag: 'q3_column' }, do: [{ recall: 'mara' }, { set: 'mara_saved', if: { flag: 'mara_scouting' } }, { note: 'You reached the clash in time. Mara rode out of the smoke unhurt.', if: { flag: 'mara_scouting' } }, { clear: 'mara_scouting' }, { rep: 'valedorn', by: 25 }, { note: 'The Aurelian column is broken. The Crown is in your debt.' }, { complete: 'q3' }, { start: 'q4' }] }]
         },
         {
           id: 'q3_strike_valedorn',
@@ -131,7 +131,7 @@
             { note: 'You came too late. Mara was caught scouting alone and did not come back.' },
             { message: 'Word comes back from the road: Mara was caught alone. She is gone.' }
           ],
-          on: [{ event: 'battle', match: { win: true, tag: 'q3_column' }, do: [{ recall: 'mara' }, { set: 'mara_saved', if: { flag: 'mara_scouting' } }, { note: 'You reached the clash in time. Mara rode out of the smoke unhurt.', if: { flag: 'mara_scouting' } }, { clear: 'mara_scouting' }, { rep: 'aurelian', by: 25 }, { note: 'The Valedorn column is broken. The Remnant is in your debt.' }, { complete: 'q3' }] }]
+          on: [{ event: 'battle', match: { win: true, tag: 'q3_column' }, do: [{ recall: 'mara' }, { set: 'mara_saved', if: { flag: 'mara_scouting' } }, { note: 'You reached the clash in time. Mara rode out of the smoke unhurt.', if: { flag: 'mara_scouting' } }, { clear: 'mara_scouting' }, { rep: 'aurelian', by: 25 }, { note: 'The Valedorn column is broken. The Remnant is in your debt.' }, { complete: 'q3' }, { start: 'q4' }] }]
         },
         {
           id: 'q3_road',
@@ -146,22 +146,79 @@
             { note: 'You came too late. Mara was caught scouting alone and did not come back.' },
             { message: 'Word comes back from the road: Mara was caught alone. She is gone.' }
           ],
-          on: [{ event: 'battle', match: { win: true, tag: 'q3_raiders' }, do: [{ recall: 'mara' }, { set: 'mara_saved', if: { flag: 'mara_scouting' } }, { note: 'You reached the clash in time. Mara rode out of the smoke unhurt.', if: { flag: 'mara_scouting' } }, { clear: 'mara_scouting' }, { rep: 'valedorn', by: 10 }, { rep: 'aurelian', by: 10 }, { set: 'road_protector', if: { flag: 'q3_side', is: 'road' } }, { note: 'The caravan is safe. Both banners hear that someone still guards the road.' }, { complete: 'q3' }] }]
+          on: [{ event: 'battle', match: { win: true, tag: 'q3_raiders' }, do: [{ recall: 'mara' }, { set: 'mara_saved', if: { flag: 'mara_scouting' } }, { note: 'You reached the clash in time. Mara rode out of the smoke unhurt.', if: { flag: 'mara_scouting' } }, { clear: 'mara_scouting' }, { rep: 'valedorn', by: 10 }, { rep: 'aurelian', by: 10 }, { set: 'road_protector', if: { flag: 'q3_side', is: 'road' } }, { note: 'The caravan is safe. Both banners hear that someone still guards the road.' }, { complete: 'q3' }, { start: 'q4' }] }]
         }
       ],
       rewards: { gold: 120, renown: 15, xp: 100 }
     },
+    // GDD §4 Q4 (climax): one deciding field battle near Greywall, then a short negotiation. The
+    // outcome uses quest flags plus the battle: Valedorn victory, Aurelian victory, or the
+    // compromise / independent road peace — only for a hero who refused full allegiance AND kept
+    // Oswin's packet as evidence (Q2). Sets Greywall's owner and both kingdoms' standing, shows an
+    // ending panel, and the sandbox carries on.
     q4: {
       id: 'q4',
       title: 'The Greywall Verdict',
       giver: 'aurelian_agent',
-      summary: 'One battle near Greywall decides the fort, and the march with it.',
+      summary: 'Both banners march on Greywall. One battle and one parley will decide the fort, and the march with it.',
       stages: [
-        { id: 'q4_field_battle', journal: 'Win the deciding battle near Greywall.' },
-        { id: 'q4_negotiation', journal: 'Choose the terms of the settlement.' },
-        { id: 'q4_ending', journal: 'See the verdict through.' }
+        {
+          id: 'q4_declare',
+          journal: 'Both armies march on Greywall. Declare for the Crown (Captain Aldric, Stonebridge), for the Remnant (Magistrate Vell, Eastwatch), or for the road and neither crown (Elder Maren, Stonebridge).'
+        },
+        {
+          id: 'q4_field_valedorn',
+          journal: 'For the Crown: break the Aurelian host drawn up before Greywall Fort.',
+          band: { template: 'aurelian_patrol', name: 'Aurelian Host', tag: 'q4_host', near: 'greywall_fort', map: 'greywall_courtyard', troops: { spearman: 6, legionary: 3, skirmisher: 4, marksman: 2, horse_scout: 2 }, camp: true, text: 'The Aurelian host stands before Greywall’s gate in red ranks, legionaries at the centre, horse on the wings. The Crown’s eyes are on you.' },
+          on: [{ event: 'battle', match: { win: true, tag: 'q4_host' }, do: [{ stage: 'q4_terms' }, { note: 'The Aurelian host broke before Greywall. The envoys wait in the parley tent.' }, { message: 'The field is yours. Go to the parley at Greywall Fort.' }] }]
+        },
+        {
+          id: 'q4_field_aurelian',
+          journal: 'For the Remnant: break the Valedorn host holding Greywall’s approach.',
+          band: { template: 'valedorn_patrol', name: 'Valedorn Host', tag: 'q4_host', near: 'greywall_fort', map: 'greywall_courtyard', troops: { footman: 6, guard: 3, hunter: 4, longbowman: 2, rider: 2 }, camp: true, text: 'The Crown’s host holds the approach to Greywall behind a wall of blue shields, riders waiting on the flanks. The Remnant’s eyes are on you.' },
+          on: [{ event: 'battle', match: { win: true, tag: 'q4_host' }, do: [{ stage: 'q4_terms' }, { note: 'The Valedorn host broke before Greywall. The envoys wait in the parley tent.' }, { message: 'The field is yours. Go to the parley at Greywall Fort.' }] }]
+        },
+        {
+          id: 'q4_field_road',
+          journal: 'For the road: hired blades mean to start the war before either envoy can speak. Break them before Greywall Fort.',
+          band: { template: 'bandits', name: 'Hired Blades', tag: 'q4_host', near: 'greywall_fort', map: 'greywall_courtyard', troops: { mercenary: 5, reaver: 4, looter: 4 }, camp: true, text: 'Sell-swords and Reavers, paid by hard men on both sides, are spreading out to fire the first volley. Break them, and the envoys will have to talk.' },
+          on: [{ event: 'battle', match: { win: true, tag: 'q4_host' }, do: [{ stage: 'q4_terms' }, { note: 'The hired blades are broken. Neither army fired a shot. The envoys wait in the parley tent.' }, { message: 'The field is quiet. Go to the parley at Greywall Fort.' }] }]
+        },
+        { id: 'q4_terms', journal: 'Go to the parley at Greywall Fort and set the terms.' }
       ],
-      rewards: { gold: 200, renown: 15 }
+      rewards: { gold: 200, renown: 15, xp: 150 },
+      endings: {
+        valedorn: {
+          title: 'The Crown Holds Greywall',
+          text: [
+            'The blue banner flies over Greywall, and the Crown’s lawyers call the Aurelian charter a forgery. Valedorn remembers who rode for it.',
+            { if: { flag: 'q2_choice', is: 'valedorn' }, text: 'The packet you gave Captain Aldric is read aloud in the King’s hall.' },
+            { if: { flag: 'mara_saved' }, text: 'Mara rides at your side still, and the roads between the forts have never been better scouted.' },
+            { if: { flag: 'mara_gone', is: 'fell' }, text: 'Some nights, at the fire, you still leave a place for Mara.' },
+            'The Remnant licks its wounds east of the river. The roads are quieter — for now. The march goes on, and so do you.'
+          ]
+        },
+        aurelian: {
+          title: 'The Remnant Takes Greywall',
+          text: [
+            'The red banner rises over Greywall for the first time in thirty years. Imperial law has its fort back, and the Remnant remembers who won it.',
+            { if: { flag: 'q2_choice', is: 'aurelian' }, text: 'Magistrate Vell enters the packet you gave her into the court archive as proof of the Aurelian claim.' },
+            { if: { flag: 'mara_saved' }, text: 'Mara rides at your side still, and the roads between the forts have never been better scouted.' },
+            { if: { flag: 'mara_gone', is: 'fell' }, text: 'Some nights, at the fire, you still leave a place for Mara.' },
+            'The Crown swears it will return. The march goes on, and so do you.'
+          ]
+        },
+        compromise: {
+          title: 'The Road Peace',
+          text: [
+            'You lay both charters on the parley table — two eagles, two heirs, both forged. With the proof in front of them and no battle to hide behind, the envoys sign a road peace.',
+            'Greywall keeps its garrison, but its gates stay open to both crowns, and the roads between the forts are guarded in common.',
+            { if: { flag: 'mara_saved' }, text: 'Mara rides at your side still, and the roads between the forts have never been better scouted.' },
+            { if: { flag: 'mara_gone', is: 'fell' }, text: 'Some nights, at the fire, you still leave a place for Mara.' },
+            'Carters and drovers call you the Warden of the Road. The march goes on, and so do you.'
+          ]
+        }
+      }
     }
   };
 })(typeof window !== 'undefined' ? window : globalThis);

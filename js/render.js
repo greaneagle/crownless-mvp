@@ -714,7 +714,7 @@
   function draw() {
     const g = CL.game;
     ctx.clearRect(0, 0, W, H);
-    if (g.town && ['town', 'talk', 'trade', 'contracts', 'saves', 'character', 'settlement', 'journal'].includes(g.mode)) {
+    if (g.town && ['town', 'talk', 'trade', 'contracts', 'saves', 'character', 'settlement', 'journal', 'ending'].includes(g.mode)) {
       drawTown();
       if (performance.now() > g.messageUntil) CL.ui.$('#message').textContent = '';
       return;

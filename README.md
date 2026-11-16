@@ -1,4 +1,4 @@
-# Crownless 0.24.0 — The Border March
+# Crownless 0.25.0 — The Border March
 
 A single-player, top-down party-battle prototype in plain HTML5 Canvas and classic JavaScript. There's no bundler, no runtime dependencies and no server. It's published to GitHub Pages straight from `main`.
 
@@ -25,6 +25,7 @@ A single-player, top-down party-battle prototype in plain HTML5 Canvas and class
 - **Q2 — The Broken Seal:** Caravan Master Oswin in Eastwatch lost a sealed packet to Reavers on the river road. Fight them, cow them with a big enough company, or pay Wenna the Fence in Highmere for their secret. Then decide who sees the two rival Greywall charters: Captain Aldric of the Crown, Magistrate Vell of the Aurelians, or nobody.
 - **Mara:** after Q2, a former imperial scout waits by the inn in Stonebridge. Be honest with her and she rides with you for free, otherwise for 100 crowns. She fights beside you, wears the weapon and armour you give her, and finds faster roads (+1 Pathfinding).
 - **Q3 — Two Banners:** after Q2, Captain Aldric and Magistrate Vell both want your sword. Break the other side's column, sell one side's plans to the other, or refuse both and save a caravan from Reavers. Mara rides ahead to scout — reach the clash within 3 days or lose her for good.
+- **Q4 — The Greywall Verdict:** both banners march on Greywall. Declare for the Crown, the Remnant or the road, win the deciding battle in Greywall's courtyard, then set the terms at the parley. Three endings: the Crown holds Greywall, the Remnant takes it, or — if you refused both crowns and kept Oswin's packet — the Road Peace. The sandbox carries on afterwards.
 - **Story system:** quests and conversations are data (`data/quests.js`, `data/dialogue.js`) run by an interpreter with conditions, effects and event triggers. Talk to Elder Maren for a conversation that changes with your background, renown, reputation and who holds Greywall. The **Journal** lists your quests and objectives.
 - **Walk Stonebridge:** stroll the streets and talk to the innkeeper (food, rest, contracts, saving), the merchant (market), the sergeant (hire troops) and the elder. Tap a person to walk over and talk; the classic menu is a tap away.
 - **Three battlefields:** you fight on an open field, in a forest clearing (trees block movement and arrows) or at a walled fort courtyard, depending on where the fight happens. Forts show their garrison.

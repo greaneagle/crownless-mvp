@@ -69,6 +69,9 @@
     if (mode === 'journal') {
       return { title: 'QUEST JOURNAL', text: '', button: 'Back' };
     }
+    if (mode === 'ending') {
+      return { title: g.ending.title.toUpperCase(), text: g.ending.text, button: 'Return to the March' };
+    }
     if (mode === 'saves') {
       return { title: 'SAVE & EXPORT', text: '', button: 'Back' };
     }
@@ -181,7 +184,7 @@
         if (next) {
           CL.game.talk = { ...CL.game.talk, conv: next, line: next.text };
           changeMode('talk');
-        } else CL.town.backToPlace();
+        } else if (CL.game.mode !== 'ending') CL.town.backToPlace(); // an ending panel stays up
       });
     }
     const services = !conv || conv.services;
@@ -985,6 +988,19 @@
 
   // ---- Conversations from a settlement menu, and the Quest Journal (GDD screen 10) ----
 
+  /** The story's ending panel; afterwards the sandbox carries on (GDD §10). */
+  function showEnding(view) {
+    CL.game.ending = view;
+    CL.save.write();
+    changeMode('ending');
+  }
+
+  function closeEnding() {
+    CL.game.ending = null;
+    if (CL.campaign.world.location) CL.town.backToPlace();
+    else changeMode('map');
+  }
+
   function talkTo(dialogueId) {
     const conv = CL.story.talk(dialogueId);
     if (!conv) return;
@@ -1029,6 +1045,8 @@
   }
 
   CL.ui = {
+    showEnding,
+    closeEnding,
     talkTo,
     openJournal,
     closeJournal,

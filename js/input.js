@@ -50,6 +50,7 @@
         else CL.town.backToPlace();
       } else if (game.mode === 'talk') CL.town.backToPlace();
       else if (game.mode === 'journal') ui.closeJournal();
+      else if (game.mode === 'ending') ui.closeEnding();
       else if (game.mode === 'settlement') world.leaveSettlement();
       else if (game.mode === 'encounter') world.attackSite();
       else if (game.mode === 'result') world.returnToMap();

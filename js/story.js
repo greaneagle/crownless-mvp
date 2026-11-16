@@ -21,6 +21,7 @@
  *    { owner: 'greywall_fort', to: 'aurelian' }  { message: 'text' }  { note: 'text', quest: 'q1' }
  *    { companion: 'mara' } (joins)  { part: 'mara', reason: 'fell' } (leaves for good)
  *    { send: 'mara' } (rides ahead; out of the company until recalled)  { recall: 'mara' }
+ *    { ending: 'key', quest: 'q4' } (sets flag ending and shows that quest's ending panel)
  *    Any effect may carry its own `if` condition and is skipped when it fails.
  *
  *  Stages may also have: begin (effects when the stage starts), deadline (days) with expire
@@ -32,7 +33,7 @@
  *    settlement}, trade {settlement, good, side}, contract {template, giver}, talk {dialogue, node},
  *    parley {party, tag, outcome: 'intimidate' | 'toll'}.
  *
- * A stage may also need a band on the map: band: { template, tag, troops, name?, text?, camp?, near | between: [a, b] }
+ * A stage may also need a band on the map: band: { template, tag, troops, name?, text?, camp?, map?, near | between: [a, b] }
  * (camp: true holds its ground and only fights if the player goes to it; otherwise it ambushes)
  * (settlement or site ids). It is spawned when the stage begins, re-spawned if lost while the stage
  * is active (so nothing soft-locks), and removed once no active stage needs it. Battles against it
@@ -48,7 +49,7 @@
   const MAX_FLAGS = 200;
   const MAX_NOTES = 20;
   const COND_KEYS = ['flag', 'not', 'all', 'any', 'quest', 'gold', 'renown', 'level', 'soldiers', 'rep', 'standing', 'skill', 'attribute', 'background', 'has', 'owner', 'at', 'companion', 'room'];
-  const EFFECT_KEYS = ['set', 'clear', 'add', 'gold', 'renown', 'xp', 'food', 'rep', 'give', 'take', 'recruit', 'start', 'stage', 'complete', 'fail', 'owner', 'message', 'note', 'companion', 'part', 'send', 'recall'];
+  const EFFECT_KEYS = ['set', 'clear', 'add', 'gold', 'renown', 'xp', 'food', 'rep', 'give', 'take', 'recruit', 'start', 'stage', 'complete', 'fail', 'owner', 'message', 'note', 'companion', 'part', 'send', 'recall', 'ending'];
 
   const camp = () => CL.campaign;
   const quest = (id) => CL.content.table('quests')[id] || null;
@@ -147,6 +148,24 @@
     else if ('part' in e) CL.companion.part(c, e.part, e.reason || 'parted');
     else if ('send' in e) CL.companion.send(c, e.send);
     else if ('recall' in e) CL.companion.recall(c, e.recall);
+    else if ('ending' in e) showEnding(c, e.quest || ctx.quest, e.ending);
+  }
+
+  // ---- Endings (GDD §4 Q4: "show a brief ending panel, return to sandbox") ----
+
+  /** The ending's title and words, with its conditional lines resolved. */
+  function endingView(c, questId, key) {
+    const e = quest(questId)?.endings?.[key];
+    if (!e) return null;
+    return { key, title: format(e.title, c), text: nodeText({ text: e.text }, c) };
+  }
+
+  function showEnding(c, questId, key) {
+    const v = endingView(c, questId, key);
+    if (!v) return;
+    state(c).flags.ending = key;
+    CL.diag.log('info', 'Ending', { quest: questId, ending: key });
+    CL.ui.showEnding?.(v);
   }
 
   // ---- Quests ----
@@ -453,6 +472,7 @@
       }
       if (k === 'owner' && (C.settlements?.[e.owner]?.type !== 'fort' || !C.factions?.[e.to])) err(`${where}: bad owner effect`);
       if (['companion', 'part', 'send', 'recall'].includes(k) && !C.companions?.[e[k]]) err(`${where}: unknown companion ${e[k]}`);
+      if (k === 'ending' && !C.quests?.[e.quest || questId]?.endings?.[e.ending]) err(`${where}: unknown ending ${e.ending}`);
       if (e.if) checkCond(e.if, C, where, err);
     }
   }
@@ -509,6 +529,7 @@
           const map = Object.values(C.world_map || {})[0];
           const known = (x) => Boolean(C.settlements?.[x] || map?.sites?.[x]);
           if (!['bandit', 'patrol'].includes(C.party_templates?.[b.template]?.kind)) err(`${w}.${st.id}: band needs a bandit or patrol template`);
+          if (b.map && !C.battle_maps?.[b.map]) err(`${w}.${st.id}: unknown battle map ${b.map}`);
           if (!/^[a-z0-9_]{1,40}$/.test(b.tag || '')) err(`${w}.${st.id}: band needs a tag`);
           if (b.between ? !(b.between.length === 2 && b.between.every(known)) : !known(b.near)) err(`${w}.${st.id}: band needs a known place`);
           for (const [tid, n] of Object.entries(b.troops || {})) {
@@ -522,6 +543,10 @@
         }
       }
       for (const f of Object.keys(q.rewards?.rep || {})) if (!C.factions?.[f]) err(`${w}: unknown faction ${f} in rewards`);
+      for (const [key, e] of Object.entries(q.endings || {})) {
+        if (!e.title || !e.text) err(`${w}: ending ${key} needs a title and text`);
+        for (const x of Array.isArray(e.text) ? e.text : [e.text]) if (typeof x === 'object') checkCond(x.if, C, `${w}: ending ${key}`, err);
+      }
     }
   }
 
@@ -568,6 +593,7 @@
     bandSpec,
     tick,
     deadlineLeft,
+    endingView,
     emit,
     format,
     nodeText,

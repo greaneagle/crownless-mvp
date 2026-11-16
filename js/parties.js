@@ -296,9 +296,9 @@
       const p = find(c, g.partyId);
       if (!p) return null;
       const t = tpl(p.template);
-      const map = W().battleMapAt(c.world.x, c.world.y);
       const hostile = hostileTo(c, t);
       const spec = p.questTag ? CL.story.bandSpec(p.questTag, c) : null;
+      const map = spec?.map || W().battleMapAt(c.world.x, c.world.y); // a story battle may name its field
       const text = spec?.text || (hostile && t.hostileText ? t.hostileText : t.text);
       return { kind: 'party', name: spec?.name || t.name, text, troops: p.troops, hostile, def: battleDef(t, p.troops, map), party: p, t };
     }

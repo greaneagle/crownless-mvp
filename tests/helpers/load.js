@@ -75,6 +75,7 @@ function loadGame({ storage = memoryStorage(), random, party = true, worldPartie
     refresh: record('refresh'),
     hideBattleOverlays: record('hideBattleOverlays'),
     showSelectedGroup: record('showSelectedGroup'),
+    showEnding: record('showEnding'),
   };
   CL.campaign = CL.save.load();
   // Deterministic world: fixed seed, and (unless asked for) no moving parties to interfere.
