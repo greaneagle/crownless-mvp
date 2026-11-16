@@ -737,7 +737,7 @@
 
     // Recruit buttons: one per troop the settlement's owner offers (hidden when none).
     const offers = p.recruitsHere();
-    ['#recruitA', '#recruitB'].forEach((sel, i) => {
+    ['#recruitA', '#recruitB', '#recruitC'].forEach((sel, i) => {
       const b = $(sel);
       const id = offers[i];
       b.classList.toggle('hidden', !id);
@@ -783,7 +783,11 @@
 
   /** Show the selected group and highlight it plus that group's current order. */
   function showSelectedGroup(group) {
-    $('#selectedGroup').textContent = group === 'infantry' ? 'Infantry' : 'Archers';
+    $('#selectedGroup').textContent = { infantry: 'Infantry', archer: 'Archers', cavalry: 'Cavalry' }[group];
+    // GDD §7: unit sets without cavalry show cavalry as unavailable.
+    const hasCav = CL.game.allies?.some((a) => a.role === 'cavalry' && a.alive);
+    const cavBtn = document.querySelector('[data-group="cavalry"]');
+    if (cavBtn) cavBtn.disabled = !hasCav;
     const current = CL.game.orders[group];
     for (const b of document.querySelectorAll('[data-group]')) b.classList.toggle('active', b.dataset.group === group);
     for (const b of document.querySelectorAll('[data-order]')) b.classList.toggle('active', b.dataset.order === current);

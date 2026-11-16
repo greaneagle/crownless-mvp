@@ -13,6 +13,8 @@
     up: [48, 49, 50, 51],
   };
   const allyArt = { infantry: [72, 73, 74, 75], archer: [85, 86, 87, 88] };
+  // Mounted troops have their own art: blue-tabard Valedorn riders, red Aurelian scouts.
+  const troopArt = { rider: [204, 205, 206, 207], horse_scout: [210, 211, 212, 213] };
   const enemyArt = [92, 93, 94, 95, 120, 121, 122, 123, 200, 201, 202, 203];
   const worldTiles = [0, 1, 2, 3, 7, 12, 20, 34, 50, 61, 91, 110, 121, 132, 147, 167, 174];
 
@@ -36,6 +38,7 @@
     const used = new Set([
       ...Object.values(heroFrames).flat(),
       ...Object.values(allyArt).flat(),
+      ...Object.values(troopArt).flat(),
       ...enemyArt,
       // Townsfolk in walkable town hubs.
       ...Object.values(CL.content?.table('town_hubs') || {}).flatMap((h) => h.npcs.flatMap((n) => n.frames)),
@@ -104,5 +107,5 @@
     return cv;
   }
 
-  CL.assets = { imgs, heroFrames, allyArt, enemyArt, key, preload, heroSprite, CLOAK_TINT };
+  CL.assets = { imgs, heroFrames, allyArt, troopArt, enemyArt, key, preload, heroSprite, CLOAK_TINT };
 })(typeof window !== 'undefined' ? window : globalThis);

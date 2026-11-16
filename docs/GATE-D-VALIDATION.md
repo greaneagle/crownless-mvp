@@ -10,13 +10,28 @@ _Spec: GDD §3–§10 and §14 Gate D._
 | 4.2 Stonebridge walkable town hub | ✅ 0.16.0 |
 | 4.3 Three battle maps as distinct environments | ✅ 0.15.0 |
 | 4.4 Complete the item catalogue (~30) | ✅ 0.17.0 |
-| 4.5 AI cavalry; all 15 troop roles | ⬜ |
+| 4.5 AI cavalry; all 15 troop roles | ✅ 0.18.0 |
 | 4.6 Faction reputation and fort ownership | ⬜ |
 | 4.7 Quest and dialogue interpreter | ⬜ |
 | 4.8–4.12 Q1–Q4 and the companion Mara | ⬜ |
 | 4.13 Escort and delivery contracts | ⬜ |
 | 4.14 Trade-world interactions and regional news | ⬜ |
 | 4.15 Gate D acceptance | ⬜ |
+
+---
+
+## Slice 4 — 0.18.0: AI cavalry, all 15 troop roles (2026-11-16)
+
+### What's in (GDD §7: cavalry "charge momentum and pass-through behavior"; mounted charge damage ×1.2)
+- **Cavalry AI:** riders ramp up speed over 0.8 s. At momentum ≥ 0.6 a strike gets the GDD **1.2× charge bonus**. After striking they **ride through** the target (about 22 px past it), then wheel round for another run.
+- **Orders:** group **3 Cavalry** (key 3 or the button). Charge is the default. Hold keeps them in place until enemies come within 160 px; Follow keeps them near the hero and lets them ride down anyone within 180 px. Without living cavalry the button is greyed out and orders say "No cavalry in this battle".
+- **Deployment:** up to 6 riders form on the left wing behind the hero, clear of trees and walls.
+- **Art:** Riders and Horse Scouts use mounted sprites, drawn larger than foot soldiers.
+- **All 15 troops in play:** Footman → Rider and Spearman → Horse Scout upgrades are open, and **Mercenaries** can be hired in towns. A test checks that every troop type in `data/troops.js` can be recruited, reached by upgrade or met as an enemy.
+- **Fix:** a pyrrhic loss that wiped out a contract's marked band left the contract stuck as active. It now completes the contract.
+
+### Checks
+- `tests/cavalry.test.js`: deployment, charge bonus, pass-through, Hold/Follow, no-cavalry orders, upgrades, Mercenary hire, all-15 reachability, and 12 cavalry battles across the three maps (all end, nobody stuck in scenery). 194 tests pass; lint clean.
 
 ---
 

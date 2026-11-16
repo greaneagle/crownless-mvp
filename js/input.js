@@ -7,6 +7,7 @@
   const KEY_ORDERS = {
     Digit1: ['infantry', null],
     Digit2: ['archer', null],
+    Digit3: ['cavalry', null],
     KeyF: [null, 'follow'],
     KeyH: [null, 'hold'],
     KeyC: [null, 'charge'],
@@ -80,7 +81,7 @@
     $('#contractsBtn').onclick = () => ui.changeMode('contracts');
     bindSaves($);
     $('#gearBtn').onclick = ui.openSheet;
-    for (const sel of ['#recruitA', '#recruitB']) $(sel).onclick = (e) => party.recruit(e.currentTarget.dataset.troop);
+    for (const sel of ['#recruitA', '#recruitB', '#recruitC']) $(sel).onclick = (e) => party.recruit(e.currentTarget.dataset.troop);
     for (const sel of ['#buyFoodA', '#buyFoodB']) {
       $(sel).onclick = (e) => {
         if (CL.upkeep.buyFood(CL.campaign, Number(e.currentTarget.dataset.rations))) CL.save.write();

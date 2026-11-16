@@ -398,8 +398,11 @@
     if (win) remove(c, p);
     else {
       A().removeTroops(p.troops, fallenEnemyTroops);
-      if (!troopCount(p)) remove(c, p);
-      else p.ignoreUntil = c.day + IGNORE_AFTER.capture;
+      if (!troopCount(p)) {
+        // A pyrrhic loss: the player was beaten but took the whole band down with them.
+        if (p.contractId) CL.contracts.onTargetDefeated(c, p);
+        remove(c, p);
+      } else p.ignoreUntil = c.day + IGNORE_AFTER.capture;
     }
   }
 

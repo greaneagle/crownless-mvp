@@ -224,14 +224,16 @@
     if (u.role === 'hero') return heroFrames[u.face];
     if (u.role === 'infantry') return allyArt.infantry;
     if (u.role === 'archer') return allyArt.archer;
+    if (u.role === 'cavalry') return CL.assets.troopArt[u.troop] || CL.assets.troopArt.rider;
     return [u.art || 92];
   }
 
   /** Fallen unit: sprite laid on its side, faded. */
   function drawDowned(u) {
     const hero = u.role === 'hero';
-    const sh = hero ? 74 : 43;
-    const sw = hero ? 58 : 37;
+    const mounted = u.role === 'cavalry';
+    const sh = hero ? 74 : mounted ? 62 : 43;
+    const sw = hero ? 58 : mounted ? 42 : 37;
     const frames = unitFrames(u);
     const age = CL.game.t - u.downAt;
     ctx.save();
@@ -279,8 +281,9 @@
   function drawUnit(u) {
     if (!u?.alive) return;
     const hero = u.role === 'hero';
-    const sh = hero ? 74 : 43;
-    const sw = hero ? 58 : 37;
+    const mounted = u.role === 'cavalry';
+    const sh = hero ? 74 : mounted ? 62 : 43;
+    const sw = hero ? 58 : mounted ? 42 : 37;
     const x = u.x - sw / 2;
     const y = u.y - sh + 8;
 

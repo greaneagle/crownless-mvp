@@ -32,7 +32,9 @@
   function recruitsHere(camp = c()) {
     const s = currentSettlement(camp);
     if (!offers(s, 'recruit')) return [];
-    return CL.content.get('factions', s.ownerFaction).recruits || [];
+    const own = CL.content.get('factions', s.ownerFaction).recruits || [];
+    // Towns also have sell-swords for hire: the neutral Mercenary (the 15th troop type).
+    return s.type === 'town' ? [...own, 'mercenary'] : own;
   }
 
   const canRest = (camp = c()) => offers(currentSettlement(camp), 'rest');
@@ -51,7 +53,7 @@
 
   // ---- Troop upgrades (GDD §7) ----
 
-  /** Upgrade paths from a troop: main and alternate branch. Cavalry stays locked until mounted AI. */
+  /** Upgrade paths from a troop: main and alternate branch (Footman → Rider, Spearman → Horse Scout). */
   function upgradeOptions(troopId) {
     const t = CL.content.troop(troopId);
     return [
@@ -59,10 +61,7 @@
       [t.altUpgradeTo, t.altUpgradeCost],
     ]
       .filter(([to]) => to)
-      .map(([to, cost]) => {
-        const target = CL.content.troop(to);
-        return { to, cost, xp: UPGRADE_XP[t.tier], locked: target.role === 'cavalry' ? 'Cavalry training comes later' : null };
-      });
+      .map(([to, cost]) => ({ to, cost, xp: UPGRADE_XP[t.tier], locked: null }));
   }
 
   const readyFor = (s) => s.woundedUntil === null && s.xp >= (UPGRADE_XP[CL.content.troop(s.troop).tier] ?? Infinity);

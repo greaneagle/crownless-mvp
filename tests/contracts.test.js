@@ -129,6 +129,15 @@ test('abandoning costs 2 renown; a finished contract cannot be abandoned', () =>
   assert.equal(CL.contracts.abandon(c), false);
 });
 
+test('a pyrrhic loss that wipes out the marked band still completes the contract', () => {
+  const { CL, c, p } = withContract();
+  p.troops = { looter: 1 };
+  CL.game.partyId = p.id;
+  CL.parties.onBattleResolved(false, p.id, ['looter']);
+  assert.equal(c.parties.includes(p), false);
+  assert.equal(c.contract.status, 'done', 'the band is broken');
+});
+
 test('GDD edge case: the target is destroyed off-screen — the contract is void, no penalty', () => {
   const { CL, c, p } = withContract();
   c.renown = 10;

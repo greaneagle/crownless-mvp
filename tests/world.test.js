@@ -61,9 +61,9 @@ test('travelling to Eastwatch takes road time, advances the clock and autosaves 
 
 test('recruits depend on the settlement owner and its services', () => {
   const { CL } = loadGame();
-  assert.deepEqual(Array.from(CL.party.recruitsHere()), ['levy', 'hunter']);
+  assert.deepEqual(Array.from(CL.party.recruitsHere()), ['levy', 'hunter', 'mercenary'], 'towns also hire sell-swords');
   CL.campaign.world.location = 'eastwatch';
-  assert.deepEqual(Array.from(CL.party.recruitsHere()), ['recruit', 'skirmisher']);
+  assert.deepEqual(Array.from(CL.party.recruitsHere()), ['recruit', 'skirmisher', 'mercenary']);
   assert.equal(CL.party.recruit('levy'), false, 'Aurelian town does not train Valedorn levies');
   assert.equal(CL.party.recruit('recruit'), true);
   CL.campaign.world.location = 'oakford'; // village: trade + rest only

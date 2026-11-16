@@ -15,7 +15,18 @@
   const SHOT_FLASH = 0.2;
   const KNOCKBACK = 6;
   const INPUT_BUFFER = 0.1; // GDD §6: a press up to 100 ms before recovery ends still swings
-  const DEPLOY_CAP = { infantry: 12, archer: 8 };
+  const DEPLOY_CAP = { infantry: 12, archer: 8, cavalry: 6 };
+  // GDD §7: cavalry accelerate toward a target, pass through, and turn for another run.
+  const CAVALRY = {
+    rampSeconds: 0.8, // from half to full speed while charging straight
+    chargeBonus: 1.2, // GDD §6 AttackModifier for a simple cavalry charge (AI only)
+    chargeMomentum: 0.6, // momentum needed for the bonus
+    passDistance: 22, // this close, the rider rides on through
+    overrunSeconds: 0.6, // how long they keep going before wheeling round
+    followRange: 180, // on Follow, engage enemies this close
+    holdRange: 160, // on Hold, engage enemies this close
+    followGap: 80, // otherwise stay this near the hero
+  };
   const DEFAULT_ENCOUNTER = 'captains_trial';
   const GUARD_SPEED = 0.65;
   const MAX_DT = 0.05;
@@ -58,13 +69,13 @@
     g.effects = [];
     g.attackQueuedAt = null;
     g.group = 'infantry';
-    g.orders = { infantry: 'follow', archer: 'hold' };
+    g.orders = { infantry: 'follow', archer: 'hold', cavalry: 'charge' };
     g.battleMap = CL.content.get('battle_maps', enc.map || 'grass_field');
     const anchor = g.battleMap.spawn.hero;
     g.hero = makeUnit(anchor.x, anchor.y, 'ally', 'hero');
     Object.assign(g.hero, CL.character.heroCombat()); // HP, damage, armor, shield from the character
     g.hero.face = 'right';
-    const placed = { infantry: 0, archer: 0 };
+    const placed = { infantry: 0, archer: 0, cavalry: 0 };
     for (const s of CL.party.healthySoldiers()) {
       const role = CL.content.troop(s.troop).role;
       if (!(role in placed) || placed[role] >= DEPLOY_CAP[role]) continue;
@@ -72,7 +83,9 @@
       const [x, y] =
         role === 'infantry'
           ? [anchor.x - 95 + (i % 3) * 42, anchor.y - 85 + Math.floor(i / 3) * 47]
-          : [anchor.x - 166 + (i % 3) * 40, anchor.y + 58 + Math.floor(i / 3) * 44];
+          : role === 'archer'
+            ? [anchor.x - 166 + (i % 3) * 40, anchor.y + 58 + Math.floor(i / 3) * 44]
+            : [anchor.x - 210 + (i % 2) * 52, anchor.y - 120 + Math.floor(i / 2) * 56]; // cavalry on the left wing
       const u = makeUnit(x, y, 'ally', s.troop, s.id);
       CL.units.resolveObstacles(u); // form up around trees and walls
       g.allies.push(u);
@@ -172,7 +185,7 @@
       if (!v?.alive || u.swing.hit.includes(v.id)) continue;
       if (dist(u, v) > u.reach || !inArc(u, v, ARC.attack)) continue;
       u.swing.hit.push(v.id);
-      hit(v, u.damage, u);
+      hit(v, u.damage * (u.chargeBonus || 1), u);
     }
   }
 
@@ -191,7 +204,54 @@
     if (u.alive) advanceSwing(u, dt);
   }
 
+  /** Move along a direction at a fraction of the unit's speed (charging cavalry). */
+  function ride(u, dx, dy, dt, factor) {
+    const s = u.speed;
+    u.speed = s * factor;
+    move(u, dx, dy, dt);
+    u.speed = s;
+  }
+
+  function cavalryAi(u, dt) {
+    tickTimers(u, dt);
+    u.aiTimer -= dt;
+    if (u.aiTimer <= 0 || (u.target && !u.target.alive)) {
+      u.aiTimer = rand(0.17, 0.41);
+      u.target = nearestAlive(u, opponentsOf(u)) || null;
+    }
+    u.momentum ??= 0;
+    const target = u.target;
+    const g = game();
+    const cmd = u.team === 'ally' ? g.orders.cavalry : 'charge';
+    // Hold and Follow keep the horsemen back until enemies come close.
+    if (!target || (cmd === 'hold' && dist(u, target) > CAVALRY.holdRange) || (cmd === 'follow' && dist(u, target) > CAVALRY.followRange)) {
+      u.momentum = 0;
+      u.overrun = 0;
+      const home = cmd === 'hold' ? { x: u.holdX, y: u.holdY } : g.hero;
+      const gap = cmd === 'hold' ? 5 : CAVALRY.followGap;
+      if (u.team === 'ally' && home && dist(u, home) > gap + 5) move(u, home.x - u.x, home.y - u.y, dt);
+      return;
+    }
+    if (u.overrun > 0) {
+      // Riding on through after the pass, then wheel round for another run.
+      u.overrun -= dt;
+      ride(u, u.runDir[0], u.runDir[1], dt, 0.5 + 0.5 * u.momentum);
+      if (u.overrun <= 0) u.momentum *= 0.4;
+      return;
+    }
+    const [dx, dy] = normalize(target.x - u.x, target.y - u.y);
+    u.runDir = [dx, dy];
+    u.momentum = Math.min(1, u.momentum + dt / CAVALRY.rampSeconds);
+    ride(u, dx, dy, dt, 0.5 + 0.5 * u.momentum);
+    if (dist(u, target) < u.reach - 1 && !u.swing && u.attackCooldown <= 1e-6) {
+      u.chargeBonus = u.momentum >= CAVALRY.chargeMomentum ? CAVALRY.chargeBonus : 1;
+      startAttack(u);
+    }
+    if (dist(u, target) < CAVALRY.passDistance) u.overrun = CAVALRY.overrunSeconds;
+  }
+
   function ai(u, dt) {
+    if (u.role === 'cavalry' && u.alive) return cavalryAi(u, dt);
     if (!u.alive) return;
     tickTimers(u, dt);
     u.aiTimer -= dt;
@@ -308,6 +368,10 @@
   function order(group, cmd) {
     const g = game();
     if (group) g.group = group;
+    if (cmd && g.group === 'cavalry' && !g.allies.some((a) => a.role === 'cavalry' && a.alive)) {
+      CL.ui.message('No cavalry in this battle'); // GDD §7: cavalry shown as unavailable
+      return;
+    }
     if (cmd) {
       g.orders[g.group] = cmd;
       if (cmd === 'hold') {
@@ -323,6 +387,7 @@
   }
 
   CL.combat = {
+    CAVALRY,
     COOLDOWN,
     INPUT_BUFFER,
     DEPLOY_CAP,

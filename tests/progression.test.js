@@ -70,11 +70,12 @@ test('GDD party cap: min(20, 8 + 2×Leadership + floor(Renown/40))', () => {
   assert.equal(CL.party.recruit('levy'), false, 'full at 8');
 });
 
-test('upgrade trees follow the GDD; cavalry stays locked for now', () => {
+test('upgrade trees follow the GDD, including the cavalry branches', () => {
   const { CL } = loadGame();
   const opts = (id) => Array.from(CL.party.upgradeOptions(id), (o) => `${o.to}:${o.cost}:${o.xp}:${o.locked ? 'locked' : 'ok'}`);
   assert.deepEqual(opts('levy'), ['footman:25:40:ok', 'hunter:25:40:ok']);
-  assert.deepEqual(opts('footman'), ['guard:60:100:ok', 'rider:90:100:locked']);
+  assert.deepEqual(opts('footman'), ['guard:60:100:ok', 'rider:90:100:ok']);
+  assert.deepEqual(opts('spearman'), ['legionary:60:100:ok', 'horse_scout:90:100:ok']);
   assert.deepEqual(opts('recruit'), ['spearman:25:40:ok', 'skirmisher:25:40:ok']);
   assert.deepEqual(opts('hunter'), ['longbowman:60:100:ok']);
   assert.deepEqual(opts('guard'), []);
@@ -98,7 +99,7 @@ test('upgrading spends XP and gold, skips the wounded and the unready, stops whe
   c.gold = 100;
   assert.equal(CL.party.upgrade('levy', 'hunter'), 1);
   assert.equal(b.troop, 'hunter');
-  assert.equal(CL.party.upgrade('footman', 'rider'), 0, 'cavalry locked');
+  assert.equal(CL.party.upgrade('footman', 'rider'), 0, 'not enough XP yet');
 });
 
 test('battle XP: hero by result and kills; soldiers who fought, half if wounded, plus their kills', () => {
