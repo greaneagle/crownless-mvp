@@ -413,6 +413,26 @@
       }),
     );
 
+    // Armoury: what this place sells, with how it compares to what you're wearing.
+    const stock = T.gearStock(sid);
+    $('#armouryHead').classList.toggle('hidden', !stock.length);
+    $('#tradeArmoury').replaceChildren(
+      ...stock.map((id) => {
+        const it = CL.content.item(id);
+        const price = T.gearBuyPrice(c, id);
+        const worn = it.slot ? c.equipment[it.slot] : null;
+        const vs = worn ? ` — wearing ${CL.content.item(worn).name}` : it.slot ? ' — slot empty' : '';
+        return li(`${it.name}${itemSummary(it)}${vs}`, `Buy · ${price}`, () => {
+          tradeAction(() => T.buyGear(c, sid, id));
+          if (it.slot) message(`Bought ${it.name} — equip it from Character & gear.`);
+        });
+      }),
+    );
+    for (const b of document.querySelectorAll('#tradeArmoury button')) {
+      const id = stock[[...document.querySelectorAll('#tradeArmoury button')].indexOf(b)];
+      b.disabled = c.gold < T.gearBuyPrice(c, id);
+    }
+
     const gear = Object.entries(c.inventory).filter(([id]) => T.gearPrice(c, id) > 0);
     $('#tradeGear').replaceChildren(
       ...(gear.length

@@ -16,6 +16,7 @@ function makeBot(CL, { log = () => {} } = {}) {
     contractsDone: 0,
     hired: 0,
     upgraded: 0,
+    gearBought: 0,
     foodBought: 0,
     minGold: Infinity,
     stuck: 0,
@@ -48,6 +49,18 @@ function makeBot(CL, { log = () => {} } = {}) {
       const afford = Math.floor(camp.gold / U().rationPrice(camp)) - 2;
       const n = Math.min(want, afford);
       if (n > 0 && U().buyFood(camp, n)) stats.foodBought += n;
+    }
+    // Shop for better gear when there's money to spare after a safety reserve.
+    const score = (id) => {
+      const it = id ? CL.content.item(id) : null;
+      return it ? (it.stats.damage || 0) + (it.stats.armor || 0) * 3 + (it.stats.travel || 0) * 10 : -1;
+    };
+    for (const id of CL.trade.gearStock(sid)) {
+      const it = CL.content.item(id);
+      if (!it.slot || score(id) <= score(camp.equipment[it.slot])) continue;
+      const reserve = U().weeklyWages(camp) * 2 + 8 * U().dailyRations(camp) + 80;
+      if (camp.gold < CL.trade.gearBuyPrice(camp, id) + reserve) continue;
+      if (CL.trade.buyGear(camp, sid, id).ok && CL.character.equip(id)) stats.gearBought++;
     }
     for (const t of [...new Set(camp.roster.map((x) => x.troop))]) {
       for (const o of CL.party.upgradeOptions(t)) {

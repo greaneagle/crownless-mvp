@@ -69,11 +69,11 @@ test('a battle pays out exactly once', () => {
 
 test('loot: one roll per kill at the encounter chance, picked by weight', () => {
   // kill 1: 0.1 < 0.3 → drop, pick 0 → first entry (food). kill 2: 0.5 → no drop.
-  // kill 3: 0.2 → drop, pick 0.999 → last entry (oak shield).
+  // kill 3: 0.2 → drop, pick 0.999 → last entry of the 'mid' table (nag).
   const { CL } = loadGame({ random: scripted([0.1, 0, 0.5, 0.2, 0.999]) });
   const enc = CL.content.encounter('captains_trial');
   const loot = CL.party.rollLoot(enc, 3);
-  assert.deepEqual({ ...loot }, { food_3_days: 1, oak_shield: 1 });
+  assert.deepEqual({ ...loot }, { food_3_days: 1, nag: 1 });
 });
 
 test('loot is added to the pack on victory', () => {

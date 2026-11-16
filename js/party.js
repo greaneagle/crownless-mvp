@@ -166,11 +166,12 @@
   /** Weighted loot: one roll per kill at the encounter's chance. Returns { itemId: count }. */
   function rollLoot(enc, kills) {
     const loot = {};
-    const table = enc.loot?.table || [];
+    const lt = CL.content.lootTable(enc.loot);
+    const table = lt?.table || [];
     const total = table.reduce((sum, e) => sum + e.weight, 0);
     if (!total) return loot;
     for (let i = 0; i < kills; i++) {
-      if (Math.random() >= enc.loot.chancePerKill) continue;
+      if (Math.random() >= lt.chancePerKill) continue;
       const entry = weightedPick(table, Math.random() * total);
       loot[entry.item] = (loot[entry.item] || 0) + 1;
     }

@@ -5,19 +5,6 @@
 (function (root) {
   root.CROWNLESS_CONTENT = root.CROWNLESS_CONTENT || {};
   var C = root.CROWNLESS_CONTENT;
-  var banditLoot = {
-    chancePerKill: 0.3,
-    table: [
-      { item: 'food_3_days', weight: 6 },
-      { item: 'clothing', weight: 4 },
-      { item: 'boots', weight: 3 },
-      { item: 'gloves', weight: 3 },
-      { item: 'worn_sword', weight: 3 },
-      { item: 'leather_chest', weight: 2 },
-      { item: 'iron_helm', weight: 1 },
-      { item: 'oak_shield', weight: 1 }
-    ]
-  };
   C.party_templates = {
     bandits: {
       id: 'bandits',
@@ -34,7 +21,8 @@
       troops: { looter: [3, 6], reaver: [0, 3] },
       toll: { base: 20, perTroop: 4 },
       reward: { goldBase: 15, goldPerKill: 3, renown: 2 },
-      loot: banditLoot,
+      // Loot tier by band size: up to 6 → low, up to 10 → mid, larger → high (data/items.js).
+      lootBySize: [[6, 'low'], [10, 'mid'], [99, 'high']],
       text: 'A ragged band of Road Reavers blocks the way, blades out.'
     },
     valedorn_patrol: {

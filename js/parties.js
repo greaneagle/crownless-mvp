@@ -203,6 +203,12 @@
         CL.diag.log('info', 'Off-screen battle', { winner: r.winner.template, loser: r.loser.template, losses: r.winnerLosses });
         if (r.loser.contractId) CL.contracts.onTargetLost(c, r.loser);
         remove(c, r.loser);
+        // A pyrrhic win: if the winner lost its last troops too, it is gone as well.
+        if (!troopCount(r.winner)) {
+          if (r.winner.contractId) CL.contracts.onTargetLost(c, r.winner);
+          remove(c, r.winner);
+          if (r.winner === a) break;
+        }
         if (r.loser === a) break;
       }
     }
@@ -270,7 +276,8 @@
     const list = A().expand(troops);
     const waves = [];
     for (let i = 0; i < list.length; i += WAVE_SIZE) waves.push(A().collapse(list.slice(i, i + WAVE_SIZE)));
-    return { id: `party_${t.id}`, name: t.name, map, waves, reward: t.reward, loot: t.loot };
+    const loot = t.lootBySize?.find(([max]) => list.length <= max)?.[1] || 'low';
+    return { id: `party_${t.id}`, name: t.name, map, waves, reward: t.reward, loot };
   }
 
   function open(partyId) {

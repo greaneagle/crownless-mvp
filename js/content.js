@@ -20,6 +20,7 @@
     'party_templates',
     'contracts',
     'town_hubs',
+    'loot_tables',
   ];
 
   const raw = () => root.CROWNLESS_CONTENT || {};
@@ -36,6 +37,8 @@
   }
 
   const troop = (id) => get('troops', id);
+  /** A loot table: an id from loot_tables, or an inline { chancePerKill, table }. */
+  const lootTable = (ref) => (typeof ref === 'string' ? get('loot_tables', ref) : ref || null);
   const item = (id) => get('items', id);
   const encounter = (id) => get('encounters', id);
 
@@ -68,6 +71,10 @@
     for (const s of Object.values(C.settlements || {})) {
       if (!C.factions?.[s.ownerFaction]) err(`settlement ${s.id}: unknown owner ${s.ownerFaction}`);
       if (s.type === 'fort' && !s.garrison) err(`settlement ${s.id}: forts need a garrison`);
+      for (const id of s.gear || []) {
+        const it = C.items?.[id];
+        if (!it || it.questItem || !(it.value > 0)) err(`settlement ${s.id}: armoury cannot sell ${id}`);
+      }
       for (const [id, n] of Object.entries(s.garrison || {})) {
         if (!C.troops?.[id] || !(Number.isInteger(n) && n > 0)) err(`settlement ${s.id}: bad garrison entry ${id}`);
       }
@@ -122,7 +129,8 @@
       if (t.home && !C.settlements?.[t.home]) err(`party_template ${t.id}: unknown home ${t.home}`);
       for (const s of t.route || []) if (!C.settlements?.[s]) err(`party_template ${t.id}: unknown route stop ${s}`);
       for (const g of t.goods || []) if (!C.markets?.[g]?.tradeGood) err(`party_template ${t.id}: unknown good ${g}`);
-      if (t.kind === 'bandit' && !(t.toll && t.reward && t.loot)) err(`party_template ${t.id}: bandits need toll, reward and loot`);
+      if (t.kind === 'bandit' && !(t.toll && t.reward && t.lootBySize)) err(`party_template ${t.id}: bandits need toll, reward and lootBySize`);
+      for (const [, id] of t.lootBySize || []) if (!C.loot_tables?.[id]) err(`party_template ${t.id}: unknown loot table ${id}`);
     }
     for (const m of Object.values(C.battle_maps || {})) {
       if (!m.ground?.base || !m.spawn?.hero || !m.spawn?.enemies) err(`battle_map ${m.id}: needs ground and spawns`);
@@ -159,10 +167,20 @@
           if (!(Number.isInteger(n) && n > 0)) err(`encounter ${e.id}: bad count for ${tid}`);
         }
       }
-      for (const entry of e.loot?.table || []) {
+      if (typeof e.loot === 'string' && !C.loot_tables?.[e.loot]) err(`encounter ${e.id}: unknown loot table ${e.loot}`);
+      const lt = typeof e.loot === 'string' ? C.loot_tables?.[e.loot] : e.loot;
+      for (const entry of lt?.table || []) {
         if (!C.items?.[entry.item]) err(`encounter ${e.id}: unknown loot item ${entry.item}`);
         else if (C.items[entry.item].questItem) err(`encounter ${e.id}: quest item ${entry.item} in random loot`);
         if (!(entry.weight > 0)) err(`encounter ${e.id}: bad weight for ${entry.item}`);
+      }
+    }
+    for (const lt of Object.values(C.loot_tables || {})) {
+      if (!(lt.chancePerKill > 0 && lt.chancePerKill <= 1)) err(`loot_table ${lt.id}: bad chancePerKill`);
+      for (const entry of lt.table || []) {
+        if (!C.items?.[entry.item]) err(`loot_table ${lt.id}: unknown item ${entry.item}`);
+        else if (C.items[entry.item].questItem) err(`loot_table ${lt.id}: quest item ${entry.item}`);
+        if (!(entry.weight > 0)) err(`loot_table ${lt.id}: bad weight for ${entry.item}`);
       }
     }
     return errors;
@@ -176,5 +194,5 @@
     return errors;
   }
 
-  CL.content = { TABLES, table, get, troop, item, encounter, validate, init };
+  CL.content = { TABLES, table, get, troop, item, encounter, lootTable, validate, init };
 })(typeof window !== 'undefined' ? window : globalThis);

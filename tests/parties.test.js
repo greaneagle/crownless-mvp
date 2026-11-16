@@ -73,6 +73,19 @@ test('off-screen fights: the loser is destroyed and the winner always takes loss
   }
 });
 
+test('a winner left with no troops is removed too (no empty parties on the map)', () => {
+  const { CL } = loadGame();
+  const c = CL.campaign;
+  const caravan = CL.parties.spawn(c, 'valedorn_caravan');
+  const band = CL.parties.spawn(c, 'bandits');
+  Object.assign(caravan, { x: 30, y: 30, troops: { levy: 1 } });
+  Object.assign(band, { x: 30, y: 30, troops: { looter: 1 } });
+  c.world.location = 'stonebridge';
+  CL.parties.tick(c, 0.25);
+  assert.ok(c.parties.every((p) => CL.parties.troopCount(p) > 0), 'no empty party left behind');
+  assert.ok(!c.parties.includes(caravan) || !c.parties.includes(band), 'one side lost');
+});
+
 test('caravans deliver goods (cheaper at the destination); robbed caravans make them scarcer', () => {
   const { CL } = loadGame();
   const c = CL.campaign;

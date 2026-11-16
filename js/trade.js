@@ -18,6 +18,7 @@
   const UNIT_IMPACT = 0.003; // scarcity change per unit traded (30 units ≈ 0.09)
   const DRIFT_PER_DAY = 0.1; // share of the gap to baseline closed each day
   const GEAR_SELL_FACTOR = 0.5; // gear sells for half its listed value (before Trade)
+  const GEAR_BUY_FACTOR = 1.3; // the armoury's markup; always above the sell price, so no flipping
   const CARRY = { base: 20, perSoldier: 10, horse: 30 };
   const HEAVY_SPEED = 0.7; // GDD §3: heavy party modifier between 0.7 and 1.0
 
@@ -114,6 +115,26 @@
     return Math.max(1, Math.round(it.value * GEAR_SELL_FACTOR * (1 + 0.01 * tradeSkill(c))));
   }
 
+  /** What a settlement's armoury stocks (only where there is a market). */
+  const gearStock = (sid) => (hasMarket(sid) ? settlement(sid).gear || [] : []);
+
+  function gearBuyPrice(c, itemId) {
+    const it = CL.content.item(itemId);
+    return Math.max(1, Math.round(it.value * GEAR_BUY_FACTOR * (1 - 0.01 * tradeSkill(c))));
+  }
+
+  /** Buy one item from the local armoury into the pack (food goes to the ration stock). */
+  function buyGear(c, sid, itemId) {
+    if (!gearStock(sid).includes(itemId)) return { ok: false, reason: 'Not sold here' };
+    const price = gearBuyPrice(c, itemId);
+    if (c.gold < price) return { ok: false, reason: 'Not enough crowns' };
+    c.gold -= price;
+    c.inventory[itemId] = (c.inventory[itemId] || 0) + 1;
+    CL.upkeep.stowFood(c);
+    CL.diag.log('info', 'Bought gear', { at: sid, item: itemId, cost: price });
+    return { ok: true, total: price };
+  }
+
   function sellGear(c, sid, itemId) {
     if (!hasMarket(sid)) return { ok: false, reason: 'No market here' };
     const price = gearPrice(c, itemId);
@@ -178,6 +199,9 @@
     sell,
     gearPrice,
     sellGear,
+    gearStock,
+    gearBuyPrice,
+    buyGear,
     drift,
     priceWord,
     sanitize,

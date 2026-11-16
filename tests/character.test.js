@@ -49,7 +49,7 @@ test('equip swaps through the pack atomically; unequip returns the item', () => 
   assert.equal(c.equipment.body, 'leather_chest');
   assert.equal(c.inventory.clothing, 1, 'old chest back in the pack');
   assert.equal('leather_chest' in c.inventory, false);
-  assert.equal(CL.character.heroCombat().armor, 2);
+  assert.equal(CL.character.heroCombat().armor, 3, 'Leather Jerkin');
 
   assert.equal(CL.character.equip('leather_chest'), false, 'none left in the pack');
   assert.equal(CL.character.equip('food_3_days'), false, 'not equipment');

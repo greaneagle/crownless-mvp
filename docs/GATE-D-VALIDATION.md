@@ -9,7 +9,7 @@ _Spec: GDD §3–§10 and §14 Gate D._
 | 4.1 All ten settlements with their services | ✅ All 10 enterable since 0.6.0 (recruit, trade, rest, contracts where listed); **fort garrisons** shown since 0.15.0 |
 | 4.2 Stonebridge walkable town hub | ✅ 0.16.0 |
 | 4.3 Three battle maps as distinct environments | ✅ 0.15.0 |
-| 4.4 Complete the item catalogue (~30) | ⬜ |
+| 4.4 Complete the item catalogue (~30) | ✅ 0.17.0 |
 | 4.5 AI cavalry; all 15 troop roles | ⬜ |
 | 4.6 Faction reputation and fort ownership | ⬜ |
 | 4.7 Quest and dialogue interpreter | ⬜ |
@@ -19,6 +19,46 @@ _Spec: GDD §3–§10 and §14 Gate D._
 | 4.15 Gate D acceptance | ⬜ |
 
 ---
+
+## Slice 3 — 0.17.0: Item catalogue, tiered loot, armouries (2026-11-16)
+
+### What's in (GDD §9: "Approximately 30 item definitions including weapons, helmets, armor, shields, boots, gloves, horses, goods and food"; "Loot uses small weighted tables tied to encounter tier"; income from "loot and sale of gear")
+- **The catalogue:** 28 items plus the 6 trade goods, 34 in all. Every gear slot has a tiered ladder:
+
+  | Slot | Ladder |
+  |---|---|
+  | Weapons | Worn Sword 17 → Hand Axe 19 → Arming Sword 21 → War Mace 22 → Knight's Sword 25 |
+  | Shields (all can block) | Oak → Kite (+1 armour) → Iron-Rimmed Heater (+2) |
+  | Helmets | Leather Cap 1 → Iron Helm 2 → Bascinet 3 |
+  | Body | Clothing 1 → Padded Gambeson 2 → Leather Jerkin 3 → Mail Hauberk 5 |
+  | Gloves | Work Gloves → Mail Mittens 1 |
+  | Boots | Boots 1 → Iron Greaves 2 |
+  | Horses | Nag +10% → Rouncey +20% → Courser +35% travel (all also add carrying capacity) |
+
+  There's also the Ring of Roads, two foods (Three Days of Food, Smoked Meat = 6 rations), and the 3 protected quest items. Each item has a `tier` (1–3).
+- **Changed stats:** the Iron Helm went from armour 1 to 2 and the Leather Jerkin from 2 to 3, to make room for the ladders.
+- **Tiered loot:** `loot_tables` low, mid and high in `data/items.js`, each richer than the last (checked by average value). Encounters name their table: the Looter Camp uses low, the Reaver Hideout mid. **Bandit bands pick by size**: up to 6 → low, up to 10 → mid, larger → high.
+- **Armouries** in every market:
+  - **Stonebridge** and **Eastwatch** stock the full range. Only the river port sells the Knight's Sword, the Heater and the Courser.
+  - Villages stock 3–4 basics; forts have none.
+  - Price: `round(value × 1.3 × (1 − 0.01 × Trade))`, always above the resale value, so buying and reselling can't make money. Checked for every stocked item at Trade 0 and 10.
+  - Each listing shows what you're wearing in that slot. Buying is all-or-nothing, and bought food goes straight into the ration stock.
+- **Content validation:** every loot-table item must exist and not be a quest item; armouries can only stock real, sellable items; bands need loot-size tiers.
+
+### Balance check (`npm run simulate`, 30 days × 8 seeds)
+The campaign bot now also buys better gear when it has money to spare after a safety reserve. Results: 4–8 pieces bought and 4–6 hero armour by day 30, ending gold 30–133 (gear is now a real money sink), levels 4–7, 5–14 contracts, still about 10–16 lost fights, and **0 stalls, 0 desertions**. Better gear helps without making the game trivial.
+
+### Bug found by the acceptance test
+The reload check in `tests/acceptance.test.js` found **empty "zombie" parties**. A winner of an off-screen fight that lost its last troops to attrition stayed on the map with 0 troops, and was dropped on reload, so the reload didn't match. The gear changes shifted the random sequence enough to expose it. Now a winner with nobody left is removed too, and there's a regression test.
+
+### Verification
+- **Automated:** `npm test` → 184/184. The new `tests/items.test.js` (7 tests) covers:
+  - catalogue size and slot coverage, and the tier ladders (value and power never go down)
+  - loot tables getting richer per tier with no quest items, and band size choosing the tier
+  - which places have armouries and what they stock
+  - buy prices above resale with all-or-nothing buying, and bought food becoming rations
+  - full heavy armour (13) cutting a Looter's hit from 7 to 5
+- **Browser:** Stonebridge merchant, then See my wares. The Armoury listed 18 items with what's worn in each slot. A **real click** bought a Padded Gambeson for 33, with the hint "equip it from Character & gear". Equipping it raised armour to 2, and Back returned to the streets. No errors were logged.
 
 ## Slice 2 — 0.16.0: Walkable Stonebridge (2026-11-16)
 

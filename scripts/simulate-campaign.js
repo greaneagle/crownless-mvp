@@ -54,6 +54,8 @@ function run(seed, days) {
     tolls: s.tolls,
     hired: s.hired,
     upgraded: s.upgraded,
+    gear: s.gearBought,
+    armor: CL.character.heroCombat().armor,
     desertions: count('Desertion'),
     starving: messages.filter((m) => /run out of food/.test(m)).length,
     unpaidWages: messages.filter((m) => /Wages short/.test(m)).length,

@@ -113,11 +113,11 @@ test('the ContentDB validator catches broken references', () => {
   const { CL } = loadGame();
   const raw = CL.content.table('encounters').captains_trial;
   raw.waves[0].dragon = 2;
-  raw.loot.table.push({ item: 'courier_packet', weight: 1 });
+  CL.content.table('loot_tables').mid.table.push({ item: 'courier_packet', weight: 1 });
   CL.content.table('troops').levy.upgradeTo = 'nobody';
   const errors = Array.from(CL.content.validate()).join('\n');
   assert.match(errors, /unknown troop dragon/);
-  assert.match(errors, /quest item courier_packet in random loot/);
+  assert.match(errors, /loot_table mid: quest item courier_packet/);
   assert.match(errors, /levy: unknown upgrade nobody/);
 });
 
