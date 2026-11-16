@@ -66,6 +66,10 @@
 
     for (const s of Object.values(C.settlements || {})) {
       if (!C.factions?.[s.ownerFaction]) err(`settlement ${s.id}: unknown owner ${s.ownerFaction}`);
+      if (s.type === 'fort' && !s.garrison) err(`settlement ${s.id}: forts need a garrison`);
+      for (const [id, n] of Object.entries(s.garrison || {})) {
+        if (!C.troops?.[id] || !(Number.isInteger(n) && n > 0)) err(`settlement ${s.id}: bad garrison entry ${id}`);
+      }
     }
     const tradeGoods = Object.values(C.markets || {}).filter((g) => g.tradeGood);
     if (tradeGoods.length !== 6) err(`markets: expected 6 trade goods, found ${tradeGoods.length}`);
@@ -118,6 +122,13 @@
       for (const s of t.route || []) if (!C.settlements?.[s]) err(`party_template ${t.id}: unknown route stop ${s}`);
       for (const g of t.goods || []) if (!C.markets?.[g]?.tradeGood) err(`party_template ${t.id}: unknown good ${g}`);
       if (t.kind === 'bandit' && !(t.toll && t.reward && t.loot)) err(`party_template ${t.id}: bandits need toll, reward and loot`);
+    }
+    for (const m of Object.values(C.battle_maps || {})) {
+      if (!m.ground?.base || !m.spawn?.hero || !m.spawn?.enemies) err(`battle_map ${m.id}: needs ground and spawns`);
+      for (const o of m.obstacles || []) {
+        const ok = o.shape === 'circle' ? o.r > 0 : o.shape === 'rect' && o.w > 0 && o.h > 0;
+        if (!ok) err(`battle_map ${m.id}: bad obstacle`);
+      }
     }
     for (const k of Object.values(C.contracts || {})) {
       if (!C.party_templates?.[k.band]) err(`contract ${k.id}: unknown band ${k.band}`);

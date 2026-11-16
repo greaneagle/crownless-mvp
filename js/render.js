@@ -6,15 +6,6 @@
 
   let ctx = null;
 
-  // [tile index, x, y, w, h] decorative world props on the grass field.
-  const PROPS = [
-    [91, 40, 70, 49, 57],
-    [91, 850, 75, 58, 63],
-    [34, 71, 430, 65, 72],
-    [50, 864, 411, 65, 72],
-    [110, 550, 90, 54, 55],
-    [121, 120, 89, 57, 62],
-  ];
   const FACE_ANGLE = { up: -Math.PI / 2, right: 0, down: Math.PI / 2, left: Math.PI };
 
   function init(canvas) {
@@ -33,40 +24,94 @@
     if (sprite) ctx.drawImage(sprite, Math.round(x), Math.round(y), w, h);
   }
 
+  /** Battle ground for the current map: base colour, tiled texture, patches, decor (no collision). */
   function drawGround() {
-    ctx.fillStyle = '#71904e';
+    const m = CL.game.battleMap || CL.content.get('battle_maps', 'grass_field');
+    const gr = m.ground;
+    ctx.fillStyle = gr.base;
     ctx.fillRect(0, 0, W, H);
 
     ctx.save();
     ctx.globalAlpha = 0.24;
+    const tiles = gr.tiles;
     for (let y = 0; y < H; y += 64) {
       for (let x = 0; x < W; x += 64) {
-        const k = (x * 3 + y * 7) % 5 === 0 ? 'w0001' : (x + y) % 3 === 0 ? 'w0002' : 'w0000';
+        const k = (x * 3 + y * 7) % 5 === 0 ? tiles[1 % tiles.length] : (x + y) % 3 === 0 ? tiles[2 % tiles.length] : tiles[0];
         drawImage(k, x, y, 65, 65);
       }
     }
     ctx.restore();
 
-    // Dirt arena.
-    ctx.fillStyle = '#a28e61';
-    ctx.beginPath();
-    ctx.ellipse(481, 271, 320, 182, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Grass speckles.
-    ctx.fillStyle = '#8d9560';
-    for (let i = 0; i < 60; i++) {
-      ctx.fillRect((i * 167 + 53) % W, (i * 113 + 39) % H, 4, 2);
+    if (gr.patch) {
+      ctx.fillStyle = gr.patch.color;
+      ctx.beginPath();
+      ctx.ellipse(gr.patch.x, gr.patch.y, gr.patch.rx, gr.patch.ry, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    if (gr.stone) {
+      // Flagstones inside the courtyard.
+      const st = gr.stone;
+      ctx.fillStyle = st.color;
+      ctx.fillRect(st.x, st.y, st.w, st.h);
+      ctx.strokeStyle = '#00000022';
+      ctx.lineWidth = 1;
+      for (let y = st.y; y < st.y + st.h; y += 20) {
+        for (let x = st.x + ((y / 20) % 2) * 16; x < st.x + st.w; x += 32) ctx.strokeRect(x, y, 32, 20);
+      }
     }
 
+    // Grass speckles.
+    ctx.fillStyle = '#ffffff12';
+    for (let i = 0; i < 60; i++) ctx.fillRect((i * 167 + 53) % W, (i * 113 + 39) % H, 4, 2);
+
     ctx.save();
-    ctx.globalAlpha = 0.75;
-    for (const [i, x, y, w, h] of PROPS) drawImage(CL.assets.key('w', i), x, y, w, h);
+    ctx.globalAlpha = 0.85;
+    for (const [tile, x, y, w, h] of m.decor || []) drawImage(tile, x, y, w, h);
     ctx.restore();
 
     ctx.strokeStyle = '#2c3c2e';
     ctx.lineWidth = 12;
     ctx.strokeRect(12, 12, W - 24, H - 24);
+  }
+
+  /** Where an obstacle sits in the depth order: its base line. */
+  const obstacleBase = (o) => (o.shape === 'circle' ? o.y + o.r * 0.5 : o.y + o.h);
+
+  function drawObstacle(o) {
+    if (o.look === 'wall' || o.look === 'crate') {
+      const wall = o.look === 'wall';
+      // Front face plus a lighter top edge, with block/plank lines.
+      ctx.fillStyle = wall ? '#6e675b' : '#8a6a3c';
+      ctx.fillRect(o.x, o.y, o.w, o.h);
+      ctx.fillStyle = wall ? '#9a937f' : '#a8844f';
+      ctx.fillRect(o.x, o.y - (wall ? 10 : 6), o.w, wall ? 10 : 6);
+      ctx.strokeStyle = '#00000044';
+      ctx.lineWidth = 1;
+      if (wall) {
+        for (let y = o.y; y < o.y + o.h; y += 11) {
+          for (let x = o.x + ((y / 11) % 2) * 9; x < o.x + o.w; x += 18) ctx.strokeRect(x, y, 18, 11);
+        }
+      } else {
+        ctx.strokeRect(o.x + 3, o.y + 3, o.w - 6, o.h - 6);
+        ctx.beginPath();
+        ctx.moveTo(o.x + 3, o.y + 3);
+        ctx.lineTo(o.x + o.w - 3, o.y + o.h - 3);
+        ctx.stroke();
+      }
+      ctx.strokeStyle = '#1b1208';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(o.x, o.y - (wall ? 10 : 6), o.w, o.h + (wall ? 10 : 6));
+      return;
+    }
+    if (o.look?.tile) {
+      const { tile, w, h } = o.look;
+      // Shadow, then the sprite standing on the obstacle's base.
+      ctx.fillStyle = '#00000033';
+      ctx.beginPath();
+      ctx.ellipse(o.x, o.y + o.r * 0.4, o.r * 1.2, o.r * 0.45, 0, 0, Math.PI * 2);
+      ctx.fill();
+      drawImage(tile, o.x - w / 2, o.y + o.r * 0.5 - h, w, h);
+    }
   }
 
   function unitFrames(u) {
@@ -521,7 +566,12 @@
     if (g.hero) chars.push(g.hero);
     chars.sort((a, b) => a.y - b.y); // painter's order by depth
     for (const u of chars) if (u.ground) drawDowned(u);
-    for (const u of chars) drawUnit(u);
+    // Living units and obstacles share one depth order, so units can pass behind trees and walls.
+    const scene = [
+      ...chars.filter((u) => u.alive).map((u) => [u.y, () => drawUnit(u)]),
+      ...(g.battleMap?.obstacles || []).map((o) => [obstacleBase(o), () => drawObstacle(o)]),
+    ].sort((p, q) => p[0] - q[0]);
+    for (const [, paint] of scene) paint();
 
     for (const a of g.arrows) {
       ctx.strokeStyle = a.team === 'ally' ? '#f6e8b4' : '#eec19e';

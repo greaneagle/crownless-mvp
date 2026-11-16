@@ -23,9 +23,15 @@
     if (mode === 'settlement') {
       const s = CL.party.currentSettlement();
       const owner = CL.content.get('factions', s.ownerFaction);
+      // GDD §8: forts show their garrison.
+      const garrison = s.garrison
+        ? ` Garrison: ${Object.values(s.garrison).reduce((a, b) => a + b, 0)} (${Object.entries(s.garrison)
+            .map(([id, n]) => `${n} ${plural(CL.content.troop(id).name, n)}`)
+            .join(', ')}).`
+        : '';
       return {
         title: s.name.toUpperCase(),
-        text: `${TYPE_LABEL[s.type] || s.type} of the ${owner.name}. ${CL.world.clockLabel()}.`,
+        text: `${TYPE_LABEL[s.type] || s.type} of the ${owner.name}. ${CL.world.clockLabel()}.${garrison}`,
         button: 'Leave',
       };
     }

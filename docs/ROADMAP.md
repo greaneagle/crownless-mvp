@@ -1,6 +1,6 @@
 # Crownless — Project Status & Roadmap
 
-_Last reviewed: 2026-11-16 · Build 0.14.0 · Spec: `Crownless_MVP_GDD_v1.md` (engine overridden: HTML5 Canvas + classic JS, no bundler, GitHub Pages)._
+_Last reviewed: 2026-11-16 · Build 0.15.0 · Spec: `Crownless_MVP_GDD_v1.md` (engine overridden: HTML5 Canvas + classic JS, no bundler, GitHub Pages)._
 
 This replaces the opencode-swarm plan (`.swarm/plan.md`, removed). The gate structure (A→E) is kept from the GDD; the task list is condensed and re-ordered around what the code actually needs.
 
@@ -19,7 +19,8 @@ This replaces the opencode-swarm plan (`.swarm/plan.md`, removed). The gate stru
 ### Gate status vs GDD
 - **Gate A (combat feel)** — implemented to GDD §6 in 0.4.0 (phased swings, 90°/120° arcs, input buffer, telegraphs, auto-pause, portrait prompt). Awaiting a real-phone playtest; see `docs/GATE-A-VALIDATION.md`.
 - **Gate B (party battle)** — done in 0.5.0: troops, waves and loot come from `data/`, armor formula, archer accuracy, per-soldier save v2 with migration/backup, 2-day wound recovery on a day clock. Only return-to-map is left, and it opens Gate C.
-- **Gate C** — ✅ passed (0.14.0): world map, travel and settlement menus (0.6.0); character creation, equipment and debug tools (0.7.0); food, wages and morale (0.8.0); trading (0.9.0); world parties and encounter choices (0.10.0); levels, troop upgrades and party cap (0.11.0); bandit-hunt contracts (0.12.0); save export/import (0.13.0); acceptance (0.14.0). **Next: Gate D.** **Gates D–E** — not started.
+- **Gate C** — ✅ passed (0.14.0): world map, travel and settlement menus (0.6.0); character creation, equipment and debug tools (0.7.0); food, wages and morale (0.8.0); trading (0.9.0); world parties and encounter choices (0.10.0); levels, troop upgrades and party cap (0.11.0); bandit-hunt contracts (0.12.0); save export/import (0.13.0); acceptance (0.14.0).
+- **Gate D** — in progress: three battle maps with obstacles and fort garrisons (0.15.0). **Gates D–E** — not started.
 
 ### Problems to fix early
 1. **`game.js` is minified source.** Every feature from here touches it; it is unreadable for review and hostile to AI-assisted edits. De-minify and split before adding systems.
@@ -70,7 +71,7 @@ Order chosen so each step is playable:
 10. ✅ (0.13.0) Save export/import: file and paste-text, checksum, strict ID/version validation, pre-import backup and restore, storage warning.
 11. ✅ (0.14.0) Acceptance: end-to-end test, 30-day multi-seed campaign simulation (found and fixed a stalled-economy problem in auto-resolve), real-click browser playthrough with reload check, GDD edge-case coverage table.
 
-### Phase 4 — Gate D (full region & story)
+### Phase 4 — Gate D (full region & story) — in progress, see `docs/GATE-D-VALIDATION.md`
 All 10 settlements; Stonebridge walkable hub; 3 battle maps; ~30 items; AI cavalry (all 15 troop roles); reputation + Greywall ownership; quest/dialogue interpreter; Q1–Q4 with 3 endings; Mara companion; escort + delivery contracts; regional news.
 
 ### Phase 5 — Gate E (release quality)

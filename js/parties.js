@@ -252,7 +252,8 @@
       const p = find(c, g.partyId);
       if (!p) return null;
       const t = tpl(p.template);
-      return { kind: 'party', name: t.name, text: t.text, troops: p.troops, hostile: t.hostile, def: battleDef(t, p.troops), party: p, t };
+      const map = W().battleMapAt(c.world.x, c.world.y);
+      return { kind: 'party', name: t.name, text: t.text, troops: p.troops, hostile: t.hostile, def: battleDef(t, p.troops, map), party: p, t };
     }
     if (g.siteId) {
       const st = W().map().sites[g.siteId];
@@ -264,12 +265,12 @@
     return null;
   }
 
-  /** A battle definition for a band: its actual troops, in waves of up to 8. */
-  function battleDef(t, troops) {
+  /** A battle definition for a band: its actual troops, in waves of up to 8, on the local map. */
+  function battleDef(t, troops, map = 'grass_field') {
     const list = A().expand(troops);
     const waves = [];
     for (let i = 0; i < list.length; i += WAVE_SIZE) waves.push(A().collapse(list.slice(i, i + WAVE_SIZE)));
-    return { id: `party_${t.id}`, name: t.name, map: 'grass_field', waves, reward: t.reward, loot: t.loot };
+    return { id: `party_${t.id}`, name: t.name, map, waves, reward: t.reward, loot: t.loot };
   }
 
   function open(partyId) {

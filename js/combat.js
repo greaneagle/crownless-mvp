@@ -59,7 +59,9 @@
     g.attackQueuedAt = null;
     g.group = 'infantry';
     g.orders = { infantry: 'follow', archer: 'hold' };
-    g.hero = makeUnit(330, 270, 'ally', 'hero');
+    g.battleMap = CL.content.get('battle_maps', enc.map || 'grass_field');
+    const anchor = g.battleMap.spawn.hero;
+    g.hero = makeUnit(anchor.x, anchor.y, 'ally', 'hero');
     Object.assign(g.hero, CL.character.heroCombat()); // HP, damage, armor, shield from the character
     g.hero.face = 'right';
     const placed = { infantry: 0, archer: 0 };
@@ -69,9 +71,11 @@
       const i = placed[role]++;
       const [x, y] =
         role === 'infantry'
-          ? [235 + (i % 3) * 42, 185 + Math.floor(i / 3) * 47]
-          : [164 + (i % 3) * 40, 328 + Math.floor(i / 3) * 44];
-      g.allies.push(makeUnit(x, y, 'ally', s.troop, s.id));
+          ? [anchor.x - 95 + (i % 3) * 42, anchor.y - 85 + Math.floor(i / 3) * 47]
+          : [anchor.x - 166 + (i % 3) * 40, anchor.y + 58 + Math.floor(i / 3) * 44];
+      const u = makeUnit(x, y, 'ally', s.troop, s.id);
+      CL.units.resolveObstacles(u); // form up around trees and walls
+      g.allies.push(u);
     }
     for (const a of g.allies) {
       a.holdX = a.x;
@@ -89,7 +93,11 @@
     const wave = g.encounterDef.waves[g.wave - 1];
     const troops = Object.entries(wave).flatMap(([id, n]) => Array(n).fill(id));
     troops.forEach((troopId, i) => {
-      const e = makeUnit(rand(735, 887), rand(91, 450), 'enemy', troopId);
+      const box = g.battleMap.spawn.enemies;
+      let [x, y] = [rand(box.x0, box.x1), rand(box.y0, box.y1)];
+      for (let tries = 0; tries < 30 && CL.units.blocked(x, y); tries++) [x, y] = [rand(box.x0, box.x1), rand(box.y0, box.y1)];
+      const e = makeUnit(x, y, 'enemy', troopId);
+      CL.units.resolveObstacles(e);
       e.face = 'left';
       e.art = art[i % art.length];
       g.enemies.push(e);
@@ -258,6 +266,12 @@
       a.x += a.dx * a.speed * dt;
       a.y += a.dy * a.speed * dt;
       a.life -= dt;
+      if (CL.units.arrowBlocked(a.x, a.y)) {
+        // GDD §6: arrows collide with terrain — trees, walls and crates stop them.
+        a.life = 0;
+        g.effects.push({ x: a.x, y: a.y, t: 0.15, color: '#d9c8a2', kind: 'thunk' });
+        continue;
+      }
       const targets = a.team === 'ally' ? g.enemies : [h, ...g.allies];
       for (const v of targets) {
         if (v.alive && Math.hypot(a.x - v.x, a.y - (v.y - ARROW.aimHeight)) < ARROW.hitRadius) {

@@ -30,7 +30,7 @@
       id: 'captains_trial',
       name: "The Captain's Trial",
       enemyFaction: 'neutral',
-      map: 'grass_field',
+      map: 'forest_clearing',
       waves: [
         { looter: 4, reaver: 2 },
         { looter: 6, reaver: 2 }

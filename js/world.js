@@ -83,6 +83,17 @@
     return m.baseSpeed * m.terrain[terrainAt(x, y)] * CL.trade.loadFactor(CL.campaign) * CL.character.travelFactor();
   }
 
+  /**
+   * Which battle map a fight at (x, y) uses: the forest clearing in woodland, the fort approach
+   * near Greywall or Ashgate, otherwise the open field.
+   */
+  const FORT_RADIUS = 6;
+  function battleMapAt(x, y) {
+    if (terrainAt(x, y) === 'forest') return 'forest_clearing';
+    const nearFort = settlements().some((s) => s.type === 'fort' && mapDist(x, y, s.mapX, s.mapY) <= FORT_RADIUS);
+    return nearFort ? 'greywall_courtyard' : 'grass_field';
+  }
+
   // ---- Sites ----
 
   function siteActive(id) {
@@ -330,6 +341,7 @@
     sanitize,
     terrainAt,
     speedAt,
+    battleMapAt,
     siteActive,
     targetAt,
     travelTo,
