@@ -74,10 +74,13 @@
     return 'grass';
   }
 
-  /** GDD §3: Speed = BaseSpeed × TerrainFactor × PartyLoadFactor (load is 1.0 until cargo exists). */
+  /**
+   * GDD §3: Speed = BaseSpeed × TerrainFactor × PartyLoadFactor (load is 1.0 until cargo exists),
+   * then × the hero's Pathfinding/horse bonus.
+   */
   function speedAt(x, y) {
     const m = map();
-    return m.baseSpeed * m.terrain[terrainAt(x, y)];
+    return m.baseSpeed * m.terrain[terrainAt(x, y)] * CL.character.travelFactor();
   }
 
   // ---- Sites ----

@@ -8,19 +8,29 @@ const LEGACY = 'crownless_v03_party';
 
 const troops = (c) => Array.from(c.roster, (s) => s.troop);
 
-test('a fresh browser starts with 130 crowns, 3 levies and 2 hunters on day 1', () => {
-  const { CL } = loadGame();
+test('a new game follows GDD §5: 60 crowns, sword, clothing, shield, food, no soldiers', () => {
+  const { CL } = loadGame({ party: false });
   const c = CL.campaign;
+  assert.equal(CL.save.existed, false);
   assert.equal(c.version, 2);
-  assert.equal(c.gold, 130);
-  assert.deepEqual(troops(c), ['levy', 'levy', 'levy', 'hunter', 'hunter']);
-  assert.deepEqual(
-    Array.from(c.roster, (s) => s.id),
-    [1, 2, 3, 4, 5],
-  );
-  assert.equal(c.nextSoldierId, 6);
+  assert.equal(c.gold, 60);
+  assert.equal(c.roster.length, 0);
+  assert.equal(c.nextSoldierId, 1);
   assert.equal(c.day, 0);
-  assert.deepEqual({ ...c.inventory }, {});
+  assert.equal(c.character, null, 'filled in by the creator');
+  assert.equal(c.equipment.weapon, 'worn_sword');
+  assert.equal(c.equipment.body, 'clothing');
+  assert.equal(c.equipment.offhand, 'oak_shield');
+  assert.deepEqual({ ...c.inventory }, { food_3_days: 1 });
+});
+
+test('old saves without equipment get the starting kit equipped; character stays null', () => {
+  const { CL } = loadGame();
+  const s = CL.save.sanitize({ version: 2, gold: 300, roster: [{ id: 1, troop: 'levy' }] });
+  assert.equal(s.gold, 300);
+  assert.equal(s.equipment.weapon, 'worn_sword');
+  assert.equal(s.equipment.offhand, 'oak_shield');
+  assert.equal(s.character, null);
 });
 
 test('a v2 save round-trips, and each write keeps the previous save as backup', () => {

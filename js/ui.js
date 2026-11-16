@@ -39,10 +39,27 @@
         secondary: 'Leave',
       };
     }
+    if (mode === 'create') {
+      return {
+        title: g.newGame ? 'A NEW WANDERER' : 'WHO ARE YOU?',
+        text: g.newGame
+          ? 'You arrive outside Stonebridge with little more than a sword. Who were you before the road?'
+          : 'Your party remembers your deeds, but not your name. Tell them who leads them.',
+        button: 'Begin',
+        secondary: g.newGame ? 'Back' : null,
+      };
+    }
+    if (mode === 'character') {
+      const ch = CL.campaign.character;
+      const bg = CL.content.get('backgrounds', ch.background);
+      return { title: ch.name.toUpperCase(), text: `Level ${ch.level} ${bg.name}. ${CL.world.clockLabel()}.`, button: 'Back' };
+    }
+    const existed = CL.save.existed;
     return {
       title: 'CROWNLESS',
       text: 'The Border March: travel between towns, hire soldiers, and break the Road Reavers who prey on the roads.',
-      button: CL.campaign.battles || CL.campaign.day ? 'Continue' : 'Set out',
+      button: existed ? 'Continue' : 'New game',
+      secondary: existed ? (g.confirmNew ? 'Erase save and start over?' : 'New game') : null,
     };
   }
 
@@ -67,6 +84,8 @@
     $('#overlay').classList.remove('hidden');
     $('#prep').classList.toggle('hidden', mode !== 'settlement');
     $('#result').classList.toggle('hidden', mode !== 'result');
+    $('#create').classList.toggle('hidden', mode !== 'create');
+    $('#sheet').classList.toggle('hidden', mode !== 'character');
     const screen = screenFor(mode);
     if (mode === 'result') $('#result').innerHTML = g.result.html;
     $('#overlayTitle').textContent = screen.title;
@@ -75,6 +94,156 @@
     $('#secondaryBtn').classList.toggle('hidden', !screen.secondary);
     if (screen.secondary) $('#secondaryBtn').textContent = screen.secondary;
     if (mode === 'settlement') refreshRoster();
+    if (mode === 'create') renderCreator();
+    if (mode === 'character') renderSheet();
+  }
+
+  /** Re-render whichever menu screen is open (after a debug change, equip, etc.). */
+  function refresh() {
+    const m = CL.game.mode;
+    if (m !== 'battle' && m !== 'map') changeMode(m);
+  }
+
+  // ---- Character creator ----
+
+  const CLOAK_LABELS = { crimson: 'Crimson', forest: 'Forest', violet: 'Violet', ash: 'Ash grey' };
+  const CLOAK_SWATCH = { crimson: '#9b2c2c', forest: '#2f6b35', violet: '#6b3a9b', ash: '#7c7c78' };
+  const draft = { cloak: 'crimson', background: 'farmhand' };
+
+  function choiceButton(label, checked, onPick, html) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.setAttribute('role', 'radio');
+    b.setAttribute('aria-checked', String(checked));
+    if (html) b.append(...html);
+    else b.textContent = label;
+    b.onclick = onPick;
+    return b;
+  }
+
+  function renderCreator() {
+    $('#cloakChoices').replaceChildren(
+      ...CL.character.CLOAKS.map((id) => {
+        const sw = Object.assign(document.createElement('span'), { className: 'swatch' });
+        sw.style.background = CLOAK_SWATCH[id];
+        return choiceButton(CLOAK_LABELS[id], draft.cloak === id, () => {
+          draft.cloak = id;
+          renderCreator();
+        }, [sw, CLOAK_LABELS[id]]);
+      }),
+    );
+    $('#bgChoices').replaceChildren(
+      ...Object.values(CL.content.table('backgrounds')).map((bg) => {
+        const title = Object.assign(document.createElement('b'), {
+          textContent: `${bg.name} · +1 ${CL.character.ATTRIBUTE_NAMES[bg.attribute]}, +1 ${CL.content.get('skills', bg.skill).name}`,
+        });
+        return choiceButton(bg.name, draft.background === bg.id, () => {
+          draft.background = bg.id;
+          renderCreator();
+        }, [title, bg.description]);
+      }),
+    );
+    const kit = CL.content.get('backgrounds', draft.background).kit;
+    const gear = Object.values(kit.equipment).map((id) => CL.content.item(id).name);
+    $('#createNote').textContent = CL.game.newGame
+      ? `You start with ${kit.gold} crowns, ${gear.join(', ')} and ${CL.party.describeItems(kit.items)}. No soldiers — yet.`
+      : 'Your gold, soldiers and gear are kept.';
+    drawPreview();
+  }
+
+  function drawPreview() {
+    const cv = $('#heroPreview');
+    const x = cv.getContext('2d');
+    x.imageSmoothingEnabled = false;
+    x.clearRect(0, 0, cv.width, cv.height);
+    const sprite = CL.assets.heroSprite(CL.assets.key('u', CL.assets.heroFrames.down[0]), draft.cloak);
+    if (sprite) x.drawImage(sprite, 8, 6, 56, 80);
+    else setTimeout(drawPreview, 200); // sprite still loading
+  }
+
+  function creatorChoices() {
+    return { name: $('#heroName').value, gender: $('#heroGender').value, cloak: draft.cloak, background: draft.background };
+  }
+
+  // ---- Character sheet ----
+
+  function li(text, buttonLabel, onClick) {
+    const row = document.createElement('li');
+    row.append(Object.assign(document.createElement('span'), { textContent: text }));
+    if (buttonLabel) {
+      const b = Object.assign(document.createElement('button'), { type: 'button', textContent: buttonLabel });
+      b.onclick = onClick;
+      row.append(b);
+    }
+    return row;
+  }
+
+  function itemSummary(it) {
+    const s = it.stats;
+    const bits = [];
+    if (s.damage) bits.push(`${s.damage} dmg`);
+    if (s.armor) bits.push(`+${s.armor} armor`);
+    if (s.block) bits.push('can block');
+    if (s.travel) bits.push(`+${Math.round(s.travel * 100)}% travel`);
+    for (const k of Object.keys(CL.content.table('skills'))) if (s[k]) bits.push(`+${s[k]} ${CL.content.get('skills', k).name}`);
+    if (s.food) bits.push(`${s.food} days' food`);
+    return bits.length ? ` (${bits.join(', ')})` : '';
+  }
+
+  function renderSheet() {
+    const c = CL.campaign;
+    const C = CL.character;
+    const hero = C.heroCombat();
+    const stats = $('#sheetStats');
+    const line = (parts) => {
+      const d = Object.assign(document.createElement('div'), { className: 'statLine' });
+      d.append(...parts.map((t) => Object.assign(document.createElement('span'), { textContent: t })));
+      return d;
+    };
+    const skills = Object.values(CL.content.table('skills')).map((sk) => `${sk.name} ${C.skill(sk.id)}`);
+    stats.replaceChildren(
+      line(C.ATTRIBUTES.map((a) => `${C.ATTRIBUTE_NAMES[a]} ${C.attribute(a)}`)),
+      line([
+        `HP ${hero.hp}`,
+        `Damage ${Math.round(hero.damage * 10) / 10}`,
+        `Armor ${hero.armor}`,
+        hero.canBlock ? 'Can block' : 'No shield — cannot block',
+        `Travel ×${C.travelFactor().toFixed(2)}`,
+      ]),
+      line(skills),
+    );
+    $('#sheetEquip').replaceChildren(
+      ...C.SLOTS.map((slot) => {
+        const id = c.equipment[slot];
+        const it = id ? CL.content.item(id) : null;
+        return li(`${C.SLOT_NAMES[slot]}: ${it ? it.name + itemSummary(it) : '—'}`, it ? 'Remove' : null, () => {
+          C.unequip(slot);
+          CL.save.write();
+          renderSheet();
+        });
+      }),
+    );
+    const pack = Object.entries(c.inventory);
+    $('#sheetPack').replaceChildren(
+      ...(pack.length
+        ? pack.map(([id, n]) => {
+            const it = CL.content.item(id);
+            const equippable = it.slot && C.SLOTS.includes(it.slot);
+            return li(`${n > 1 ? `${n}× ` : ''}${it.name}${itemSummary(it)}`, equippable ? 'Equip' : null, () => {
+              C.equip(id);
+              CL.save.write();
+              renderSheet();
+            });
+          })
+        : [li('Empty')]),
+    );
+  }
+
+  function openSheet() {
+    if (!CL.campaign.character) return;
+    const m = CL.game.mode;
+    if (m === 'map' || m === 'settlement') CL.game.returnMode = m;
+    changeMode('character');
   }
 
   function refreshRoster() {
@@ -125,6 +294,7 @@
 
   function hideBattleOverlays() {
     $('#stage').dataset.mode = 'battle';
+    $('#blockBtn').disabled = CL.game.hero?.canBlock === false; // no shield, no block
     $('#overlay').classList.add('hidden');
     $('#ordersPanel').classList.add('hidden');
   }
@@ -231,7 +401,10 @@
     $,
     message,
     changeMode,
+    refresh,
     refreshRoster,
+    creatorChoices,
+    openSheet,
     hideBattleOverlays,
     showSelectedGroup,
     setPaused,

@@ -34,14 +34,35 @@
     $('#pauseBtn').onclick = ui.togglePause;
     $('#primaryBtn').onclick = () => {
       const { world } = CL;
-      if (game.mode === 'title') ui.changeMode(party.currentSettlement() ? 'settlement' : 'map');
+      if (game.mode === 'title') {
+        if (!CL.save.existed) game.newGame = true;
+        if (game.newGame || !CL.campaign.character) ui.changeMode('create');
+        else ui.changeMode(party.currentSettlement() ? 'settlement' : 'map');
+      } else if (game.mode === 'create') CL.character.begin(ui.creatorChoices());
+      else if (game.mode === 'character') ui.changeMode(game.returnMode);
       else if (game.mode === 'settlement') world.leaveSettlement();
       else if (game.mode === 'encounter') world.attackSite();
       else if (game.mode === 'result') world.returnToMap();
     };
     $('#secondaryBtn').onclick = () => {
       if (game.mode === 'encounter') ui.changeMode('map');
+      else if (game.mode === 'create') {
+        game.newGame = false;
+        ui.changeMode('title');
+      } else if (game.mode === 'title') {
+        // New game over an existing save needs a second, explicit press (GDD §11 confirmations).
+        if (!game.confirmNew) {
+          game.confirmNew = true;
+          ui.changeMode('title');
+        } else {
+          game.confirmNew = false;
+          game.newGame = true;
+          ui.changeMode('create');
+        }
+      }
     };
+    $('#partyBtn').onclick = ui.openSheet;
+    $('#gearBtn').onclick = ui.openSheet;
     for (const sel of ['#recruitA', '#recruitB']) $(sel).onclick = (e) => party.recruit(e.currentTarget.dataset.troop);
     $('#restBtn').onclick = () => {
       party.rest();
@@ -59,6 +80,8 @@
   function bindKeyboardAndMouse($, canvas) {
     const g = CL.game;
     root.addEventListener('keydown', (e) => {
+      // Let form fields (character name, debug selects) receive keys normally.
+      if (e.target.closest?.('input, select, textarea')) return;
       if (PREVENT_DEFAULT.includes(e.code)) e.preventDefault();
       if (e.code === 'F3') {
         e.preventDefault();

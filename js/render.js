@@ -27,6 +27,12 @@
     if (im?.complete && im.naturalWidth) ctx.drawImage(im, Math.round(x), Math.round(y), w, h);
   }
 
+  /** Hero frames are drawn with the player's chosen cloak colour. */
+  function drawHeroFrame(key, x, y, w, h) {
+    const sprite = CL.assets.heroSprite(key, CL.campaign?.character?.cloak);
+    if (sprite) ctx.drawImage(sprite, Math.round(x), Math.round(y), w, h);
+  }
+
   function drawGround() {
     ctx.fillStyle = '#71904e';
     ctx.fillRect(0, 0, W, H);
@@ -82,7 +88,7 @@
     ctx.globalAlpha = age < 0.25 ? 0.9 - age * 1.6 : 0.5;
     ctx.translate(u.x, u.y - 6);
     ctx.rotate(u.face === 'left' ? -Math.PI / 2 : Math.PI / 2);
-    drawImage(CL.assets.key('u', frames[0]), -sh / 2, -sw / 2, sw, sh);
+    (hero ? drawHeroFrame : drawImage)(CL.assets.key('u', frames[0]), -sh / 2, -sw / 2, sw, sh);
     ctx.restore();
   }
 
@@ -140,7 +146,8 @@
       ctx.save();
       ctx.globalAlpha = 0.5;
     }
-    drawImage(CL.assets.key('u', frame), x, y, sw, sh);
+    if (hero) drawHeroFrame(CL.assets.key('u', frame), x, y, sw, sh);
+    else drawImage(CL.assets.key('u', frame), x, y, sw, sh);
     if (u.flash > 0) ctx.restore();
 
     drawSwing(u, hero);
@@ -377,7 +384,7 @@
     ctx.beginPath();
     ctx.ellipse(mx, my + 2, 10, 4, 0, 0, Math.PI * 2);
     ctx.fill();
-    drawImage(CL.assets.key('u', frame), mx - 13, my - 32, 26, 33);
+    drawHeroFrame(CL.assets.key('u', frame), mx - 13, my - 32, 26, 33);
 
     updateMapHud();
   }

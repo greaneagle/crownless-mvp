@@ -31,6 +31,10 @@
     travelFace: 'down',
     siteId: null, // map site whose encounter is open or being fought
     releasedAt: null, // settlement id after a capture, for the release message
+    godMode: false, // debug panel: the hero takes no damage
+    newGame: false, // true while the creator is making a fresh campaign
+    confirmNew: false, // title screen: second press of New game erases the save
+    returnMode: 'map', // where the character sheet goes back to
   };
 
   CL.campaign = null;

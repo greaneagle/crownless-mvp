@@ -58,6 +58,7 @@
     g.group = 'infantry';
     g.orders = { infantry: 'follow', archer: 'hold' };
     g.hero = makeUnit(330, 270, 'ally', 'hero');
+    Object.assign(g.hero, CL.character.heroCombat()); // HP, damage, armor, shield from the character
     g.hero.face = 'right';
     const placed = { infantry: 0, archer: 0 };
     for (const s of CL.party.healthySoldiers()) {
@@ -103,6 +104,7 @@
   function hit(target, raw, source) {
     const g = game();
     if (!target.alive) return null;
+    if (target === g.hero && g.godMode) return 'blocked'; // debug panel
     if (target.guard && source && inArc(target, source, ARC.block)) {
       g.effects.push({ x: target.x, y: target.y - 17, t: 0.2, color: '#f6daa6', kind: 'block' });
       return 'blocked';
@@ -182,7 +184,8 @@
     if (!u.alive) return;
     tickTimers(u, dt);
     u.aiTimer -= dt;
-    if (u.aiTimer <= 0) {
+    // Retarget at once when the current target falls, instead of swinging at a body.
+    if (u.aiTimer <= 0 || (u.target && !u.target.alive)) {
       u.aiTimer = rand(0.17, 0.41);
       u.target = nearestAlive(u, opponentsOf(u)) || null;
     }
@@ -232,7 +235,8 @@
     const y = (k.KeyS || k.ArrowDown ? 1 : 0) - (k.KeyW || k.ArrowUp ? 1 : 0) + g.joystick.y;
     // Block input cannot interrupt a committed swing (GDD §6); it takes effect in recovery.
     const blockInput = Boolean(g.blockHeld || k.ShiftLeft || k.ShiftRight);
-    h.guard = h.alive && blockInput && !isCommitted(h);
+    // GDD §6: blocking needs a shield equipped.
+    h.guard = h.alive && blockInput && h.canBlock !== false && !isCommitted(h);
     if (g.attackQueuedAt !== null && g.t - g.attackQueuedAt > INPUT_BUFFER) g.attackQueuedAt = null;
     if (!h.alive) return;
     if (x || y) {

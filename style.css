@@ -26,3 +26,40 @@
 #stage:not([data-mode="battle"]) #hpbar{display:none}
 #stage[data-mode="map"] #game{cursor:pointer}
 #serviceNote{font-size:12px;color:#c9ae7a;min-height:0}
+
+/* 0.7.0 — character creator, character sheet, Party/Debug buttons, debug panel */
+#stage:not([data-mode="map"]) #partyBtn{display:none}
+#cheatBtn{background:linear-gradient(#6b5a2e,#3d321a)}
+#create,#sheet{text-align:left;font-size:clamp(12px,1.25vw,15px)}
+.createTop{display:flex;gap:12px;align-items:center}
+#heroPreview{width:72px;height:92px;image-rendering:pixelated;background:#0b1620;border:1px solid #6d5a3a;flex:none}
+.createFields{display:flex;flex-direction:column;gap:6px;flex:1}
+.createFields label{display:flex;gap:8px;align-items:center}
+#heroName,#heroGender,#cheatPanel select{font:inherit;font-size:16px;padding:6px 8px;min-height:44px;background:#0c1823;color:#f7e8c5;border:1px solid #b89b64;border-radius:6px}
+#heroName{flex:1;min-width:0}
+.choiceRow{display:flex;gap:6px;flex-wrap:wrap}
+.choiceRow button{min-height:44px;flex:1}
+.choiceRow button[aria-checked="true"]{border-color:#ffe7a8;background:linear-gradient(#8a7346,#4d3d22);box-shadow:0 0 0 2px #ffe7a855}
+.bgChoices{margin-top:8px}
+.bgChoices button{text-align:left;font-weight:normal;line-height:1.3}
+.bgChoices b{display:block}
+.swatch{display:inline-block;width:14px;height:14px;border-radius:3px;margin-right:6px;vertical-align:-2px;border:1px solid #0008}
+#createNote{font-size:12px;color:#c9ae7a;margin:8px 0 0}
+#sheetStats{line-height:1.5}
+#sheetStats .statLine{display:flex;flex-wrap:wrap;gap:4px 14px}
+.sheetCols{display:flex;gap:16px;flex-wrap:wrap;margin-top:8px}
+.sheetCols>div{flex:1;min-width:200px}
+.sheetCols h3{margin:4px 0;font-size:15px;color:#ecd6a4}
+.sheetCols ul{list-style:none;margin:0;padding:0}
+.sheetCols li{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:3px 0;border-bottom:1px solid #ffffff14}
+.sheetCols li button{min-height:40px;padding:4px 10px}
+#cheatPanel{position:fixed;left:12px;top:12px;width:min(640px,calc(100vw - 24px));max-height:calc(100vh - 24px);overflow:auto;background:#1a160c;border:2px solid #c7a85a;z-index:21;box-shadow:0 0 0 100vmax #0008;padding:12px 14px;font:13px system-ui;touch-action:auto}
+#cheatPanel h2{margin:0 0 4px;font:bold 16px Georgia}
+#cheatPanel p{margin:0 0 8px;color:#d9c8a2}
+#closeCheats{float:right}
+.cheatGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px}
+.cheatGrid section{border:1px solid #5c4a28;border-radius:6px;padding:6px 8px;display:flex;flex-wrap:wrap;gap:6px;align-content:flex-start}
+.cheatGrid h3{width:100%;margin:0;font:bold 13px Georgia;color:#ecd6a4}
+.cheatGrid button{min-height:44px;flex:1}
+.cheatGrid select{flex:1 1 100%;min-width:0}
+#topRight{z-index:7} /* Logs and Debug stay reachable over menu overlays */

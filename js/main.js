@@ -11,6 +11,7 @@
   const canvas = CL.ui.$('#game');
   CL.render.init(canvas);
   CL.input.bind(canvas);
+  CL.debugTools.bind();
 
   let last = performance.now();
   function loop(ts) {

@@ -78,11 +78,12 @@ test('loot: one roll per kill at the encounter chance, picked by weight', () => 
 
 test('loot is added to the pack on victory', () => {
   const { CL } = loadGame({ random: scripted([0.1, 0]) });
+  const before = CL.campaign.inventory.food_3_days || 0;
   const r = CL.party.applyBattleResult(CL.campaign, {
     battleId: 1, encounterId: 'captains_trial', win: true, kills: 1, killed: [], wounded: [],
   });
   assert.deepEqual({ ...r.loot }, { food_3_days: 1 });
-  assert.equal(CL.campaign.inventory.food_3_days, 1);
+  assert.equal(CL.campaign.inventory.food_3_days, before + 1);
 });
 
 test('capture keeps 80% of crowns and takes one non-quest item, never a quest item', () => {

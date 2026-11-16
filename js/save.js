@@ -22,10 +22,14 @@
   const isCount = (n) => typeof n === 'number' && Number.isFinite(n) && n >= 0;
   const count = (n, fallback) => (isCount(n) ? Math.min(MAX_VALUE, Math.floor(n)) : fallback);
 
-  function starter() {
+  /**
+   * A brand-new campaign (GDD §5): the background's kit — 60 crowns, worn sword, clothing,
+   * oak shield, food — and no soldiers. The character itself is filled in by the creator.
+   */
+  function starter(background = 'farmhand') {
     const c = {
       version: VERSION,
-      gold: 130,
+      gold: 0,
       renown: 0,
       battles: 0,
       victories: 0,
@@ -35,8 +39,10 @@
       inventory: {},
       lastResolvedBattle: 0,
       world: CL.world.defaultState(), // map position, current settlement, site timers
+      character: null, // set by the character creator
+      equipment: CL.character.blankEquipment(),
     };
-    for (const t of ['levy', 'levy', 'levy', 'hunter', 'hunter']) addSoldier(c, t);
+    CL.character.applyKit(c, background);
     return c;
   }
 
@@ -72,6 +78,8 @@
     const maxId = s.roster.reduce((m, e) => Math.max(m, e.id), 0);
     s.nextSoldierId = Math.max(maxId + 1, count(d.nextSoldierId, 1));
     s.world = CL.world.sanitize(d.world);
+    s.character = CL.character.sanitize(d.character);
+    s.equipment = CL.character.sanitizeEquipment(d.equipment);
     s.inventory = {};
     if (d.inventory && typeof d.inventory === 'object') {
       for (const [id, n] of Object.entries(d.inventory)) {
@@ -115,7 +123,9 @@
     }
   }
 
+  /** Load the best available save. Sets CL.save.existed so the title can offer Continue. */
   function load() {
+    CL.save.existed = true;
     const main = tryLoad(KEY, sanitize);
     if (main) return main;
     const backup = tryLoad(BACKUP_KEY, sanitize);
@@ -128,6 +138,7 @@
       CL.diag.log('info', 'Migrated 0.3 save to v2', { soldiers: legacy.roster.length });
       return legacy;
     }
+    CL.save.existed = false;
     return starter();
   }
 
@@ -152,6 +163,7 @@
     addSoldier,
     sanitize,
     migrateV1,
+    existed: false,
     load,
     write,
   };

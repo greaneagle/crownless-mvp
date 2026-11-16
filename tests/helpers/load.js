@@ -7,7 +7,7 @@ const vm = require('node:vm');
 const ROOT = path.join(__dirname, '..', '..');
 
 // Logic modules only (no render/input/main — those need a real DOM).
-const LOGIC_MODULES = ['core', 'content', 'state', 'save', 'assets', 'units', 'combat', 'party', 'world'];
+const LOGIC_MODULES = ['core', 'content', 'state', 'save', 'assets', 'units', 'combat', 'party', 'world', 'character', 'debug'];
 const CONTENT_MODULES = [
   'factions',
   'settlements',
@@ -19,6 +19,7 @@ const CONTENT_MODULES = [
   'battle_maps',
   'encounters',
   'world_map',
+  'character',
 ];
 
 function memoryStorage(initial = {}) {
@@ -35,8 +36,12 @@ function memoryStorage(initial = {}) {
   };
 }
 
-/** Fresh sandbox with the game logic loaded and the UI stubbed. */
-function loadGame({ storage = memoryStorage(), random } = {}) {
+/**
+ * Fresh sandbox with the game logic loaded and the UI stubbed.
+ * With `party` (default) a brand-new campaign gets a test fixture: a Farmhand hero, 130 crowns,
+ * 3 Levies and 2 Hunters (soldier ids 1–5). Pass { party: false } to see the real GDD new game.
+ */
+function loadGame({ storage = memoryStorage(), random, party = true } = {}) {
   const uiCalls = [];
   const sandbox = {
     console,
@@ -63,10 +68,17 @@ function loadGame({ storage = memoryStorage(), random } = {}) {
       uiCalls.push(['changeMode', mode]);
     },
     refreshRoster: record('refreshRoster'),
+    refresh: record('refresh'),
     hideBattleOverlays: record('hideBattleOverlays'),
     showSelectedGroup: record('showSelectedGroup'),
   };
   CL.campaign = CL.save.load();
+  if (party && !CL.save.existed) {
+    const c = CL.campaign;
+    c.gold = 130;
+    c.character = CL.character.create({ name: 'Tester', background: 'farmhand' });
+    for (const t of ['levy', 'levy', 'levy', 'hunter', 'hunter']) CL.save.addSoldier(c, t);
+  }
   return { CL, storage, uiCalls };
 }
 

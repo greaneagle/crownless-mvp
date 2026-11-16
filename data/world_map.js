@@ -26,6 +26,15 @@
       hills: [[44, 22], [49, 18], [38, 28], [86, 30], [90, 38]],
       // Non-settlement points of interest that start a battle.
       sites: {
+        looter_camp: {
+          id: 'looter_camp',
+          name: 'Looter Camp',
+          mapX: 40,
+          mapY: 47,
+          encounter: 'looter_band',
+          respawnDays: 2,
+          text: 'A handful of ragged looters squat by the road, waiting for easy prey. A fair first test for a lone sword.'
+        },
         reaver_hideout: {
           id: 'reaver_hideout',
           name: 'Reaver Hideout',

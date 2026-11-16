@@ -10,7 +10,7 @@ Gate C is delivered in slices. This file records each one.
 |---|---|
 | 1. World map, click/tap travel, time advancing | ✅ 0.6.0 |
 | 2. Settlement menu (Recruit / Trade / Rest / Contracts / Leave) | 🟡 0.6.0: Recruit, Rest and Leave work. Trade (step 5) and Contracts (step 9) are still to come. |
-| 3. Character creation + inventory/equipment | ⬜ |
+| 3. Character creation + inventory/equipment | ✅ 0.7.0. Hairstyles wait for art. |
 | 4. Food & weekly wages, morale/desertion | ⬜ |
 | 5. Trading (6 goods, scarcity) | ⬜ |
 | 6. World parties + encounter options (Attack / Negotiate / Retreat / Auto-resolve) | ⬜ The static Reaver hideout stands in for now |
@@ -21,6 +21,69 @@ Gate C is delivered in slices. This file records each one.
 | 11. Gate C acceptance | ⬜ |
 
 ---
+
+## Slice 2 — 0.7.0: Character, equipment, debug tools (2026-11-16)
+
+### What's in
+- **New game / Continue:**
+  - The title offers **Continue** when a save exists.
+  - **New game** over an existing save needs a second press ("Erase save and start over?"), following GDD §11's rule to confirm irreversible choices.
+- **Character creator (GDD §5):**
+  - Name: up to 20 characters, with control characters and `<>` stripped. It's only ever displayed as text.
+  - Gender presentation: stored now for future sprite art.
+  - **4 cloak colours**: Crimson, Forest, Violet and Ash. The hero sprite is recoloured live. Only the cloak's red band (hue ≥330° or ≤12°) is shifted; skin, hair and tunic are untouched. I checked this from the front, side and back. Royal blue was dropped because it vanished against the blue tunic.
+  - **3 backgrounds** from the new `data/character.js`: Farmhand (+1 STR, +1 One-Handed), Scout (+1 AGI, +1 Pathfinding) and Peddler (+1 CHA, +1 Trade).
+  - A live preview shows the hero.
+  - **Hairstyles are deferred**: they need sprite art (Gate E art pass).
+- **Starting state (GDD §5):**
+  - 60 crowns, a worn sword, clothing, three days of food, and **no soldiers**.
+  - **Deviation:** an **oak shield** is in the kit too. Blocking requires a shield (GDD §6), and sword-and-shield is the GDD's first core promise.
+  - A new **Looter Camp** near Stonebridge (3, then 4 Looters; clears for 2 days) gives a lone hero a fair first fight.
+- **Stats in effect now:**
+  - **HP** = 60 + 5×STR.
+  - **Damage** = weapon damage × (1 + 0.03 × One-Handed): Worn Sword 17, the new Arming Sword 21 (rare loot), unarmed 6.
+  - **Armor** is the sum of equipped gear.
+  - **No shield means no block.** The Block button is disabled in battle.
+  - **Travel** speed gets +3% per Pathfinding point (the Ring of Roads adds a point), and a horse adds its travel bonus.
+  - Trade, Leadership, Tactics, Shield, Archery and Riding are stored but have no effect until their steps arrive.
+- **Character & gear sheet:**
+  - Opened from **Party** on the map or **Character & gear** in a settlement.
+  - Shows attributes, derived stats and the 8 skills, plus 8 equipment slots (weapon, shield, helmet, chest, gloves, boots, horse, ring) and the pack.
+  - Equip and Remove swap items between pack and slot **atomically**, so an item is always in exactly one place, and each change is saved.
+- **Older saves:** if a save predates characters, the player is asked to create one and keeps their gold, soldiers and pack. Missing equipment becomes the starting kit, already equipped.
+- **Debug tools** (the **Debug** button next to Logs, also reachable over menus):
+  - **Crowns:** ±100 or +1000.
+  - **Soldiers:** add 1 or 5 of any troop (past the cap), heal all wounded, dismiss everyone.
+  - **Items:** add any item to the pack.
+  - **Hero:** ±1 to any attribute or skill (clamped), and a god-mode toggle.
+  - **World:** +1 day, reset sites, teleport to any settlement.
+  - **Battle:** win now or lose now, through the normal exactly-once result path.
+  - **Save:** wipe, which needs a second press.
+  - Every action is logged as `Debug: …` (it shows in exported reports) and saved.
+- **AI fix:** units whose target falls now pick a new one at once, instead of swinging at the body for up to 0.4 s.
+
+### Verification
+- **Automated:** `npm test` → 80/80. New suites:
+  - `tests/character.test.js` (10 tests): backgrounds, name cleaning, derived stats, atomic equip, travel factor, battle hero and the no-shield block, the new-game flow, older-save upgrade, save validation, kit validation.
+  - `tests/debug.test.js` (7 tests): one per tool group.
+  - The test helper gives fresh campaigns an explicit fixture (130 crowns, Farmhand, 3 Levies and 2 Hunters). `{ party: false }` tests the real GDD new game.
+- **Browser (desktop):**
+  - Played the full new game through real clicks: New game, a Scout with a violet cloak, then Begin. Stonebridge showed 60 crowns and no soldiers, and the sheet showed the correct stats.
+  - Opened the Debug panel with a real click and used +1000, Add item (Arming Sword), STR +1 and Add 5. Every one applied and was logged.
+  - Equipped the Arming Sword from the sheet, and damage went to 21.
+  - Travelled to the Looter Camp and won the fight.
+- **Balance sample:** 100 battles with a scripted player.
+
+  | Matchup | Wins | Hero HP left on a win |
+  |---|---|---|
+  | Lone hero vs Looter Camp | 20/20 | about 47/90 |
+  | 4 Levies vs Looter Camp | 20/20 | — |
+  | Lone hero vs Reaver Hideout | 10/20 | — |
+  | 3 Levies + 2 Hunters vs Reaver Hideout | 15/20 | — |
+  | 6 Levies + 3 Hunters vs Reaver Hideout | 19/20 | — |
+
+  No battle stalled.
+- **Observation for the GDD's open question 2** ("is facing by movement comfortable?"): standing still, the hero can't turn without moving. My first bot got stuck facing the wrong way next to a diagonal enemy, which a person would fix with a nudge of the stick. If phone testing shows players having the same trouble, let small joystick pushes turn the hero without moving.
 
 ## Slice 1 — 0.6.0: The Border March map (2026-11-16)
 

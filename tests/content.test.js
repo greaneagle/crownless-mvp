@@ -9,14 +9,15 @@ const { loadContent, CONTENT_MODULES } = require('./helpers/load');
 const C = loadContent();
 const ASSET_DIR = path.join(__dirname, '..', 'assets');
 
-test('every content module registers a non-empty table', () => {
-  for (const m of CONTENT_MODULES) {
-    assert.ok(C[m] && Object.keys(C[m]).length > 0, `missing or empty: ${m}`);
+test('every content module loads and every table is non-empty', () => {
+  assert.equal(CONTENT_MODULES.length, 11);
+  for (const [name, table] of Object.entries(C)) {
+    assert.ok(Object.keys(table).length > 0, `empty table: ${name}`);
   }
 });
 
 test('record keys match their id fields', () => {
-  for (const m of CONTENT_MODULES) {
+  for (const m of Object.keys(C)) {
     if (m === 'dialogue') continue; // dialogue is keyed by speaker, values are line arrays
     for (const [key, rec] of Object.entries(C[m])) {
       assert.equal(rec.id, key, `${m}.${key} has id '${rec.id}'`);

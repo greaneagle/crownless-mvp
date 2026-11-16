@@ -15,6 +15,8 @@
     'battle_maps',
     'encounters',
     'world_map',
+    'skills',
+    'backgrounds',
   ];
 
   const raw = () => root.CROWNLESS_CONTENT || {};
@@ -76,6 +78,20 @@
         if (st.id !== key) err(`world_map ${m.id}: site ${key} has id ${st.id}`);
         if (!C.encounters?.[st.encounter]) err(`world_map ${m.id}: site ${key} unknown encounter ${st.encounter}`);
       }
+    }
+    const SLOTS = ['weapon', 'offhand', 'head', 'body', 'hands', 'feet', 'horse', 'ring'];
+    for (const it of Object.values(C.items || {})) {
+      if (it.slot && !SLOTS.includes(it.slot)) err(`item ${it.id}: unknown slot ${it.slot}`);
+      if (it.slot === 'weapon' && !(it.stats?.damage > 0)) err(`item ${it.id}: weapon needs stats.damage`);
+    }
+    for (const b of Object.values(C.backgrounds || {})) {
+      if (!['str', 'agi', 'int', 'cha'].includes(b.attribute)) err(`background ${b.id}: bad attribute ${b.attribute}`);
+      if (!C.skills?.[b.skill]) err(`background ${b.id}: unknown skill ${b.skill}`);
+      if (!(b.kit?.gold >= 0)) err(`background ${b.id}: kit needs gold`);
+      for (const [slot, id] of Object.entries(b.kit?.equipment || {})) {
+        if (C.items?.[id]?.slot !== slot) err(`background ${b.id}: kit item ${id} does not fit ${slot}`);
+      }
+      for (const id of Object.keys(b.kit?.items || {})) if (!C.items?.[id]) err(`background ${b.id}: unknown kit item ${id}`);
     }
     for (const q of Object.values(C.quests || {})) {
       if (!C.dialogue?.[q.giver]) err(`quest ${q.id}: no dialogue for giver ${q.giver}`);
