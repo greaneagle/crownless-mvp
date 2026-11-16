@@ -9,7 +9,7 @@
   const SCREENS = {
     camp: {
       title: 'THE CAPTAIN’S CAMP',
-      text: 'Recruit soldiers, then lead your party against Road Reavers. Your gold and surviving troops persist between battles.',
+      text: 'Hire soldiers, rest your wounded, then lead your party against the Road Reavers. Gold, soldiers and loot persist between battles.',
       button: 'Begin Battle',
     },
     title: {
@@ -55,11 +55,40 @@
 
   function refreshRoster() {
     const c = CL.campaign;
+    const p = CL.party;
     $('#rosterSummary').textContent =
-      `${c.gold} crowns · ${c.infantry} infantry · ${c.archer} archers · ` +
-      `${c.woundedInfantry + c.woundedArcher} wounded · ${c.victories} wins`;
-    $('#recruitInf').disabled = !CL.party.canRecruit(c, 'infantry');
-    $('#recruitArch').disabled = !CL.party.canRecruit(c, 'archer');
+      `Day ${p.dayNumber()} · ${c.gold} crowns · ${c.renown} renown · ` +
+      `${c.roster.length}/${p.PARTY_CAP} soldiers · ${c.victories} wins`;
+
+    // One line per troop type: ready count, plus wounded and when they return.
+    const groups = {};
+    for (const s of c.roster) {
+      groups[s.troop] ||= { ready: 0, wounded: [] };
+      const g = groups[s.troop];
+      if (s.woundedUntil === null) g.ready++;
+      else g.wounded.push(p.dayNumber(s.woundedUntil));
+    }
+    const list = $('#rosterList');
+    list.replaceChildren(
+      ...Object.entries(groups).map(([id, g]) => {
+        const t = CL.content.troop(id);
+        const li = document.createElement('li');
+        const back = g.wounded.length ? ` · ${g.wounded.length} wounded (back day ${Math.min(...g.wounded)})` : '';
+        li.textContent = `${t.name} (${t.tier} ${t.role}) — ${g.ready} ready${back}`;
+        return li;
+      }),
+    );
+    if (!c.roster.length) list.replaceChildren(Object.assign(document.createElement('li'), { textContent: 'No soldiers — the hero fights alone.' }));
+
+    const items = p.describeItems(c.inventory);
+    $('#inventory').textContent = items ? `Pack: ${items}` : 'Pack: empty';
+
+    const [levy, hunter] = p.RECRUITABLE.map((id) => CL.content.troop(id));
+    $('#recruitInf').textContent = `Recruit ${levy.name.toLowerCase()} · ${levy.recruitCost} crowns`;
+    $('#recruitArch').textContent = `Recruit ${hunter.name.toLowerCase()} · ${hunter.recruitCost} crowns`;
+    $('#recruitInf').disabled = !p.canRecruit(c, levy.id);
+    $('#recruitArch').disabled = !p.canRecruit(c, hunter.id);
+    $('#restBtn').disabled = !c.roster.some((s) => s.woundedUntil !== null);
   }
 
   function hideBattleOverlays() {

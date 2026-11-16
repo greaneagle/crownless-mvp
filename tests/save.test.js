@@ -2,54 +2,103 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { loadGame, memoryStorage } = require('./helpers/load');
 
-const KEY = 'crownless_v03_party';
+const KEY = 'crownless_save';
+const BACKUP = 'crownless_save_backup';
+const LEGACY = 'crownless_v03_party';
 
-test('a fresh browser starts with the starter party', () => {
+const troops = (c) => Array.from(c.roster, (s) => s.troop);
+
+test('a fresh browser starts with 130 crowns, 3 levies and 2 hunters on day 1', () => {
   const { CL } = loadGame();
-  assert.deepEqual({ ...CL.campaign }, { ...CL.save.starter() });
-  assert.equal(CL.campaign.gold, 130);
-  assert.equal(CL.campaign.infantry, 3);
-  assert.equal(CL.campaign.archer, 2);
+  const c = CL.campaign;
+  assert.equal(c.version, 2);
+  assert.equal(c.gold, 130);
+  assert.deepEqual(troops(c), ['levy', 'levy', 'levy', 'hunter', 'hunter']);
+  assert.deepEqual(
+    Array.from(c.roster, (s) => s.id),
+    [1, 2, 3, 4, 5],
+  );
+  assert.equal(c.nextSoldierId, 6);
+  assert.equal(c.day, 0);
+  assert.deepEqual({ ...c.inventory }, {});
 });
 
-test('a valid v1 save round-trips', () => {
+test('a v2 save round-trips, and each write keeps the previous save as backup', () => {
   const { CL, storage } = loadGame();
-  CL.campaign.gold = 77;
-  CL.campaign.victories = 3;
   CL.save.write();
+  const first = storage.data[KEY];
+  CL.campaign.gold = 77;
+  CL.campaign.inventory.boots = 2;
+  CL.campaign.roster[0].woundedUntil = 1.5;
+  CL.save.write();
+  assert.equal(storage.data[BACKUP], first);
   const reloaded = loadGame({ storage }).CL.campaign;
   assert.equal(reloaded.gold, 77);
-  assert.equal(reloaded.victories, 3);
+  assert.equal(reloaded.inventory.boots, 2);
+  assert.equal(reloaded.roster[0].woundedUntil, 1.5);
 });
 
-test('corrupt JSON falls back to starter and logs a warning', () => {
-  const { CL } = loadGame({ storage: memoryStorage({ [KEY]: '{not json' }) });
-  assert.equal(CL.campaign.gold, 130);
-  assert.ok(CL.diag.events.some((e) => e.level === 'warn' && e.msg === 'Cannot read save'));
+test('a corrupt main save falls back to the backup', () => {
+  const { CL, storage } = loadGame();
+  CL.campaign.gold = 444;
+  CL.save.write();
+  CL.save.write(); // backup now holds gold 444 as well
+  storage.data[KEY] = '{broken';
+  const { CL: CL2 } = loadGame({ storage });
+  assert.equal(CL2.campaign.gold, 444);
+  assert.ok(CL2.diag.events.some((e) => e.msg === 'Main save unreadable; restored backup'));
 });
 
-test('unknown save versions are ignored', () => {
-  const { CL } = loadGame({ storage: memoryStorage({ [KEY]: JSON.stringify({ version: 2, gold: 9999 }) }) });
-  assert.equal(CL.campaign.gold, 130);
+test('a 0.3 save migrates: infantry → levy, archers → hunter, wounded heal on day 3', () => {
+  const v1 = { version: 1, gold: 210, infantry: 4, archer: 1, woundedInfantry: 1, woundedArcher: 2, battles: 5, victories: 3, renown: 12 };
+  const { CL, storage } = loadGame({ storage: memoryStorage({ [LEGACY]: JSON.stringify(v1) }) });
+  const c = CL.campaign;
+  assert.equal(c.gold, 210);
+  assert.equal(c.renown, 12);
+  assert.equal(c.battles, 5);
+  assert.equal(c.lastResolvedBattle, 5);
+  assert.deepEqual(troops(c), ['levy', 'levy', 'levy', 'levy', 'hunter', 'levy', 'hunter', 'hunter']);
+  assert.equal(c.roster.filter((s) => s.woundedUntil === 2).length, 3);
+  assert.ok(CL.diag.events.some((e) => e.msg === 'Migrated 0.3 save to v2'));
+  CL.save.write();
+  assert.equal(storage.data[LEGACY], JSON.stringify(v1), 'legacy save left untouched');
 });
 
-test('sanitize drops invalid fields, floors and clamps numbers', () => {
+test('sanitize drops unknown troops, duplicate ids, unknown items and bad numbers', () => {
   const { CL } = loadGame();
   const s = CL.save.sanitize({
-    version: 1,
+    version: 2,
     gold: 12.9,
-    infantry: -4,
-    archer: 'lots',
-    renown: Number.POSITIVE_INFINITY,
-    victories: 1e9,
-    extra: 5,
+    renown: -3,
+    day: 4.5,
+    nextSoldierId: 2,
+    roster: [
+      { id: 7, troop: 'footman', xp: 30, woundedUntil: null },
+      { id: 7, troop: 'levy' }, // duplicate id
+      { id: 8, troop: 'dragon' }, // unknown troop
+      { id: 9, troop: 'hero' }, // the hero is not a roster soldier
+      { id: 'x', troop: 'levy' },
+      { id: 10, troop: 'hunter', xp: -5, woundedUntil: 6 },
+    ],
+    inventory: { boots: 2, excalibur: 1, gloves: 0, clothing: 1.7 },
   });
   assert.equal(s.gold, 12);
-  assert.equal(s.infantry, 3, 'negative ignored → default');
-  assert.equal(s.archer, 2, 'non-number ignored → default');
-  assert.equal(s.renown, 0, 'infinite ignored → default');
-  assert.equal(s.victories, 99999, 'clamped to max');
-  assert.equal('extra' in s, false, 'unknown keys dropped');
+  assert.equal(s.renown, 0);
+  assert.equal(s.day, 4.5);
+  assert.deepEqual(
+    Array.from(s.roster, (e) => [e.id, e.troop, e.xp, e.woundedUntil]),
+    [
+      [7, 'footman', 30, null],
+      [10, 'hunter', 0, 6],
+    ],
+  );
+  assert.equal(s.nextSoldierId, 11, 'never reuses an existing soldier id');
+  assert.deepEqual({ ...s.inventory }, { boots: 2, clothing: 1 });
+});
+
+test('unknown or future save versions are ignored', () => {
+  const { CL } = loadGame({ storage: memoryStorage({ [KEY]: JSON.stringify({ version: 3, gold: 9999 }) }) });
+  assert.equal(CL.campaign.gold, 130);
 });
 
 test('storage failures are logged, not thrown', () => {

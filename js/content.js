@@ -1,0 +1,95 @@
+/* Crownless ContentDB: typed access to window.CROWNLESS_CONTENT (data/*.js) plus
+ * load-time reference validation. One authoritative source per ID (GDD §13). */
+(function (root) {
+  'use strict';
+  const CL = root.Crownless;
+
+  const TABLES = [
+    'factions',
+    'settlements',
+    'troops',
+    'items',
+    'markets',
+    'quests',
+    'dialogue',
+    'battle_maps',
+    'encounters',
+  ];
+
+  const raw = () => root.CROWNLESS_CONTENT || {};
+
+  function table(name) {
+    return raw()[name] || {};
+  }
+
+  /** Look up a record; throws on unknown IDs so bad references fail loudly. */
+  function get(name, id) {
+    const rec = table(name)[id];
+    if (!rec) throw new Error(`Unknown ${name} id: ${id}`);
+    return rec;
+  }
+
+  const troop = (id) => get('troops', id);
+  const item = (id) => get('items', id);
+  const encounter = (id) => get('encounters', id);
+
+  /** Return a list of human-readable problems; empty means the content is consistent. */
+  function validate() {
+    const errors = [];
+    const C = raw();
+    const err = (msg) => errors.push(msg);
+    for (const t of TABLES) if (!C[t] || !Object.keys(C[t]).length) err(`missing table: ${t}`);
+
+    for (const t of TABLES) {
+      if (t === 'dialogue' || !C[t]) continue;
+      for (const [key, rec] of Object.entries(C[t])) if (rec.id !== key) err(`${t}.${key}: id is '${rec.id}'`);
+    }
+
+    for (const t of Object.values(C.troops || {})) {
+      if (!C.factions?.[t.faction]) err(`troop ${t.id}: unknown faction ${t.faction}`);
+      for (const u of [t.upgradeTo, t.altUpgradeTo]) if (u && !C.troops[u]) err(`troop ${t.id}: unknown upgrade ${u}`);
+      for (const s of ['hp', 'damage', 'armor', 'speed', 'reach']) {
+        if (!(Number.isFinite(t[s]) && t[s] >= 0)) err(`troop ${t.id}: bad ${s}`);
+      }
+      if (t.role === 'archer') {
+        const r = t.ranged;
+        if (!r || !(r.range > 0 && r.projectileSpeed > 0 && r.cooldown > 0 && r.accuracy > 0 && r.accuracy <= 1)) {
+          err(`troop ${t.id}: archer needs ranged {range, projectileSpeed, cooldown, accuracy}`);
+        }
+      }
+    }
+
+    for (const s of Object.values(C.settlements || {})) {
+      if (!C.factions?.[s.ownerFaction]) err(`settlement ${s.id}: unknown owner ${s.ownerFaction}`);
+    }
+    for (const q of Object.values(C.quests || {})) {
+      if (!C.dialogue?.[q.giver]) err(`quest ${q.id}: no dialogue for giver ${q.giver}`);
+    }
+    for (const e of Object.values(C.encounters || {})) {
+      if (!C.battle_maps?.[e.map]) err(`encounter ${e.id}: unknown map ${e.map}`);
+      if (!e.waves?.length) err(`encounter ${e.id}: no waves`);
+      for (const w of e.waves || []) {
+        for (const [tid, n] of Object.entries(w)) {
+          if (!C.troops?.[tid]) err(`encounter ${e.id}: unknown troop ${tid}`);
+          if (!(Number.isInteger(n) && n > 0)) err(`encounter ${e.id}: bad count for ${tid}`);
+        }
+      }
+      for (const entry of e.loot?.table || []) {
+        if (!C.items?.[entry.item]) err(`encounter ${e.id}: unknown loot item ${entry.item}`);
+        else if (C.items[entry.item].questItem) err(`encounter ${e.id}: quest item ${entry.item} in random loot`);
+        if (!(entry.weight > 0)) err(`encounter ${e.id}: bad weight for ${entry.item}`);
+      }
+    }
+    return errors;
+  }
+
+  /** Validate once at boot and log every problem to diagnostics. */
+  function init() {
+    const errors = validate();
+    for (const e of errors) CL.diag.log('error', 'Content error', { error: e });
+    if (!errors.length) CL.diag.log('info', 'Content validated', { tables: TABLES.length });
+    return errors;
+  }
+
+  CL.content = { TABLES, table, get, troop, item, encounter, validate, init };
+})(typeof window !== 'undefined' ? window : globalThis);

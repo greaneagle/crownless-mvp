@@ -175,12 +175,12 @@
   function updateHud() {
     const g = CL.game;
     const $ = CL.ui.$;
-    const maxHp = CL.units.STATS.hero.hp;
+    const maxHp = g.hero.maxhp;
     $('#hptext').textContent = `Hero HP: ${Math.max(0, Math.ceil(g.hero.hp))} / ${maxHp}`;
     $('#hpfill').style.width = `${(g.hero.hp / maxHp) * 100}%`;
     $('#summary').textContent =
       `Allies ${g.allies.filter((x) => x.alive).length} · ` +
-      `Enemies ${g.enemies.filter((x) => x.alive).length} · Wave ${g.wave}/2`;
+      `Enemies ${g.enemies.filter((x) => x.alive).length} · Wave ${g.wave}/${g.totalWaves}`;
   }
 
   function draw() {

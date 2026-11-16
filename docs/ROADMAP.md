@@ -1,6 +1,6 @@
 # Crownless — Project Status & Roadmap
 
-_Last reviewed: 2026-11-16 · Build 0.4.0 · Spec: `Crownless_MVP_GDD_v1.md` (engine overridden: HTML5 Canvas + classic JS, no bundler, GitHub Pages)._
+_Last reviewed: 2026-11-16 · Build 0.5.0 · Spec: `Crownless_MVP_GDD_v1.md` (engine overridden: HTML5 Canvas + classic JS, no bundler, GitHub Pages)._
 
 This replaces the opencode-swarm plan (`.swarm/plan.md`, removed). The gate structure (A→E) is kept from the GDD; the task list is condensed and re-ordered around what the code actually needs.
 
@@ -11,14 +11,14 @@ This replaces the opencode-swarm plan (`.swarm/plan.md`, removed). The gate stru
 | Area | State |
 |---|---|
 | **Runtime** | `js/*.js` — 11 classic-script modules on `window.Crownless` (split from the old minified `game.js` in Phase 0). Battle-only prototype: title → camp → battle (2 waves) → result → camp. |
-| **Content data** | `data/*.js` — 8 classic-script modules filling `window.CROWNLESS_CONTENT` (3 factions, 10 settlements, 20 troops, 13 items, 7 market goods, 4 quests, 6 dialogue sets, 3 battle maps). References are internally consistent. **Not loaded by `index.html` and not used by `game.js`.** |
+| **Content data** | `data/*.js` — 9 classic-script modules filling `window.CROWNLESS_CONTENT` (adds `encounters`). Loaded by `index.html`, validated at boot by `js/content.js`, and the source of all troop, wave and loot numbers. |
 | **Assets** | 169 PNGs (1.3 MB); `game.js` loads 53 of them (36 unit frames, 17 world tiles). |
 | **Docs** | `docs/BASELINE.md` — accurate audit of 0.3.0 behavior (keep it; it is the regression reference). |
 | **Tooling** | `npm test` (node:test, 34 tests), `npm run lint` (Biome via npx), `npm run serve`. CI runs both before the Pages deploy. |
 
 ### Gate status vs GDD
 - **Gate A (combat feel)** — implemented to GDD §6 in 0.4.0 (phased swings, 90°/120° arcs, input buffer, telegraphs, auto-pause, portrait prompt). Awaiting a real-phone playtest; see `docs/GATE-A-VALIDATION.md`.
-- **Gate B (party battle)** — partial: recruit infantry/archers, F/H/C orders, archers shoot, 35/65 dead/wounded split. Gaps: stats hardcoded (not from `data/troops.js`), no armor/damage formula, no loot, wounded heal instantly on "Return to Camp" instead of after 2 campaign days, no return-to-map.
+- **Gate B (party battle)** — done in 0.5.0: troops, waves and loot come from `data/`, armor formula, archer accuracy, per-soldier save v2 with migration/backup, 2-day wound recovery on a day clock. Only return-to-map is left, and it opens Gate C.
 - **Gates C–E** — not started (no world map, character, inventory, trade, upkeep, quests, export/import, audio, tutorial).
 
 ### Problems to fix early
@@ -48,13 +48,13 @@ Each step should leave the game deployable. Bold items are the critical path.
 - [x] 1.3 Lifecycle: auto-pause on `visibilitychange`/blur, orientation/resize handling, touch-target ≥48 px check.
 - [ ] 1.4 Playtest on a real phone → fill in the checklist in `docs/GATE-A-VALIDATION.md` (desktop validation already recorded there).
 
-### Phase 2 — Finish Gate B (party battle slice)
-- [ ] 2.1 **Load `data/*.js` in `index.html`; build a small `ContentDB` with load-time validation.**
-- [ ] 2.2 **Units built from troop definitions** (hp/damage/armor/speed/reach/ranged); apply `Damage = max(1, round(Raw·100/(100+4·Armor)))`; archer range/cooldown/accuracy from data. Remove `legacy_*` troops.
-- [ ] 2.3 **Save v2**: roster as troop-ID entries with XP and wound timers; migrate v1 saves; keep a backup copy before overwriting.
-- [ ] 2.4 Loot from weighted tables, granted exactly once per battle; results screen lists loot and casualties.
-- [ ] 2.5 Minimal campaign clock (days) so wounded recover after 2 days, not on "Return to Camp".
-- [ ] 2.6 Record `docs/GATE-B-VALIDATION.md`.
+### Phase 2 — Finish Gate B (party battle slice) ✅ done in 0.5.0 (see `docs/GATE-B-VALIDATION.md`)
+- [x] 2.1 **Load `data/*.js` in `index.html`; build a small `ContentDB` with load-time validation.**
+- [x] 2.2 **Units built from troop definitions** (hp/damage/armor/speed/reach/ranged); apply `Damage = max(1, round(Raw·100/(100+4·Armor)))`; archer range/cooldown/accuracy from data. Remove `legacy_*` troops.
+- [x] 2.3 **Save v2**: roster as troop-ID entries with XP and wound timers; migrate v1 saves; keep a backup copy before overwriting.
+- [x] 2.4 Loot from weighted tables, granted exactly once per battle; results screen lists loot and casualties.
+- [x] 2.5 Minimal campaign clock (days) so wounded recover after 2 days, not on "Return to Camp".
+- [x] 2.6 Record `docs/GATE-B-VALIDATION.md`. (Return-to-map moves to Gate C step 1.)
 
 ### Phase 3 — Gate C (two-town campaign loop) — the big one
 Order chosen so each step is playable:

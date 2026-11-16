@@ -4,16 +4,6 @@
   const CL = root.Crownless;
   const { rand, clamp, normalize } = CL.util;
 
-  // Hardcoded 0.3.0 stats. Unknown roles fall back to 'reaver'.
-  // TODO(Phase 2.2): replace with data/troops.js definitions.
-  const STATS = {
-    hero: { hp: 85, speed: 142, damage: 18 },
-    infantry: { hp: 70, speed: 94, damage: 11 },
-    archer: { hp: 46, speed: 84, damage: 8 },
-    brute: { hp: 85, speed: 77, damage: 13 },
-    reaver: { hp: 52, speed: 103, damage: 11 },
-  };
-
   const BOUNDS = { minX: 47, maxX: 908, minY: 65, maxY: 490 };
   const FACE_VECTORS = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
 
@@ -29,19 +19,28 @@
 
   let uid = 0;
 
-  function makeUnit(x, y, team, role) {
-    const s = STATS[role] || STATS.reaver;
+  /**
+   * Build a battle unit from a troop definition (data/troops.js).
+   * `soldierId` links an allied unit back to its campaign roster entry.
+   */
+  function makeUnit(x, y, team, troopId, soldierId = null) {
+    const t = CL.content.troop(troopId);
     return {
       id: ++uid,
       x,
       y,
       team,
-      role,
+      troop: t.id,
+      role: t.role, // 'hero' | 'infantry' | 'archer' | 'cavalry'
+      soldierId,
       alive: true,
-      hp: s.hp,
-      maxhp: s.hp,
-      speed: s.speed,
-      damage: s.damage,
+      hp: t.hp,
+      maxhp: t.hp,
+      speed: t.speed,
+      damage: t.damage,
+      armor: t.armor,
+      reach: t.reach,
+      ranged: t.ranged || null,
       face: 'down',
       anim: rand(0, 1),
       swing: null, // { t, hit: [ids] } while a melee swing is in progress
@@ -108,5 +107,5 @@
     u.y = clamp(u.y + vy * distance, BOUNDS.minY, BOUNDS.maxY);
   }
 
-  CL.units = { STATS, BOUNDS, ARC, SWING, makeUnit, inArc, swingPhase, isCommitted, aim, move, push };
+  CL.units = { BOUNDS, ARC, SWING, makeUnit, inArc, swingPhase, isCommitted, aim, move, push };
 })(typeof window !== 'undefined' ? window : globalThis);

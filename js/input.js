@@ -36,12 +36,12 @@
       if (game.mode === 'title') ui.changeMode('camp');
       else if (game.mode === 'camp') combat.startBattle();
       else if (game.mode === 'result') {
-        party.recover();
         ui.changeMode('camp');
       }
     };
-    $('#recruitInf').onclick = () => party.recruit('infantry');
-    $('#recruitArch').onclick = () => party.recruit('archer');
+    $('#recruitInf').onclick = () => party.recruit(party.RECRUITABLE[0]);
+    $('#recruitArch').onclick = () => party.recruit(party.RECRUITABLE[1]);
+    $('#restBtn').onclick = () => party.rest();
     $('#ordersBtn').onclick = () => {
       $('#ordersPanel').classList.toggle('hidden');
       combat.order(game.group, null);

@@ -7,7 +7,7 @@ const vm = require('node:vm');
 const ROOT = path.join(__dirname, '..', '..');
 
 // Logic modules only (no render/input/main — those need a real DOM).
-const LOGIC_MODULES = ['core', 'state', 'save', 'assets', 'units', 'combat', 'party'];
+const LOGIC_MODULES = ['core', 'content', 'state', 'save', 'assets', 'units', 'combat', 'party'];
 const CONTENT_MODULES = [
   'factions',
   'settlements',
@@ -17,6 +17,7 @@ const CONTENT_MODULES = [
   'quests',
   'dialogue',
   'battle_maps',
+  'encounters',
 ];
 
 function memoryStorage(initial = {}) {
@@ -44,6 +45,7 @@ function loadGame({ storage = memoryStorage(), random } = {}) {
   };
   sandbox.window = sandbox;
   vm.createContext(sandbox);
+  runModules(sandbox, 'data', CONTENT_MODULES);
   for (const m of LOGIC_MODULES) {
     const file = path.join(ROOT, 'js', `${m}.js`);
     vm.runInContext(fs.readFileSync(file, 'utf8'), sandbox, { filename: file });
@@ -67,15 +69,19 @@ function loadGame({ storage = memoryStorage(), random } = {}) {
   return { CL, storage, uiCalls };
 }
 
+function runModules(sandbox, dir, names) {
+  for (const m of names) {
+    const file = path.join(ROOT, dir, `${m}.js`);
+    vm.runInContext(fs.readFileSync(file, 'utf8'), sandbox, { filename: file });
+  }
+}
+
 /** Load data/*.js content modules into a sandbox and return CROWNLESS_CONTENT. */
 function loadContent() {
   const sandbox = {};
   sandbox.window = sandbox;
   vm.createContext(sandbox);
-  for (const m of CONTENT_MODULES) {
-    const file = path.join(ROOT, 'data', `${m}.js`);
-    vm.runInContext(fs.readFileSync(file, 'utf8'), sandbox, { filename: file });
-  }
+  runModules(sandbox, 'data', CONTENT_MODULES);
   return sandbox.CROWNLESS_CONTENT;
 }
 

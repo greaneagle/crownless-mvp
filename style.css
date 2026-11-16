@@ -15,3 +15,8 @@
 #ordersPanel .ordersRow{display:flex;gap:6px;margin-top:6px}
 #ordersPanel .ordersRow button{margin:0;flex:1;white-space:nowrap}
 #ordersPanel button.active{border-color:#ffe7a8;background:linear-gradient(#8a7346,#4d3d22);box-shadow:0 0 0 2px #ffe7a855}
+
+/* 0.5.0 — Gate B camp roster */
+#rosterSummary{font-weight:bold}
+#rosterList{list-style:none;margin:8px auto;padding:0;font-size:clamp(12px,1.25vw,15px);line-height:1.5}
+#inventory{font-size:clamp(11px,1.15vw,14px);color:#d9c8a2;margin-bottom:4px}

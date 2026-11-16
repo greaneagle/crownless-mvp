@@ -99,3 +99,29 @@ test('battle map palettes point at existing tile images', () => {
     }
   }
 });
+
+test('the in-game ContentDB validator reports no problems', () => {
+  const { loadGame } = require('./helpers/load');
+  const { CL } = loadGame();
+  assert.deepEqual(Array.from(CL.content.validate()), []);
+});
+
+test('the ContentDB validator catches broken references', () => {
+  const { loadGame } = require('./helpers/load');
+  const { CL } = loadGame();
+  const raw = CL.content.table('encounters').captains_trial;
+  raw.waves[0].dragon = 2;
+  raw.loot.table.push({ item: 'courier_packet', weight: 1 });
+  CL.content.table('troops').levy.upgradeTo = 'nobody';
+  const errors = Array.from(CL.content.validate()).join('\n');
+  assert.match(errors, /unknown troop dragon/);
+  assert.match(errors, /quest item courier_packet in random loot/);
+  assert.match(errors, /levy: unknown upgrade nobody/);
+});
+
+test('camp recruits and starting enemies exist as troop definitions', () => {
+  assert.equal(C.troops.levy.recruitCost, 15);
+  assert.equal(C.troops.hunter.recruitCost, 25);
+  assert.equal(C.troops.hunter.role, 'archer');
+  assert.ok(C.encounters.captains_trial.waves.every((w) => Object.keys(w).every((id) => C.troops[id])));
+});

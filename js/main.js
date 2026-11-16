@@ -4,6 +4,7 @@
   const CL = root.Crownless;
   const { diag } = CL;
 
+  CL.content.init();
   CL.campaign = CL.save.load();
   CL.assets.preload();
 

@@ -1,4 +1,4 @@
-# Crownless 0.4.0 — Gate B: The Captain's Trial
+# Crownless 0.5.0 — Gate B: The Captain's Trial
 
 A single-player, top-down party-battle prototype in plain HTML5 Canvas and classic JavaScript. There's no bundler, no runtime dependencies and no server. It's published to GitHub Pages straight from `main`.
 
@@ -8,16 +8,17 @@ A single-player, top-down party-battle prototype in plain HTML5 Canvas and class
 
 ## What is playable
 
-- Recruit infantry (20 crowns) and archers (25 crowns), up to 15 troops in total.
+- Hire Valedorn Levies (15 crowns) and Hunters (25 crowns), up to 15 soldiers in total, including wounded ones. Every troop's stats come from `data/troops.js`.
 - Real-time four-direction hero movement. Sword swings have a visible windup, a strike window and a recovery, and hit everything in a 90° arc in front of you.
 - A frontal shield block that covers 120°. It can't cancel a swing you've already started, and enemy windups are drawn in red so you know when to block.
 - Allied infantry and archers fight alongside you, and archers fire arrows.
 - Pick a group with **1** (infantry) or **2** (archers), then give an order: **F** Follow, **H** Hold or **C** Charge.
-- Two waves of Road Reavers (6, then 8), ending in victory or capture, with gold and renown rewards.
-- Casualties: 35% of fallen troops are killed and 65% are wounded. Wounded troops recover when you return to camp.
-- The game auto-saves in the browser. A diagnostics panel (F3) shows logs and can export them as JSON or TXT.
+- Two waves of Road Reavers (Looters and Reavers, defined in `data/encounters.js`), ending in victory or capture. Armor reduces damage, and archers sometimes miss.
+- Win gold, renown and loot, which goes into your pack. If you're captured you lose 20% of your crowns and one item.
+- Casualties: 35% of fallen soldiers are killed and the rest are wounded for 2 campaign days. Rest at camp to pass the time.
+- The game auto-saves in the browser and keeps a backup of the previous save. Saves from 0.3 and 0.4 are converted automatically. A diagnostics panel (F3) shows logs and can export them as JSON or TXT.
 - Landscape phone controls: joystick, Attack, Block and an Orders menu above them. The game pauses when you switch away and asks you to rotate in portrait.
-- Gate A details and phone-test checklist: [`docs/GATE-A-VALIDATION.md`](docs/GATE-A-VALIDATION.md)
+- Gate details and playtest checklists: [`docs/GATE-A-VALIDATION.md`](docs/GATE-A-VALIDATION.md), [`docs/GATE-B-VALIDATION.md`](docs/GATE-B-VALIDATION.md)
 
 | Action | Desktop | Touch |
 |---|---|---|
@@ -31,21 +32,22 @@ A single-player, top-down party-battle prototype in plain HTML5 Canvas and class
 ## Project layout
 
 ```
-index.html        page shell; loads data/ (later) and js/ as classic deferred scripts
+index.html        page shell; loads data/ then js/ as classic deferred scripts
 style.css         layout, HUD and touch controls
 js/               game runtime, attached to window.Crownless
   core.js         constants, math helpers, diagnostics log
+  content.js      ContentDB: lookups into data/ + boot-time validation
   state.js        live game state (CL.game)
-  save.js         localStorage save (schema v1)
+  save.js         localStorage save (schema v2, backup, 0.3 migration)
   assets.js       sprite preloading and frame tables
-  units.js        unit stats, facing, movement
+  units.js        units built from troop data, swing phases, facing, movement
   combat.js       waves, attacks, AI, arrows, win/loss
-  party.js        recruiting, battle results, recovery
+  party.js        recruiting, day clock, wounded recovery, battle results and loot
   ui.js           overlays, roster, pause, diagnostics panel
   render.js       canvas drawing and HUD
   input.js        keyboard, mouse, touch buttons, joystick
   main.js         boot and main loop (loads last)
-data/             content definitions (window.CROWNLESS_CONTENT), not yet used by the runtime
+data/             content definitions (window.CROWNLESS_CONTENT): troops, encounters, items…
 assets/           sprite PNGs (u#### units, w#### world tiles)
 tests/            node:test suite (no dependencies)
 ```
@@ -78,4 +80,4 @@ On every push to `main`, [`.github/workflows/deploy.yml`](.github/workflows/depl
 
 ## Known limits
 
-This is Gate B, not the full campaign. There is no strategic map, trading, quests or save export/import yet, and no cavalry. Ally commands are simple, not a formation system. The sprite crops come from the Sprite Studio assets, and some animations are not yet hand-aligned. Browser saves can be cleared by the browser.
+This is Gate B, not the full campaign. There is no strategic map, trading, food or wages, quests or save export/import yet, and no cavalry. Loot can be collected but not used or sold until inventory and trading arrive in Gate C. Ally commands are simple, not a formation system. The sprite crops come from the Sprite Studio assets, and some animations are not yet hand-aligned. Browser saves can be cleared by the browser.

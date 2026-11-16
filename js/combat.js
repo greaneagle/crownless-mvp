@@ -6,31 +6,45 @@
   const { rand, dist, normalize } = CL.util;
   const { ARC, SWING, makeUnit, inArc, swingPhase, isCommitted, aim, move, push } = CL.units;
 
-  // Time from one attack start to the next. Melee swings can't restart before SWING.total.
-  const COOLDOWN = { hero: SWING.total, archer: 1.2, melee: 0.86 };
-  const REACH = { hero: 67, melee: 48 };
-  const ARROW = { speed: 240, life: 1.6, hitRadius: 19, maxRange: 245, aimHeight: 16 };
+  // Time from one melee attack start to the next (archers use their troop's ranged.cooldown).
+  // Melee swings can't restart before SWING.total.
+  const COOLDOWN = { hero: SWING.total, melee: 0.86 };
+  const ARROW = { life: 1.6, hitRadius: 19, rangeSlack: 20, aimHeight: 16 };
+  // A missed shot (1 - accuracy) is thrown off by 0.12–0.25 rad: enough to miss a standing target.
+  const MISS_ANGLE = [0.12, 0.25];
   const SHOT_FLASH = 0.2;
   const KNOCKBACK = 6;
   const INPUT_BUFFER = 0.1; // GDD §6: a press up to 100 ms before recovery ends still swings
-  const WAVE_SIZES = [6, 8];
+  const DEPLOY_CAP = { infantry: 12, archer: 8 };
+  const DEFAULT_ENCOUNTER = 'captains_trial';
   const GUARD_SPEED = 0.65;
   const MAX_DT = 0.05;
 
   // AI distances (px). goal = stopping distance from destination.
   const AI = {
-    archer: { chase: 145, followGoal: 98, followEngage: 205, followFight: 143, holdEngage: 218, holdFight: 150, fire: 225 },
-    melee: { chase: 38, followGoal: 62, followEngage: 75, followFight: 37, holdEngage: 85, holdFight: 37, fire: 47 },
+    archer: { chase: 145, followGoal: 98, followEngage: 205, followFight: 143, holdEngage: 218, holdFight: 150 },
+    melee: { chase: 38, followGoal: 62, followEngage: 75, followFight: 37, holdEngage: 85, holdFight: 37 },
   };
 
   const game = () => CL.game;
   const opponentsOf = (u) => (u.team === 'enemy' ? [game().hero, ...game().allies] : game().enemies);
   const nearestAlive = (u, list) =>
     list.filter((v) => v?.alive).sort((a, b) => dist(u, a) - dist(u, b))[0];
+  // Start a swing just inside reach; archers loose at their troop range.
+  const fireRange = (u) => (u.ranged ? u.ranged.range : u.reach - 1);
 
-  function startBattle() {
+  /** GDD §6: Damage = max(1, round(Raw × 100 / (100 + 4 × Armor))). */
+  function mitigate(raw, armor) {
+    return Math.max(1, Math.round((raw * 100) / (100 + 4 * (armor || 0))));
+  }
+
+  /** Deploy the hero plus healthy roster soldiers and start the encounter's first wave. */
+  function startBattle(encounterId = DEFAULT_ENCOUNTER) {
     const g = game();
-    const c = CL.campaign;
+    const enc = CL.content.encounter(encounterId);
+    g.encounter = enc.id;
+    g.battleId = CL.campaign.battles + 1;
+    g.totalWaves = enc.waves.length;
     g.mode = 'battle';
     g.paused = false;
     g.t = 0;
@@ -45,13 +59,16 @@
     g.orders = { infantry: 'follow', archer: 'hold' };
     g.hero = makeUnit(330, 270, 'ally', 'hero');
     g.hero.face = 'right';
-    const nInf = Math.min(12, c.infantry);
-    const nArch = Math.min(8, c.archer);
-    for (let i = 0; i < nInf; i++) {
-      g.allies.push(makeUnit(235 + (i % 3) * 42, 185 + Math.floor(i / 3) * 47, 'ally', 'infantry'));
-    }
-    for (let i = 0; i < nArch; i++) {
-      g.allies.push(makeUnit(164 + (i % 3) * 40, 328 + Math.floor(i / 3) * 44, 'ally', 'archer'));
+    const placed = { infantry: 0, archer: 0 };
+    for (const s of CL.party.healthySoldiers()) {
+      const role = CL.content.troop(s.troop).role;
+      if (!(role in placed) || placed[role] >= DEPLOY_CAP[role]) continue;
+      const i = placed[role]++;
+      const [x, y] =
+        role === 'infantry'
+          ? [235 + (i % 3) * 42, 185 + Math.floor(i / 3) * 47]
+          : [164 + (i % 3) * 40, 328 + Math.floor(i / 3) * 44];
+      g.allies.push(makeUnit(x, y, 'ally', s.troop, s.id));
     }
     for (const a of g.allies) {
       a.holdX = a.x;
@@ -59,39 +76,38 @@
     }
     spawnWave();
     CL.ui.hideBattleOverlays();
-    CL.diag.log('info', 'Battle begun', { infantry: nInf, archers: nArch });
+    CL.diag.log('info', 'Battle begun', { encounter: enc.id, battleId: g.battleId, deployed: placed });
   }
 
   function spawnWave() {
     const g = game();
     const art = CL.assets.enemyArt;
     g.wave++;
-    const count = WAVE_SIZES[g.wave - 1] ?? WAVE_SIZES[WAVE_SIZES.length - 1];
-    for (let i = 0; i < count; i++) {
-      const x = rand(735, 887);
-      const y = rand(91, 450);
-      const e = makeUnit(x, y, 'enemy', i % 5 === 0 ? 'brute' : 'reaver');
+    const wave = CL.content.encounter(g.encounter).waves[g.wave - 1];
+    const troops = Object.entries(wave).flatMap(([id, n]) => Array(n).fill(id));
+    troops.forEach((troopId, i) => {
+      const e = makeUnit(rand(735, 887), rand(91, 450), 'enemy', troopId);
       e.face = 'left';
       e.art = art[i % art.length];
       g.enemies.push(e);
-    }
+    });
     CL.ui.message(`Enemy wave ${g.wave} / ${g.totalWaves}`);
-    CL.diag.log('info', 'Enemy wave spawned', { wave: g.wave, enemies: count });
+    CL.diag.log('info', 'Enemy wave spawned', { wave: g.wave, enemies: wave });
   }
 
   /**
-   * Apply damage. A guarding target absorbs it entirely when the source is inside its
-   * 120° shield arc (GDD §6); hits from behind or the flanks land.
+   * Apply raw damage, reduced by the target's armor. A guarding target absorbs it entirely
+   * when the source is inside its 120° shield arc (GDD §6); hits from behind or the flanks land.
    * Returns 'blocked' | 'hit' | 'down' | null.
    */
-  function hit(target, damage, source) {
+  function hit(target, raw, source) {
     const g = game();
     if (!target.alive) return null;
     if (target.guard && source && inArc(target, source, ARC.block)) {
       g.effects.push({ x: target.x, y: target.y - 17, t: 0.2, color: '#f6daa6', kind: 'block' });
       return 'blocked';
     }
-    target.hp = Math.max(0, target.hp - damage);
+    target.hp = Math.max(0, target.hp - mitigate(raw, target.armor));
     target.flash = 0.14;
     if (source) push(target, source.x, source.y, KNOCKBACK);
     g.effects.push({
@@ -115,13 +131,18 @@
   /** Begin an attack if the unit is ready. Returns true when an attack started. */
   function startAttack(u) {
     if (!u.alive || u.attackCooldown > 1e-6 || u.swing) return false;
-    if (u.role === 'archer') {
-      u.attackCooldown = COOLDOWN.archer;
+    if (u.ranged) {
+      const r = u.ranged;
+      u.attackCooldown = r.cooldown;
       u.shot = SHOT_FLASH;
       const target = nearestAlive(u, opponentsOf(u));
-      if (target && dist(u, target) < ARROW.maxRange) {
-        const [dx, dy] = normalize(target.x - u.x, target.y - u.y);
-        game().arrows.push({ x: u.x, y: u.y - 20, dx, dy, team: u.team, life: ARROW.life, source: u, damage: u.damage });
+      if (target && dist(u, target) < r.range + ARROW.rangeSlack) {
+        let [dx, dy] = normalize(target.x - u.x, target.y - u.y);
+        if (Math.random() > r.accuracy) {
+          const off = rand(MISS_ANGLE[0], MISS_ANGLE[1]) * (Math.random() < 0.5 ? -1 : 1);
+          [dx, dy] = [dx * Math.cos(off) - dy * Math.sin(off), dx * Math.sin(off) + dy * Math.cos(off)];
+        }
+        game().arrows.push({ x: u.x, y: u.y - 20, dx, dy, speed: r.projectileSpeed, team: u.team, life: ARROW.life, source: u, damage: u.damage });
       }
       return true;
     }
@@ -134,10 +155,9 @@
 
   /** During the active window, hit every opponent in reach and arc — each at most once per swing. */
   function resolveSwing(u) {
-    const reach = u.role === 'hero' ? REACH.hero : REACH.melee;
     for (const v of opponentsOf(u)) {
       if (!v?.alive || u.swing.hit.includes(v.id)) continue;
-      if (dist(u, v) > reach || !inArc(u, v, ARC.attack)) continue;
+      if (dist(u, v) > u.reach || !inArc(u, v, ARC.attack)) continue;
       u.swing.hit.push(v.id);
       hit(v, u.damage, u);
     }
@@ -196,7 +216,7 @@
     const d = dist(u, dest);
     if (d > goal + 5) move(u, dest.x - u.x, dest.y - u.y, dt);
     else if (dest === target) aim(u, target);
-    if (dist(u, target) < p.fire) startAttack(u);
+    if (dist(u, target) < fireRange(u)) startAttack(u);
   }
 
   /** Record an attack press so a tap during late recovery is not lost. */
@@ -228,8 +248,8 @@
   function updateArrows(h, dt) {
     const g = game();
     for (const a of g.arrows) {
-      a.x += a.dx * ARROW.speed * dt;
-      a.y += a.dy * ARROW.speed * dt;
+      a.x += a.dx * a.speed * dt;
+      a.y += a.dy * a.speed * dt;
       a.life -= dt;
       const targets = a.team === 'ally' ? g.enemies : [h, ...g.allies];
       for (const v of targets) {
@@ -283,8 +303,9 @@
 
   CL.combat = {
     COOLDOWN,
-    REACH,
     INPUT_BUFFER,
+    DEPLOY_CAP,
+    mitigate,
     startBattle,
     spawnWave,
     hit,

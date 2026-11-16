@@ -1,4 +1,4 @@
-// Combat tests: 0.3.0 baseline behavior plus the Gate A rules from GDD §6.
+// Combat tests: Gate A rules (GDD §6) and Gate B data-driven units, armor and archers.
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { loadGame } = require('./helpers/load');
@@ -14,20 +14,29 @@ function setup() {
   return env;
 }
 
-test('unit stats match the 0.3.0 baseline', () => {
+test('units are built from troop definitions', () => {
   const { CL } = setup();
-  const expect = {
-    hero: [85, 142, 18],
-    infantry: [70, 94, 11],
-    archer: [46, 84, 8],
-    brute: [85, 77, 13],
-    reaver: [52, 103, 11],
-    unknown_role: [52, 103, 11],
-  };
-  for (const [role, [hp, speed, damage]] of Object.entries(expect)) {
-    const u = CL.units.makeUnit(0, 0, 'enemy', role);
-    assert.deepEqual([u.hp, u.maxhp, u.speed, u.damage], [hp, hp, speed, damage], role);
-  }
+  const levy = CL.units.makeUnit(0, 0, 'ally', 'levy', 3);
+  assert.deepEqual(
+    [levy.troop, levy.role, levy.hp, levy.maxhp, levy.damage, levy.armor, levy.reach, levy.soldierId],
+    ['levy', 'infantry', 45, 45, 7, 1, 48, 3],
+  );
+  const hero = CL.units.makeUnit(0, 0, 'ally', 'hero');
+  assert.deepEqual([hero.role, hero.hp, hero.damage, hero.reach], ['hero', 85, 18, 67]);
+  const hunter = CL.units.makeUnit(0, 0, 'ally', 'hunter');
+  assert.equal(hunter.role, 'archer');
+  assert.deepEqual({ ...hunter.ranged }, { projectileSpeed: 240, range: 225, cooldown: 1.6, accuracy: 0.6 });
+  assert.throws(() => CL.units.makeUnit(0, 0, 'enemy', 'dragon'), /Unknown troops id: dragon/);
+});
+
+test('armor mitigation follows GDD §6', () => {
+  const { CL } = setup();
+  const m = CL.combat.mitigate;
+  assert.equal(m(18, 0), 18);
+  assert.equal(m(18, 1), 17);
+  assert.equal(m(18, 3), 16);
+  assert.equal(m(14, 6), 11);
+  assert.equal(m(1, 50), 1, 'never below 1');
 });
 
 test('attack arc is 90° and block arc is 120° (GDD §6)', () => {
@@ -85,7 +94,7 @@ test('a lethal hit downs the unit, cancels its swing and counts one kill', () =>
 test('melee hits push the target back', () => {
   const { CL } = setup();
   const src = CL.units.makeUnit(100, 100, 'ally', 'hero');
-  const v = CL.units.makeUnit(130, 100, 'enemy', 'reaver');
+  const v = CL.units.makeUnit(130, 100, 'enemy', 'looter');
   CL.combat.hit(v, 5, src);
   assert.equal(v.x, 136);
 });
@@ -119,13 +128,13 @@ test('swing lifecycle: windup 0.16 → active 0.12 → recovery 0.24', () => {
   step(CL, 0.02);
   assert.equal(CL.units.swingPhase(hero), 'windup');
   step(CL, 0.12);
-  assert.equal(e.hp, 52, 'no damage during windup');
+  assert.equal(e.hp, 60, 'no damage during windup');
   step(CL, 0.04);
   assert.equal(CL.units.swingPhase(hero), 'active');
-  assert.equal(e.hp, 52 - 18, 'damage lands in the active window');
+  assert.equal(e.hp, 60 - 16, 'damage lands in the active window');
   step(CL, 0.14);
   assert.equal(CL.units.swingPhase(hero), 'recovery');
-  assert.equal(e.hp, 52 - 18, 'one hit per target per swing');
+  assert.equal(e.hp, 60 - 16, 'one hit per target per swing');
   step(CL, 0.22);
   assert.equal(hero.swing, null, 'swing finished');
 });
@@ -135,7 +144,7 @@ test('one swing hits every enemy in the 90° arc, each once; not those outside i
   CL.combat.queueAttack();
   step(CL, 0.4);
   const hp = CL.game.enemies.map((e) => e.hp);
-  assert.deepEqual(hp, [34, 34, 52, 52]);
+  assert.deepEqual(hp, [44, 44, 60, 60], 'reavers: 60 hp, armor 3 → 16 damage');
 });
 
 test('facing locks while the swing is committed', () => {
@@ -172,7 +181,7 @@ test('guarding prevents starting an attack', () => {
   CL.game.attackHeld = true;
   step(CL, 0.4);
   assert.equal(CL.game.hero.swing, null);
-  assert.equal(CL.game.enemies[0].hp, 52);
+  assert.equal(CL.game.enemies[0].hp, 60);
 });
 
 test('a tap within 100 ms of recovery ending is buffered; an earlier tap is dropped', () => {
@@ -200,55 +209,82 @@ test('AI swings turn toward their target at windup', () => {
   const u = CL.units.makeUnit(100, 100, 'enemy', 'reaver');
   u.face = 'down';
   u.attackCooldown = 0;
-  u.target = CL.units.makeUnit(60, 100, 'ally', 'infantry');
+  u.target = CL.units.makeUnit(60, 100, 'ally', 'levy');
   CL.game.hero = u.target;
   assert.equal(CL.combat.startAttack(u), true);
   assert.equal(u.face, 'left');
   assert.equal(CL.combat.startAttack(u), false, 'cannot start while swinging');
 });
 
-test('archers spawn an arrow only within 245px', () => {
+test('archers fire within troop range (+20 px slack) on their troop cooldown', () => {
   const { CL } = setup();
-  const archer = CL.units.makeUnit(100, 100, 'ally', 'archer');
+  const archer = CL.units.makeUnit(100, 100, 'ally', 'hunter');
   archer.attackCooldown = 0;
-  CL.game.enemies = [CL.units.makeUnit(400, 100, 'enemy', 'reaver')];
+  CL.game.enemies = [CL.units.makeUnit(400, 100, 'enemy', 'looter')];
   CL.combat.startAttack(archer);
-  assert.equal(CL.game.arrows.length, 0);
+  assert.equal(CL.game.arrows.length, 0, '300 px is out of range');
   archer.attackCooldown = 0;
-  CL.game.enemies[0].x = 300;
+  CL.game.enemies[0].x = 340;
   CL.combat.startAttack(archer);
-  assert.equal(CL.game.arrows.length, 1);
-  assert.equal(CL.game.arrows[0].damage, 8);
-  assert.equal(archer.attackCooldown, 1.2);
+  assert.equal(CL.game.arrows.length, 1, '240 px is in range');
+  const a = CL.game.arrows[0];
+  assert.equal(a.damage, 10);
+  assert.equal(a.speed, 240);
+  assert.equal(archer.attackCooldown, 1.6);
 });
 
-test('startBattle caps the deployed party at 12 infantry and 8 archers', () => {
+test('archer accuracy: a hit roll aims true, a miss roll throws the shot off line', () => {
+  const rolls = [0.5, 0.7, 0, 0.1];
+  const { CL } = loadGame({ random: () => (rolls.length ? rolls.shift() : 0.5) });
+  CL.game.allies = [];
+  CL.game.arrows = [];
+  const archer = CL.units.makeUnit(100, 100, 'ally', 'hunter');
+  CL.game.enemies = [CL.units.makeUnit(300, 100, 'enemy', 'looter')];
+  rolls.splice(0, rolls.length, 0.5); // 0.5 ≤ 0.6 accuracy → on target
+  archer.attackCooldown = 0;
+  CL.combat.startAttack(archer);
+  assert.equal(CL.game.arrows[0].dy, 0);
+  rolls.splice(0, rolls.length, 0.7, 0, 0.1); // miss; smallest offset; rotate negative
+  archer.attackCooldown = 0;
+  CL.combat.startAttack(archer);
+  const miss = CL.game.arrows[1];
+  assert.ok(Math.abs(Math.atan2(miss.dy, miss.dx)) >= 0.12 - 1e-9, 'deflected at least 0.12 rad');
+});
+
+test('startBattle deploys only healthy soldiers, capped at 12 infantry and 8 archers', () => {
   const { CL, uiCalls } = setup();
-  Object.assign(CL.campaign, { infantry: 20, archer: 20 });
+  const c = CL.campaign;
+  c.roster = [];
+  for (let i = 0; i < 14; i++) CL.save.addSoldier(c, 'levy');
+  for (let i = 0; i < 10; i++) CL.save.addSoldier(c, 'hunter');
+  c.roster[0].woundedUntil = 5;
   CL.combat.startBattle();
   const roles = CL.game.allies.map((a) => a.role);
   assert.equal(roles.filter((r) => r === 'infantry').length, 12);
   assert.equal(roles.filter((r) => r === 'archer').length, 8);
+  assert.ok(!CL.game.allies.some((a) => a.soldierId === c.roster[0].id), 'wounded soldier stays in camp');
+  assert.ok(CL.game.allies.every((a) => c.roster.some((s) => s.id === a.soldierId)));
   assert.equal(CL.game.mode, 'battle');
+  assert.equal(CL.game.battleId, 1);
   assert.equal(CL.game.hero.face, 'right');
-  assert.equal(CL.game.enemies.length, 6, 'wave 1 has 6 enemies');
-  assert.ok(uiCalls.some((c) => c[0] === 'hideBattleOverlays'));
+  assert.ok(uiCalls.some((x) => x[0] === 'hideBattleOverlays'));
 });
 
-test('waves: 6 enemies then 8, then victory', () => {
+test('waves come from the encounter: 4 looters + 2 reavers, then 6 + 2, then victory', () => {
   const { CL, uiCalls } = setup();
   CL.combat.startBattle();
-  const brutes = CL.game.enemies.filter((e) => e.role === 'brute').length;
-  assert.equal(brutes, 2, 'every 5th spawn is a brute');
+  const count = (id) => CL.game.enemies.filter((e) => e.troop === id).length;
+  assert.equal(CL.game.totalWaves, 2);
+  assert.deepEqual([count('looter'), count('reaver')], [4, 2]);
   for (const e of CL.game.enemies) e.alive = false;
   CL.combat.update(0.01);
   assert.equal(CL.game.wave, 2);
-  assert.equal(CL.game.enemies.length, 8);
+  assert.deepEqual([count('looter'), count('reaver')], [6, 2]);
   for (const e of CL.game.enemies) e.alive = false;
   CL.combat.update(0.01);
   assert.equal(CL.game.mode, 'result');
   assert.equal(CL.game.result.win, true);
-  assert.ok(uiCalls.some((c) => c[0] === 'changeMode' && c[1] === 'result'));
+  assert.ok(uiCalls.some((x) => x[0] === 'changeMode' && x[1] === 'result'));
 });
 
 test('defeat when the hero and every ally are down', () => {
