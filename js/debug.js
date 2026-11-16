@@ -275,6 +275,7 @@
       case 'teleport':
         if (mode === 'battle' || mode === 'result') return CL.ui.message('Finish the battle first');
         teleport($('#cheatPlace').value);
+        Object.assign(CL.game, { town: null, talk: null, battleMap: null }); // leave the old streets behind
         CL.save.write();
         CL.town.enterPlace();
         return;

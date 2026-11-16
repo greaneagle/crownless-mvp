@@ -149,45 +149,118 @@
     },
     caravan_master: {
       id: 'caravan_master',
-      speaker: 'Caravan Master',
-      start: 'talk',
+      speaker: 'Caravan Master Oswin',
+      place: 'eastwatch',
+      start: [
+        { if: { quest: 'q2', stage: 'q2_choose' }, node: 'q2_read' },
+        { if: { quest: 'q2', stage: 'q2_recover' }, node: 'q2_waiting' },
+        { if: { quest: 'q2', is: 'done' }, node: 'after' },
+        'intro'
+      ],
       nodes: {
-        talk: {
+        intro: {
+          text: [
+            'Oswin, master of the Eastwatch caravans — what is left of them. Reavers hit my wagons on the river road and took a courier’s packet sealed with the old imperial eagle.',
+            { if: { has: 'charter_fragment' }, text: 'Wait — that scrap you carry. The same eagle, the same wax. Where did you find that?' },
+            { if: { not: { has: 'charter_fragment' } }, text: 'Whoever sealed it wanted it to reach Greywall. Whoever took it wanted it not to.' },
+            'Bring it back and I will pay eighty crowns, no questions.'
+          ],
+          options: [
+            { text: 'I’ll find your packet.', do: [{ start: 'q2' }], next: 'q2_go' },
+            { text: 'Not my business.' }
+          ]
+        },
+        q2_go: {
+          text: [
+            'They are camped on the river road between here and Highmere, bold as you like.',
+            'Fight them if you have the swords. A big enough company might scare them off without a fight. Or there is a fence in Highmere who hears everything — for a price.'
+          ],
+          options: [{ text: 'I’ll be back with it.' }]
+        },
+        q2_waiting: {
+          cycle: true,
+          text: ['The river road, between here and Highmere. Fight them, cow them, or buy their secret from the fence in Highmere.', 'Every day that packet is out there, someone is reading it who should not.'],
+          options: [{ text: 'On my way.' }]
+        },
+        q2_read: {
+          services: false,
+          text: [
+            'You found it! Let me see — two charters? Both sealed with the eagle, both naming a different heir to Greywall. One for the Crown, one for the Aurelian line.',
+            'Someone forged one of these. Or both. Whoever holds this packet holds the argument.',
+            'Captain Aldric of the Crown is in Stonebridge. Magistrate Vell sits here in Eastwatch. Or keep it, and let neither of them have it.'
+          ],
+          options: [
+            { text: 'I’ll keep it. Nobody gets to use this yet.', if: { has: 'courier_packet' }, do: [{ set: 'q2_choice', to: 'kept' }, { set: 'has_evidence' }, { complete: 'q2' }], next: 'kept' },
+            { text: 'I need to think about who should see it.' }
+          ]
+        },
+        kept: {
+          services: false,
+          text: ['A dangerous thing to carry. But maybe the right one. Here is your eighty — and keep your head down on the roads.'],
+          options: [{ text: 'I will.' }]
+        },
+        after: {
           cycle: true,
           text: [
-            'My seal was broken before I even reached the pass.',
-            'Survive the ambush, then recover the courier packet.',
-            'Show it to your masters, or keep it. Either way, choose wisely.'
+            'The caravans run a little easier these days. Thank you for that.',
+            { if: { flag: 'q2_choice', is: 'kept' }, text: 'Still carrying that packet? Good. Neither crown has stopped asking about it.' },
+            { if: { flag: 'q2_choice', is: 'valedorn' }, text: 'The Crown’s men walk taller since you gave them that packet. The magistrate does not smile at me any more.' },
+            { if: { flag: 'q2_choice', is: 'aurelian' }, text: 'The magistrate says the packet proves the Aurelian claim. Half of Eastwatch believes her.' }
           ]
         }
       }
     },
     valedorn_agent: {
       id: 'valedorn_agent',
-      speaker: 'Valedorn Agent',
-      start: 'talk',
+      speaker: 'Captain Aldric',
+      start: [{ if: [{ quest: 'q2', stage: 'q2_choose' }, { has: 'courier_packet' }], node: 'q2' }, 'talk'],
       nodes: {
+        q2: {
+          services: false,
+          text: ['They say you have Oswin’s packet. The Crown would be grateful to see it, {name} — and the Crown remembers its friends.'],
+          options: [{ text: 'Show the packet to the Crown.', if: [{ quest: 'q2', stage: 'q2_choose' }, { has: 'courier_packet' }], do: [{ take: 'courier_packet' }, { set: 'q2_choice', to: 'valedorn' }, { rep: 'valedorn', by: 25 }, { rep: 'aurelian', by: -10 }, { complete: 'q2' }], next: 'q2_thanks' }, { text: 'Not yet.' }]
+        },
+        q2_thanks: {
+          services: false,
+          text: ['Two charters… and only one of them true. The King’s lawyers will know which. You have done Valedorn a service it will not forget.'],
+          options: [{ text: 'See that it doesn’t.' }]
+        },
         talk: {
           cycle: true,
           text: [
-            'Two banners claim this land, and only one can stand.',
-            'Take our contract and settle the patrol and the caravan in one stroke.',
-            'Keep Mara alive — she is the witness this frontier needs.'
+            'Greywall has been the Crown’s for thirty years. Paper will not change that.',
+            'Keep the roads clear and the Crown keeps your purse full. Simple.',
+            { if: { flag: 'q2_choice', is: 'valedorn' }, text: 'The packet you brought us has the Aurelians scrambling. Well done.' },
+            { if: { flag: 'q2_choice', is: 'aurelian' }, text: 'You gave that packet to the magistrate. I hope her gold was worth it.' },
+            { if: { flag: 'q2_choice', is: 'kept' }, text: 'You still have that packet, I hear. The Crown would pay well for it — if you ever tire of carrying it.' }
           ]
         }
       }
     },
     aurelian_agent: {
       id: 'aurelian_agent',
-      speaker: 'Aurelian Agent',
-      start: 'talk',
+      speaker: 'Magistrate Vell',
+      place: 'eastwatch',
+      start: [{ if: [{ quest: 'q2', stage: 'q2_choose' }, { has: 'courier_packet' }], node: 'q2' }, 'talk'],
       nodes: {
+        q2: {
+          services: false,
+          text: ['Oswin tells me you recovered his packet. Imperial law belongs to those who keep it, {name}. Let me see it.'],
+          options: [{ text: 'Show the packet to the magistrate.', if: [{ quest: 'q2', stage: 'q2_choose' }, { has: 'courier_packet' }], do: [{ take: 'courier_packet' }, { set: 'q2_choice', to: 'aurelian' }, { rep: 'aurelian', by: 25 }, { rep: 'valedorn', by: -10 }, { complete: 'q2' }], next: 'q2_thanks' }, { text: 'Not yet.' }]
+        },
+        q2_thanks: {
+          services: false,
+          text: ['Two charters, and one of them a forgery that favours Valedorn — I would stake my seat on it. The Remnant owes you, {name}.'],
+          options: [{ text: 'I’ll remember that.' }]
+        },
         talk: {
           cycle: true,
           text: [
-            'Greywall’s verdict will decide who rules the south.',
-            'Win the deciding battle, then dictate the settlement’s terms.',
-            'Valedorn, Aurelian, or compromise — the choice will be yours.'
+            'Greywall was granted by charter, not won by the sword. The law is on our side.',
+            'Eastwatch remembers the empire’s order. The roads were safe then.',
+            { if: { flag: 'q2_choice', is: 'aurelian' }, text: 'The packet you brought me is in the court archive. Valedorn’s claim is crumbling.' },
+            { if: { flag: 'q2_choice', is: 'valedorn' }, text: 'You handed that packet to the Crown. I hope you know what you have done.' },
+            { if: { flag: 'q2_choice', is: 'kept' }, text: 'You still keep that packet. The court would welcome it — whenever you choose.' }
           ]
         }
       }
@@ -209,16 +282,24 @@
     },
     bandit_informant: {
       id: 'bandit_informant',
-      speaker: 'Bandit Informant',
-      start: 'talk',
+      speaker: 'Wenna the Fence',
+      place: 'highmere',
+      visible: { quest: 'q2', stage: 'q2_recover' },
+      start: 'offer',
       nodes: {
-        talk: {
-          cycle: true,
+        offer: {
           text: [
-            'Word travels fast among those who live off the road.',
-            'Wagons, patrols, and better-paying employers — I hear it all.',
-            'Cross me and the next coin you spend will be your last.'
+            'Word travels fast among those who live off the road. You want Oswin’s packet.',
+            'The lads by the river cannot read, so they hid it in a hollow oak and kept the satchel for show. Sixty crowns, and I will tell you which oak.'
+          ],
+          options: [
+            { text: 'Pay 60 crowns.', if: { gold: 60 }, do: [{ gold: -60 }, { give: 'courier_packet' }, { set: 'q2_how', to: 'paid' }, { stage: 'q2_choose', quest: 'q2' }, { note: 'Wenna the Fence sold you the hiding place. The packet was in a hollow oak.', quest: 'q2' }], next: 'paid' },
+            { text: 'Too rich for me.' }
           ]
+        },
+        paid: {
+          text: ['Third oak past the ford, a hand’s depth down. Pleasure doing business. You never saw me.'],
+          options: [{ text: 'Saw who?' }]
         }
       }
     }

@@ -91,6 +91,18 @@
           lines: ['Stonebridge has stood at this ford since before the empire. It will stand after.']
         },
         {
+          id: 'captain',
+          name: 'Captain Aldric',
+          tag: 'Captain',
+          frames: [72, 73, 74, 75],
+          x: 330,
+          y: 300,
+          pace: [400, 300],
+          action: 'talk',
+          dialogue: 'valedorn_agent',
+          lines: ['Keep the roads clear and the Crown keeps your purse full.']
+        },
+        {
           id: 'guard',
           name: 'Gate Guard',
           tag: 'Gate',

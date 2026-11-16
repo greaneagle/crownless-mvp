@@ -13,10 +13,54 @@ _Spec: GDD §3–§10 and §14 Gate D._
 | 4.5 AI cavalry; all 15 troop roles | ✅ 0.18.0 |
 | 4.6 Faction reputation and fort ownership | ✅ 0.19.0 |
 | 4.7 Quest and dialogue interpreter | ✅ 0.20.0 |
-| 4.8–4.12 Q1–Q4 and the companion Mara | 🟡 Q1 ✅ 0.21.0 |
+| 4.8–4.12 Q1–Q4 and the companion Mara | 🟡 Q1 ✅ 0.21.0 · Q2 ✅ 0.22.0 |
 | 4.13 Escort and delivery contracts | ⬜ |
 | 4.14 Trade-world interactions and regional news | ⬜ |
 | 4.15 Gate D acceptance | ⬜ |
+
+---
+
+## Slice 8 — 0.22.0: Q2 "The Broken Seal" (2026-11-17)
+
+### What's in (GDD §4 Q2: "Locate a courier's lost packet after a caravan ambush. Resolve the encounter by fighting, paying a bandit informant or negotiating if sufficiently strong. The recovered packet exposes contradictory claims about Greywall. Choose whether to show it to Valedorn, Aurelian, or keep it. The choice modifies reputation and available dialogue, not all future access.")
+- **New people:**
+  - **Caravan Master Oswin** and **Magistrate Vell** (Aurelian) appear as *Talk to …* on Eastwatch's menu.
+  - **Captain Aldric** (Valedorn) walks the Stonebridge square.
+  - **Wenna the Fence** appears on Highmere's menu while the packet is missing.
+- **Start:** Oswin offers the job in Eastwatch, and Q1 isn't required. If you carry the Q1 charter fragment, he recognises the same imperial seal.
+- **The thieves:** a 4 Looter + 2 Reaver camp on the river road between Eastwatch and Highmere, marked in gold. It is a *camp*: it holds its ground and only fights if you go to it, so the road to Highmere stays open even for a lone hero.
+- **Three ways to the packet:**
+  - **Fight** the camp.
+  - **Pay** Wenna 60 crowns for its hiding place.
+  - **Intimidate** the camp with a company at least 2.5× its strength, using the existing negotiation rule.
+  - Paying the camp's toll only buys passage.
+- **Reading it:** two sealed copies of the Greywall charter, naming different heirs.
+- **Three choices:**
+  - **Show Aldric:** Valedorn +25, Aurelian −10 (the GDD's ±25 story decision).
+  - **Show Vell:** Aurelian +25, Valedorn −10.
+  - **Keep it:** tell Oswin. No reputation change, and it sets `has_evidence` for the Q4 compromise ending. The packet is protected from sale and capture.
+  - Every choice pays 80 crowns, +15 renown and +80 XP, and closes the quest.
+- **Dialogue remembers:** Oswin, Aldric and Vell each have lines for every choice. No choice locks any later content.
+- **Interpreter additions:**
+  - A `parley` event, so quests can react to intimidating or paying a band.
+  - `camp` quest bands. Quest bands now always attack unless they're camps, and the camp marker survives saves.
+- **Fix:** the debug teleport no longer leaves the Stonebridge streets drawn behind another settlement's menu.
+
+### Checks
+- `tests/q2.test.js` (10 tests) covers:
+  - Oswin noticing the fragment, and Q2 needing no Q1
+  - the camp not chasing, and keeping its marker through a save
+  - each way to the packet; a toll that only buys passage; a fence you can't afford
+  - all three choices with exact reputation and pay
+  - dialogue that remembers the choice
+  - agents that only take the packet while you carry it
+- 233 tests pass; lint clean.
+- Browser, with real clicks:
+  - In Eastwatch, Oswin and Vell were on the menu; took the job from Oswin.
+  - Saw the gold "Quest: Reavers 6" camp on the map, then travelled past it to Highmere with no encounter.
+  - Paid Wenna through her conversation, and the camp packed up.
+  - In Stonebridge, tapped Captain Aldric and showed him the packet: "Quest complete · +80 crowns · +15 renown", Valedorn 25 (Friendly), Aurelian −10.
+  - The preview save was then reset so the quest can be played fresh.
 
 ---
 

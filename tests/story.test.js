@@ -214,10 +214,7 @@ test('people at menu-only settlements; the journal and HUD show the current ques
   const { CL } = withFixture();
   const S = CL.story;
   const c = CL.campaign;
-  assert.deepEqual(
-    Array.from(S.peopleAt('eastwatch').map((t) => t.id)),
-    ['tq_giver'],
-  );
+  assert.ok(S.peopleAt('eastwatch').some((t) => t.id === 'tq_giver'));
   assert.deepEqual(Array.from(S.peopleAt('stonebridge')), []);
   assert.deepEqual(Array.from(S.journal()), []);
   assert.equal(S.currentQuest(), null);
@@ -229,7 +226,11 @@ test('people at menu-only settlements; the journal and HUD show the current ques
   assert.equal(row.status, 'active');
   assert.equal(row.objective, 'Clear the looter camp.');
   S.finish(c, 'tq', 'done');
-  assert.deepEqual(Array.from(S.peopleAt('eastwatch')), [], 'hidden once done');
+  assert.equal(
+    S.peopleAt('eastwatch').some((t) => t.id === 'tq_giver'),
+    false,
+    'hidden once done',
+  );
   assert.equal(S.journal()[0].status, 'done');
 });
 

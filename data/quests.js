@@ -1,7 +1,7 @@
 /* Crownless content: quests. Plain classic script; no modules, no fetch.
  * Read by the story interpreter (js/story.js). A quest starts from a dialogue effect
  * ({ start: 'q1' }) and walks through its stages; each stage has a journal line and triggers:
- *   on: [{ event, match?, if?, do }]   — event: battle | enter | recruit | trade | contract | talk
+ *   on: [{ event, match?, if?, do }]   — event: battle | enter | recruit | trade | contract | talk | parley
  * Triggers move the quest on with { stage: 'id' } or close it with { complete: 'q1' } / { fail: 'q1' }.
  * rewards are paid on completion: { gold, renown, xp, rep: { faction: n } }.
  * GDD §4: four story quests; the stage triggers are authored with each quest (Gate D 4.8–4.12). */
@@ -60,17 +60,37 @@
       ],
       rewards: { gold: 50, renown: 15, xp: 60, rep: { valedorn: 10 } }
     },
+    // GDD §4 Q2 (investigation): recover a courier's packet by fighting, paying an informant or
+    // intimidating the thieves; it holds contradictory Greywall charters. Show it to Valedorn, to
+    // Aurelian, or keep it. The choice moves reputation and dialogue, never locks later quests.
     q2: {
       id: 'q2',
       title: 'The Broken Seal',
       giver: 'caravan_master',
-      summary: 'A courier’s packet went missing in a caravan ambush. It may say who should hold Greywall.',
+      summary: 'Caravan Master Oswin lost a sealed courier packet to Reavers on the river road. It may say who should hold Greywall.',
       stages: [
-        { id: 'q2_ambush', journal: 'Find the site of the caravan ambush.' },
-        { id: 'q2_recover_packet', journal: 'Recover the courier packet.' },
-        { id: 'q2_choose_faction', journal: 'Decide who sees the packet: Valedorn, Aurelian, or nobody.' }
+        {
+          id: 'q2_recover',
+          journal: 'Recover the packet from the Reavers camped on the river road between Eastwatch and Highmere — fight them, cow them, or pay the fence in Highmere for their secret.',
+          band: {
+            template: 'bandits',
+            tag: 'q2_thieves',
+            camp: true, // they sit on their loot; the player chooses how to deal with them
+            between: ['eastwatch', 'highmere'],
+            troops: { looter: 4, reaver: 2 },
+            text: 'The Reavers who took Oswin’s packet are dug in by the river, a broken courier’s satchel hanging from a spear.'
+          },
+          on: [
+            { event: 'battle', match: { win: true, tag: 'q2_thieves' }, do: [{ give: 'courier_packet' }, { set: 'q2_how', to: 'fought' }, { stage: 'q2_choose' }, { note: 'You took the packet from the Reavers by force.' }, { message: 'You recover the courier packet.' }] },
+            { event: 'parley', match: { tag: 'q2_thieves', outcome: 'intimidate' }, do: [{ give: 'courier_packet' }, { set: 'q2_how', to: 'cowed' }, { stage: 'q2_choose' }, { note: 'The Reavers threw the packet at your feet rather than face your company.' }, { message: 'The Reavers drop the packet and flee.' }] }
+          ]
+        },
+        {
+          id: 'q2_choose',
+          journal: 'The packet holds two sealed copies of the Greywall charter, naming different heirs. Show it to Captain Aldric in Stonebridge (Valedorn), Magistrate Vell in Eastwatch (Aurelian), or tell Oswin you are keeping it.'
+        }
       ],
-      rewards: { gold: 80, renown: 15 }
+      rewards: { gold: 80, renown: 15, xp: 80 }
     },
     q3: {
       id: 'q3',

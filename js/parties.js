@@ -90,6 +90,7 @@
     const p = spawn(c, spec.template);
     if (spec.troops) p.troops = { ...spec.troops };
     Object.assign(p, { x, y, tx: null, ty: null, anchor: { x, y }, questTag: spec.tag });
+    if (spec.camp) p.camp = true;
     CL.diag.log('info', 'Quest band spawned', { tag: spec.tag, troops: p.troops });
     return p;
   }
@@ -102,7 +103,7 @@
     const t = tpl(p.template);
     if (!hostileTo(c, t) || !playerOnMap(c) || now(c) < p.ignoreUntil) return false;
     if (dist(p, c.world) > t.detection) return false;
-    if (p.questTag) return true; // a story ambush springs whatever the odds
+    if (p.questTag) return !p.camp; // a story ambush springs whatever the odds; a camp waits to be found
     return A().troopsPower(p.troops) >= CHASE_RATIO * A().playerPower(c);
   }
 
@@ -359,6 +360,7 @@
       CL.ui.message(`You pay ${n.cost} crowns. The ${e.name} let you pass.`);
     }
     CL.diag.log('info', 'Negotiated', { party: e.party.id, outcome: n.kind, cost: n.cost || 0 });
+    CL.story.emit('parley', { party: e.party.template, tag: e.party.questTag || null, outcome: n.kind }, c);
     return true;
   }
 
@@ -478,6 +480,7 @@
       if (t.kind === 'bandit') q.lair = t.lairs.includes(p.lair) ? p.lair : t.lairs[0];
       if (Number.isInteger(p.contractId)) q.contractId = p.contractId;
       if (typeof p.questTag === 'string' && /^[a-z0-9_]{1,40}$/.test(p.questTag)) q.questTag = p.questTag;
+      if (q.questTag && p.camp === true) q.camp = true;
       if (num(p.anchor?.x) && num(p.anchor?.y)) q.anchor = { x: clamp(p.anchor.x, 0, 100), y: clamp(p.anchor.y, 0, 100) };
       if (t.kind === 'caravan') {
         q.routeIndex = Number.isInteger(p.routeIndex) ? clamp(p.routeIndex, 0, t.route.length - 1) : 0;

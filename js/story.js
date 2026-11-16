@@ -22,9 +22,11 @@
  *  Events: game code calls `emit(name, payload)`; quest stages react with
  *    on: [{ event, match: { key: value | [values] }, if, do }]
  *    Events: battle {win, encounter, site, party, contract}, enter {settlement}, recruit {troop,
- *    settlement}, trade {settlement, good, side}, contract {template, giver}, talk {dialogue, node}.
+ *    settlement}, trade {settlement, good, side}, contract {template, giver}, talk {dialogue, node},
+ *    parley {party, tag, outcome: 'intimidate' | 'toll'}.
  *
- * A stage may also need a band on the map: band: { template, tag, troops, text?, near | between: [a, b] }
+ * A stage may also need a band on the map: band: { template, tag, troops, text?, camp?, near | between: [a, b] }
+ * (camp: true holds its ground and only fights if the player goes to it; otherwise it ambushes)
  * (settlement or site ids). It is spawned when the stage begins, re-spawned if lost while the stage
  * is active (so nothing soft-locks), and removed once no active stage needs it. Battles against it
  * carry its tag: match: { tag: 'q1_ambush' }.
@@ -34,7 +36,7 @@
   'use strict';
   const CL = root.Crownless;
 
-  const EVENTS = ['battle', 'enter', 'recruit', 'trade', 'contract', 'talk'];
+  const EVENTS = ['battle', 'enter', 'recruit', 'trade', 'contract', 'talk', 'parley'];
   const QUEST_STATUS = ['active', 'done', 'failed'];
   const MAX_FLAGS = 200;
   const MAX_NOTES = 20;
