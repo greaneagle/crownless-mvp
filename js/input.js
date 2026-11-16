@@ -64,6 +64,12 @@
     $('#partyBtn').onclick = ui.openSheet;
     $('#gearBtn').onclick = ui.openSheet;
     for (const sel of ['#recruitA', '#recruitB']) $(sel).onclick = (e) => party.recruit(e.currentTarget.dataset.troop);
+    for (const sel of ['#buyFoodA', '#buyFoodB']) {
+      $(sel).onclick = (e) => {
+        if (CL.upkeep.buyFood(CL.campaign, Number(e.currentTarget.dataset.rations))) CL.save.write();
+        ui.refreshRoster();
+      };
+    }
     $('#restBtn').onclick = () => {
       party.rest();
       ui.changeMode('settlement'); // refresh the clock line too

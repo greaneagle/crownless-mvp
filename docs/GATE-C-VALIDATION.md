@@ -11,7 +11,7 @@ Gate C is delivered in slices. This file records each one.
 | 1. World map, click/tap travel, time advancing | ✅ 0.6.0 |
 | 2. Settlement menu (Recruit / Trade / Rest / Contracts / Leave) | 🟡 0.6.0: Recruit, Rest and Leave work. Trade (step 5) and Contracts (step 9) are still to come. |
 | 3. Character creation + inventory/equipment | ✅ 0.7.0. Hairstyles wait for art. |
-| 4. Food & weekly wages, morale/desertion | ⬜ |
+| 4. Food & weekly wages, morale/desertion | ✅ 0.8.0 |
 | 5. Trading (6 goods, scarcity) | ⬜ |
 | 6. World parties + encounter options (Attack / Negotiate / Retreat / Auto-resolve) | ⬜ The static Reaver hideout stands in for now |
 | 7. Capture on defeat | 🟡 0.6.0: released near a settlement after half a day. Loss of crowns and an item came in Gate B. |
@@ -21,6 +21,50 @@ Gate C is delivered in slices. This file records each one.
 | 11. Gate C acceptance | ⬜ |
 
 ---
+
+## Slice 3 — 0.8.0: Food, wages, morale (2026-11-16)
+
+### Rules (GDD §9, plus starting values where the GDD gives none)
+- **Food:**
+  - The party eats `ceil(party size / 5)` rations a day, counting the hero, wounded soldiers included. Food is eaten continuously as time passes: travelling, resting, battles (¼ day) and captivity (½ day).
+  - Food items, from the starting kit or loot, go straight into the ration stock. "Three Days of Food" is 3 rations.
+  - Settlements that trade sell **3 days'** or **a week's** worth for the current party. A ration costs `round(8 × (1 − 0.01 × Trade))` crowns, per the GDD price formula, with scarcity fixed at 1 until trading (step 5).
+- **Wages:**
+  - Paid every 7 days (first payday day 8): the sum of each soldier's weekly `wage` from `data/troops.js`, wounded soldiers included (GDD §7).
+  - If you're short, you pay what you have and lose **20 morale**.
+- **Morale:**
+  - Runs 0–100 and starts at 70.
+  - **Losses:** −15 per day starving, −20 for unpaid wages, −10 for a lost battle.
+  - **Gains:** +5 per fed day back up to 70, and +5 for a win. Morale above 70 from victories is kept.
+  - **Desertion:** below 25, each midnight has a chance (up to 60% at 0 morale) that one random soldier deserts.
+  - In this slice morale only drives desertion; it has no effect in battle yet.
+- **Warnings (GDD §11):**
+  - Messages for low food (under a day left), running out of food, wages paid or short, and desertion.
+  - The map HUD shows food in days and morale; the panel border turns red when food is under a day or morale is under 25.
+  - Settlement and Party screens show food, morale and wages, with warnings in red when short.
+- **Saves:**
+  - New fields: `food`, `morale`, `nextWagesDay`, `starving`.
+  - Older saves get 3 rations, 70 morale and a payday 7 days on; food items in their pack become rations.
+- **Debug panel:** a new **Supplies** section with +10 food, No food, Morale ±20, and Pay wages now.
+
+### Verification
+- **Automated:** `npm test` → 92/92. The new `tests/upkeep.test.js` (12 tests) covers:
+  - ration maths, eating over time, prices with the Trade discount
+  - starving and its one-time warning, and the low-food warning
+  - morale recovery and its cap
+  - payday timing, wounded soldiers' wages, short pay
+  - the desertion threshold and rolls, battle morale
+  - older-save upgrade, and the debug supplies
+  - The GDD edge cases "all food consumed during travel" and "no gold for wages" are covered explicitly.
+- **Browser (desktop):**
+  - New game: Stonebridge showed "Food: 3.0 days (1/day) · Morale 70 · No wages owed", with buttons to buy 3 days' food (24) and a week's (56).
+  - Hiring 2 Levies and a Hunter left 5 crowns. The wages line turned red ("12 crowns due day 8") and the food buttons were disabled.
+  - Debug "No food", then travelling to Eastwatch, gave the "run out of food" message, morale falling, and the HUD showing "food 0.0d" with the red border.
+  - Fixed a "3 days's food" typo along the way. No errors were logged.
+
+### Balance notes for playtesting
+- 60 starting crowns go quickly: three hires leave you unable to buy food or cover the first wages. The Looter Camp is meant to be the way out of that, so check that the early loop feels tight rather than punishing.
+- If desertion feels harsh, tune `MORALE` in `js/upkeep.js`.
 
 ## Slice 2 — 0.7.0: Character, equipment, debug tools (2026-11-16)
 

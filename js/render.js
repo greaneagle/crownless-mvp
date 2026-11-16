@@ -397,8 +397,11 @@
     const ground = { road: 'on the road', grass: 'open country', forest: 'in the forest' }[CL.world.terrainAt(w.x, w.y)];
     $('#hptext').textContent = here ? `At ${here}` : CL.game.travel ? `Travelling, ${ground}` : `Camped, ${ground}`;
     const wounded = CL.party.woundedSoldiers().length;
+    const food = CL.upkeep.foodDays(c);
     $('#summary').textContent =
-      `${CL.world.clockLabel()} · ${c.gold} crowns · ${c.roster.length} soldiers${wounded ? ` (${wounded} wounded)` : ''}`;
+      `${CL.world.clockLabel()} · ${c.gold} crowns · ${c.roster.length} soldiers${wounded ? ` (${wounded} wounded)` : ''}` +
+      ` · food ${food >= 10 ? Math.floor(food) : food.toFixed(1)}d · morale ${Math.round(c.morale)}`;
+    $('#topLeft').classList.toggle('warn', food < 1 || c.morale < CL.upkeep.MORALE.desertBelow);
   }
 
   function draw() {

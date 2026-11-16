@@ -211,7 +211,9 @@
         `Travel ×${C.travelFactor().toFixed(2)}`,
       ]),
       line(skills),
+      Object.assign(document.createElement('div'), { className: 'statLine' }),
     );
+    stats.lastChild.append(...supplyParts(c));
     $('#sheetEquip').replaceChildren(
       ...C.SLOTS.map((slot) => {
         const id = c.equipment[slot];
@@ -276,6 +278,24 @@
     const items = p.describeItems(c.inventory);
     $('#inventory').textContent = items ? `Pack: ${items}` : 'Pack: empty';
 
+    $('#supplies').replaceChildren(...supplyParts(c));
+
+    // Food: sold wherever the settlement trades (GDD §9: food is bought through settlement menus).
+    const sellsFood = p.currentSettlement()?.services.includes('trade');
+    const U = CL.upkeep;
+    const price = U.rationPrice(c);
+    [
+      ['#buyFoodA', 3, "3 days'"],
+      ['#buyFoodB', 7, "a week's"],
+    ].forEach(([sel, days, label]) => {
+      const b = $(sel);
+      b.classList.toggle('hidden', !sellsFood);
+      const rations = U.dailyRations(c) * days;
+      b.dataset.rations = rations;
+      b.textContent = `Buy ${label} food · ${rations * price} crowns`;
+      b.disabled = c.gold < rations * price;
+    });
+
     // Recruit buttons: one per troop the settlement's owner offers (hidden when none).
     const offers = p.recruitsHere();
     ['#recruitA', '#recruitB'].forEach((sel, i) => {
@@ -290,6 +310,23 @@
     });
     $('#restBtn').classList.toggle('hidden', !p.canRest());
     $('#serviceNote').textContent = offers.length ? '' : 'No one here is looking to take up arms.';
+  }
+
+  /** Food / morale / wages readout, with warnings highlighted (GDD §11). */
+  function supplyParts(c) {
+    const U = CL.upkeep;
+    const days = U.foodDays(c);
+    const wages = U.weeklyWages(c);
+    const span = (text, warn) => Object.assign(document.createElement('span'), { textContent: text, className: warn ? 'warn' : '' });
+    const moraleWord = c.morale >= 60 ? 'steady' : c.morale >= U.MORALE.desertBelow ? 'shaken' : 'mutinous';
+    return [
+      span(`Food: ${days >= 10 ? Math.floor(days) : days.toFixed(1)} days (${U.dailyRations(c)}/day)`, days < 1),
+      span(` · Morale: ${Math.round(c.morale)} ${moraleWord}`, c.morale < U.MORALE.desertBelow),
+      span(
+        wages ? ` · Wages: ${wages} crowns due day ${CL.party.dayNumber(c.nextWagesDay)}` : ' · No wages owed',
+        wages > c.gold,
+      ),
+    ];
   }
 
   function hideBattleOverlays() {
@@ -403,6 +440,7 @@
     changeMode,
     refresh,
     refreshRoster,
+    supplyParts,
     creatorChoices,
     openSheet,
     hideBattleOverlays,

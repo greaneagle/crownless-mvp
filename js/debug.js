@@ -39,7 +39,18 @@
   function addItem(itemId, n = 1) {
     CL.content.item(itemId);
     c().inventory[itemId] = (c().inventory[itemId] || 0) + n;
+    CL.upkeep.stowFood(c());
     log('item', { item: itemId, added: n });
+  }
+
+  function addFood(n) {
+    c().food = Math.max(0, c().food + n);
+    log('food', { change: n, food: c().food });
+  }
+
+  function addMorale(n) {
+    CL.upkeep.changeMorale(c(), n);
+    log('morale', { change: n, morale: c().morale });
   }
 
   /** Adjust an attribute (str/agi/int/cha) or a skill id by delta, within sane bounds. */
@@ -145,6 +156,16 @@
       case 'item':
         addItem($('#cheatItem').value);
         break;
+      case 'food':
+        addFood(n);
+        break;
+      case 'morale':
+        addMorale(n);
+        break;
+      case 'wages':
+        CL.upkeep.payWages(c());
+        c().nextWagesDay = Math.floor(c().day) + CL.upkeep.WAGE_INTERVAL;
+        break;
       case 'stat':
         if (!adjustStat($('#cheatStat').value, n)) CL.ui.message('Create a character first');
         break;
@@ -204,6 +225,8 @@
     healAll,
     dismissAll,
     addItem,
+    addFood,
+    addMorale,
     adjustStat,
     toggleGod,
     passDays,

@@ -21,7 +21,10 @@ test('a new game follows GDD §5: 60 crowns, sword, clothing, shield, food, no s
   assert.equal(c.equipment.weapon, 'worn_sword');
   assert.equal(c.equipment.body, 'clothing');
   assert.equal(c.equipment.offhand, 'oak_shield');
-  assert.deepEqual({ ...c.inventory }, { food_3_days: 1 });
+  assert.deepEqual({ ...c.inventory }, {}, 'the food item became rations');
+  assert.equal(c.food, 3, 'three days for a lone hero');
+  assert.equal(c.morale, 70);
+  assert.equal(c.nextWagesDay, 7);
 });
 
 test('old saves without equipment get the starting kit equipped; character stays null', () => {

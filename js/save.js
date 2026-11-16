@@ -41,8 +41,13 @@
       world: CL.world.defaultState(), // map position, current settlement, site timers
       character: null, // set by the character creator
       equipment: CL.character.blankEquipment(),
+      food: 0, // rations; one feeds 5 people for a day
+      morale: CL.upkeep.MORALE.start,
+      nextWagesDay: CL.upkeep.WAGE_INTERVAL,
+      starving: false,
     };
     CL.character.applyKit(c, background);
+    CL.upkeep.stowFood(c);
     return c;
   }
 
@@ -86,6 +91,7 @@
         if (knownItem(id) && isCount(n) && n >= 1) s.inventory[id] = Math.min(MAX_VALUE, Math.floor(n));
       }
     }
+    CL.upkeep.sanitize(s, d); // food, morale, payday (and stows any food items)
     return s;
   }
 

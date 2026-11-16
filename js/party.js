@@ -50,7 +50,9 @@
 
   /** Advance the campaign clock; wounded soldiers whose time is up return to duty. */
   function advanceDays(days, camp = c()) {
+    const from = camp.day;
     camp.day += days;
+    CL.upkeep.tick(camp, from, camp.day); // eat, morale, desertion, weekly wages
     const healed = [];
     for (const s of camp.roster) {
       if (isWounded(s) && s.woundedUntil <= camp.day + 1e-9) {
@@ -131,6 +133,7 @@
     advanceDays(BATTLE_DAYS, camp);
     for (const s of camp.roster) if (wounded.includes(s.id)) s.woundedUntil = camp.day + CL.save.WOUND_DAYS;
     camp.battles++;
+    CL.upkeep.onBattle(camp, win);
     const result = { gold: 0, renown: 0, loot: {}, lostItem: null };
     if (win) {
       result.gold = enc.reward.goldBase + kills * enc.reward.goldPerKill;
@@ -140,6 +143,7 @@
       camp.gold += result.gold;
       camp.renown += result.renown;
       for (const [id, n] of Object.entries(result.loot)) camp.inventory[id] = (camp.inventory[id] || 0) + n;
+      CL.upkeep.stowFood(camp); // looted food goes into the ration stock
     } else {
       const kept = Math.floor(camp.gold * DEFEAT_GOLD_KEPT);
       result.gold = kept - camp.gold;

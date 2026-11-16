@@ -63,3 +63,8 @@
 .cheatGrid button{min-height:44px;flex:1}
 .cheatGrid select{flex:1 1 100%;min-width:0}
 #topRight{z-index:7} /* Logs and Debug stay reachable over menu overlays */
+
+/* 0.8.0 — supplies and warnings */
+#supplies{font-size:clamp(12px,1.25vw,15px);margin-top:4px}
+.warn{color:#ff9f86;font-weight:bold}
+#topLeft.warn{border-color:#e0664f;box-shadow:0 0 0 2px #e0664f66}
