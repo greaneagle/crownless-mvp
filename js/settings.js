@@ -9,6 +9,20 @@
   const KEY = 'crownless_settings';
   const BATTLE_SIZES = [20, 30, 40];
   const BATTLEFIELDS = ['large', 'small']; // V2-05: large maps with a following camera, or one screen
+  const PREP_PRESETS = ['balanced', 'defensive', 'aggressive', 'custom']; // V2-07
+  const PREP_ORDERS = ['follow', 'hold', 'charge'];
+
+  /** A remembered Custom setup: each group's offset from the hero's start and its order, or null. */
+  function customSetup(v) {
+    if (!v || typeof v !== 'object') return null;
+    const out = {};
+    for (const grp of ['infantry', 'archer', 'cavalry']) {
+      const c = v[grp];
+      if (!c || !Number.isFinite(c.dx) || !Number.isFinite(c.dy) || !PREP_ORDERS.includes(c.order)) return null;
+      out[grp] = { dx: Math.max(-800, Math.min(800, Math.round(c.dx))), dy: Math.max(-800, Math.min(800, Math.round(c.dy))), order: c.order };
+    }
+    return out;
+  }
 
   /** Touch phones start at battle size 30 (every current battle still fits); desktops at 40. */
   function defaults() {
@@ -19,7 +33,7 @@
       touch = false;
     }
     // Full screen is on by default on phones, where the address bar costs the most room.
-    return { music: 50, sfx: 70, battleSize: touch ? 30 : 40, battlefield: 'large', reducedEffects: false, healthBars: true, tips: true, fullscreen: touch };
+    return { music: 50, sfx: 70, battleSize: touch ? 30 : 40, battlefield: 'large', prepPreset: 'balanced', prepSkip: false, prepCustom: null, reducedEffects: false, healthBars: true, tips: true, fullscreen: touch };
   }
 
   let current = defaults();
@@ -35,6 +49,9 @@
       sfx: volume(r.sfx, d.sfx),
       battleSize: BATTLE_SIZES.includes(r.battleSize) ? r.battleSize : d.battleSize,
       battlefield: BATTLEFIELDS.includes(r.battlefield) ? r.battlefield : d.battlefield,
+      prepPreset: PREP_PRESETS.includes(r.prepPreset) ? r.prepPreset : d.prepPreset,
+      prepSkip: typeof r.prepSkip === 'boolean' ? r.prepSkip : d.prepSkip,
+      prepCustom: customSetup(r.prepCustom),
       reducedEffects: typeof r.reducedEffects === 'boolean' ? r.reducedEffects : d.reducedEffects,
       healthBars: typeof r.healthBars === 'boolean' ? r.healthBars : d.healthBars,
       tips: typeof r.tips === 'boolean' ? r.tips : d.tips,
@@ -75,7 +92,7 @@
   function set(key, value) {
     if (!(key in current)) return false;
     const next = sanitize({ ...current, [key]: value });
-    if (next[key] !== value) return false;
+    if (JSON.stringify(next[key]) !== JSON.stringify(value)) return false; // objects compare by content
     current = next;
     persist();
     apply();
@@ -83,5 +100,5 @@
     return true;
   }
 
-  CL.settings = { KEY, BATTLE_SIZES, BATTLEFIELDS, defaults, sanitize, load, get, all, set, apply };
+  CL.settings = { KEY, BATTLE_SIZES, BATTLEFIELDS, PREP_PRESETS, defaults, sanitize, load, get, all, set, apply };
 })(typeof window !== 'undefined' ? window : globalThis);

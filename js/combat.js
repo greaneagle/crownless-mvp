@@ -61,7 +61,11 @@
 
   /** Deploy the hero plus healthy roster soldiers and start the encounter's first wave. */
   /** Start a battle from an encounter id (data/encounters.js) or a ready-made definition (a band). */
-  function startBattle(encounter = DEFAULT_ENCOUNTER) {
+  /**
+   * @param {any} [encounter] an encounter id or a ready-made definition
+   * @param {{ plan?: any }} [opts] plan: a battle setup from the preparation screen (js/prep.js, V2-07)
+   */
+  function startBattle(encounter = DEFAULT_ENCOUNTER, opts = {}) {
     const g = game();
     const enc = typeof encounter === 'string' ? CL.content.encounter(encounter) : encounter;
     g.encounter = enc.id;
@@ -131,6 +135,7 @@
       a.holdX = a.x;
       a.holdY = a.y;
     }
+    if (opts.plan && !g.practice) CL.prep.place(g, opts.plan); // the chosen setup (V2-07)
     spawnWave();
     Object.assign(g, { overview: false, cameraFocus: null, scanIn: 0 });
     CL.camera.snap(g); // one-screen maps keep the camera at 0,0

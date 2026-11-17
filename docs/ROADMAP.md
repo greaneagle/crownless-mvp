@@ -1,6 +1,6 @@
 # Crownless — Project Status & Roadmap
 
-_Last reviewed: 2026-11-17 · Build 1.9.0 · Spec: `Crownless_MVP_GDD_v1.md` (engine overridden: HTML5 Canvas + classic JS, no bundler, GitHub Pages)._
+_Last reviewed: 2026-11-17 · Build 1.10.0 · Spec: `Crownless_MVP_GDD_v1.md` (engine overridden: HTML5 Canvas + classic JS, no bundler, GitHub Pages)._
 
 This replaces the opencode-swarm plan (`.swarm/plan.md`, removed). The gate structure (A→E) is kept from the GDD; the task list is condensed and re-ordered around what the code actually needs.
 
@@ -104,7 +104,7 @@ From the owner's v2.0 design (`Crownless_v2_0_Feature_and_Systems_Design_Part_1.
   - ✅ (1.7.0) PROTO-A a camera test run in the Debug panel: **passed on the owner's Zenfone 10: 60 fps at 30 and 40 units, 0.5 ms simulation and 1.4 ms drawing, slowest frame 17 ms; "felt like a bigger battle, not just a fight in one room"; commands and the minimap need work.** The 3× arena and this camera are V2-05's starting point. Camera test 30 / 40 in a generated 3× forest (2880×1620) with a damped hero-follow camera, culling, edge markers for off-screen enemies, and an obstacle grid for big maps; the result screen reports fps, drawing ms, slowest frame, time to contact and battle length
   - ✅ (1.8.0) V2-05 a world-space camera and larger arenas: ordinary battles in forests and in the open use generated fields three screens across (Forest Wilds, Open Country) with the PROTO-A camera, culling and edge markers; the Greywall courtyard stays one screen; a device setting Battlefield: Small brings back the one-screen maps; bodies (F-2), reserves and collision checked on the large maps; the large maps are the cheapest to simulate
   - ✅ (1.9.0) V2-06 minimap and tactical overview: detection (only enemies the company has seen are shown, with last-seen marks; the edge markers follow the same rule); a minimap at the top centre of large battles, tap to look; a tactical overview (MAP on phones, hold Tab or M on desktop) that holds the battle still and sends the selected group to a tapped spot to hold
-  - V2-07 battle preparation presets and deployment
+  - ✅ (1.10.0) V2-07 battle preparation: Attack opens a Prepare screen with the real field; Balanced (default), Defensive, Aggressive and Custom (drag group flags inside a legal deployment zone, set each group's first order); Fight in two taps; Simulate with the odds explained; a smaller zone when ambushed; remember the setup and skip the screen (device settings)
   - V2-08 group AI, cohesion and counterplay
   - V2-09 nearby reinforcements
   - V2-10 company chronicle and roll of honour

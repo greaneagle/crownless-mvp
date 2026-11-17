@@ -392,10 +392,12 @@
     return { id: `party_${t.id}`, name: t.name, map, waves, reward: t.reward, loot };
   }
 
-  function open(partyId) {
+  /** Open the encounter with a band. `caught`: it came at you (an ambush: a small deployment zone, V2-07). */
+  function open(partyId, { caught = false } = {}) {
     const g = CL.game;
     g.partyId = partyId;
     g.siteId = null;
+    g.caught = caught;
     g.travel = null;
     CL.encounter.begin(); // whatever the player chooses commits under this result ID
     CL.ui.changeMode('encounter');
@@ -472,11 +474,12 @@
     CL.realm.adjust(c, e.t.faction, CL.realm.REP.attack, `attacked ${e.t.id}`);
   }
 
-  function attack() {
+  /** Fight the open encounter. `plan`: the setup chosen on the preparation screen (V2-07), if any. */
+  function attack(plan = null) {
     const e = current();
     if (!e) return;
     assaultPenalty(CL.campaign, e);
-    CL.combat.startBattle(e.def);
+    CL.combat.startBattle(e.def, { plan });
   }
 
   /** GDD §7 auto-resolve for the player's encounter, applied through the normal result path. */
@@ -488,6 +491,7 @@
     assaultPenalty(c, e);
     const pp = A().playerPower(c);
     const pe = A().troopsPower(e.troops);
+    const reasons = A().explain(c, e.troops); // before anyone falls (V2-07)
     const win = A().next(c) < A().winChance(pp, pe);
     const healthy = CL.party.healthySoldiers().map((s) => s.id);
     const enemyList = A().expand(e.troops);
@@ -508,7 +512,7 @@
       win,
       auto: true, // drawn over the world map, not a battlefield
       ...r,
-      html: CL.party.resultHtml({ win, r, kills: enemyFallen.length, killed, wounded, survivors: healthy.length - fallen.length, auto: { pp, pe }, names }),
+      html: CL.party.resultHtml({ win, r, kills: enemyFallen.length, killed, wounded, survivors: healthy.length - fallen.length, auto: { pp, pe, reasons }, names }),
     };
     CL.diag.log('info', 'Auto-resolved', { ...outcome, encounter: e.def.id, pp, pe });
     CL.ui.changeMode('result');

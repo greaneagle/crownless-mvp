@@ -221,6 +221,15 @@
         CL.world.click(((e.clientX - r.left) * CL.W) / r.width, ((e.clientY - r.top) * CL.H) / r.height);
         return;
       }
+      if (g.mode === 'prepare' && g.prep) {
+        // Battle preparation (V2-07): pick up a group's flag to drag it.
+        const r = canvas.getBoundingClientRect();
+        const [sx, sy] = [((e.clientX - r.left) * CL.W) / r.width, ((e.clientY - r.top) * CL.H) / r.height];
+        const groups = CL.prep.GROUPS.filter((grp) => CL.party.healthySoldiers().some((s) => CL.content.troop(s.troop).role === grp));
+        g.prep.drag = CL.prep.flagAt(g.prep.plan, g.prep.map, groups, sx, sy);
+        if (g.prep.drag) canvas.setPointerCapture?.(e.pointerId);
+        return;
+      }
       if (g.mode === 'battle') {
         // The minimap (tap to look) and the tactical overview (tap to send a group), V2-06.
         const r = canvas.getBoundingClientRect();
@@ -236,6 +245,17 @@
     root.addEventListener('pointerup', () => {
       g.attackHeld = false;
       g.blockHeld = false;
+    });
+    canvas.addEventListener('pointermove', (e) => {
+      if (g.mode !== 'prepare' || !g.prep?.drag) return;
+      const r = canvas.getBoundingClientRect();
+      CL.prep.moveFlag(g.prep.plan, g.prep.map, g.prep.drag, ((e.clientX - r.left) * CL.W) / r.width, ((e.clientY - r.top) * CL.H) / r.height);
+    });
+    canvas.addEventListener('pointerup', () => {
+      if (g.mode === 'prepare' && g.prep?.drag) {
+        g.prep.drag = null;
+        CL.ui.renderPrep(); // the setup is now Custom
+      }
     });
     canvas.addEventListener('contextmenu', (e) => e.preventDefault());
   }

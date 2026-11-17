@@ -163,7 +163,7 @@
     const id = g.contactParty;
     g.contactParty = null;
     g.waiting = false;
-    CL.parties.open(id);
+    CL.parties.open(id, { caught: true }); // they came at you: an ambush (V2-07)
     return true;
   }
 
@@ -253,6 +253,7 @@
       if (siteActive(t.id)) {
         g.siteId = t.id;
         g.partyId = null;
+        g.caught = false;
         CL.encounter.begin(); // whatever the player chooses commits under this result ID
         CL.ui.changeMode('encounter');
       } else {

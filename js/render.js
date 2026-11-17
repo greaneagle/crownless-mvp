@@ -840,6 +840,84 @@
     }
   }
 
+  /**
+   * The preparation screen's preview (V2-07): the field, the deployment zone, the hero's start, a flag
+   * per group (drag them in Custom) and the side the enemy comes from.
+   */
+  function drawPrepare(g) {
+    const p = g.prep;
+    const map = p.map;
+    const r = CL.prep.previewRect(map, p.ambush);
+    const box = r.box;
+    ctx.fillStyle = '#06101a';
+    ctx.fillRect(0, 0, W, H);
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(box.x, box.y, box.w, box.h);
+    ctx.clip(); // the preview shows the area around the deployment zone
+    const { w: fw, h: fh } = CL.camera.worldSize(map);
+    ctx.drawImage(terrainImage(map), r.x, r.y, fw * r.scale, fh * r.scale);
+    const T = CL.tactics;
+    const z = CL.prep.zone(map, p.ambush);
+    const z0 = T.toScreen(r, z.x0, z.y0);
+    const z1 = T.toScreen(r, z.x1, z.y1);
+    ctx.fillStyle = p.ambush ? '#e0503c33' : '#9be07f2e';
+    ctx.fillRect(z0.x, z0.y, z1.x - z0.x, z1.y - z0.y);
+    ctx.strokeStyle = p.ambush ? '#e0503c' : '#9be07f';
+    ctx.setLineDash([5, 4]);
+    ctx.strokeRect(z0.x, z0.y, z1.x - z0.x, z1.y - z0.y);
+    ctx.setLineDash([]);
+    // The enemy comes from the east.
+    const eb = map.spawn.enemies;
+    const raw = T.toScreen(r, (eb.x0 + eb.x1) / 2, (eb.y0 + eb.y1) / 2);
+    const ec = { x: Math.min(raw.x, box.x + box.w - 44), y: raw.y }; // at the edge when off the preview
+    ctx.fillStyle = '#ff5a4a';
+    ctx.font = 'bold 15px Georgia';
+    ctx.textAlign = 'center';
+    ctx.fillText('enemy', ec.x, ec.y - 12);
+    ctx.beginPath();
+    ctx.moveTo(ec.x - 12, ec.y);
+    ctx.lineTo(ec.x + 6, ec.y - 7);
+    ctx.lineTo(ec.x + 6, ec.y + 7);
+    ctx.closePath();
+    ctx.fill();
+    // The hero's start.
+    const h = T.toScreen(r, CL.prep.anchorOf(map).x, CL.prep.anchorOf(map).y);
+    ctx.fillStyle = '#1b1208';
+    ctx.beginPath();
+    ctx.arc(h.x, h.y, 6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#fff3c4';
+    ctx.beginPath();
+    ctx.arc(h.x, h.y, 4.5, 0, Math.PI * 2);
+    ctx.fill();
+    // One flag per group that has soldiers fit to fight.
+    const fit = { infantry: 0, archer: 0, cavalry: 0 };
+    for (const s of CL.party.healthySoldiers()) fit[CL.content.troop(s.troop).role]++;
+    const letters = { infantry: 'I', archer: 'A', cavalry: 'C' };
+    for (const grp of CL.prep.GROUPS) {
+      if (!fit[grp]) continue;
+      const a = T.toScreen(r, p.plan.anchors[grp].x, p.plan.anchors[grp].y);
+      ctx.strokeStyle = '#1b1208';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(a.x, a.y + 10);
+      ctx.lineTo(a.x, a.y - 16);
+      ctx.stroke();
+      ctx.fillStyle = GROUP_COLOR[grp];
+      ctx.fillRect(a.x, a.y - 16, 22, 14);
+      ctx.strokeRect(a.x, a.y - 16, 22, 14);
+      ctx.fillStyle = '#1b1208';
+      ctx.font = 'bold 11px Georgia';
+      ctx.fillText(`${letters[grp]}${fit[grp]}`, a.x + 11, a.y - 5);
+    }
+    ctx.textAlign = 'left';
+    ctx.restore();
+    ctx.strokeStyle = '#c9a85c';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(box.x - 1, box.y - 1, box.w + 2, box.h + 2);
+  }
+
   /** The minimap: always on in a large battle, top centre, tap to look there. */
   function drawMinimap(g) {
     const r = CL.tactics.minimapRect(g);
@@ -917,6 +995,10 @@
     if (g.town && ['town', 'talk', 'trade', 'contracts', 'saves', 'character', 'settlement', 'journal', 'ending'].includes(g.mode)) {
       drawTown();
       if (performance.now() > g.messageUntil) CL.ui.$('#message').textContent = '';
+      return;
+    }
+    if (g.mode === 'prepare' && g.prep) {
+      drawPrepare(g);
       return;
     }
     if ((g.mode !== 'battle' && g.mode !== 'result') || (g.mode === 'result' && g.result?.auto)) {

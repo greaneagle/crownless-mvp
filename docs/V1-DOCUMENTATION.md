@@ -190,7 +190,7 @@ When a hostile party catches you, or you attack a camp, you choose:
 
 | Choice | What happens |
 |---|---|
-| **Attack** | Fight the battle yourself |
+| **Attack** | Fight the battle yourself (from 1.10.0 through a Prepare screen: a setup, then Fight or Simulate) |
 | **Auto-resolve** | Power = Σ(count × tier power × health) × (1 + 0.03 × Tactics), with tier power T1 1, T2 1.7, T3 2.5. Your win chance = your power ÷ total, held between 10% and 90%; the odds are shown. The winner always takes some losses |
 | **Negotiate** | Pay the Reavers' toll (base + per troop), or **intimidate** them if you are at least 2.5× stronger. Either way they leave you alone for a day |
 | **Retreat** | Chance = 0.5 + 0.1 × (your speed − their speed), held between 15% and 85% |
@@ -286,6 +286,7 @@ The sandbox carries on after the story ends.
   - music and effects volume
   - battle size (20/30/40)
   - battlefield: large or small (from 1.8.0)
+  - before battles: prepare, or go straight in with the remembered setup (from 1.10.0)
   - health bars
   - reduced effects
   - tips on/off and show again
@@ -340,6 +341,7 @@ The sandbox carries on after the story ends.
 | `assets` | Sprite loading (`assets/u####.png` units, `w####.png` world) and frame tables |
 | `camera` | From 1.7.0: the battle camera (follows the hero in arenas larger than a screen; one-screen maps stay at 0,0) |
 | `arena` | From 1.7.0: generated battlefields (the camera test's forest; from 1.8.0 the large Forest Wilds and Open Country, built from `generate` specs in `data/battle_maps.js`), and the Battlefield setting's swap to one-screen maps |
+| `prep` | From 1.10.0: battle preparation: Balanced / Defensive / Aggressive / Custom setups, deployment zones (smaller when ambushed), placement, remembered setups |
 | `tactics` | From 1.9.0: detection (only enemies your company has seen are shown), the minimap (tap to look) and the tactical overview (battle held; send a group to a spot) |
 | `units` | Units built from troop data: facing, swing phases, movement, obstacle steering, spacing (from 1.7.0: per-map bounds, an obstacle grid on big maps) |
 | `combat` | Battle simulation: waves and reserves, swings, blocks, arrows, AI, cavalry, win and loss |

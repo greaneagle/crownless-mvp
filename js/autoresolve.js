@@ -100,6 +100,33 @@
     return p * (1 + TACTICS * CL.character.skill('tactics', c));
   }
 
+  /**
+   * Why the odds are what they are (V2-07, "Simulate ... with reasons"): each side's strength, part by
+   * part, in the same units as playerPower and troopsPower. Lines of plain text.
+   */
+  function explain(c, enemyTroops) {
+    const own = [];
+    own.push(`your hero ${heroPower(c).toFixed(1)}`);
+    const fit = { T1: 0, T2: 0, T3: 0 };
+    let wounded = 0;
+    for (const s of c.roster) {
+      if (s.woundedUntil !== null) wounded++;
+      else fit[CL.content.troop(s.troop).tier]++;
+    }
+    for (const t of ['T1', 'T2', 'T3']) if (fit[t]) own.push(`${fit[t]} ${t} soldier${fit[t] === 1 ? '' : 's'} ${(fit[t] * TIER_POWER[t]).toFixed(1)}`);
+    const mara = CL.companion?.power(c) || 0;
+    if (mara) own.push(`your companion ${mara.toFixed(1)}`);
+    const tactics = CL.character.skill('tactics', c);
+    const pp = playerPower(c);
+    const pe = troopsPower(enemyTroops);
+    const foes = Object.entries(enemyTroops).map(([id, n]) => `${n} ${CL.content.troop(id).name}${n === 1 ? '' : 's'}`);
+    const lines = [`Your side ${pp.toFixed(1)}: ${own.join(', ')}${tactics ? `, then +${Math.round(TACTICS * tactics * 100)}% for Tactics` : ''}.`];
+    if (wounded) lines.push(`${wounded} wounded soldier${wounded === 1 ? '' : 's'} sat it out.`);
+    lines.push(`Their side ${pe.toFixed(1)}: ${foes.join(', ')}.`);
+    lines.push(`Odds ${Math.round(winChance(pp, pe) * 100)}%: your share of the total strength, kept between 10% and 90%.`);
+    return lines;
+  }
+
   const winChance = (pa, pb) => clamp(pa / (pa + pb), WIN_CLAMP[0], WIN_CLAMP[1]);
 
   const lossChance = (spec, ownPower, otherPower) => clamp(spec.scale * (otherPower / ownPower), spec.min, spec.max);
@@ -156,6 +183,7 @@
     roll,
     troopsPower,
     playerPower,
+    explain,
     winChance,
     lossChance,
     rollFallen,

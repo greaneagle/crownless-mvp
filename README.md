@@ -1,4 +1,4 @@
-# Crownless 1.9.0 — The Border March
+# Crownless 1.10.0 — The Border March
 
 A single-player, top-down party-battle prototype in plain HTML5 Canvas and classic JavaScript. There's no bundler, no runtime dependencies and no server. It's published to GitHub Pages straight from `main`.
 
@@ -36,6 +36,7 @@ A single-player, top-down party-battle prototype in plain HTML5 Canvas and class
 - **Named soldiers (1.4.0):** every soldier has a name from their homeland's culture, where and when they joined, and a service record (battles, victories, kills, assists, wounds, captures, wages actually paid) with short service notes. The Party screen lists them by name with a filter; each has a card where you can rename or upgrade them. Names come from `data/names.js`, which a mod can extend.
 - **Troop tree (1.5.0):** a third Party tab shows every troop line as you discover it: troops you have met by name, troops you have hired or trained in full. Troops at the end of a line are at max tier; Mercenaries now train into Sellswords. **Upgrade all ready** upgrades everyone who has earned it after showing the total cost.
 - **Large battlefields (1.8.0):** battles in forests and in the open are fought on fields three screens across; the view follows your hero and red markers on the screen edge point to enemies out of sight. The Greywall courtyard stays one screen. Settings → Battlefield: Small brings back the one-screen maps.
+- **Battle preparation (1.10.0):** Attack opens a Prepare screen with the real field: Balanced (default), Defensive, Aggressive or Custom (drag each group's flag inside the deployment zone and pick its first order); Fight, or Simulate (auto-resolve with the odds explained). Ambushed, you get less room. You can remember your setup and skip the screen.
 - **Minimap and tactical overview (1.9.0):** on a large battlefield a small map at the top shows your company and only the enemies your soldiers have seen; tap it to look there. MAP (phone) or holding Tab (desktop, or M to toggle) opens the whole field with the battle held still; pick a group in Orders and tap where it should go and hold.
 - **Time (1.6.0):** a battle takes a fixed 4 game hours of overworld time, fought or auto-resolved; capture 12 hours; a rest a day. The fight's own seconds, pausing and menus pass no time.
 - Casualties: 35% of fallen soldiers are killed and the rest are wounded for 2 campaign days. Travelling or resting passes the time.
@@ -82,6 +83,7 @@ js/               game runtime, attached to window.Crownless
   camera.js       battle camera: follows the hero in arenas larger than a screen (one-screen maps stay put)
   arena.js        large battlefields generated from data (forest, open field), the Battlefield setting
   tactics.js      what the company can see, the minimap (tap to look) and the tactical overview (send a group)
+  prep.js         battle preparation: presets, deployment zones (smaller when ambushed), Custom placement
   units.js        units built from troop data, swing phases, facing, movement
   combat.js       waves, attacks, AI, arrows, win/loss
   party.js        recruiting, day clock, wounded recovery, battle results and loot

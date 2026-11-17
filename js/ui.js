@@ -143,7 +143,9 @@
     if (mode === 'result') CL.audio?.play(g.result?.win ? 'win' : 'capture');
     $('#attackBtn').textContent = mode === 'town' ? 'TALK' : 'ATTACK';
     $('#ordersPanel').classList.add('hidden');
-    if (mode === 'map' || mode === 'town') {
+    $('#prepPanel').classList.toggle('hidden', mode !== 'prepare');
+    if (mode === 'prepare') renderPrep();
+    if (mode === 'map' || mode === 'town' || mode === 'prepare') {
       $('#overlay').classList.add('hidden');
       g.messageUntil = 0; // drop leftover battle/menu messages
       $('#message').textContent = '';
@@ -427,7 +429,7 @@
     const buttons = [];
     if (e.hostile) {
       const odds = Math.round(A.winChance(A.playerPower(c), A.troopsPower(e.troops)) * 100);
-      buttons.push(choice('Attack', 'Fight the battle yourself', () => P.attack()));
+      buttons.push(choice('Attack', 'Fight the battle yourself', prepareBattle));
       buttons.push(choice('Auto-resolve', `About ${odds}% to win`, () => P.autoResolve()));
       const n = P.negotiation(c, e);
       if (n?.kind === 'intimidate') buttons.push(choice('Intimidate', 'They are badly outmatched', () => P.negotiate()));
@@ -442,11 +444,119 @@
       if (f) {
         const odds = Math.round(A.winChance(A.playerPower(c), A.troopsPower(e.troops)) * 100);
         const cost = `−${-CL.realm.REP.attack} reputation with the ${f.name}`;
-        buttons.push(choice('Attack them', cost, () => P.attack()));
+        buttons.push(choice('Attack them', cost, prepareBattle));
         buttons.push(choice('Attack (auto-resolve)', `About ${odds}% to win · ${cost}`, () => P.autoResolve()));
       }
     }
     box.replaceChildren(...buttons);
+  }
+
+  // ---- Battle preparation (V2-07; js/prep.js) ----
+
+  const PRESET_NAMES = { balanced: 'Balanced', defensive: 'Defensive', aggressive: 'Aggressive', custom: 'Custom' };
+  const PRESET_ABOUT = {
+    balanced: 'Infantry in front and following you, archers behind, cavalry on a flank. Archers and cavalry hold until the enemy comes close.',
+    defensive: 'A tight block. Everyone holds and fights what comes to them.',
+    aggressive: 'Infantry and cavalry forward and charging, archers following you.',
+    custom: 'Drag the flags on the map to place each group, and choose each group’s starting order below.',
+  };
+  const GROUP_NAMES = { infantry: 'Infantry', archer: 'Archers', cavalry: 'Cavalry' };
+
+  /** The fit soldiers by group, for the setup (Mara stands with the hero). */
+  function fitByGroup() {
+    const out = { infantry: 0, archer: 0, cavalry: 0 };
+    for (const s of CL.party.healthySoldiers()) out[CL.content.troop(s.troop).role]++;
+    return out;
+  }
+
+  /** Attack pressed: the preparation screen, or straight in with the remembered setup. */
+  function prepareBattle() {
+    const g = CL.game;
+    const e = CL.parties.current();
+    if (!e) return;
+    const map = CL.arena.mapFor(e.def.map || 'open_country');
+    const ambush = Boolean(g.caught && e.hostile);
+    const plan = CL.prep.remembered(map, ambush);
+    if (CL.settings.get('prepSkip')) return CL.parties.attack(plan);
+    g.prep = { map, plan, ambush, remember: CL.settings.get('prepPreset') !== 'balanced', skip: false, drag: null };
+    changeMode('prepare');
+  }
+
+  function renderPrep() {
+    const g = CL.game;
+    const p = g.prep;
+    const e = CL.parties.current();
+    if (!p || !e) return;
+    const fit = fitByGroup();
+    const box = $('#prepPanel');
+    const btn = (label, onclick, extra = {}) => Object.assign(document.createElement('button'), { type: 'button', textContent: label, onclick, ...extra });
+    const foes = Object.values(e.troops).reduce((a, b) => a + b, 0);
+    const own = fit.infantry + fit.archer + fit.cavalry;
+    const odds = Math.round(CL.autoresolve.winChance(CL.autoresolve.playerPower(), CL.autoresolve.troopsPower(e.troops)) * 100);
+    const presets = document.createElement('div');
+    presets.className = 'prepPresets';
+    for (const id of CL.prep.PRESETS) {
+      presets.append(
+        btn(PRESET_NAMES[id], () => {
+          const custom = id === 'custom' && p.plan.preset !== 'custom' ? CL.settings.get('prepCustom') : null;
+          p.plan = id === 'custom' && p.plan.preset !== 'custom' && !custom ? { ...p.plan, preset: 'custom' } : CL.prep.plan(id, p.map, { ambush: p.ambush, custom });
+          renderPrep();
+        }, { className: p.plan.preset === id ? 'active' : '' }),
+      );
+    }
+    const rows = [];
+    if (p.plan.preset === 'custom') {
+      for (const grp of CL.prep.GROUPS) {
+        if (!fit[grp]) continue;
+        const row = document.createElement('div');
+        row.className = 'prepGroup';
+        row.append(Object.assign(document.createElement('span'), { textContent: `${GROUP_NAMES[grp]} (${fit[grp]})` }));
+        for (const o of CL.prep.ORDERS) {
+          row.append(btn(o[0].toUpperCase() + o.slice(1), () => { CL.prep.setOrder(p.plan, grp, o); renderPrep(); }, { className: p.plan.orders[grp] === o ? 'active' : '' }));
+        }
+        rows.push(row);
+      }
+    }
+    const check = (label, key) => {
+      const l = document.createElement('label');
+      l.className = 'setCheck';
+      const i = Object.assign(document.createElement('input'), { type: 'checkbox', checked: p[key] });
+      i.onchange = () => {
+        p[key] = i.checked;
+        if (key === 'skip' && i.checked) p.remember = true;
+        renderPrep();
+      };
+      l.append(i, ` ${label}`);
+      return l;
+    };
+    const actions = document.createElement('div');
+    actions.className = 'prepActions';
+    actions.append(
+      btn('Fight', () => {
+        if (p.remember || p.skip) CL.prep.remember(p.plan, p.map, p.skip);
+        const plan = p.plan;
+        g.prep = null;
+        CL.parties.attack(plan);
+      }, { className: 'primary' }),
+      btn(`Simulate · ${odds}%`, () => {
+        g.prep = null;
+        CL.parties.autoResolve();
+      }),
+      btn('Back', () => {
+        g.prep = null;
+        changeMode('encounter');
+      }),
+    );
+    box.replaceChildren(
+      Object.assign(document.createElement('h2'), { textContent: 'Prepare for battle' }),
+      Object.assign(document.createElement('p'), { textContent: `${e.name}: ${foes} against your ${own} fit soldier${own === 1 ? '' : 's'}.${p.ambush ? ' Ambush! Little room to form up.' : ''}` }),
+      actions, // first, so Fight is always in reach (two taps from the encounter)
+      presets,
+      Object.assign(document.createElement('p'), { className: 'setNote', textContent: PRESET_ABOUT[p.plan.preset] }),
+      ...rows,
+      check('Remember this setup', 'remember'),
+      check('Skip this screen next time', 'skip'),
+    );
   }
 
   // ---- Market ----
@@ -1223,6 +1333,7 @@
     $('#blockBtn').disabled = CL.game.hero?.canBlock === false; // no shield, no block
     $('#overlay').classList.add('hidden');
     $('#ordersPanel').classList.add('hidden');
+    $('#prepPanel').classList.add('hidden'); // the battle starts from the preparation screen (V2-07)
   }
 
   /** Show the selected group and highlight it plus that group's current order. */
@@ -1418,6 +1529,7 @@
     $('#setSfx').value = String(s.sfx);
     $('#setBattleSize').value = String(s.battleSize);
     $('#setBattlefield').value = s.battlefield;
+    $('#setPrepSkip').value = s.prepSkip ? 'skip' : 'prepare';
     $('#setHealthBars').checked = s.healthBars;
     $('#setReduced').checked = s.reducedEffects;
     $('#setTips').checked = s.tips;
@@ -1474,6 +1586,7 @@
     $('#setSfx').onchange = () => CL.audio?.play('coin'); // a sample at the new level
     $('#setBattleSize').onchange = () => CL.settings.set('battleSize', Number($('#setBattleSize').value));
     $('#setBattlefield').onchange = () => CL.settings.set('battlefield', $('#setBattlefield').value);
+    $('#setPrepSkip').onchange = () => CL.settings.set('prepSkip', $('#setPrepSkip').value === 'skip');
     $('#setHealthBars').onchange = () => CL.settings.set('healthBars', $('#setHealthBars').checked);
     $('#setReduced').onchange = () => CL.settings.set('reducedEffects', $('#setReduced').checked);
   }
@@ -1593,6 +1706,8 @@
     hideBattleOverlays,
     showSelectedGroup,
     showOverview,
+    prepareBattle,
+    renderPrep,
     setPaused,
     togglePause,
     autoPause,

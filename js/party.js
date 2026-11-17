@@ -419,7 +419,7 @@
   /**
    * Result screen text for a fought or auto-resolved battle. Only numbers and data names are interpolated.
    * @param {{ win: boolean, r: BattleResult | null, kills: number, killed: number[], wounded: number[],
-   *   survivors: number, waves?: string, auto?: { pp: number, pe: number }, names?: Record<number, string> }} info
+   *   survivors: number, waves?: string, auto?: { pp: number, pe: number, reasons?: string[] }, names?: Record<number, string> }} info
    *   names: soldier names by ID, taken before the battle (soldiers can be renamed, so they are escaped)
    */
   function resultHtml({ win, r, kills, killed, wounded, survivors, waves, auto, names }) {
@@ -430,6 +430,8 @@
     if (auto) {
       const odds = Math.round(CL.autoresolve.winChance(auto.pp, auto.pe) * 100);
       lines.push(`Auto-resolved: your strength ${auto.pp.toFixed(1)} vs ${auto.pe.toFixed(1)} (${odds}% odds)`);
+      // Why those odds (V2-07): strength part by part, from before the fight.
+      if (auto.reasons?.length) lines.push(`<small>${auto.reasons.map(escapeHtml).join('<br>')}</small>`);
     }
     lines.push(`Enemies defeated: ${kills}`, `Killed: ${killed.length} · Wounded: ${wounded.length}`);
     const who = (ids) => ids.map((id) => escapeHtml(names?.[id] || '')).filter(Boolean).join(', ');
