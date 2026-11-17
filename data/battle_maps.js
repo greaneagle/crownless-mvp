@@ -6,7 +6,12 @@
  *   obstacles: circles { shape:'circle', x, y, r } or rects { shape:'rect', x, y, w, h } that block
  *              movement; blocksArrows: false for low cover (rocks, bushes, fences)
  *              look: { tile, w, h } sprite drawn with its base on the obstacle, or 'wall' / 'crate'
- *   spawn:     hero anchor (allies form up behind it) and the box enemies appear in */
+ *   spawn:     hero anchor (allies form up behind it) and the box enemies appear in
+ * Large maps (V2-05, from 1.8.0) are generated in code (js/arena.js) from a spec instead:
+ *   generate:  { kind: 'forest' | 'field', scale: screens each way, seed } — the same map every time
+ *   small:     the one-screen map used instead with the device setting "Battlefield: Small"
+ * Ordinary battles in forest and on open ground use the large maps; the Greywall courtyard stays one
+ * screen (its walls make the fight). */
 (function (root) {
   root.CROWNLESS_CONTENT = root.CROWNLESS_CONTENT || {};
   var C = root.CROWNLESS_CONTENT;
@@ -42,6 +47,9 @@
       ],
       spawn: { hero: { x: 300, y: 330 }, enemies: { x0: 700, x1: 880, y0: 100, y1: 440 } }
     },
+    // V2-05: the large battlefields (the camera test passed at 60 fps on the owner's phone).
+    forest_wilds: { id: 'forest_wilds', name: 'Forest Wilds', generate: { kind: 'forest', scale: 3, seed: 7 }, small: 'forest_clearing' },
+    open_country: { id: 'open_country', name: 'Open Country', generate: { kind: 'field', scale: 3, seed: 11 }, small: 'grass_field' },
     greywall_courtyard: {
       id: 'greywall_courtyard',
       name: 'Greywall Courtyard',

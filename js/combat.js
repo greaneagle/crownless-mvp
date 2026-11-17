@@ -87,7 +87,7 @@
     g.group = 'infantry';
     g.orders = { infantry: 'follow', archer: 'hold', cavalry: 'charge' };
     // A ready-made arena (the debug camera test, PROTO-A) or a battle map from the content.
-    g.battleMap = enc.mapDef || CL.content.get('battle_maps', enc.map || 'grass_field');
+    g.battleMap = enc.mapDef || CL.arena.mapFor(enc.map || 'open_country');
     const anchor = g.battleMap.spawn.hero;
     g.hero = makeUnit(anchor.x, anchor.y, 'ally', 'hero');
     Object.assign(g.hero, CL.character.heroCombat()); // HP, damage, armor, shield from the character

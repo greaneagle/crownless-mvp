@@ -101,6 +101,16 @@
     }
     for (const f of Object.values(C.factions || {})) if (!f.culture) err(`faction ${f.id}: needs a name culture`);
 
+    // Generated battle maps (V2-05): a known kind, a sensible size, and a one-screen map to fall back to.
+    for (const m of Object.values(C.battle_maps || {})) {
+      if (!m.generate) continue;
+      const gen = m.generate;
+      if (!['forest', 'field'].includes(gen.kind)) err(`battle_map ${m.id}: unknown generator ${gen.kind}`);
+      if (!(Number.isInteger(gen.scale) && gen.scale >= 1 && gen.scale <= 4)) err(`battle_map ${m.id}: scale must be 1–4 screens`);
+      if (!Number.isInteger(gen.seed)) err(`battle_map ${m.id}: needs a whole-number seed`);
+      if (m.small != null && (!C.battle_maps[m.small] || C.battle_maps[m.small].generate)) err(`battle_map ${m.id}: small must be a one-screen map`);
+    }
+
     // Fixed campaign times (V2-04): hours, if given, between 0 and a week.
     for (const m of Object.values(C.world_map || {})) {
       for (const [k, h] of Object.entries(m.time || {})) {
@@ -177,6 +187,7 @@
       for (const [, id] of t.lootBySize || []) if (!C.loot_tables?.[id]) err(`party_template ${t.id}: unknown loot table ${id}`);
     }
     for (const m of Object.values(C.battle_maps || {})) {
+      if (m.generate) continue; // generated maps (V2-05) are checked below and in tests
       if (!m.ground?.base || !m.spawn?.hero || !m.spawn?.enemies) err(`battle_map ${m.id}: needs ground and spawns`);
       for (const o of m.obstacles || []) {
         const ok = o.shape === 'circle' ? o.r > 0 : o.shape === 'rect' && o.w > 0 && o.h > 0;

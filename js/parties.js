@@ -384,7 +384,7 @@
   }
 
   /** A battle definition for a band: its actual troops, in waves of up to 8, on the local map. */
-  function battleDef(t, troops, map = 'grass_field') {
+  function battleDef(t, troops, map = 'open_country') {
     const list = A().expand(troops);
     const waves = [];
     for (let i = 0; i < list.length; i += WAVE_SIZE) waves.push(A().collapse(list.slice(i, i + WAVE_SIZE)));

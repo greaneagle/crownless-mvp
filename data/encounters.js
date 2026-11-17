@@ -10,7 +10,7 @@
       id: 'looter_band',
       name: 'Looter Band',
       enemyFaction: 'neutral',
-      map: 'grass_field',
+      map: 'open_country',
       waves: [
         { looter: 3 },
         { looter: 4 }
@@ -22,7 +22,7 @@
       id: 'captains_trial',
       name: "The Captain's Trial",
       enemyFaction: 'neutral',
-      map: 'forest_clearing',
+      map: 'forest_wilds',
       waves: [
         { looter: 4, reaver: 2 },
         { looter: 6, reaver: 2 }

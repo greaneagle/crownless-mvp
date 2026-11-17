@@ -29,7 +29,7 @@ function fight(CL, maxSeconds = 240) {
 
 test('an ordinary battle keeps the camera at 0,0 and its old bounds', () => {
   const { CL } = loadGame({ random: () => 0.5 });
-  CL.combat.startBattle('captains_trial');
+  CL.combat.startBattle({ ...CL.content.encounter('captains_trial'), map: 'forest_clearing' });
   const g = CL.game;
   assert.equal(CL.camera.scrolls(g), false);
   for (let i = 0; i < 200; i++) {

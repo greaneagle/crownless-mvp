@@ -6,7 +6,7 @@
 const { loadGame } = require('../tests/helpers/load');
 
 const SIZES = [20, 30, 40, 60];
-const MAPS = ['grass_field', 'forest_clearing', 'greywall_courtyard'];
+const MAPS = ['grass_field', 'forest_clearing', 'greywall_courtyard', 'open_country', 'forest_wilds'];
 const STEP = 1 / 60;
 
 /** A battle of about `total` units: half allies (hero included), half enemies, mixed roles. */

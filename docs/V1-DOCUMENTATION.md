@@ -172,7 +172,7 @@ Time doesn't pass in town.
   - reserves step in 3 at a time as others fall
   - your company deploys at most 12 infantry, 8 archers and 6 cavalry at the start (the rest wait in reserve)
 - **Spacing:** soldiers stand shoulder to shoulder (12 px footprints that push apart). Charging riders pass through.
-- **Maps:** an open field, a forest clearing (trees block movement and arrows) and the Greywall courtyard (walls). The map depends on where the fight happens.
+- **Maps:** an open field, a forest clearing (trees block movement and arrows) and the Greywall courtyard (walls). The map depends on where the fight happens. From 1.8.0 (V2-05) battles in the open and in forests use large generated fields three screens across (Open Country, Forest Wilds) with a following camera; the courtyard stays one screen; Settings → Battlefield: Small brings back the one-screen maps.
 - **Time:** a battle and its aftermath take 6 game hours (0.25 days). From 1.6.0 (V2-04): a fixed 4 game hours, fought or auto-resolved, however long the fight lasts.
 - **Defeat:**
   - you are captured, not killed: you keep 80% of your crowns and lose one item
@@ -283,6 +283,7 @@ The sandbox carries on after the story ends.
 - **Settings** (⚙ on the map, in town and in battle, and on the title screen):
   - music and effects volume
   - battle size (20/30/40)
+  - battlefield: large or small (from 1.8.0)
   - health bars
   - reduced effects
   - tips on/off and show again
@@ -336,7 +337,7 @@ The sandbox carries on after the story ends.
 | `save` | Save service: schema v2 at 1.0 (v3 from 1.2.0), backup on every write, fallback to the backup, migration from 0.3.x; from 1.2.0 also structure checks, migration steps and the travel autosave |
 | `assets` | Sprite loading (`assets/u####.png` units, `w####.png` world) and frame tables |
 | `camera` | From 1.7.0: the battle camera (follows the hero in arenas larger than a screen; one-screen maps stay at 0,0) |
-| `arena` | From 1.7.0: the generated forest arena for the Debug camera test (PROTO-A) |
+| `arena` | From 1.7.0: generated battlefields (the camera test's forest; from 1.8.0 the large Forest Wilds and Open Country, built from `generate` specs in `data/battle_maps.js`), and the Battlefield setting's swap to one-screen maps |
 | `units` | Units built from troop data: facing, swing phases, movement, obstacle steering, spacing (from 1.7.0: per-map bounds, an obstacle grid on big maps) |
 | `combat` | Battle simulation: waves and reserves, swings, blocks, arrows, AI, cavalry, win and loss |
 | `party` | Recruiting, the day clock (`advanceDays`), recovery, resting, battle results applied exactly once, XP and upgrades, party cap |
@@ -375,7 +376,7 @@ Everything that is content lives in data files and is checked by `CL.content` at
 | `items.js` | Equipment, food and quest items |
 | `markets.js` | The six trade goods and food rations: base price, weight |
 | `quests.js`, `dialogue.js` | The story: quests with stages and dialogue trees |
-| `battle_maps.js` | Grass field, forest clearing, Greywall courtyard: obstacles and spawn zones |
+| `battle_maps.js` | Grass field, forest clearing, Greywall courtyard: obstacles and spawn zones. From 1.8.0 also Forest Wilds and Open Country, generated from a `generate` spec, each naming its one-screen `small` map |
 | `encounters.js` | Scripted encounters (the looter band, the captain's trial) |
 | `world_map.js` | The Border March: terrain, roads, base speed, terrain factors |
 | `character.js` | Skills, backgrounds, the starting kit |

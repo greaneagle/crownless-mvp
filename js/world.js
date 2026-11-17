@@ -89,9 +89,10 @@
    */
   const FORT_RADIUS = 6;
   function battleMapAt(x, y) {
-    if (terrainAt(x, y) === 'forest') return 'forest_clearing';
+    // Large battlefields (V2-05); js/arena.js swaps in the one-screen maps with Battlefield: Small.
+    if (terrainAt(x, y) === 'forest') return 'forest_wilds';
     const nearFort = settlements().some((s) => s.type === 'fort' && mapDist(x, y, s.mapX, s.mapY) <= FORT_RADIUS);
-    return nearFort ? 'greywall_courtyard' : 'grass_field';
+    return nearFort ? 'greywall_courtyard' : 'open_country';
   }
 
   // ---- Sites ----

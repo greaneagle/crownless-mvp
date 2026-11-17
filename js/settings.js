@@ -8,6 +8,7 @@
 
   const KEY = 'crownless_settings';
   const BATTLE_SIZES = [20, 30, 40];
+  const BATTLEFIELDS = ['large', 'small']; // V2-05: large maps with a following camera, or one screen
 
   /** Touch phones start at battle size 30 (every current battle still fits); desktops at 40. */
   function defaults() {
@@ -18,7 +19,7 @@
       touch = false;
     }
     // Full screen is on by default on phones, where the address bar costs the most room.
-    return { music: 50, sfx: 70, battleSize: touch ? 30 : 40, reducedEffects: false, healthBars: true, tips: true, fullscreen: touch };
+    return { music: 50, sfx: 70, battleSize: touch ? 30 : 40, battlefield: 'large', reducedEffects: false, healthBars: true, tips: true, fullscreen: touch };
   }
 
   let current = defaults();
@@ -33,6 +34,7 @@
       music: volume(r.music, d.music),
       sfx: volume(r.sfx, d.sfx),
       battleSize: BATTLE_SIZES.includes(r.battleSize) ? r.battleSize : d.battleSize,
+      battlefield: BATTLEFIELDS.includes(r.battlefield) ? r.battlefield : d.battlefield,
       reducedEffects: typeof r.reducedEffects === 'boolean' ? r.reducedEffects : d.reducedEffects,
       healthBars: typeof r.healthBars === 'boolean' ? r.healthBars : d.healthBars,
       tips: typeof r.tips === 'boolean' ? r.tips : d.tips,
@@ -81,5 +83,5 @@
     return true;
   }
 
-  CL.settings = { KEY, BATTLE_SIZES, defaults, sanitize, load, get, all, set, apply };
+  CL.settings = { KEY, BATTLE_SIZES, BATTLEFIELDS, defaults, sanitize, load, get, all, set, apply };
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -24,7 +24,8 @@ test('Gate D scope: the region, troops, maps, quests, contracts, companion, repu
   };
   assert.deepEqual(by(t('settlements'), 'type'), { town: 2, fort: 2, village: 6 });
   assert.equal(t('troops').filter((x) => x.id !== 'hero').length, 16, '15 troop types, plus the Sellsword from 1.5.0 (V2-03b)');
-  assert.equal(t('battle_maps').length, 3);
+  assert.equal(t('battle_maps').filter((m) => !m.generate).length, 3, 'the three hand-made maps');
+  assert.equal(t('battle_maps').filter((m) => m.generate).length, 2, 'plus two large generated ones from 1.8.0 (V2-05)');
   assert.deepEqual(
     t('quests').map((q) => q.id),
     ['q1', 'q2', 'q3', 'q4'],

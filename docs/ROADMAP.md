@@ -1,6 +1,6 @@
 # Crownless — Project Status & Roadmap
 
-_Last reviewed: 2026-11-17 · Build 1.7.0 · Spec: `Crownless_MVP_GDD_v1.md` (engine overridden: HTML5 Canvas + classic JS, no bundler, GitHub Pages)._
+_Last reviewed: 2026-11-17 · Build 1.8.0 · Spec: `Crownless_MVP_GDD_v1.md` (engine overridden: HTML5 Canvas + classic JS, no bundler, GitHub Pages)._
 
 This replaces the opencode-swarm plan (`.swarm/plan.md`, removed). The gate structure (A→E) is kept from the GDD; the task list is condensed and re-ordered around what the code actually needs.
 
@@ -102,7 +102,7 @@ From the owner's v2.0 design (`Crownless_v2_0_Feature_and_Systems_Design_Part_1.
   - ✅ (1.5.0) V2-03b a troop tree discovered as you play: a Troop tree tab in Party (unknown troops hidden, seen ones by name, owned ones in full with costs and XP targets); knowledge saved and learned from events and hiring offers; a debug Reveal toggle; the Sellsword, a tier 3 for the Mercenary; "max tier" everywhere a troop has no path; Upgrade all ready with the total and a confirmation; each disabled upgrade says why. Settles F-1. Save schema v6
   - ✅ (1.6.0) V2-04 a canonical campaign clock: `js/clock.js` is the one authority; a battle takes a **fixed 4 game hours** of overworld time, fought or auto-resolved (owner decision 2026-11-17, replacing the planned battle-rate clock); capture 12 hours, rest 24, set in `data/world_map.js`; retreats, tolls, pausing, menus and towns pass no time
   - ✅ (1.7.0) PROTO-A a camera test run in the Debug panel: **passed on the owner's Zenfone 10: 60 fps at 30 and 40 units, 0.5 ms simulation and 1.4 ms drawing, slowest frame 17 ms; "felt like a bigger battle, not just a fight in one room"; commands and the minimap need work.** The 3× arena and this camera are V2-05's starting point. Camera test 30 / 40 in a generated 3× forest (2880×1620) with a damped hero-follow camera, culling, edge markers for off-screen enemies, and an obstacle grid for big maps; the result screen reports fps, drawing ms, slowest frame, time to contact and battle length
-  - V2-05 a world-space camera and larger arenas
+  - ✅ (1.8.0) V2-05 a world-space camera and larger arenas: ordinary battles in forests and in the open use generated fields three screens across (Forest Wilds, Open Country) with the PROTO-A camera, culling and edge markers; the Greywall courtyard stays one screen; a device setting Battlefield: Small brings back the one-screen maps; bodies (F-2), reserves and collision checked on the large maps; the large maps are the cheapest to simulate
   - V2-06 minimap and tactical overview
   - V2-07 battle preparation presets and deployment
   - V2-08 group AI, cohesion and counterplay

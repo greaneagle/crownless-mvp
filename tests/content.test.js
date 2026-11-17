@@ -93,7 +93,8 @@ test('quest items are flagged and worthless to sell', () => {
 });
 
 test('battle map sprites point at existing tile images', () => {
-  for (const m of Object.values(C.battle_maps)) {
+  // Generated maps (V2-05) are built in code; tests/arena.test.js checks their sprites.
+  for (const m of Object.values(C.battle_maps).filter((x) => !x.generate)) {
     const tiles = [...m.ground.tiles, ...m.decor.map((d) => d[0]), ...m.obstacles.filter((o) => o.look?.tile).map((o) => o.look.tile)];
     for (const tile of tiles) {
       assert.ok(fs.existsSync(path.join(ASSET_DIR, `${tile}.png`)), `${m.id}: missing assets/${tile}.png`);

@@ -1410,6 +1410,7 @@
     $('#setMusic').value = String(s.music);
     $('#setSfx').value = String(s.sfx);
     $('#setBattleSize').value = String(s.battleSize);
+    $('#setBattlefield').value = s.battlefield;
     $('#setHealthBars').checked = s.healthBars;
     $('#setReduced').checked = s.reducedEffects;
     $('#setTips').checked = s.tips;
@@ -1465,6 +1466,7 @@
     };
     $('#setSfx').onchange = () => CL.audio?.play('coin'); // a sample at the new level
     $('#setBattleSize').onchange = () => CL.settings.set('battleSize', Number($('#setBattleSize').value));
+    $('#setBattlefield').onchange = () => CL.settings.set('battlefield', $('#setBattlefield').value);
     $('#setHealthBars').onchange = () => CL.settings.set('healthBars', $('#setHealthBars').checked);
     $('#setReduced').onchange = () => CL.settings.set('reducedEffects', $('#setReduced').checked);
   }
