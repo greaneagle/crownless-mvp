@@ -137,6 +137,9 @@
     $('#stage').dataset.mode = mode;
     requestAnimationFrame(fitHud); // the top-right buttons change with the mode
     CL.audio?.onMode(mode);
+    // A tip belongs to the screen it explains: a new screen closes it, then may bring its own.
+    if (CL.tips?.showing()) hideTip();
+    setTimeout(() => CL.tips?.check(), 400);
     if (mode === 'result') CL.audio?.play(g.result?.win ? 'win' : 'capture');
     $('#attackBtn').textContent = mode === 'town' ? 'TALK' : 'ATTACK';
     $('#ordersPanel').classList.add('hidden');
@@ -916,6 +919,8 @@
 
   function hideBattleOverlays() {
     $('#stage').dataset.mode = 'battle';
+    if (CL.tips?.showing()) hideTip();
+    setTimeout(() => CL.tips?.check('battle'), 0); // at once: the first battle waits on its card (battles don't start through changeMode)
     requestAnimationFrame(fitHud);
     $('#attackBtn').textContent = 'ATTACK';
     $('#blockBtn').disabled = CL.game.hero?.canBlock === false; // no shield, no block
@@ -1110,6 +1115,7 @@
     $('#setBattleSize').value = String(s.battleSize);
     $('#setHealthBars').checked = s.healthBars;
     $('#setReduced').checked = s.reducedEffects;
+    $('#setTips').checked = s.tips;
     showVolumes();
     // A battle waits while you change settings.
     settingsPaused = CL.game.mode === 'battle' && !CL.game.paused;
@@ -1147,7 +1153,90 @@
     $('#setReduced').onchange = () => CL.settings.set('reducedEffects', $('#setReduced').checked);
   }
 
+  // ---- First-time tips and How to play (Gate E tutorial; data/help.js) ----
+
+  function showTip(t) {
+    $('#tipTitle').textContent = t.title;
+    $('#tipText').textContent = t.text;
+    $('#tipMore').dataset.topic = t.help;
+    $('#tipCard').classList.remove('hidden');
+  }
+
+  function hideTip() {
+    $('#tipCard').classList.add('hidden');
+    CL.tips?.dismiss();
+  }
+
+  function openHelp(topic) {
+    const el = (tag, cls, text) => Object.assign(document.createElement(tag), { className: cls || '', textContent: text || '' });
+    const topics = Object.values(CL.content.table('help_topics')).sort((a, b) => a.order - b.order);
+    $('#helpTopics').replaceChildren(
+      ...topics.map((h) => {
+        const d = el('details', 'helpTopic');
+        d.open = h.id === (topic || 'start');
+        d.append(el('summary', '', h.title), ...h.body.map((p) => el('p', '', p)));
+        if (h.controls?.length) {
+          const table = el('table', 'helpKeys');
+          const head = el('tr');
+          for (const c of ['Touch', 'Keyboard / mouse', '']) head.append(el('th', '', c));
+          table.append(head);
+          for (const row of h.controls) {
+            const tr = el('tr');
+            for (const c of row) tr.append(el('td', '', c));
+            table.append(tr);
+          }
+          d.append(table);
+        }
+        return d;
+      }),
+    );
+    if (!$('#settingsPanel').classList.contains('hidden')) $('#settingsPanel').classList.add('hidden');
+    // A battle waits while you read.
+    helpPaused = CL.game.mode === 'battle' && !CL.game.paused;
+    if (helpPaused) setPaused(true, 'help');
+    $('#helpPanel').classList.remove('hidden');
+    // Start at the chosen topic, not wherever the panel was last scrolled to.
+    const open = $('#helpTopics .helpTopic[open]');
+    $('#helpPanel').scrollTop = open && topic && topic !== 'start' ? open.offsetTop - 8 : 0;
+  }
+
+  let helpPaused = false;
+
+  function closeHelp() {
+    $('#helpPanel').classList.add('hidden');
+    if (helpPaused) setPaused(false, 'help');
+    helpPaused = false;
+  }
+
+  function bindHelp() {
+    $('#tipOk').onclick = hideTip;
+    $('#tipMore').onclick = () => {
+      const topic = $('#tipMore').dataset.topic;
+      hideTip();
+      openHelp(topic);
+    };
+    $('#titleHelpBtn').onclick = () => openHelp('start');
+    $('#settingsHelp').onclick = () => {
+      closeSettings();
+      openHelp('start');
+    };
+    $('#closeHelp').onclick = closeHelp;
+    $('#doneHelp').onclick = closeHelp;
+    $('#setTips').onchange = () => CL.settings.set('tips', $('#setTips').checked);
+    $('#resetTips').onclick = () => {
+      CL.tips.reset();
+      CL.settings.set('tips', true);
+      $('#setTips').checked = true;
+      message('Tips will show again.');
+    };
+  }
+
   CL.ui = {
+    showTip,
+    hideTip,
+    openHelp,
+    closeHelp,
+    bindHelp,
     fitHud,
     openSettings,
     closeSettings,

@@ -1,4 +1,4 @@
-# Crownless 0.31.0 — The Border March
+# Crownless 0.32.0 — The Border March
 
 A single-player, top-down party-battle prototype in plain HTML5 Canvas and classic JavaScript. There's no bundler, no runtime dependencies and no server. It's published to GitHub Pages straight from `main`.
 
@@ -37,6 +37,7 @@ A single-player, top-down party-battle prototype in plain HTML5 Canvas and class
 - **Trade:** buy goods where they're cheap and sell them where they're dear. There are six goods, every market prices them differently, prices move as you trade and settle back over time, and a heavy cargo slows you down. You can also sell spare gear from your pack.
 - **Upkeep:** your party eats a ration a day for every 5 people, so buy food in towns and villages. Wages are due every 7 days. Running out of food or missing wages lowers morale, and below 25 soldiers start to desert.
 - **Save & export** (in any settlement or on the title screen): export your game as a file, or copy it as text, and import it in another browser or device. Damaged, edited, newer-version or unknown-content saves are refused without touching your game, and the save from before an import can be restored.
+- **Tips and How to Play:** the first time each screen or situation comes up (the map, Stonebridge, an encounter, the first battle, the market, low food, points to spend…), a short tip explains it once on this device; the first battle waits on its controls card. **How to play** (title screen, Settings, or a tip's More help) covers every system and lists the touch and keyboard controls. Tips can be switched off or shown again in Settings. The Elder's first quest remains the hands-on tutorial.
 - **Sound and settings:** synthesized sound effects and three music loops (menu, world, battle), generated in the browser with no sound files. The ⚙ button (on the map, in town and in battle, which pauses) and the title screen open **Settings**: music and effects volume, battle size (20 / 30 / 40 units at once), health bars over soldiers, and reduced effects. Settings stay on the device and are not part of a save.
 - **Developer tools** (the Logs and Debug buttons) show on a local dev server. On the published site they are hidden; open the page with `?dev` added to the address (for example `…/crownless-mvp/?dev`) to show them on that device, and `?dev=0` to hide them again. F3 opens the diagnostics panel either way.
 - The **Debug** button gives testing shortcuts: hero and troop XP, renown, contracts, crowns, trade goods and prices, spawning or clearing world parties, food and morale, soldiers, items, stats, god mode, time, teleport, win or lose a battle, and wiping the save. Every use is logged.
@@ -80,6 +81,7 @@ js/               game runtime, attached to window.Crownless
   debug.js        Debug panel testing tools
   settings.js     device settings (volumes, battle size, effects), kept outside the save
   audio.js        Web Audio synthesizer: sound effects and music loops
+  tips.js         first-time tips (content in data/help.js)
   ui.js           overlays, roster, pause, diagnostics panel
   render.js       canvas drawing (battle and world map) and HUD
   input.js        keyboard, mouse, touch buttons, joystick

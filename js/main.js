@@ -17,6 +17,7 @@
   CL.input.bind(canvas);
   CL.debugTools.bind();
   CL.ui.bindSettings();
+  CL.ui.bindHelp();
   // Every button gives a small click (rate-limited; silent until audio is unlocked by this very tap).
   root.document.addEventListener('click', (e) => e.target.closest?.('button') && CL.audio.play('select', 0.6), true);
 
@@ -31,6 +32,7 @@
       CL.town.update(dt);
       const t1 = performance.now();
       CL.render.draw();
+      CL.tips.tick(ts); // situation tips (low food, points to spend, wounded)
       const t2 = performance.now();
       // Frame timing for the diagnostics panel (smoothed), and a stress battle's tally.
       diag.simMs = diag.simMs * 0.95 + (t1 - t0) * 0.05;

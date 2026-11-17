@@ -23,6 +23,8 @@
     'loot_tables',
     'companions',
     'news',
+    'help_topics',
+    'tips',
   ];
 
   const raw = () => root.CROWNLESS_CONTENT || {};
@@ -181,6 +183,7 @@
     // Dialogue trees and quests: node links, conditions, effects and triggers (js/story.js).
     CL.story?.validate(C, err);
     CL.news?.validate(C, err);
+    CL.tips?.validate(C, err);
     for (const e of Object.values(C.encounters || {})) {
       if (!C.battle_maps?.[e.map]) err(`encounter ${e.id}: unknown map ${e.map}`);
       if (!e.waves?.length) err(`encounter ${e.id}: no waves`);

@@ -171,3 +171,23 @@
 .setCheck input{width:22px;height:22px;accent-color:#c9a977}
 #topRight #settingsBtn{font-size:clamp(20px,2.4vw,28px);line-height:1;padding:2px 10px}
 #stage:not([data-mode="map"]):not([data-mode="town"]):not([data-mode="battle"]) #settingsBtn{display:none}
+
+/* Gate E 5.4 tips and help */
+#tipCard{position:absolute;left:50%;bottom:5%;transform:translateX(-50%);width:min(520px,56%);z-index:8;pointer-events:auto;background:#132333f5;border:2px solid #d4b784;border-radius:8px;box-shadow:0 8px 24px #000a;padding:8px 14px;font-size:clamp(12px,1.35vw,16px)}
+#tipCard b{color:#ecd6a4;font-size:1.1em}
+#tipCard p{margin:4px 0 2px;line-height:1.35}
+#tipCard .row{margin-top:4px;justify-content:flex-end}
+#tipCard button{min-height:40px;padding:6px 12px}
+#stage[data-mode="battle"] #tipCard{bottom:auto;top:24%}
+/* Over a menu, the tip sits at the top so it never covers the menu's buttons. */
+#stage:not([data-mode="map"]):not([data-mode="town"]):not([data-mode="battle"]) #tipCard{bottom:auto;top:2%;z-index:9}
+#helpPanel{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(620px,calc(100vw - 24px));max-height:calc(100vh - 24px);overflow:auto;background:#132333f8;border:3px double #d4b784;z-index:23;box-shadow:0 0 0 100vmax #0009;padding:12px 16px;font:15px Georgia;touch-action:auto}
+#helpPanel h2{margin:0 0 6px;font:bold 20px Georgia;color:#ecd6a4}
+#closeHelp{float:right;min-height:36px;min-width:40px;padding:2px 8px}
+.helpTopic{border-top:1px solid #3e5168;padding:6px 0}
+.helpTopic summary{cursor:pointer;font-weight:bold;color:#ecd6a4;min-height:32px;line-height:32px}
+.helpTopic p{margin:6px 0;line-height:1.4;font-size:14px}
+.helpKeys{border-collapse:collapse;width:100%;font-size:13px;margin:6px 0}
+.helpKeys th{text-align:left;color:#d9c8a2;font-weight:normal;border-bottom:1px solid #3e5168;padding:3px 6px}
+.helpKeys td{padding:3px 6px;border-bottom:1px solid #22344a}
+#settingsPanel .row{flex-wrap:wrap}

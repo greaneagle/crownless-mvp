@@ -9,10 +9,66 @@ _Spec: GDD §6 (scaling), §12 (performance targets), §13 (saves), §14 Gate E,
 | 5.1 Battle scaling: active-unit cap with reserves, stress test, measured costs | ✅ 0.29.0 |
 | 5.2 Landscape UX pass (the phone-size notes from Gate D; touch targets; dev buttons out of release builds) | ✅ 0.30.0 |
 | 5.3 Settings and audio (battle size, volume, sound effects) | ✅ 0.31.0 |
-| 5.4 Tutorial and help | ⬜ |
+| 5.4 Tutorial and help | ✅ 0.32.0 |
 | 5.5 Save safety and cross-platform export/import QA | ⬜ |
 | 5.6 Asset provenance (original or licensed art, GDD §11) | ⬜ |
 | 5.7 Device QA and Gate E acceptance | ⬜ |
+
+---
+
+## Slice 4 — 0.32.0: Tips and How to Play (2026-11-17)
+
+### What's in (GDD §14 Gate E "tutorial"; §11 "initial mappings are documented in Help"; §4 Q1 is the onboarding quest that "introduces movement, settlement menu, first battle, money and recruitment")
+- **Q1 stays the tutorial you play.** The new pieces explain the screens around it rather than adding a separate scripted tutorial.
+- **First-time tips:** 15 short cards (`data/help.js`), each shown once, the first time its moment comes:
+  - **Screens:** the map, Stonebridge, a settlement menu, an encounter, the first battle, the market, the contract board, the Party screen, the Journal, Save & export.
+  - **Situations:** reserves in a battle, the first capture, food running low (under 2 days with soldiers), points to spend, wounded soldiers.
+- **How the cards behave:**
+  - **First battle:** it waits on its controls card until "Got it". There are separate touch and keyboard wordings, chosen by the device.
+  - **One at a time.** Moving to another screen closes the card. "More help" opens How to Play at that card's topic.
+  - **Placement:** on the map, in town and in battle the card sits low between the joystick and the action buttons (or mid-screen in battle). Over a menu it sits at the top, so it never covers the menu's buttons.
+  - **Remembered per device**, so a second campaign on the same phone isn't lectured again. Like the settings, this lives in its own storage key, never in the save.
+  - **Settings** has "Tips the first time something comes up" (on by default) and "Show all tips again".
+  - Stress battles show no tips.
+- **How to Play** (title screen, Settings, or a tip's More help): eight topics:
+  - getting started
+  - the map
+  - towns and villages
+  - battle
+  - your company
+  - trade and contracts
+  - story, reputation and news
+  - saving and settings
+
+  The map, town and battle topics list their controls as Touch, Keyboard / mouse, and Action. Battle covers every mapping the GDD lists: WASD, Space and left click, Shift and right click, 1–3, F/H/C, and Esc. A battle pauses while How to Play is open.
+- Content is validated at load: every tip needs a title and text (or both touch and keyboard wordings), a known help topic and a known situation; help rows have three columns.
+
+### Found in the browser run and fixed
+- Over a settlement menu the card covered Rest, Save & export and Leave, and a tap meant for Leave landed on the card. Over menus it now sits at the top.
+- The card was 70% wide and touched the joystick and TALK button in town. It's now 56%.
+- "More help" opened the right topic but kept the panel's old scroll position, so the topic started off-screen. It now scrolls to the topic.
+- The first battle ran 0.4 s before its card appeared. Battle tips now show at once.
+- The map tip said "Start in Stonebridge" just as you leave it. It now says "Elder Maren in Stonebridge has work for a stranger."
+
+### Checks
+- `tests/tips.test.js` (6 tests) covers:
+  - every GDD control documented, and every tip pointing at a real topic
+  - a tip showing once, one at a time, remembered on the device across campaigns and not stored in the save
+  - turning tips off and showing them again
+  - the situation tips waiting for their moment
+  - the first battle pausing on its card and resuming, then the reserves and capture tips
+  - no tips in stress battles
+- 301 tests pass; lint clean.
+- Browser, with real taps at 667×375 (phone emulation, so the touch wording):
+  - How to Play from the title (Battle's controls table readable at phone width).
+  - A new game: the Stonebridge tip, and "More help" opening Towns.
+  - The settlement-menu tip, the map tip, the encounter tip over the choices, and the first battle frozen on its controls card until "Got it".
+  - A lost battle with the Captured tip.
+  - No console errors. The preview save was restored and the seen tips cleared afterwards.
+
+### For the owner to try
+- [ ] Start a new game on the phone and play to the end of Q1. Do the tips come at useful moments, and does any feel like nagging or arrive too late?
+- [ ] Is anything you had to figure out yourself missing from How to Play?
 
 ---
 

@@ -17,7 +17,7 @@
     } catch {
       touch = false;
     }
-    return { music: 50, sfx: 70, battleSize: touch ? 30 : 40, reducedEffects: false, healthBars: true };
+    return { music: 50, sfx: 70, battleSize: touch ? 30 : 40, reducedEffects: false, healthBars: true, tips: true };
   }
 
   let current = defaults();
@@ -34,6 +34,7 @@
       battleSize: BATTLE_SIZES.includes(r.battleSize) ? r.battleSize : d.battleSize,
       reducedEffects: typeof r.reducedEffects === 'boolean' ? r.reducedEffects : d.reducedEffects,
       healthBars: typeof r.healthBars === 'boolean' ? r.healthBars : d.healthBars,
+      tips: typeof r.tips === 'boolean' ? r.tips : d.tips,
     };
   }
 
