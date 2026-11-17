@@ -99,6 +99,8 @@
         if (e.alive) g.kills++; // credit the kills so rewards and loot match a real win
         e.alive = false;
       }
+      g.kills += g.enemyReserve?.length || 0; // and the ones still waiting to step in
+      g.enemyReserve = [];
     }
     else {
       g.hero.alive = false;
@@ -107,6 +109,30 @@
     log(win ? 'win battle' : 'lose battle');
     CL.party.endBattle(win);
     return true;
+  }
+
+  /**
+   * A practice battle of about `total` units on the courtyard map (walls and crates make the AI
+   * steer), half yours and half Reavers, to measure a device. Nothing in the campaign changes.
+   */
+  function stressBattle(total) {
+    const allies = Math.floor(total / 2) - 1;
+    const mix = ['footman', 'footman', 'hunter', 'levy', 'rider', 'guard', 'longbowman', 'levy'];
+    const emix = ['looter', 'reaver', 'looter', 'mercenary'];
+    const wave = {};
+    for (let i = 0; i < total - allies - 1; i++) wave[emix[i % emix.length]] = (wave[emix[i % emix.length]] || 0) + 1;
+    CL.game.siteId = null;
+    CL.game.partyId = null;
+    CL.combat.startBattle({
+      id: `stress_${total}`,
+      name: `Stress test (${total})`,
+      map: 'greywall_courtyard',
+      waves: [wave],
+      practice: Array.from({ length: allies }, (_, i) => mix[i % mix.length]),
+      reward: { goldBase: 0, goldPerKill: 0, renown: 0 },
+      loot: 'low',
+    });
+    log('stress battle', { total, cap: CL.combat.BATTLE.activeCap });
   }
 
   function wipeSave() {
@@ -137,6 +163,7 @@
     fillSelect('#cheatQuest', Object.values(CL.content.table('quests')).map((q) => [q.id, q.title]));
     fillSelect('#cheatPlace', Object.values(CL.content.table('settlements')).map((s) => [s.id, s.name]));
     document.querySelector('#cheatGod').textContent = `God mode: ${CL.game.godMode ? 'on' : 'off'}`;
+    document.querySelector('#cheatCap').value = String(CL.combat.BATTLE.activeCap);
   }
 
   let wipeArmed = false;
@@ -283,6 +310,12 @@
         CL.save.write();
         CL.town.enterPlace();
         return;
+      case 'stress':
+        if (mode === 'battle' || mode === 'result') return CL.ui.message('Finish the battle first');
+        CL.combat.setActiveCap(Number($('#cheatCap').value));
+        toggle(false);
+        stressBattle(n);
+        return;
       case 'win':
       case 'lose':
         if (!endBattleNow(act === 'win')) CL.ui.message('Not in a battle');
@@ -332,6 +365,7 @@
     resetSites,
     teleport,
     endBattleNow,
+    stressBattle,
     wipeSave,
     toggle,
     bind,

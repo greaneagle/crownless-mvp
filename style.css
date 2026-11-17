@@ -149,3 +149,5 @@
 .questCard .objective{color:#ffd34d}
 .questCard ul{margin:4px 0 0 18px;padding:0;font-size:12px;color:#d9c8a2}
 #peopleHere:empty{display:none}
+
+.cheatNote{font-size:12px;color:#d9c8a2;margin:4px 0}

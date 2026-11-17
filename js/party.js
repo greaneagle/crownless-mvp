@@ -236,6 +236,7 @@
     const g = CL.game;
     if (g.mode !== 'battle') return;
     g.mode = 'result';
+    if (g.practice) return endPractice(win);
     const { killed, wounded } = rollCasualties(g.allies);
     const deployed = g.allies.filter((a) => a.soldierId != null);
     const outcome = {
@@ -267,6 +268,33 @@
     });
     g.result = { win, html, ...r };
     CL.diag.log('info', 'Battle ended', { ...outcome, result: r, day: CL.campaign.day });
+    CL.ui.changeMode('result');
+  }
+
+  /** A stress test is over: report how it ran; nothing in the campaign changes and nothing is saved. */
+  function endPractice(win) {
+    const g = CL.game;
+    const p = g.practice;
+    const secs = Math.max(0.001, (performance.now() - p.started) / 1000);
+    const avg = (x) => (p.frames ? x / p.frames : 0).toFixed(1);
+    const stats = {
+      cap: CL.combat.BATTLE.activeCap,
+      peak: p.peak,
+      seconds: Number(secs.toFixed(1)),
+      fps: Math.round(p.frames / secs),
+      simMs: Number(avg(p.sim)),
+      drawMs: Number(avg(p.draw)),
+      worstFrameMs: Math.round(p.worst),
+    };
+    const html = [
+      `<strong>${stats.fps} fps average over ${stats.seconds} s</strong>`,
+      `Up to ${stats.peak} units on the field (battle size ${stats.cap})`,
+      `Per frame: simulation ${stats.simMs} ms · drawing ${stats.drawMs} ms`,
+      `Slowest frame: ${stats.worstFrameMs} ms`,
+      'Nothing in your campaign changed.',
+    ].join('<br>');
+    g.result = { win, practice: stats, html };
+    CL.diag.log('info', 'Stress battle', stats);
     CL.ui.changeMode('result');
   }
 

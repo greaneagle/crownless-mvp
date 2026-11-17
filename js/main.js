@@ -18,10 +18,26 @@
     try {
       const dt = (ts - last) / 1000;
       last = ts;
+      const t0 = performance.now();
       CL.combat.update(dt);
       CL.world.update(dt);
       CL.town.update(dt);
+      const t1 = performance.now();
       CL.render.draw();
+      const t2 = performance.now();
+      // Frame timing for the diagnostics panel (smoothed), and a stress battle's tally.
+      diag.simMs = diag.simMs * 0.95 + (t1 - t0) * 0.05;
+      diag.drawMs = diag.drawMs * 0.95 + (t2 - t1) * 0.05;
+      const p = CL.game.mode === 'battle' && !CL.game.paused ? CL.game.practice : null;
+      if (p) {
+        p.frames++;
+        p.sim += t1 - t0;
+        p.draw += t2 - t1;
+        p.worst = Math.max(p.worst, dt * 1000);
+        const g = CL.game;
+        const live = (l) => l.reduce((n, u) => n + (u.alive ? 1 : 0), 0);
+        p.peak = Math.max(p.peak, (g.hero.alive ? 1 : 0) + live(g.allies) + live(g.enemies));
+      }
       diag.frames++;
       if (ts - diag.lastFps > 1000) {
         diag.fps = Math.round((diag.frames * 1000) / (ts - diag.lastFps));

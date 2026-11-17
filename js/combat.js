@@ -27,6 +27,12 @@
     holdRange: 160, // on Hold, engage enemies this close
     followGap: 80, // otherwise stay this near the hero
   };
+  /**
+   * GDD §6 scaling: at most `activeCap` units fight at once (hero, companion, soldiers and enemies
+   * together). Each side's share is fixed when the battle starts; the rest wait in reserve and step in
+   * as others fall, a stack at a time. The cap is a setting (20 / 30 / 40) for slower phones.
+   */
+  const BATTLE = { activeCap: 40, capChoices: [20, 30, 40], stack: 3, minEnemies: 6 };
   const DEFAULT_ENCOUNTER = 'captains_trial';
   const GUARD_SPEED = 0.65;
   const MAX_DT = 0.05;
@@ -68,6 +74,10 @@
     g.arrows = [];
     g.effects = [];
     g.attackQueuedAt = null;
+    g.allyReserve = [];
+    g.enemyReserve = [];
+    // A practice battle (the debug panel's stress test) brings its own soldiers and changes nothing.
+    g.practice = Array.isArray(enc.practice) ? { started: performance.now(), frames: 0, sim: 0, draw: 0, worst: 0, peak: 0 } : null;
     g.group = 'infantry';
     g.orders = { infantry: 'follow', archer: 'hold', cavalry: 'charge' };
     g.battleMap = CL.content.get('battle_maps', enc.map || 'grass_field');
@@ -75,10 +85,22 @@
     g.hero = makeUnit(anchor.x, anchor.y, 'ally', 'hero');
     Object.assign(g.hero, CL.character.heroCombat()); // HP, damage, armor, shield from the character
     g.hero.face = 'right';
+    // Share the field: the enemies get room for their biggest wave (up to half the cap), the
+    // company the rest. Soldiers beyond their formation slots or that share wait in reserve.
+    const soldiers = g.practice ? enc.practice.map((troop) => ({ troop, id: null })) : CL.party.healthySoldiers();
+    const withMara = !g.practice && CL.companion.fit() ? 1 : 0;
+    const biggestWave = Math.max(...enc.waves.map((w) => Object.values(w).reduce((a, b) => a + b, 0)));
+    const enemyShare = Math.max(Math.min(biggestWave, Math.floor(BATTLE.activeCap / 2)), BATTLE.minEnemies);
+    g.allyCap = Math.max(1 + withMara, Math.min(1 + withMara + soldiers.length, BATTLE.activeCap - enemyShare));
+    g.enemyCap = BATTLE.activeCap - g.allyCap;
     const placed = { infantry: 0, archer: 0, cavalry: 0 };
-    for (const s of CL.party.healthySoldiers()) {
+    for (const s of soldiers) {
       const role = CL.content.troop(s.troop).role;
-      if (!(role in placed) || placed[role] >= DEPLOY_CAP[role]) continue;
+      if (!(role in placed)) continue;
+      if (placed[role] >= DEPLOY_CAP[role] || 1 + withMara + g.allies.length >= g.allyCap) {
+        g.allyReserve.push({ troop: s.troop, soldierId: s.id });
+        continue;
+      }
       const i = placed[role]++;
       const [x, y] =
         role === 'infantry'
@@ -91,7 +113,7 @@
       g.allies.push(u);
     }
     // The companion fights beside the hero (GDD §10), with the infantry's orders.
-    if (CL.companion.fit()) {
+    if (withMara) {
       const m = CL.companion.get();
       const u = makeUnit(anchor.x - 40, anchor.y + 34, 'ally', 'mercenary');
       Object.assign(u, CL.companion.combat(), { companion: m.id, frames: CL.companion.def(m.id).frames, role: 'infantry' });
@@ -104,7 +126,7 @@
     }
     spawnWave();
     CL.ui.hideBattleOverlays();
-    CL.diag.log('info', 'Battle begun', { encounter: enc.id, battleId: g.battleId, deployed: placed });
+    CL.diag.log('info', 'Battle begun', { encounter: enc.id, battleId: g.battleId, deployed: placed, reserve: g.allyReserve.length, cap: BATTLE.activeCap });
   }
 
   function spawnWave() {
@@ -113,18 +135,57 @@
     g.wave++;
     const wave = g.encounterDef.waves[g.wave - 1];
     const troops = Object.entries(wave).flatMap(([id, n]) => Array(n).fill(id));
-    troops.forEach((troopId, i) => {
-      const box = g.battleMap.spawn.enemies;
-      let [x, y] = [rand(box.x0, box.x1), rand(box.y0, box.y1)];
-      for (let tries = 0; tries < 30 && CL.units.blocked(x, y); tries++) [x, y] = [rand(box.x0, box.x1), rand(box.y0, box.y1)];
-      const e = makeUnit(x, y, 'enemy', troopId);
-      CL.units.resolveObstacles(e);
-      e.face = 'left';
-      e.art = art[i % art.length];
-      g.enemies.push(e);
-    });
-    CL.ui.message(`Enemy wave ${g.wave} / ${g.totalWaves}`);
-    CL.diag.log('info', 'Enemy wave spawned', { wave: g.wave, enemies: wave });
+    const room = enemyCapOf(g);
+    for (const troopId of troops.slice(0, room)) addEnemy(g, troopId, art);
+    g.enemyReserve = troops.slice(room);
+    CL.ui.message(`Enemy wave ${g.wave} / ${g.totalWaves}${g.enemyReserve.length ? ` · ${g.enemyReserve.length} more waiting` : ''}`);
+    CL.diag.log('info', 'Enemy wave spawned', { wave: g.wave, enemies: wave, reserve: g.enemyReserve.length });
+  }
+
+  const enemyCapOf = (g) => g.enemyCap ?? Number.POSITIVE_INFINITY; // older battle states have no cap
+  const aliveCount = (list) => list.reduce((n, u) => n + (u.alive ? 1 : 0), 0);
+
+  function addEnemy(g, troopId, art = CL.assets.enemyArt) {
+    const box = g.battleMap.spawn.enemies;
+    let [x, y] = [rand(box.x0, box.x1), rand(box.y0, box.y1)];
+    for (let tries = 0; tries < 30 && CL.units.blocked(x, y); tries++) [x, y] = [rand(box.x0, box.x1), rand(box.y0, box.y1)];
+    const e = makeUnit(x, y, 'enemy', troopId);
+    CL.units.resolveObstacles(e);
+    e.face = 'left';
+    e.art = art[g.enemies.length % art.length];
+    g.enemies.push(e);
+    return e;
+  }
+
+  function addAlly(g, r) {
+    const a = g.battleMap.spawn.hero;
+    const u = makeUnit(a.x - 150 + rand(-30, 30), a.y + rand(-90, 90), 'ally', r.troop, r.soldierId);
+    CL.units.resolveObstacles(u);
+    u.face = 'right';
+    u.holdX = u.x;
+    u.holdY = u.y;
+    g.allies.push(u);
+    return u;
+  }
+
+  /**
+   * Reserves step in as others fall: a stack at a time (or the last few), each side up to its
+   * share of the field. Called every frame; cheap when nothing waits.
+   */
+  function reinforce(g) {
+    const sides = [
+      { reserve: g.enemyReserve, alive: aliveCount(g.enemies), cap: enemyCapOf(g), add: (t) => addEnemy(g, t), who: 'Enemy reserves' },
+      { reserve: g.allyReserve, alive: (g.hero.alive ? 1 : 0) + aliveCount(g.allies), cap: g.allyCap ?? Number.POSITIVE_INFINITY, add: (r) => addAlly(g, r), who: 'Your reserves' },
+    ];
+    for (const s of sides) {
+      if (!s.reserve?.length) continue;
+      const free = s.cap - s.alive;
+      if (free < Math.min(BATTLE.stack, s.reserve.length)) continue;
+      const n = Math.min(free, s.reserve.length);
+      for (const r of s.reserve.splice(0, n)) s.add(r);
+      CL.ui.message(`${s.who}: ${n} join the fight${s.reserve.length ? ` (${s.reserve.length} still waiting)` : ''}`);
+      CL.diag.log('info', 'Reinforcements', { side: s.who, joined: n, waiting: s.reserve.length });
+    }
   }
 
   /**
@@ -363,13 +424,23 @@
     updateArrows(h, dt);
     for (const e of g.effects) e.t -= dt;
     g.effects = g.effects.filter((e) => e.t > 0);
+    reinforce(g);
 
-    if (g.enemies.every((e) => !e.alive)) {
+    // GDD §15 edge case: the battle only ends when no one is left waiting to step in.
+    if (g.enemies.every((e) => !e.alive) && !g.enemyReserve?.length) {
       if (g.wave < g.totalWaves) {
         g.enemies = [];
         spawnWave();
       } else CL.party.endBattle(true);
-    } else if (!h.alive && g.allies.every((a) => !a.alive)) CL.party.endBattle(false);
+    } else if (!h.alive && g.allies.every((a) => !a.alive) && !g.allyReserve?.length) CL.party.endBattle(false);
+  }
+
+  /** Change the active-unit cap (Settings / debug panel); takes effect from the next battle. */
+  function setActiveCap(n) {
+    if (!BATTLE.capChoices.includes(n)) return false;
+    BATTLE.activeCap = n;
+    CL.diag.log('info', 'Battle size set', { activeCap: n });
+    return true;
   }
 
   /** Select a unit group and/or issue an order to the selected group. */
@@ -395,6 +466,9 @@
   }
 
   CL.combat = {
+    BATTLE,
+    setActiveCap,
+    reinforce,
     CAVALRY,
     COOLDOWN,
     INPUT_BUFFER,

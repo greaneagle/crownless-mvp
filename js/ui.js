@@ -11,6 +11,9 @@
   /** Overlay copy for each mode. Map and battle hide the overlay entirely. */
   function screenFor(mode) {
     const g = CL.game;
+    if (mode === 'result' && g.result.practice) {
+      return { title: 'STRESS TEST', text: 'How this device handled the battle:', button: 'Continue' };
+    }
     if (mode === 'result') {
       return {
         title: g.result.win ? 'VICTORY' : 'CAPTURED',
@@ -983,6 +986,8 @@
         hero: r.game.hero,
         units: { allies: r.game.liveAllies, enemies: r.game.liveEnemies },
         fps: r.fps,
+        frameMs: { simulation: Number(CL.diag.simMs.toFixed(2)), drawing: Number(CL.diag.drawMs.toFixed(2)) },
+        battleSize: CL.combat.BATTLE.activeCap,
         assets: r.assets,
         campaign: CL.campaign,
       },

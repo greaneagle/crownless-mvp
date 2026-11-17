@@ -5,7 +5,7 @@
   root.Crownless = root.Crownless || {};
   const CL = root.Crownless;
 
-  CL.BUILD = '0.28.0';
+  CL.BUILD = '0.29.0';
   CL.SAVEKEY = 'crownless_v03_party';
   CL.W = 960;
   CL.H = 540;
@@ -28,6 +28,8 @@
     assets: { requested: 0, loaded: 0, failed: [] },
     fps: 0,
     frames: 0,
+    simMs: 0,
+    drawMs: 0,
     lastFps: performance.now(),
     started: new Date().toISOString(),
     log(level, msg, data) {

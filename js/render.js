@@ -341,7 +341,8 @@
     $('#hpfill').style.width = `${(g.hero.hp / maxHp) * 100}%`;
     $('#summary').textContent =
       `Allies ${g.allies.filter((x) => x.alive).length} · ` +
-      `Enemies ${g.enemies.filter((x) => x.alive).length} · Wave ${g.wave}/${g.totalWaves}`;
+      `Enemies ${g.enemies.filter((x) => x.alive).length} · Wave ${g.wave}/${g.totalWaves}` +
+      (g.allyReserve?.length || g.enemyReserve?.length ? ` · Reserves ${g.allyReserve?.length || 0}/${g.enemyReserve?.length || 0}` : '');
   }
 
   // ---- Walkable town (Stonebridge) ----
@@ -749,7 +750,7 @@
       ctx.stroke();
     }
 
-    if (g.mode === 'battle') updateHud();
+    if (g.mode === 'battle' || (g.mode === 'result' && g.hero)) updateHud(); // the final tally, not the frame before
     if (performance.now() > g.messageUntil) CL.ui.$('#message').textContent = '';
 
     if (g.paused) {
