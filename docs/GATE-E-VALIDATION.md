@@ -12,7 +12,46 @@ _Spec: GDD §6 (scaling), §12 (performance targets), §13 (saves), §14 Gate E,
 | 5.4 Tutorial and help | ✅ 0.32.0 |
 | 5.5 Save safety and cross-platform export/import QA | ✅ 0.33.0 |
 | 5.6 Asset provenance (original or licensed art, GDD §11) | ✅ 0.34.0 — see `docs/ASSETS.md` |
+| Owner request: full screen on phones | ✅ 0.35.0 |
 | 5.7 Device QA and Gate E acceptance | ⬜ |
+
+---
+
+## Slice 7 — 0.35.0: Full screen on phones (2026-11-17, from the owner's phone testing)
+
+### The request
+The owner tested on phones and confirmed the game works. One issue remained: in Chrome on a phone the address bar takes room at the top. The owner asked for full screen, or a setting for it.
+
+### What's in
+- **Settings → Full screen (hide the browser's address bar):** on by default on phones (`pointer: coarse`), off on desktops, and kept on the device like the other settings.
+  - Browsers allow full screen only from a tap or key press. With the setting on, the game goes full screen on the first tap of a session. If you swipe out of it, the next tap brings it back.
+  - Ticking the box enters full screen at once; unticking it leaves.
+  - Esc never re-enters, because that's how you leave on a desktop.
+  - While in full screen it asks to **lock landscape**, which works on Android and is ignored where it isn't supported.
+- **iPhone:** no iPhone browser lets a web page go full screen (they're all Safari underneath). There, the switch is replaced by instructions: Share → Add to Home Screen.
+- **Add to Home Screen (iPhone and Android):** a web app manifest (`manifest.webmanifest`: `display: fullscreen`, landscape, the game's colours) plus the Apple meta tags.
+  - Launched from the home screen, the game runs with no browser bars at all.
+  - Settings then says "Running from your home screen, so there are no browser bars", and the game doesn't ask for full screen.
+- **Icons:** 192, 512 (also "maskable") and the 180 px Apple icon, made by `npm run icons` (`scripts/make-icons.js`, no dependencies) from the owner's hero sprite. The figure is cropped, scaled up pixel for pixel, and centred on the game's background inside Android's mask safe zone. They're recorded in `docs/ASSETS.md`.
+
+### Found while checking
+- **Phones would have refused the first tap.** The first version listened for `pointerdown`, but on a phone Chrome only grants full screen at the end of a tap (`pointerup`); a pressed finger doesn't count. It now listens for `pointerup` and key presses.
+
+### Checks
+- `tests/fullscreen.test.js` (5 tests, with a stand-in document) covers:
+  - the first tap going full screen with the bar hidden and landscape locked, later taps leaving it be, and swiping out then tapping going back in
+  - the setting off doing nothing, and the switch entering and leaving at once
+  - home-screen launches and browsers without full screen (iPhone) making no requests, and no document at all (Node) not throwing
+  - phones defaulting to on and desktops to off
+  - the manifest being full screen and landscape with real icons of the stated sizes (including a maskable one), linked from `index.html` with the Apple tags, and recorded in the provenance doc
+- 315 tests pass; lint clean.
+- Browser:
+  - The manifest and icons are served (200, image/png), and Settings shows the new switch and its note.
+  - **Not verifiable here:** the Claude preview pane never grants full screen. A real click left the request pending; without a click it's refused with "Permissions check failed", as browsers do. The real check is on a phone.
+
+### For the owner (on your phone)
+- [ ] **Android Chrome:** open the game. Your first tap should hide the address bar and lock landscape. Swipe out, tap again, and it's back. Settings → Full screen off should keep the bar.
+- [ ] **Add to Home Screen** on Android (⋮ → Add to Home screen) and on an iPhone if you have one (Share → Add to Home Screen). It should open from the icon with no browser bars, and the icon should be the hero.
 
 ---
 

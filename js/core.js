@@ -5,7 +5,7 @@
   root.Crownless = root.Crownless || {};
   const CL = root.Crownless;
 
-  CL.BUILD = '0.34.0';
+  CL.BUILD = '0.35.0';
 
   /**
    * Developer tools (the Logs and Debug buttons) show on a local dev server, and on any build when the

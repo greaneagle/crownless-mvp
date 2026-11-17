@@ -1125,6 +1125,7 @@
     $('#setHealthBars').checked = s.healthBars;
     $('#setReduced').checked = s.reducedEffects;
     $('#setTips').checked = s.tips;
+    refreshFullscreen();
     showVolumes();
     // A battle waits while you change settings.
     settingsPaused = CL.game.mode === 'battle' && !CL.game.paused;
@@ -1143,7 +1144,25 @@
     $('#setSfxOut').textContent = `${$('#setSfx').value}%`;
   }
 
+  /** The full-screen row: a switch where the browser allows it, otherwise how to get there. */
+  function refreshFullscreen() {
+    const F = CL.fullscreen;
+    const canSwitch = F.supported() && !F.installed();
+    $('#setFullscreenRow').classList.toggle('hidden', !canSwitch);
+    $('#setFullscreen').checked = Boolean(CL.settings.get('fullscreen'));
+    $('#setFullscreenNote').textContent = F.installed()
+      ? 'Running from your home screen, so there are no browser bars.'
+      : canSwitch
+        ? 'If you leave full screen, the next tap brings it back. For no bars at all, add Crownless to your home screen (browser menu → Add to Home screen).'
+        : 'This browser can’t hide its bars for a web page. To play full screen, add Crownless to your home screen: Share → Add to Home Screen on iPhone, or the ⋮ menu → Add to Home screen on Android.';
+  }
+
   function bindSettings() {
+    $('#setFullscreen').onchange = () => {
+      const on = $('#setFullscreen').checked;
+      CL.settings.set('fullscreen', on);
+      CL.fullscreen.setWanted(on);
+    };
     $('#settingsBtn').onclick = openSettings;
     $('#titleSettingsBtn').onclick = openSettings;
     $('#closeSettings').onclick = closeSettings;
@@ -1247,6 +1266,7 @@
   }
 
   CL.ui = {
+    refreshFullscreen,
     showStale,
     showTip,
     hideTip,

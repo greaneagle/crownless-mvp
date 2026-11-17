@@ -17,7 +17,8 @@
     } catch {
       touch = false;
     }
-    return { music: 50, sfx: 70, battleSize: touch ? 30 : 40, reducedEffects: false, healthBars: true, tips: true };
+    // Full screen is on by default on phones, where the address bar costs the most room.
+    return { music: 50, sfx: 70, battleSize: touch ? 30 : 40, reducedEffects: false, healthBars: true, tips: true, fullscreen: touch };
   }
 
   let current = defaults();
@@ -35,6 +36,7 @@
       reducedEffects: typeof r.reducedEffects === 'boolean' ? r.reducedEffects : d.reducedEffects,
       healthBars: typeof r.healthBars === 'boolean' ? r.healthBars : d.healthBars,
       tips: typeof r.tips === 'boolean' ? r.tips : d.tips,
+      fullscreen: typeof r.fullscreen === 'boolean' ? r.fullscreen : d.fullscreen,
     };
   }
 

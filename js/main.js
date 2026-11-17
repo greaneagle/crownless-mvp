@@ -19,6 +19,7 @@
   CL.debugTools.bind();
   CL.ui.bindSettings();
   CL.ui.bindHelp();
+  CL.fullscreen.bind();
   // Every button gives a small click (rate-limited; silent until audio is unlocked by this very tap).
   root.document.addEventListener('click', (e) => e.target.closest?.('button') && CL.audio.play('select', 0.6), true);
 
