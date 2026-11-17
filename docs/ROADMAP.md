@@ -82,20 +82,25 @@ All 10 settlements; Stonebridge walkable hub; 3 battle maps; ~30 items; AI caval
 4. ✅ (0.32.0) Tutorial and help: 15 first-time tips (once per device; the first battle waits on its controls card), a How to Play screen with every control, Q1 kept as the hands-on tutorial.
 5. ✅ (0.33.0) Save safety and cross-device export/import: save on page hide, two-tab guard, backup-load notice, export reminders and storage-persistence request, forgiving paste import, cross-device and old-build round trips.
 6. ✅ (0.34.0) Asset provenance: sprites are the owner's own AI-generated art (Sprite Studio); sound and map are code; no third-party assets or runtime dependencies. `docs/ASSETS.md`, `assets/manifest.json` and a guarding test; Credits in How to Play.
-7. Device QA and Gate E acceptance.
+7. Device QA and Gate E acceptance. First evidence: on the owner's Zenfone 10 (Chrome), the stress test at battle size 30 ran at **60 fps** (0.6 ms simulation, 1.7 ms drawing, 17 ms slowest frame); full screen, Add to Home Screen and play "all felt pretty good".
+   - 7b. **Towns open on their menu (finding F-3):** walkable places open their settlement menu on arrival, with Walk the streets and Leave; a per-place content flag.
 8. Release **v1.0 "The Border March"**: freeze save schema v2, tag the release, keep v1 save fixtures for the v2 migration.
 
 ### Phase 6+ — v2 (planned; see `docs/V2-PLAN.md`)
+**Workflow:** everything on `main`. GitHub Pages is the test build, not a release.
 From the owner's v2.0 design (`Crownless_v2_0_Feature_and_Systems_Design_Part_1.md` and `_Part_2.md`). Every system ships a default path, a one-decision preset and optional expert depth; power is gained and lost without ever ending the campaign.
 - **Playtest findings (owner, 2026-11-17)** — in `docs/V2-PLAN.md` §4b:
   - **F-1, troops with XP but no upgrade.** Confirmed: the stuck soldiers were Mercenaries, which have no upgrade path while the Party screen shows an XP target. The owner chose to fix this in v2 through a **troop tree discovered as you play** (V2-03b). Unknown troops are hidden, troops seen in battle show only their name, and troops you have owned or trained show full stats. End-of-path troops show "max tier", and there is an "Upgrade all ready" action. Nothing changes before then.
   - **F-2, soldiers stacking on one spot in battle.** ✅ Fixed in 0.36.0: soldiers now have bodies. In 0.36.1 the spacing was tightened to shoulder to shoulder (12 px) at the owner's request. They never stack, and charging riders still ride through. V2-05 keeps this working on larger maps.
 - **Phase 6, v2.0 "The Living Warband":**
   - ART-01 an art style guide and asset list (alongside)
+  - V2-00 type checking with `@ts-check` and JSDoc (no build step)
   - V2-01 save schema v3, migrations and a storage layer
   - V2-02 one idempotent result path, events and seeded randomness
-  - V2-03 named soldiers and service records
+  - V2-03 named soldiers and service records, with a data-driven, moddable culture name generator
+  - V2-03b a troop tree discovered as you play
   - V2-04 a canonical campaign clock (no flat 6-hour battle charge)
+  - PROTO-A a camera test run in the Debug panel, on your phone first
   - V2-05 a world-space camera and larger arenas
   - V2-06 minimap and tactical overview
   - V2-07 battle preparation presets and deployment
@@ -104,8 +109,11 @@ From the owner's v2.0 design (`Crownless_v2_0_Feature_and_Systems_Design_Part_1.
   - V2-10 company chronicle and roll of honour
   - V2-11 accounts and the quartermaster
   - V2-12 the merchant follower
-  - V2-13 v2.0 acceptance
-  - **Release track** (the goal is to sell eventually): R-01 commercial readiness, R-02 packaging trial, R-03 demo plan
+  - V2-Q a few small quests that use the new systems (no new main story)
+  - V2-T1 and V2-T2 tuning passes (economy, then battles)
+  - V2-13 v2.0 acceptance; v2.0 is a testing release
+  - **Release track** (the goal is to sell eventually; never blocks v2.0): R-01 commercial readiness, including OpenAI's terms for the ChatGPT-made sprites; R-02 packaging trial; R-03 demo plan
+  - **Later backlog:** text size and zoom, other languages (English only for now)
 - **Phase 7, v2.1–2.2 "Company & World":** more followers, officers and detached patrols, pursuit and detection, dynamic events, a duel tournament, a first business.
 - **Phase 8, v2.3+ "The Landed World":** holdings, claims and occupation, fealty and allegiance, castellans, simple sieges, named nobles. Acceptance is "The Dispossessed Lord".
 - **Phase 9, later:** kingdoms, treaties and rebellion, houses and marriage, modding, new worlds.

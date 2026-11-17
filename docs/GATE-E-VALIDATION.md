@@ -13,7 +13,7 @@ _Spec: GDD §6 (scaling), §12 (performance targets), §13 (saves), §14 Gate E,
 | 5.5 Save safety and cross-platform export/import QA | ✅ 0.33.0 |
 | 5.6 Asset provenance (original or licensed art, GDD §11) | ✅ 0.34.0 — see `docs/ASSETS.md` |
 | Owner request: full screen on phones | ✅ 0.35.0 |
-| 5.7 Device QA and Gate E acceptance | ⬜ |
+| 5.7 Device QA and Gate E acceptance | 🟡 In progress. Zenfone 10 (Chrome): stress test at size 30 at 60 fps, 0.6 ms simulation and 1.7 ms drawing; full screen, home screen and play all work. Still to do: F-3 (towns open on their menu), iPhone if available, the §15 checklist |
 
 ---
 
