@@ -8,6 +8,8 @@
   CL.campaign = CL.save.load();
   CL.assets.preload();
 
+  CL.ui.$('#stage').dataset.dev = CL.dev ? 'on' : 'off';
+  root.addEventListener('resize', () => CL.ui.fitHud());
   const canvas = CL.ui.$('#game');
   CL.render.init(canvas);
   CL.input.bind(canvas);

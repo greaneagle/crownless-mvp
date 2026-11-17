@@ -405,7 +405,21 @@
     });
   }
 
-  function label(text, x, y, color = '#f8ecd0') {
+  // On the world map, labels are queued while icons are drawn and placed last, most important first,
+  // so names don't pile on top of each other (see placeLabels). Null outside the world map.
+  let mapLabels = null;
+  const LABEL_PRIORITY = { quest: 0, settlement: 1, site: 2, hostile: 3, party: 4 };
+
+  /** Draw a label now, or (on the world map) queue it with its icon's position and priority. */
+  function label(text, x, y, color = '#f8ecd0', place = null) {
+    if (mapLabels && place) {
+      mapLabels.push({ text, x, y, color, ...place });
+      return;
+    }
+    drawLabel(text, x, y, color);
+  }
+
+  function drawLabel(text, x, y, color) {
     ctx.font = 'bold 14px Georgia'; // stays legible when the canvas is scaled down on phones
     ctx.textAlign = 'center';
     ctx.lineWidth = 4;
@@ -465,7 +479,7 @@
       ctx.stroke();
     }
     ctx.restore();
-    label(s.name, x, y + 24);
+    label(s.name, x, y + 24, undefined, { prio: LABEL_PRIORITY.settlement, iy: y });
   }
 
   function drawSite(st) {
@@ -489,7 +503,7 @@
     ctx.lineTo(x - 6, y + 6);
     ctx.stroke();
     ctx.restore();
-    label(active ? st.name : `${st.name} (cleared)`, x, y + 22, active ? '#ffb3a1' : '#c9bda8');
+    label(active ? st.name : `${st.name} (cleared)`, x, y + 22, active ? '#ffb3a1' : '#c9bda8', { prio: LABEL_PRIORITY.site, iy: y });
   }
 
   /** A world party: banner in its faction colour, a shape by kind, and its size. */
@@ -563,22 +577,63 @@
       ctx.fillText('!', x, y - 16);
       ctx.textAlign = 'left';
     }
-    if (crowded) {
-      // Count badge instead of a full label.
-      ctx.fillStyle = hostile ? '#7a1e16' : '#1b2a3a';
-      ctx.beginPath();
-      ctx.arc(x + 11, y + 4, 7, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#fff';
-      ctx.font = 'bold 9px system-ui';
-      ctx.textAlign = 'center';
-      ctx.fillText(String(n), x + 11, y + 7);
-      ctx.textAlign = 'left';
-    }
+    if (crowded) countBadge(x, y, n, hostile);
     ctx.restore();
     if (!crowded) {
+      const marked = (p.contractId && !p.ambush) || p.questTag || p.escortTo;
       const name = p.escortTo ? 'Escort' : p.contractId && !p.ambush ? 'Contract target' : p.questTag ? (t.kind === 'bandit' ? 'Quest: Reavers' : 'Quest: Column') : t.kind === 'bandit' ? 'Reavers' : t.kind === 'patrol' ? 'Patrol' : 'Caravan';
-      label(`${name} ${n}`, x, y + 20, (p.contractId && !p.ambush) || p.questTag ? '#ffd34d' : hostile ? '#ffb3a1' : '#e8f0ff');
+      const prio = marked ? LABEL_PRIORITY.quest : hostile ? LABEL_PRIORITY.hostile : LABEL_PRIORITY.party;
+      // If there is no room for its name, the party keeps its size as a badge on the icon.
+      label(`${name} ${n}`, x, y + 20, marked ? '#ffd34d' : hostile ? '#ffb3a1' : '#e8f0ff', { prio, iy: y, fallback: () => countBadge(x, y, n, hostile) });
+    }
+  }
+
+  /** A party's troop count on its icon (when it is crowded or its name has no room). */
+  function countBadge(x, y, n, hostile) {
+    ctx.save();
+    ctx.fillStyle = hostile ? '#7a1e16' : '#1b2a3a';
+    ctx.beginPath();
+    ctx.arc(x + 11, y + 4, 7, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 9px system-ui';
+    ctx.textAlign = 'center';
+    ctx.fillText(String(n), x + 11, y + 7);
+    ctx.restore();
+  }
+
+  /**
+   * Place the queued map labels, most important first: each tries below its icon, then above, right
+   * and left, avoiding labels already placed and `blockers` (the hero). Quest marks, settlements and
+   * sites always get their name (in the least crowded spot); ordinary parties without room fall back
+   * to a count badge.
+   */
+  function placeLabels(blockers) {
+    const queue = mapLabels;
+    mapLabels = null;
+    ctx.font = 'bold 14px Georgia';
+    const placed = [...blockers];
+    const overlap = (b) => placed.reduce((n, o) => n + (b.x < o.x + o.w && o.x < b.x + b.w && b.y < o.y + o.h && o.y < b.y + b.h ? 1 : 0), 0);
+    queue.sort((a, b) => a.prio - b.prio);
+    for (const l of queue) {
+      const w = ctx.measureText(l.text).width + 6;
+      const spots = [
+        [l.x, l.y],
+        [l.x, l.iy - 20],
+        [l.x + w / 2 + 14, l.iy + 5],
+        [l.x - w / 2 - 14, l.iy + 5],
+      ].map(([cx, cy]) => ({ cx, cy, box: { x: cx - w / 2, y: cy - 13, w, h: 17 } }));
+      const inside = spots.filter((s) => s.box.x >= 0 && s.box.x + s.box.w <= W && s.box.y >= 0 && s.box.y + s.box.h <= H);
+      let spot = inside.find((s) => !overlap(s.box));
+      if (!spot) {
+        if (l.fallback) {
+          l.fallback();
+          continue;
+        }
+        spot = (inside.length ? inside : spots).reduce((a, b) => (overlap(b.box) < overlap(a.box) ? b : a));
+      }
+      placed.push(spot.box);
+      drawLabel(l.text, spot.cx, spot.cy, l.color);
     }
   }
 
@@ -647,6 +702,7 @@
       ctx.stroke();
     }
 
+    mapLabels = [];
     for (const st of Object.values(m.sites)) drawSite(st);
     for (const s of Object.values(CL.content.table('settlements'))) drawSettlement(s, s.id === w.location);
     for (const p of CL.campaign.parties || []) drawParty(p);
@@ -678,6 +734,7 @@
     ctx.ellipse(mx, my + 2, 10, 4, 0, 0, Math.PI * 2);
     ctx.fill();
     drawHeroFrame(CL.assets.key('u', frame), mx - 13, my - 32, 26, 33);
+    placeLabels([{ x: mx - 13, y: my - 32, w: 26, h: 33 }]);
 
     updateMapHud();
   }

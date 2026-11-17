@@ -107,7 +107,11 @@
       if (target) [w.x, w.y] = [target.x, target.y + 24]; // follow a pacing person
       const d = Math.hypot(w.x - t.hero.x, w.y - t.hero.y);
       const before = [t.hero.x, t.hero.y];
-      if (d > ARRIVE) CL.units.move(t.hero, w.x - t.hero.x, w.y - t.hero.y, dt);
+      if (d > ARRIVE) {
+        // Tap-to-walk steers round the well and buildings as soldiers do, instead of grinding along them.
+        const [vx, vy] = CL.units.steer(t.hero, (w.x - t.hero.x) / d, (w.y - t.hero.y) / d);
+        CL.units.move(t.hero, vx, vy, dt);
+      }
       const stuck = Math.hypot(t.hero.x - before[0], t.hero.y - before[1]) < 0.2;
       const npc = w.npc && t.npcs.find((n) => n.id === w.npc);
       if (npc && Math.hypot(npc.x - t.hero.x, npc.y - t.hero.y) <= TALK_RANGE) {

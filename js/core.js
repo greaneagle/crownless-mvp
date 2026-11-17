@@ -5,7 +5,26 @@
   root.Crownless = root.Crownless || {};
   const CL = root.Crownless;
 
-  CL.BUILD = '0.29.0';
+  CL.BUILD = '0.30.0';
+
+  /**
+   * Developer tools (the Logs and Debug buttons) show on a local dev server, and on any build when the
+   * page is opened with ?dev (remembered on this device; ?dev=0 turns them off again). F3 always
+   * opens the diagnostics panel, so players can still export a report.
+   */
+  CL.dev = (() => {
+    const loc = root.location;
+    if (!loc) return false;
+    try {
+      const q = new URLSearchParams(loc.search).get('dev');
+      if (q !== null) root.localStorage.setItem('crownless_dev', q === '0' ? '0' : '1');
+      const kept = root.localStorage.getItem('crownless_dev');
+      if (kept !== null) return kept === '1';
+    } catch {
+      // storage blocked: fall back to the host check
+    }
+    return /^(localhost|127.0.0.1|[::1])$/.test(loc.hostname);
+  })();
   CL.SAVEKEY = 'crownless_v03_party';
   CL.W = 960;
   CL.H = 540;

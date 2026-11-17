@@ -112,13 +112,29 @@
     CL.game.message = text;
     CL.game.messageUntil = performance.now() + MESSAGE_MS;
     $('#message').textContent = text;
+    fitHud();
     CL.diag.log('info', text);
+  }
+
+  /**
+   * Phone layout: the HUD panel may only be as wide as the space the top-right buttons leave (its
+   * text wraps rather than hiding under them), and announcements sit just below it, not over it.
+   */
+  function fitHud() {
+    const stage = $('#stage')?.getBoundingClientRect();
+    const left = $('#topLeft');
+    const right = $('#topRight')?.getBoundingClientRect();
+    if (!stage || !left || !right) return;
+    const room = (right.width ? right.left : stage.right - stage.width * 0.02) - left.getBoundingClientRect().left - 8;
+    left.style.maxWidth = `${Math.max(150, Math.floor(room))}px`;
+    $('#message').style.top = `${Math.ceil(left.getBoundingClientRect().bottom - stage.top + 6)}px`;
   }
 
   function changeMode(mode) {
     const g = CL.game;
     g.mode = mode;
     $('#stage').dataset.mode = mode;
+    requestAnimationFrame(fitHud); // the top-right buttons change with the mode
     $('#attackBtn').textContent = mode === 'town' ? 'TALK' : 'ATTACK';
     $('#ordersPanel').classList.add('hidden');
     if (mode === 'map' || mode === 'town') {
@@ -1080,6 +1096,7 @@
   }
 
   CL.ui = {
+    fitHud,
     showEnding,
     closeEnding,
     talkTo,

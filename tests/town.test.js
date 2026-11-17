@@ -128,3 +128,16 @@ test('town content is valid: every person stands clear of buildings, actions are
   }
   assert.deepEqual(Array.from(CL.content.validate()), []);
 });
+
+test('tap-to-walk steers round the well instead of grinding along it (Gate E 5.2)', () => {
+  const { CL, t } = inTown();
+  // From where you arrive, the Elder is across the square with the well on the way.
+  const elder = t.npcs.find((n) => n.id === 'elder');
+  const straight = Math.hypot(elder.x - t.hero.x, elder.y - t.hero.y) / t.hero.speed;
+  CL.town.tap(elder.x, elder.y - 16);
+  let seconds = 0;
+  for (; seconds < 20 && CL.game.mode === 'town'; seconds += 0.05) CL.town.update(0.05);
+  assert.equal(CL.game.mode, 'talk');
+  // Talk opens within reach, so a clean walk beats the straight-line time; sliding along the well did not.
+  assert.ok(seconds < straight, `took ${seconds.toFixed(2)} s, straight line ${straight.toFixed(2)} s`);
+});

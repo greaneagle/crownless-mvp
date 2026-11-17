@@ -7,12 +7,50 @@ _Spec: GDD §6 (scaling), §12 (performance targets), §13 (saves), §14 Gate E,
 | Roadmap step | Status |
 |---|---|
 | 5.1 Battle scaling: active-unit cap with reserves, stress test, measured costs | ✅ 0.29.0 |
-| 5.2 Landscape UX pass (the phone-size notes from Gate D; touch targets; dev buttons out of release builds) | ⬜ |
+| 5.2 Landscape UX pass (the phone-size notes from Gate D; touch targets; dev buttons out of release builds) | ✅ 0.30.0 |
 | 5.3 Settings and audio (battle size, volume, sound effects) | ⬜ |
 | 5.4 Tutorial and help | ⬜ |
 | 5.5 Save safety and cross-platform export/import QA | ⬜ |
 | 5.6 Asset provenance (original or licensed art, GDD §11) | ⬜ |
 | 5.7 Device QA and Gate E acceptance | ⬜ |
+
+---
+
+## Slice 2 — 0.30.0: Phone layout pass (2026-11-17)
+
+### What's in (GDD §14 Gate E "UX on landscape phones and web"; the phone-size notes from Gate D acceptance)
+- **The HUD fits beside the buttons.**
+  - Before: the status panel ran under the top-right buttons, cutting off the quest name ("• A Strange…").
+  - Now: the panel is limited to the room the buttons leave (measured on every mode change and resize), so its text wraps to a second line instead.
+- **Announcements sit below the HUD.**
+  - Before: messages such as "New quest…", "Quest complete…" and "Enemy wave…" drew over the status panel.
+  - Now: they appear just below it, centred on a dark backing that reads over the map, the streets or a battle.
+- **Map labels no longer pile up.**
+  - Labels are placed after everything else, most important first: quest, contract and escort marks, then settlements, sites, hostile bands and other parties.
+  - Each label tries below its icon, then above, right and left, and avoids labels already placed and the hero sprite.
+  - Settlement, site and quest names always appear. A patrol or caravan with no room shows its troop count as a badge on its icon instead.
+  - At 667×375: Stonebridge moved above its icon (the caravan beside it shows a badge), Highmere moved clear of the hero, and Greywall, Oakford and the quest band no longer cover each other.
+- **Tap-to-walk in Stonebridge steers** round the well and buildings the way soldiers do. Before, the hero ground slowly along the well's edge on the way to the Elder.
+- **Developer tools are out of release builds.**
+  - The Logs and Debug buttons show on a local dev server, or with `?dev` in the address (remembered on that device; `?dev=0` turns them off).
+  - On the published site they are hidden, which frees the top bar and stops them overlapping menus.
+  - F3 still opens the diagnostics panel, so a desktop player can export a report.
+
+### Not changed (checked, fine)
+- Touch targets were already at least 44–48 px (Gate A).
+- The battle HUD, joystick, Orders, Block and Attack buttons fit at 667×375 and 740×360.
+- With `?dev` on, the Logs and Debug buttons still overlap a menu's top-right corner on small phones. That's developer-only, so it stays.
+
+### Checks
+- `tests/town.test.js`: a new test walks from where you arrive to the Elder and must beat the straight-line time. It fails without the steering fix (4.85 s sliding along the well, against 4.60 s).
+- Label placement and HUD fitting draw to the canvas and page, so they're checked in the browser rather than in Node.
+- 289 tests pass; lint clean.
+- Browser, with real clicks, at 667×375 (iPhone SE landscape) and 740×360 (small Android):
+  - Map as a release build: the full HUD line, the toast below it, and labels apart.
+  - Map with `?dev`: the HUD wraps to two lines beside five buttons.
+  - Then, at 667×375: the quest ambush's encounter screen, the battle HUD and controls, and the Stonebridge streets.
+  - At 740×360: the town menu.
+  - No console errors. The preview save and the dev setting were restored afterwards.
 
 ---
 
@@ -72,5 +110,5 @@ Before the cap, a 60-unit battle put 54 on the field at up to 0.44 ms per frame.
   - The preview save was byte-identical after both stress battles. No console errors.
 
 ### For the owner to try on a phone
-- [ ] Debug → Battle size & stress test → **Stress 40** at size 40. Write down the fps, simulation ms and drawing ms on the result screen.
+- [ ] Open the game with `?dev` added to the address (the Debug button is hidden on the published site since 0.30.0), then Debug → Battle size & stress test → **Stress 40** at size 40. Write down the fps, simulation ms and drawing ms on the result screen.
 - [ ] If it's under about 30 fps, try **Stress 40** at size 30 and at size 20, and note which size feels smooth. That size becomes the default for phones in 5.3.
