@@ -893,10 +893,15 @@
     $('#contractsBtn').classList.toggle('hidden', !board);
     const payday = c.contract?.status === 'done' && c.contract.giver === c.world.location;
     $('#contractsBtn').textContent = payday ? 'Contracts — collect pay!' : 'Contracts';
-    // People to talk to at menu-only settlements (dialogues with a place).
+    // People to talk to: those in a walkable place's streets (so the menu, where you arrive, reaches
+    // them too), then dialogues placed at this settlement.
+    const people = [
+      ...CL.town.streetPeople(c.world.location),
+      ...CL.story.peopleAt(c.world.location, c).map((t) => ({ id: t.id, name: t.speaker })),
+    ].filter((p, i, all) => all.findIndex((q) => q.id === p.id) === i);
     $('#peopleHere').replaceChildren(
-      ...CL.story.peopleAt(c.world.location, c).map((t) => {
-        const b = Object.assign(document.createElement('button'), { type: 'button', textContent: `Talk to ${t.speaker}` });
+      ...people.map((t) => {
+        const b = Object.assign(document.createElement('button'), { type: 'button', textContent: `Talk to ${t.name}` });
         b.onclick = () => talkTo(t.id);
         return b;
       }),

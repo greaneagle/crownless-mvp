@@ -36,11 +36,22 @@
   }
 
   /** Go to a settlement: its town scene if it has one, otherwise its menu. */
-  function enterPlace() {
-    if (!enter()) {
-      g().placeMode = 'settlement';
-      CL.ui.changeMode('settlement');
-    }
+  /**
+   * Go to a settlement: its menu by default (owner playtest finding F-3), with "Walk the streets" one
+   * tap away. A walkable place whose hub says `entry: 'streets'` (content, so mods can choose) opens
+   * on its streets instead.
+   */
+  function enterPlace(sid = CL.campaign.world.location) {
+    if (hubFor(sid)?.entry === 'streets' && enter(sid)) return;
+    g().placeMode = 'settlement';
+    CL.ui.changeMode('settlement');
+  }
+
+  /** People in a walkable place's streets who have a conversation, for its menu ("Talk to …"). */
+  function streetPeople(sid = CL.campaign.world.location) {
+    const hub = hubFor(sid);
+    if (!hub) return [];
+    return hub.npcs.filter((n) => n.dialogue && CL.story.test(n.visible)).map((n) => ({ id: n.dialogue, name: n.name }));
   }
 
   function npcAt(px, py) {
@@ -166,5 +177,5 @@
     else CL.ui.changeMode('settlement');
   }
 
-  CL.town = { TALK_RANGE, hubFor, enter, enterPlace, tap, npcAt, update, interact, open, leave, backToPlace };
+  CL.town = { TALK_RANGE, hubFor, enter, enterPlace, streetPeople, tap, npcAt, update, interact, open, leave, backToPlace };
 })(typeof window !== 'undefined' ? window : globalThis);

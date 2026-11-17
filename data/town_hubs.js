@@ -8,7 +8,9 @@
  *   npcs[].action: 'trade' | 'recruit' | 'tavern' | 'talk' | 'leave'
  *   npcs[].lines:  what they say (one is picked each time you talk)
  *   npcs[].tag:    short title shown under their feet
- *   npcs[].visible: optional story condition for appearing at all (js/story.js vocabulary) */
+ *   npcs[].visible: optional story condition for appearing at all (js/story.js vocabulary)
+ *   entry: 'menu' (default) or 'streets': what arriving opens. Menu first, with "Walk the streets"
+ *          one tap away (owner playtest finding F-3); people with conversations are also listed there. */
 (function (root) {
   root.CROWNLESS_CONTENT = root.CROWNLESS_CONTENT || {};
   var C = root.CROWNLESS_CONTENT;
@@ -20,6 +22,7 @@
       id: 'stonebridge',
       settlement: 'stonebridge',
       name: 'Stonebridge',
+      entry: 'menu',
       ground: {
         base: '#6f8f4e',
         tiles: ['w0000', 'w0001', 'w0002'],

@@ -13,7 +13,29 @@ _Spec: GDD §6 (scaling), §12 (performance targets), §13 (saves), §14 Gate E,
 | 5.5 Save safety and cross-platform export/import QA | ✅ 0.33.0 |
 | 5.6 Asset provenance (original or licensed art, GDD §11) | ✅ 0.34.0 — see `docs/ASSETS.md` |
 | Owner request: full screen on phones | ✅ 0.35.0 |
-| 5.7 Device QA and Gate E acceptance | 🟡 In progress. Zenfone 10 (Chrome): stress test at size 30 at 60 fps, 0.6 ms simulation and 1.7 ms drawing; full screen, home screen and play all work. Still to do: F-3 (towns open on their menu), iPhone if available, the §15 checklist |
+| 5.7 Device QA and Gate E acceptance | 🟡 In progress. Zenfone 10 (Chrome): stress test at size 30 at 60 fps, 0.6 ms simulation and 1.7 ms drawing; full screen, home screen and play all work. F-3 (towns open on their menu) done in 0.37.0. Still to do: iPhone if available, the §15 checklist |
+
+---
+
+## Step 5.7b — 0.37.0: Towns open on their menu (2026-11-17, owner playtest finding F-3)
+
+The owner's verdict after phone testing was "it all felt pretty good", with one change asked for: walkable towns should open on the settlement menu rather than the streets.
+
+### What changed
+- **Arriving opens the menu.** Arriving at a walkable place (Stonebridge today), or starting a new game there, opens the settlement menu. The streets are opt-in: **Walk the streets** (the menu's second button) opens them, and **Leave** goes back to the map. Inside the streets, Town menu and the road out work as before, and screens opened from the streets return to the streets.
+- **The menu reaches the street people.** With the menu first, the Elder (who starts Q1), the Captain, the Sergeant and Mara would otherwise be hidden behind a walk. They now also appear as **Talk to …** buttons, following the same story rules (for example, Mara only once Q2 brings her), and a conversation started from the menu returns to the menu.
+- **A content flag for each place.** `entry: 'menu'` (the default) or `'streets'` on the town hub, so a future walkable town or a mod can choose. It's validated at load.
+- How to Play's "Towns and villages" topic now describes menu first, then the streets.
+
+### Checks
+- Two tests that encoded the old behaviour were updated: arriving at Stonebridge, and starting a new game, now expect the menu.
+- A new test covers the street people listed on the menu (Mara only when the story allows), talking from the menu and returning to it, the `entry: 'streets'` option (sub-screens returning to the streets), and validation of a bad value.
+- 321 tests pass; lint clean.
+- Browser at 844×390, with real taps:
+  - Rode to Stonebridge and the menu opened, with "Talk to Sergeant Brun / Elder Maren / Captain Aldric", **Walk the streets** and **Leave**.
+  - Talked to the Elder from the menu and came back to the menu.
+  - Walk the streets opened Stonebridge, with the Town menu button there.
+  - No errors. The preview save was restored afterwards.
 
 ---
 

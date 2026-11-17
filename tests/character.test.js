@@ -102,7 +102,8 @@ test('starting a new game builds a fresh campaign from the kit and enters Stoneb
   assert.equal(CL.save.existed, true);
   assert.equal(CL.game.newGame, false);
   assert.equal(JSON.parse(storage.data.crownless_save).character.background, 'peddler');
-  assert.ok(uiCalls.some((x) => x[0] === 'changeMode' && x[1] === 'town'), 'starts in the streets of Stonebridge');
+  assert.ok(uiCalls.some((x) => x[0] === 'changeMode' && x[1] === 'settlement'), 'starts at the Stonebridge menu (F-3), the streets one tap away');
+  assert.equal(CL.campaign.world.location, 'stonebridge');
 });
 
 test('an older save gains a character without losing its party or gold', () => {

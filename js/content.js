@@ -149,6 +149,7 @@
     for (const h of Object.values(C.town_hubs || {})) {
       if (!C.settlements?.[h.settlement]?.explorable) err(`town_hub ${h.id}: settlement ${h.settlement} is not explorable`);
       if (!h.spawn || !h.exitZone) err(`town_hub ${h.id}: needs a spawn and an exit`);
+      if (h.entry != null && !['menu', 'streets'].includes(h.entry)) err(`town_hub ${h.id}: entry must be 'menu' or 'streets'`);
       for (const n of h.npcs || []) {
         if (!['trade', 'recruit', 'tavern', 'talk', 'leave'].includes(n.action)) err(`town_hub ${h.id}: ${n.id} has unknown action ${n.action}`);
         if (!n.frames?.length) err(`town_hub ${h.id}: ${n.id} needs sprite frames`);

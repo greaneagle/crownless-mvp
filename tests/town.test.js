@@ -16,10 +16,13 @@ const walk = (CL, keys, seconds) => {
   CL.game.hold = {};
 };
 
-test('Stonebridge is a walkable town; other settlements stay menus', () => {
+test('Stonebridge is a walkable town that opens on its menu (F-3); other settlements are menus only', () => {
   const { CL, uiCalls } = loadGame();
   CL.world.leaveSettlement();
   CL.world.travelTo({ type: 'settlement', id: 'stonebridge', x: 50, y: 55 });
+  assert.equal(CL.game.mode, 'settlement', 'arriving opens the menu');
+  assert.equal(CL.game.placeMode, 'settlement');
+  assert.equal(CL.town.enter(), true, 'Walk the streets');
   assert.equal(CL.game.mode, 'town');
   assert.equal(CL.game.placeMode, 'town');
   CL.world.leaveSettlement();
@@ -140,4 +143,28 @@ test('tap-to-walk steers round the well instead of grinding along it (Gate E 5.2
   assert.equal(CL.game.mode, 'talk');
   // Talk opens within reach, so a clean walk beats the straight-line time; sliding along the well did not.
   assert.ok(seconds < straight, `took ${seconds.toFixed(2)} s, straight line ${straight.toFixed(2)} s`);
+});
+
+test('F-3: the menu reaches the people in the streets; a place can still choose to open on its streets', () => {
+  const { CL } = loadGame();
+  // The Elder, the Captain and the Sergeant are in Stonebridge's streets, and listed on its menu too.
+  const people = CL.town.streetPeople('stonebridge').map((p) => p.id);
+  for (const id of ['stonebridge_elder', 'valedorn_agent', 'sergeant_brun']) assert.ok(people.includes(id), id);
+  assert.equal(people.includes('mara'), false, 'Mara only once the story brings her');
+  assert.deepEqual(Array.from(CL.town.streetPeople('eastwatch')), [], 'no streets, no street people');
+  // Talking from the menu returns to the menu.
+  CL.campaign.world.location = 'stonebridge';
+  CL.town.enterPlace();
+  const v = CL.story.talk('stonebridge_elder');
+  assert.ok(v.options.some((o) => /work for me/.test(o.text)), 'the Elder offers work from the menu');
+  CL.town.backToPlace();
+  assert.equal(CL.game.mode, 'settlement');
+  // Content can make a walkable place open on its streets instead.
+  CL.content.get('town_hubs', 'stonebridge').entry = 'streets';
+  CL.town.enterPlace();
+  assert.equal(CL.game.mode, 'town');
+  CL.town.backToPlace();
+  assert.equal(CL.game.mode, 'town', 'and sub-screens return to the streets');
+  CL.content.get('town_hubs', 'stonebridge').entry = 'sideways';
+  assert.ok(Array.from(CL.content.validate()).some((e) => /entry must be 'menu' or 'streets'/.test(e)));
 });

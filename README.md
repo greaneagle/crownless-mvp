@@ -1,4 +1,4 @@
-# Crownless 0.36.1 — The Border March
+# Crownless 0.37.0 — The Border March
 
 A single-player, top-down party-battle prototype in plain HTML5 Canvas and classic JavaScript. There's no bundler, no runtime dependencies and no server. It's published to GitHub Pages straight from `main`.
 
@@ -73,7 +73,7 @@ js/               game runtime, attached to window.Crownless
   upkeep.js       food rations, weekly wages, morale, desertion
   trade.js        markets, prices, cargo, selling gear
   world.js        strategic map: travel, terrain, settlements, sites, capture release
-  town.js         walkable Stonebridge: walking, townsfolk, talking
+  town.js         walkable Stonebridge (menu first, Walk the streets): walking, townsfolk, talking
   autoresolve.js  seeded RNG and GDD auto-resolve (power, odds, casualties)
   parties.js      patrols, caravans, bandit bands; encounter choices
   contracts.js    contract lifecycle (offer, accept, complete, collect, fail)

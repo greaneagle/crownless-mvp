@@ -42,7 +42,7 @@
       order: 3,
       title: 'Towns and villages',
       body: [
-        'Stonebridge is walkable: tap a person to walk over and talk, or use the joystick and TALK. Town menu opens the same services as everywhere else. Leave by the road on the left.',
+        'Every place opens on its menu: hire, buy food, rest, trade, take contracts and talk to people. Stonebridge also has streets: Walk the streets to stroll around, tap a person to walk over and talk (or use the joystick and TALK), Town menu to get back, and the road on the left to leave.',
         'Every other place is a menu: hire soldiers, buy food, rest, trade, take contracts and talk to whoever is there. Forts show their garrison. A kingdom that is Hostile to you will not hire out soldiers or work.'
       ],
       controls: [
