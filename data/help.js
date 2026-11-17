@@ -106,6 +106,16 @@
         'The game saves itself in this browser after battles and in settlements. Browsers can clear that storage, so use Save & export now and then: the file (or text) also moves your game to another device.',
         'Settings (⚙, or on the title screen) has music and effects volume, battle size, health bars, reduced effects, and tips. Settings stay on this device and are not part of a save.'
       ]
+    },
+    credits: {
+      id: 'credits',
+      order: 9,
+      title: 'Credits',
+      body: [
+        'Crownless: The Border March. Design, story and code by the game’s developer.',
+        'Character and world sprites were made with AI using Sprite Studio, the developer’s own sprite tool. Sound effects and music are synthesized live in your browser; the map and interface are drawn in code.',
+        'No third-party art, music, fonts or libraries are used, and the game loads nothing from other sites.'
+      ]
     }
   };
 

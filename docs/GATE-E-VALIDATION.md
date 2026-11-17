@@ -11,8 +11,41 @@ _Spec: GDD §6 (scaling), §12 (performance targets), §13 (saves), §14 Gate E,
 | 5.3 Settings and audio (battle size, volume, sound effects) | ✅ 0.31.0 |
 | 5.4 Tutorial and help | ✅ 0.32.0 |
 | 5.5 Save safety and cross-platform export/import QA | ✅ 0.33.0 |
-| 5.6 Asset provenance (original or licensed art, GDD §11) | ⬜ |
+| 5.6 Asset provenance (original or licensed art, GDD §11) | ✅ 0.34.0 — see `docs/ASSETS.md` |
 | 5.7 Device QA and Gate E acceptance | ⬜ |
+
+---
+
+## Slice 6 — 0.34.0: Asset provenance (2026-11-17)
+
+### What's in (GDD §14 Gate E "original/licensed art"; §11 art bible "No real Pokémon sprites, tiles, trademarks, or assets")
+- **Where the art comes from, confirmed by the owner:** the 169 sprite PNGs (character frames `u####`, world tiles `w####`) were made with AI by the project owner using **Sprite Studio**, the owner's own AI-built sprite tool, and are owned by the owner. There is no third-party art.
+- **Everything else is written for this project or generated in code:**
+  - the world map and its icons are canvas shapes
+  - the interface is CSS
+  - the sound and music are synthesized (5.3)
+  - the hero's cloak colours are a runtime recolour
+  - the text was written for the game
+  - the font is the device's own Georgia, and the page icon is a ⚔️ emoji, so neither is distributed
+- **No runtime dependencies:** the page loads only its own files: no CDN, web fonts or trackers. Lint and the local server run through `npx` and are not shipped.
+- **`docs/ASSETS.md`:** the provenance record, covering what ships, its origin and rights, the unused files, and things to keep in mind:
+  - how copyright treats AI-generated images varies by country, and the image model's terms may matter, so note which model Sprite Studio used
+  - the sprites are a generic 16-bit fantasy style, not copies from any existing game
+  - how to add art later
+- **`assets/manifest.json`** (`npm run assets` rebuilds it) lists every image with its source and whether the game uses it: 85 of the 169 are loaded.
+  - **Unused files:** the other 84 are unused unit frames from the same sheets. The owner chose to keep them. They're published with the site but never downloaded by players.
+- **Credits:** a ninth How to Play topic says the sprites were made with AI using Sprite Studio, the sound is synthesized, and no third-party art, music, fonts or libraries are used.
+
+### Checks
+- `tests/assets.test.js` (3 tests) covers:
+  - every PNG listed in the manifest with a documented source, and no stale entries
+  - the "used" flags matching what the game's own preload asks for, with nothing it asks for missing
+  - no external resources in `index.html`, and no other-site URLs or web fonts in any shipped script, data file or stylesheet
+- 310 tests pass; lint clean.
+- Browser: How to Play → Credits shows the new topic.
+
+### For the owner
+- [ ] For the record in `docs/ASSETS.md`: which image model or service did Sprite Studio use to generate the sheets, and do its terms allow commercial use if Crownless is ever sold?
 
 ---
 
