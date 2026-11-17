@@ -83,6 +83,29 @@ All 10 settlements; Stonebridge walkable hub; 3 battle maps; ~30 items; AI caval
 5. ✅ (0.33.0) Save safety and cross-device export/import: save on page hide, two-tab guard, backup-load notice, export reminders and storage-persistence request, forgiving paste import, cross-device and old-build round trips.
 6. ✅ (0.34.0) Asset provenance: sprites are the owner's own AI-generated art (Sprite Studio); sound and map are code; no third-party assets or runtime dependencies. `docs/ASSETS.md`, `assets/manifest.json` and a guarding test; Credits in How to Play.
 7. Device QA and Gate E acceptance.
+8. Release **v1.0 "The Border March"**: freeze save schema v2, tag the release, keep v1 save fixtures for the v2 migration.
+
+### Phase 6+ — v2 (planned; see `docs/V2-PLAN.md`)
+From the owner's v2.0 design (`Crownless_v2_0_Feature_and_Systems_Design_Part_1.md` and `_Part_2.md`). Every system ships a default path, a one-decision preset and optional expert depth; power is gained and lost without ever ending the campaign.
+- **Phase 6, v2.0 "The Living Warband":**
+  - ART-01 an art style guide and asset list (alongside)
+  - V2-01 save schema v3, migrations and a storage layer
+  - V2-02 one idempotent result path, events and seeded randomness
+  - V2-03 named soldiers and service records
+  - V2-04 a canonical campaign clock (no flat 6-hour battle charge)
+  - V2-05 a world-space camera and larger arenas
+  - V2-06 minimap and tactical overview
+  - V2-07 battle preparation presets and deployment
+  - V2-08 group AI, cohesion and counterplay
+  - V2-09 nearby reinforcements
+  - V2-10 company chronicle and roll of honour
+  - V2-11 accounts and the quartermaster
+  - V2-12 the merchant follower
+  - V2-13 v2.0 acceptance
+  - **Release track** (the goal is to sell eventually): R-01 commercial readiness, R-02 packaging trial, R-03 demo plan
+- **Phase 7, v2.1–2.2 "Company & World":** more followers, officers and detached patrols, pursuit and detection, dynamic events, a duel tournament, a first business.
+- **Phase 8, v2.3+ "The Landed World":** holdings, claims and occupation, fealty and allegiance, castellans, simple sieges, named nobles. Acceptance is "The Dispossessed Lord".
+- **Phase 9, later:** kingdoms, treaties and rebellion, houses and marriage, modding, new worlds.
 
 ---
 

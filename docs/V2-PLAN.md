@@ -1,0 +1,156 @@
+# Crownless v2 — Development Plan
+
+_Planning document, written 2026-11-17 at build 0.35.0. Source: `Crownless_v2_0_Feature_and_Systems_Design_Part_1.md` and `_Part_2.md` (edition 1.1, written against build 0.18.0). Nothing here is implemented yet; this turns the design into ordered, testable work._
+
+---
+
+## 1. What the v2 design asks for (summary)
+
+**Vision:** *Start with nothing, raise a warband, become part of a living world, and gain — or lose — wealth, land, followers, political authority and even a crown, while always keeping the freedom to travel and fight in person.*
+
+**The rules that shape every task:**
+1. **One continuous sandbox.** Mercenary, landowner, vassal, monarch and exile are relationships, not game modes. Nothing replaces the character, ends the campaign, or turns off field combat (§1, §4).
+2. **Optional depth with competent defaults (§2.5, §22.7).** Every system ships three paths:
+   - **zero-configuration:** useful as it stands
+   - **one decision:** a preset or intent
+   - **expert:** detailed control
+
+   Automation uses the same rules and money as the player. A player who never opens a deep menu still gets a full campaign.
+3. **Reversible power.** Everything gained can be lost and regained; loss never means game over (§4.4, §17.3, §18.6).
+4. **Warband first.** The first v2 release deepens battles and soldiers, the things players do every session, before land and kingdoms (§26.2).
+5. **2D by choice;** **modding later**, with content boundaries kept clean now (§1.3, §23).
+6. **Hard separation:** finish the MVP first (§1.2, §26.1).
+
+## 2. Where the game stands against the design
+
+The design was written at 0.18.0. Since then:
+
+| Design item | Status at 0.35.0 |
+|---|---|
+| Finish the MVP: reputation, quest interpreter, Q1–Q4 with three endings, Mara, escort and delivery, regional news, Gate D acceptance (§26.1) | ✅ Done (0.19–0.28) |
+| Release quality: battle scaling, phone layout, settings and audio, tips and help, save safety, asset provenance | ✅ Done (0.29–0.34). **Gate E 5.7, device QA and acceptance, is still open.** |
+| §22.3 explicit full screen; installable web app | ✅ Done (0.35) |
+| §9.3 "reinforcing troops enter as additional waves if the active-unit cap is reached" | 🟡 Groundwork: a battle-size cap with reserves (0.29). Off-map reinforcements are not built yet. |
+| §24.7 save hardening | 🟡 Mostly done (0.33): a backup with notice, the two-tab guard, save on page hide, forgiving import, cross-device tests. **Still open:** structural validation (a near-empty `{version: 2}` is accepted and filled with defaults), a versioned migration framework, a periodic autosave while travelling, and IndexedDB for larger saves. |
+| §21.4 chronicle | 🟡 Regional news exists (a world chronicle in miniature). No personal chronicle yet. |
+| §10 named soldiers | 🟡 Soldiers have permanent IDs, troop type, XP and wound timers; kills are counted per soldier for XP but not stored. No names, origins or records. |
+| §5 canonical clock | ❌ A fought battle still adds a flat 6 hours afterwards (`BATTLE_DAYS`); no time passes during a battle. |
+| §17 / §24.2 ownership | ❌ Each fort has one owner field (`c.owners`). There's no separation of sovereign, legal holder, occupier and administrator. |
+| §24.8 seeded randomness | 🟡 The world and auto-resolve use a seeded generator, but casualties and some combat rolls use the unseeded `Math.random`. |
+| Everything else in the design (camera, deployment, AI morale, followers, property, fealty, kingdoms, houses, modding) | ❌ Not started |
+
+## 3. The plan at a glance
+
+```text
+Phase 5   Finish Gate E (5.7 device QA + acceptance) → tag v1.0 "The Border March"
+Phase 6   v2.0 "The Living Warband"     — foundations, named soldiers, big battles, reinforcements, one follower
+Phase 7   v2.1–2.2 "Company & World"    — more followers, officers & detached patrols, pursuit, events, tournament, first business
+Phase 8   v2.3+ "The Landed World"      — holdings/claims model, fealty, sieges, castellans, named nobles
+Phase 9   later "Kingdoms & Houses"     — realms, treaties, rebellion/deposition, houses & marriage, modding, new worlds
+```
+
+Each phase ends with an acceptance pass, as Gates C–E did: automated tests, a headless simulation, a real-browser playthrough and your phone pass. Each task below is one build (0.x.0 → 2.0.0-pre…) with its own validation section, as before.
+
+---
+
+## 4. Phase 5 — finish the MVP: v1.0
+
+| ID | Task | Acceptance |
+|---|---|---|
+| **5.7** | Device QA and Gate E acceptance: real Android Chrome and iPhone runs (performance with Stress 40, full screen and home screen, save transfer, phone layout), plus the GDD §15 definition-of-done checklist | Every §15 box is checked or explicitly deferred; no critical data loss; no unavoidable progression blocker |
+| **5.8** | **Release v1.0:** freeze save schema v2, tag `v1.0.0`, keep a pre-v2 save fixture set for migration tests, short release notes | A v1.0 save becomes the first fixture the v2 migration must load |
+
+## 5. Phase 6 — v2.0 "The Living Warband"
+
+Order follows the design's §26.2 dependencies, with one deliberate change: **named soldiers come early**. They depend only on the save foundations, give a visible payoff after the plumbing work, and de-risk the people model everything later relies on (Prototype C). The camera refactor, the riskiest and largest item, starts once the foundations are safe.
+
+| ID | Task | Design § | Size | Depends on |
+|---|---|---|---|---|
+| **ART-01** | **Art style guide and asset list** (written for an artist; no code): resolution and pixel grid, palette, outline rules, character proportions and four facings, animation frame counts, tile sizes for larger arenas and buildings, UI and icon style, a portrait spec (if any), naming and export rules. Plus an asset list per v2 task, so art can be produced alongside the code. Also confirm the AI image model's commercial terms for the existing sprites (see R-01) | §2 pillars, design §11 art bible | S | — (runs alongside) |
+| **V2-01** | **Save schema v3 and migration framework:** versioned migrations with fixtures (v1, v2 at 0.14 / 0.28 / 1.0), structural validation that rejects partial saves, last-known-good kept until a write succeeds, periodic autosave while travelling, `worldId` and `contentVersion` in the save, and a **storage layer** (localStorage today; IndexedDB or a desktop file store later) so a store build can save files | §24.7, SC-30–32 | M | 5.8 |
+| **V2-02** | **One result path and a small event dispatcher:** battle, auto-resolve, retreat and capture all commit through one idempotent `resolveEncounter(resultId)`; domain events (`SoldierWounded`, `BattleResolved`, …) with unique IDs; named RNG streams (world, battle, loot, casualties) | §24.3–24.5, §24.8, §25.2 | M | V2-01 |
+| **V2-03** | **Named soldiers and service records:** a generated name from the origin settlement's culture, origin, recruit date, battles, victories, kills / knockouts / assists, wounds, captures, wages actually paid, a bounded list of service notes, status. A roster view with filters, a profile card, and existing soldiers named on migration. An optional `portrait` slot, so the artist's portraits can drop in later | §10, SC-01–03, Prototype C | M | V2-02 |
+| **V2-04** | **Canonical campaign clock:** remove the flat 6-hour battle charge; one clock authority; the battle advances world time at the normal map rate ÷ 12 (configurable); deployment and pause add zero; post-battle time is explicit; tested across manual battles, auto-resolve, retreat, capture and reload | §5, SC-10–12, Prototype B (part 1) | M | V2-02 |
+| **V2-05** | **World-space battle camera and larger arenas:** world coordinates throughout (units, arrows, obstacles, input); a damped hero-follow camera; screen-anchored HUD; one 3× forest arena first, measured on your phone, then the others; draw only what's visible; edge threat indicators | §6.1–6.2, §6.7, §24.6, SC-04, Prototype A | L | V2-02 |
+| **V2-06** | **Minimap and tactical overview:** detected enemies only; tap to focus; a phone toggle and desktop press-and-hold; group orders issued from the overview | §6.3, SC-05 | M | V2-05 |
+| **V2-07** | **Battle preparation:** Balanced / Defensive / Aggressive / Custom presets, two clicks to Fight, **Simulate** (auto-resolve with reasons), a remembered preset with a fast-entry preference, Custom placement inside a legal deployment zone, ambushes with a constrained zone | §7, SC-06–07, SC-36 | M | V2-05, V2-06 |
+| **V2-08** | **Group AI, cohesion and counterplay:** commander → group → soldier; formation states (forming → advancing → engaged → regrouping → retreating) as soft constraints; group morale (hold / waver / fall back / rout / rally) with a rally action; spears versus cavalry, shields screening archers, line of sight for archers; visible "can't do that" order feedback | §8, SC-36–37 | L | V2-07 |
+| **V2-09** | **Nearby reinforcements:** battles become active conflicts on the map; nearby parties keep moving at the battle rate; eligibility (reach, awareness, relationship, unit cap); an approaching-banner warning; edge spawns into reserves when full; involved parties locked so there are no double battles; one commit | §9, §5.4, SC-08–09, Prototype B (part 2) | L | V2-04, V2-05 |
+| **V2-10** | **Company chronicle and roll of honour:** a personal chronicle (recruitments, notable battles, promotions, deaths, Q1–Q4 milestones) beside the regional news; a compact roll of honour for fallen and retired soldiers; post-battle "who did what" | §10.5, §21.4 | S–M | V2-03 |
+| **V2-11** | **Accounts and the quartermaster:** separate accounts (your purse, the company chest, follower budgets) with every transfer having a source and a destination. A hireable **quartermaster** keeps a food reserve and the next wages covered within a budget, buys only necessities, warns before shortages, and logs every purchase. Default: "keep 5 days' food and next week's wages"; one decision: reserve days and budget; expert: per-good rules and substitution | §12.2, §25.1, SC-02 | M | V2-02 |
+| **V2-12** | **Merchant follower:** trades with an assigned budget through the *same* market functions as you (scarcity and the per-unit price movement included). Knows only prices it has seen (plus bounded estimates); never sells reserved supplies; cautious preset by default. Reports what it did and why ("Sold 4 salt for 68, bought 3 iron for 27; skipped wool, cargo full"); stop and recover funds at any time | §12.3, SC-13–14, SC-39, Prototype E | M | V2-11 |
+| **V2-13** | **v2.0 acceptance:** design scenarios SC-01–14, SC-30–39; Prototype G (a hands-off player, a preset-only player and an expert on the same campaign); 30-day and story bots extended; phone performance on large maps with cavalry and reinforcements | §27, Prototype G | M | all |
+
+**Release track (because the goal is to sell eventually; runs alongside, not blocking v2.0):**
+
+| ID | Task |
+|---|---|
+| **R-01** | **Commercial-readiness checklist:** rights (the AI image model's terms for the existing sprites, artist contract terms, fonts, the synthesized audio), a privacy note (the game collects nothing), age rating input, and store requirements (itch.io, Steam, app stores). |
+| **R-02** | **Packaging trial:** run the game as a desktop app (Tauri or Electron wrapper) with saves as files and offline play, and note what Steam or the mobile stores would need (achievements, cloud saves, controller support). A decision document, not a shipped build. |
+| **R-03** | **Demo and storefront plan:** what a free demo includes (for example Q1 plus the sandbox until day N), trailer-capable scenes, and a press-kit outline. Scheduled near the end of v2.0. |
+
+**Explicitly not in v2.0** (design §26.2): kingdoms, marriage, multiple businesses, multi-stage sieges, player mounted combat, procedural maps, public modding.
+
+### Per-task contract (applies to every V2 task)
+Each task's validation section answers the design's ticket questions (§26.8), condensed:
+- **Default path:** what happens if the player never opens the new UI?
+- **One decision:** which single preset or intent changes the behaviour?
+- **Expert path:** what extra levers are there, under the same rules?
+- **Ignorable:** proof the system can be left alone for ten ordinary minutes.
+- **Loss and recovery cases**, anti-exploit rules, save changes and migration.
+- **Testing:** unit tests, a bot or simulation, a real-browser run, your phone.
+- **Quality gates** (§27.5): fresh game without debug tools; saves migrate; mouse and touch; no duplicated money, troops, XP or rewards; deterministic under a fixed seed; device performance measured for heavy changes.
+
+## 6. Phase 7 — v2.1–2.2 "The Living Company & World" (outline)
+
+Detailed tasks get written when Phase 6 ends; candidates, in rough order:
+- **More followers:** surgeon (triage and recovery), scout (detection, route risk), then blacksmith (upgrades rather than durability chores) (§12).
+- **Officers and detached patrols:** an order package (objective, constraints, resources, autonomy), transfers that keep soldier histories, reports (§11.3, SC-17–18).
+- **Pursuit and detection:** limited vision, last-seen positions, searching, hiding in forests, route preferences and travel estimates (§13.2, §13.5).
+- **Dynamic world events** that change state and offer a choice (shortages, infestations, militia requests, couriers), feeding news and the chronicle (§13.4, §21.3).
+- **Tournament:** a single foot-melee duel format first (§15).
+- **First business:** a mill or inn with a manager and an income/expense ledger, independent of rank (§14, SC-15, SC-40).
+- **Battle extras:** additional formations, objectives and terrain interactions (§6.4, §8).
+
+**Exit (design):** an independent player builds a lasting company with non-combat roles, delegates, earns through trade or property, and meets dynamic consequences without needing a title.
+
+## 7. Phase 8 — v2.3+ "The Landed World" (outline)
+- **Holdings model:** sovereign realm, legal holder, occupier, administrator and private owners, replacing `c.owners` (§17.1, §24.2).
+- **Permissions query:** rights computed from oaths, offices and ownership, never `if (player.isKing)` (§4.3).
+- **Allegiance objects:** independent, mercenary contract, sworn vassal, rebel, sovereign, deposed; switching with a consequence preview (§16, §22.5).
+- **Castellans and policies:** garrison, tax stance, reserves, repairs, with a default steward (§17.2).
+- **Simple sieges:** encirclement → preparation → one assault map → resolution; surrender, capture and ransom (§20.4–20.6).
+- **A handful of named nobles** with a few stable motives and explained obey / negotiate / refuse decisions (§18.4).
+- **Prototype D, "The Dispossessed Lord", is this phase's acceptance:** gain Greywall, lose it while away, carry on as a captain, switch allegiance, retake it.
+
+## 8. Phase 9 — later "Kingdoms & Houses" (kept in the architecture, not scheduled)
+Realms with treasuries, laws and offices; treaties with dates and breach rules; rebellion and deposition without game over; houses, marriage and claims (founding-house model first; generational play optional); army-scale campaigns; a world manifest, namespaced IDs and a declarative content format; creator tools and a second official world (§18–20, §23).
+
+## 9. Risks to watch (from design §25.7, re-rated for this codebase)
+
+| Risk | Note for this codebase | Early guard |
+|---|---|---|
+| Scope never reaches a release | The design is huge; v2.0 alone is 13 tasks plus ART-01 | Freeze the v2.0 list above; everything else goes to Phase 7+ |
+| Camera refactor destabilises combat | `combat.js`, `units.js`, `render.js` and `input.js` all assume screen space | V2-05 behind a flag; the old arena still playable until parity; the benchmark and stress test re-run |
+| Phone performance on big maps | Simulation is cheap (0.2 ms at 40 units); drawing is the unknown | Measure on your phone at the end of V2-05 before converting more maps |
+| Time integration double-counts | The 6-hour charge sits inside `applyBattleResult` | V2-04 tests every exit path; one clock authority |
+| Save migration breaks old games | Many sanitize-based upgrades so far | V2-01 fixtures from 0.14, 0.28, 1.0 and every later release |
+| Automation feels like cheating or busywork | Merchant and quartermaster | The same market functions as the player; activity log; Prototype E comparison |
+
+## 10. Direction decisions
+
+**Decided by the owner (2026-11-17):**
+
+| Question | Decision | Effect on the plan |
+|---|---|---|
+| What comes first in v2.0? | Named soldiers first (after the save and result foundations), then big battles | Order V2-01 → V2-03 → V2-04 → V2-05… as above |
+| First camp follower? | **Both** the quartermaster and the merchant in v2.0 | V2-11 (accounts + quartermaster) and V2-12 (merchant) |
+| Art during v2? | **Write a style guide now**; an artist may unify the style later (2D stays) | ART-01 at the start of Phase 6; portrait and art slots in the data model |
+| Release goal? | **Sell it eventually** | Release track R-01–R-03; the storage layer in V2-01; checking the AI image model's commercial terms becomes important |
+
+**Still open (defaults assumed until decided):**
+- **World size during v2.0:** assumed to stay the 10-settlement Border March and grow in Phase 8, when holdings and nobles need more places.
+- **Difficulty options:** assumed none in v2.0 beyond battle size; permadeath and ironman are Phase 9 settings at most (design §19.4).
+- **Phone versus desktop priority for the new battle UI:** assumed phone-first, with every v2.0 battle feature usable by touch (design §2.6).
+- **Time in battle:** the design's 1:12 rate is the starting value for V2-04 (design §28 lists 1:10–1:15 as the experiment).
+- **Old saves:** v1.0 saves will migrate into v2 (soldiers get names on load); no save is ever invalidated.
