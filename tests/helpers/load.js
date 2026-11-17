@@ -7,7 +7,7 @@ const vm = require('node:vm');
 const ROOT = path.join(__dirname, '..', '..');
 
 // Logic modules only (no render/input/main — those need a real DOM).
-const LOGIC_MODULES = ['core', 'content', 'state', 'storage', 'events', 'soldiers', 'save', 'assets', 'units', 'combat', 'party', 'upkeep', 'trade', 'autoresolve', 'parties', 'contracts', 'realm', 'story', 'companion', 'news', 'portable', 'world', 'encounter', 'town', 'character', 'debug', 'settings', 'audio', 'tips', 'fullscreen'];
+const LOGIC_MODULES = ['core', 'content', 'state', 'storage', 'events', 'soldiers', 'troops', 'save', 'assets', 'units', 'combat', 'party', 'upkeep', 'trade', 'autoresolve', 'parties', 'contracts', 'realm', 'story', 'companion', 'news', 'portable', 'world', 'encounter', 'town', 'character', 'debug', 'settings', 'audio', 'tips', 'fullscreen'];
 const CONTENT_MODULES = [
   'factions',
   'settlements',
@@ -91,6 +91,7 @@ function loadGame({ storage = memoryStorage(), random, party = true, worldPartie
   CL.campaign = CL.save.load();
   // Deterministic world: fixed seed, and (unless asked for) no moving parties to interfere.
   CL.campaign.rngSeed = seed;
+  CL.campaign.rng = CL.autoresolve.streamSeeds(seed); // the named streams follow the fixed seed too
   CL.campaign.parties = [];
   CL.campaign.partySpawns = {};
   CL.campaign.nextPartyId = 1;

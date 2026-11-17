@@ -7,7 +7,7 @@
  * campaign (`c.nextEventId`, saved), the campaign day, and its own data.
  *
  *   BattleResolved     { resultId, battleId, kind: 'battle' | 'auto', encounter, encounterName, win, kills,
- *                        killed, wounded, participants, soldierKills, soldierAssists }
+ *                        killed, wounded, participants, soldierKills, soldierAssists, enemyTroops }
  *   EncounterResolved  { resultId, kind: 'battle' | 'auto' | 'retreat' | 'parley', win?, outcome? }
  *   SoldierRecruited   { soldierId, troop, settlement, via: 'hire' | 'story' }
  *   SoldierPromoted    { soldierId, from, to, cost }

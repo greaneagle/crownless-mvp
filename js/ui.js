@@ -785,10 +785,10 @@
     return node;
   }
 
-  /** "XP 32/100", "XP 140 · top of its line". */
+  /** "XP 32/100", or "XP 285 · max tier" at the end of a troop's path (finding F-1). */
   function xpText(s) {
     const need = CL.party.UPGRADE_XP[CL.content.troop(s.troop).tier];
-    return need && CL.party.upgradeOptions(s.troop).length ? `XP ${s.xp}/${need}` : `XP ${s.xp} · top of its line`;
+    return need && CL.party.upgradeOptions(s.troop).length ? `XP ${s.xp}/${need}` : `XP ${s.xp} · max tier`;
   }
 
   const FILTER_LABELS = { all: 'Everyone', fit: 'Fit', wounded: 'Wounded', ready: 'Ready to upgrade', infantry: 'Infantry', archer: 'Archers', cavalry: 'Cavalry' };
@@ -800,12 +800,7 @@
   function renderTroops() {
     const g = CL.game;
     const c = CL.campaign;
-    if (!c.roster.length) {
-      g.soldierProfile = null;
-      $('#sheetTroops').replaceChildren(el('p', { textContent: 'No soldiers yet. Hire some in a town.' }));
-      return;
-    }
-    const view = g.troopView === 'types' ? 'types' : 'soldiers';
+    const view = ['types', 'tree'].includes(g.troopView) ? g.troopView : 'soldiers';
     const tab = (id, label) =>
       el('button', {
         type: 'button',
@@ -818,9 +813,18 @@
           renderTroops();
         },
       });
-    const tabs = el('div', { className: 'viewTabs' }, tab('soldiers', 'Soldiers'), tab('types', 'By type'));
+    const tabs = el('div', { className: 'viewTabs' }, tab('soldiers', 'Soldiers'), tab('types', 'By type'), tab('tree', 'Troop tree'));
+    if (view === 'tree') {
+      $('#sheetTroops').replaceChildren(tabs, upgradeAllBlock(), ...troopTree());
+      return;
+    }
+    if (!c.roster.length) {
+      g.soldierProfile = null;
+      $('#sheetTroops').replaceChildren(tabs, el('p', { textContent: 'No soldiers yet. Hire some in a town.' }));
+      return;
+    }
     if (view === 'types') {
-      $('#sheetTroops').replaceChildren(tabs, ...troopTypeRows());
+      $('#sheetTroops').replaceChildren(tabs, upgradeAllBlock(), ...troopTypeRows());
       return;
     }
     const profile = g.soldierProfile != null && c.roster.find((s) => s.id === g.soldierProfile);
@@ -862,6 +866,7 @@
     });
     $('#sheetTroops').replaceChildren(
       tabs,
+      upgradeAllBlock(),
       el('label', { className: 'soldierFilter' }, 'Show ', select),
       ...(rows.length ? rows : [el('p', { textContent: 'Nobody matches.' })]),
     );
@@ -936,45 +941,163 @@
         stat('crowns paid', r.wagesPaid),
       ),
       el('ul', { className: 'soldierNotes' }, ...s.notes.map((n) => el('li', { textContent: `Day ${P.dayNumber(n.day)}: ${CL.soldiers.noteText(n)}` }))),
-      upgrades.length ? el('div', { className: 'soldierUpgrades' }, ...upgrades) : el('p', { className: 'muted', textContent: `${t.name} is the top of its line.` }),
+      upgrades.length ? el('div', { className: 'soldierUpgrades' }, ...upgrades) : el('p', { className: 'muted', textContent: `${t.name} is at max tier; experience still counts toward the record.` }),
     );
   }
 
-  /** Troops grouped by type, with XP progress and upgrade buttons (GDD §7). */
-  function troopTypeRows() {
-    const c = CL.campaign;
+  /** "3× Levy (T1 infantry) · 1 wounded · best XP 30/40 · 1 ready", or "… · max tier" (F-1). */
+  function troopTypeInfo(id, list) {
     const P = CL.party;
-    const groups = {};
-    for (const s of c.roster) {
-      groups[s.troop] ||= [];
-      groups[s.troop].push(s);
-    }
-    const rows = Object.entries(groups).map(([id, list]) => {
-      const t = CL.content.troop(id);
-      const need = P.UPGRADE_XP[t.tier];
-      const ready = list.filter(P.readyFor).length;
-      const wounded = list.filter((s) => s.woundedUntil !== null).length;
-      const best = Math.max(...list.map((s) => s.xp));
-      const row = Object.assign(document.createElement('div'), { className: 'troopRow' });
-      const info = need
-        ? `${list.length}× ${t.name} (${t.tier} ${t.role})${wounded ? ` · ${wounded} wounded` : ''} · best XP ${best}/${need}${ready ? ` · ${ready} ready` : ''}`
-        : `${list.length}× ${t.name} (${t.tier} ${t.role})${wounded ? ` · ${wounded} wounded` : ''} · top tier`;
-      row.append(Object.assign(document.createElement('span'), { textContent: info }));
-      for (const o of P.upgradeOptions(id)) {
-        const to = CL.content.troop(o.to);
-        const b = Object.assign(document.createElement('button'), { type: 'button' });
-        b.textContent = o.locked ? `→ ${to.name}: ${o.locked}` : `→ ${to.name} · ${o.cost} each`;
-        b.disabled = Boolean(o.locked) || !ready || c.gold < o.cost;
-        b.onclick = () => {
+    const t = CL.content.troop(id);
+    const opts = P.upgradeOptions(id);
+    const wounded = list.filter((s) => s.woundedUntil !== null).length;
+    const head = `${list.length}× ${t.name} (${t.tier} ${t.role})${wounded ? ` · ${wounded} wounded` : ''}`;
+    if (!opts.length) return `${head} · max tier`;
+    const ready = list.filter(P.readyFor).length;
+    const best = Math.max(...list.map((s) => s.xp));
+    return `${head} · best XP ${best}/${opts[0].xp}${ready ? ` · ${ready} ready` : ''}`;
+  }
+
+  /** One button per upgrade path of a troop type, each saying why when it can't be pressed. */
+  function typeUpgradeButtons(id, list) {
+    const P = CL.party;
+    const c = CL.campaign;
+    const t = CL.content.troop(id);
+    const ready = list.filter(P.readyFor).length;
+    return P.upgradeOptions(id).map((o) => {
+      const to = CL.content.troop(o.to);
+      let why = o.locked;
+      if (!why && !list.length) why = 'none in the company';
+      if (!why && !ready) why = list.some((s) => s.xp >= o.xp) ? 'the ready ones are wounded' : `needs ${o.xp} XP`;
+      if (!why && c.gold < o.cost) why = `needs ${o.cost} crowns`;
+      return el('button', {
+        type: 'button',
+        disabled: Boolean(why),
+        textContent: why ? `→ ${to.name} · ${o.cost} each (${why})` : `→ ${to.name} · ${o.cost} each`,
+        onclick: () => {
           const n = P.upgrade(id, o.to);
           if (n) {
             CL.save.write();
             message(`Upgraded ${n} ${plural(t.name, n)} to ${plural(to.name, n)}`);
           }
           renderSheet();
-        };
-        row.append(b);
-      }
+        },
+      });
+    });
+  }
+
+  /**
+   * "Upgrade all ready" (V2-03b, F-1): the total cost first, then a confirmation that says exactly
+   * what will happen, including who waits (wounded) and who can't be afforded.
+   */
+  function upgradeAllBlock() {
+    const g = CL.game;
+    const c = CL.campaign;
+    const P = CL.party;
+    const plan = P.upgradeAllPlan(c);
+    const box = el('div', { className: 'upgradeAll' });
+    const waiting = [
+      plan.wounded ? `${plan.wounded} wounded wait${plan.wounded === 1 ? 's' : ''}` : '',
+      plan.unaffordable ? `${plan.unaffordable} more need${plan.unaffordable === 1 ? 's' : ''} crowns` : '',
+    ]
+      .filter(Boolean)
+      .join(' · ');
+    if (!plan.items.length) {
+      if (waiting) box.append(el('span', { className: 'muted', textContent: `Ready to upgrade: ${waiting}.` }));
+      return box;
+    }
+    const n = plan.items.length;
+    if (!g.confirmUpgradeAll) {
+      box.append(
+        el('button', {
+          type: 'button',
+          textContent: `Upgrade all ready · ${n} for ${plan.total} crowns`,
+          onclick: () => {
+            g.confirmUpgradeAll = true;
+            renderTroops();
+          },
+        }),
+        ...(waiting ? [el('span', { className: 'muted', textContent: waiting })] : []),
+      );
+      return box;
+    }
+    const groups = {};
+    for (const it of plan.items) groups[`${it.from}>${it.to}`] = (groups[`${it.from}>${it.to}`] || 0) + 1;
+    const what = Object.entries(groups)
+      .map(([k, k2]) => {
+        const [from, to] = k.split('>');
+        return `${k2} ${plural(CL.content.troop(from).name, k2)} → ${plural(CL.content.troop(to).name, k2)}`;
+      })
+      .join(', ');
+    const twoPath = plan.items.some((it) => P.upgradeOptions(it.from).length > 1);
+    box.append(
+      el('p', {
+        textContent: `Upgrade ${n} soldier${n === 1 ? '' : 's'} for ${plan.total} crowns: ${what}.${waiting ? ` (${waiting}.)` : ''}${twoPath ? ' Troops with two paths take the first; choose the other on a soldier’s card.' : ''}`,
+      }),
+      el('button', {
+        type: 'button',
+        textContent: 'Upgrade',
+        onclick: () => {
+          g.confirmUpgradeAll = false;
+          const r = P.upgradeAll(c);
+          if (r.done) {
+            CL.save.write();
+            message(`Upgraded ${r.done} soldier${r.done === 1 ? '' : 's'} for ${r.cost} crowns`);
+          }
+          renderSheet();
+        },
+      }),
+      el('button', {
+        type: 'button',
+        textContent: 'Cancel',
+        onclick: () => {
+          g.confirmUpgradeAll = false;
+          renderTroops();
+        },
+      }),
+    );
+    return box;
+  }
+
+  /** The troop tree as the company knows it (V2-03b): unknown troops hidden, seen ones named, owned ones in full. */
+  function troopTree() {
+    const c = CL.campaign;
+    const lines = CL.troopTree.view(c);
+    if (!lines.length) return [el('p', { textContent: 'You have not met any troops yet. The tree fills in as you hire, train and fight them.' })];
+    const node = (n) => {
+      const kids = n.children.length ? el('ul', {}, ...n.children.map(node)) : null;
+      if (n.level === 'unknown') return el('li', { className: 'treeNode unknown' }, el('span', { textContent: '? An unknown troop' }), kids);
+      if (n.level === 'seen') return el('li', { className: 'treeNode seen' }, el('b', { textContent: n.name }), el('span', { className: 'muted', textContent: ' · seen, not yet known' }), kids);
+      const st = n.stats;
+      const company = n.count ? `In your company: ${n.count}${n.ready ? ` (${n.ready} ready)` : ''}` : 'None in your company';
+      const ways = n.maxTier
+        ? 'Max tier'
+        : n.paths.map((p) => `→ ${CL.troopTree.level(c, p.to) ? CL.content.troop(p.to).name : '?'}: ${p.xp} XP and ${p.cost} crowns`).join(' · ');
+      const list = c.roster.filter((s) => s.troop === n.id);
+      return el(
+        'li',
+        { className: 'treeNode owned' },
+        el('b', { textContent: n.name }),
+        el('span', { textContent: ` · ${n.tier} ${n.role} · HP ${st.hp} · damage ${st.damage} · armour ${st.armor} · wage ${st.wage}/week` }),
+        el('div', { className: 'muted', textContent: `${company} · ${ways}` }),
+        n.count && !n.maxTier ? el('div', { className: 'treeButtons' }, ...typeUpgradeButtons(n.id, list)) : null,
+        kids,
+      );
+    };
+    return lines.map((line) => el('div', { className: 'treeLine' }, el('h4', { textContent: line.name }), el('ul', {}, ...line.nodes.map(node))));
+  }
+
+  /** Troops grouped by type, with XP progress and upgrade buttons (GDD §7). */
+  function troopTypeRows() {
+    const c = CL.campaign;
+    const groups = {};
+    for (const s of c.roster) {
+      groups[s.troop] ||= [];
+      groups[s.troop].push(s);
+    }
+    const rows = Object.entries(groups).map(([id, list]) => {
+      const row = Object.assign(document.createElement('div'), { className: 'troopRow' });
+      row.append(el('span', { textContent: troopTypeInfo(id, list) }), ...typeUpgradeButtons(id, list));
       return row;
     });
     return rows;

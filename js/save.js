@@ -1,10 +1,11 @@
 // @ts-check
 /* Crownless save service.
  *
- * Schema v5 (key `crownless_save`, from build 1.4.0; v4 from 1.3.0, v3 from 1.2.0; docs/SAVE-FORMAT.md): named soldiers with
+ * Schema v6 (key `crownless_save`, from build 1.5.0; v5 1.4.0, v4 1.3.0, v3 1.2.0; docs/SAVE-FORMAT.md): named soldiers with
  * troop IDs, XP and wound timers, the item inventory, the campaign day clock and every system's state,
  * plus the world the save belongs to (`worldId`) and the build that wrote it (`contentVersion`), and
- * (v4) the named random streams (`rng`), the encounter result counter and the event ID counter.
+ * (v4) the named random streams (`rng`), the encounter result counter and the event ID counter, and
+ * (v6) what the company knows of each troop (`troopKnowledge`, the troop tree).
  *
  * Loading (design §24.7, V2-01). Anything read back from storage or a file goes through `fromRaw`:
  *   1. structural check for its own schema version: a save missing the fields its version always
@@ -25,7 +26,7 @@
   'use strict';
   const CL = root.Crownless;
 
-  const VERSION = 5;
+  const VERSION = 6;
   const KEY = 'crownless_save';
   const BACKUP_KEY = 'crownless_save_backup';
   const LEGACY_KEY = 'crownless_v03_party';
@@ -91,6 +92,7 @@
       story: CL.story.blank(), // quest progress, story flags, conversation visits (GDD §13)
       companion: null, // Mara, once she joins (GDD §10)
       news: CL.news.blank(), // recent world events and regional news lines
+      troopKnowledge: {}, // troop → 'seen' | 'owned': the troop tree as discovered (js/troops.js)
     };
     CL.character.applyKit(c, background);
     CL.upkeep.stowFood(c);
@@ -165,6 +167,7 @@
     3: V3_FIELDS,
     4: [...V3_FIELDS, ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number']],
     5: [...V3_FIELDS, ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number']],
+    6: [...V3_FIELDS, ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object']],
   };
 
   /** @param {unknown} v @param {string} kind */
@@ -219,6 +222,9 @@
     // (js/soldiers.js). Names come from a names stream seeded by the save's own seed; where they
     // joined and when was never recorded, so they start as veterans with an empty record.
     4: (d) => ({ ...CL.soldiers.migrateRoster(d), version: 5 }),
+    // 5 → 6 (build 1.5.0, V2-03b): what the company knows of each troop (the troop tree). An older
+    // company knows the troops it has and what they were trained from; nothing was ever seen.
+    5: (d) => ({ ...CL.troopTree.migrateKnowledge(d), version: 6 }),
   };
 
   /**
@@ -284,6 +290,7 @@
     CL.news.sanitize(s, d); // recent events and news lines
     CL.parties.sanitize(s, d); // world parties and the RNG seed
     CL.contracts.sanitize(s, d); // after parties: an active hunt needs its band
+    CL.troopTree.sanitize(s, d); // what the company knows of each troop
     // Named random streams (after parties, which restores rngSeed) and the result and event counters.
     const seeds = CL.autoresolve.streamSeeds(s.rngSeed);
     for (const name of CL.autoresolve.STREAMS) {

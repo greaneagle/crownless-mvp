@@ -19,7 +19,10 @@
     horse_scout: {id:'horse_scout',name:'Horse Scout',faction:'aurelian',role:'cavalry',tier:'T3',hp:90,damage:14,armor:6,speed:135,reach:70,wage:12,recruitCost:60,upgradeTo:null,upgradeCost:0},
     looter: {id:'looter',name:'Looter',faction:'neutral',role:'infantry',tier:'T1',hp:45,damage:7,armor:1,speed:90,reach:48,wage:3,recruitCost:15,upgradeTo:null,upgradeCost:0},
     reaver: {id:'reaver',name:'Reaver',faction:'neutral',role:'infantry',tier:'T2',hp:60,damage:10,armor:3,speed:90,reach:48,wage:6,recruitCost:25,upgradeTo:null,upgradeCost:0},
-    mercenary: {id:'mercenary',name:'Mercenary',faction:'neutral',culture:'border',role:'infantry',tier:'T2',hp:60,damage:10,armor:3,speed:92,reach:48,wage:6,recruitCost:25,upgradeTo:null,upgradeCost:0},
+    mercenary: {id:'mercenary',name:'Mercenary',faction:'neutral',culture:'border',role:'infantry',tier:'T2',hp:60,damage:10,armor:3,speed:92,reach:48,wage:6,recruitCost:25,upgradeTo:'sellsword',upgradeCost:60},
+    // 1.5.0 (V2-03b, finding F-1): the Mercenary's own tier 3, so hired swords have somewhere to grow.
+    // Not for hire; only trained. A little dearer than a kingdom's tier 3 (it is paid to stay).
+    sellsword: {id:'sellsword',name:'Sellsword',faction:'neutral',culture:'border',role:'infantry',tier:'T3',hp:80,damage:15,armor:5,speed:92,reach:48,wage:14,recruitCost:60,upgradeTo:null,upgradeCost:0},
 
     hero: {id:'hero',name:'Hero',faction:'neutral',role:'hero',tier:'T1',hp:85,damage:18,armor:0,speed:142,reach:67,wage:0,recruitCost:0,upgradeTo:null,upgradeCost:0},
   };

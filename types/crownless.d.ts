@@ -186,6 +186,23 @@ declare global {
     story: StoryState;
     companion: CompanionState | null;
     news: NewsState;
+    /** v6: what the company knows of each troop: 'seen' (name only) or 'owned' (full details). */
+    troopKnowledge: Record<ContentId, 'seen' | 'owned'>;
+  }
+
+  /** A troop on the troop tree as the player knows it (js/troops.js). */
+  interface TreeNode {
+    id: ContentId;
+    level: 'owned' | 'seen' | 'unknown';
+    name?: string;
+    tier?: string;
+    role?: string;
+    stats?: { hp: number; damage: number; armor: number; wage: number };
+    maxTier?: boolean;
+    paths?: Array<{ to: ContentId; cost: number; xp: number }>;
+    count?: number;
+    ready?: number;
+    children: TreeNode[];
   }
 
   // ---- Battles ----
@@ -350,6 +367,8 @@ declare global {
     upgrade(fromId: ContentId, toId: ContentId, max?: number, camp?: Campaign): number;
     soldierUpgrades(s: Soldier, camp?: Campaign): Array<UpgradeOption & { can: boolean; why: string | null }>;
     upgradeSoldier(camp: Campaign, soldierId: number, toId: ContentId): boolean;
+    upgradeAllPlan(camp?: Campaign): { items: Array<{ soldierId: number; from: ContentId; to: ContentId; cost: number }>; total: number; wounded: number; unaffordable: number };
+    upgradeAll(camp?: Campaign): { done: number; cost: number };
     awardXp(camp: Campaign, outcome: BattleOutcome): XpAward;
     resultHtml(info: Record<string, any>): string;
     rosterNames(camp: Campaign): Record<number, string>;
@@ -396,6 +415,8 @@ declare global {
     outcome?: BattleOutcome;
     companionDown?: boolean;
     fallenEnemies?: ContentId[];
+    /** battle and auto: the enemy troops met (they become 'seen' on the troop tree). */
+    enemyTroops?: ContentId[];
     siteId?: string | null;
     partyId?: number | null;
     /** retreat and parley: the change to make, run once inside the commit. */

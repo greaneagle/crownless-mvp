@@ -68,7 +68,8 @@
   }
 
   /** @param {Soldier} s */
-  const readyFor = (s) => s.woundedUntil === null && s.xp >= (UPGRADE_XP[CL.content.troop(s.troop).tier] ?? Infinity);
+  // Ready = fit, with a path to take and the XP for it. A troop at max tier is never "ready" (finding F-1).
+  const readyFor = (s) => s.woundedUntil === null && upgradeOptions(s.troop).length > 0 && s.xp >= (UPGRADE_XP[CL.content.troop(s.troop).tier] ?? Infinity);
 
   /**
    * Upgrade up to max ready soldiers of one troop type along one branch. All-or-nothing per soldier.
@@ -123,6 +124,49 @@
     CL.events.emit(camp, 'SoldierPromoted', { soldierId: s.id, from, to: toId, cost: opt.cost });
     CL.diag.log('info', 'Soldier upgraded', { id: s.id, from, to: toId, cost: opt.cost });
     return true;
+  }
+
+  /**
+   * What "Upgrade all ready" would do (V2-03b, F-1), for the confirmation: every soldier with enough XP
+   * takes their troop's first path, in the order they joined, while the crowns last. A troop with a
+   * second path (Levy → Hunter) takes that one only from the soldier's card or the By type view.
+   * @param {Campaign} [camp]
+   * @returns {{ items: Array<{ soldierId: number, from: ContentId, to: ContentId, cost: number }>, total: number,
+   *   wounded: number, unaffordable: number }}
+   */
+  function upgradeAllPlan(camp = c()) {
+    const items = [];
+    let total = 0;
+    let wounded = 0;
+    let unaffordable = 0;
+    for (const s of camp.roster) {
+      const o = upgradeOptions(s.troop)[0];
+      if (!o || o.locked || s.xp < o.xp) continue; // max tier, or not enough XP yet
+      if (s.woundedUntil !== null) wounded++;
+      else if (total + o.cost > camp.gold) unaffordable++;
+      else {
+        items.push({ soldierId: s.id, from: s.troop, to: o.to, cost: o.cost });
+        total += o.cost;
+      }
+    }
+    return { items, total, wounded, unaffordable };
+  }
+
+  /**
+   * Carry out "Upgrade all ready": the plan above, each soldier through the same per-soldier upgrade
+   * (same cost, same events). Returns how many were upgraded and what it cost.
+   * @param {Campaign} [camp] @returns {{ done: number, cost: number }}
+   */
+  function upgradeAll(camp = c()) {
+    let done = 0;
+    let cost = 0;
+    for (const it of upgradeAllPlan(camp).items) {
+      if (!upgradeSoldier(camp, it.soldierId, it.to)) continue;
+      done++;
+      cost += it.cost;
+    }
+    if (done) CL.diag.log('info', 'Upgraded all ready', { done, cost });
+    return { done, cost };
   }
 
   /**
@@ -314,6 +358,7 @@
         outcome,
         companionDown: g.allies.some((a) => a.companion && !a.alive),
         fallenEnemies: g.enemies.filter((e) => !e.alive).map((e) => e.troop),
+        enemyTroops: [...new Set(g.enemies.map((e) => e.troop))], // the troops that took the field
       })
     );
     const html = resultHtml({
@@ -408,6 +453,8 @@
     upgrade,
     soldierUpgrades,
     upgradeSoldier,
+    upgradeAllPlan,
+    upgradeAll,
     awardXp,
     resultHtml,
     rosterNames,

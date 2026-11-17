@@ -165,6 +165,7 @@
     fillSelect('#cheatQuest', Object.values(CL.content.table('quests')).map((q) => [q.id, q.title]));
     fillSelect('#cheatPlace', Object.values(CL.content.table('settlements')).map((s) => [s.id, s.name]));
     document.querySelector('#cheatGod').textContent = `God mode: ${CL.game.godMode ? 'on' : 'off'}`;
+    document.querySelector('#cheatTree').textContent = `Reveal troop tree: ${CL.game.revealTree ? 'on' : 'off'}`;
     document.querySelector('#cheatCap').value = String(CL.combat.BATTLE.activeCap);
   }
 
@@ -298,6 +299,14 @@
         break;
       case 'god':
         btn.textContent = `God mode: ${toggleGod() ? 'on' : 'off'}`;
+        return;
+      case 'tree':
+        // Show every troop on the troop tree with full details (V2-03b). A view switch for testing:
+        // the campaign's own knowledge is not changed or saved.
+        CL.game.revealTree = !CL.game.revealTree;
+        btn.textContent = `Reveal troop tree: ${CL.game.revealTree ? 'on' : 'off'}`;
+        log('reveal troop tree', { on: CL.game.revealTree });
+        CL.ui.refresh();
         return;
       case 'days':
         passDays(n);

@@ -214,3 +214,18 @@
 .soldierUpgrades button{min-height:40px;font-size:12px}
 .muted{color:#a8977a}
 @media(pointer:coarse){.viewTabs button,.soldierFilter select,.soldierName input,.soldierName button{min-height:44px}}
+
+/* 1.5.0 — troop tree and Upgrade all ready (V2-03b) */
+.upgradeAll{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:4px 0 6px}
+.upgradeAll:empty{display:none}
+.upgradeAll p{flex:1 1 100%;margin:2px 0}
+.upgradeAll button{min-height:40px;font-size:12px}
+.treeLine h4{margin:8px 0 2px;font-size:14px;color:#ecd6a4}
+.treeLine ul{margin:0;padding-left:16px;list-style:none}
+.treeLine>ul{padding-left:0}
+.treeNode{margin:4px 0;padding-left:8px;border-left:2px solid #5c4a28;font-size:13px}
+.treeNode b{color:#ecd6a4}
+.treeNode.unknown>span,.treeNode.seen>span{color:#a8977a}
+.treeButtons{display:flex;flex-wrap:wrap;gap:6px;margin:3px 0}
+.treeButtons button{min-height:36px;font-size:12px}
+@media(pointer:coarse){.upgradeAll button,.treeButtons button{min-height:44px}}

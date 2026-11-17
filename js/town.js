@@ -42,6 +42,7 @@
    * on its streets instead.
    */
   function enterPlace(sid = CL.campaign.world.location) {
+    CL.troopTree.seeOffers(CL.campaign); // the troops for hire here are on the hiring buttons: now seen
     if (hubFor(sid)?.entry === 'streets' && enter(sid)) return;
     g().placeMode = 'settlement';
     CL.ui.changeMode('settlement');

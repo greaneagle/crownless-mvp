@@ -83,6 +83,7 @@
         participants: [...(o.participants || [])],
         soldierKills: { ...(o.soldierKills || {}) },
         soldierAssists: { ...(o.soldierAssists || {}) },
+        enemyTroops: [...(x.enemyTroops || [])],
         win: o.win,
         kills: o.kills,
         killed: [...o.killed],

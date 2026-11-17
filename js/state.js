@@ -44,6 +44,8 @@
     troopView: 'soldiers', // character sheet: 'soldiers' (named, V2-03) or 'types' (grouped by troop)
     soldierFilter: 'all', // the soldiers list's filter (CL.soldiers.FILTERS)
     soldierProfile: null, // soldier id whose profile card is open
+    revealTree: false, // debug: show the whole troop tree (V2-03b); never saved
+    confirmUpgradeAll: false, // Party: the Upgrade all ready confirmation is showing
   };
 
   CL.campaign = null;

@@ -502,7 +502,7 @@
     const outcome = { battleId: g.battleId, encounter: e.def, win, kills: enemyFallen.length, killed, wounded, participants: healthy };
     const names = CL.party.rosterNames(c); // before the fallen leave the roster
     // The one commit path (V2-02): result, companion, map, band, events and the save, exactly once.
-    const r = /** @type {BattleResult | null} */ (CL.encounter.resolve(c, { kind: 'auto', outcome, fallenEnemies: enemyFallen }));
+    const r = /** @type {BattleResult | null} */ (CL.encounter.resolve(c, { kind: 'auto', outcome, fallenEnemies: enemyFallen, enemyTroops: Object.keys(e.troops) }));
     if (!r) return null; // already applied (a double tap)
     g.result = {
       win,

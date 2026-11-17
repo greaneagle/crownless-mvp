@@ -132,7 +132,8 @@ Time doesn't pass in town.
 | Skirmisher | Aurelian | Archer | T2 | 60 | 10 | 2 | 6 | 25 | Marksman (60) |
 | Marksman | Aurelian | Archer | T3 | 80 | 14 | 5 | 12 | 60 | — |
 | Horse Scout | Aurelian | Cavalry | T3 | 90 | 14 | 6 | 12 | 60 | — |
-| Mercenary | Neutral | Infantry | T2 | 60 | 10 | 3 | 6 | 25 | — (no path in v1; see F-1) |
+| Mercenary | Neutral | Infantry | T2 | 60 | 10 | 3 | 6 | 25 | — (no path in v1; see F-1). From 1.5.0: Sellsword (60) |
+| Sellsword (from 1.5.0) | Neutral | Infantry | T3 | 80 | 15 | 5 | 14 | trained only | — |
 | Looter, Reaver | Neutral | Infantry | T1, T2 | 45, 60 | 7, 10 | 1, 3 | — | enemies only | — |
 
 **Soldier XP:**
@@ -297,7 +298,7 @@ The sandbox carries on after the story ends.
   - The game reminds you to export a copy now and then. Browsers, notably iOS Safari after about 7 days unused, can clear site storage.
 
 ### 2.14 Known limits of v1
-- Mercenaries have no upgrade path (finding F-1; the v2 troop tree V2-03b).
+- Mercenaries have no upgrade path (finding F-1; from 1.5.0 they train into Sellswords, V2-03b).
 - Soldiers have no names (from 1.4.0 they do: V2-03).
 - A raised shield protects only its holder.
 - Shield, Archery and Riding skills have no effect yet.
@@ -330,6 +331,7 @@ The sandbox carries on after the story ends.
 | `storage` | From 1.2.0: the storage layer every save key goes through (localStorage today; swappable) |
 | `events` | From 1.3.0: domain events with unique IDs (BattleResolved, SoldierWounded, …) and listeners |
 | `soldiers` | From 1.4.0: named soldiers: culture names, service records kept from events, notes, filters, rename |
+| `troops` | From 1.5.0: the troop tree as discovered (seen or owned), learned from events and hiring offers |
 | `save` | Save service: schema v2 at 1.0 (v3 from 1.2.0), backup on every write, fallback to the backup, migration from 0.3.x; from 1.2.0 also structure checks, migration steps and the travel autosave |
 | `assets` | Sprite loading (`assets/u####.png` units, `w####.png` world) and frame tables |
 | `units` | Units built from troop data: facing, swing phases, movement, obstacle steering, spacing |
@@ -391,6 +393,7 @@ Everything that is content lives in data files and is checked by `CL.content` at
 - **Fixtures:** five real v1.0 saves in `tests/fixtures/saves-v1.0/` (a new game, day 30, a mid-story escort, the Road Peace with Mara, the Crown ending). `tests/save-fixtures.test.js` keeps them loading in every later build.
   - They are built by `scripts/make-save-fixtures.js`.
   - Don't regenerate them casually; they stand for real players' saves.
+- **Since v1 (1.5.0, V2-03b):** schema v6 adds what the company knows of each troop (the troop tree).
 - **Since v1 (1.4.0, V2-03):** schema v5: every soldier is a named person with an origin, a joining day, a service record and notes; older saves' soldiers are named on load.
 - **Since v1 (1.3.0, V2-02):** schema v4 adds the named random streams and the result and event counters; every encounter result commits once through `CL.encounter.resolve`.
 - **Since v1 (1.2.0, V2-01):** saves are schema v3 (v2 plus `worldId` and `contentVersion`). Loading first checks that a save is complete for its schema version (a partial save is rejected rather than filled with defaults), then migrates it step by step, keeping a v2 save as it was in `crownless_save_v2`. The backup only ever holds a complete save, a write counts only once it reads back, imports and restores report success only once stored, and the game also autosaves once per game day on the map. Saves from the 0.3, 0.14 and 0.28 builds are fixtures too. Details: `docs/SAVE-FORMAT.md`.

@@ -52,7 +52,7 @@ test('a fort recruits under its owner: when Greywall changes hands, so do the na
   CL.campaign.reputation.aurelian = 0;
   const r = hire(CL, 'recruit');
   assert.equal(r.culture, 'aurelian');
-  if (r.name.includes(' of ')) assert.match(r.name, / of Greywall$/, 'bynames use the short place name');
+  assert.doesNotMatch(r.name, /Greywall Fort/, 'bynames use the short place name ("of Greywall")');
 });
 
 test('names are seeded: the same save names the same soldiers, and nobody in the roster shares a name', () => {
