@@ -185,6 +185,77 @@
     return [vx, vy];
   }
 
+  // ---- Bodies: soldiers crowd but don't stack (owner playtest finding F-2) ----
+
+  // Two living units closer than SPACING push apart. SPACING is half of two footprints (12 px):
+  // shoulder to shoulder, with plenty of overlap in a melee scrum (owner request after 0.36.0's
+  // 0.7 felt too loose), but twenty soldiers can no longer share one spot.
+  const SPACING = UNIT_RADIUS * 2 * 0.5;
+  const PUSH = 0.5; // share of an overlap removed each frame: firm but smooth, no jitter
+  // Heavier units give way less: the hero isn't shoved around by their own soldiers, riders less than footmen.
+  const mass = (u) => (u.role === 'hero' ? 3 : u.role === 'cavalry' ? 2 : 1);
+  const GOLDEN = 2.399963; // spreads units that stand on exactly the same point, deterministically
+  // GDD §7: cavalry "accelerate toward a target, pass through, and turn for another run". A rider at
+  // charge speed (or riding on after a pass) goes through enemy bodies; it still keeps clear of its own side.
+  const CHARGE_THROUGH = 0.6; // = CAVALRY.chargeMomentum in combat.js
+  const charging = (u) => u.role === 'cavalry' && (u.overrun > 0 || (u.momentum || 0) >= CHARGE_THROUGH);
+  const passesThrough = (u, v) => u.team !== v.team && (charging(u) || charging(v));
+
+  /**
+   * One separation step over the living units. A uniform grid with SPACING-sized cells means each
+   * unit only checks its own and neighbouring cells, so the cost grows with the number of units, not
+   * with every pair. Returns how many pairs were pushed apart.
+   */
+  function separate(units) {
+    const live = units.filter((u) => u?.alive);
+    if (live.length < 2) return 0;
+    const cellOf = (v) => Math.floor(v / SPACING);
+    const grid = new Map();
+    live.forEach((u, i) => {
+      const k = `${cellOf(u.x)},${cellOf(u.y)}`;
+      const entry = { u, i };
+      const bucket = grid.get(k);
+      if (bucket) bucket.push(entry);
+      else grid.set(k, [entry]);
+    });
+    const moved = new Set();
+    let pushes = 0;
+    live.forEach((u, i) => {
+      const cx = cellOf(u.x);
+      const cy = cellOf(u.y);
+      for (let gx = cx - 1; gx <= cx + 1; gx++) {
+        for (let gy = cy - 1; gy <= cy + 1; gy++) {
+          for (const { u: v, i: j } of grid.get(`${gx},${gy}`) || []) {
+            if (j <= i || passesThrough(u, v)) continue; // each pair once; charging riders ride through
+            let dx = v.x - u.x;
+            let dy = v.y - u.y;
+            let d = Math.hypot(dx, dy);
+            if (d >= SPACING) continue;
+            if (d < 1e-6) {
+              const a = (i * GOLDEN + j * 1.3) % (Math.PI * 2);
+              [dx, dy, d] = [Math.cos(a), Math.sin(a), 1];
+            }
+            const shove = (SPACING - Math.min(d, SPACING)) * PUSH;
+            const [nx, ny] = [dx / d, dy / d];
+            const [mu, mv] = [mass(u), mass(v)];
+            u.x -= nx * shove * (mv / (mu + mv));
+            u.y -= ny * shove * (mv / (mu + mv));
+            v.x += nx * shove * (mu / (mu + mv));
+            v.y += ny * shove * (mu / (mu + mv));
+            moved.add(u).add(v);
+            pushes++;
+          }
+        }
+      }
+    });
+    for (const u of moved) {
+      u.x = clamp(u.x, BOUNDS.minX, BOUNDS.maxX);
+      u.y = clamp(u.y, BOUNDS.minY, BOUNDS.maxY);
+      resolveObstacles(u); // a crowd never squeezes anyone into a wall
+    }
+    return pushes;
+  }
+
   /** Does a flying arrow at (x, y) hit cover that stops arrows (trees, walls, crates)? */
   const arrowBlocked = (x, y) => obstacles().some((o) => o.blocksArrows !== false && inside(o, x, y));
 
@@ -212,6 +283,8 @@
     ARC,
     SWING,
     UNIT_RADIUS,
+    SPACING,
+    separate,
     makeUnit,
     inArc,
     swingPhase,

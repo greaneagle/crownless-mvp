@@ -435,6 +435,7 @@
     const h = g.hero;
     updateHero(h, dt);
     for (const u of [...g.allies, ...g.enemies]) ai(u, dt);
+    CL.units.separate([h, ...g.allies, ...g.enemies]); // bodies: crowd, but never stack on one spot
     updateArrows(h, dt);
     for (const e of g.effects) e.t -= dt;
     g.effects = g.effects.filter((e) => e.t > 0);

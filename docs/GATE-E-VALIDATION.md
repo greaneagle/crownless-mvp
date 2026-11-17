@@ -17,6 +17,62 @@ _Spec: GDD §6 (scaling), §12 (performance targets), §13 (saves), §14 Gate E,
 
 ---
 
+## Patch — 0.36.1: Shoulder to shoulder (2026-11-17, owner request)
+
+The owner asked for more allowed overlap after 0.36.0, for a shoulder-to-shoulder feel.
+
+- **Spacing:** from 0.7 to **0.5 × two footprints**, so from about 17 px to **12 px** (one body width).
+  - In 40-unit battles soldiers now average **10.6–11.2 px** from their nearest neighbour (14–15 px before).
+  - In a deep scrum two soldiers on foot may briefly come **4.3–5.5 px** apart, and no two are ever closer than 3 px. Still no stacking.
+- **Cost:** unchanged, at 0.33–0.53 ms per frame at 40 units.
+- **Test:** the real-battle test now asserts that no two soldiers on foot come within a third of a body (4 px). It was tied to the old spacing.
+- 320 tests pass; lint clean.
+- **Browser:** a 40-unit stress battle shows tight blocks around the hero and in the melee. The preview save was untouched.
+
+**Not changed, and planned:** a raised shield still protects only the person holding it. **Shield cover for the ally beside you**, so the hero can cover a companion and a shield wall works, is now part of v2's formation work (`docs/V2-PLAN.md` V2-08).
+
+---
+
+## Patch — 0.36.0: Soldiers have bodies (2026-11-17, owner playtest finding F-2)
+
+### The problem
+In battle, soldiers had no size against each other. Their 12 px footprint only collided with trees, walls and crates, so a group following the hero, or a crowd chasing one enemy, collapsed onto a single point. In 40-unit battles the nearest pair averaged **1.3–4.1 px apart**, and on 273–1045 frames per battle two units stood within 4 px (stacked).
+
+### What changed (`js/units.js` `separate`, called every battle frame after the AI moves)
+- **How it works:** two living units closer than **16.8 px** (0.7 × two 12 px footprints) push apart by half the overlap each frame.
+  - Soldiers can crowd and overlap a little in a melee, but can't stack.
+  - The push is smooth rather than jumpy, and the fallen don't push anyone.
+- **Weight:** the hero counts as 3, riders as 2 and soldiers on foot as 1. So your own soldiers step aside rather than shoving you, and riders give way less than footmen.
+- **Cavalry still charges through:** a rider at charge speed, or riding on after a pass, goes through *enemy* bodies (GDD §7: "pass through, and turn for another run"), while staying clear of its own side.
+- **Pushed units stay out of walls and inside the arena.** Units on exactly the same point are split in a fixed direction, so a battle replays identically from the same seed.
+- **Cost stays low:** a simple grid of cells the size of the spacing means each unit only checks its neighbours, so the cost grows with the number of units, not with every pair (this is the "proximity grid" the GDD asks for).
+
+### Measurements (40-unit battles, 15–20 s, every map)
+
+| | Average nearest pair | Closest pair on foot | Frames with two units under 4 px |
+|---|---|---|---|
+| Before | 1.3–4.1 px | 0.0 px | 273–1045 |
+| After | 13.8–14.8 px | 8.3–10.2 px | only riders passing through enemies (9–17 frames) |
+
+- **Simulation cost:** at 40 units it went from about 0.2 ms to **0.3–0.6 ms** per frame on desktop (`npm run bench`), still a small fraction of the 16.7 ms frame budget.
+- **Browser:** in a 40-unit stress battle the closest pair on foot over 3 s was **15.0 px**, with no errors.
+
+### Checks
+- `tests/spacing.test.js` (5 tests) covers:
+  - 20 soldiers on one spot spreading into a crowd, deterministically
+  - a little overlap eased out softly, units already apart left alone, the fallen ignored
+  - the hero not being shoved by their own soldiers
+  - a crowd never pushed into a wall or out of the arena
+  - real 40-unit battles on all three maps never stacking soldiers on foot
+- The cavalry test "riders pass through their target and wheel round for another run" first **failed**, because the new bodies stopped the charge. That led to the charge-through rule above, and it passes again.
+- 320 tests pass; lint clean; the 30-day campaign simulation is unchanged (it auto-resolves battles).
+- Browser: a 40-unit stress battle shows a readable crowd instead of a pile, with the measurement above. The preview save was untouched.
+
+### Playtest finding F-1 (troops with XP but no upgrade)
+Confirmed by the owner: the stuck soldiers were Mercenaries, which have no upgrade path while the Party screen showed an XP target. **Not changed now.** It is planned for v2 as a troop tree discovered as you play (`docs/V2-PLAN.md` V2-03b): end-of-path troops will show "max tier", and there will be an "Upgrade all ready" action.
+
+---
+
 ## Slice 7 — 0.35.0: Full screen on phones (2026-11-17, from the owner's phone testing)
 
 ### The request
