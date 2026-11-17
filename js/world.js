@@ -15,7 +15,6 @@
   const HOURS_PER_SECOND = 4; // game hours that pass per real second of travel
   const HIT_RADIUS_PX = 28; // ≈ 38 CSS px wide on a small landscape phone
   const ARRIVE_EPSILON = 0.05;
-  const CAPTURE_DAYS = 0.5; // GDD §6: short time skip, then released near a settlement
 
   const map = () => CL.content.get('world_map', MAP_ID);
   const world = () => CL.campaign.world;
@@ -173,7 +172,7 @@
     if (!g.travel) {
       if (!g.waiting) return 0;
       const hours = Math.min(dt, 0.1) * HOURS_PER_SECOND;
-      CL.party.advanceDays(hours / 24);
+      CL.clock.advance(CL.campaign, hours, 'wait');
       CL.save.autosave(); // once per game day on the map
       checkContact();
       return hours;
@@ -208,7 +207,7 @@
       w.y += (t.y - w.y) * k;
     }
     g.travelFace = Math.abs(t.x - w.x) > Math.abs((t.y - w.y) * Y_ASPECT) ? (t.x < w.x ? 'left' : 'right') : t.y < w.y ? 'up' : 'down';
-    CL.party.advanceDays(hours / 24);
+    CL.clock.advance(CL.campaign, hours, 'travel');
     CL.save.autosave(); // once per game day on the map
     if (checkContact()) return hours;
     if (w.x === t.x && w.y === t.y) arrive(t);
@@ -299,7 +298,7 @@
       w.sites[siteId].clearedUntil = CL.campaign.day + site(siteId).respawnDays;
     }
     if (!win) {
-      CL.party.advanceDays(CAPTURE_DAYS);
+      CL.clock.pass(CL.campaign, 'capture'); // held captive, then released (data/world_map.js time.capture)
       const c = CL.campaign;
       const s =
         nearestSettlement(w.x, w.y, (x) => CL.realm.owner(x.id, c) !== 'neutral' && CL.realm.welcomes(c, x.id)) ||
@@ -349,7 +348,6 @@
     MAP_ID,
     VIEW,
     HOURS_PER_SECOND,
-    CAPTURE_DAYS,
     map,
     toPx,
     fromPx,

@@ -47,12 +47,12 @@ test('victory pays the encounter reward, applies casualties and wound timers', (
   assert.equal(c.renown, 4);
   assert.equal(c.victories, 1);
   assert.equal(c.battles, 1);
-  assert.equal(c.day, 0.25);
+  assert.equal(c.day, CL.clock.hours('battle') / 24); // a battle's fixed time (V2-04)
   assert.deepEqual(
     Array.from(c.roster, (s) => s.id),
     [2, 3, 4, 5],
   );
-  assert.equal(c.roster.find((s) => s.id === 2).woundedUntil, 2.25, 'heals 2 days after the battle');
+  assert.equal(c.roster.find((s) => s.id === 2).woundedUntil, CL.clock.hours('battle') / 24 + 2, 'heals 2 days after the battle');
   assert.equal(CL.party.healthySoldiers().length, 2);
 });
 
@@ -83,7 +83,7 @@ test('loot is added to the pack on victory', () => {
     battleId: 1, encounterId: 'captains_trial', win: true, kills: 1, killed: [], wounded: [],
   });
   assert.deepEqual({ ...r.loot }, { food_3_days: 1 });
-  const eaten = CL.upkeep.dailyRations(CL.campaign) * CL.party.BATTLE_DAYS; // the battle's quarter-day
+  const eaten = CL.upkeep.dailyRations(CL.campaign) * (CL.clock.hours('battle') / 24); // the battle's fixed time (V2-04)
   assert.equal(CL.campaign.food, before - eaten + 3, 'looted food goes into the ration stock');
   assert.equal('food_3_days' in CL.campaign.inventory, false);
 });
@@ -131,7 +131,7 @@ test('endBattle resolves once and links casualties to roster soldiers', () => {
   fallen.alive = false;
   CL.party.endBattle(true);
   const s = CL.campaign.roster.find((x) => x.id === fallen.soldierId);
-  assert.equal(s.woundedUntil, 2.25);
+  assert.equal(s.woundedUntil, CL.clock.hours('battle') / 24 + 2);
   const gold = CL.campaign.gold;
   CL.party.endBattle(true);
   assert.equal(CL.campaign.gold, gold);

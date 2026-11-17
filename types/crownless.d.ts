@@ -360,7 +360,6 @@ declare global {
   interface PartyAPI {
     UPGRADE_XP: Record<string, number>;
     XP: Record<string, number>;
-    BATTLE_DAYS: number;
     partyCap(camp?: Campaign): number;
     upgradeOptions(troopId: ContentId): UpgradeOption[];
     readyFor(s: Soldier): boolean;
@@ -434,6 +433,15 @@ declare global {
     resolve(c: Campaign, x: EncounterCommit): BattleResult | true | null;
   }
 
+  /** The campaign clock (js/clock.js): the one authority for campaign time. */
+  interface ClockAPI {
+    KINDS: string[];
+    DEFAULTS: Record<string, number>;
+    hours(kind: string): number;
+    advance(c: Campaign, hours: number, reason: string): number[];
+    pass(c: Campaign, kind: string): number[];
+  }
+
   /** window.Crownless. Modules without an interface yet are `any`. */
   interface CrownlessNS {
     BUILD: string;
@@ -448,6 +456,7 @@ declare global {
     /** The live, transient state (battle, journey, town walk). */
     game: Record<string, any>;
     storage: StorageAPI;
+    clock: ClockAPI;
     events: EventsAPI;
     encounter: EncounterAPI;
     save: SaveAPI;

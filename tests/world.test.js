@@ -99,7 +99,7 @@ test('the Reaver hideout opens an encounter, and victory clears it for 3 days', 
   const dayBefore = CL.campaign.day;
   CL.party.endBattle(true);
   const cleared = CL.campaign.world.sites.reaver_hideout.clearedUntil;
-  assert.ok(Math.abs(cleared - (dayBefore + 0.25 + 3)) < 1e-9);
+  assert.ok(Math.abs(cleared - (dayBefore + CL.clock.hours('battle') / 24 + 3)) < 1e-9);
   CL.world.returnToMap();
   assert.equal(CL.game.mode, 'map');
   assert.deepEqual([CL.campaign.world.x, CL.campaign.world.y], [site.mapX, site.mapY], 'back where the battle was');
@@ -120,7 +120,7 @@ test('defeat: half a day in captivity, then released at the nearest kingdom sett
   CL.game.siteId = 'reaver_hideout';
   CL.combat.startBattle('captains_trial');
   CL.party.endBattle(false);
-  assert.equal(CL.campaign.day, 0.25 + 0.5);
+  assert.equal(CL.campaign.day, (CL.clock.hours('battle') + CL.clock.hours('capture')) / 24);
   const nearest = CL.world.nearestSettlement(site.mapX, site.mapY, (s) => s.ownerFaction !== 'neutral');
   assert.deepEqual([CL.campaign.world.x, CL.campaign.world.y], [nearest.mapX, nearest.mapY]);
   assert.equal(CL.campaign.world.sites.reaver_hideout.clearedUntil, 0, 'hideout still active');

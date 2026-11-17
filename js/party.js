@@ -11,7 +11,6 @@
   // wounded) + per enemy they personally felled in a real battle.
   const XP = { heroWin: 25, heroLoss: 5, heroPerKill: 8, heroPerKillLoss: 4, troopWin: 20, troopLoss: 8, troopPerKill: 5 };
   const DEATH_CHANCE = 0.35; // otherwise wounded (GDD §7)
-  const BATTLE_DAYS = 0.25; // a battle and its aftermath take about six hours
   const DEFEAT_GOLD_KEPT = 0.8; // GDD §6: lose ~20% of carried crowns
 
   const c = () => CL.campaign;
@@ -202,7 +201,8 @@
   }
 
   /**
-   * Advance the campaign clock; wounded soldiers whose time is up return to duty.
+   * Advance the campaign clock; wounded soldiers whose time is up return to duty. Game code moves
+   * time through CL.clock (js/clock.js), which calls this; tests and tools may call it directly.
    * The one way campaign time passes (upkeep, markets, world parties, contracts, story, news).
    * @param {number} days @param {Campaign} [camp] @returns {number[]} IDs of soldiers who healed
    */
@@ -229,7 +229,7 @@
 
   function rest() {
     if (!canRest()) return [];
-    const healed = advanceDays(1);
+    const healed = CL.clock.pass(c(), 'rest');
     CL.save.write();
     CL.ui.refreshRoster();
     CL.ui.message(
@@ -301,7 +301,7 @@
     const enc = encounter || CL.content.encounter(encounterId);
     camp.lastResolvedBattle = battleId;
     camp.roster = camp.roster.filter((s) => !killed.includes(s.id));
-    advanceDays(BATTLE_DAYS, camp);
+    CL.clock.pass(camp, 'battle'); // a fixed amount of overworld time per battle (V2-04)
     for (const s of camp.roster) if (wounded.includes(s.id)) s.woundedUntil = camp.day + CL.save.WOUND_DAYS;
     camp.battles++;
     CL.upkeep.onBattle(camp, win);
@@ -461,7 +461,6 @@
     currentSettlement,
     recruitsHere,
     canRest,
-    BATTLE_DAYS,
     canRecruit,
     recruit,
     healthySoldiers,

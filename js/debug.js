@@ -73,7 +73,7 @@
   }
 
   function passDays(n) {
-    CL.party.advanceDays(n);
+    CL.clock.advance(c(), n * 24, 'debug');
     log('days', { added: n, day: c().day });
   }
 

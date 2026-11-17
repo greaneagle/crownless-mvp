@@ -103,7 +103,7 @@ Every field is validated on load by `CL.save.sanitize` and the modules it calls,
 |---|---|---|---|
 | `version` | `2` | save | |
 | `gold`, `renown`, `battles`, `victories` | integers ≥ 0 | save, party | Capped at 99,999 |
-| `day` | number | party | Campaign days elapsed (fractional); 6 game hours = 0.25 |
+| `day` | number | party, clock | Campaign days elapsed (fractional); 6 game hours = 0.25. Moved only by `js/clock.js` (from 1.6.0) |
 | `nextSoldierId` | integer | save | Soldier IDs are never reused |
 | `roster` | `[{ id, troop, xp, woundedUntil }]` | save, party | `troop` is a troop ID; `woundedUntil` is a day or `null`; at most 200 |
 | `inventory` | `{ itemId: count }` | save, character | The pack; quest items included |

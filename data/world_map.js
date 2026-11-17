@@ -13,6 +13,10 @@
       baseSpeed: 4,
       terrain: { road: 1.2, grass: 1.0, forest: 0.75 },
       roadWidth: 1.6, // map units either side of a road's centre line
+      // Fixed campaign time, in game hours, for things that happen off the map clock (V2-04, owner
+      // decision 2026-11-17: a battle takes a fixed amount of overworld time, however long it is
+      // fought). js/clock.js applies them; nothing else charges time.
+      time: { battle: 4, capture: 12, rest: 24 },
       // Two roads (GDD §3): west–east trade road and the north–south fort road.
       roads: [
         ['oakford', 'stonebridge', 'eastwatch', 'redfield'],

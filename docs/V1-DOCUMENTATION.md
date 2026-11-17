@@ -173,7 +173,7 @@ Time doesn't pass in town.
   - your company deploys at most 12 infantry, 8 archers and 6 cavalry at the start (the rest wait in reserve)
 - **Spacing:** soldiers stand shoulder to shoulder (12 px footprints that push apart). Charging riders pass through.
 - **Maps:** an open field, a forest clearing (trees block movement and arrows) and the Greywall courtyard (walls). The map depends on where the fight happens.
-- **Time:** a battle and its aftermath take 6 game hours (0.25 days).
+- **Time:** a battle and its aftermath take 6 game hours (0.25 days). From 1.6.0 (V2-04): a fixed 4 game hours, fought or auto-resolved, however long the fight lasts.
 - **Defeat:**
   - you are captured, not killed: you keep 80% of your crowns and lose one item
   - you are released near a settlement half a day later
@@ -329,6 +329,7 @@ The sandbox carries on after the story ends.
 | `content` | ContentDB: typed lookups into `data/` and load-time reference validation (one source per ID) |
 | `state` | `CL.game`, the live battle and game object |
 | `storage` | From 1.2.0: the storage layer every save key goes through (localStorage today; swappable) |
+| `clock` | From 1.6.0: the campaign clock: the one way time moves, with fixed hours for battle, capture and rest |
 | `events` | From 1.3.0: domain events with unique IDs (BattleResolved, SoldierWounded, …) and listeners |
 | `soldiers` | From 1.4.0: named soldiers: culture names, service records kept from events, notes, filters, rename |
 | `troops` | From 1.5.0: the troop tree as discovered (seen or owned), learned from events and hiring offers |
@@ -428,7 +429,7 @@ Quests are data. `js/story.js` interprets three small vocabularies; its header c
 ### 3.6 Time
 - `CL.party.advanceDays(days)` is the one way campaign time passes. It drives upkeep, recovery, market drift, the world parties' ticks, contract deadlines, story deadlines and news.
 - Travel advances time continuously at 4 game hours per real second.
-- A battle adds a flat 0.25 days. This changes in v2 (V2-04).
+- A battle adds a flat 0.25 days. From 1.6.0 (V2-04) all fixed amounts come from `js/clock.js`, the one clock authority, with the hours in `data/world_map.js` (`time`: battle 4, capture 12, rest 24). Nothing else passes time: not the battle's own seconds, pausing, menus, towns or a retreat.
 
 ### 3.7 Developer mode
 - **Showing the tools:**

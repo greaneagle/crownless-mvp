@@ -101,6 +101,14 @@
     }
     for (const f of Object.values(C.factions || {})) if (!f.culture) err(`faction ${f.id}: needs a name culture`);
 
+    // Fixed campaign times (V2-04): hours, if given, between 0 and a week.
+    for (const m of Object.values(C.world_map || {})) {
+      for (const [k, h] of Object.entries(m.time || {})) {
+        if (!['battle', 'capture', 'rest'].includes(k)) err(`world_map ${m.id}: unknown time ${k}`);
+        else if (!(typeof h === 'number' && h >= 0 && h <= 168)) err(`world_map ${m.id}: time.${k} must be 0–168 hours`);
+      }
+    }
+
     for (const s of Object.values(C.settlements || {})) {
       if (!C.factions?.[s.ownerFaction]) err(`settlement ${s.id}: unknown owner ${s.ownerFaction}`);
       if (s.type === 'fort' && !s.garrison) err(`settlement ${s.id}: forts need a garrison`);
