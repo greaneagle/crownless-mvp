@@ -778,7 +778,114 @@
     $('#waitBtn').textContent = CL.game.waiting ? 'Stop waiting' : 'Wait';
   }
 
-  /** Enemies off screen in a large arena: a red marker on the screen edge, pointing their way. */
+  // ---- Minimap and tactical overview (V2-06; js/tactics.js) ----
+
+  const GROUP_COLOR = { infantry: '#8fb8ff', archer: '#9be07f', cavalry: '#ffd36b' };
+  const terrainCache = new WeakMap();
+
+  /** The field's terrain at a small fixed scale, drawn once per map: ground, glades, trees, cover. */
+  function terrainImage(m) {
+    let img = terrainCache.get(m);
+    if (img) return img;
+    const { w, h } = CL.camera.worldSize(m);
+    const k = 0.125; // 2880×1620 → 360×203
+    img = document.createElement('canvas');
+    img.width = Math.ceil(w * k);
+    img.height = Math.ceil(h * k);
+    const c = img.getContext('2d');
+    c.fillStyle = m.ground.base;
+    c.fillRect(0, 0, img.width, img.height);
+    for (const p of m.ground.patches || (m.ground.patch ? [m.ground.patch] : [])) {
+      c.fillStyle = p.color;
+      c.beginPath();
+      c.ellipse(p.x * k, p.y * k, p.rx * k, p.ry * k, 0, 0, Math.PI * 2);
+      c.fill();
+    }
+    for (const o of m.obstacles) {
+      c.fillStyle = o.blocksArrows ? '#24361f' : '#5d6b49';
+      c.beginPath();
+      c.arc(o.x * k, o.y * k, Math.max(2, (o.r || 12) * k * 1.6), 0, Math.PI * 2);
+      c.fill();
+    }
+    terrainCache.set(m, img);
+    return img;
+  }
+
+  /** Draw the field into a screen rectangle r: terrain, view, company, detected enemies. */
+  function drawField(g, r, dot) {
+    const T = CL.tactics;
+    ctx.drawImage(terrainImage(g.battleMap), r.x, r.y, r.w, r.h);
+    const cam = g.camera || { x: 0, y: 0 };
+    const v = T.toScreen(r, cam.x, cam.y);
+    ctx.strokeStyle = '#f8ecd0cc';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(v.x, v.y, W * r.scale, H * r.scale);
+    const pip = (x, y, color, size, hollow) => {
+      const p = T.toScreen(r, x, y);
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, size, 0, Math.PI * 2);
+      if (hollow) {
+        ctx.strokeStyle = color;
+        ctx.stroke();
+      } else {
+        ctx.fillStyle = color;
+        ctx.fill();
+      }
+    };
+    for (const k of T.knownEnemies(g)) pip(k.x, k.y, k.live ? '#ff5a4a' : '#ff5a4a99', dot, !k.live);
+    for (const a of g.allies) if (a.alive) pip(a.x, a.y, GROUP_COLOR[a.role] || '#8fb8ff', dot);
+    if (g.hero?.alive) {
+      pip(g.hero.x, g.hero.y, '#1b1208', dot + 1.5);
+      pip(g.hero.x, g.hero.y, '#fff3c4', dot);
+    }
+  }
+
+  /** The minimap: always on in a large battle, top centre, tap to look there. */
+  function drawMinimap(g) {
+    const r = CL.tactics.minimapRect(g);
+    ctx.save();
+    ctx.globalAlpha = 0.9;
+    ctx.fillStyle = '#0c1823';
+    ctx.fillRect(r.x - 3, r.y - 3, r.w + 6, r.h + 6);
+    ctx.globalAlpha = 1;
+    drawField(g, r, 2);
+    ctx.strokeStyle = '#c9a85c';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(r.x - 2, r.y - 2, r.w + 4, r.h + 4);
+    ctx.restore();
+  }
+
+  /** The tactical overview: the whole field, the battle held, groups sent by tapping. */
+  function drawOverview(g) {
+    const r = CL.tactics.overviewRect(g);
+    ctx.save();
+    ctx.fillStyle = '#06101add';
+    ctx.fillRect(0, 0, W, H);
+    drawField(g, r, 4);
+    ctx.strokeStyle = '#c9a85c';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(r.x - 1, r.y - 1, r.w + 2, r.h + 2);
+    // Where each held group was sent: a flag at the middle of its spots.
+    for (const group of ['infantry', 'archer', 'cavalry']) {
+      if (g.orders[group] !== 'hold') continue;
+      const units = g.allies.filter((a) => a.alive && a.role === group);
+      if (!units.length) continue;
+      const hx = units.reduce((n, u) => n + u.holdX, 0) / units.length;
+      const hy = units.reduce((n, u) => n + u.holdY, 0) / units.length;
+      const p = CL.tactics.toScreen(r, hx, hy);
+      ctx.strokeStyle = GROUP_COLOR[group];
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(p.x, p.y);
+      ctx.lineTo(p.x, p.y - 14);
+      ctx.stroke();
+      ctx.fillStyle = GROUP_COLOR[group];
+      ctx.fillRect(p.x, p.y - 14, 9, 6);
+    }
+    ctx.restore(); // the instructions are in the message line (CL.tactics.overview), clear of the HUD
+  }
+
+  /** Enemies off screen but in sight in a large arena: a red marker on the screen edge, pointing their way. */
   function drawEdgeThreats(g) {
     const cam = g.camera || { x: 0, y: 0 };
     const [cx, cy] = [W / 2, H / 2];
@@ -787,7 +894,8 @@
     ctx.strokeStyle = '#1b1208';
     ctx.lineWidth = 2;
     for (const e of g.enemies) {
-      if (!e.alive || CL.camera.visible(g, e.x, e.y, 0)) continue;
+      // Only enemies the company can see right now (V2-06: nothing unseen is given away).
+      if (!e.alive || !e.seen || CL.camera.visible(g, e.x, e.y, 0)) continue;
       const [dx, dy] = [e.x - cam.x - cx, e.y - cam.y - cy];
       const k = Math.min((cx - 18) / Math.abs(dx || 1e-6), (cy - 18) / Math.abs(dy || 1e-6));
       const [x, y] = [cx + dx * k, cy + dy * k];
@@ -852,7 +960,13 @@
       ctx.stroke();
     }
     ctx.restore();
-    if (CL.camera.scrolls(g)) drawEdgeThreats(g);
+    if (CL.camera.scrolls(g) && g.mode === 'battle') {
+      drawEdgeThreats(g);
+      if (g.overview) drawOverview(g);
+      else drawMinimap(g);
+    }
+    const field = CL.camera.scrolls(g) ? 'large' : 'small';
+    if (CL.ui.$('#stage').dataset.field !== field) CL.ui.$('#stage').dataset.field = field; // shows the MAP button
 
     if (g.mode === 'battle' || (g.mode === 'result' && g.hero)) updateHud(); // the final tally, not the frame before
     if (performance.now() > g.messageUntil) CL.ui.$('#message').textContent = '';

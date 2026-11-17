@@ -229,3 +229,9 @@
 .treeButtons{display:flex;flex-wrap:wrap;gap:6px;margin:3px 0}
 .treeButtons button{min-height:36px;font-size:12px}
 @media(pointer:coarse){.upgradeAll button,.treeButtons button{min-height:44px}}
+
+/* 1.9.0 — minimap and tactical overview (V2-06) */
+#stage:not([data-field="large"]) #mapBtn,#stage[data-mode="town"] #mapBtn{display:none}
+#rightControls #mapBtn{align-self:flex-start;width:clamp(50px,6.6vw,82px);height:clamp(50px,6.6vw,82px);font-size:clamp(9px,1.1vw,14px)}
+#rightControls #mapBtn.active{background:#5c4a28;color:#fff3d6}
+#rightControls:has(#mapBtn.active){opacity:1}

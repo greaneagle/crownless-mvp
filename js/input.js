@@ -101,6 +101,8 @@
       combat.order(game.group, null);
     };
     $('#closeOrders').onclick = () => $('#ordersPanel').classList.add('hidden');
+    // V2-06: the tactical overview on phones (a toggle; desktops hold Tab or press M).
+    $('#mapBtn').onclick = () => CL.tactics.overview(game);
     for (const b of document.querySelectorAll('[data-group]')) b.onclick = () => combat.order(b.dataset.group, null);
     for (const b of document.querySelectorAll('[data-order]')) b.onclick = () => combat.order(null, b.dataset.order);
   }
@@ -174,8 +176,15 @@
         CL.ui.toggleDebug();
         return;
       }
+      if (g.mode === 'battle' && (e.code === 'Tab' || e.code === 'KeyM')) {
+        // Tactical overview (V2-06): hold Tab to look, or press M to toggle it.
+        e.preventDefault();
+        if (!e.repeat) CL.tactics.overview(g, e.code === 'Tab' ? true : undefined);
+        return;
+      }
       if (e.code === 'Escape') {
-        if (!$('#ordersPanel').classList.contains('hidden')) $('#ordersPanel').classList.add('hidden');
+        if (g.overview) CL.tactics.overview(g, false);
+        else if (!$('#ordersPanel').classList.contains('hidden')) $('#ordersPanel').classList.add('hidden');
         else CL.ui.togglePause();
         return;
       }
@@ -196,6 +205,7 @@
     });
     root.addEventListener('keyup', (e) => {
       g.hold[e.code] = false;
+      if (e.code === 'Tab' && g.overview) CL.tactics.overview(g, false); // Tab is held to look
     });
     root.addEventListener('blur', releaseAll);
     canvas.addEventListener('pointerdown', (e) => {
@@ -210,6 +220,11 @@
         const r = canvas.getBoundingClientRect();
         CL.world.click(((e.clientX - r.left) * CL.W) / r.width, ((e.clientY - r.top) * CL.H) / r.height);
         return;
+      }
+      if (g.mode === 'battle') {
+        // The minimap (tap to look) and the tactical overview (tap to send a group), V2-06.
+        const r = canvas.getBoundingClientRect();
+        if (CL.tactics.tap(g, ((e.clientX - r.left) * CL.W) / r.width, ((e.clientY - r.top) * CL.H) / r.height)) return;
       }
       if (e.pointerType !== 'mouse') return;
       if (e.button === 0) {

@@ -25,9 +25,12 @@
     const { w, h } = worldSize(g.battleMap);
     const hero = g.hero;
     if (!hero) return { x: 0, y: 0 };
-    const lead = g.joystick || { x: 0, y: 0 };
-    const cx = hero.x + lead.x * hero.speed * LEAD - CL.W / 2;
-    const cy = hero.y + lead.y * hero.speed * LEAD - CL.H / 2;
+    // A moment's look elsewhere (tapping the minimap, V2-06), then back to the hero.
+    const f = CL.tactics?.focusPoint(g);
+    const lead = f ? { x: 0, y: 0 } : g.joystick || { x: 0, y: 0 };
+    const [px, py] = f ? [f.x, f.y] : [hero.x, hero.y];
+    const cx = px + lead.x * hero.speed * LEAD - CL.W / 2;
+    const cy = py + lead.y * hero.speed * LEAD - CL.H / 2;
     return { x: Math.max(0, Math.min(w - CL.W, cx)), y: Math.max(0, Math.min(h - CL.H, cy)) };
   }
 

@@ -132,7 +132,9 @@
       a.holdY = a.y;
     }
     spawnWave();
+    Object.assign(g, { overview: false, cameraFocus: null, scanIn: 0 });
     CL.camera.snap(g); // one-screen maps keep the camera at 0,0
+    CL.tactics.scan(g, 0); // what the company can see from the start
     CL.ui.hideBattleOverlays();
     CL.diag.log('info', 'Battle begun', { encounter: enc.id, battleId: g.battleId, deployed: placed, reserve: g.allyReserve.length, cap: BATTLE.activeCap });
   }
@@ -442,7 +444,7 @@
 
   function update(dt) {
     const g = game();
-    if (g.mode !== 'battle' || g.paused) return;
+    if (g.mode !== 'battle' || g.paused || g.overview) return; // the tactical overview holds the battle still (V2-06)
     dt = Math.min(dt, MAX_DT);
     g.t += dt;
     const h = g.hero;
@@ -453,6 +455,7 @@
     for (const e of g.effects) e.t -= dt;
     g.effects = g.effects.filter((e) => e.t > 0);
     reinforce(g);
+    CL.tactics.scan(g, dt); // what the company can see (V2-06)
     CL.camera.follow(g, dt);
 
     // GDD §15 edge case: the battle only ends when no one is left waiting to step in.

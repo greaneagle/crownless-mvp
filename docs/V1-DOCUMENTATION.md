@@ -276,6 +276,8 @@ The sandbox carries on after the story ends.
 | Attack | Space or left click | ATTACK |
 | Block | Shift or right click (hold) | Hold BLOCK |
 | Orders | 1/2/3 to pick a group, then F/H/C | ORDERS |
+| Look around (large battlefields, from 1.9.0) | Click the small map | Tap the small map |
+| Tactical overview (from 1.9.0) | Hold Tab, or M to toggle | MAP |
 | Pause | Esc | Pause |
 | Diagnostics | F3 | Logs (dev mode) |
 
@@ -338,6 +340,7 @@ The sandbox carries on after the story ends.
 | `assets` | Sprite loading (`assets/u####.png` units, `w####.png` world) and frame tables |
 | `camera` | From 1.7.0: the battle camera (follows the hero in arenas larger than a screen; one-screen maps stay at 0,0) |
 | `arena` | From 1.7.0: generated battlefields (the camera test's forest; from 1.8.0 the large Forest Wilds and Open Country, built from `generate` specs in `data/battle_maps.js`), and the Battlefield setting's swap to one-screen maps |
+| `tactics` | From 1.9.0: detection (only enemies your company has seen are shown), the minimap (tap to look) and the tactical overview (battle held; send a group to a spot) |
 | `units` | Units built from troop data: facing, swing phases, movement, obstacle steering, spacing (from 1.7.0: per-map bounds, an obstacle grid on big maps) |
 | `combat` | Battle simulation: waves and reserves, swings, blocks, arrows, AI, cavalry, win and loss |
 | `party` | Recruiting, the day clock (`advanceDays`), recovery, resting, battle results applied exactly once, XP and upgrades, party cap |

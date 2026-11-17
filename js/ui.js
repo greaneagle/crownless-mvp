@@ -1226,6 +1226,13 @@
   }
 
   /** Show the selected group and highlight it plus that group's current order. */
+  /** The tactical overview opened or closed (V2-06): the Orders panel comes with it, to pick a group. */
+  function showOverview(on) {
+    $('#mapBtn')?.classList.toggle('active', on);
+    $('#ordersPanel').classList.toggle('hidden', !on);
+    if (on) showSelectedGroup(CL.game.group);
+  }
+
   function showSelectedGroup(group) {
     $('#selectedGroup').textContent = { infantry: 'Infantry', archer: 'Archers', cavalry: 'Cavalry' }[group];
     // GDD §7: unit sets without cavalry show cavalry as unavailable.
@@ -1585,6 +1592,7 @@
     importDone,
     hideBattleOverlays,
     showSelectedGroup,
+    showOverview,
     setPaused,
     togglePause,
     autoPause,

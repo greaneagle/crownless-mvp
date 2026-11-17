@@ -58,7 +58,8 @@
       body: [
         'When a band catches you, or you ride at one, choose: Attack fights the battle yourself; Auto-resolve rolls it from your strength; you can also pay a toll, threaten weaker bands, or try to slip away. Each button shows the odds.',
         'In battle you fight in person. Swings hit what is in front of you; a shield blocks hits from the front only. Your soldiers follow orders by group: Follow keeps them near you, Hold keeps them where they stand, Charge sends them at the nearest enemy.',
-        'Only so many fight at once (Settings → Battle size); the rest wait in reserve and step in as others fall. Enemies may come in waves.'
+        'Only so many fight at once (Settings → Battle size); the rest wait in reserve and step in as others fall. Enemies may come in waves.',
+        'On a large battlefield the view follows you. The small map at the top shows your company and the enemies your soldiers have seen (red; faded where they were last seen); tap it to look there for a moment. MAP (or hold Tab) opens the whole field with the battle held still: pick a group in Orders, then tap where it should go and hold. You never have to use it.'
       ],
       controls: [
         ['Joystick', 'WASD / arrows', 'Move'],
@@ -66,6 +67,8 @@
         ['Hold BLOCK', 'Shift / right click', 'Block (needs a shield)'],
         ['ORDERS → group', '1 / 2 / 3', 'Infantry / Archers / Cavalry'],
         ['ORDERS → order', 'F / H / C', 'Follow / Hold / Charge'],
+        ['Tap the small map', 'Click the small map', 'Look there for a moment'],
+        ['MAP', 'Hold Tab, or M', 'Tactical overview: send a group to a spot'],
         ['Pause', 'Esc', 'Pause']
       ]
     },
