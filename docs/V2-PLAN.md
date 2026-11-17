@@ -61,7 +61,7 @@ Each phase ends with an acceptance pass, as Gates C–E did: automated tests, a 
 |---|---|---|
 | **5.7** | ✅ **Done in 0.38.0 — Gate E passed** (owner pass open: an iPhone if available, and a real save transfer). Device QA and Gate E acceptance: real Android Chrome and iPhone runs (performance with Stress 40, full screen and home screen, save transfer, phone layout), plus the GDD §15 definition-of-done checklist. **First evidence (owner, ASUS Zenfone 10, Chrome):** the stress test at battle size 30 ran at **60 fps**, with 0.6 ms simulation and 1.7 ms drawing per frame and a slowest frame of 17 ms. The owner reports full screen, Add to Home Screen and play all work well | Every §15 box is checked or explicitly deferred; no critical data loss; no unavoidable progression blocker |
 | **5.7b** | **Towns open on their menu (finding F-3).** ✅ Done in 0.37.0 | Arriving at any walkable place (Stonebridge today, more later) opens the settlement menu, with **Walk the streets** and **Leave** buttons. The streets are opt-in, and the town menu inside the streets still works |
-| **5.8** | **Release v1.0:** freeze save schema v2, tag `v1.0.0`, keep a pre-v2 save fixture set for migration tests, short release notes | A v1.0 save becomes the first fixture the v2 migration must load |
+| **5.8** | ✅ **Done: v1.0.0 released.** **Release v1.0:** freeze save schema v2, tag `v1.0.0`, keep a pre-v2 save fixture set for migration tests, short release notes | A v1.0 save becomes the first fixture the v2 migration must load |
 
 ## 4b. Findings from the owner's playtesting (2026-11-17)
 

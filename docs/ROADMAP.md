@@ -1,6 +1,6 @@
 # Crownless — Project Status & Roadmap
 
-_Last reviewed: 2026-11-17 · Build 0.38.0 · Spec: `Crownless_MVP_GDD_v1.md` (engine overridden: HTML5 Canvas + classic JS, no bundler, GitHub Pages)._
+_Last reviewed: 2026-11-17 · Build 1.0.0 · Spec: `Crownless_MVP_GDD_v1.md` (engine overridden: HTML5 Canvas + classic JS, no bundler, GitHub Pages)._
 
 This replaces the opencode-swarm plan (`.swarm/plan.md`, removed). The gate structure (A→E) is kept from the GDD; the task list is condensed and re-ordered around what the code actually needs.
 
@@ -84,7 +84,7 @@ All 10 settlements; Stonebridge walkable hub; 3 battle maps; ~30 items; AI caval
 6. ✅ (0.34.0) Asset provenance: sprites are the owner's own AI-generated art (Sprite Studio); sound and map are code; no third-party assets or runtime dependencies. `docs/ASSETS.md`, `assets/manifest.json` and a guarding test; Credits in How to Play.
 7. ✅ (0.38.0) Device QA and Gate E acceptance: §15 checklist complete, new money and result probes (`tests/gate-e.test.js`), full regression run. Owner pass open: an iPhone if available, and a real phone↔desktop save transfer. Device evidence: on the owner's Zenfone 10 (Chrome), the stress test at battle size 30 ran at **60 fps** (0.6 ms simulation, 1.7 ms drawing, 17 ms slowest frame); full screen, Add to Home Screen and play "all felt pretty good".
    - 7b. ✅ (0.37.0) **Towns open on their menu (finding F-3):** walkable places open their settlement menu on arrival, with Walk the streets and Leave; people in the streets can be talked to from the menu too; a per-place `entry` content flag (`menu` or `streets`).
-8. Release **v1.0 "The Border March"**: freeze save schema v2, tag the release, keep v1 save fixtures for the v2 migration.
+8. ✅ (1.0.0) Release **v1.0 "The Border March"**: save schema v2 frozen (`docs/SAVE-FORMAT.md`); five v1.0 save fixtures (`tests/fixtures/saves-v1.0/`, guarded by `tests/save-fixtures.test.js`); release notes (`docs/RELEASE-NOTES.md`); tag `v1.0.0`.
 
 ### Phase 6+ — v2 (planned; see `docs/V2-PLAN.md`)
 **Workflow:** everything on `main`. GitHub Pages is the test build, not a release.

@@ -1,0 +1,221 @@
+[
+ {
+  "file": "new-game.json",
+  "about": "A brand-new game: character created, standing in Stonebridge, no soldiers.",
+  "build": "0.38.0",
+  "expect": {
+   "name": "Bot1",
+   "day": 0,
+   "gold": 60,
+   "renown": 0,
+   "soldiers": 0,
+   "soldierIds": [],
+   "troops": [],
+   "location": "stonebridge",
+   "quests": {},
+   "ending": null,
+   "companion": null,
+   "contract": null,
+   "owners": {
+    "greywall_fort": "valedorn",
+    "ashgate_fort": "aurelian"
+   },
+   "reputation": {
+    "valedorn": 0,
+    "aurelian": 0
+   },
+   "parties": 9,
+   "newsLines": 0
+  }
+ },
+ {
+  "file": "campaign-day30.json",
+  "about": "30 days of mercenary life by the campaign bot: soldiers, upgrades, gear, cargo, contracts.",
+  "build": "0.38.0",
+  "expect": {
+   "name": "Bot1",
+   "day": 30.071,
+   "gold": 127,
+   "renown": 81,
+   "soldiers": 12,
+   "soldierIds": [
+    1,
+    8,
+    15,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25
+   ],
+   "troops": [
+    "guard",
+    "guard",
+    "marksman",
+    "spearman",
+    "recruit",
+    "marksman",
+    "recruit",
+    "skirmisher",
+    "mercenary",
+    "footman",
+    "hunter",
+    "mercenary"
+   ],
+   "location": "eastwatch",
+   "quests": {},
+   "ending": null,
+   "companion": null,
+   "contract": null,
+   "owners": {
+    "greywall_fort": "valedorn",
+    "ashgate_fort": "aurelian"
+   },
+   "reputation": {
+    "valedorn": 66,
+    "aurelian": 58
+   },
+   "parties": 7,
+   "newsLines": 8
+  }
+ },
+ {
+  "file": "mid-story-escort.json",
+  "about": "Part-way through the story, with an escort contract under way (caravan and ambush on the map).",
+  "build": "0.38.0",
+  "expect": {
+   "name": "Bot2",
+   "day": 1.508,
+   "gold": 3000,
+   "renown": 0,
+   "soldiers": 4,
+   "soldierIds": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "troops": [
+    "footman",
+    "footman",
+    "hunter",
+    "levy"
+   ],
+   "location": "eastwatch",
+   "quests": {
+    "q2": "active"
+   },
+   "ending": null,
+   "companion": null,
+   "contract": "escort",
+   "owners": {
+    "greywall_fort": "valedorn",
+    "ashgate_fort": "aurelian"
+   },
+   "reputation": {
+    "valedorn": 0,
+    "aurelian": 0
+   },
+   "parties": 12,
+   "newsLines": 0
+  }
+ },
+ {
+  "file": "ending-road-peace-mara.json",
+  "about": "The story finished with the road peace (compromise ending), Mara in the company.",
+  "build": "0.38.0",
+  "expect": {
+   "name": "Bot3",
+   "day": 9.595,
+   "gold": 3417,
+   "renown": 68,
+   "soldiers": 7,
+   "soldierIds": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "troops": [
+    "footman",
+    "footman",
+    "hunter",
+    "levy",
+    "levy",
+    "hunter",
+    "hunter"
+   ],
+   "location": "greywall_fort",
+   "quests": {
+    "q1": "done",
+    "q2": "done",
+    "q3": "done",
+    "q4": "done"
+   },
+   "ending": "compromise",
+   "companion": "mara",
+   "contract": null,
+   "owners": {
+    "greywall_fort": "valedorn",
+    "ashgate_fort": "aurelian"
+   },
+   "reputation": {
+    "valedorn": 47,
+    "aurelian": 35
+   },
+   "parties": 6,
+   "newsLines": 4
+  }
+ },
+ {
+  "file": "ending-crown.json",
+  "about": "The story finished with Greywall held for the Crown (Valedorn ending); the sandbox goes on.",
+  "build": "0.38.0",
+  "expect": {
+   "name": "Bot5",
+   "day": 13.859,
+   "gold": 2838,
+   "renown": 74,
+   "soldiers": 4,
+   "soldierIds": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "troops": [
+    "footman",
+    "footman",
+    "hunter",
+    "levy"
+   ],
+   "location": "greywall_fort",
+   "quests": {
+    "q1": "done",
+    "q2": "done",
+    "q3": "done",
+    "q4": "done"
+   },
+   "ending": "valedorn",
+   "companion": null,
+   "contract": null,
+   "owners": {
+    "greywall_fort": "valedorn",
+    "ashgate_fort": "aurelian"
+   },
+   "reputation": {
+    "valedorn": 47,
+    "aurelian": -43
+   },
+   "parties": 7,
+   "newsLines": 6
+  }
+ }
+]

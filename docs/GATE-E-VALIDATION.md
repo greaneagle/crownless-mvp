@@ -79,7 +79,11 @@ Every case is covered, as recorded in the Gate C and Gate D docs plus these:
 - [ ] A real save transfer: Export on the phone and import on desktop, then the other way round.
 
 ### Next
-**Step 5.8, release v1.0:** freeze the v2 save schema, tag `v1.0.0`, and keep v1.0 save fixtures for the v2 migration.
+**Step 5.8, release v1.0: ✅ done in 1.0.0.**
+- **Save format frozen:** schema v2, documented in `docs/SAVE-FORMAT.md`.
+- **Five v1.0 save fixtures** (`tests/fixtures/saves-v1.0/`, built by `scripts/make-save-fixtures.js` and guarded by `tests/save-fixtures.test.js`): a new game, 30 days of mercenary life, mid-Q2 with an escort under way, the road peace with Mara, and the Crown ending. Each must import, keep its summary, re-export unchanged, and play on.
+- **Release notes:** `docs/RELEASE-NOTES.md`.
+- **One version everywhere:** a stale "0.38.1" footer, left by blanket find-and-replace version bumps, is fixed, and `tests/version.test.js` now keeps `package.json`, `CL.BUILD`, the title, the HUD and the footer in step.
 
 ---
 

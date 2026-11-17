@@ -1,0 +1,302 @@
+{
+ "format": "crownless-save",
+ "version": 2,
+ "game": "0.38.0",
+ "exportedAt": "2026-11-17T13:17:33.797Z",
+ "checksum": "97948a9d",
+ "campaign": {
+  "version": 2,
+  "gold": 60,
+  "renown": 0,
+  "battles": 0,
+  "victories": 0,
+  "day": 0,
+  "nextSoldierId": 1,
+  "roster": [],
+  "inventory": {},
+  "lastResolvedBattle": 0,
+  "world": {
+   "x": 50,
+   "y": 55,
+   "location": "stonebridge",
+   "sites": {
+    "looter_camp": {
+     "clearedUntil": 0
+    },
+    "reaver_hideout": {
+     "clearedUntil": 0
+    }
+   }
+  },
+  "character": {
+   "name": "Bot1",
+   "gender": "unspecified",
+   "cloak": "crimson",
+   "background": "farmhand",
+   "attributes": {
+    "str": 6,
+    "agi": 5,
+    "int": 5,
+    "cha": 5
+   },
+   "skills": {
+    "one_handed": 1,
+    "shield": 0,
+    "archery": 0,
+    "riding": 0,
+    "leadership": 0,
+    "tactics": 0,
+    "pathfinding": 0,
+    "trade": 0
+   },
+   "level": 1,
+   "xp": 0,
+   "skillPoints": 0,
+   "attributePoints": 0
+  },
+  "equipment": {
+   "weapon": "worn_sword",
+   "offhand": "oak_shield",
+   "head": null,
+   "body": "clothing",
+   "hands": null,
+   "feet": null,
+   "horse": null,
+   "ring": null
+  },
+  "food": 3,
+  "morale": 70,
+  "nextWagesDay": 7,
+  "starving": false,
+  "markets": {
+   "stonebridge": {
+    "grain": 0.95,
+    "salt": 1.1,
+    "wool": 0.9,
+    "iron": 1.1,
+    "cloth": 1.05,
+    "tools": 1
+   },
+   "eastwatch": {
+    "grain": 1.15,
+    "salt": 0.9,
+    "wool": 1.1,
+    "iron": 1,
+    "cloth": 0.85,
+    "tools": 0.9
+   },
+   "oakford": {
+    "grain": 0.8,
+    "salt": 1.3,
+    "wool": 0.9,
+    "iron": 1.3,
+    "cloth": 1.2,
+    "tools": 1.25
+   },
+   "highmere": {
+    "grain": 1.1,
+    "salt": 1.25,
+    "wool": 0.8,
+    "iron": 0.85,
+    "cloth": 1.2,
+    "tools": 1.1
+   },
+   "brackenfield": {
+    "grain": 0.9,
+    "salt": 1.3,
+    "wool": 1,
+    "iron": 1.2,
+    "cloth": 1.25,
+    "tools": 1.3
+   },
+   "dunmarsh": {
+    "grain": 1.25,
+    "salt": 0.9,
+    "wool": 1.2,
+    "iron": 1.3,
+    "cloth": 1.1,
+    "tools": 1.2
+   },
+   "redfield": {
+    "grain": 0.85,
+    "salt": 1,
+    "wool": 1.05,
+    "iron": 1.25,
+    "cloth": 1.15,
+    "tools": 1.2
+   },
+   "saltmere": {
+    "grain": 1.2,
+    "salt": 0.8,
+    "wool": 1.2,
+    "iron": 1.3,
+    "cloth": 1,
+    "tools": 1.15
+   }
+  },
+  "cargo": {},
+  "rngSeed": 2207636696,
+  "parties": [
+   {
+    "id": 1,
+    "template": "bandits",
+    "x": 46,
+    "y": 74,
+    "troops": {
+     "looter": 5
+    },
+    "tx": null,
+    "ty": null,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lair": "reaver_hideout"
+   },
+   {
+    "id": 2,
+    "template": "bandits",
+    "x": 40,
+    "y": 47,
+    "troops": {
+     "looter": 6,
+     "reaver": 3
+    },
+    "tx": null,
+    "ty": null,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lair": "looter_camp"
+   },
+   {
+    "id": 3,
+    "template": "bandits",
+    "x": 40,
+    "y": 47,
+    "troops": {
+     "looter": 5,
+     "reaver": 2
+    },
+    "tx": null,
+    "ty": null,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lair": "looter_camp"
+   },
+   {
+    "id": 4,
+    "template": "valedorn_patrol",
+    "x": 42,
+    "y": 30,
+    "troops": {
+     "footman": 4,
+     "hunter": 2,
+     "levy": 2
+    },
+    "tx": null,
+    "ty": null,
+    "ignoreUntil": 0,
+    "alerted": false
+   },
+   {
+    "id": 5,
+    "template": "valedorn_patrol",
+    "x": 42,
+    "y": 30,
+    "troops": {
+     "footman": 3,
+     "hunter": 2,
+     "levy": 2
+    },
+    "tx": null,
+    "ty": null,
+    "ignoreUntil": 0,
+    "alerted": false
+   },
+   {
+    "id": 6,
+    "template": "aurelian_patrol",
+    "x": 70,
+    "y": 70,
+    "troops": {
+     "spearman": 3,
+     "skirmisher": 2,
+     "recruit": 2
+    },
+    "tx": null,
+    "ty": null,
+    "ignoreUntil": 0,
+    "alerted": false
+   },
+   {
+    "id": 7,
+    "template": "aurelian_patrol",
+    "x": 70,
+    "y": 70,
+    "troops": {
+     "spearman": 3,
+     "skirmisher": 3,
+     "recruit": 2
+    },
+    "tx": null,
+    "ty": null,
+    "ignoreUntil": 0,
+    "alerted": false
+   },
+   {
+    "id": 8,
+    "template": "valedorn_caravan",
+    "x": 50,
+    "y": 55,
+    "troops": {
+     "levy": 2
+    },
+    "tx": null,
+    "ty": null,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "routeIndex": 0,
+    "good": "grain"
+   },
+   {
+    "id": 9,
+    "template": "aurelian_caravan",
+    "x": 66,
+    "y": 88,
+    "troops": {
+     "recruit": 3
+    },
+    "tx": null,
+    "ty": null,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "routeIndex": 3,
+    "good": "salt"
+   }
+  ],
+  "partySpawns": {},
+  "nextPartyId": 10,
+  "contract": null,
+  "contractOffers": {},
+  "nextContractId": 1,
+  "contractsDone": 0,
+  "reputation": {
+   "valedorn": 0,
+   "aurelian": 0
+  },
+  "owners": {
+   "greywall_fort": "valedorn",
+   "ashgate_fort": "aurelian"
+  },
+  "story": {
+   "flags": {},
+   "quests": {},
+   "visits": {}
+  },
+  "companion": null,
+  "news": {
+   "events": [],
+   "lines": [],
+   "next": 2,
+   "clashUntil": 0
+  }
+ }
+}
