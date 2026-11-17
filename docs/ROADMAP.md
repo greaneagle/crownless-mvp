@@ -1,6 +1,6 @@
 # Crownless — Project Status & Roadmap
 
-_Last reviewed: 2026-11-17 · Build 1.3.0 · Spec: `Crownless_MVP_GDD_v1.md` (engine overridden: HTML5 Canvas + classic JS, no bundler, GitHub Pages)._
+_Last reviewed: 2026-11-17 · Build 1.4.0 · Spec: `Crownless_MVP_GDD_v1.md` (engine overridden: HTML5 Canvas + classic JS, no bundler, GitHub Pages)._
 
 This replaces the opencode-swarm plan (`.swarm/plan.md`, removed). The gate structure (A→E) is kept from the GDD; the task list is condensed and re-ordered around what the code actually needs.
 
@@ -98,7 +98,7 @@ From the owner's v2.0 design (`Crownless_v2_0_Feature_and_Systems_Design_Part_1.
   - ✅ (1.1.0) V2-00 type checking with `@ts-check` and JSDoc (no build step): `npm run typecheck` (TypeScript 6.0.3 via `npx`, part of `npm run lint`), shared types in `types/crownless.d.ts`, seven modules checked (`core`, `save`, `party`, `units`, `combat`, `story`, `world`)
   - ✅ (1.2.0) V2-01 save schema v3, migrations and a storage layer: `worldId` and `contentVersion`; structural checks that reject partial saves; pure migration steps with a pre-migration copy; last-known-good backup and writes that must read back; imports and restores that report success only once stored; autosave once per game day on the map; `CL.storage` (`js/storage.js`); fixtures from the real 0.14 and 0.28 builds plus a 0.3 save (`docs/SAVE-FORMAT.md`)
   - ✅ (1.3.0) V2-02 one idempotent result path, events and seeded randomness: `CL.encounter.resolve` commits every encounter result (fought battle and capture, auto-resolve, retreat, toll or intimidation) exactly once under a result ID taken when the encounter opens; `CL.events` with unique, saved event IDs (BattleResolved, EncounterResolved, SoldierRecruited, SoldierPromoted, SoldierWounded, SoldierKilled, SoldierDeserted); named random streams for casualties, loot and upkeep beside the world stream; save schema v4; fixtures from the real 1.2.0 build
-  - V2-03 named soldiers and service records, with a data-driven, moddable culture name generator
+  - ✅ (1.4.0) V2-03 named soldiers and service records, with a data-driven, moddable culture name generator: `data/names.js` (Valedorn, Aurelian, border folk; factions, settlements and troops point at a culture); `js/soldiers.js` (seeded names, records kept from events: battles, victories, kills, assists, wounds, captures, wages actually paid; bounded notes); a Soldiers view in Party with a filter and a profile card (rename, per-soldier upgrade with reasons); the fallen and wounded named on result screens; save schema v5 naming old soldiers on load; fixtures from the real 1.3.0 build
   - V2-03b a troop tree discovered as you play
   - V2-04 a canonical campaign clock (no flat 6-hour battle charge)
   - PROTO-A a camera test run in the Debug panel, on your phone first

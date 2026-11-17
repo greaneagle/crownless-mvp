@@ -65,6 +65,7 @@
     if (!owed) return { owed: 0, paid: 0 };
     const paid = Math.min(owed, c.gold);
     c.gold -= paid;
+    CL.events.emit(c, 'WagesPaid', { owed, paid, shares: CL.soldiers.wageShares(c, paid) });
     if (paid < owed) {
       changeMorale(c, -MORALE.unpaid);
       CL.ui.message(`Wages short: paid ${paid} of ${owed} crowns. Your soldiers grumble.`);

@@ -1,4 +1,4 @@
-# Crownless 1.3.0 — The Border March
+# Crownless 1.4.0 — The Border March
 
 A single-player, top-down party-battle prototype in plain HTML5 Canvas and classic JavaScript. There's no bundler, no runtime dependencies and no server. It's published to GitHub Pages straight from `main`.
 
@@ -33,6 +33,7 @@ A single-player, top-down party-battle prototype in plain HTML5 Canvas and class
 - **Three battlefields:** you fight on an open field, in a forest clearing (trees block movement and arrows) or at a walled fort courtyard, depending on where the fight happens. Forts show their garrison.
 - The battle is two waves of Road Reavers (Looters and Reavers, defined in `data/encounters.js`) and ends in victory or capture. Armor reduces damage, and archers sometimes miss.
 - Win gold, renown and loot, which goes into your pack. If you're captured you lose 20% of your crowns and one item, then you're released near a settlement half a day later.
+- **Named soldiers (1.4.0):** every soldier has a name from their homeland's culture, where and when they joined, and a service record (battles, victories, kills, assists, wounds, captures, wages actually paid) with short service notes. The Party screen lists them by name with a filter; each has a card where you can rename or upgrade them. Names come from `data/names.js`, which a mod can extend.
 - Casualties: 35% of fallen soldiers are killed and the rest are wounded for 2 campaign days. Travelling or resting passes the time.
 - **Gear:** about 30 items, including swords, axes and maces, three shields, helmets, armour from gambeson to mail, gloves, greaves and three horses. Find them as loot (better bands drop better gear) or buy them in town armouries.
 - **Trade:** buy goods where they're cheap and sell them where they're dear. There are six goods, every market prices them differently, prices move as you trade and settle back over time, and a heavy cargo slows you down. You can also sell spare gear from your pack.
@@ -68,7 +69,8 @@ js/               game runtime, attached to window.Crownless
   state.js        live game state (CL.game)
   storage.js      storage layer: every save key goes through it (localStorage today)
   events.js       domain events with unique IDs (BattleResolved, SoldierWounded, …) and listeners
-  save.js         save schema v4: structure checks, migrations (0.3, v2, v3), last-known-good backup, autosave
+  soldiers.js     named soldiers: culture names, service records kept from events, notes, filters, rename
+  save.js         save schema v5: structure checks, migrations (0.3, v2, v3, v4), last-known-good backup, autosave
   assets.js       sprite preloading and frame tables
   units.js        units built from troop data, swing phases, facing, movement
   combat.js       waves, attacks, AI, arrows, win/loss
@@ -92,7 +94,7 @@ js/               game runtime, attached to window.Crownless
   render.js       canvas drawing (battle and world map) and HUD
   input.js        keyboard, mouse, touch buttons, joystick
   main.js         boot and main loop (loads last)
-data/             content definitions (window.CROWNLESS_CONTENT): troops, encounters, world map, items, backgrounds…
+data/             content definitions (window.CROWNLESS_CONTENT): troops, encounters, world map, items, backgrounds, name cultures…
 assets/           sprite PNGs (u#### units, w#### world tiles)
 tests/            node:test suite (no dependencies)
 types/            shared types for the type checker only (the page never loads them)

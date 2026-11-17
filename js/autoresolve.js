@@ -50,9 +50,11 @@
   //               outcome, its casualties included, on the world stream, as before)
   //   loot        battle loot, and the item taken on capture
   //   upkeep      desertion
+  //   names       soldiers' names (V2-03)
   // Moment-to-moment rolls inside a fought battle (aim, AI timing) stay unseeded: they depend on the
   // player's real-time input anyway. News and cosmetics never use any of these.
-  const STREAMS = ['casualties', 'loot', 'upkeep'];
+  /** @type {Array<keyof Campaign["rng"]>} */
+  const STREAMS = ['casualties', 'loot', 'upkeep', 'names'];
 
   /** A stream's starting seed from the campaign seed and the stream's name (FNV-1a, then mixed). */
   function streamSeed(base, name) {

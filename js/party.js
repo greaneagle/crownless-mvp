@@ -93,6 +93,39 @@
   }
 
   /**
+   * One soldier's upgrade paths, each with whether it can be taken now and, if not, why (V2-03 profile
+   * card). Same rules and costs as `upgrade`.
+   * @param {Soldier} s @param {Campaign} [camp]
+   * @returns {Array<UpgradeOption & { can: boolean, why: string | null }>}
+   */
+  function soldierUpgrades(s, camp = c()) {
+    return upgradeOptions(s.troop).map((o) => {
+      let why = o.locked;
+      if (!why && s.woundedUntil !== null) why = `Wounded until day ${dayNumber(s.woundedUntil)}`;
+      if (!why && s.xp < o.xp) why = `Needs ${o.xp} XP (has ${s.xp})`;
+      if (!why && camp.gold < o.cost) why = `Needs ${o.cost} crowns`;
+      return { ...o, can: !why, why };
+    });
+  }
+
+  /**
+   * Upgrade one named soldier along one path. Returns true when done.
+   * @param {Campaign} camp @param {number} soldierId @param {ContentId} toId
+   */
+  function upgradeSoldier(camp, soldierId, toId) {
+    const s = camp.roster.find((x) => x.id === soldierId);
+    const opt = s && soldierUpgrades(s, camp).find((o) => o.to === toId);
+    if (!opt?.can) return false;
+    const from = s.troop;
+    camp.gold -= opt.cost;
+    s.xp -= opt.xp;
+    s.troop = toId;
+    CL.events.emit(camp, 'SoldierPromoted', { soldierId: s.id, from, to: toId, cost: opt.cost });
+    CL.diag.log('info', 'Soldier upgraded', { id: s.id, from, to: toId, cost: opt.cost });
+    return true;
+  }
+
+  /**
    * Award battle XP to the hero and to the soldiers who took part.
    * @param {Campaign} camp @param {BattleOutcome} outcome @returns {XpAward}
    */
@@ -271,7 +304,9 @@
       wounded,
       participants: deployed.map((a) => a.soldierId),
       soldierKills: Object.fromEntries(deployed.map((a) => [a.soldierId, a.kills || 0])),
+      soldierAssists: Object.fromEntries(deployed.map((a) => [a.soldierId, a.assists || 0])),
     };
+    const names = rosterNames(CL.campaign); // before the fallen leave the roster
     // The one commit path (V2-02): result, companion, map, band, events and the save, exactly once.
     const r = /** @type {BattleResult | null} */ (
       CL.encounter.resolve(CL.campaign, {
@@ -289,6 +324,7 @@
       wounded,
       survivors: g.allies.filter((u) => u.alive).length,
       waves: `${g.wave}/${g.totalWaves}`,
+      names,
     });
     g.result = { win, html, ...r };
     CL.diag.log('info', 'Battle ended', { ...outcome, result: r, day: CL.campaign.day });
@@ -322,12 +358,19 @@
     CL.ui.changeMode('result');
   }
 
+  /** Soldier names by ID (V2-03), for result screens. @param {Campaign} camp @returns {Record<number, string>} */
+  const rosterNames = (camp) => Object.fromEntries(camp.roster.map((s) => [s.id, s.name]));
+
+  /** @param {string} text */
+  const escapeHtml = (text) => text.replace(/[&<>"']/g, (ch) => `&#${ch.charCodeAt(0)};`);
+
   /**
    * Result screen text for a fought or auto-resolved battle. Only numbers and data names are interpolated.
    * @param {{ win: boolean, r: BattleResult | null, kills: number, killed: number[], wounded: number[],
-   *   survivors: number, waves?: string, auto?: { pp: number, pe: number } }} info
+   *   survivors: number, waves?: string, auto?: { pp: number, pe: number }, names?: Record<number, string> }} info
+   *   names: soldier names by ID, taken before the battle (soldiers can be renamed, so they are escaped)
    */
-  function resultHtml({ win, r, kills, killed, wounded, survivors, waves, auto }) {
+  function resultHtml({ win, r, kills, killed, wounded, survivors, waves, auto, names }) {
     const recoverDay = dayNumber(CL.campaign.day + CL.save.WOUND_DAYS);
     const lines = [
       `<strong>${win ? `+${r.gold} crowns · +${r.renown} renown` : `${-r.gold} crowns lost (20%)`}</strong>`,
@@ -337,6 +380,9 @@
       lines.push(`Auto-resolved: your strength ${auto.pp.toFixed(1)} vs ${auto.pe.toFixed(1)} (${odds}% odds)`);
     }
     lines.push(`Enemies defeated: ${kills}`, `Killed: ${killed.length} · Wounded: ${wounded.length}`);
+    const who = (ids) => ids.map((id) => escapeHtml(names?.[id] || '')).filter(Boolean).join(', ');
+    if (who(killed)) lines.push(`Fallen: ${who(killed)}`);
+    if (who(wounded)) lines.push(`Wounded: ${who(wounded)}`);
     lines.push(`Survivors: ${survivors}${waves ? ` · Battle waves reached: ${waves}` : ''}`);
     if (r.xp) {
       const lv = r.xp.levels ? ` · <strong>Level up! Now level ${CL.campaign.character.level}</strong>` : '';
@@ -360,8 +406,11 @@
     upgradeOptions,
     readyFor,
     upgrade,
+    soldierUpgrades,
+    upgradeSoldier,
     awardXp,
     resultHtml,
+    rosterNames,
     currentSettlement,
     recruitsHere,
     canRest,

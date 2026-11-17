@@ -24,6 +24,7 @@
     'companions',
     'news',
     'help_topics',
+    'cultures',
     'tips',
   ];
 
@@ -71,6 +72,34 @@
         }
       }
     }
+
+    // Name cultures (V2-03): who points at them, and that each can make a name.
+    const PARTS = ['given', 'trade', 'epithet', 'origin'];
+    const LISTS = { given: 'given', trade: 'trades', epithet: 'epithets' };
+    for (const k of Object.values(C.cultures || {})) {
+      if (!Array.isArray(k.given) || !k.given.length || k.given.some((n) => typeof n !== 'string' || !n.trim())) err(`culture ${k.id}: needs a list of given names`);
+      for (const list of ['trades', 'epithets']) {
+        if (k[list] != null && (!Array.isArray(k[list]) || k[list].some((n) => typeof n !== 'string' || !n.trim()))) err(`culture ${k.id}: ${list} must be a list of names`);
+      }
+      if (!Array.isArray(k.forms) || !k.forms.length) err(`culture ${k.id}: needs name forms`);
+      for (const f of k.forms || []) {
+        if (typeof f.pattern !== 'string' || !f.pattern.includes('{given}')) err(`culture ${k.id}: form "${f.pattern}" must use {given}`);
+        if (!(f.weight > 0)) err(`culture ${k.id}: form "${f.pattern}" needs a weight above 0`);
+        for (const [, part] of String(f.pattern).matchAll(/\{(\w+)\}/g)) {
+          if (!PARTS.includes(part)) err(`culture ${k.id}: form "${f.pattern}" has unknown part {${part}}`);
+          else if (LISTS[part] && !k[LISTS[part]]?.length) err(`culture ${k.id}: form "${f.pattern}" needs ${LISTS[part]}`);
+        }
+      }
+      if (!(k.forms || []).some((f) => !String(f.pattern).includes('{origin}'))) err(`culture ${k.id}: needs a form without {origin}`);
+    }
+    for (const [table, list] of [
+      ['factions', C.factions],
+      ['settlements', C.settlements],
+      ['troops', C.troops],
+    ]) {
+      for (const r of Object.values(list || {})) if (r.culture != null && !C.cultures?.[r.culture]) err(`${table} ${r.id}: unknown culture ${r.culture}`);
+    }
+    for (const f of Object.values(C.factions || {})) if (!f.culture) err(`faction ${f.id}: needs a name culture`);
 
     for (const s of Object.values(C.settlements || {})) {
       if (!C.factions?.[s.ownerFaction]) err(`settlement ${s.id}: unknown owner ${s.ownerFaction}`);

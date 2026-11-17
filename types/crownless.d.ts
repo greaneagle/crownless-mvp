@@ -17,13 +17,46 @@ declare global {
   /** A content ID (troop, item, settlement, faction, quest, …). Checked against data/ at load. */
   type ContentId = string;
 
-  /** One soldier in the player's company. IDs are never reused. */
+  /** A soldier's service record (V2-03): counts kept by listening to events. */
+  interface SoldierRecord {
+    battles: number;
+    victories: number;
+    kills: number;
+    assists: number;
+    wounds: number;
+    captures: number;
+    /** Crowns actually received (SC-02), not wages owed. */
+    wagesPaid: number;
+  }
+
+  /** One service note; shown as a sentence by CL.soldiers.noteText. */
+  interface SoldierNote {
+    day: number;
+    kind: 'joined' | 'veteran' | 'wounded' | 'promoted' | 'captured' | 'notable';
+    place?: string | null;
+    foe?: string | null;
+    to?: ContentId;
+    kills?: number;
+  }
+
+  /** One soldier in the player's company: a named person (save schema v5). IDs are never reused. */
   interface Soldier {
     id: number;
     troop: ContentId;
     xp: number;
     /** Campaign day the wound heals, or null when fit. */
     woundedUntil: number | null;
+    name: string;
+    /** The name culture (data/names.js). */
+    culture: string;
+    /** Settlement they joined at, or null (on the road, or before records were kept). */
+    origin: string | null;
+    /** Campaign day they joined, or null when it was never recorded. */
+    joined: number | null;
+    /** Art slot for a later portrait; null until there is one. */
+    portrait: string | null;
+    record: SoldierRecord;
+    notes: SoldierNote[];
   }
 
   interface WorldState {
@@ -136,7 +169,7 @@ declare global {
     /** The world random stream's state (world parties, contracts, auto-resolve, retreat). */
     rngSeed: number;
     /** v4: the other named random streams' states (CL.autoresolve.STREAMS). */
-    rng: Record<'casualties' | 'loot' | 'upkeep', number>;
+    rng: Record<'casualties' | 'loot' | 'upkeep' | 'names', number>;
     /** v4: the next encounter result ID to commit (js/encounter.js). */
     nextResultId: number;
     /** v4: the next domain event ID (js/events.js). */
@@ -194,6 +227,8 @@ declare global {
     wounded: number[];
     participants?: number[];
     soldierKills?: Record<number, number>;
+    /** Enemies each soldier helped down without the final blow (V2-03). */
+    soldierAssists?: Record<number, number>;
   }
 
   interface XpAward {
@@ -267,7 +302,7 @@ declare global {
     MIGRATIONS: Record<number, (d: Record<string, any>) => Record<string, any>>;
     preMigrationKey(version: number): string;
     starter(background?: ContentId): Campaign;
-    addSoldier(c: Campaign, troop: ContentId, woundedUntil?: number | null): Soldier;
+    addSoldier(c: Campaign, troop: ContentId, woundedUntil?: number | null, opts?: { origin?: string | null; veteran?: boolean }): Soldier;
     check(d: unknown): SaveCheck;
     migrate(d: Record<string, any>): Record<string, any> | null;
     sanitize(d: any): Campaign | null;
@@ -313,8 +348,11 @@ declare global {
     upgradeOptions(troopId: ContentId): UpgradeOption[];
     readyFor(s: Soldier): boolean;
     upgrade(fromId: ContentId, toId: ContentId, max?: number, camp?: Campaign): number;
+    soldierUpgrades(s: Soldier, camp?: Campaign): Array<UpgradeOption & { can: boolean; why: string | null }>;
+    upgradeSoldier(camp: Campaign, soldierId: number, toId: ContentId): boolean;
     awardXp(camp: Campaign, outcome: BattleOutcome): XpAward;
     resultHtml(info: Record<string, any>): string;
+    rosterNames(camp: Campaign): Record<number, string>;
     currentSettlement(camp?: Campaign): any;
     recruitsHere(camp?: Campaign): ContentId[];
     canRest(camp?: Campaign): boolean;

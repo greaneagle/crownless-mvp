@@ -6,32 +6,34 @@
  * chronicle and quests will all listen to the same events). Each event gets an ID unique within the
  * campaign (`c.nextEventId`, saved), the campaign day, and its own data.
  *
- *   BattleResolved     { resultId, battleId, kind: 'battle' | 'auto', encounter, win, kills, killed, wounded }
+ *   BattleResolved     { resultId, battleId, kind: 'battle' | 'auto', encounter, encounterName, win, kills,
+ *                        killed, wounded, participants, soldierKills, soldierAssists }
  *   EncounterResolved  { resultId, kind: 'battle' | 'auto' | 'retreat' | 'parley', win?, outcome? }
  *   SoldierRecruited   { soldierId, troop, settlement, via: 'hire' | 'story' }
  *   SoldierPromoted    { soldierId, from, to, cost }
- *   SoldierWounded     { soldierId, troop, until, resultId }
+ *   SoldierWounded     { soldierId, troop, until, resultId, encounterName }
  *   SoldierKilled      { soldierId, troop, resultId }
  *   SoldierDeserted    { soldierId, troop, morale }
+ *   WagesPaid          { owed, paid, shares: { soldierId: crowns } }  (shares add up to paid)
  *
- * Listeners run synchronously in the order they were added. A listener that throws is logged and
- * skipped, so it can never undo or block the change that emitted the event. Listeners are not
+ * Listeners are called as fn(event, campaign), synchronously, in the order they were added. A
+ * listener that throws is logged and skipped, so it can never undo or block the change that emitted the event. Listeners are not
  * saved; modules add theirs when they load. The last few events are kept in memory for diagnostics. */
 (function (root) {
   'use strict';
   const CL = root.Crownless;
 
-  const TYPES = ['BattleResolved', 'EncounterResolved', 'SoldierRecruited', 'SoldierPromoted', 'SoldierWounded', 'SoldierKilled', 'SoldierDeserted'];
+  const TYPES = ['BattleResolved', 'EncounterResolved', 'SoldierRecruited', 'SoldierPromoted', 'SoldierWounded', 'SoldierKilled', 'SoldierDeserted', 'WagesPaid'];
   const RECENT = 50;
 
-  /** @type {Record<string, Array<(e: GameEvent) => void>>} */
+  /** @type {Record<string, Array<(e: GameEvent, c: Campaign) => void>>} */
   const listeners = {};
   /** @type {GameEvent[]} */
   const recent = [];
 
   /**
    * Listen for one event type. Returns a function that stops listening.
-   * @param {string} type @param {(e: GameEvent) => void} fn @returns {() => void}
+   * @param {string} type @param {(e: GameEvent, c: Campaign) => void} fn @returns {() => void}
    */
   function on(type, fn) {
     if (!TYPES.includes(type)) throw new Error(`Unknown event type: ${type}`);
@@ -57,7 +59,7 @@
     if (recent.length > RECENT) recent.shift();
     for (const fn of [...(listeners[type] || [])]) {
       try {
-        fn(e);
+        fn(e, c);
       } catch (err) {
         CL.diag.log('error', 'Event listener failed', { type, id: e.id, error: String(err) });
       }

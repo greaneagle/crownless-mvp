@@ -778,8 +778,170 @@
     return `${name}s`;
   }
 
-  /** Troops grouped by type, with XP progress and upgrade buttons (GDD §7). */
+  /** Make an element: el('p', { className: 'x' }, child, 'text'). */
+  function el(tag, props = {}, ...children) {
+    const node = Object.assign(document.createElement(tag), props);
+    node.append(...children.filter((x) => x != null && x !== false));
+    return node;
+  }
+
+  /** "XP 32/100", "XP 140 · top of its line". */
+  function xpText(s) {
+    const need = CL.party.UPGRADE_XP[CL.content.troop(s.troop).tier];
+    return need && CL.party.upgradeOptions(s.troop).length ? `XP ${s.xp}/${need}` : `XP ${s.xp} · top of its line`;
+  }
+
+  const FILTER_LABELS = { all: 'Everyone', fit: 'Fit', wounded: 'Wounded', ready: 'Ready to upgrade', infantry: 'Infantry', archer: 'Archers', cavalry: 'Cavalry' };
+
+  /**
+   * The company (V2-03): the soldiers as people (a list with a filter, then a profile card), or the
+   * older view grouped by troop type. Which one shows is remembered for the session.
+   */
   function renderTroops() {
+    const g = CL.game;
+    const c = CL.campaign;
+    if (!c.roster.length) {
+      g.soldierProfile = null;
+      $('#sheetTroops').replaceChildren(el('p', { textContent: 'No soldiers yet. Hire some in a town.' }));
+      return;
+    }
+    const view = g.troopView === 'types' ? 'types' : 'soldiers';
+    const tab = (id, label) =>
+      el('button', {
+        type: 'button',
+        textContent: label,
+        className: view === id ? 'active' : '',
+        ariaPressed: String(view === id),
+        onclick: () => {
+          g.troopView = id;
+          g.soldierProfile = null;
+          renderTroops();
+        },
+      });
+    const tabs = el('div', { className: 'viewTabs' }, tab('soldiers', 'Soldiers'), tab('types', 'By type'));
+    if (view === 'types') {
+      $('#sheetTroops').replaceChildren(tabs, ...troopTypeRows());
+      return;
+    }
+    const profile = g.soldierProfile != null && c.roster.find((s) => s.id === g.soldierProfile);
+    if (profile) {
+      $('#sheetTroops').replaceChildren(tabs, soldierCard(profile));
+      return;
+    }
+    g.soldierProfile = null;
+    const filter = CL.soldiers.FILTERS.includes(g.soldierFilter) ? g.soldierFilter : 'all';
+    const select = el(
+      'select',
+      {
+        ariaLabel: 'Show soldiers',
+        onchange: (e) => {
+          g.soldierFilter = e.target.value;
+          renderTroops();
+        },
+      },
+      ...CL.soldiers.FILTERS.map((f) => el('option', { value: f, selected: f === filter, textContent: `${FILTER_LABELS[f]} (${CL.soldiers.list(c, f).length})` })),
+    );
+    const shown = CL.soldiers.list(c, filter);
+    const rows = shown.map((s) => {
+      const t = CL.content.troop(s.troop);
+      const status = s.woundedUntil !== null ? ` · wounded until day ${CL.party.dayNumber(s.woundedUntil)}` : '';
+      const ready = CL.party.soldierUpgrades(s, c).some((o) => o.can) ? ' · ready to upgrade' : '';
+      return el(
+        'button',
+        {
+          type: 'button',
+          className: 'soldierRow',
+          onclick: () => {
+            g.soldierProfile = s.id;
+            renderTroops();
+          },
+        },
+        el('b', { textContent: s.name }),
+        el('span', { textContent: `${t.name} · ${t.tier} ${t.role} · ${xpText(s)}${status}${ready}` }),
+      );
+    });
+    $('#sheetTroops').replaceChildren(
+      tabs,
+      el('label', { className: 'soldierFilter' }, 'Show ', select),
+      ...(rows.length ? rows : [el('p', { textContent: 'Nobody matches.' })]),
+    );
+  }
+
+  /** One soldier's profile card: who they are, their record and notes, rename and upgrade. */
+  function soldierCard(s) {
+    const g = CL.game;
+    const c = CL.campaign;
+    const P = CL.party;
+    const t = CL.content.troop(s.troop);
+    const culture = CL.content.table('cultures')[s.culture]?.name || '';
+    const joined = s.joined === null ? 'Served before the company kept records' : `Joined ${s.origin ? `at ${CL.soldiers.placeName(s.origin)} ` : ''}on day ${P.dayNumber(s.joined)}`;
+    const status = s.woundedUntil === null ? 'Fit' : `Wounded until day ${P.dayNumber(s.woundedUntil)}`;
+    const r = s.record;
+    const back = el('button', {
+      type: 'button',
+      textContent: '‹ The company',
+      onclick: () => {
+        g.soldierProfile = null;
+        renderTroops();
+      },
+    });
+    const nameRow = el('div', { className: 'soldierName' }, el('h3', { textContent: s.name }));
+    const renameBtn = el('button', { type: 'button', textContent: 'Rename' });
+    renameBtn.onclick = () => {
+      const input = el('input', { value: s.name, maxLength: CL.soldiers.NAME_MAX, ariaLabel: 'New name', spellcheck: false, autocomplete: 'off' });
+      const save = () => {
+        if (CL.soldiers.rename(c, s.id, input.value)) CL.save.write();
+        renderTroops();
+      };
+      input.onkeydown = (e) => {
+        if (e.key === 'Enter') save();
+        if (e.key === 'Escape') renderTroops();
+      };
+      nameRow.replaceChildren(input, el('button', { type: 'button', textContent: 'Save', onclick: save }), el('button', { type: 'button', textContent: 'Cancel', onclick: renderTroops }));
+      input.focus();
+      input.select();
+    };
+    nameRow.append(renameBtn);
+    const portrait = s.portrait ? el('img', { className: 'portrait', src: `assets/${s.portrait}`, alt: '' }) : null;
+    const stat = (label, n) => el('span', {}, el('b', { textContent: String(n) }), ` ${label}`);
+    const upgrades = P.soldierUpgrades(s, c).map((o) => {
+      const to = CL.content.troop(o.to);
+      return el('button', {
+        type: 'button',
+        disabled: !o.can,
+        textContent: o.can ? `Upgrade to ${to.name} · ${o.cost} crowns` : `${to.name}: ${o.why}`,
+        onclick: () => {
+          if (P.upgradeSoldier(c, s.id, o.to)) {
+            CL.save.write();
+            message(`${s.name} is now a ${to.name}`);
+          }
+          renderSheet();
+        },
+      });
+    });
+    return el(
+      'div',
+      { className: 'soldierCard' },
+      back,
+      el('div', { className: 'soldierHead' }, portrait, el('div', {}, nameRow, el('p', { textContent: `${t.name} · ${t.tier} ${t.role} · ${xpText(s)}` }), el('p', { textContent: `${status} · ${culture} · ${joined}` }))),
+      el(
+        'p',
+        { className: 'soldierStats' },
+        stat('battles', r.battles),
+        stat('victories', r.victories),
+        stat('kills', r.kills),
+        stat('assists', r.assists),
+        stat('wounds', r.wounds),
+        stat('captures', r.captures),
+        stat('crowns paid', r.wagesPaid),
+      ),
+      el('ul', { className: 'soldierNotes' }, ...s.notes.map((n) => el('li', { textContent: `Day ${P.dayNumber(n.day)}: ${CL.soldiers.noteText(n)}` }))),
+      upgrades.length ? el('div', { className: 'soldierUpgrades' }, ...upgrades) : el('p', { className: 'muted', textContent: `${t.name} is the top of its line.` }),
+    );
+  }
+
+  /** Troops grouped by type, with XP progress and upgrade buttons (GDD §7). */
+  function troopTypeRows() {
     const c = CL.campaign;
     const P = CL.party;
     const groups = {};
@@ -815,9 +977,7 @@
       }
       return row;
     });
-    $('#sheetTroops').replaceChildren(
-      ...(rows.length ? rows : [Object.assign(document.createElement('p'), { textContent: 'No soldiers yet. Hire some in a town.' })]),
-    );
+    return rows;
   }
 
   function openSheet() {

@@ -11,7 +11,7 @@ const ROOT = path.join(__dirname, '..');
 const read = (f) => fs.readFileSync(path.join(ROOT, f), 'utf8');
 
 // Modules converted so far. Add a module here when a task converts it; never remove one.
-const CHECKED = ['core', 'storage', 'events', 'encounter', 'save', 'portable', 'party', 'units', 'combat', 'story', 'world'];
+const CHECKED = ['core', 'storage', 'events', 'soldiers', 'encounter', 'save', 'portable', 'party', 'units', 'combat', 'story', 'world'];
 
 test('every converted module opts in to type checking on its first line', () => {
   for (const m of CHECKED) {

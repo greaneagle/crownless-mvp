@@ -76,6 +76,7 @@
       body: [
         'Everyone you hire takes a slot, eats a ration a day for every five people, and draws a weekly wage. Hungry or unpaid soldiers lose morale; at very low morale they desert.',
         'Fallen soldiers are wounded or killed. The wounded sit out battles for about two days. Soldiers gain experience and can be upgraded for crowns in the Party screen; Leadership and renown raise how many you can lead.',
+        'Every soldier has a name, a home and a service record: battles, kills, wounds and the wages they were actually paid. Party lists them by name (filter by who is fit, wounded or ready to upgrade); tap one for their card, where you can rename them or upgrade them on their own. By type groups them as before.',
         'Party also shows your hero: equip loot, and spend skill and attribute points as you level.'
       ]
     },

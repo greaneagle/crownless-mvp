@@ -1,7 +1,7 @@
 // @ts-check
 /* Crownless save service.
  *
- * Schema v4 (key `crownless_save`, from build 1.3.0; v3 from 1.2.0; docs/SAVE-FORMAT.md): individual soldiers with
+ * Schema v5 (key `crownless_save`, from build 1.4.0; v4 from 1.3.0, v3 from 1.2.0; docs/SAVE-FORMAT.md): named soldiers with
  * troop IDs, XP and wound timers, the item inventory, the campaign day clock and every system's state,
  * plus the world the save belongs to (`worldId`) and the build that wrote it (`contentVersion`), and
  * (v4) the named random streams (`rng`), the encounter result counter and the event ID counter.
@@ -25,7 +25,7 @@
   'use strict';
   const CL = root.Crownless;
 
-  const VERSION = 4;
+  const VERSION = 5;
   const KEY = 'crownless_save';
   const BACKUP_KEY = 'crownless_save_backup';
   const LEGACY_KEY = 'crownless_v03_party';
@@ -99,11 +99,14 @@
   }
 
   /**
-   * Enlist a new soldier with the next unused ID.
-   * @param {Campaign} c @param {ContentId} troop @param {number | null} [woundedUntil] @returns {Soldier}
+   * Enlist a new soldier with the next unused ID: a named person (js/soldiers.js) who joined here.
+   * @param {Campaign} c @param {ContentId} troop @param {number | null} [woundedUntil]
+   * @param {{ origin?: string | null, veteran?: boolean }} [opts] where they joined (default: here)
+   * @returns {Soldier}
    */
-  function addSoldier(c, troop, woundedUntil = null) {
-    const s = { id: c.nextSoldierId++, troop, xp: 0, woundedUntil };
+  function addSoldier(c, troop, woundedUntil = null, opts = {}) {
+    /** @type {Soldier} */
+    const s = { id: c.nextSoldierId++, troop, xp: 0, woundedUntil, ...CL.soldiers.fresh(c, troop, opts) };
     c.roster.push(s);
     return s;
   }
@@ -161,6 +164,7 @@
     2: V2_FIELDS,
     3: V3_FIELDS,
     4: [...V3_FIELDS, ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number']],
+    5: [...V3_FIELDS, ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number']],
   };
 
   /** @param {unknown} v @param {string} kind */
@@ -211,6 +215,10 @@
       nextResultId: 1,
       nextEventId: 1,
     }),
+    // 4 → 5 (build 1.4.0, V2-03): every soldier becomes a named person with a service record
+    // (js/soldiers.js). Names come from a names stream seeded by the save's own seed; where they
+    // joined and when was never recorded, so they start as veterans with an empty record.
+    4: (d) => ({ ...CL.soldiers.migrateRoster(d), version: 5 }),
   };
 
   /**
@@ -246,12 +254,15 @@
       for (const e of d.roster.slice(0, MAX_ROSTER)) {
         if (!e || !knownTroop(e.troop) || !Number.isInteger(e.id) || e.id < 1 || seen.has(e.id)) continue;
         seen.add(e.id);
-        s.roster.push({
+        /** @type {Soldier} */
+        const soldier = /** @type {any} */ ({
           id: e.id,
           troop: e.troop,
           xp: count(e.xp, 0),
           woundedUntil: isCount(e.woundedUntil) ? e.woundedUntil : null,
         });
+        CL.soldiers.sanitize(e, soldier, s); // name, culture, origin, joined, portrait, record, notes
+        s.roster.push(soldier);
       }
     }
     const maxId = s.roster.reduce((m, e) => Math.max(m, e.id), 0);
@@ -297,7 +308,7 @@
     /** @param {'infantry' | 'archer'} role @param {unknown} n @param {boolean} wounded */
     const add = (role, n, wounded) => {
       for (let i = 0; i < Math.min(count(n, 0), MAX_ROSTER); i++) {
-        addSoldier(c, V1_TROOP[role], wounded ? WOUND_DAYS : null);
+        addSoldier(c, V1_TROOP[role], wounded ? WOUND_DAYS : null, { origin: null, veteran: true });
       }
     };
     add('infantry', d.infantry, false);

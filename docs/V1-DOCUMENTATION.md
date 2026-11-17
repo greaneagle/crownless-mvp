@@ -298,6 +298,7 @@ The sandbox carries on after the story ends.
 
 ### 2.14 Known limits of v1
 - Mercenaries have no upgrade path (finding F-1; the v2 troop tree V2-03b).
+- Soldiers have no names (from 1.4.0 they do: V2-03).
 - A raised shield protects only its holder.
 - Shield, Archery and Riding skills have no effect yet.
 - No hairstyles (waiting for art).
@@ -328,6 +329,7 @@ The sandbox carries on after the story ends.
 | `state` | `CL.game`, the live battle and game object |
 | `storage` | From 1.2.0: the storage layer every save key goes through (localStorage today; swappable) |
 | `events` | From 1.3.0: domain events with unique IDs (BattleResolved, SoldierWounded, …) and listeners |
+| `soldiers` | From 1.4.0: named soldiers: culture names, service records kept from events, notes, filters, rename |
 | `save` | Save service: schema v2 at 1.0 (v3 from 1.2.0), backup on every write, fallback to the backup, migration from 0.3.x; from 1.2.0 also structure checks, migration steps and the travel autosave |
 | `assets` | Sprite loading (`assets/u####.png` units, `w####.png` world) and frame tables |
 | `units` | Units built from troop data: facing, swing phases, movement, obstacle steering, spacing |
@@ -378,6 +380,7 @@ Everything that is content lives in data files and is checked by `CL.content` at
 | `companions.js` | Mara |
 | `help.js` | How to Play topics and first-time tips |
 | `news.js` | News line templates |
+| `names.js` | From 1.4.0: name cultures for soldiers (given names, trades, epithets, forms); factions point at one |
 
 ### 3.4 Saves
 - **Where:** localStorage key `crownless_save`, with `crownless_save_backup` and `crownless_save_pre_import`.
@@ -388,6 +391,7 @@ Everything that is content lives in data files and is checked by `CL.content` at
 - **Fixtures:** five real v1.0 saves in `tests/fixtures/saves-v1.0/` (a new game, day 30, a mid-story escort, the Road Peace with Mara, the Crown ending). `tests/save-fixtures.test.js` keeps them loading in every later build.
   - They are built by `scripts/make-save-fixtures.js`.
   - Don't regenerate them casually; they stand for real players' saves.
+- **Since v1 (1.4.0, V2-03):** schema v5: every soldier is a named person with an origin, a joining day, a service record and notes; older saves' soldiers are named on load.
 - **Since v1 (1.3.0, V2-02):** schema v4 adds the named random streams and the result and event counters; every encounter result commits once through `CL.encounter.resolve`.
 - **Since v1 (1.2.0, V2-01):** saves are schema v3 (v2 plus `worldId` and `contentVersion`). Loading first checks that a save is complete for its schema version (a partial save is rejected rather than filled with defaults), then migrates it step by step, keeping a v2 save as it was in `crownless_save_v2`. The backup only ever holds a complete save, a write counts only once it reads back, imports and restores report success only once stored, and the game also autosaves once per game day on the map. Saves from the 0.3, 0.14 and 0.28 builds are fixtures too. Details: `docs/SAVE-FORMAT.md`.
 
@@ -467,6 +471,7 @@ Quests are data. `js/story.js` interprets three small vocabularies; its header c
 - **A settlement:** add it to `data/settlements.js` with `mapX`/`mapY`, services, a market baseline and gear.
 - **A quest:** add stages to `data/quests.js` and conversations to `data/dialogue.js`, using the vocabulary in 3.5. Add a test like `tests/q1.test.js`, and run `npm run simulate:story` to prove nothing soft-locks.
 - **A tip or help topic:** add it to `data/help.js`.
+- **A name culture (from 1.4.0):** add it to `data/names.js` (given names, optional trades and epithets, weighted forms using `{given}`, `{trade}`, `{epithet}` and `{origin}`), then point a faction, settlement or troop at it with `culture`. `npm test` checks it.
 - **A sprite:** add the PNG to `assets/`, then run `npm run assets` and record its source in `docs/ASSETS.md`.
 
 `npm test` catches broken references (`tests/content.test.js`). A change to anything saved needs a save-format thought; see `docs/SAVE-FORMAT.md`.

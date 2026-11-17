@@ -72,11 +72,17 @@
       CL.companion.afterBattle(c, { win: o.win, down: Boolean(x.companionDown) });
       CL.world.onBattleResolved(o.win, x.siteId ?? g.siteId);
       CL.parties.onBattleResolved(o.win, x.partyId ?? g.partyId, x.fallenEnemies || []);
+      const enc = o.encounter || (o.encounterId ? CL.content.table('encounters')[o.encounterId] : null);
+      const encounterName = enc?.name ?? null;
       CL.events.emit(c, 'BattleResolved', {
         resultId,
         battleId: o.battleId,
         kind: x.kind,
-        encounter: o.encounter?.id ?? o.encounterId ?? null,
+        encounter: enc?.id ?? o.encounterId ?? null,
+        encounterName,
+        participants: [...(o.participants || [])],
+        soldierKills: { ...(o.soldierKills || {}) },
+        soldierAssists: { ...(o.soldierAssists || {}) },
         win: o.win,
         kills: o.kills,
         killed: [...o.killed],
@@ -84,7 +90,7 @@
       });
       for (const id of o.killed) CL.events.emit(c, 'SoldierKilled', { soldierId: id, troop: troopOf[id], resultId });
       for (const s of c.roster) {
-        if (o.wounded.includes(s.id)) CL.events.emit(c, 'SoldierWounded', { soldierId: s.id, troop: s.troop, until: s.woundedUntil, resultId });
+        if (o.wounded.includes(s.id)) CL.events.emit(c, 'SoldierWounded', { soldierId: s.id, troop: s.troop, until: s.woundedUntil, resultId, encounterName });
       }
     } else {
       c.nextResultId = resultId + 1;

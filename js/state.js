@@ -41,6 +41,9 @@
     newGame: false, // true while the creator is making a fresh campaign
     confirmNew: false, // title screen: second press of New game erases the save
     returnMode: 'map', // where the character sheet goes back to
+    troopView: 'soldiers', // character sheet: 'soldiers' (named, V2-03) or 'types' (grouped by troop)
+    soldierFilter: 'all', // the soldiers list's filter (CL.soldiers.FILTERS)
+    soldierProfile: null, // soldier id whose profile card is open
   };
 
   CL.campaign = null;

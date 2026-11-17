@@ -209,6 +209,10 @@
       return 'blocked';
     }
     target.hp = Math.max(0, target.hp - mitigate(raw, target.armor));
+    if (source && source.team !== target.team) {
+      if (!target.hitBy) target.hitBy = new Set();
+      target.hitBy.add(source);
+    }
     target.flash = 0.14;
     if (source) push(target, source.x, source.y, KNOCKBACK);
     g.effects.push({
@@ -230,6 +234,9 @@
     target.guard = false;
     if (target.team === 'enemy') g.kills++;
     if (source) source.kills = (source.kills || 0) + 1; // soldier XP for their own kills
+    // Everyone else who wounded it earns an assist (soldiers' service records, V2-03).
+    for (const u of target.hitBy || []) if (u !== source) u.assists = (u.assists || 0) + 1;
+    target.hitBy = null;
     CL.diag.log('info', 'Unit down', { role: target.role, team: target.team, id: target.id });
     return 'down';
   }
