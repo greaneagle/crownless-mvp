@@ -234,9 +234,12 @@
       CL.save.write(); // GDD §13: autosave when entering a settlement
       CL.diag.log('info', 'Entered settlement', { id: t.id, day: CL.campaign.day });
       CL.story.emit('enter', { settlement: t.id });
+      CL.contracts.onArrive(CL.campaign, t.id); // deliveries and escorts are paid on arrival
       CL.town.enterPlace(); // Stonebridge's streets, or the settlement menu elsewhere
     } else if (t.type === 'party') {
-      CL.parties.open(t.id);
+      // Riding up to the caravan you escort just puts you at its side.
+      if (CL.parties.find(CL.campaign, t.id)?.escortTo) CL.ui.message('You ride beside the caravan.');
+      else CL.parties.open(t.id);
     } else if (t.type === 'site') {
       if (siteActive(t.id)) {
         g.siteId = t.id;

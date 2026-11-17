@@ -49,7 +49,8 @@ test('accepting spawns the marked band at the offered camp; one contract at a ti
   assert.equal(p.contractId, c.contract.id);
   assert.deepEqual({ ...p.troops }, { ...c.contract.troops });
   assert.deepEqual([p.x, p.y], [c.contract.x, c.contract.y]);
-  assert.equal('stonebridge' in c.contractOffers, false);
+  assert.equal(CL.contracts.offerAt(c, 'stonebridge'), null, 'the hunt is taken off the board');
+  assert.ok(CL.contracts.offerAt(c, 'stonebridge', 'escort'), 'the other work stays posted');
   assert.match(CL.contracts.accept(c, 'eastwatch').reason, /current contract/);
 });
 

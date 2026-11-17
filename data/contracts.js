@@ -1,9 +1,15 @@
 /* Crownless content: contracts. Plain classic script; no modules, no fetch.
  * GDD §4 "Repeatable work": templates vary target and reward, without procedural dialogue.
- * Offered in settlements with the 'contracts' service. Gate C ships the bandit hunt; escort and
- * delivery templates arrive in Gate D on the same lifecycle (js/contracts.js).
+ * Offered in settlements with the 'contracts' service, one offer per template on each board, all on
+ * the same lifecycle (js/contracts.js). GDD §4: bandit hunt, escort, delivery.
  *   strength: target band power as a multiple of the player's power when offered, [min, max]
- *   reward:   gold = goldBase + goldPerTroop × band size; renown; hero XP = xpBase + xpPerTroop × size */
+ *   reward:   gold = goldBase + goldPerTroop × band size (hunts) or goldPerLeague × distance (escort,
+ *             delivery); renown; hero XP = xpBase + xpPerTroop × size or xpPerLeague × distance
+ *   distance: map units from the giver — the camp (hunts) or the destination (escort, delivery)
+ *   Escort: a marked caravan rolls toward the destination only while the player stays within
+ *     escortRange; a Reaver ambush (ambushStrength) waits on the route. Paid on arrival.
+ *   Delivery: goods (qty of one trade good, a refundable deposit at their value) or a sealed message
+ *     (letterChance); delivered by entering the destination. Paid on arrival. */
 (function (root) {
   root.CROWNLESS_CONTENT = root.CROWNLESS_CONTENT || {};
   var C = root.CROWNLESS_CONTENT;
@@ -23,6 +29,37 @@
       failRenown: 2,
       offer: 'Reavers have been raiding the farms nearby. Hunt down their band and you will be paid for every head of it.',
       done: 'The band is broken. Return to {giver} to collect your pay.'
+    },
+    escort: {
+      id: 'escort',
+      name: 'Caravan Escort',
+      kind: 'escort',
+      band: 'bandits',
+      troopPool: ['looter', 'reaver'],
+      minTroops: 3,
+      maxTroops: 10,
+      ambushStrength: [0.5, 0.9],
+      distance: [12, 32],
+      escortRange: 6,
+      timeLimitDays: 4,
+      reward: { goldBase: 30, goldPerLeague: 3, renown: 4, xpBase: 30, xpPerLeague: 2 },
+      failRenown: 2,
+      offer: 'A merchant wagon needs a sword beside it as far as {to}, and the Reavers know the road.',
+      done: 'The caravan rolls safely into {to}. The drivers pay you on the spot.'
+    },
+    delivery: {
+      id: 'delivery',
+      name: 'Delivery',
+      kind: 'delivery',
+      distance: [12, 40],
+      goodsQty: [3, 5],
+      letterChance: 0.4,
+      timeLimitDays: 5,
+      reward: { goldBase: 20, goldPerLeague: 2, renown: 2, xpBase: 20, xpPerLeague: 1 },
+      failRenown: 2,
+      offer: 'A load needs carrying to {to}, and the carters are all on the road already.',
+      offerLetter: 'A sealed letter must reach {to}, unopened. Speed matters more than strength.',
+      done: 'Delivered to {to}. You are paid on the spot.'
     }
   };
 })(typeof window !== 'undefined' ? window : globalThis);

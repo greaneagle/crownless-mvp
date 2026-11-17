@@ -80,10 +80,16 @@
       if (!has('party_templates', p?.template)) bad(`unknown party type "${p?.template}"`);
       for (const id of Object.keys(obj(p?.troops) ? p.troops : {})) if (!has('troops', id)) bad(`unknown troop "${id}" in a party`);
     }
-    for (const k of [raw.contract, ...Object.values(obj(raw.contractOffers) ? raw.contractOffers : {})]) {
-      if (!k) continue;
+    // Boards hold one offer per template (older saves: a single offer) plus 'taken' markers.
+    const offers = Object.values(obj(raw.contractOffers) ? raw.contractOffers : {}).flatMap((b) =>
+      obj(b) && b.template ? [b] : Object.values(obj(b) ? b : {}).filter((o) => obj(o)),
+    );
+    for (const k of [raw.contract, ...offers]) {
+      if (!obj(k)) continue;
       if (!has('contracts', k.template)) bad(`unknown contract "${k.template}"`);
       if (!has('settlements', k.giver)) bad(`unknown contract giver "${k.giver}"`);
+      if (k.to != null && !has('settlements', k.to)) bad(`unknown contract destination "${k.to}"`);
+      if (k.good != null && !has('markets', k.good)) bad(`unknown contract goods "${k.good}"`);
     }
     return problems;
   }

@@ -155,6 +155,13 @@
       }
     }
     for (const k of Object.values(C.contracts || {})) {
+      if (!['hunt', 'escort', 'delivery'].includes(k.kind)) err(`contract ${k.id}: unknown kind ${k.kind}`);
+      if (!(k.distance?.[1] >= k.distance?.[0])) err(`contract ${k.id}: bad distance`);
+      if (k.kind === 'delivery') {
+        if (!(k.goodsQty?.[0] >= 1 && k.goodsQty[1] >= k.goodsQty[0])) err(`contract ${k.id}: bad goodsQty`);
+        if (!(k.timeLimitDays > 0) || !(k.reward?.goldBase >= 0)) err(`contract ${k.id}: needs a time limit and reward`);
+        continue;
+      }
       if (!C.party_templates?.[k.band]) err(`contract ${k.id}: unknown band ${k.band}`);
       for (const id of k.troopPool || []) if (!C.troops?.[id]) err(`contract ${k.id}: unknown troop ${id}`);
       if (!(k.timeLimitDays > 0) || !(k.minTroops >= 1 && k.maxTroops >= k.minTroops)) err(`contract ${k.id}: bad limits`);

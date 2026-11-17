@@ -14,9 +14,50 @@ _Spec: GDD §3–§10 and §14 Gate D._
 | 4.6 Faction reputation and fort ownership | ✅ 0.19.0 |
 | 4.7 Quest and dialogue interpreter | ✅ 0.20.0 |
 | 4.8–4.12 Q1–Q4 and the companion Mara | ✅ Q1 0.21.0 · Q2 0.22.0 · Mara 0.23.0 · Q3 0.24.0 · Q4 0.25.0 |
-| 4.13 Escort and delivery contracts | ⬜ |
+| 4.13 Escort and delivery contracts | ✅ 0.26.0 |
 | 4.14 Trade-world interactions and regional news | ⬜ |
 | 4.15 Gate D acceptance | ⬜ |
+
+---
+
+## Slice 12 — 0.26.0: Escort and delivery contracts (2026-11-17)
+
+### What's in (GDD §4 Repeatable work: "Bandit hunt: defeat a spawned bandit party; gold/renown. Escort: follow a caravan to an existing settlement; gold and friendly reputation. Delivery: bring goods or a message between settlements; gold or discounts.")
+- **Three kinds of work on every town board:** Stonebridge and Eastwatch now post a Bandit Hunt, a Caravan Escort and a Delivery at once.
+  - You take one contract at a time. The other offers stay posted, and the taken one is replaced at the next 3-day refresh.
+  - Each card says what the job asks, the distance, the time limit and the reward. Accept is greyed out, with the reason, while another contract is active or a deposit is unaffordable.
+- **Caravan Escort:**
+  - A gold-ringed **Escort** caravan from the town's own kingdom rolls toward a destination 12–32 leagues away, **but only while you stay within 6 leagues of it**. Leave it and it waits; riding up to it just puts you at its side.
+  - A Reaver **ambush**, sized to 0.5–0.9× your strength, lies still 40–70% of the way along the road. It looks like any other band and springs only when you pass within 3.5 leagues, with its own line ("…go for the caravan you are escorting").
+  - Arrive at the destination together and the drivers pay on the spot: 30 + 3 crowns per league, +4 renown, XP, and +10 with the giver's kingdom (friendly reputation).
+  - Off-screen bands and patrols leave the caravan and the ambush alone.
+- **Delivery:**
+  - **Goods:** 3–5 of one trade good go into your cargo, and they weigh. You pay a deposit at their base value, returned with the pay. Arrive without the full load and it can't be delivered until you have it again.
+  - **Sealed letter:** 40% of offers, nothing to carry.
+  - Paid on arrival: 20 + 2 crowns per league, +2 renown, XP, and +10 with the giver's kingdom.
+- **Shared lifecycle:**
+  - The deadline (4–5 days) or abandoning costs −2 renown and clears any caravan and ambush.
+  - The HUD shows "escort to Highmere · 3.2d left" or "deliver to Redfield · …".
+  - Saves keep escort caravans, ambushes, destinations, goods and deposits. Boards are saved per template, older single-offer saves load, and import checks destinations and goods.
+- **Fixes found while testing:**
+  - A caravan that rolled in a moment before you left the job "done" but unpaid, with nowhere to collect. Escort and delivery now pay on the spot.
+  - The ambush used the normal 9-league detection and sprang as you left town. It now waits in place and springs at close range.
+
+### Checks
+- `tests/escort-delivery.test.js` (7 tests) covers:
+  - every board posting all three; rewards growing with distance
+  - the escort waiting when left behind, no encounter when riding up to it, the ambush on the road, then paid together (with reputation)
+  - arriving without the caravan, and the deadline clean-up
+  - no off-screen fights, saved escort parties
+  - goods delivery: deposit, cargo, short load refused, paid back; letter delivery; unaffordable deposits refused
+  - the board refilling, and old save format
+- `tests/contracts.test.js` was updated for boards keeping their other offers.
+- 268 tests pass; lint clean; 30-day simulations normal (6–13 contracts per seed, nobody stuck).
+- Browser, with real clicks:
+  - The Stonebridge board showed Bandit Hunt, Caravan Escort (to Highmere, 18 leagues, 6 Looters + 4 Reavers in wait) and Delivery (5 Iron to Redfield, 140-crown deposit). Accepted the escort; the other offers greyed out.
+  - On the map the gold Escort caravan waited at Stonebridge, the ambush looked like ordinary "Reavers 10", and the HUD read "escort to Highmere · 4.0d left".
+  - Rode north and the ambush sprang. After the debug win, rode on; the caravan arrived and paid (contract closed, +123 crowns, Valedorn 12 including +2 for the Reavers).
+  - That run led to the "ride beside the caravan" and ambush-text polish. The preview save was then restored.
 
 ---
 

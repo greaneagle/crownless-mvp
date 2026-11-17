@@ -15,6 +15,7 @@
   const IGNORE_AFTER = { retreat: 0.25, toll: 1, intimidate: 1, capture: 1 }; // days
   const CARAVAN_EFFECT = 0.08; // scarcity change at the destination (GDD: ±0.05–0.1)
   const WAVE_SIZE = 8;
+  const AMBUSH_RANGE = 3.5; // map units: a contract ambush springs only on travellers passing close
 
   // The world sim runs in steps inside a span of time the clock has already advanced, so it keeps
   // its own "now" for spawn timers, deaths and cooldowns (null outside a tick → the campaign day).
@@ -104,6 +105,7 @@
     if (!hostileTo(c, t) || !playerOnMap(c) || now(c) < p.ignoreUntil) return false;
     if (dist(p, c.world) > t.detection) return false;
     if (p.questTag) return !p.camp; // a story ambush springs whatever the odds; a camp waits to be found
+    if (p.ambush) return dist(p, c.world) <= AMBUSH_RANGE; // lies still on the escort road and springs as you pass
     return A().troopsPower(p.troops) >= CHASE_RATIO * A().playerPower(c);
   }
 
@@ -111,7 +113,7 @@
     let best = null;
     for (const o of c.parties) {
       // Quest bands are the story's: patrols leave them be and they leave caravans alone.
-      if (o === p || o.questTag || tpl(o.template).kind !== kind) continue;
+      if (o === p || o.questTag || o.ambush || o.escortTo || tpl(o.template).kind !== kind) continue;
       const d = dist(p, o);
       if (d <= range && (!best || d < best.d)) best = { o, d };
     }
@@ -141,6 +143,10 @@
       }
       return;
     }
+    if (p.ambush && !wantsPlayer(c, p)) {
+      p.tx = p.ty = null; // waiting in the ditch
+      return;
+    }
     if (t.kind === 'bandit') {
       if (wantsPlayer(c, p)) {
         p.chasing = 'player';
@@ -153,14 +159,14 @@
       }
       p.alerted = false;
       // Bands keep clear of patrols they can see (quest bands hold their ground).
-      const threat = p.questTag ? null : nearest(c, p, 'patrol', t.detection);
+      const threat = p.questTag || p.ambush ? null : nearest(c, p, 'patrol', t.detection);
       if (threat && A().troopsPower(threat.troops) > A().troopsPower(p.troops)) {
         p.chasing = 'fleeing';
         p.tx = clamp(p.x * 2 - threat.x, 2, 98);
         p.ty = clamp(p.y * 2 - threat.y, 2, 98);
         return;
       }
-      const prey = p.questTag ? null : nearest(c, p, 'caravan', t.detection);
+      const prey = p.questTag || p.ambush ? null : nearest(c, p, 'caravan', t.detection);
       if (prey) {
         p.chasing = prey.id;
         [p.tx, p.ty] = [prey.x, prey.y];
@@ -187,6 +193,13 @@
         const s = pick(c, own);
         [p.tx, p.ty] = [s.mapX, s.mapY];
       }
+    } else if (p.escortTo) {
+      // An escorted caravan rolls toward its destination only while the player rides with it.
+      const s = settlement(p.escortTo);
+      const range = CL.content.get('contracts', 'escort').escortRange;
+      if (dist(p, c.world) <= range) [p.tx, p.ty] = [s.mapX, s.mapY];
+      else p.tx = p.ty = null;
+      if (W().mapDist(p.x, p.y, s.mapX, s.mapY) <= ARRIVE) CL.contracts.onCaravanArrived(c, p);
     } else {
       const s = settlement(t.route[(p.routeIndex + 1) % t.route.length]);
       [p.tx, p.ty] = [s.mapX, s.mapY];
@@ -224,10 +237,10 @@
   /** Bandits vs caravans and patrols vs bandits fight it out off-screen. */
   function resolveContacts(c) {
     for (const a of [...c.parties]) {
-      if (!c.parties.includes(a) || a.questTag || tpl(a.template).kind !== 'bandit') continue;
+      if (!c.parties.includes(a) || a.questTag || a.ambush || tpl(a.template).kind !== 'bandit') continue;
       for (const b of [...c.parties]) {
         const kb = tpl(b.template).kind;
-        if (b === a || b.questTag || !c.parties.includes(b) || (kb !== 'caravan' && kb !== 'patrol')) continue;
+        if (b === a || b.questTag || b.escortTo || !c.parties.includes(b) || (kb !== 'caravan' && kb !== 'patrol')) continue;
         if (dist(a, b) > CONTACT) continue;
         const r = A().resolveParties(c, a, b);
         if (tpl(r.loser.template).kind === 'caravan') {
@@ -299,7 +312,8 @@
       const hostile = hostileTo(c, t);
       const spec = p.questTag ? CL.story.bandSpec(p.questTag, c) : null;
       const map = spec?.map || W().battleMapAt(c.world.x, c.world.y); // a story battle may name its field
-      const text = spec?.text || (hostile && t.hostileText ? t.hostileText : t.text);
+      const ambushText = p.ambush ? 'Reavers burst from cover and go for the caravan you are escorting. Stand and fight, or lose it.' : null;
+      const text = spec?.text || ambushText || (hostile && t.hostileText ? t.hostileText : t.text);
       return { kind: 'party', name: spec?.name || t.name, text, troops: p.troops, hostile, def: battleDef(t, p.troops, map), party: p, t };
     }
     if (g.siteId) {
@@ -490,6 +504,8 @@
       if (Number.isInteger(p.contractId)) q.contractId = p.contractId;
       if (typeof p.questTag === 'string' && /^[a-z0-9_]{1,40}$/.test(p.questTag)) q.questTag = p.questTag;
       if (q.questTag && p.camp === true) q.camp = true;
+      if (p.ambush === true) q.ambush = true;
+      if (t.kind === 'caravan' && CL.content.table('settlements')[p.escortTo]) q.escortTo = p.escortTo;
       if (num(p.anchor?.x) && num(p.anchor?.y)) q.anchor = { x: clamp(p.anchor.x, 0, 100), y: clamp(p.anchor.y, 0, 100) };
       if (t.kind === 'caravan') {
         q.routeIndex = Number.isInteger(p.routeIndex) ? clamp(p.routeIndex, 0, t.route.length - 1) : 0;

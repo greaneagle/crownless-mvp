@@ -298,20 +298,38 @@
     const sid = c.world.location;
     const cards = [];
     const k = c.contract;
+    const name = (id) => CL.content.get('settlements', id).name;
+    const leagues = (a, b) => {
+      const [x, y] = [CL.content.get('settlements', a), CL.content.get('settlements', b)];
+      return Math.round(CL.world.mapDist(x.mapX, x.mapY, y.mapX, y.mapY));
+    };
+    const fill = (text, o) => text.replace('{giver}', name(o.giver)).replace('{to}', o.to ? name(o.to) : '');
+    const rewardLine = (o) => `Reward: ${o.reward.gold} crowns${o.deposit ? ` (${o.deposit} of it your deposit back)` : ''} · +${o.reward.renown} renown · +${o.reward.xp} XP`;
     const after = (fn) => () => {
       const r = fn();
       if (r?.ok === false) message(r.reason);
       CL.save.write();
       renderContracts();
     };
+    /** What the job asks, for offers and the active card alike. */
+    const task = (o) => {
+      const t = CL.content.get('contracts', o.template);
+      if (t.kind === 'escort') {
+        return [`Ride beside the caravan to ${name(o.to)}, ${leagues(o.giver, o.to)} leagues away. It only rolls while you stay within ${t.escortRange} leagues of it.`, `Reavers (${describeTroops(o.troops)}) lie in wait on the road.`];
+      }
+      if (t.kind === 'delivery') {
+        return o.letter
+          ? [`Carry a sealed letter to ${name(o.to)}, ${leagues(o.giver, o.to)} leagues away.`]
+          : [`Carry ${o.qty} ${CL.content.get('markets', o.good).name} to ${name(o.to)}, ${leagues(o.giver, o.to)} leagues away. Deposit: ${o.deposit} crowns, paid back on delivery.`];
+      }
+      return [`Destroy the marked band (${describeTroops(o.troops)}).`];
+    };
     if (k) {
       const t = CL.content.get('contracts', k.template);
-      const giver = CL.content.get('settlements', k.giver).name;
-      const reward = `Reward: ${k.reward.gold} crowns · +${k.reward.renown} renown · +${k.reward.xp} XP`;
       if (k.status === 'done') {
-        const here = sid === k.giver;
+        const here = sid === (k.payAt || k.giver);
         cards.push(
-          contractCard(`${t.name} — complete`, [here ? 'The band is broken. Your employer counts out your pay.' : `Return to ${giver} to collect.`, reward], [
+          contractCard(`${t.name} — complete`, [here ? 'The band is broken. Your employer counts out your pay.' : `Return to ${name(k.payAt || k.giver)} to collect.`, rewardLine(k)], [
             [
               'Collect payment',
               after(() => {
@@ -323,41 +341,36 @@
           ]),
         );
       } else {
-        const left = K.daysLeft(c);
+        const where = t.kind === 'hunt' ? [`It is camped about ${Math.round(CL.world.mapDist(CL.content.get('settlements', k.giver).mapX, CL.content.get('settlements', k.giver).mapY, k.x, k.y))} leagues from ${name(k.giver)}.`] : [];
         cards.push(
           contractCard(
-            `${t.name} — for ${giver}`,
-            [
-              `Destroy the marked band (${describeTroops(k.troops)}). It is camped about ${Math.round(CL.world.mapDist(CL.content.get('settlements', k.giver).mapX, CL.content.get('settlements', k.giver).mapY, k.x, k.y))} leagues from ${giver}.`,
-              `Time left: ${left.toFixed(1)} days.`,
-              reward,
-            ],
+            `${t.name} — for ${name(k.giver)}`,
+            [...task(k), ...where, `Time left: ${K.daysLeft(c).toFixed(1)} days.`, rewardLine(k)],
             [['Abandon (−2 renown)', after(() => K.abandon(c))]],
           ),
         );
       }
     }
-    const offer = K.offerAt(c, sid);
-    if (offer && !k) {
-      const t = CL.content.get('contracts', offer.template);
+    const offers = K.offersAt(c, sid);
+    for (const o of offers) {
+      const t = CL.content.get('contracts', o.template);
+      const intro = fill(o.letter ? t.offerLetter : t.offer, o);
+      const short = o.deposit && c.gold < o.deposit;
       cards.push(
         contractCard(
           `Offer: ${t.name}`,
-          [
-            t.offer,
-            `Target: ${describeTroops(offer.troops)}. Time limit: ${offer.days} days.`,
-            `Reward: ${offer.reward.gold} crowns · +${offer.reward.renown} renown · +${offer.reward.xp} XP`,
-          ],
-          [['Accept contract', after(() => K.accept(c, sid))]],
+          [intro, ...task(o), `Time limit: ${o.days} days.`, rewardLine(o)],
+          [[k ? 'Finish your current contract first' : short ? `Need ${o.deposit} crowns for the deposit` : 'Accept contract', after(() => K.accept(c, sid, o.template)), Boolean(k) || short]],
         ),
       );
-    } else if (offer && k) {
-      cards.push(contractCard('More work posted', ['Finish your current contract before taking another.'], []));
-    } else if (!CL.realm.welcomes(c, sid)) {
+    }
+    if (!offers.length && !CL.realm.welcomes(c, sid)) {
       const f = CL.content.get('factions', CL.realm.owner(sid, c));
       cards.push(
         contractCard('No work for enemies', [`The ${f.name} count you Hostile and post nothing for you. Win back their favour by fighting Road Reavers on their land.`], []),
       );
+    } else if (!offers.length) {
+      cards.push(contractCard('Nothing posted', ['The board is bare for now. New work goes up every few days.'], []));
     }
     $('#contractsScreen').replaceChildren(...cards);
   }
@@ -390,7 +403,7 @@
       else buttons.push(choice('Leave', 'Come back another time', () => changeMode('map')));
     } else {
       // A kingdom's patrol or caravan: you may still fall on them, at a price (GDD §10).
-      const f = e.kind === 'party' && e.t.faction && e.t.kind !== 'bandit' ? CL.content.get('factions', e.t.faction) : null;
+      const f = e.kind === 'party' && e.t.faction && e.t.kind !== 'bandit' && !e.party.escortTo ? CL.content.get('factions', e.t.faction) : null;
       buttons.push(choice('Leave', 'Go on your way', () => changeMode('map')));
       if (f) {
         const odds = Math.round(A.winChance(A.playerPower(c), A.troopsPower(e.troops)) * 100);

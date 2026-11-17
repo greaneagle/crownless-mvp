@@ -495,8 +495,8 @@
   function drawParty(p) {
     const t = CL.content.get('party_templates', p.template);
     const { x, y, crowded } = CL.world.partyDrawPos(p); // beside a landmark, not on its name
-    if (p.contractId || p.questTag) {
-      // Contract or quest target: pulsing gold ring.
+    if ((p.contractId && !p.ambush) || p.questTag) {
+      // Contract or quest target (or the caravan you escort): pulsing gold ring.
       const pulse = 17 + Math.sin(performance.now() / 250) * 2;
       ctx.save();
       ctx.strokeStyle = '#ffd34d';
@@ -576,8 +576,8 @@
     }
     ctx.restore();
     if (!crowded) {
-      const name = p.contractId ? 'Contract target' : p.questTag ? (t.kind === 'bandit' ? 'Quest: Reavers' : 'Quest: Column') : t.kind === 'bandit' ? 'Reavers' : t.kind === 'patrol' ? 'Patrol' : 'Caravan';
-      label(`${name} ${n}`, x, y + 20, p.contractId || p.questTag ? '#ffd34d' : hostile ? '#ffb3a1' : '#e8f0ff');
+      const name = p.escortTo ? 'Escort' : p.contractId && !p.ambush ? 'Contract target' : p.questTag ? (t.kind === 'bandit' ? 'Quest: Reavers' : 'Quest: Column') : t.kind === 'bandit' ? 'Reavers' : t.kind === 'patrol' ? 'Patrol' : 'Caravan';
+      label(`${name} ${n}`, x, y + 20, (p.contractId && !p.ambush) || p.questTag ? '#ffd34d' : hostile ? '#ffb3a1' : '#e8f0ff');
     }
   }
 
@@ -701,11 +701,7 @@
       (c.companion ? ` + ${CL.companion.def(c.companion.id).name}${c.companion.away ? ' (scouting ahead)' : CL.companion.fit(c) ? '' : ' (wounded)'}` : '') +
       ` · food ${food >= 10 ? Math.floor(food) : food.toFixed(1)}d · morale ${Math.round(c.morale)}` +
       (Object.keys(c.cargo).length ? ` · cargo ${CL.trade.cargoWeight(c)}/${CL.trade.capacity(c)}` : '') +
-      (c.contract
-        ? c.contract.status === 'done'
-          ? ' · contract done — collect pay'
-          : ` · contract ${Math.max(0, CL.contracts.daysLeft(c)).toFixed(1)}d left`
-        : '') +
+      (c.contract ? ` · ${CL.contracts.summary(c)}` : '') +
       (CL.story.currentQuest(c) ? ` · ▸ ${CL.story.currentQuest(c).title}` : '');
     $('#topLeft').classList.toggle('warn', food < 1 || c.morale < CL.upkeep.MORALE.desertBelow);
     $('#waitBtn').textContent = CL.game.waiting ? 'Stop waiting' : 'Wait';
