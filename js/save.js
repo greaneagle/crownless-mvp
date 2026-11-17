@@ -1,27 +1,48 @@
 // @ts-check
 /* Crownless save service.
  *
- * Schema v2 (key `crownless_save`): individual soldiers with troop IDs, XP and wound timers,
- * an item inventory and a campaign day clock. Every write first copies the previous save to
- * `crownless_save_backup`; a corrupt main save falls back to the backup.
+ * Schema v3 (key `crownless_save`, from build 1.2.0; docs/SAVE-FORMAT.md): individual soldiers with
+ * troop IDs, XP and wound timers, the item inventory, the campaign day clock and every system's state,
+ * plus the world the save belongs to (`worldId`) and the build that wrote it (`contentVersion`).
+ *
+ * Loading (design §24.7, V2-01). Anything read back from storage or a file goes through `fromRaw`:
+ *   1. structural check for its own schema version: a save missing the fields its version always
+ *      had (for example a near-empty `{ "version": 2 }`) is rejected, not filled with defaults;
+ *   2. the save must belong to this world;
+ *   3. migrations step it up one schema version at a time (MIGRATIONS), each a pure function;
+ *   4. `sanitize` repairs it field by field: unknown IDs and bad values fall back to safe defaults.
+ * A save migrated on load is also kept, as it was, in `crownless_save_v<n>` (written once).
+ *
+ * Writing. Every write keeps the last known good save: the previous save is copied to
+ * `crownless_save_backup` only if it is itself complete, and a write only counts once the stored text
+ * reads back unchanged. A corrupt or partial main save falls back to the backup.
  *
  * Schema v1 (key `crownless_v03_party`, build 0.3.x) held aggregate counts. It is migrated on
- * first load (infantry → levy, archers → hunter) and left untouched as a further backup. */
+ * first load (infantry → levy, archers → hunter) and left untouched as a further backup.
+ * All storage goes through CL.storage (js/storage.js). */
 (function (root) {
   'use strict';
   const CL = root.Crownless;
 
-  const VERSION = 2;
+  const VERSION = 3;
   const KEY = 'crownless_save';
   const BACKUP_KEY = 'crownless_save_backup';
   const LEGACY_KEY = 'crownless_v03_party';
+  /** @param {number} version @returns {string} key holding a save exactly as it was before migrating */
+  const preMigrationKey = (version) => `crownless_save_v${version}`;
   const MAX_VALUE = 99999;
   const MAX_ROSTER = 200;
   const V1_TROOP = { infantry: 'levy', archer: 'hunter' };
   const WOUND_DAYS = 2;
+  const AUTOSAVE_DAYS = 1; // while travelling or waiting on the map, save once per game day
 
+  /** @param {unknown} n @returns {n is number} */
   const isCount = (n) => typeof n === 'number' && Number.isFinite(n) && n >= 0;
+  /** @param {unknown} n @param {number} fallback */
   const count = (n, fallback) => (isCount(n) ? Math.min(MAX_VALUE, Math.floor(n)) : fallback);
+  /** @param {unknown} v @returns {v is Record<string, any>} */
+  const isObject = (v) => Boolean(v) && typeof v === 'object' && !Array.isArray(v);
+  const worldId = () => CL.world.map().id;
 
   /**
    * A brand-new campaign (GDD §5): the background's kit — 60 crowns, worn sword, clothing,
@@ -32,6 +53,8 @@
     /** @type {Campaign} */
     const c = {
       version: VERSION,
+      worldId: worldId(), // the world (content package) this campaign belongs to
+      contentVersion: CL.BUILD, // the build that last wrote it
       gold: 0,
       renown: 0,
       battles: 0,
@@ -80,17 +103,124 @@
     return s;
   }
 
-  const knownTroop = (id) => Boolean(CL.content.table('troops')[id]) && id !== 'hero';
+  /** @param {unknown} id */
+  const knownTroop = (id) => typeof id === 'string' && Boolean(CL.content.table('troops')[id]) && id !== 'hero';
+  /** @param {string} id */
   const knownItem = (id) => Boolean(CL.content.table('items')[id]);
 
+  // ---- Structure: what every save of a schema version always had ----
+
+  // Each check is [field, kind]. A v2 save may come from any build since 0.5.0, so only the fields
+  // v2 had from the start are required; later v2 fields get their defaults. A v3 save is always
+  // written whole by 1.2.0 or later, so all of it is required.
+  /** @type {Array<[string, string]>} */
+  const V2_FIELDS = [
+    ['gold', 'number'],
+    ['renown', 'number'],
+    ['battles', 'number'],
+    ['victories', 'number'],
+    ['day', 'number'],
+    ['nextSoldierId', 'number'],
+    ['roster', 'array'],
+    ['inventory', 'object'],
+    ['lastResolvedBattle', 'number'],
+  ];
+  /** @type {Record<number, Array<[string, string]>>} */
+  const REQUIRED = {
+    1: [['gold', 'number']],
+    2: V2_FIELDS,
+    3: [
+      ...V2_FIELDS,
+      ['worldId', 'string'],
+      ['contentVersion', 'string'],
+      ['world', 'object'],
+      ['character', 'object|null'],
+      ['equipment', 'object'],
+      ['food', 'number'],
+      ['morale', 'number'],
+      ['nextWagesDay', 'number'],
+      ['markets', 'object'],
+      ['cargo', 'object'],
+      ['rngSeed', 'number'],
+      ['parties', 'array'],
+      ['partySpawns', 'object'],
+      ['nextPartyId', 'number'],
+      ['contract', 'object|null'],
+      ['contractOffers', 'object'],
+      ['reputation', 'object'],
+      ['owners', 'object'],
+      ['story', 'object'],
+      ['companion', 'object|null'],
+      ['news', 'object'],
+    ],
+  };
+
+  /** @param {unknown} v @param {string} kind */
+  function isKind(v, kind) {
+    if (kind === 'number') return typeof v === 'number' && Number.isFinite(v);
+    if (kind === 'string') return typeof v === 'string';
+    if (kind === 'array') return Array.isArray(v);
+    if (kind === 'object') return isObject(v);
+    if (kind === 'object|null') return v === null || isObject(v);
+    return false;
+  }
+
   /**
-   * Validate a parsed v2 save; unknown IDs and malformed entries are dropped (GDD §13).
-   * @param {any} d parsed JSON of unknown shape @returns {Campaign | null} null if it isn't a v2 save
+   * Is this a complete save of a version this build can read? Never changes `d`.
+   * @param {unknown} d parsed JSON
+   * @returns {{ problems: string[], newer?: boolean, otherWorld?: boolean }}
+   */
+  function check(d) {
+    if (!isObject(d)) return { problems: ['it is not a saved campaign'] };
+    const v = d.version;
+    if (!Number.isInteger(v) || v < 1) return { problems: ['it has no save version'] };
+    if (v > VERSION) return { problems: [`it uses save version ${v}; this build reads up to ${VERSION}`], newer: true };
+    const problems = [];
+    for (const [field, kind] of REQUIRED[v]) {
+      if (!(field in d)) problems.push(`"${field}" is missing`);
+      else if (!isKind(d[field], kind)) problems.push(`"${field}" is not a valid ${kind.replace('|null', '')}`);
+    }
+    if (problems.length) return { problems };
+    if (v >= 3 && d.worldId !== worldId()) return { problems: [`it belongs to another world ("${d.worldId}")`], otherWorld: true };
+    return { problems: [] };
+  }
+
+  // ---- Migrations: one pure step per schema version ----
+
+  /** Steps from schema n to n + 1, applied in order. v1 → v2 is `migrateV1` (it rebuilds the roster). */
+  /** @type {Record<number, (d: Record<string, any>) => Record<string, any>>} */
+  const MIGRATIONS = {
+    // 2 → 3 (build 1.2.0, V2-01): the save names its world and the build that wrote it. Every v2
+    // save was a Border March campaign; which build wrote it was never recorded.
+    2: (d) => ({ ...d, version: 3, worldId: 'border_march', contentVersion: 'unknown' }),
+  };
+
+  /**
+   * Step a v2+ save up to the current schema. Pure: returns a new object, `d` is unchanged.
+   * @param {Record<string, any>} d @returns {Record<string, any> | null} null if a step is missing
+   */
+  function migrate(d) {
+    let x = d;
+    while (x.version < VERSION) {
+      const step = MIGRATIONS[x.version];
+      if (!step) return null;
+      x = step(x);
+    }
+    return x;
+  }
+
+  /**
+   * Repair a parsed save field by field: unknown IDs and malformed entries are dropped and missing
+   * fields get their defaults (GDD §13). Older schema versions (v2) are migrated first. This does not
+   * check that the save is complete; loading and importing do that first (`check`, `fromRaw`).
+   * @param {any} d parsed JSON of unknown shape @returns {Campaign | null} null if it isn't a v2+ save
    */
   function sanitize(d) {
-    if (d?.version !== VERSION) return null;
+    if (!isObject(d) || !Number.isInteger(d.version) || d.version < 2 || d.version > VERSION) return null;
+    d = migrate(d);
+    if (!d) return null;
     const s = starter();
-    for (const k of ['gold', 'renown', 'battles', 'victories', 'lastResolvedBattle']) s[k] = count(d[k], s[k]);
+    for (const k of /** @type {const} */ (['gold', 'renown', 'battles', 'victories', 'lastResolvedBattle'])) s[k] = count(d[k], s[k]);
     s.day = isCount(d.day) ? Math.min(MAX_VALUE, d.day) : 0;
     if (Array.isArray(d.roster)) {
       s.roster = [];
@@ -112,7 +242,7 @@
     s.character = CL.character.sanitize(d.character);
     s.equipment = CL.character.sanitizeEquipment(d.equipment);
     s.inventory = {};
-    if (d.inventory && typeof d.inventory === 'object') {
+    if (isObject(d.inventory)) {
       for (const [id, n] of Object.entries(d.inventory)) {
         if (knownItem(id) && isCount(n) && n >= 1) s.inventory[id] = Math.min(MAX_VALUE, Math.floor(n));
       }
@@ -125,11 +255,11 @@
     CL.news.sanitize(s, d); // recent events and news lines
     CL.parties.sanitize(s, d); // world parties and the RNG seed
     CL.contracts.sanitize(s, d); // after parties: an active hunt needs its band
-    return s;
+    return s; // worldId and contentVersion: this world and this build, from starter()
   }
 
   /**
-   * Convert a 0.3.x aggregate save into a v2 roster.
+   * Convert a 0.3.x aggregate save into a current campaign.
    * @param {any} d @returns {Campaign | null}
    */
   function migrateV1(d) {
@@ -137,7 +267,8 @@
     const c = starter();
     c.roster = [];
     c.nextSoldierId = 1;
-    for (const k of ['gold', 'renown', 'battles', 'victories']) c[k] = count(d[k], c[k]);
+    for (const k of /** @type {const} */ (['gold', 'renown', 'battles', 'victories'])) c[k] = count(d[k], c[k]);
+    /** @param {'infantry' | 'archer'} role @param {unknown} n @param {boolean} wounded */
     const add = (role, n, wounded) => {
       for (let i = 0; i < Math.min(count(n, 0), MAX_ROSTER); i++) {
         addSoldier(c, V1_TROOP[role], wounded ? WOUND_DAYS : null);
@@ -151,39 +282,77 @@
     return c;
   }
 
-  function read(key) {
-    const text = root.localStorage.getItem(key);
-    return text == null ? null : JSON.parse(text);
+  /**
+   * The load path for any saved campaign (storage, a file, the pre-import slot): check its structure
+   * and world, migrate it, repair it. Never touches storage.
+   * @param {unknown} d parsed JSON
+   * @returns {{ campaign: Campaign | null, problems: string[], from?: number, newer?: boolean, otherWorld?: boolean }}
+   */
+  function fromRaw(d) {
+    const r = check(d);
+    if (r.problems.length) return { campaign: null, ...r };
+    const raw = /** @type {Record<string, any>} */ (d);
+    const campaign = raw.version === 1 ? migrateV1(raw) : sanitize(raw);
+    if (!campaign) return { campaign: null, problems: ['it could not be read'] };
+    return { campaign, problems: [], from: raw.version };
   }
 
-  function tryLoad(key, convert) {
+  /**
+   * Read and load one storage key. A save migrated on the way in is also kept as it was.
+   * @param {string} key @returns {Campaign | null}
+   */
+  function loadKey(key) {
+    const text = CL.storage.get(key);
+    if (text == null) return null;
+    let d;
     try {
-      return convert(read(key));
+      d = JSON.parse(text);
     } catch (e) {
       CL.diag.log('warn', 'Cannot read save', { key, error: String(e) });
       return null;
     }
+    const r = fromRaw(d);
+    if (!r.campaign) {
+      CL.diag.log('warn', 'Save rejected', { key, problems: r.problems });
+      return null;
+    }
+    if (r.from >= 2 && r.from < VERSION) {
+      const keep = preMigrationKey(r.from);
+      if (CL.storage.get(keep) == null) CL.storage.set(keep, text);
+      CL.diag.log('info', 'Save migrated', { key, from: r.from, to: VERSION, keptAs: keep });
+    }
+    return r.campaign;
   }
 
   /** Load the best available save. Sets CL.save.existed so the title can offer Continue. */
   function load() {
     CL.save.existed = true;
-    const main = tryLoad(KEY, sanitize);
-    if (main) return main;
-    const backup = tryLoad(BACKUP_KEY, sanitize);
-    if (backup) {
-      CL.diag.log('warn', 'Main save unreadable; restored backup');
-      // Tell the player rather than quietly losing their last few minutes.
-      CL.save.notice = 'Your latest save could not be read, so the one before it was loaded. You may have lost a few minutes.';
-      return backup;
+    let c = loadKey(KEY);
+    if (!c) {
+      c = loadKey(BACKUP_KEY);
+      if (c) {
+        CL.diag.log('warn', 'Main save unreadable; restored backup');
+        // Tell the player rather than quietly losing their last few minutes.
+        CL.save.notice = 'Your latest save could not be read, so the one before it was loaded. You may have lost a few minutes.';
+      }
     }
-    const legacy = tryLoad(LEGACY_KEY, migrateV1);
-    if (legacy) {
-      CL.diag.log('info', 'Migrated 0.3 save to v2', { soldiers: legacy.roster.length });
-      return legacy;
+    if (!c) {
+      const text = CL.storage.get(LEGACY_KEY);
+      let d = null;
+      try {
+        d = text == null ? null : JSON.parse(text);
+      } catch {
+        d = null;
+      }
+      c = d?.version === 1 ? fromRaw(d).campaign : null;
+      if (c) CL.diag.log('info', 'Migrated 0.3 save', { soldiers: c.roster.length });
     }
-    CL.save.existed = false;
-    return starter();
+    if (!c) {
+      CL.save.existed = false;
+      c = starter();
+    }
+    CL.save.lastSavedDay = c.day;
+    return c;
   }
 
   /**
@@ -199,26 +368,58 @@
     });
   }
 
+  /** Is this stored text a complete save (good enough to keep as the backup)? @param {string} text */
+  function isComplete(text) {
+    try {
+      return check(JSON.parse(text)).problems.length === 0;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Save the current campaign. The previous save becomes the backup only if it is complete, and the
+   * write only counts once the stored text reads back unchanged.
+   * @returns {boolean} true when the campaign is safely stored
+   */
   function write() {
     if (CL.save.stale) {
       CL.ui?.message?.('This game is open in another tab. Reload this page to carry on here.');
       return false;
     }
-    try {
-      const previous = root.localStorage.getItem(KEY);
-      if (previous) root.localStorage.setItem(BACKUP_KEY, previous);
-      root.localStorage.setItem(KEY, JSON.stringify(CL.campaign));
-      CL.save.lastSavedAt = Date.now();
-      CL.save.lastError = null;
-      CL.diag.log('info', 'Campaign saved', { day: CL.campaign.day, soldiers: CL.campaign.roster.length });
-      return true;
-    } catch (e) {
+    const c = CL.campaign;
+    c.contentVersion = CL.BUILD;
+    const text = JSON.stringify(c);
+    const previous = CL.storage.get(KEY);
+    if (previous && isComplete(previous) && !CL.storage.set(BACKUP_KEY, previous)) {
+      CL.diag.log('warn', 'Backup not updated; the older backup is kept');
+    }
+    if (!CL.storage.set(KEY, text) || CL.storage.get(KEY) !== text) {
+      const error = CL.storage.lastError || 'the save did not read back';
       // GDD §13: browser storage can fail or be cleared — tell the player to export.
       if (!CL.save.lastError) CL.ui?.message?.('Could not save in this browser — use Save & export to keep your progress.');
-      CL.save.lastError = String(e);
-      CL.diag.log('error', 'Save failed', { error: String(e) });
+      CL.save.lastError = error;
+      CL.diag.log('error', 'Save failed', { error });
       return false;
     }
+    CL.save.lastSavedAt = Date.now();
+    CL.save.lastSavedDay = c.day;
+    CL.save.lastError = null;
+    CL.diag.log('info', 'Campaign saved', { day: c.day, soldiers: c.roster.length });
+    return true;
+  }
+
+  /**
+   * Periodic autosave while time passes on the map (design §24.7): once per game day since the last
+   * save. Called by the world map's update; a battle, a settlement or the page closing save anyway.
+   * @returns {boolean} true if it saved now
+   */
+  function autosave() {
+    const c = CL.campaign;
+    if (!c?.character) return false;
+    if (CL.save.lastSavedDay == null) CL.save.lastSavedDay = c.day;
+    if (c.day - CL.save.lastSavedDay < AUTOSAVE_DAYS) return false;
+    return write();
   }
 
   CL.save = {
@@ -227,17 +428,25 @@
     BACKUP_KEY,
     LEGACY_KEY,
     WOUND_DAYS,
+    AUTOSAVE_DAYS,
+    MIGRATIONS,
+    preMigrationKey,
     starter,
     addSoldier,
+    check,
+    migrate,
     sanitize,
     migrateV1,
+    fromRaw,
     existed: false,
     lastSavedAt: null,
+    lastSavedDay: null,
     lastError: null,
     stale: false,
     notice: null,
     load,
     write,
+    autosave,
     bindTabs,
   };
 })(typeof window !== 'undefined' ? window : globalThis);

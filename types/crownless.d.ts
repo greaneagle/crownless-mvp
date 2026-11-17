@@ -107,7 +107,12 @@ declare global {
 
   /** The persistent campaign: the thing that is saved (CL.campaign). */
   interface Campaign {
+    /** Save schema version (3 from build 1.2.0). */
     version: number;
+    /** The world (content package) this campaign belongs to, e.g. "border_march". */
+    worldId: string;
+    /** The build that last wrote this save ("unknown" right after migrating a v2 save). */
+    contentVersion: string;
     gold: number;
     renown: number;
     battles: number;
@@ -236,24 +241,61 @@ declare global {
     normalize(x: number, y: number): [number, number];
   }
 
+  /** Result of CL.save.check: why a parsed save can't be loaded (empty when it can). */
+  interface SaveCheck {
+    problems: string[];
+    /** Made by a newer build with a later save schema. */
+    newer?: boolean;
+    /** Belongs to another world (content package). */
+    otherWorld?: boolean;
+  }
+
   interface SaveAPI {
     VERSION: number;
     KEY: string;
     BACKUP_KEY: string;
     LEGACY_KEY: string;
     WOUND_DAYS: number;
+    AUTOSAVE_DAYS: number;
+    MIGRATIONS: Record<number, (d: Record<string, any>) => Record<string, any>>;
+    preMigrationKey(version: number): string;
     starter(background?: ContentId): Campaign;
     addSoldier(c: Campaign, troop: ContentId, woundedUntil?: number | null): Soldier;
+    check(d: unknown): SaveCheck;
+    migrate(d: Record<string, any>): Record<string, any> | null;
     sanitize(d: any): Campaign | null;
     migrateV1(d: any): Campaign | null;
+    fromRaw(d: unknown): SaveCheck & { campaign: Campaign | null; from?: number };
     existed: boolean;
     lastSavedAt: number | null;
+    /** Campaign day of the last successful save (drives the travel autosave). */
+    lastSavedDay: number | null;
     lastError: string | null;
     stale: boolean;
     notice: string | null;
     load(): Campaign;
     write(): boolean;
+    autosave(): boolean;
     bindTabs(): void;
+  }
+
+  /** Where saves are kept: localStorage today, another store in a packaged build. Synchronous. */
+  interface StorageBackend {
+    name: string;
+    get(key: string): string | null;
+    set(key: string, value: string): void;
+    remove(key: string): void;
+  }
+
+  interface StorageAPI {
+    /** null if missing or unreadable. */
+    get(key: string): string | null;
+    /** false if the value could not be stored. */
+    set(key: string, value: string): boolean;
+    remove(key: string): boolean;
+    use(backend?: StorageBackend): void;
+    backendName(): string;
+    lastError: string | null;
   }
 
   interface PartyAPI {
@@ -297,6 +339,7 @@ declare global {
     campaign: Campaign;
     /** The live, transient state (battle, journey, town walk). */
     game: Record<string, any>;
+    storage: StorageAPI;
     save: SaveAPI;
     party: PartyAPI;
     [module: string]: any;

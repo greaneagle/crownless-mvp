@@ -136,7 +136,9 @@
   }
 
   function wipeSave() {
-    for (const k of [CL.save.KEY, CL.save.BACKUP_KEY, CL.save.LEGACY_KEY]) root.localStorage.removeItem(k);
+    const S = CL.save;
+    const pre = Array.from({ length: S.VERSION - 2 }, (_, i) => S.preMigrationKey(i + 2)); // crownless_save_v2, …
+    for (const k of [S.KEY, S.BACKUP_KEY, S.LEGACY_KEY, ...pre]) CL.storage.remove(k);
     log('save wiped');
   }
 

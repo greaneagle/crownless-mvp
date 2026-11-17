@@ -1,3 +1,4 @@
+// @ts-check
 /* Crownless portable saves (GDD §13): manual export/import between browsers and devices.
  *
  * File: { format: 'crownless-save', version, game, exportedAt, checksum, campaign }.
@@ -184,71 +185,85 @@
       raw = data.campaign;
     }
 
+    // Structure first (design SC-31): a partial or damaged campaign is rejected, not filled in.
+    if (!Number.isInteger(raw.version)) return { ok: false, reason: 'This is not a Crownless save file.' };
+    const check = CL.save.check(raw);
+    if (check.newer) return { ok: false, reason: 'This save was made by a newer version of Crownless. Update the game first.' };
+    if (check.otherWorld) return { ok: false, reason: 'This save belongs to a different world than this game has.', problems: check.problems };
+    if (check.problems.length) return { ok: false, reason: 'The save is incomplete or damaged, so it was not loaded.', problems: check.problems };
+
     if (raw.version === 1) {
       const migrated = CL.save.migrateV1(raw);
       return migrated ? { ok: true, campaign: migrated, migrated: true } : { ok: false, reason: 'The old save could not be read.' };
     }
-    if (raw.version !== CL.save.VERSION) {
-      return raw.version > CL.save.VERSION
-        ? { ok: false, reason: 'This save was made by a newer version of Crownless. Update the game first.' }
-        : { ok: false, reason: 'This is not a Crownless save file.' };
-    }
-    const problems = unknownIds(raw);
+    const current = CL.save.migrate(raw); // older schema versions step up first (pure; raw is unchanged)
+    if (!current) return { ok: false, reason: 'The save could not be read.' };
+    const problems = unknownIds(current);
     if (problems.length) return { ok: false, reason: 'The save mentions things this version of the game does not know.', problems };
-    const campaign = CL.save.sanitize(raw);
+    const campaign = CL.save.sanitize(current);
     if (!campaign) return { ok: false, reason: 'The save could not be read.' };
-    return { ok: true, campaign };
+    return { ok: true, campaign, migrated: raw.version < CL.save.VERSION };
   }
 
-  /** Apply a parsed import: set the current save aside, then switch to the imported campaign. */
+  const NOT_STORED = 'The game could not be saved in this browser (storage may be full, or the game is open in another tab), so nothing changed.';
+
+  /**
+   * Apply a parsed import: set the current save aside, then switch to the imported campaign.
+   * Success is reported only once the imported game is stored (design SC-32); if anything fails on
+   * the way, the current game and the earlier pre-import copy are put back as they were.
+   */
   function importText(text) {
     const r = parse(text);
     if (!r.ok) {
       CL.diag.log('warn', 'Import rejected', { reason: r.reason, problems: r.problems });
       return r;
     }
-    try {
-      const current = root.localStorage.getItem(CL.save.KEY);
-      if (current) root.localStorage.setItem(PRE_IMPORT_KEY, current);
-    } catch (e) {
-      CL.diag.log('warn', 'Could not keep a pre-import copy', { error: String(e) });
+    const current = CL.storage.get(CL.save.KEY);
+    const olderCopy = CL.storage.get(PRE_IMPORT_KEY);
+    if (current && !CL.storage.set(PRE_IMPORT_KEY, current)) {
+      CL.diag.log('warn', 'Import stopped: no room for a pre-import copy');
+      return { ok: false, reason: 'There was no room to keep a copy of your current game first, so nothing was imported. Export your current game, then try again.' };
     }
+    const previous = CL.campaign;
+    const existed = CL.save.existed;
     CL.campaign = r.campaign;
+    if (!CL.save.write()) {
+      CL.campaign = previous;
+      CL.save.existed = existed;
+      if (olderCopy == null) CL.storage.remove(PRE_IMPORT_KEY);
+      else CL.storage.set(PRE_IMPORT_KEY, olderCopy);
+      CL.diag.log('warn', 'Import not stored; current game kept');
+      return { ok: false, reason: NOT_STORED };
+    }
     CL.save.existed = true;
     resetTransient();
-    CL.save.write();
     CL.diag.log('info', 'Save imported', { day: r.campaign.day, migrated: Boolean(r.migrated) });
     return r;
   }
 
   function hasPreImport() {
-    try {
-      return Boolean(root.localStorage.getItem(PRE_IMPORT_KEY));
-    } catch {
-      return false;
-    }
+    return Boolean(CL.storage.get(PRE_IMPORT_KEY));
   }
 
-  /** Bring back the save that was replaced by the last import. */
+  /** Bring back the save that was replaced by the last import. Its copy is removed only once it is stored again. */
   function restorePreImport() {
-    let text = null;
-    try {
-      text = root.localStorage.getItem(PRE_IMPORT_KEY);
-    } catch {
-      return { ok: false, reason: 'Browser storage is unavailable.' };
-    }
+    const text = CL.storage.get(PRE_IMPORT_KEY);
     if (!text) return { ok: false, reason: 'There is no earlier save to restore.' };
     let s = null;
     try {
-      s = CL.save.sanitize(JSON.parse(text));
+      s = CL.save.fromRaw(JSON.parse(text)).campaign;
     } catch {
       s = null;
     }
     if (!s) return { ok: false, reason: 'The earlier save could not be read.' };
+    const previous = CL.campaign;
     CL.campaign = s;
+    if (!CL.save.write()) {
+      CL.campaign = previous;
+      return { ok: false, reason: NOT_STORED };
+    }
     resetTransient();
-    CL.save.write();
-    root.localStorage.removeItem(PRE_IMPORT_KEY);
+    CL.storage.remove(PRE_IMPORT_KEY);
     CL.diag.log('info', 'Pre-import save restored');
     return { ok: true };
   }

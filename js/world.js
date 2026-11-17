@@ -174,6 +174,7 @@
       if (!g.waiting) return 0;
       const hours = Math.min(dt, 0.1) * HOURS_PER_SECOND;
       CL.party.advanceDays(hours / 24);
+      CL.save.autosave(); // once per game day on the map
       checkContact();
       return hours;
     }
@@ -208,6 +209,7 @@
     }
     g.travelFace = Math.abs(t.x - w.x) > Math.abs((t.y - w.y) * Y_ASPECT) ? (t.x < w.x ? 'left' : 'right') : t.y < w.y ? 'up' : 'down';
     CL.party.advanceDays(hours / 24);
+    CL.save.autosave(); // once per game day on the map
     if (checkContact()) return hours;
     if (w.x === t.x && w.y === t.y) arrive(t);
     return hours;

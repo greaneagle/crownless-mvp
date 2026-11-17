@@ -1,0 +1,64 @@
+[
+ {
+  "file": "campaign-day20.json",
+  "about": "20 days of mercenary life by that build’s campaign bot.",
+  "expect": {
+   "build": "0.14.0",
+   "name": "Bot3",
+   "day": 20.085,
+   "gold": 181,
+   "renown": 68,
+   "battles": 24,
+   "victories": 14,
+   "soldierIds": [
+    6,
+    7,
+    14,
+    16,
+    21,
+    23,
+    25,
+    27,
+    28,
+    29,
+    30,
+    31,
+    32,
+    33
+   ],
+   "troops": [
+    "footman",
+    "longbowman",
+    "footman",
+    "levy",
+    "hunter",
+    "recruit",
+    "recruit",
+    "recruit",
+    "recruit",
+    "skirmisher",
+    "recruit",
+    "skirmisher",
+    "recruit",
+    "skirmisher"
+   ],
+   "xp": [
+    84,
+    84,
+    72,
+    44,
+    44,
+    48,
+    48,
+    48,
+    20,
+    20,
+    20,
+    20,
+    10,
+    20
+   ],
+   "location": null
+  }
+ }
+]

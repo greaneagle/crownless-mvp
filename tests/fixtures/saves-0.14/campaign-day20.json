@@ -1,0 +1,350 @@
+{
+ "format": "crownless-save",
+ "version": 2,
+ "game": "0.14.0",
+ "exportedAt": "2026-11-17T16:49:49.506Z",
+ "checksum": "98920487",
+ "campaign": {
+  "version": 2,
+  "gold": 181,
+  "renown": 68,
+  "battles": 24,
+  "victories": 14,
+  "day": 20.08463651099155,
+  "nextSoldierId": 34,
+  "roster": [
+   {
+    "id": 6,
+    "troop": "footman",
+    "xp": 84,
+    "woundedUntil": 21.529525261443943
+   },
+   {
+    "id": 7,
+    "troop": "longbowman",
+    "xp": 84,
+    "woundedUntil": null
+   },
+   {
+    "id": 14,
+    "troop": "footman",
+    "xp": 72,
+    "woundedUntil": null
+   },
+   {
+    "id": 16,
+    "troop": "levy",
+    "xp": 44,
+    "woundedUntil": null
+   },
+   {
+    "id": 21,
+    "troop": "hunter",
+    "xp": 44,
+    "woundedUntil": null
+   },
+   {
+    "id": 23,
+    "troop": "recruit",
+    "xp": 48,
+    "woundedUntil": null
+   },
+   {
+    "id": 25,
+    "troop": "recruit",
+    "xp": 48,
+    "woundedUntil": null
+   },
+   {
+    "id": 27,
+    "troop": "recruit",
+    "xp": 48,
+    "woundedUntil": null
+   },
+   {
+    "id": 28,
+    "troop": "recruit",
+    "xp": 20,
+    "woundedUntil": null
+   },
+   {
+    "id": 29,
+    "troop": "skirmisher",
+    "xp": 20,
+    "woundedUntil": null
+   },
+   {
+    "id": 30,
+    "troop": "recruit",
+    "xp": 20,
+    "woundedUntil": null
+   },
+   {
+    "id": 31,
+    "troop": "skirmisher",
+    "xp": 20,
+    "woundedUntil": null
+   },
+   {
+    "id": 32,
+    "troop": "recruit",
+    "xp": 10,
+    "woundedUntil": 22.08463651099155
+   },
+   {
+    "id": 33,
+    "troop": "skirmisher",
+    "xp": 20,
+    "woundedUntil": null
+   }
+  ],
+  "inventory": {
+   "gloves": 3,
+   "boots": 2,
+   "oak_shield": 2,
+   "worn_sword": 1,
+   "leather_chest": 2,
+   "clothing": 3,
+   "iron_helm": 1
+  },
+  "lastResolvedBattle": 24,
+  "world": {
+   "x": 51.3479242912547,
+   "y": 32.319040576400916,
+   "location": null,
+   "sites": {
+    "looter_camp": {
+     "clearedUntil": 17.093569808596087
+    },
+    "reaver_hideout": {
+     "clearedUntil": 0
+    }
+   }
+  },
+  "character": {
+   "name": "Bot3",
+   "gender": "unspecified",
+   "cloak": "crimson",
+   "background": "farmhand",
+   "attributes": {
+    "str": 8,
+    "agi": 5,
+    "int": 5,
+    "cha": 5
+   },
+   "skills": {
+    "one_handed": 1,
+    "shield": 0,
+    "archery": 0,
+    "riding": 0,
+    "leadership": 4,
+    "tactics": 0,
+    "pathfinding": 0,
+    "trade": 0
+   },
+   "level": 5,
+   "xp": 572,
+   "skillPoints": 0,
+   "attributePoints": 0
+  },
+  "equipment": {
+   "weapon": "worn_sword",
+   "offhand": "oak_shield",
+   "head": null,
+   "body": "clothing",
+   "hands": null,
+   "feet": null,
+   "horse": null,
+   "ring": null
+  },
+  "food": 14.471549047220627,
+  "morale": 80,
+  "nextWagesDay": 21,
+  "starving": false,
+  "markets": {
+   "stonebridge": {
+    "grain": 0.976,
+    "salt": 1.1,
+    "wool": 0.847,
+    "iron": 1.1,
+    "cloth": 1.05,
+    "tools": 1
+   },
+   "eastwatch": {
+    "grain": 1.15,
+    "salt": 0.886,
+    "wool": 1.1,
+    "iron": 1,
+    "cloth": 0.877,
+    "tools": 0.9
+   },
+   "oakford": {
+    "grain": 0.8,
+    "salt": 1.3,
+    "wool": 0.892,
+    "iron": 1.3,
+    "cloth": 1.2,
+    "tools": 1.25
+   },
+   "highmere": {
+    "grain": 0.964,
+    "salt": 1.25,
+    "wool": 0.855,
+    "iron": 0.85,
+    "cloth": 1.2,
+    "tools": 1.1
+   },
+   "brackenfield": {
+    "grain": 0.835,
+    "salt": 1.3,
+    "wool": 0.903,
+    "iron": 1.2,
+    "cloth": 1.25,
+    "tools": 1.3
+   },
+   "dunmarsh": {
+    "grain": 1.25,
+    "salt": 0.809,
+    "wool": 1.2,
+    "iron": 1.3,
+    "cloth": 0.811,
+    "tools": 1.2
+   },
+   "redfield": {
+    "grain": 0.85,
+    "salt": 0.835,
+    "wool": 1.05,
+    "iron": 1.25,
+    "cloth": 0.907,
+    "tools": 1.2
+   },
+   "saltmere": {
+    "grain": 1.2,
+    "salt": 0.8,
+    "wool": 1.2,
+    "iron": 1.3,
+    "cloth": 0.847,
+    "tools": 1.15
+   }
+  },
+  "cargo": {},
+  "rngSeed": 1092747240,
+  "parties": [
+   {
+    "id": 7,
+    "template": "aurelian_patrol",
+    "x": 75.98516000501957,
+    "y": 74.27511428929972,
+    "troops": {
+     "spearman": 3,
+     "skirmisher": 1,
+     "recruit": 2
+    },
+    "tx": 70,
+    "ty": 70,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "chasing": null
+   },
+   {
+    "id": 19,
+    "template": "bandits",
+    "x": 63.2992360193173,
+    "y": 54.562181523322764,
+    "troops": {
+     "looter": 1,
+     "reaver": 1
+    },
+    "tx": 63.2992360193173,
+    "ty": 54.562181523322764,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lair": "reaver_hideout",
+    "chasing": null
+   },
+   {
+    "id": 33,
+    "template": "bandits",
+    "x": 33.18361705543723,
+    "y": 39.32081284179708,
+    "troops": {
+     "looter": 4,
+     "reaver": 1
+    },
+    "tx": 29.76955803949386,
+    "ty": 35.864271209575236,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lair": "looter_camp",
+    "chasing": null
+   },
+   {
+    "id": 36,
+    "template": "aurelian_patrol",
+    "x": 72.78163639193345,
+    "y": 84.9859393813629,
+    "troops": {
+     "spearman": 4,
+     "skirmisher": 3,
+     "recruit": 3
+    },
+    "tx": 66,
+    "ty": 88,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "chasing": null
+   }
+  ],
+  "partySpawns": {
+   "bandits": 21.511719844324883,
+   "valedorn_caravan": 20.373275261443943,
+   "valedorn_patrol": 20.769108594777283,
+   "aurelian_patrol": 20.644108594777283,
+   "aurelian_caravan": 21.074219844324883
+  },
+  "nextPartyId": 39,
+  "contract": {
+   "id": 14,
+   "template": "bandit_hunt",
+   "giver": "eastwatch",
+   "troops": {
+    "reaver": 3,
+    "looter": 11
+   },
+   "x": 49.87123633972985,
+   "y": 31.247085880703676,
+   "reward": {
+    "gold": 124,
+    "renown": 5,
+    "xp": 110
+   },
+   "days": 4,
+   "offeredUntil": 22.71796984432489,
+   "status": "done",
+   "partyId": 38,
+   "deadline": 23.71796984432489
+  },
+  "contractOffers": {
+   "stonebridge": {
+    "id": 10,
+    "template": "bandit_hunt",
+    "giver": "stonebridge",
+    "troops": {
+     "looter": 4,
+     "reaver": 8
+    },
+    "x": 49.15571622362656,
+    "y": 73.93097693076774,
+    "reward": {
+     "gold": 112,
+     "renown": 5,
+     "xp": 100
+    },
+    "days": 4,
+    "offeredUntil": 19.497686631609653
+   }
+  },
+  "nextContractId": 15,
+  "contractsDone": 8
+ }
+}

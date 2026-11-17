@@ -1,4 +1,4 @@
-# Crownless 1.1.0 — The Border March
+# Crownless 1.2.0 — The Border March
 
 A single-player, top-down party-battle prototype in plain HTML5 Canvas and classic JavaScript. There's no bundler, no runtime dependencies and no server. It's published to GitHub Pages straight from `main`.
 
@@ -66,7 +66,8 @@ js/               game runtime, attached to window.Crownless
   core.js         constants, math helpers, diagnostics log
   content.js      ContentDB: lookups into data/ + boot-time validation
   state.js        live game state (CL.game)
-  save.js         localStorage save (schema v2, backup, 0.3 migration)
+  storage.js      storage layer: every save key goes through it (localStorage today)
+  save.js         save schema v3: structure checks, migrations (0.3, v2), last-known-good backup, autosave
   assets.js       sprite preloading and frame tables
   units.js        units built from troop data, swing phases, facing, movement
   combat.js       waves, attacks, AI, arrows, win/loss

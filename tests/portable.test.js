@@ -30,7 +30,7 @@ test('the file has an envelope with format, version, game build, time and checks
   const { CL, text } = exported();
   const f = JSON.parse(text);
   assert.equal(f.format, 'crownless-save');
-  assert.equal(f.version, 2);
+  assert.equal(f.version, 3); // save schema v3 from 1.2.0 (V2-01)
   assert.equal(f.game, CL.BUILD);
   assert.ok(!Number.isNaN(Date.parse(f.exportedAt)));
   assert.equal(f.checksum, CL.portable.checksum(JSON.stringify(f.campaign)));
@@ -57,7 +57,7 @@ test('rejected: a damaged or edited file (checksum)', () => {
 test('rejected: a save from a newer version of the game', () => {
   const { CL, text } = exported();
   const f = JSON.parse(text);
-  f.version = 3;
+  f.version = CL.save.VERSION + 1;
   f.game = '2.0.0';
   assert.match(CL.portable.parse(JSON.stringify(f)).reason, /newer version of Crownless \(2\.0\.0\)/);
   assert.match(CL.portable.parse(JSON.stringify({ version: 9, gold: 1 })).reason, /newer version/);

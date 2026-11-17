@@ -12,7 +12,9 @@ test('a new game follows GDD §5: 60 crowns, sword, clothing, shield, food, no s
   const { CL } = loadGame({ party: false });
   const c = CL.campaign;
   assert.equal(CL.save.existed, false);
-  assert.equal(c.version, 2);
+  assert.equal(c.version, 3); // save schema v3 from 1.2.0 (V2-01)
+  assert.equal(c.worldId, 'border_march');
+  assert.equal(c.contentVersion, CL.BUILD);
   assert.equal(c.gold, 60);
   assert.equal(c.roster.length, 0);
   assert.equal(c.nextSoldierId, 1);
@@ -72,7 +74,7 @@ test('a 0.3 save migrates: infantry → levy, archers → hunter, wounded heal o
   assert.equal(c.lastResolvedBattle, 5);
   assert.deepEqual(troops(c), ['levy', 'levy', 'levy', 'levy', 'hunter', 'levy', 'hunter', 'hunter']);
   assert.equal(c.roster.filter((s) => s.woundedUntil === 2).length, 3);
-  assert.ok(CL.diag.events.some((e) => e.msg === 'Migrated 0.3 save to v2'));
+  assert.ok(CL.diag.events.some((e) => e.msg === 'Migrated 0.3 save'));
   CL.save.write();
   assert.equal(storage.data[LEGACY], JSON.stringify(v1), 'legacy save left untouched');
 });

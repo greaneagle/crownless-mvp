@@ -1,6 +1,6 @@
 # Crownless — Project Status & Roadmap
 
-_Last reviewed: 2026-11-17 · Build 1.1.0 · Spec: `Crownless_MVP_GDD_v1.md` (engine overridden: HTML5 Canvas + classic JS, no bundler, GitHub Pages)._
+_Last reviewed: 2026-11-17 · Build 1.2.0 · Spec: `Crownless_MVP_GDD_v1.md` (engine overridden: HTML5 Canvas + classic JS, no bundler, GitHub Pages)._
 
 This replaces the opencode-swarm plan (`.swarm/plan.md`, removed). The gate structure (A→E) is kept from the GDD; the task list is condensed and re-ordered around what the code actually needs.
 
@@ -96,7 +96,7 @@ From the owner's v2.0 design (`Crownless_v2_0_Feature_and_Systems_Design_Part_1.
 - **Phase 6, v2.0 "The Living Warband":**
   - ART-01 an art style guide and asset list (alongside)
   - ✅ (1.1.0) V2-00 type checking with `@ts-check` and JSDoc (no build step): `npm run typecheck` (TypeScript 6.0.3 via `npx`, part of `npm run lint`), shared types in `types/crownless.d.ts`, seven modules checked (`core`, `save`, `party`, `units`, `combat`, `story`, `world`)
-  - V2-01 save schema v3, migrations and a storage layer
+  - ✅ (1.2.0) V2-01 save schema v3, migrations and a storage layer: `worldId` and `contentVersion`; structural checks that reject partial saves; pure migration steps with a pre-migration copy; last-known-good backup and writes that must read back; imports and restores that report success only once stored; autosave once per game day on the map; `CL.storage` (`js/storage.js`); fixtures from the real 0.14 and 0.28 builds plus a 0.3 save (`docs/SAVE-FORMAT.md`)
   - V2-02 one idempotent result path, events and seeded randomness
   - V2-03 named soldiers and service records, with a data-driven, moddable culture name generator
   - V2-03b a troop tree discovered as you play

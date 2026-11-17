@@ -1,0 +1,572 @@
+{
+ "format": "crownless-save",
+ "version": 2,
+ "game": "0.28.0",
+ "exportedAt": "2026-11-17T16:50:19.864Z",
+ "checksum": "e8723292",
+ "campaign": {
+  "version": 2,
+  "gold": 2914,
+  "renown": 59,
+  "battles": 4,
+  "victories": 3,
+  "day": 6.96903709133057,
+  "nextSoldierId": 5,
+  "roster": [
+   {
+    "id": 1,
+    "troop": "footman",
+    "xp": 24,
+    "woundedUntil": null
+   },
+   {
+    "id": 3,
+    "troop": "hunter",
+    "xp": 24,
+    "woundedUntil": null
+   }
+  ],
+  "inventory": {
+   "boots": 2
+  },
+  "lastResolvedBattle": 4,
+  "world": {
+   "x": 42,
+   "y": 30,
+   "location": "greywall_fort",
+   "sites": {
+    "looter_camp": {
+     "clearedUntil": 0
+    },
+    "reaver_hideout": {
+     "clearedUntil": 0
+    }
+   }
+  },
+  "character": {
+   "name": "Bot4",
+   "gender": "unspecified",
+   "cloak": "crimson",
+   "background": "farmhand",
+   "attributes": {
+    "str": 6,
+    "agi": 5,
+    "int": 5,
+    "cha": 5
+   },
+   "skills": {
+    "one_handed": 1,
+    "shield": 0,
+    "archery": 0,
+    "riding": 0,
+    "leadership": 0,
+    "tactics": 0,
+    "pathfinding": 0,
+    "trade": 0
+   },
+   "level": 3,
+   "xp": 231,
+   "skillPoints": 2,
+   "attributePoints": 1
+  },
+  "equipment": {
+   "weapon": "worn_sword",
+   "offhand": "oak_shield",
+   "head": null,
+   "body": "clothing",
+   "hands": null,
+   "feet": null,
+   "horse": null,
+   "ring": null
+  },
+  "food": 208.03096290866634,
+  "morale": 80,
+  "nextWagesDay": 7,
+  "starving": false,
+  "markets": {
+   "stonebridge": {
+    "grain": 0.819,
+    "salt": 1.1,
+    "wool": 0.8,
+    "iron": 1.1,
+    "cloth": 1.05,
+    "tools": 1
+   },
+   "eastwatch": {
+    "grain": 1.15,
+    "salt": 0.8,
+    "wool": 1.1,
+    "iron": 1,
+    "cloth": 0.8,
+    "tools": 0.9
+   },
+   "oakford": {
+    "grain": 0.8,
+    "salt": 1.3,
+    "wool": 0.8,
+    "iron": 1.3,
+    "cloth": 1.2,
+    "tools": 1.25
+   },
+   "highmere": {
+    "grain": 0.95,
+    "salt": 1.25,
+    "wool": 0.941,
+    "iron": 0.85,
+    "cloth": 1.2,
+    "tools": 1.1
+   },
+   "brackenfield": {
+    "grain": 0.8,
+    "salt": 1.3,
+    "wool": 0.92,
+    "iron": 1.2,
+    "cloth": 1.25,
+    "tools": 1.3
+   },
+   "dunmarsh": {
+    "grain": 1.25,
+    "salt": 0.839,
+    "wool": 1.2,
+    "iron": 1.3,
+    "cloth": 0.8,
+    "tools": 1.2
+   },
+   "redfield": {
+    "grain": 0.85,
+    "salt": 0.861,
+    "wool": 1.05,
+    "iron": 1.25,
+    "cloth": 0.872,
+    "tools": 1.2
+   },
+   "saltmere": {
+    "grain": 1.2,
+    "salt": 0.8,
+    "wool": 1.2,
+    "iron": 1.3,
+    "cloth": 0.8,
+    "tools": 1.15
+   }
+  },
+  "cargo": {},
+  "rngSeed": 3260086345,
+  "parties": [
+   {
+    "id": 2,
+    "template": "bandits",
+    "x": 29.372419738394242,
+    "y": 84.55428465299896,
+    "troops": {
+     "looter": 1
+    },
+    "tx": 28.00382204253711,
+    "ty": 88.95051588883524,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lair": "reaver_hideout",
+    "chasing": null
+   },
+   {
+    "id": 4,
+    "template": "valedorn_patrol",
+    "x": 53.67782609664504,
+    "y": 26.057739122683966,
+    "troops": {
+     "footman": 2,
+     "hunter": 3,
+     "levy": 2
+    },
+    "tx": 30,
+    "ty": 45,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "chasing": null
+   },
+   {
+    "id": 5,
+    "template": "valedorn_patrol",
+    "x": 39.547365871476515,
+    "y": 57.538158745429314,
+    "troops": {
+     "footman": 4,
+     "hunter": 3,
+     "levy": 3
+    },
+    "tx": 58.0659727267921,
+    "ty": 39.3678407240659,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "chasing": null
+   },
+   {
+    "id": 6,
+    "template": "aurelian_patrol",
+    "x": 70.12987577814444,
+    "y": 75.61037266556683,
+    "troops": {
+     "spearman": 4,
+     "skirmisher": 2,
+     "recruit": 2
+    },
+    "tx": 66,
+    "ty": 88,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "chasing": null
+   },
+   {
+    "id": 7,
+    "template": "aurelian_patrol",
+    "x": 73.06983498493702,
+    "y": 60.12697269988557,
+    "troops": {
+     "spearman": 4,
+     "skirmisher": 2,
+     "recruit": 3
+    },
+    "tx": 84,
+    "ty": 80,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "chasing": null
+   },
+   {
+    "id": 9,
+    "template": "aurelian_caravan",
+    "x": 66,
+    "y": 88,
+    "troops": {
+     "recruit": 2
+    },
+    "tx": null,
+    "ty": 88,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "routeIndex": 3,
+    "good": "salt",
+    "chasing": null
+   },
+   {
+    "id": 15,
+    "template": "bandits",
+    "x": 30.541110891073885,
+    "y": 87.48100191428253,
+    "troops": {
+     "looter": 3,
+     "reaver": 1
+    },
+    "tx": 51.25697589945048,
+    "ty": 77.97152353823185,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lair": "reaver_hideout",
+    "chasing": null
+   },
+   {
+    "id": 16,
+    "template": "bandits",
+    "x": 47.11064771913931,
+    "y": 69.18890291372941,
+    "troops": {
+     "looter": 4
+    },
+    "tx": 42.61753435339779,
+    "ty": 72.20513322763145,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lair": "reaver_hideout",
+    "chasing": null
+   }
+  ],
+  "partySpawns": {
+   "bandits": 8.195204695798452,
+   "valedorn_caravan": 7.71187136246512
+  },
+  "nextPartyId": 17,
+  "contract": null,
+  "contractOffers": {},
+  "nextContractId": 1,
+  "contractsDone": 0,
+  "reputation": {
+   "valedorn": -25,
+   "aurelian": 20
+  },
+  "owners": {
+   "greywall_fort": "aurelian",
+   "ashgate_fort": "aurelian"
+  },
+  "story": {
+   "flags": {
+    "met_elder": true,
+    "q2_how": "fought",
+    "q2_choice": "aurelian",
+    "asked_troubles": true,
+    "q3_heard_valedorn": true,
+    "heard_charter": true,
+    "mara_met": true,
+    "mara_trust": 1,
+    "mara_why": "people",
+    "q3_side": "valedorn",
+    "mara_saved": true,
+    "q4_side": "aurelian",
+    "mara_joined": true,
+    "ending": "aurelian"
+   },
+   "quests": {
+    "q2": {
+     "status": "done",
+     "stage": null,
+     "notes": [
+      "You took the packet from the Reavers by force."
+     ],
+     "startedDay": 0.38227121138630377,
+     "stageDay": 0.9096949485150722,
+     "endedDay": 0.9804254487645355
+    },
+    "q3": {
+     "status": "done",
+     "stage": null,
+     "notes": [
+      "You reached the clash in time. Mara rode out of the smoke unhurt.",
+      "The Aurelian column is broken. The Crown is in your debt."
+     ],
+     "startedDay": 1.107849185893303,
+     "stageDay": 1.899907338659669,
+     "endedDay": 3.288393232669409
+    },
+    "q4": {
+     "status": "done",
+     "stage": null,
+     "notes": [
+      "The Valedorn host broke before Greywall. The envoys wait in the parley tent."
+     ],
+     "startedDay": 3.288393232669409,
+     "stageDay": 3.8974289065858514,
+     "endedDay": 6.96903709133057
+    },
+    "q1": {
+     "status": "active",
+     "stage": "q1_choose_work",
+     "notes": [],
+     "startedDay": 4.55821934443378,
+     "stageDay": 4.55821934443378
+    }
+   },
+   "visits": {
+    "aurelian_agent": 5,
+    "stonebridge_elder": 6,
+    "sergeant_brun": 13,
+    "caravan_master": 3,
+    "valedorn_agent": 6,
+    "mara": 5,
+    "greywall_parley": 3
+   }
+  },
+  "companion": {
+   "id": "mara",
+   "woundedUntil": null,
+   "equipment": {
+    "weapon": "worn_sword",
+    "body": "gambeson"
+   }
+  },
+  "news": {
+   "events": [
+    {
+     "day": 3.8974289065858514,
+     "kind": "caravan_arrived",
+     "dest": "eastwatch",
+     "good": "cloth",
+     "faction": "aurelian"
+    },
+    {
+     "day": 3.973091529762756,
+     "kind": "caravan_arrived",
+     "dest": "stonebridge",
+     "good": "grain",
+     "faction": "valedorn"
+    },
+    {
+     "day": 4.106424863096089,
+     "kind": "caravan_arrived",
+     "dest": "redfield",
+     "good": "cloth",
+     "faction": "aurelian"
+    },
+    {
+     "day": 4.164758196429423,
+     "kind": "caravan_arrived",
+     "dest": "oakford",
+     "good": "wool",
+     "faction": "valedorn"
+    },
+    {
+     "day": 4.336943214176985,
+     "kind": "caravan_arrived",
+     "dest": "saltmere",
+     "good": "salt",
+     "faction": "aurelian"
+    },
+    {
+     "day": 4.551747945972049,
+     "kind": "caravan_arrived",
+     "dest": "highmere",
+     "good": "grain",
+     "faction": "valedorn"
+    },
+    {
+     "day": 4.651815265702398,
+     "kind": "caravan_arrived",
+     "dest": "dunmarsh",
+     "good": "cloth",
+     "faction": "aurelian"
+    },
+    {
+     "day": 4.932603029508252,
+     "kind": "caravan_arrived",
+     "dest": "brackenfield",
+     "good": "grain",
+     "faction": "valedorn"
+    },
+    {
+     "day": 5.057397591199742,
+     "kind": "caravan_arrived",
+     "dest": "eastwatch",
+     "good": "salt",
+     "faction": "aurelian"
+    },
+    {
+     "day": 5.22379034012173,
+     "kind": "caravan_arrived",
+     "dest": "stonebridge",
+     "good": "wool",
+     "faction": "valedorn"
+    },
+    {
+     "day": 5.265388527352227,
+     "kind": "caravan_arrived",
+     "dest": "redfield",
+     "good": "salt",
+     "faction": "aurelian"
+    },
+    {
+     "day": 5.410982182658966,
+     "kind": "caravan_arrived",
+     "dest": "oakford",
+     "good": "grain",
+     "faction": "valedorn"
+    },
+    {
+     "day": 5.504578103927584,
+     "kind": "caravan_arrived",
+     "dest": "saltmere",
+     "good": "salt",
+     "faction": "aurelian"
+    },
+    {
+     "day": 5.806164961348687,
+     "kind": "caravan_arrived",
+     "dest": "highmere",
+     "good": "grain",
+     "faction": "valedorn"
+    },
+    {
+     "day": 5.81656450815631,
+     "kind": "caravan_arrived",
+     "dest": "dunmarsh",
+     "good": "cloth",
+     "faction": "aurelian"
+    },
+    {
+     "day": 6.1848135972441565,
+     "kind": "caravan_arrived",
+     "dest": "brackenfield",
+     "good": "wool",
+     "faction": "valedorn"
+    },
+    {
+     "day": 6.21814693057749,
+     "kind": "caravan_arrived",
+     "dest": "eastwatch",
+     "good": "cloth",
+     "faction": "aurelian"
+    },
+    {
+     "day": 6.425192630055257,
+     "kind": "caravan_arrived",
+     "dest": "redfield",
+     "good": "cloth",
+     "faction": "aurelian"
+    },
+    {
+     "day": 6.475192630055257,
+     "kind": "caravan_arrived",
+     "dest": "stonebridge",
+     "good": "wool",
+     "faction": "valedorn"
+    },
+    {
+     "day": 6.66187136246512,
+     "kind": "caravan_arrived",
+     "dest": "saltmere",
+     "good": "cloth",
+     "faction": "aurelian"
+    },
+    {
+     "day": 6.66187136246512,
+     "kind": "caravan_arrived",
+     "dest": "oakford",
+     "good": "wool",
+     "faction": "valedorn"
+    },
+    {
+     "day": 6.71187136246512,
+     "kind": "caravan_lost",
+     "place": "oakford",
+     "dest": "highmere",
+     "good": "wool",
+     "faction": "valedorn"
+    },
+    {
+     "day": 6.96903709133057,
+     "kind": "caravan_arrived",
+     "dest": "dunmarsh",
+     "good": "cloth",
+     "faction": "aurelian"
+    },
+    {
+     "day": 6.96903709133057,
+     "kind": "fort_taken",
+     "place": "greywall_fort",
+     "fort": "greywall_fort",
+     "owner": "aurelian"
+    }
+   ],
+   "lines": [
+    {
+     "day": 2,
+     "kind": "frontier_clash",
+     "text": "Aurelian and Valedorn patrols came to blows near Eastwatch. The Aurelian riders held the field."
+    },
+    {
+     "day": 4,
+     "kind": "caravan_lost",
+     "text": "Road Reavers fell on Valedorn wagons near Oakford. Grain will cost more in Oakford for a while."
+    },
+    {
+     "day": 6,
+     "kind": "reavers_broken",
+     "text": "Valedorn soldiers broke a band of Road Reavers near Oakford."
+    }
+   ],
+   "next": 8,
+   "clashUntil": 4.202423737128768,
+   "turns": {
+    "frontier_clash": 1,
+    "caravan_lost": 1,
+    "reavers_broken": 1
+   }
+  }
+ }
+}
