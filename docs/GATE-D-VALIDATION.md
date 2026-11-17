@@ -16,7 +16,98 @@ _Spec: GDD §3–§10 and §14 Gate D._
 | 4.8–4.12 Q1–Q4 and the companion Mara | ✅ Q1 0.21.0 · Q2 0.22.0 · Mara 0.23.0 · Q3 0.24.0 · Q4 0.25.0 |
 | 4.13 Escort and delivery contracts | ✅ 0.26.0 |
 | 4.14 Trade-world interactions and regional news | ✅ 0.27.0 |
-| 4.15 Gate D acceptance | ⬜ |
+| 4.15 Gate D acceptance | ✅ 0.28.0 — see Acceptance below |
+
+---
+
+## Acceptance — 0.28.0 (2026-11-17)
+
+### The GDD Gate D criterion
+
+**Scope** (`tests/gate-d.test.js`, checked against the content tables):
+
+| GDD asks for | In the game |
+|---|---|
+| 10 settlements | 2 towns, 2 forts, 6 villages, all enterable with their services |
+| 15 troop types | 15, plus the hero, across infantry, archers and cavalry for both kingdoms and the Reavers |
+| 3 battle maps | open field, forest clearing, Greywall courtyard |
+| 4 story quests | Q1–Q4, with 18 stages between them |
+| 3 repeatable contracts | bandit hunt, caravan escort, delivery |
+| A companion | Mara |
+| Reputation and ending flags | Valedorn and Aurelian reputation; Greywall and Ashgate ownership; three endings |
+
+**Pass conditions:**
+
+| Condition | Automated | Browser, real taps at phone size (844×390) |
+|---|---|---|
+| Each ending is reachable | 60 randomized whole-story runs in the test suite reach all three. In 300 more runs: the Crown 131, the Remnant 140, the Road Peace 29 | played Q4 to **The Road Peace** |
+| No quest soft-locks | every one of the 360 runs reached an ending, from three different starts, with saves and reloads along the way | Q1 by taps, including two lost fights and captures, with the wagon slipping through on the third try |
+| The sandbox continues | after the ending, news keeps coming, patrols, caravans and Reavers move, the boards post all three jobs, travel works, and the ending survives a reload | after the ending: friendly Valedorn, the parley packed up, Mara waiting at the inn, the Stonebridge board posting all three jobs, news on its 2-day beat |
+
+### No soft-locks: the randomized story soak test
+`tests/helpers/story-bot.js` plays whole campaigns on the real game logic, from character creation to an ending. Each step it does one of four things:
+- Works on whatever the current quest stage asks: rides to the place, hunts the marked band, threatens or pays when the game offers it, or recruits.
+- Rides to someone who can be talked to right now and picks answers at random.
+- Waits (so deadlines like Mara's 3-day rescue can run out).
+- Rides somewhere at random.
+
+Travel is real map travel, so roaming bands get in the way. Only the outcome of a battle is rolled rather than fought. About one step in 25, the bot saves and reloads, as if the browser had been closed.
+
+**The mix of runs:**
+- **Starts:** a funded company (3,000 crowns, 8 soldiers) on two seeds out of three; the bare GDD start (60 crowns, no soldiers) on the rest.
+- **Luck:** the bot wins 85% of its fights on odd seeds and only 40% on even seeds.
+
+**Result:**
+- 60 runs in `npm test`, plus 300 more with `npm run simulate:story`. All 360 reached an ending.
+- **Every quest stage was reached** (18 of 18).
+- **Every authored branch value was reached.** The test reads the branch values from the content itself, so new branches join the check automatically:
+  - Q1: wagon, Reavers, recruits
+  - Q2: fought, cowed or paid for the packet; kept, shown to Valedorn, or shown to the Remnant
+  - Q3: for the Crown, for the Remnant, guarding the road, sold to either side
+  - Mara: saved, or lost too late
+- **Speed:** a bot that heads straight for the goal finishes the story in 1.7–56 days (median 13).
+
+The first run found one problem, in the bot rather than the game. Story columns are kingdom patrols, not hostile bands, so the bot rode away from them; a player chooses Attack. Once the bot attacked quest targets, there were no soft-locks.
+
+### The economy still holds: 30-day campaign simulation
+`npm run simulate` (the Gate C bot) on 8 seeds:
+- hero level 4–6
+- 3–10 contracts each
+- 7–24 battles won
+- no desertions
+- no stalls
+
+Frontier clashes (0.27.0) were tuned against this simulation so patrols still keep the Reavers down.
+
+### GDD §15 edge cases deferred to Gate D — now covered
+
+| Edge case | Covered by |
+|---|---|
+| Quest courier's party removed off-screen | `gate-d.test`: Q2's thieves are wiped off the map (and, separately, missing from a save). The story puts them back on the river road, and beating them recovers the packet. The browser run saw the same with Q1's ambush, wiped out in a lost fight and back on the road next tick. |
+| A fort changes owner before Q4 | `q4.test` "ending 1": Greywall is Aurelian before Q4; the Crown retakes it |
+| Companion wounded at story trigger | `q3.test` "a wounded Mara still rides ahead" |
+
+The rest of the table is unchanged from Gate C. Battle scaling and low-end phones remain Gate E.
+
+### Found and fixed during acceptance
+- **Road Peace news contradiction:** right after the road peace ending, the news reported "Blood on the border" between the two kingdoms. The GDD keeps frontier clashes going after every ending, so they still happen. Under the road peace, the news now reports them as the peace fraying ("The road peace frays: Valedorn and Aurelian patrols came to blows near Eastwatch."). Any news kind can now have lines specific to an ending.
+
+### Phone-size observations for the Gate E landscape UX pass (not blockers)
+Seen at 844×390:
+- The top-right buttons (Wait, Party, Journal, Logs, Debug) cover the end of the HUD line, so the quest title is cut off ("• A Strange…").
+- Toasts like "New quest…" and "Quest complete…" draw over the HUD panel.
+- Around Greywall, map labels pile up: the fort's own name is hidden under "Quest: Reavers 13", "Reavers 6" and "Patrol 7".
+- The Logs and Debug buttons overlap the top-right corner of modals. They are dev tools, but should hide or move in release builds.
+- In the town hub, tapping the Elder from the far side, the hero paused at the well before walking on. It got there, but it looked hesitant.
+
+### Owner phone pass (to close Gate D fully)
+- [ ] Play Q1→Q4 on a phone to any ending, then a second run to a different ending. Note anything confusing about where to go next.
+- [ ] Recruit Mara, then try both arriving in time and arriving too late in Q3.
+- [ ] Take one escort and one delivery. Read a few news lines and the market talk.
+- [ ] Close and reopen the browser mid-quest. Export the save and import it on desktop.
+
+### Deferred to Gate E (by design)
+Battle scaling (20→40 active units, reserve waves); the landscape UX pass (including the notes above); audio and settings; tutorial and help; asset provenance; save safety and device QA.
 
 ---
 

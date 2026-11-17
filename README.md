@@ -1,4 +1,4 @@
-# Crownless 0.27.0 — The Border March
+# Crownless 0.28.0 — The Border March
 
 A single-player, top-down party-battle prototype in plain HTML5 Canvas and classic JavaScript. There's no bundler, no runtime dependencies and no server. It's published to GitHub Pages straight from `main`.
 
@@ -110,6 +110,12 @@ npm run simulate
 ```
 
 `simulate` plays brand-new campaigns headlessly with a simple bot (30 days, 8 seeds by default) and prints how each went, as a quick check that the campaign loop doesn't stall.
+
+```bash
+npm run simulate:story
+```
+
+`simulate:story` plays whole stories from a fresh start to an ending with a randomized bot (200 seeds by default). It reports the endings and branches reached, and prints the last steps of any run that soft-locks. `tests/gate-d.test.js` runs the same check on 60 seeds.
 
 The tests load the logic modules (`core` → `party`) and the `data/` files into a Node `vm` sandbox with the UI stubbed out, so no browser is needed. The rendering and input code is checked by playing the game.
 

@@ -86,7 +86,7 @@
   function lineFor(c, kindId, e) {
     const k = kinds()[kindId];
     const ending = CL.story.state(c).flags.ending;
-    const pool = (kindId === 'tensions' && k.byEnding?.[ending]) || k.lines;
+    const pool = k.byEnding?.[ending] || k.lines; // after an ending, some news reads differently
     const n = state(c);
     return fill(pool[(n.turns?.[kindId] || 0) % pool.length], e, c);
   }

@@ -21,7 +21,14 @@
       lines: [
         '{winner} and {loser} patrols came to blows near {place}. The {winner} riders held the field.',
         'Blood on the border near {place}: {winner} riders drove {loser} soldiers off the road.'
-      ]
+      ],
+      // Clashes go on after every ending (GDD §12); under the road peace they read as it fraying.
+      byEnding: {
+        compromise: [
+          'The road peace frays: {winner} and {loser} patrols came to blows near {place}.',
+          'Hotheads on both sides: {winner} riders chased {loser} soldiers off the road near {place}, peace or no peace.'
+        ]
+      }
     },
     caravan_lost: {
       id: 'caravan_lost',
