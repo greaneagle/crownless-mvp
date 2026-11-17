@@ -129,6 +129,7 @@
     if (healed.length) CL.diag.log('info', 'Wounded recovered', { soldiers: healed, day: camp.day });
     CL.companion.heal(camp);
     CL.story.tick(camp); // quest stage deadlines
+    CL.news.tick(camp); // a regional news line every couple of days
     return healed;
   }
 

@@ -91,6 +91,11 @@
       if (k.to != null && !has('settlements', k.to)) bad(`unknown contract destination "${k.to}"`);
       if (k.good != null && !has('markets', k.good)) bad(`unknown contract goods "${k.good}"`);
     }
+    for (const e of Array.isArray(raw.news?.events) ? raw.news.events : []) {
+      if (!obj(e)) continue;
+      if (!has('news', e.kind)) bad(`unknown news kind "${e.kind}"`);
+      for (const k of ['place', 'dest', 'fort']) if (e[k] != null && !has('settlements', e[k])) bad(`unknown place "${e[k]}" in the news`);
+    }
     return problems;
   }
 

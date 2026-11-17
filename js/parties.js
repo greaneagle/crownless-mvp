@@ -16,6 +16,7 @@
   const CARAVAN_EFFECT = 0.08; // scarcity change at the destination (GDD: ±0.05–0.1)
   const WAVE_SIZE = 8;
   const AMBUSH_RANGE = 3.5; // map units: a contract ambush springs only on travellers passing close
+  const SKIRMISH_LOSS = { loser: [1, 2], winnerChance: 0.5 }; // frontier clashes: men lost
 
   // The world sim runs in steps inside a span of time the clock has already advanced, so it keeps
   // its own "now" for spawn timers, deaths and cooldowns (null outside a tick → the campaign day).
@@ -120,6 +121,18 @@
     return best?.o || null;
   }
 
+  /** A rival kingdom's regular patrol in sight (story columns keep out of border fights). */
+  function rival(c, p, t) {
+    let best = null;
+    for (const o of c.parties) {
+      const ot = tpl(o.template);
+      if (o.questTag || ot.kind !== 'patrol' || ot.faction === t.faction) continue;
+      const d = dist(p, o);
+      if (d <= t.detection && (!best || d < best.d)) best = { o, d };
+    }
+    return best?.o || null;
+  }
+
   const reached = (p) => p.tx === null || W().mapDist(p.x, p.y, p.tx, p.ty) <= ARRIVE;
 
   function chooseTarget(c, p) {
@@ -181,7 +194,7 @@
         p.ty = clamp(ay + (A().next(c) * 2 - 1) * roam, 2, 98);
       }
     } else if (t.kind === 'patrol') {
-      const quarry = nearest(c, p, 'bandit', t.detection);
+      const quarry = nearest(c, p, 'bandit', t.detection) || (CL.news.clashReady(c, now(c)) ? rival(c, p, t) : null);
       if (quarry) {
         p.chasing = quarry.id;
         [p.tx, p.ty] = [quarry.x, quarry.y];
@@ -189,9 +202,15 @@
       }
       if (reached(p)) {
         p.alerted = false;
-        const own = CL.realm.holdings(c, t.faction);
-        const s = pick(c, own);
-        [p.tx, p.ty] = [s.mapX, s.mapY];
+        const f = t.frontier;
+        if (f && A().next(c) < f.chance) {
+          // The border beat, where rival patrols meet (GDD §12 frontier clashes).
+          p.tx = clamp(f.x + (A().next(c) * 2 - 1) * f.jitter, 2, 98);
+          p.ty = clamp(f.y + (A().next(c) * 2 - 1) * f.jitter, 2, 98);
+        } else {
+          const s = pick(c, CL.realm.holdings(c, t.faction));
+          [p.tx, p.ty] = [s.mapX, s.mapY];
+        }
       }
     } else if (p.escortTo) {
       // An escorted caravan rolls toward its destination only while the player rides with it.
@@ -216,6 +235,7 @@
       c.markets[sid][p.good] = clamp(c.markets[sid][p.good] - CARAVAN_EFFECT, CL.trade.SCARCITY.min, CL.trade.SCARCITY.max);
     }
     CL.diag.log('info', 'Caravan arrived', { at: sid, good: p.good });
+    CL.news.record(c, 'caravan_arrived', { dest: sid, good: p.good, faction: t.faction }, now(c));
     p.good = pick(c, t.goods);
     p.tx = null;
   }
@@ -243,13 +263,18 @@
         if (b === a || b.questTag || b.escortTo || !c.parties.includes(b) || (kb !== 'caravan' && kb !== 'patrol')) continue;
         if (dist(a, b) > CONTACT) continue;
         const r = A().resolveParties(c, a, b);
-        if (tpl(r.loser.template).kind === 'caravan') {
+        const lt = tpl(r.loser.template);
+        if (lt.kind === 'caravan') {
           // GDD §9: bandit losses make the caravan's goods scarcer where it was heading.
-          const t = tpl(r.loser.template);
-          const sid = t.route[(r.loser.routeIndex + 1) % t.route.length];
+          const sid = lt.route[(r.loser.routeIndex + 1) % lt.route.length];
           if (c.markets[sid]) {
             c.markets[sid][r.loser.good] = clamp(c.markets[sid][r.loser.good] + CARAVAN_EFFECT, CL.trade.SCARCITY.min, CL.trade.SCARCITY.max);
           }
+          CL.news.record(c, 'caravan_lost', { x: r.loser.x, y: r.loser.y, dest: sid, good: r.loser.good, faction: lt.faction }, now(c));
+        } else if (lt.kind === 'patrol') {
+          CL.news.record(c, 'patrol_beaten', { x: r.loser.x, y: r.loser.y, faction: lt.faction }, now(c));
+        } else {
+          CL.news.record(c, 'reavers_broken', { x: r.loser.x, y: r.loser.y, faction: tpl(r.winner.template).faction }, now(c));
         }
         CL.diag.log('info', 'Off-screen battle', { winner: r.winner.template, loser: r.loser.template, losses: r.winnerLosses });
         if (r.loser.contractId) CL.contracts.onTargetLost(c, r.loser);
@@ -261,6 +286,38 @@
           if (r.winner === a) break;
         }
         if (r.loser === a) break;
+      }
+    }
+    frontierClash(c);
+  }
+
+  /**
+   * GDD §12 "recurring small frontier clashes": rival kingdoms' patrols that meet skirmish, at
+   * most once every few days: a few men fall and the loser limps home, so no road is stripped bare.
+   * Story columns keep out.
+   */
+  function frontierClash(c) {
+    if (!CL.news.clashReady(c, now(c))) return;
+    const patrols = c.parties.filter((p) => !p.questTag && tpl(p.template).kind === 'patrol');
+    for (const a of patrols) {
+      for (const b of patrols) {
+        if (tpl(a.template).faction >= tpl(b.template).faction || dist(a, b) > CONTACT) continue;
+        // A skirmish, not a war: the loser loses a man or two and falls back home, the winner at
+        // most one, so the border fights never strip either kingdom's roads of patrols.
+        const aWins = A().next(c) < A().winChance(A().troopsPower(a.troops), A().troopsPower(b.troops));
+        const [winner, loser] = aWins ? [a, b] : [b, a];
+        const lost = A().expand(loser.troops).slice(0, SKIRMISH_LOSS.loser[A().int(c, 0, 1)]);
+        const won = A().next(c) < SKIRMISH_LOSS.winnerChance ? A().expand(winner.troops).slice(0, 1) : [];
+        A().removeTroops(loser.troops, lost);
+        A().removeTroops(winner.troops, won);
+        const [fw, fl] = [tpl(winner.template).faction, tpl(loser.template).faction];
+        CL.news.record(c, 'frontier_clash', { x: loser.x, y: loser.y, winner: fw, loser: fl }, now(c));
+        CL.news.clashed(c, now(c));
+        CL.diag.log('info', 'Frontier clash', { winner: winner.template, loser: loser.template, losses: [won.length, lost.length] });
+        for (const p of [winner, loser]) if (!troopCount(p)) remove(c, p);
+        const home = settlement(tpl(loser.template).home);
+        if (c.parties.includes(loser)) [loser.tx, loser.ty] = [home.mapX, home.mapY];
+        return;
       }
     }
   }
@@ -459,7 +516,10 @@
     const c = CL.campaign;
     const p = partyId != null ? find(c, partyId) : null;
     // GDD §10: beating Road Reavers helps whoever holds the land.
-    if (win && (CL.game.siteId || (p && tpl(p.template).kind === 'bandit'))) CL.realm.onBanditsBeaten(c);
+    if (win && (CL.game.siteId || (p && tpl(p.template).kind === 'bandit'))) {
+      CL.realm.onBanditsBeaten(c);
+      CL.news.record(c, 'player_deed', { x: c.world.x, y: c.world.y });
+    }
     if (!p) return;
     if (win && p.contractId) CL.contracts.onTargetDefeated(c, p);
     if (win) remove(c, p);

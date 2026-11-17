@@ -73,6 +73,12 @@
 /* 0.9.0 — market */
 #tradeScreen{text-align:left;font-size:clamp(12px,1.25vw,15px)}
 #tradeHeader{font-weight:bold;margin-bottom:6px}
+#tradeTalk{margin:0 0 6px;font-size:13px;font-style:italic;color:#d9c8a2}
+.newsCard{border:1px solid #3e5168;border-radius:6px;padding:8px 10px;margin:10px 0 6px;background:#0c1520}
+.newsCard h3{margin:0 0 4px;font-size:15px}
+.newsCard ul{margin:0;padding:0;list-style:none;font-size:13px}
+.newsCard li{margin:3px 0}
+.newsCard .day{color:#9fb2c6;margin-right:6px}
 .tradeGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px}
 .tradeCard{border:1px solid #5c4a28;border-radius:6px;padding:6px 8px;background:#0c1823}
 .tradeHead{display:flex;justify-content:space-between;align-items:center}

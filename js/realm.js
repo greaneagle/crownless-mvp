@@ -85,6 +85,7 @@
     c.owners[sid] = f;
     CL.diag.log('info', 'Fort changed hands', { fort: sid, from, to: f, reason });
     CL.ui.message(`${s.name} now flies the banner of the ${CL.content.get('factions', f).name}.`);
+    CL.news?.record(c, 'fort_taken', { fort: sid, owner: f, place: sid });
     return true;
   }
 

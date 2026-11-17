@@ -1,4 +1,4 @@
-# Crownless 0.26.0 — The Border March
+# Crownless 0.27.0 — The Border March
 
 A single-player, top-down party-battle prototype in plain HTML5 Canvas and classic JavaScript. There's no bundler, no runtime dependencies and no server. It's published to GitHub Pages straight from `main`.
 
@@ -16,6 +16,7 @@ A single-player, top-down party-battle prototype in plain HTML5 Canvas and class
 - **Progression:** battles earn XP. Your hero levels up to 10 and gets skill points every level and an attribute point every second level. Soldiers who fight earn XP and can be upgraded along the Valedorn and Aurelian troop trees for gold. Party size grows with Leadership and renown.
 - **Reputation:** the Valedorn Crown and the Aurelian Remnant each see you as Friendly, Neutral or Hostile. Contracts and beating Reavers on their land raise it; attacking their patrols or caravans lowers it. Friendly gives +2 party slots. Hostile kingdoms refuse recruits and contracts, and their patrols hunt you. Greywall and Ashgate forts can change hands.
 - **Contracts:** Stonebridge and Eastwatch post three kinds of work. **Bandit hunts:** find the gold-marked band and break it, then return for pay. **Caravan escorts:** ride beside a wagon to another settlement (it only rolls while you stay close) and beat the Reaver ambush on the road. **Deliveries:** carry goods (with a refundable deposit) or a sealed letter. Escorts and deliveries pay on arrival, and every finished contract wins favour with the town's kingdom.
+- **Regional news:** every two days a line of news reaches you (shown on the map and kept in the Journal): Reavers robbing caravans, patrols beaten or victorious, Valedorn and Aurelian patrols skirmishing on the border, forts changing hands, and your own deeds. Markets talk about what moved their prices: a robbed caravan makes its goods cost more where it was going; caravans, escorts and deliveries that arrive make them cheaper.
 - **Encounters:** when bandits catch you, or you attack their camps, choose **Attack** (fight it yourself), **Auto-resolve** (the odds are shown), **Negotiate** (pay their toll, or intimidate them if you're much stronger) or **Retreat** (faster parties get away more often).
 - Real-time four-direction hero movement. Sword swings have a visible windup, a strike window and a recovery, and hit everything in a 90° arc in front of you.
 - A frontal shield block that covers 120°. It can't cancel a swing you've already started, and enemy windups are drawn in red so you know when to block.

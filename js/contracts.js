@@ -199,10 +199,27 @@
   /** Escort and delivery pay on arrival: the job is done and paid in one go. */
   function finishOnArrival(c) {
     const k = c.contract;
+    tradeArrives(c, k);
     k.status = 'done';
     k.payAt = k.to;
     CL.ui.message(fill(tpl(k.template).done, k));
     return collect(c, true); // paid on the spot, even if the caravan rolls in a moment before you
+  }
+
+  /**
+   * Trade-world: what an escort or delivery brings in eases that good's price at the destination
+   * (as a regular caravan does, GDD §9), and the road hears of it (regional news).
+   */
+  function tradeArrives(c, k) {
+    const kind = tpl(k.template).kind;
+    const p = kind === 'escort' ? CL.parties.find(c, k.partyId) : null;
+    const good = kind === 'escort' ? p?.good : k.good;
+    const T = CL.trade;
+    if (good && c.markets[k.to]?.[good] != null) {
+      c.markets[k.to][good] = Math.max(T.SCARCITY.min, Math.round((c.markets[k.to][good] - CL.parties.CARAVAN_EFFECT) * 1000) / 1000);
+    }
+    if (kind === 'escort') CL.news.record(c, 'escort_arrived', { dest: k.to, good, faction: CL.realm.owner(k.giver, c) });
+    else if (good) CL.news.record(c, 'delivered', { dest: k.to, good });
   }
 
   /**

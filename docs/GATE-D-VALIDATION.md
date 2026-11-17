@@ -15,8 +15,60 @@ _Spec: GDD §3–§10 and §14 Gate D._
 | 4.7 Quest and dialogue interpreter | ✅ 0.20.0 |
 | 4.8–4.12 Q1–Q4 and the companion Mara | ✅ Q1 0.21.0 · Q2 0.22.0 · Mara 0.23.0 · Q3 0.24.0 · Q4 0.25.0 |
 | 4.13 Escort and delivery contracts | ✅ 0.26.0 |
-| 4.14 Trade-world interactions and regional news | ⬜ |
+| 4.14 Trade-world interactions and regional news | ✅ 0.27.0 |
 | 4.15 Gate D acceptance | ⬜ |
+
+---
+
+## Slice 13 — 0.27.0: Trade-world interactions and regional news (2026-11-17)
+
+### What's in (GDD §4 "A post-story status bulletin periodically announces patrol defeats, caravan losses and renewed tensions"; §9 "abundance updates through caravan arrivals or bandit losses"; §12 sandbox "recurring small frontier clashes … At a fixed interval, generate one regional news line from recent simulated events")
+- **Regional news** (`js/news.js`, `data/news.js`):
+  - The world sim records what happens:
+    - Reavers robbing a caravan
+    - caravans arriving
+    - Reavers beating a patrol, or a patrol breaking a band
+    - frontier clashes
+    - forts changing hands
+    - your own victories over Reavers
+    - escorts and deliveries you complete
+  - Every 2 days one news line is written. It covers the most important event not yet told, and the kind told last time counts for less, so one busy road doesn't fill every bulletin. With nothing to tell, a line about the border's tensions runs instead, coloured by the ending once there is one.
+  - The line appears as "News: …" on screen, and the last 8 are kept in a new **Regional news** section of the Journal, renamed from "Quest Journal" to "Journal".
+  - Lines take turns per kind and never draw on the world's random numbers, so news can't change how the simulation plays out.
+- **Market talk:** the Trade screen shows what the town's traders are saying for up to 4 days after an event moved its prices. Examples:
+  - "Reavers took the Aurelian caravan bound here, and salt costs more for it."
+  - "The Valedorn caravan came in with wool."
+- **Trade-world:**
+  - Completed escorts and goods deliveries now ease the price of what they bring at the destination, as a regular caravan does (−0.08 scarcity, GDD ±0.05–0.1).
+  - Robbed caravans already raised prices where they were going (0.10.0). Now the news and market talk say so.
+- **Frontier clashes:**
+  - Each kingdom's patrols sometimes (15% of legs) ride a border beat between Stonebridge and Eastwatch.
+  - When a clash is due, rival patrols that see each other close in.
+  - The clash is a skirmish, not a war: the loser loses 1–2 men and falls back to its home fort, and the winner loses at most 1. At most one clash every 4 days, about 4–6 a month.
+  - Story columns (Q3/Q4) never join in.
+- **Saves:** news events, lines and clocks are saved. Old saves start with empty news, and the strict importer rejects unknown news kinds and places.
+
+### Tuning found by simulation
+- **First version:** clashes destroyed the losing patrol, and patrols rode the border on 30% of legs. Over 16 seeds × 30 days, the bot ended with 98 soldiers in total against 148 without clashes, and one seed never levelled in 15 days (the Gate C stall check failed). Weakened patrols lost more often to the Reavers, who then preyed on the player.
+- **Shipped version:** small skirmishes (above), the beat at 15%, and a 4-day spacing. This is back within noise of the no-clash baseline, and the stall check passes.
+- **Bulletins:** the first draft told "caravan lost" in every bulletin, so the kind told last now gets a repeat penalty. Line variants take turns per kind.
+
+### Checks
+- `tests/news.test.js` (8 tests) covers:
+  - quiet-day lines on a 2-day beat, catch-up capped at 2 after a long wait, newest first
+  - bulletin priority, each event told once, unknown kinds ignored
+  - an off-screen robbery: dearer goods, the news, market talk only at that town, talk fading after 4 days
+  - a caravan arriving
+  - frontier skirmishes: small losses, the loser riding home, the 4-day spacing
+  - a fort changing hands, the player's deed, ending-coloured quiet days
+  - a goods delivery easing iron in Oakford, with market talk
+  - save round trip, strict import, old saves
+- 276 tests pass; lint clean; 30-day simulations normal (nobody stuck).
+- Browser, with real clicks:
+  - Waited on the map from day 3. On day 6 the first bulletin arrived, a frontier clash near Eastwatch, and the Journal showed it under Regional news.
+  - Rode to Eastwatch and opened the market: "Market talk: Traders grumble: Reavers took the Aurelian caravan bound here…".
+  - That led to rewording "short/dear" to "costs more", since one lost caravan only moves a price a little.
+  - No console errors. The preview save was restored afterwards.
 
 ---
 

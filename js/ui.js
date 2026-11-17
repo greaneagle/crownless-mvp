@@ -67,7 +67,7 @@
       return { title: t.npc.name.toUpperCase(), text: `“${t.line}”`, button: null };
     }
     if (mode === 'journal') {
-      return { title: 'QUEST JOURNAL', text: '', button: 'Back' };
+      return { title: 'JOURNAL', text: '', button: 'Back' };
     }
     if (mode === 'ending') {
       return { title: g.ending.title.toUpperCase(), text: g.ending.text, button: 'Return to the March' };
@@ -433,6 +433,9 @@
     const slow = Math.round((1 - T.loadFactor(c)) * 100);
     $('#tradeHeader').textContent =
       `${c.gold} crowns · Cargo ${weight}/${cap} weight${slow ? ` (travel ${slow}% slower)` : ''}`;
+    const talk = CL.news.marketTalk(c, sid);
+    $('#tradeTalk').textContent = talk ? `Market talk: ${talk}` : '';
+    $('#tradeTalk').classList.toggle('hidden', !talk);
 
     const btn = (label, disabled, onClick) => {
       const b = Object.assign(document.createElement('button'), { type: 'button', textContent: label, disabled });
@@ -1036,8 +1039,21 @@
   function renderJournal() {
     const rows = CL.story.journal();
     const el = (tag, cls, text) => Object.assign(document.createElement(tag), { className: cls || '', textContent: text || '' });
+    // Regional news (GDD §12): the latest bulletins, newest first.
+    const news = CL.news.recent();
+    const newsCard = el('div', 'newsCard');
+    newsCard.append(el('h3', '', 'Regional news'));
+    if (news.length) {
+      const ul = el('ul');
+      for (const n of news) {
+        const li = el('li');
+        li.append(el('span', 'day', `Day ${CL.party.dayNumber(n.day)}`), document.createTextNode(n.text));
+        ul.append(li);
+      }
+      newsCard.append(ul);
+    } else newsCard.append(el('p', '', 'No news yet. Word travels every couple of days.'));
     if (!rows.length) {
-      $('#journalScreen').replaceChildren(el('p', '', 'No quests yet. People in Stonebridge may have work for a stranger — try the Elder.'));
+      $('#journalScreen').replaceChildren(el('p', '', 'No quests yet. People in Stonebridge may have work for a stranger — try the Elder.'), newsCard);
       return;
     }
     const label = { active: 'In progress', done: 'Complete', failed: 'Failed' };
@@ -1054,6 +1070,7 @@
         }
         return card;
       }),
+      newsCard,
     );
   }
 

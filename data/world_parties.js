@@ -36,6 +36,9 @@
       speed: 3.6, // heavier than bands, so a band that spots them first can slip away
       detection: 7,
       home: 'greywall_fort',
+      // GDD §12 "recurring small frontier clashes": some legs ride the border beat between the
+      // kingdoms (map point, jittered ± jitter), where rival patrols may meet.
+      frontier: { x: 56, y: 43, jitter: 4, chance: 0.15 },
       troops: { footman: [3, 4], hunter: [2, 3], levy: [2, 3] },
       // Attacking a kingdom's patrol or caravan costs 15 reputation with it (GDD §10); a Hostile kingdom's patrols hunt you.
       reward: { goldBase: 20, goldPerKill: 4, renown: 6 },
@@ -54,6 +57,7 @@
       speed: 3.6, // heavier than bands, so a band that spots them first can slip away
       detection: 7,
       home: 'ashgate_fort',
+      frontier: { x: 56, y: 43, jitter: 4, chance: 0.15 },
       troops: { spearman: [3, 4], skirmisher: [2, 3], recruit: [2, 3] },
       reward: { goldBase: 20, goldPerKill: 4, renown: 6 },
       lootBySize: [[99, 'mid']],
