@@ -1,3 +1,4 @@
+// @ts-check
 /* Crownless party & campaign operations: recruiting, the day clock, wounded recovery,
  * battle results (casualties, rewards, loot) applied as a single exactly-once transaction. */
 (function (root) {
@@ -14,7 +15,9 @@
   const DEFEAT_GOLD_KEPT = 0.8; // GDD §6: lose ~20% of carried crowns
 
   const c = () => CL.campaign;
+  /** @param {Soldier} s */
   const troopOf = (s) => CL.content.troop(s.troop);
+  /** @param {Soldier} s */
   const isWounded = (s) => s.woundedUntil !== null;
   const healthySoldiers = () => c().roster.filter((s) => !isWounded(s));
   const woundedSoldiers = () => c().roster.filter(isWounded);
@@ -64,9 +67,14 @@
       .map(([to, cost]) => ({ to, cost, xp: UPGRADE_XP[t.tier], locked: null }));
   }
 
+  /** @param {Soldier} s */
   const readyFor = (s) => s.woundedUntil === null && s.xp >= (UPGRADE_XP[CL.content.troop(s.troop).tier] ?? Infinity);
 
-  /** Upgrade up to max ready soldiers of one troop type along one branch. All-or-nothing per soldier. */
+  /**
+   * Upgrade up to max ready soldiers of one troop type along one branch. All-or-nothing per soldier.
+   * @param {ContentId} fromId @param {ContentId} toId @param {number} [max] @param {Campaign} [camp]
+   * @returns {number} soldiers upgraded
+   */
   function upgrade(fromId, toId, max = Infinity, camp = c()) {
     const opt = upgradeOptions(fromId).find((o) => o.to === toId);
     if (!opt || opt.locked) return 0;
@@ -83,7 +91,10 @@
     return done;
   }
 
-  /** Award battle XP to the hero and to the soldiers who took part. */
+  /**
+   * Award battle XP to the hero and to the soldiers who took part.
+   * @param {Campaign} camp @param {BattleOutcome} outcome @returns {XpAward}
+   */
   function awardXp(camp, { win, kills, wounded, participants = [], soldierKills = {} }) {
     const heroXp = win ? XP.heroWin + XP.heroPerKill * kills : XP.heroLoss + XP.heroPerKillLoss * kills;
     const levels = CL.character.gainXp(heroXp, camp);
@@ -111,7 +122,11 @@
     return true;
   }
 
-  /** Advance the campaign clock; wounded soldiers whose time is up return to duty. */
+  /**
+   * Advance the campaign clock; wounded soldiers whose time is up return to duty.
+   * The one way campaign time passes (upkeep, markets, world parties, contracts, story, news).
+   * @param {number} days @param {Campaign} [camp] @returns {number[]} IDs of soldiers who healed
+   */
   function advanceDays(days, camp = c()) {
     const from = camp.day;
     camp.day += days;
@@ -144,7 +159,10 @@
     return healed;
   }
 
-  /** Roll each fallen ally as killed or wounded. Returns soldier-id lists. */
+  /**
+   * Roll each fallen ally as killed or wounded. Returns soldier-id lists.
+   * @param {Unit[]} allies @returns {{ killed: number[], wounded: number[] }}
+   */
   function rollCasualties(allies) {
     const killed = [];
     const wounded = [];
@@ -168,6 +186,7 @@
 
   /** Weighted loot: one roll per kill at the encounter's chance. Returns { itemId: count }. */
   function rollLoot(enc, kills) {
+    /** @type {Record<ContentId, number>} */
     const loot = {};
     const lt = CL.content.lootTable(enc.loot);
     const table = lt?.table || [];
@@ -194,6 +213,8 @@
   /**
    * Apply one battle's outcome to the campaign. Pure with respect to the DOM.
    * Guarded by battleId so a battle can never pay out twice.
+   * @param {Campaign} camp @param {BattleOutcome} outcome
+   * @returns {BattleResult | null} null when this battle was already applied
    */
   function applyBattleResult(camp, outcome) {
     const { battleId, encounterId, encounter, win, kills, killed, wounded } = outcome;
@@ -298,7 +319,11 @@
     CL.ui.changeMode('result');
   }
 
-  /** Result screen text for a fought or auto-resolved battle. Only numbers and data names are interpolated. */
+  /**
+   * Result screen text for a fought or auto-resolved battle. Only numbers and data names are interpolated.
+   * @param {{ win: boolean, r: BattleResult | null, kills: number, killed: number[], wounded: number[],
+   *   survivors: number, waves?: string, auto?: { pp: number, pe: number } }} info
+   */
   function resultHtml({ win, r, kills, killed, wounded, survivors, waves, auto }) {
     const recoverDay = dayNumber(CL.campaign.day + CL.save.WOUND_DAYS);
     const lines = [

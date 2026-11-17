@@ -1,3 +1,4 @@
+// @ts-check
 /* Crownless units: construction, facing, swing phases and movement. Pure logic, no DOM. */
 (function (root) {
   'use strict';
@@ -22,6 +23,8 @@
   /**
    * Build a battle unit from a troop definition (data/troops.js).
    * `soldierId` links an allied unit back to its campaign roster entry.
+   * @param {number} x @param {number} y @param {'ally' | 'enemy'} team @param {ContentId} troopId
+   * @param {number | null} [soldierId] @returns {Unit}
    */
   function makeUnit(x, y, team, troopId, soldierId = null) {
     const t = CL.content.troop(troopId);
@@ -205,6 +208,7 @@
    * One separation step over the living units. A uniform grid with SPACING-sized cells means each
    * unit only checks its own and neighbouring cells, so the cost grows with the number of units, not
    * with every pair. Returns how many pairs were pushed apart.
+   * @param {Unit[]} units @returns {number}
    */
   function separate(units) {
     const live = units.filter((u) => u?.alive);

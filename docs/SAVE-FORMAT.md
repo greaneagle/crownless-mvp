@@ -53,7 +53,7 @@ Every field is validated on load by `CL.save.sanitize` and the modules it calls,
 | `nextContractId`, `contractsDone` | integers | contracts | |
 | `reputation` | `{ valedorn, aurelian }` | realm | −100 … 100 |
 | `owners` | `{ fortId: factionId }` | realm | Only the forts; every other place keeps its content owner |
-| `story` | `{ flags, quests, visits }` | story | `quests[id] = { status, stage, notes, startedDay, stageDay?, endedDay?, expired? }`; `flags` hold booleans, strings or numbers (for example `ending`, `q2_choice`, `mara_saved`) |
+| `story` | `{ flags, quests, visits }` | story | `quests[id] = { status, stage, notes, startedDay, stageDay?, endedDay?, expired? }` (`expired` is the ID of the stage whose deadline already ran out); `flags` hold booleans, strings or numbers (for example `ending`, `q2_choice`, `mara_saved`) |
 | `companion` | `{ id, woundedUntil, equipment, away? }` or `null` | companion | Mara, once she joins |
 | `news` | `{ events, lines, next, clashUntil, turns? }` | news | Recent world events (≤ 24), bulletins (≤ 8), the next bulletin day, the frontier-clash timer, line rotation |
 

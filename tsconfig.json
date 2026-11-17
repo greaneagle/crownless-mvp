@@ -1,0 +1,17 @@
+{
+  // Type checking only (V2-00): no build step and no output. The game still runs the plain .js files.
+  // Only files that start with `// @ts-check` are checked; the rest are read for their globals.
+  // Run with `npm run typecheck` (also part of `npm run lint`).
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": false,
+    "noEmit": true,
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": [],
+    "strict": false,
+    "noImplicitAny": false,
+    "skipLibCheck": true
+  },
+  "include": ["types/*.d.ts", "js/*.js"]
+}

@@ -1,3 +1,4 @@
+// @ts-check
 /* Crownless strategic world map: travel, terrain, campaign time, settlements and sites.
  * State lives in CL.campaign.world (saved); the current journey is CL.game.travel (transient).
  * Pure logic — DOM only through CL.ui hooks. */
@@ -233,7 +234,11 @@
       world().location = t.id;
       CL.save.write(); // GDD §13: autosave when entering a settlement
       const nudge = CL.portable.reminder();
-      if (nudge) (root.setTimeout || ((f) => f()))(() => CL.ui.message(nudge), 1500); // after the arrival news has been read
+      if (nudge) {
+        const remind = () => CL.ui.message(nudge);
+        if (root.setTimeout) root.setTimeout(remind, 1500); // after the arrival news has been read
+        else remind(); // no timers (Node tests)
+      }
       CL.diag.log('info', 'Entered settlement', { id: t.id, day: CL.campaign.day });
       CL.story.emit('enter', { settlement: t.id });
       CL.contracts.onArrive(CL.campaign, t.id); // deliveries and escorts are paid on arrival

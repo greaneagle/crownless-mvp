@@ -1,3 +1,4 @@
+// @ts-check
 /* Crownless story interpreter (GDD §4 quests, §13 "event-driven updates notify quest flags when
  * battles, trades and conversations resolve"; the QuestTracker service).
  *

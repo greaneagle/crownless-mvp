@@ -1,6 +1,6 @@
 # Crownless — Project Status & Roadmap
 
-_Last reviewed: 2026-11-17 · Build 1.0.0 · Spec: `Crownless_MVP_GDD_v1.md` (engine overridden: HTML5 Canvas + classic JS, no bundler, GitHub Pages)._
+_Last reviewed: 2026-11-17 · Build 1.1.0 · Spec: `Crownless_MVP_GDD_v1.md` (engine overridden: HTML5 Canvas + classic JS, no bundler, GitHub Pages)._
 
 This replaces the opencode-swarm plan (`.swarm/plan.md`, removed). The gate structure (A→E) is kept from the GDD; the task list is condensed and re-ordered around what the code actually needs.
 
@@ -88,13 +88,14 @@ All 10 settlements; Stonebridge walkable hub; 3 battle maps; ~30 items; AI caval
 
 ### Phase 6+ — v2 (planned; see `docs/V2-PLAN.md`)
 **Workflow:** everything on `main`. GitHub Pages is the test build, not a release.
+**Version numbering (owner-approved, 2026-11-17):** each finished v2 task bumps the minor version (1.1.0, 1.2.0, …); fixes bump the patch; docs-only tasks (ART-01, R-01–R-03) bump the patch; V2-13 acceptance ships **2.0.0**. Save schema steps are numbered separately (v3, v4, …), one per task that changes the save's shape, each with its own migration.
 From the owner's v2.0 design (`Crownless_v2_0_Feature_and_Systems_Design_Part_1.md` and `_Part_2.md`). Every system ships a default path, a one-decision preset and optional expert depth; power is gained and lost without ever ending the campaign.
 - **Playtest findings (owner, 2026-11-17)** — in `docs/V2-PLAN.md` §4b:
   - **F-1, troops with XP but no upgrade.** Confirmed: the stuck soldiers were Mercenaries, which have no upgrade path while the Party screen shows an XP target. The owner chose to fix this in v2 through a **troop tree discovered as you play** (V2-03b). Unknown troops are hidden, troops seen in battle show only their name, and troops you have owned or trained show full stats. End-of-path troops show "max tier", and there is an "Upgrade all ready" action. Nothing changes before then.
   - **F-2, soldiers stacking on one spot in battle.** ✅ Fixed in 0.36.0: soldiers now have bodies. In 0.36.1 the spacing was tightened to shoulder to shoulder (12 px) at the owner's request. They never stack, and charging riders still ride through. V2-05 keeps this working on larger maps.
 - **Phase 6, v2.0 "The Living Warband":**
   - ART-01 an art style guide and asset list (alongside)
-  - V2-00 type checking with `@ts-check` and JSDoc (no build step)
+  - ✅ (1.1.0) V2-00 type checking with `@ts-check` and JSDoc (no build step): `npm run typecheck` (TypeScript 6.0.3 via `npx`, part of `npm run lint`), shared types in `types/crownless.d.ts`, seven modules checked (`core`, `save`, `party`, `units`, `combat`, `story`, `world`)
   - V2-01 save schema v3, migrations and a storage layer
   - V2-02 one idempotent result path, events and seeded randomness
   - V2-03 named soldiers and service records, with a data-driven, moddable culture name generator

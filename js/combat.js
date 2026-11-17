@@ -1,3 +1,4 @@
+// @ts-check
 /* Crownless battle simulation: waves, swings, blocks, AI, arrows, win/loss checks.
  * Touches the DOM only through CL.ui hooks so it can run under Node tests. */
 (function (root) {

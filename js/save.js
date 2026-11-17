@@ -1,3 +1,4 @@
+// @ts-check
 /* Crownless save service.
  *
  * Schema v2 (key `crownless_save`): individual soldiers with troop IDs, XP and wound timers,
@@ -25,8 +26,10 @@
   /**
    * A brand-new campaign (GDD §5): the background's kit — 60 crowns, worn sword, clothing,
    * oak shield, food — and no soldiers. The character itself is filled in by the creator.
+   * @param {ContentId} [background] @returns {Campaign}
    */
   function starter(background = 'farmhand') {
+    /** @type {Campaign} */
     const c = {
       version: VERSION,
       gold: 0,
@@ -67,6 +70,10 @@
     return c;
   }
 
+  /**
+   * Enlist a new soldier with the next unused ID.
+   * @param {Campaign} c @param {ContentId} troop @param {number | null} [woundedUntil] @returns {Soldier}
+   */
   function addSoldier(c, troop, woundedUntil = null) {
     const s = { id: c.nextSoldierId++, troop, xp: 0, woundedUntil };
     c.roster.push(s);
@@ -76,7 +83,10 @@
   const knownTroop = (id) => Boolean(CL.content.table('troops')[id]) && id !== 'hero';
   const knownItem = (id) => Boolean(CL.content.table('items')[id]);
 
-  /** Validate a parsed v2 save; unknown IDs and malformed entries are dropped (GDD §13). */
+  /**
+   * Validate a parsed v2 save; unknown IDs and malformed entries are dropped (GDD §13).
+   * @param {any} d parsed JSON of unknown shape @returns {Campaign | null} null if it isn't a v2 save
+   */
   function sanitize(d) {
     if (d?.version !== VERSION) return null;
     const s = starter();
@@ -118,7 +128,10 @@
     return s;
   }
 
-  /** Convert a 0.3.x aggregate save into a v2 roster. */
+  /**
+   * Convert a 0.3.x aggregate save into a v2 roster.
+   * @param {any} d @returns {Campaign | null}
+   */
   function migrateV1(d) {
     if (d?.version !== 1) return null;
     const c = starter();

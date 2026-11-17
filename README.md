@@ -1,4 +1,4 @@
-# Crownless 1.0.0 — The Border March
+# Crownless 1.1.0 — The Border March
 
 A single-player, top-down party-battle prototype in plain HTML5 Canvas and classic JavaScript. There's no bundler, no runtime dependencies and no server. It's published to GitHub Pages straight from `main`.
 
@@ -92,6 +92,8 @@ js/               game runtime, attached to window.Crownless
 data/             content definitions (window.CROWNLESS_CONTENT): troops, encounters, world map, items, backgrounds…
 assets/           sprite PNGs (u#### units, w#### world tiles)
 tests/            node:test suite (no dependencies)
+types/            shared types for the type checker only (the page never loads them)
+tsconfig.json     type-checker settings: checks the js/ files marked // @ts-check, emits nothing
 ```
 
 Script order in `index.html` matters, because each module uses the ones loaded before it.
@@ -113,6 +115,8 @@ npm test
 ```bash
 npm run lint
 ```
+
+`lint` runs Biome and then the type checker (`npm run typecheck`, which is TypeScript's `tsc --noEmit` fetched by `npx`). There is no build step: the type checker reads the JSDoc in modules that start with `// @ts-check` (`core`, `save`, `party`, `units`, `combat`, `story`, `world` so far) against the shared types in `types/crownless.d.ts`, and writes nothing. The game still runs the plain `.js` files.
 
 ```bash
 npm run simulate
@@ -142,4 +146,4 @@ On every push to `main`, [`.github/workflows/deploy.yml`](.github/workflows/depl
 
 ## Known limits
 
-v1.0.0 is the complete MVP: Gates A–E passed (see `docs/RELEASE-NOTES.md`). Next is v2 (`docs/V2-PLAN.md`). Hairstyles wait for sprite art. The music is three short synthesized loops, a placeholder the GDD allows until final polish. Ally commands are simple, not a formation system. The sprites were made with AI by the project owner using Sprite Studio (their own tool); some animations are not yet hand-aligned. See [`docs/ASSETS.md`](docs/ASSETS.md) for where every asset comes from. Browser saves can be cleared by the browser.
+v1.0.0 is the complete MVP: Gates A–E passed (see `docs/RELEASE-NOTES.md`). v2 is under way on `main` (builds 1.1.0 onward; `docs/V2-PLAN.md`). Hairstyles wait for sprite art. The music is three short synthesized loops, a placeholder the GDD allows until final polish. Ally commands are simple, not a formation system. The sprites were made with AI by the project owner using Sprite Studio (their own tool); some animations are not yet hand-aligned. See [`docs/ASSETS.md`](docs/ASSETS.md) for where every asset comes from. Browser saves can be cleared by the browser.
