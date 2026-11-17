@@ -1,4 +1,4 @@
-# Crownless 0.32.0 — The Border March
+# Crownless 0.33.0 — The Border March
 
 A single-player, top-down party-battle prototype in plain HTML5 Canvas and classic JavaScript. There's no bundler, no runtime dependencies and no server. It's published to GitHub Pages straight from `main`.
 
@@ -41,7 +41,7 @@ A single-player, top-down party-battle prototype in plain HTML5 Canvas and class
 - **Sound and settings:** synthesized sound effects and three music loops (menu, world, battle), generated in the browser with no sound files. The ⚙ button (on the map, in town and in battle, which pauses) and the title screen open **Settings**: music and effects volume, battle size (20 / 30 / 40 units at once), health bars over soldiers, and reduced effects. Settings stay on the device and are not part of a save.
 - **Developer tools** (the Logs and Debug buttons) show on a local dev server. On the published site they are hidden; open the page with `?dev` added to the address (for example `…/crownless-mvp/?dev`) to show them on that device, and `?dev=0` to hide them again. F3 opens the diagnostics panel either way.
 - The **Debug** button gives testing shortcuts: hero and troop XP, renown, contracts, crowns, trade goods and prices, spawning or clearing world parties, food and morale, soldiers, items, stats, god mode, time, teleport, win or lose a battle, and wiping the save. Every use is logged.
-- The game auto-saves in the browser and keeps a backup of the previous save. Saves from 0.3 and 0.4 are converted automatically. A diagnostics panel (F3) shows logs and can export them as JSON or TXT.
+- The game auto-saves in the browser (after battles, in settlements, and when the page is hidden or closed) and keeps a backup of the previous save; if the latest save is ever unreadable, the one before it loads and you are told. With the game open in two tabs, the older tab stops saving so it can't overwrite newer progress. Save & export shows when you last exported a copy, and the game reminds you now and then (browsers, notably iOS Safari, can clear site storage). Saves from 0.3 and 0.4 are converted automatically. A diagnostics panel (F3) shows logs and can export them as JSON or TXT.
 - Landscape phone controls: joystick, Attack, Block and an Orders menu above them. The game pauses when you switch away and asks you to rotate in portrait.
 - Gate details and playtest checklists: [`docs/GATE-A-VALIDATION.md`](docs/GATE-A-VALIDATION.md), [`docs/GATE-B-VALIDATION.md`](docs/GATE-B-VALIDATION.md), [`docs/GATE-C-VALIDATION.md`](docs/GATE-C-VALIDATION.md), [`docs/GATE-D-VALIDATION.md`](docs/GATE-D-VALIDATION.md)
 

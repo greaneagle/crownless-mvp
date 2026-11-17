@@ -103,7 +103,64 @@
    * Parse and check an exported file (or a raw save object). Never touches storage.
    * Returns { ok: true, campaign } or { ok: false, reason, problems }.
    */
+  /**
+   * Save text that went through a chat app, email or notes may pick up a byte-order mark, blank lines
+   * or code fences around it. Keep just the JSON object.
+   */
+  function clean(text) {
+    let t = String(text).replace(/^\uFEFF/, '').trim();
+    const first = t.indexOf('{');
+    const last = t.lastIndexOf('}');
+    if (first > 0 || (last >= 0 && last < t.length - 1)) t = t.slice(Math.max(0, first), last + 1);
+    return t;
+  }
+
+  // ---- Export reminders (GDD §13: browser storage can be cleared; iOS Safari clears it after ~7 days unused) ----
+
+  const EXPORT_KEY = 'crownless_last_export';
+  const REMIND_AFTER_DAYS = 7; // real days since the last export
+  const REMIND_FROM_DAY = 3; // campaign days played before the first reminder
+  let reminded = false;
+
+  function lastExport() {
+    try {
+      const v = JSON.parse(root.localStorage.getItem(EXPORT_KEY) || 'null');
+      return v && typeof v.at === 'number' ? v : null;
+    } catch {
+      return null;
+    }
+  }
+
+  /** Remember that the player took a copy (file or text) just now. */
+  function markExported(c = CL.campaign) {
+    try {
+      root.localStorage.setItem(EXPORT_KEY, JSON.stringify({ at: Date.now(), day: c.day }));
+    } catch {
+      // nothing to remember it in
+    }
+  }
+
+  /** Once a session, on entering a settlement: a nudge to export if it's overdue. Returns the text or null. */
+  function reminder(c = CL.campaign, now = Date.now()) {
+    if (reminded || !c?.character) return null;
+    const last = lastExport();
+    const due = last ? now - last.at > REMIND_AFTER_DAYS * 86400000 : c.day >= REMIND_FROM_DAY;
+    if (!due) return null;
+    reminded = true;
+    return last
+      ? 'It has been a while since you exported a copy of your save. Browsers can clear their storage — Save & export keeps one safe.'
+      : 'Your progress lives only in this browser, which can clear it. Save & export makes a copy you can keep or move to another device.';
+  }
+
+  /** Ask the browser not to clear this site's storage on its own (granted quietly by most; Firefox may ask). */
+  function persist() {
+    const s = root.navigator?.storage;
+    if (!s?.persist) return Promise.resolve(null);
+    return s.persisted().then((already) => already || s.persist()).catch(() => null);
+  }
+
   function parse(text) {
+    if (typeof text === 'string') text = clean(text);
     if (typeof text !== 'string' || !text.trim()) return { ok: false, reason: 'The file is empty.' };
     if (text.length > MAX_BYTES) return { ok: false, reason: 'The file is too large to be a Crownless save.' };
     let data;
@@ -204,6 +261,12 @@
   CL.portable = {
     FORMAT,
     PRE_IMPORT_KEY,
+    EXPORT_KEY,
+    clean,
+    lastExport,
+    markExported,
+    reminder,
+    persist,
     checksum,
     serialize,
     fileName,

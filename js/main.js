@@ -8,6 +8,7 @@
   CL.settings.load(); // device settings: volumes, battle size, effects
   CL.audio.bind();
   CL.campaign = CL.save.load();
+  CL.save.bindTabs();
   CL.assets.preload();
 
   CL.ui.$('#stage').dataset.dev = CL.dev ? 'on' : 'off';
@@ -61,6 +62,7 @@
   }
 
   CL.ui.changeMode('title');
+  if (CL.save.notice) CL.ui.message(CL.save.notice);
   diag.log('info', 'Crownless booted', { build: CL.BUILD, assetCount: diag.assets.requested });
   requestAnimationFrame(loop);
 })(typeof window !== 'undefined' ? window : globalThis);

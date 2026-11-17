@@ -160,6 +160,8 @@
     const backup = tryLoad(BACKUP_KEY, sanitize);
     if (backup) {
       CL.diag.log('warn', 'Main save unreadable; restored backup');
+      // Tell the player rather than quietly losing their last few minutes.
+      CL.save.notice = 'Your latest save could not be read, so the one before it was loaded. You may have lost a few minutes.';
       return backup;
     }
     const legacy = tryLoad(LEGACY_KEY, migrateV1);
@@ -171,7 +173,24 @@
     return starter();
   }
 
+  /**
+   * Another tab of this game wrote the save (the `storage` event only fires in the other tabs). This
+   * tab's copy is now out of date: it stops saving, so it can't overwrite newer progress, and says so.
+   */
+  function bindTabs() {
+    root.addEventListener?.('storage', (e) => {
+      if (e.key !== KEY || CL.save.stale) return;
+      CL.save.stale = true;
+      CL.diag.log('warn', 'Save changed in another tab; this tab stopped saving');
+      CL.ui?.showStale?.();
+    });
+  }
+
   function write() {
+    if (CL.save.stale) {
+      CL.ui?.message?.('This game is open in another tab. Reload this page to carry on here.');
+      return false;
+    }
     try {
       const previous = root.localStorage.getItem(KEY);
       if (previous) root.localStorage.setItem(BACKUP_KEY, previous);
@@ -202,7 +221,10 @@
     existed: false,
     lastSavedAt: null,
     lastError: null,
+    stale: false,
+    notice: null,
     load,
     write,
+    bindTabs,
   };
 })(typeof window !== 'undefined' ? window : globalThis);

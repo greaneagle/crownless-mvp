@@ -1,6 +1,6 @@
 # Crownless — Project Status & Roadmap
 
-_Last reviewed: 2026-11-17 · Build 0.32.0 · Spec: `Crownless_MVP_GDD_v1.md` (engine overridden: HTML5 Canvas + classic JS, no bundler, GitHub Pages)._
+_Last reviewed: 2026-11-17 · Build 0.33.0 · Spec: `Crownless_MVP_GDD_v1.md` (engine overridden: HTML5 Canvas + classic JS, no bundler, GitHub Pages)._
 
 This replaces the opencode-swarm plan (`.swarm/plan.md`, removed). The gate structure (A→E) is kept from the GDD; the task list is condensed and re-ordered around what the code actually needs.
 
@@ -21,7 +21,7 @@ This replaces the opencode-swarm plan (`.swarm/plan.md`, removed). The gate stru
 - **Gate B (party battle)** — done in 0.5.0: troops, waves and loot come from `data/`, armor formula, archer accuracy, per-soldier save v2 with migration/backup, 2-day wound recovery on a day clock. Only return-to-map is left, and it opens Gate C.
 - **Gate C** — ✅ passed (0.14.0): world map, travel and settlement menus (0.6.0); character creation, equipment and debug tools (0.7.0); food, wages and morale (0.8.0); trading (0.9.0); world parties and encounter choices (0.10.0); levels, troop upgrades and party cap (0.11.0); bandit-hunt contracts (0.12.0); save export/import (0.13.0); acceptance (0.14.0).
 - **Gate D** — ✅ passed (0.28.0): three battle maps with obstacles and fort garrisons (0.15.0); walkable Stonebridge (0.16.0); item catalogue, tiered loot and armouries (0.17.0); AI cavalry and all 15 troop roles (0.18.0); faction reputation and fort ownership (0.19.0); quest and dialogue interpreter with the Quest Journal (0.20.0); Q1 "A Stranger's Wage" (0.21.0); Q2 "The Broken Seal" (0.22.0); Mara the companion (0.23.0); Q3 "Two Banners" (0.24.0); Q4 "The Greywall Verdict" with three endings (0.25.0); escort and delivery contracts (0.26.0); trade-world interactions, frontier clashes and regional news (0.27.0); acceptance with a randomized whole-story soak test (0.28.0).
-- **Gate E** — in progress: battle scaling with a configurable battle size, reserves and a stress test (0.29.0); phone layout pass (0.30.0); settings and synthesized audio (0.31.0); first-time tips and How to Play (0.32.0).
+- **Gate E** — in progress: battle scaling with a configurable battle size, reserves and a stress test (0.29.0); phone layout pass (0.30.0); settings and synthesized audio (0.31.0); first-time tips and How to Play (0.32.0); save safety and cross-device QA (0.33.0).
 
 ### Problems to fix early
 1. **`game.js` is minified source.** Every feature from here touches it; it is unreadable for review and hostile to AI-assisted edits. De-minify and split before adding systems.
@@ -80,7 +80,7 @@ All 10 settlements; Stonebridge walkable hub; 3 battle maps; ~30 items; AI caval
 2. ✅ (0.30.0) Landscape UX pass: HUD fits beside the buttons, announcements below it, map labels placed without overlap, tap-to-walk steers, dev tools hidden in release builds (`?dev` shows them).
 3. ✅ (0.31.0) Settings and audio: Settings panel (music/SFX volume, battle size, health bars, reduced effects; kept on the device); 14 synthesized sound effects and 3 music loops via Web Audio, no files.
 4. ✅ (0.32.0) Tutorial and help: 15 first-time tips (once per device; the first battle waits on its controls card), a How to Play screen with every control, Q1 kept as the hands-on tutorial.
-5. Save safety and cross-platform export/import QA.
+5. ✅ (0.33.0) Save safety and cross-device export/import: save on page hide, two-tab guard, backup-load notice, export reminders and storage-persistence request, forgiving paste import, cross-device and old-build round trips.
 6. Asset provenance: the GDD requires original or licensed art — confirm the "Sprite Studio" source licence.
 7. Device QA and Gate E acceptance.
 

@@ -10,9 +10,54 @@ _Spec: GDD §6 (scaling), §12 (performance targets), §13 (saves), §14 Gate E,
 | 5.2 Landscape UX pass (the phone-size notes from Gate D; touch targets; dev buttons out of release builds) | ✅ 0.30.0 |
 | 5.3 Settings and audio (battle size, volume, sound effects) | ✅ 0.31.0 |
 | 5.4 Tutorial and help | ✅ 0.32.0 |
-| 5.5 Save safety and cross-platform export/import QA | ⬜ |
+| 5.5 Save safety and cross-platform export/import QA | ✅ 0.33.0 |
 | 5.6 Asset provenance (original or licensed art, GDD §11) | ⬜ |
 | 5.7 Device QA and Gate E acceptance | ⬜ |
+
+---
+
+## Slice 5 — 0.33.0: Save safety and cross-device saves (2026-11-17)
+
+### Audit (GDD §13 save model; §14 Gate E "export/import cross-platform … no critical data loss")
+**Already in place:**
+- an autosave after battles and on entering a settlement
+- a backup copy kept on every write, with fallback to it
+- a checksummed export, and a strict import that rejects unknown IDs, damaged files and newer versions without touching the current save
+- a copy of the current save kept before every import
+- a warning shown when the browser refuses a save
+
+Saves are small, about 9 KB after 60 game days, so storage quota is no concern. The audit found five ways progress could still be lost.
+
+| Gap | Fix |
+|---|---|
+| **Closing or switching away didn't save.** Phones close background tabs without warning, losing travel, waiting and trading done on the map since the last settlement. | The game now saves when the page is hidden or closed (`visibilitychange`, `pagehide`), except mid-battle: a battle in progress isn't part of the save and is fought again on return, as before. |
+| **Two tabs overwrote each other.** An older tab left open quietly overwrote progress made in a newer one. | When another tab writes the save, this tab stops saving and says so ("open in another tab — reload to carry on here"), and Save & export explains it. The newer save is never overwritten. |
+| **Browsers can clear site storage**, and iOS Safari does after about 7 days unused. The game gave no reminder. | Save & export shows when you last exported a copy ("No copy exported from this browser yet"). Once a session, on entering a settlement, a reminder appears if you've never exported by game day 3, or not for a week. Save now and Export also ask the browser to keep the game's storage (`navigator.storage.persist`); most grant it quietly, and the screen says so when granted. |
+| **Falling back to the backup was silent.** | The title screen now says: "Your latest save could not be read, so the one before it was loaded. You may have lost a few minutes." |
+| **Save text sent through a chat app, email or notes** can arrive with a byte-order mark, blank lines, ```json fences or a note around it, and was rejected. | Import keeps just the JSON object. Damage inside it is still caught by the checksum. |
+
+### Checks
+- `tests/save-safety.test.js` (6 tests) covers:
+  - the two-tab guard (the newer save untouched, the message shown)
+  - the backup loading with the notice
+  - four kinds of wrapped paste importing, with in-save damage still rejected
+  - the reminder timing
+  - **cross-device:** five campaigns at different stages (early Q1, mid-story, two finished stories, one mid-Q2), played by the story bot, exported on one "device" and imported on another fresh one, each identical
+  - **older builds:** a save without reputation, quests, Mara, news, fort owners or the per-template contract boards (as exported by 0.14.0) imports and plays, with the Elder offering Q1
+- 307 tests pass; lint clean.
+- Browser, with real clicks:
+  - **Two real tabs:** the second tab saved (1111 crowns), the first switched to "stopped saving" at once, and its Save now was refused with the reason while the newer save stayed.
+  - **Page hide mid-journey:** the save moved from day 3.35 to the live 3.51, with the new position.
+  - **A pasted save** wrapped in a note, a code fence and a BOM imported through the real paste box (4,242 crowns, mid-journey).
+  - **A corrupted main save:** the previous one loaded, and the title screen showed the notice.
+  - Export and Copy weren't pressed: one downloads a file and the other overwrites the clipboard. They're unchanged apart from recording the export time.
+  - No console errors. The preview save, its backup and storage were restored afterwards.
+
+### For the owner (real devices — the part only you can check)
+- [ ] **Phone → desktop:** Save & export → Export save file on the phone, then import that file on desktop. Then the reverse.
+- [ ] **Phone → phone (or desktop) by text:** Copy save text, send it to yourself in a chat app or email, paste it on the other device.
+- [ ] **On the phone, switch apps mid-journey:** leave the browser while travelling on the map, swipe it closed, reopen. You should be roughly where you were, not back at the last town.
+- [ ] **iPhone:** after Export, check the file landed in Files, and that Import from file can pick it.
 
 ---
 

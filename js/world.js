@@ -232,6 +232,8 @@
     if (t.type === 'settlement') {
       world().location = t.id;
       CL.save.write(); // GDD §13: autosave when entering a settlement
+      const nudge = CL.portable.reminder();
+      if (nudge) (root.setTimeout || ((f) => f()))(() => CL.ui.message(nudge), 1500); // after the arrival news has been read
       CL.diag.log('info', 'Entered settlement', { id: t.id, day: CL.campaign.day });
       CL.story.emit('enter', { settlement: t.id });
       CL.contracts.onArrive(CL.campaign, t.id); // deliveries and escorts are paid on arrival

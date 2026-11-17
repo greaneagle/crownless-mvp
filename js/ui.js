@@ -264,6 +264,15 @@
       : inGame
         ? `${CL.campaign.character.name}, ${CL.world.clockLabel()}. Last saved ${S.lastSavedAt ? ago(S.lastSavedAt) : 'when this session started'}.`
         : 'No game in progress — you can import a save from another browser or device.';
+    if (inGame) {
+      const last = CL.portable.lastExport();
+      status.textContent += ` ${last ? `Last copy exported ${ago(last.at)}.` : 'No copy exported from this browser yet.'}`;
+      if (S.persisted === true) status.textContent += ' This browser has agreed not to clear the game on its own.';
+    }
+    if (S.stale) {
+      status.className = 'warn';
+      status.textContent = 'This game is open in another tab, so this one has stopped saving. Reload the page to carry on here.';
+    }
     for (const id of ['#saveNowBtn', '#exportBtn', '#copySaveBtn']) $(id).disabled = !inGame;
     $('#restoreBtn').classList.toggle('hidden', !CL.portable.hasPreImport());
     const box = $('#importResult');
@@ -1231,7 +1240,14 @@
     };
   }
 
+  /** Another tab took over the save: say so plainly, once. */
+  function showStale() {
+    message('This game is open in another tab, so this one has stopped saving. Reload to carry on here.');
+    if (CL.game.mode === 'saves') renderSaves();
+  }
+
   CL.ui = {
+    showStale,
     showTip,
     hideTip,
     openHelp,

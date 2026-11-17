@@ -112,11 +112,15 @@
     $('#savesBtn').onclick = ui.openSaves;
     $('#titleSavesBtn').onclick = ui.openSaves;
     $('#saveNowBtn').onclick = () => {
+      P().persist().then((p) => (CL.save.persisted = p));
       const ok = CL.save.write();
-      ui.renderSaves({ ok, text: ok ? 'Saved.' : 'Saving failed — export your game instead.' });
+      const why = CL.save.stale ? 'Not saved: this game is open in another tab. Reload this page to carry on here.' : 'Saving failed — export your game instead.';
+      ui.renderSaves({ ok, text: ok ? 'Saved.' : why });
     };
     $('#exportBtn').onclick = () => {
+      P().persist().then((p) => (CL.save.persisted = p));
       ui.download(P().fileName(), 'application/json', P().serialize());
+      P().markExported();
       ui.renderSaves({ ok: true, text: 'Save file exported. Keep it somewhere safe, or open it in Crownless on another device.' });
     };
     $('#copySaveBtn').onclick = () => {
@@ -130,7 +134,10 @@
       if (!navigator.clipboard) return fallback();
       navigator.clipboard
         .writeText(text)
-        .then(() => ui.renderSaves({ ok: true, text: 'Save text copied. Paste it into "Paste save text" on the other device.' }))
+        .then(() => {
+          P().markExported();
+          ui.renderSaves({ ok: true, text: 'Save text copied. Paste it into "Paste save text" on the other device.' });
+        })
         .catch(fallback);
     };
     const tryImport = (text) => {
@@ -292,6 +299,9 @@
     const onHidden = () => {
       releaseAll();
       CL.ui.autoPause('page hidden');
+      // Phones may close a hidden tab without warning: keep what happened on the map since the last
+      // settlement. (A battle in progress isn't part of the save; it is fought again on return.)
+      if (CL.campaign?.character && CL.game.mode !== 'battle' && CL.game.mode !== 'title' && CL.game.mode !== 'create') CL.save.write();
     };
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) onHidden();
