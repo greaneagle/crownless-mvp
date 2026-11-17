@@ -12,7 +12,7 @@
   function screenFor(mode) {
     const g = CL.game;
     if (mode === 'result' && g.result.practice) {
-      return { title: 'STRESS TEST', text: 'How this device handled the battle:', button: 'Continue' };
+      return { title: g.result.practice.arena ? 'CAMERA TEST' : 'STRESS TEST', text: 'How this device handled the battle:', button: 'Continue' };
     }
     if (mode === 'result') {
       return {

@@ -1,4 +1,4 @@
-# Crownless 1.6.0 — The Border March
+# Crownless 1.7.0 — The Border March
 
 A single-player, top-down party-battle prototype in plain HTML5 Canvas and classic JavaScript. There's no bundler, no runtime dependencies and no server. It's published to GitHub Pages straight from `main`.
 
@@ -45,6 +45,7 @@ A single-player, top-down party-battle prototype in plain HTML5 Canvas and class
 - **Tips and How to Play:** the first time each screen or situation comes up (the map, Stonebridge, an encounter, the first battle, the market, low food, points to spend…), a short tip explains it once on this device; the first battle waits on its controls card. **How to play** (title screen, Settings, or a tip's More help) covers every system and lists the touch and keyboard controls. Tips can be switched off or shown again in Settings. The Elder's first quest remains the hands-on tutorial.
 - **Sound and settings:** synthesized sound effects and three music loops (menu, world, battle), generated in the browser with no sound files. The ⚙ button (on the map, in town and in battle, which pauses) and the title screen open **Settings**: music and effects volume, battle size (20 / 30 / 40 units at once), health bars over soldiers, and reduced effects. Settings stay on the device and are not part of a save.
 - **Developer tools** (the Logs and Debug buttons) show on a local dev server. On the published site they are hidden; open the page with `?dev` added to the address (for example `…/crownless-mvp/?dev`) to show them on that device, and `?dev=0` to hide them again. F3 opens the diagnostics panel either way.
+- The Debug panel's **Camera test 30 / 40** (1.7.0, PROTO-A) runs a practice battle in a forest three screens across with the camera following the hero, and reports fps, drawing time, the slowest frame and how long the armies took to meet.
 - The **Debug** button gives testing shortcuts: hero and troop XP, renown, contracts, crowns, trade goods and prices, spawning or clearing world parties, food and morale, soldiers, items, stats, god mode, time, teleport, win or lose a battle, and wiping the save. Every use is logged.
 - The game auto-saves in the browser (after battles, in settlements, and when the page is hidden or closed) and keeps a backup of the previous save; if the latest save is ever unreadable, the one before it loads and you are told. With the game open in two tabs, the older tab stops saving so it can't overwrite newer progress. Save & export shows when you last exported a copy, and the game reminds you now and then (browsers, notably iOS Safari, can clear site storage). Saves from 0.3 and 0.4 are converted automatically. A diagnostics panel (F3) shows logs and can export them as JSON or TXT.
 - Landscape phone controls: joystick, Attack, Block and an Orders menu above them. The game pauses when you switch away and asks you to rotate in portrait.
@@ -76,6 +77,8 @@ js/               game runtime, attached to window.Crownless
   troops.js       the troop tree as discovered (seen or owned), from events and hiring offers
   save.js         save schema v6: structure checks, migrations (0.3, v2 to v5), last-known-good backup, autosave
   assets.js       sprite preloading and frame tables
+  camera.js       battle camera: follows the hero in arenas larger than a screen (one-screen maps stay put)
+  arena.js        generated forest arena for the Debug panel's camera test (PROTO-A)
   units.js        units built from troop data, swing phases, facing, movement
   combat.js       waves, attacks, AI, arrows, win/loss
   party.js        recruiting, day clock, wounded recovery, battle results and loot

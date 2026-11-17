@@ -86,7 +86,8 @@
     g.practice = Array.isArray(enc.practice) ? { started: performance.now(), frames: 0, sim: 0, draw: 0, worst: 0, peak: 0 } : null;
     g.group = 'infantry';
     g.orders = { infantry: 'follow', archer: 'hold', cavalry: 'charge' };
-    g.battleMap = CL.content.get('battle_maps', enc.map || 'grass_field');
+    // A ready-made arena (the debug camera test, PROTO-A) or a battle map from the content.
+    g.battleMap = enc.mapDef || CL.content.get('battle_maps', enc.map || 'grass_field');
     const anchor = g.battleMap.spawn.hero;
     g.hero = makeUnit(anchor.x, anchor.y, 'ally', 'hero');
     Object.assign(g.hero, CL.character.heroCombat()); // HP, damage, armor, shield from the character
@@ -131,6 +132,7 @@
       a.holdY = a.y;
     }
     spawnWave();
+    CL.camera.snap(g); // one-screen maps keep the camera at 0,0
     CL.ui.hideBattleOverlays();
     CL.diag.log('info', 'Battle begun', { encounter: enc.id, battleId: g.battleId, deployed: placed, reserve: g.allyReserve.length, cap: BATTLE.activeCap });
   }
@@ -208,6 +210,7 @@
       g.effects.push({ x: target.x, y: target.y - 17, t: 0.2, color: '#f6daa6', kind: 'block' });
       return 'blocked';
     }
+    if (g.practice && g.practice.firstHit == null) g.practice.firstHit = g.t; // camera test: time to contact
     target.hp = Math.max(0, target.hp - mitigate(raw, target.armor));
     if (source && source.team !== target.team) {
       if (!target.hitBy) target.hitBy = new Set();
@@ -233,6 +236,7 @@
     target.swing = null;
     target.guard = false;
     if (target.team === 'enemy') g.kills++;
+    if (g.practice && g.practice.firstDown == null) g.practice.firstDown = g.t; // camera test: time to first blood
     if (source) source.kills = (source.kills || 0) + 1; // soldier XP for their own kills
     // Everyone else who wounded it earns an assist (soldiers' service records, V2-03).
     for (const u of target.hitBy || []) if (u !== source) u.assists = (u.assists || 0) + 1;
@@ -449,6 +453,7 @@
     for (const e of g.effects) e.t -= dt;
     g.effects = g.effects.filter((e) => e.t > 0);
     reinforce(g);
+    CL.camera.follow(g, dt);
 
     // GDD §15 edge case: the battle only ends when no one is left waiting to step in.
     if (g.enemies.every((e) => !e.alive) && !g.enemyReserve?.length) {

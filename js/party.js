@@ -391,11 +391,18 @@
       drawMs: Number(avg(p.draw)),
       worstFrameMs: Math.round(p.worst),
     };
+    // The camera test (PROTO-A) also reports the arena and how long the armies took to meet.
+    const big = CL.camera.scrolls(g);
+    if (big) {
+      const { w, h } = CL.camera.worldSize(g.battleMap);
+      Object.assign(stats, { arena: `${w}×${h}`, contactS: p.firstHit == null ? null : Number(p.firstHit.toFixed(1)), firstDownS: p.firstDown == null ? null : Number(p.firstDown.toFixed(1)), battleS: Number(g.t.toFixed(1)) });
+    }
     const html = [
       `<strong>${stats.fps} fps average over ${stats.seconds} s</strong>`,
       `Up to ${stats.peak} units on the field (battle size ${stats.cap})`,
       `Per frame: simulation ${stats.simMs} ms · drawing ${stats.drawMs} ms`,
       `Slowest frame: ${stats.worstFrameMs} ms`,
+      ...(big ? [`Arena ${stats.arena}: first contact after ${stats.contactS ?? '–'} s, first fall after ${stats.firstDownS ?? '–'} s, battle ${stats.battleS} s of play`] : []),
       'Nothing in your campaign changed.',
     ].join('<br>');
     g.result = { win, practice: stats, html };

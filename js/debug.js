@@ -135,6 +135,33 @@
     log('stress battle', { total, cap: CL.combat.BATTLE.activeCap });
   }
 
+  /**
+   * PROTO-A, the camera test run (docs/V2-PLAN.md): a practice battle of `total` units, all on the
+   * field at once, in a generated forest arena three screens across and down, with the camera
+   * following the hero and cavalry on both sides. Reports fps, drawing time, the slowest frame and
+   * how long the armies took to meet. Nothing in the campaign changes and nothing is saved.
+   */
+  function cameraTest(total) {
+    const allies = Math.floor(total / 2) - 1;
+    const mix = ['footman', 'rider', 'hunter', 'footman', 'levy', 'rider', 'longbowman', 'guard'];
+    const emix = ['reaver', 'horse_scout', 'looter', 'spearman', 'skirmisher', 'reaver'];
+    const wave = {};
+    for (let i = 0; i < total - allies - 1; i++) wave[emix[i % emix.length]] = (wave[emix[i % emix.length]] || 0) + 1;
+    CL.game.siteId = null;
+    CL.game.partyId = null;
+    CL.combat.setActiveCap(total); // everyone on the field at once: the camera has to cope with all of them
+    CL.combat.startBattle({
+      id: `camera_${total}`,
+      name: `Camera test (${total}, 3× forest)`,
+      mapDef: CL.arena.forest(3),
+      waves: [wave],
+      practice: Array.from({ length: allies }, (_, i) => mix[i % mix.length]),
+      reward: { goldBase: 0, goldPerKill: 0, renown: 0 },
+      loot: 'low',
+    });
+    log('camera test', { total, arena: '3x forest' });
+  }
+
   function wipeSave() {
     const S = CL.save;
     const pre = Array.from({ length: S.VERSION - 2 }, (_, i) => S.preMigrationKey(i + 2)); // crownless_save_v2, …
@@ -327,6 +354,11 @@
         toggle(false);
         stressBattle(n);
         return;
+      case 'camera':
+        if (mode === 'battle' || mode === 'result') return CL.ui.message('Finish the battle first');
+        toggle(false);
+        cameraTest(n);
+        return;
       case 'win':
       case 'lose':
         if (!endBattleNow(act === 'win')) CL.ui.message('Not in a battle');
@@ -377,6 +409,7 @@
     teleport,
     endBattleNow,
     stressBattle,
+    cameraTest,
     wipeSave,
     toggle,
     bind,

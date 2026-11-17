@@ -25,27 +25,36 @@
   }
 
   /** Battle ground for the current map: base colour, tiled texture, patches, decor (no collision). */
+  /**
+   * The battle ground, in world pixels (drawn through the camera). A one-screen map draws exactly as
+   * before; a larger arena (PROTO-A) draws only the part in view.
+   */
   function drawGround() {
-    const m = CL.game.battleMap || CL.content.get('battle_maps', 'grass_field');
+    const g = CL.game;
+    const m = g.battleMap || CL.content.get('battle_maps', 'grass_field');
     const gr = m.ground;
+    const { w: WW, h: WH } = CL.camera.worldSize(m);
+    const v = CL.camera.view(g);
     ctx.fillStyle = gr.base;
-    ctx.fillRect(0, 0, W, H);
+    ctx.fillRect(v.x, v.y, W, H);
 
     ctx.save();
     ctx.globalAlpha = 0.24;
     const tiles = gr.tiles;
-    for (let y = 0; y < H; y += 64) {
-      for (let x = 0; x < W; x += 64) {
+    const [x0, y0] = [Math.floor(v.x / 64) * 64, Math.floor(v.y / 64) * 64];
+    for (let y = y0; y < Math.min(WH, v.y + H); y += 64) {
+      for (let x = x0; x < Math.min(WW, v.x + W); x += 64) {
         const k = (x * 3 + y * 7) % 5 === 0 ? tiles[1 % tiles.length] : (x + y) % 3 === 0 ? tiles[2 % tiles.length] : tiles[0];
         drawImage(k, x, y, 65, 65);
       }
     }
     ctx.restore();
 
-    if (gr.patch) {
-      ctx.fillStyle = gr.patch.color;
+    for (const p of gr.patch ? [gr.patch, ...(gr.patches || [])] : gr.patches || []) {
+      if (!CL.camera.visible(g, p.x, p.y, Math.max(p.rx, p.ry))) continue;
+      ctx.fillStyle = p.color;
       ctx.beginPath();
-      ctx.ellipse(gr.patch.x, gr.patch.y, gr.patch.rx, gr.patch.ry, 0, 0, Math.PI * 2);
+      ctx.ellipse(p.x, p.y, p.rx, p.ry, 0, 0, Math.PI * 2);
       ctx.fill();
     }
     for (const r of gr.roads || []) {
@@ -85,16 +94,20 @@
 
     // Grass speckles.
     ctx.fillStyle = '#ffffff12';
-    for (let i = 0; i < 60; i++) ctx.fillRect((i * 167 + 53) % W, (i * 113 + 39) % H, 4, 2);
+    const speckles = Math.round((60 * WW * WH) / (W * H));
+    for (let i = 0; i < speckles; i++) {
+      const [sx, sy] = [(i * 167 + 53) % WW, (i * 113 + 39) % WH];
+      if (CL.camera.visible(g, sx, sy, 4)) ctx.fillRect(sx, sy, 4, 2);
+    }
 
     ctx.save();
     ctx.globalAlpha = 0.85;
-    for (const [tile, x, y, w, h] of m.decor || []) drawImage(tile, x, y, w, h);
+    for (const [tile, x, y, w, h] of m.decor || []) if (CL.camera.visible(g, x + w / 2, y + h / 2, Math.max(w, h))) drawImage(tile, x, y, w, h);
     ctx.restore();
 
     ctx.strokeStyle = '#2c3c2e';
     ctx.lineWidth = 12;
-    ctx.strokeRect(12, 12, W - 24, H - 24);
+    ctx.strokeRect(12, 12, WW - 24, WH - 24);
   }
 
   /** Where an obstacle sits in the depth order: its base line. */
@@ -765,6 +778,31 @@
     $('#waitBtn').textContent = CL.game.waiting ? 'Stop waiting' : 'Wait';
   }
 
+  /** Enemies off screen in a large arena: a red marker on the screen edge, pointing their way. */
+  function drawEdgeThreats(g) {
+    const cam = g.camera || { x: 0, y: 0 };
+    const [cx, cy] = [W / 2, H / 2];
+    ctx.save();
+    ctx.fillStyle = '#e0503c';
+    ctx.strokeStyle = '#1b1208';
+    ctx.lineWidth = 2;
+    for (const e of g.enemies) {
+      if (!e.alive || CL.camera.visible(g, e.x, e.y, 0)) continue;
+      const [dx, dy] = [e.x - cam.x - cx, e.y - cam.y - cy];
+      const k = Math.min((cx - 18) / Math.abs(dx || 1e-6), (cy - 18) / Math.abs(dy || 1e-6));
+      const [x, y] = [cx + dx * k, cy + dy * k];
+      const a = Math.atan2(dy, dx);
+      ctx.beginPath();
+      ctx.moveTo(x + Math.cos(a) * 10, y + Math.sin(a) * 10);
+      ctx.lineTo(x + Math.cos(a + 2.4) * 8, y + Math.sin(a + 2.4) * 8);
+      ctx.lineTo(x + Math.cos(a - 2.4) * 8, y + Math.sin(a - 2.4) * 8);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
   function draw() {
     const g = CL.game;
     ctx.clearRect(0, 0, W, H);
@@ -778,16 +816,23 @@
       if (performance.now() > g.messageUntil) CL.ui.$('#message').textContent = '';
       return;
     }
+    // The battlefield is drawn in world pixels through the camera (PROTO-A; a one-screen map keeps it at 0,0).
+    const cam = g.camera || { x: 0, y: 0 };
+    ctx.save();
+    ctx.translate(-Math.round(cam.x), -Math.round(cam.y));
     drawGround();
 
+    const seen = (x, y, margin) => CL.camera.visible(g, x, y, margin);
     const chars = [...g.allies, ...g.enemies];
     if (g.hero) chars.push(g.hero);
     chars.sort((a, b) => a.y - b.y); // painter's order by depth
-    for (const u of chars) if (u.ground) drawDowned(u);
+    for (const u of chars) if (u.ground && seen(u.x, u.y, 60)) drawDowned(u);
     // Living units and obstacles share one depth order, so units can pass behind trees and walls.
     const scene = [
-      ...chars.filter((u) => u.alive).map((u) => [u.y, () => drawUnit(u)]),
-      ...(g.battleMap?.obstacles || []).map((o) => [obstacleBase(o), () => drawObstacle(o)]),
+      ...chars.filter((u) => u.alive && seen(u.x, u.y, 80)).map((u) => [u.y, () => drawUnit(u)]),
+      ...(g.battleMap?.obstacles || [])
+        .filter((o) => seen(o.x + (o.w || 0) / 2, o.y + (o.h || 0) / 2, 120 + Math.max(o.w || 0, o.h || 0)))
+        .map((o) => [obstacleBase(o), () => drawObstacle(o)]),
     ].sort((p, q) => p[0] - q[0]);
     for (const [, paint] of scene) paint();
 
@@ -806,6 +851,8 @@
       ctx.arc(e.x, e.y, 15 * (1 - e.t / 0.4), 0, Math.PI * 2);
       ctx.stroke();
     }
+    ctx.restore();
+    if (CL.camera.scrolls(g)) drawEdgeThreats(g);
 
     if (g.mode === 'battle' || (g.mode === 'result' && g.hero)) updateHud(); // the final tally, not the frame before
     if (performance.now() > g.messageUntil) CL.ui.$('#message').textContent = '';

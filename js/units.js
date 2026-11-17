@@ -6,6 +6,8 @@
   const { rand, clamp, normalize } = CL.util;
 
   const BOUNDS = { minX: 47, maxX: 908, minY: 65, maxY: 490 };
+  // A larger arena (PROTO-A, V2-05) brings its own movement bounds; one-screen maps use BOUNDS.
+  const bounds = () => CL.game?.battleMap?.bounds || BOUNDS;
   const FACE_VECTORS = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
 
   // GDD §6 arcs, as minimum dot products against the facing vector.
@@ -102,6 +104,39 @@
 
   const obstacles = () => CL.game?.battleMap?.obstacles || [];
 
+  // Large arenas (PROTO-A, V2-05) have a hundred or more obstacles: a uniform grid finds the few near a
+  // point instead of checking them all. Each cell keeps obstacles in their original order, so results
+  // are exactly those of the full scan. Small maps (the three battle maps, the town) skip the grid.
+  const GRID_CELL = 128;
+  const GRID_FROM = 30; // obstacles before a map gets a grid
+  const GRID_PAD = UNIT_RADIUS + 4; // queries reach this far past a point
+  const grids = new WeakMap();
+  function gridOf(map) {
+    let grid = grids.get(map);
+    if (grid) return grid;
+    grid = new Map();
+    for (const o of map.obstacles) {
+      const [x0, y0, x1, y1] = o.shape === 'circle' ? [o.x - o.r, o.y - o.r, o.x + o.r, o.y + o.r] : [o.x, o.y, o.x + o.w, o.y + o.h];
+      for (let cy = Math.floor((y0 - GRID_PAD) / GRID_CELL); cy <= Math.floor((y1 + GRID_PAD) / GRID_CELL); cy++) {
+        for (let cx = Math.floor((x0 - GRID_PAD) / GRID_CELL); cx <= Math.floor((x1 + GRID_PAD) / GRID_CELL); cx++) {
+          const k = cx * 65536 + cy;
+          if (!grid.has(k)) grid.set(k, []);
+          grid.get(k).push(o);
+        }
+      }
+    }
+    grids.set(map, grid);
+    return grid;
+  }
+  const NONE = [];
+  /** The obstacles that could touch a unit or arrow at (x, y). */
+  function obstaclesNear(x, y) {
+    const map = CL.game?.battleMap;
+    const all = map?.obstacles || NONE;
+    if (all.length < GRID_FROM) return all;
+    return gridOf(map).get(Math.floor(x / GRID_CELL) * 65536 + Math.floor(y / GRID_CELL)) || NONE;
+  }
+
   /** Is (x, y) inside obstacle o grown by pad? Rectangles grow with rounded corners, matching collision. */
   function inside(o, x, y, pad = 0) {
     if (o.shape === 'circle') return Math.hypot(x - o.x, y - o.y) < o.r + pad;
@@ -111,7 +146,7 @@
   }
 
   /** Would a unit standing at (x, y) overlap any obstacle? */
-  const blocked = (x, y) => obstacles().some((o) => inside(o, x, y, UNIT_RADIUS));
+  const blocked = (x, y) => obstaclesNear(x, y).some((o) => inside(o, x, y, UNIT_RADIUS));
 
   /**
    * Push a unit out of every obstacle it overlaps (so movement slides along edges). Repeats a few
@@ -120,12 +155,12 @@
   function resolveObstacles(u) {
     for (let pass = 0; pass < 4; pass++) {
       resolveOnce(u);
-      if (!obstacles().some((o) => inside(o, u.x, u.y, UNIT_RADIUS - 0.01))) return;
+      if (!obstaclesNear(u.x, u.y).some((o) => inside(o, u.x, u.y, UNIT_RADIUS - 0.01))) return;
     }
   }
 
   function resolveOnce(u) {
-    for (const o of obstacles()) {
+    for (const o of obstaclesNear(u.x, u.y)) {
       if (o.shape === 'circle') {
         const dx = u.x - o.x;
         const dy = u.y - o.y;
@@ -159,8 +194,8 @@
         }
       }
     }
-    u.x = clamp(u.x, BOUNDS.minX, BOUNDS.maxX);
-    u.y = clamp(u.y, BOUNDS.minY, BOUNDS.maxY);
+    u.x = clamp(u.x, bounds().minX, bounds().maxX);
+    u.y = clamp(u.y, bounds().minY, bounds().maxY);
   }
 
   /**
@@ -253,22 +288,22 @@
       }
     });
     for (const u of moved) {
-      u.x = clamp(u.x, BOUNDS.minX, BOUNDS.maxX);
-      u.y = clamp(u.y, BOUNDS.minY, BOUNDS.maxY);
+      u.x = clamp(u.x, bounds().minX, bounds().maxX);
+      u.y = clamp(u.y, bounds().minY, bounds().maxY);
       resolveObstacles(u); // a crowd never squeezes anyone into a wall
     }
     return pushes;
   }
 
   /** Does a flying arrow at (x, y) hit cover that stops arrows (trees, walls, crates)? */
-  const arrowBlocked = (x, y) => obstacles().some((o) => o.blocksArrows !== false && inside(o, x, y));
+  const arrowBlocked = (x, y) => obstaclesNear(x, y).some((o) => o.blocksArrows !== false && inside(o, x, y));
 
   function move(u, dx, dy, dt) {
     let [vx, vy] = normalize(dx, dy);
     if (Math.abs(dx) + Math.abs(dy) < 0.5) return;
     if (u.role !== 'hero') [vx, vy] = steer(u, vx, vy); // the player steers the hero
-    u.x = clamp(u.x + vx * u.speed * dt, BOUNDS.minX, BOUNDS.maxX);
-    u.y = clamp(u.y + vy * u.speed * dt, BOUNDS.minY, BOUNDS.maxY);
+    u.x = clamp(u.x + vx * u.speed * dt, bounds().minX, bounds().maxX);
+    u.y = clamp(u.y + vy * u.speed * dt, bounds().minY, bounds().maxY);
     resolveObstacles(u);
     if (!isCommitted(u)) u.face = faceFromVector(vx, vy);
     u.anim += dt * 6;
@@ -277,8 +312,8 @@
   /** Shove u by distance px directly away from point (sx, sy), within the arena. */
   function push(u, sx, sy, distance) {
     const [vx, vy] = normalize(u.x - sx, u.y - sy);
-    u.x = clamp(u.x + vx * distance, BOUNDS.minX, BOUNDS.maxX);
-    u.y = clamp(u.y + vy * distance, BOUNDS.minY, BOUNDS.maxY);
+    u.x = clamp(u.x + vx * distance, bounds().minX, bounds().maxX);
+    u.y = clamp(u.y + vy * distance, bounds().minY, bounds().maxY);
     resolveObstacles(u);
   }
 

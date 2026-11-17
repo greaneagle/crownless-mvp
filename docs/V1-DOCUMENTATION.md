@@ -335,7 +335,9 @@ The sandbox carries on after the story ends.
 | `troops` | From 1.5.0: the troop tree as discovered (seen or owned), learned from events and hiring offers |
 | `save` | Save service: schema v2 at 1.0 (v3 from 1.2.0), backup on every write, fallback to the backup, migration from 0.3.x; from 1.2.0 also structure checks, migration steps and the travel autosave |
 | `assets` | Sprite loading (`assets/u####.png` units, `w####.png` world) and frame tables |
-| `units` | Units built from troop data: facing, swing phases, movement, obstacle steering, spacing |
+| `camera` | From 1.7.0: the battle camera (follows the hero in arenas larger than a screen; one-screen maps stay at 0,0) |
+| `arena` | From 1.7.0: the generated forest arena for the Debug camera test (PROTO-A) |
+| `units` | Units built from troop data: facing, swing phases, movement, obstacle steering, spacing (from 1.7.0: per-map bounds, an obstacle grid on big maps) |
 | `combat` | Battle simulation: waves and reserves, swings, blocks, arrows, AI, cavalry, win and loss |
 | `party` | Recruiting, the day clock (`advanceDays`), recovery, resting, battle results applied exactly once, XP and upgrades, party cap |
 | `upkeep` | Rations, weekly wages, morale, desertion |
@@ -436,6 +438,7 @@ Quests are data. `js/story.js` interprets three small vocabularies; its header c
   - The **Logs** and **Debug** buttons show on a local dev server.
   - On the published site, add `?dev` to the address to show them on that device, and `?dev=0` to hide them again.
   - F3 opens diagnostics either way.
+- **Camera test (from 1.7.0, PROTO-A):** Camera test 30 / 40 in the Debug panel: everyone on the field at once in a 2880×1620 forest, the camera following the hero, red markers at the screen edge for enemies out of view. The result screen adds the arena, time to first contact, first fall and battle length.
 - **Debug panel:** XP, crowns, renown, items, troops, food and morale, time, teleport, world parties, contracts, prices, god mode, win or lose a battle, wipe the save, and a **stress test** that reports fps, simulation and drawing time. Every action is logged as `Debug: …`.
 - **Diagnostics:** export as JSON or TXT.
 
