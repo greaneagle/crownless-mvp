@@ -1,4 +1,4 @@
-# Crownless 0.37.0 — The Border March
+# Crownless 0.38.0 — The Border March
 
 A single-player, top-down party-battle prototype in plain HTML5 Canvas and classic JavaScript. There's no bundler, no runtime dependencies and no server. It's published to GitHub Pages straight from `main`.
 
@@ -141,4 +141,4 @@ On every push to `main`, [`.github/workflows/deploy.yml`](.github/workflows/depl
 
 ## Known limits
 
-Gates A–D are complete; Gate E (release quality) is in progress. Hairstyles wait for sprite art. The music is three short synthesized loops, a placeholder the GDD allows until final polish. Ally commands are simple, not a formation system. The sprites were made with AI by the project owner using Sprite Studio (their own tool); some animations are not yet hand-aligned. See [`docs/ASSETS.md`](docs/ASSETS.md) for where every asset comes from. Browser saves can be cleared by the browser.
+Gates A–E are complete (Gate E passed in 0.38.0); next is the v1.0 release, then v2 (`docs/V2-PLAN.md`). Hairstyles wait for sprite art. The music is three short synthesized loops, a placeholder the GDD allows until final polish. Ally commands are simple, not a formation system. The sprites were made with AI by the project owner using Sprite Studio (their own tool); some animations are not yet hand-aligned. See [`docs/ASSETS.md`](docs/ASSETS.md) for where every asset comes from. Browser saves can be cleared by the browser.

@@ -13,7 +13,73 @@ _Spec: GDD §6 (scaling), §12 (performance targets), §13 (saves), §14 Gate E,
 | 5.5 Save safety and cross-platform export/import QA | ✅ 0.33.0 |
 | 5.6 Asset provenance (original or licensed art, GDD §11) | ✅ 0.34.0 — see `docs/ASSETS.md` |
 | Owner request: full screen on phones | ✅ 0.35.0 |
-| 5.7 Device QA and Gate E acceptance | 🟡 In progress. Zenfone 10 (Chrome): stress test at size 30 at 60 fps, 0.6 ms simulation and 1.7 ms drawing; full screen, home screen and play all work. F-3 (towns open on their menu) done in 0.37.0. Still to do: iPhone if available, the §15 checklist |
+| 5.7 Device QA and Gate E acceptance | ✅ 0.38.0. See Acceptance below; two owner checks remain open (an iPhone, if available, and a real phone-to-desktop save transfer) |
+
+---
+
+## Acceptance — 0.38.0 (2026-11-17)
+
+**Verdict: Gate E passes.** The core loop is complete, with no critical data loss and no unavoidable progression blocker found. As with Gates C and D, a short owner phone pass stays open (below).
+
+### The GDD Gate E criterion
+| Criterion (GDD §14) | Evidence |
+|---|---|
+| UX on landscape phones and web | Phone layout pass (0.30): checked at 667×375, 740×360 and 844×390. Towns open on their menu (0.37). Owner playtest on a Zenfone 10: "it all felt pretty good". |
+| Export/import cross-platform | 0.33: tests for cross-device round trips at five story stages, a 0.14-era save, wrapped pasted text, the two-tab guard and a corrupt-save fallback, plus a real-browser paste import. |
+| Performance scaling | 0.29: battle size and reserves. 0.36: soldier spacing on a grid. Zenfone 10 at size 30: **60 fps**, 0.6 ms simulation and 1.7 ms drawing, 17 ms slowest frame. Desktop benchmark at 40 units: 0.35–0.55 ms simulation. |
+| Audio | 0.31: 14 synthesized effects and 3 loops, volumes in Settings. |
+| Tutorial | 0.32: 15 first-time tips and How to Play; Q1 is the hands-on tutorial. |
+| Device QA | Owner on Android Chrome (Zenfone 10): play, full screen, Add to Home Screen and the stress test. Phone-size checks in the browser at every step. |
+| Original or licensed art | 0.34: `docs/ASSETS.md`, the asset manifest and a guarding test. The sprites are the owner's own, made with ChatGPT's image tools through Sprite Studio; sound and map are code. |
+| **Pass:** complete core loop, no critical data loss, no unavoidable progression blocker | See the §15 checklist and the regression run below. |
+
+### GDD §15 definition of done
+| Item | Status and evidence |
+|---|---|
+| Character creation with three backgrounds; saveable appearance, name and stats | ✅ Since 0.7 (`character.test`). Cloak colours and presentation are saved. Hairstyles wait for art (noted since Gate C). |
+| Top-down 4-direction movement and satisfying attack and block on touch and web | ✅ Gate A, owner playtests on the phone, and the controls listed in How to Play. |
+| Two factions, 10 settlements, 15 troop definitions, a traversable strategic map | ✅ The `gate-d.test` scope audit. |
+| Battle encounter offers Attack / Negotiate / Retreat / Auto-resolve | ✅ Since 0.10 (`parties.test`). |
+| Recruit, equip, upgrade and command troops in separate groups | ✅ Recruiting, equipment, upgrade trees, and Orders for infantry, archers and cavalry. **Known gap:** Mercenaries have no upgrade path (finding F-1), planned for v2's troop tree (V2-03b) by owner decision. |
+| Wounded and dead soldiers, player capture, permanent campaign consequences | ✅ Gates B and C, plus reputation, fort ownership and Mara's fate in Gate D. |
+| At least 20 active troops perform acceptably on a target phone; scaling documented | ✅ 30 at 60 fps on a Zenfone 10. The scaling record is in slices 1 and 0.36. |
+| Moving faction patrols, bandits and caravans create real encounters | ✅ Since 0.10, plus frontier clashes and news (0.27). |
+| 6 trade goods, loot and sales, food and wages, character and party progression | ✅ Gate C. |
+| Four story quests, at least two political routes, three ending summaries completable | ✅ `gate-d.test`: 60 randomized whole-story runs, plus 300 more in this run. All reached an ending, and all three endings were reached. |
+| Faction reputation and one fort's ownership can change and persist | ✅ `realm.test` and Q4. |
+| Story completion returns to an ongoing sandbox with repeatable contracts | ✅ `gate-d.test` sandbox-after-ending check. |
+| Local save survives restart; a manually exported save imports on both supported builds | ✅ Automated (`portable`, `save-safety`, real-browser reloads). The owner's real phone↔desktop transfer is still open (below). |
+| UI readable across representative landscape phone sizes; no mandatory online account | ✅ 0.30 phone layout. The game has no accounts and no network use. |
+| No critical soft-locks, save corruption, or repeatable infinite-money exploit in basic QA | ✅ Soft-locks: 360 randomized story runs (`gate-d.test` and this run), none stuck. Save corruption: `save-safety` and `portable` tests. Money: `trade.test` (same-town round trips always lose), `items.test` (gear resale below cost), `story.test` (quest rewards pay once), and the **new `gate-e.test`** (below). |
+
+### New in this pass: `tests/gate-e.test.js`, money and result probes
+- **Deliveries:** for every trade good, taking a delivery, selling the load where it fetches the most (with the good at its dearest everywhere) and abandoning always earns less than delivering, even with a reward below the smallest real one. Abandoning never gains renown.
+- **Contract pay** is collected once, whether collect is pressed again or the game reloads in between.
+- **A battle result** is applied once: a stray second end-of-battle, or a replayed result with the same ID, changes nothing (gold, renown, day and battle count are unchanged).
+- **An auto-resolved band** is gone afterwards, with no encounter left to resolve again.
+
+### Regression run for the acceptance
+- **Tests and lint:** 325 tests pass; lint clean.
+- **30-day campaign simulation, 8 seeds:**
+  - hero level 4–6 by day 30
+  - 4–9 contracts and 8–22 battles won per run
+  - no desertions and **no stalls**
+  - running out of food once in 2 of 8 runs
+- **Story soak, 300 runs:** all reached an ending (the Crown 134, the Remnant 139, the road peace 27); a direct player finishes in 1.7–56 game days, median 12.6.
+- **Battle benchmark at 40 units:** 0.35–0.55 ms simulation per frame on desktop.
+
+### GDD §15 required edge cases (final)
+Every case is covered, as recorded in the Gate C and Gate D docs plus these:
+- **Battle ends during reinforcement spawn:** `scaling.test` (0.29).
+- **Low-end phone with 30+ units:** the Zenfone 10 at 60 fps, plus the battle-size setting for slower phones.
+- **Rotating the device, the app pausing mid-battle, tap commands overlapping the attack button:** covered since Gate A.
+
+### Owner pass (open, as with Gates C and D)
+- [ ] An iPhone, if one is available: play, Add to Home Screen, the stress test.
+- [ ] A real save transfer: Export on the phone and import on desktop, then the other way round.
+
+### Next
+**Step 5.8, release v1.0:** freeze the v2 save schema, tag `v1.0.0`, and keep v1.0 save fixtures for the v2 migration.
 
 ---
 

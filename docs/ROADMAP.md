@@ -1,6 +1,6 @@
 # Crownless — Project Status & Roadmap
 
-_Last reviewed: 2026-11-17 · Build 0.37.0 · Spec: `Crownless_MVP_GDD_v1.md` (engine overridden: HTML5 Canvas + classic JS, no bundler, GitHub Pages)._
+_Last reviewed: 2026-11-17 · Build 0.38.0 · Spec: `Crownless_MVP_GDD_v1.md` (engine overridden: HTML5 Canvas + classic JS, no bundler, GitHub Pages)._
 
 This replaces the opencode-swarm plan (`.swarm/plan.md`, removed). The gate structure (A→E) is kept from the GDD; the task list is condensed and re-ordered around what the code actually needs.
 
@@ -21,7 +21,7 @@ This replaces the opencode-swarm plan (`.swarm/plan.md`, removed). The gate stru
 - **Gate B (party battle)** — done in 0.5.0: troops, waves and loot come from `data/`, armor formula, archer accuracy, per-soldier save v2 with migration/backup, 2-day wound recovery on a day clock. Only return-to-map is left, and it opens Gate C.
 - **Gate C** — ✅ passed (0.14.0): world map, travel and settlement menus (0.6.0); character creation, equipment and debug tools (0.7.0); food, wages and morale (0.8.0); trading (0.9.0); world parties and encounter choices (0.10.0); levels, troop upgrades and party cap (0.11.0); bandit-hunt contracts (0.12.0); save export/import (0.13.0); acceptance (0.14.0).
 - **Gate D** — ✅ passed (0.28.0): three battle maps with obstacles and fort garrisons (0.15.0); walkable Stonebridge (0.16.0); item catalogue, tiered loot and armouries (0.17.0); AI cavalry and all 15 troop roles (0.18.0); faction reputation and fort ownership (0.19.0); quest and dialogue interpreter with the Quest Journal (0.20.0); Q1 "A Stranger's Wage" (0.21.0); Q2 "The Broken Seal" (0.22.0); Mara the companion (0.23.0); Q3 "Two Banners" (0.24.0); Q4 "The Greywall Verdict" with three endings (0.25.0); escort and delivery contracts (0.26.0); trade-world interactions, frontier clashes and regional news (0.27.0); acceptance with a randomized whole-story soak test (0.28.0).
-- **Gate E** — in progress: battle scaling with a configurable battle size, reserves and a stress test (0.29.0); phone layout pass (0.30.0); settings and synthesized audio (0.31.0); first-time tips and How to Play (0.32.0); save safety and cross-device QA (0.33.0); asset provenance (0.34.0); full screen on phones and home-screen install (0.35.0, from the owner's phone testing).
+- **Gate E** — ✅ passed (0.38.0): battle scaling with a configurable battle size, reserves and a stress test (0.29.0); phone layout pass (0.30.0); settings and synthesized audio (0.31.0); first-time tips and How to Play (0.32.0); save safety and cross-device QA (0.33.0); asset provenance (0.34.0); full screen on phones and home-screen install (0.35.0, from the owner's phone testing); soldier spacing (0.36); towns open on their menu (0.37); acceptance (0.38.0).
 
 ### Problems to fix early
 1. **`game.js` is minified source.** Every feature from here touches it; it is unreadable for review and hostile to AI-assisted edits. De-minify and split before adding systems.
@@ -75,14 +75,14 @@ Order chosen so each step is playable:
 ### Phase 4 — Gate D (full region & story) ✅ passed in 0.28.0 — see `docs/GATE-D-VALIDATION.md`
 All 10 settlements; Stonebridge walkable hub; 3 battle maps; ~30 items; AI cavalry (all 15 troop roles); reputation + Greywall ownership; quest/dialogue interpreter; Q1–Q4 with 3 endings; Mara companion; escort + delivery contracts; regional news.
 
-### Phase 5 — Gate E (release quality) — in progress, see `docs/GATE-E-VALIDATION.md`
+### Phase 5 — Gate E (release quality) ✅ passed in 0.38.0 — see `docs/GATE-E-VALIDATION.md`
 1. ✅ (0.29.0) Battle scaling: active-unit cap (20 / 30 / 40) with reserves that step in as others fall; stress test and per-frame timing; measured (no proximity grid needed at MVP scale).
 2. ✅ (0.30.0) Landscape UX pass: HUD fits beside the buttons, announcements below it, map labels placed without overlap, tap-to-walk steers, dev tools hidden in release builds (`?dev` shows them).
 3. ✅ (0.31.0) Settings and audio: Settings panel (music/SFX volume, battle size, health bars, reduced effects; kept on the device); 14 synthesized sound effects and 3 music loops via Web Audio, no files.
 4. ✅ (0.32.0) Tutorial and help: 15 first-time tips (once per device; the first battle waits on its controls card), a How to Play screen with every control, Q1 kept as the hands-on tutorial.
 5. ✅ (0.33.0) Save safety and cross-device export/import: save on page hide, two-tab guard, backup-load notice, export reminders and storage-persistence request, forgiving paste import, cross-device and old-build round trips.
 6. ✅ (0.34.0) Asset provenance: sprites are the owner's own AI-generated art (Sprite Studio); sound and map are code; no third-party assets or runtime dependencies. `docs/ASSETS.md`, `assets/manifest.json` and a guarding test; Credits in How to Play.
-7. Device QA and Gate E acceptance. First evidence: on the owner's Zenfone 10 (Chrome), the stress test at battle size 30 ran at **60 fps** (0.6 ms simulation, 1.7 ms drawing, 17 ms slowest frame); full screen, Add to Home Screen and play "all felt pretty good".
+7. ✅ (0.38.0) Device QA and Gate E acceptance: §15 checklist complete, new money and result probes (`tests/gate-e.test.js`), full regression run. Owner pass open: an iPhone if available, and a real phone↔desktop save transfer. Device evidence: on the owner's Zenfone 10 (Chrome), the stress test at battle size 30 ran at **60 fps** (0.6 ms simulation, 1.7 ms drawing, 17 ms slowest frame); full screen, Add to Home Screen and play "all felt pretty good".
    - 7b. ✅ (0.37.0) **Towns open on their menu (finding F-3):** walkable places open their settlement menu on arrival, with Walk the streets and Leave; people in the streets can be talked to from the menu too; a per-place `entry` content flag (`menu` or `streets`).
 8. Release **v1.0 "The Border March"**: freeze save schema v2, tag the release, keep v1 save fixtures for the v2 migration.
 
