@@ -3,6 +3,7 @@
 A single-player, top-down party-battle prototype in plain HTML5 Canvas and classic JavaScript. There's no bundler, no runtime dependencies and no server. It's published to GitHub Pages straight from `main`.
 
 - **Design spec:** [`Crownless_MVP_GDD_v1.md`](Crownless_MVP_GDD_v1.md). The engine is HTML5 Canvas, not the Godot the spec recommends.
+- **Full v1 documentation** (rules and numbers, architecture, how to add content, what v2 brings and where its details are): [`docs/V1-DOCUMENTATION.md`](docs/V1-DOCUMENTATION.md)
 - **Current behavior (regression reference):** [`docs/BASELINE.md`](docs/BASELINE.md)
 - **Status and plan:** [`docs/ROADMAP.md`](docs/ROADMAP.md); the v2 plan is [`docs/V2-PLAN.md`](docs/V2-PLAN.md), from the owner's v2.0 design documents
 
