@@ -397,6 +397,7 @@
     g.partyId = partyId;
     g.siteId = null;
     g.travel = null;
+    CL.encounter.begin(); // whatever the player chooses commits under this result ID
     CL.ui.changeMode('encounter');
   }
 
@@ -422,22 +423,26 @@
   function negotiate() {
     const c = CL.campaign;
     const e = current(c);
-    const n = e && negotiation(c, e);
+    const n = e && CL.encounter.isOpen(c) && negotiation(c, e);
     if (!n) return false;
-    if (n.kind === 'intimidate') {
-      leaveAlone(e, IGNORE_AFTER.intimidate);
-      // Send them scurrying away from the player.
-      [e.party.tx, e.party.ty] = [clamp(e.party.x * 2 - c.world.x, 2, 98), clamp(e.party.y * 2 - c.world.y, 2, 98)];
-      CL.ui.changeMode('map');
-      CL.ui.message(`The ${e.name} take one look at your company and melt away.`);
-    } else {
-      if (c.gold < n.cost) return false;
-      c.gold -= n.cost;
-      leaveAlone(e, IGNORE_AFTER.toll);
-      CL.save.write();
-      CL.ui.changeMode('map');
-      CL.ui.message(`You pay ${n.cost} crowns. The ${e.name} let you pass.`);
-    }
+    if (n.kind === 'toll' && c.gold < n.cost) return false;
+    const done = CL.encounter.resolve(c, {
+      kind: 'parley',
+      detail: n.kind,
+      commit: () => {
+        if (n.kind === 'intimidate') {
+          leaveAlone(e, IGNORE_AFTER.intimidate);
+          // Send them scurrying away from the player.
+          [e.party.tx, e.party.ty] = [clamp(e.party.x * 2 - c.world.x, 2, 98), clamp(e.party.y * 2 - c.world.y, 2, 98)];
+        } else {
+          c.gold -= n.cost;
+          leaveAlone(e, IGNORE_AFTER.toll);
+        }
+      },
+    });
+    if (!done) return false; // already settled (a double tap)
+    CL.ui.changeMode('map');
+    CL.ui.message(n.kind === 'intimidate' ? `The ${e.name} take one look at your company and melt away.` : `You pay ${n.cost} crowns. The ${e.name} let you pass.`);
     CL.diag.log('info', 'Negotiated', { party: e.party.id, outcome: n.kind, cost: n.cost || 0 });
     CL.story.emit('parley', { party: e.party.template, tag: e.party.questTag || null, outcome: n.kind }, c);
     return true;
@@ -446,12 +451,12 @@
   function retreat() {
     const c = CL.campaign;
     const e = current(c);
-    if (e?.kind !== 'party') return false;
+    if (e?.kind !== 'party' || !CL.encounter.isOpen(c)) return false;
     const chance = retreatChance(c, e);
     const ok = A().next(c) < chance;
     CL.diag.log('info', 'Retreat', { party: e.party.id, chance, ok });
     if (ok) {
-      leaveAlone(e, IGNORE_AFTER.retreat);
+      CL.encounter.resolve(c, { kind: 'retreat', commit: () => leaveAlone(e, IGNORE_AFTER.retreat) });
       CL.ui.changeMode('map');
       CL.ui.message('You slip away before they can close in.');
     } else {
@@ -479,7 +484,7 @@
     const c = CL.campaign;
     const g = CL.game;
     const e = current(c);
-    if (!e) return null;
+    if (!e || !CL.encounter.isOpen(c)) return null; // nothing to fight, or already settled (a double tap)
     assaultPenalty(c, e);
     const pp = A().playerPower(c);
     const pe = A().troopsPower(e.troops);
@@ -495,11 +500,9 @@
     for (const id of fallen) (A().next(c) < 0.35 ? killed : wounded).push(id);
     g.battleId = c.battles + 1;
     const outcome = { battleId: g.battleId, encounter: e.def, win, kills: enemyFallen.length, killed, wounded, participants: healthy };
-    const r = CL.party.applyBattleResult(c, outcome);
-    CL.companion.afterBattle(c, { win, down: false });
-    W().onBattleResolved(win, g.siteId);
-    onBattleResolved(win, g.partyId, enemyFallen);
-    CL.save.write();
+    // The one commit path (V2-02): result, companion, map, band, events and the save, exactly once.
+    const r = /** @type {BattleResult | null} */ (CL.encounter.resolve(c, { kind: 'auto', outcome, fallenEnemies: enemyFallen }));
+    if (!r) return null; // already applied (a double tap)
     g.result = {
       win,
       auto: true, // drawn over the world map, not a battlefield

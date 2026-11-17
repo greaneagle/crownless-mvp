@@ -85,6 +85,7 @@
       camp.gold -= opt.cost;
       s.xp -= opt.xp;
       s.troop = toId;
+      CL.events.emit(camp, 'SoldierPromoted', { soldierId: s.id, from: fromId, to: toId, cost: opt.cost });
       done++;
     }
     if (done) CL.diag.log('info', 'Troops upgraded', { from: fromId, to: toId, count: done, cost: done * opt.cost });
@@ -114,7 +115,8 @@
     if (!recruitsHere().includes(troopId) || !canRecruit(c(), troopId)) return false;
     const price = CL.content.troop(troopId).recruitCost;
     c().gold -= price;
-    CL.save.addSoldier(c(), troopId);
+    const s = CL.save.addSoldier(c(), troopId);
+    CL.events.emit(c(), 'SoldierRecruited', { soldierId: s.id, troop: troopId, settlement: c().world.location, via: 'hire' });
     CL.save.write();
     CL.ui.refreshRoster();
     CL.diag.log('info', 'Soldier recruited', { troop: troopId, cost: price });
@@ -160,15 +162,15 @@
   }
 
   /**
-   * Roll each fallen ally as killed or wounded. Returns soldier-id lists.
-   * @param {Unit[]} allies @returns {{ killed: number[], wounded: number[] }}
+   * Roll each fallen ally as killed or wounded (the seeded casualties stream). Returns soldier-id lists.
+   * @param {Unit[]} allies @param {Campaign} [camp] @returns {{ killed: number[], wounded: number[] }}
    */
-  function rollCasualties(allies) {
+  function rollCasualties(allies, camp = c()) {
     const killed = [];
     const wounded = [];
     for (const a of allies) {
       if (a.alive || a.soldierId == null) continue;
-      if (Math.random() < DEATH_CHANCE) killed.push(a.soldierId);
+      if (CL.autoresolve.roll(camp, 'casualties') < DEATH_CHANCE) killed.push(a.soldierId);
       else wounded.push(a.soldierId);
     }
     return { killed, wounded };
@@ -185,7 +187,7 @@
   }
 
   /** Weighted loot: one roll per kill at the encounter's chance. Returns { itemId: count }. */
-  function rollLoot(enc, kills) {
+  function rollLoot(enc, kills, camp = c()) {
     /** @type {Record<ContentId, number>} */
     const loot = {};
     const lt = CL.content.lootTable(enc.loot);
@@ -193,8 +195,8 @@
     const total = table.reduce((sum, e) => sum + e.weight, 0);
     if (!total) return loot;
     for (let i = 0; i < kills; i++) {
-      if (Math.random() >= lt.chancePerKill) continue;
-      const entry = weightedPick(table, Math.random() * total);
+      if (CL.autoresolve.roll(camp, 'loot') >= lt.chancePerKill) continue;
+      const entry = weightedPick(table, CL.autoresolve.roll(camp, 'loot') * total);
       loot[entry.item] = (loot[entry.item] || 0) + 1;
     }
     return loot;
@@ -204,7 +206,7 @@
   function loseItemOnCapture(camp) {
     const losable = Object.keys(camp.inventory).filter((id) => !CL.content.item(id).questItem);
     if (!losable.length) return null;
-    const id = losable[Math.floor(Math.random() * losable.length)];
+    const id = losable[Math.floor(CL.autoresolve.roll(camp, 'loot') * losable.length)];
     camp.inventory[id] -= 1;
     if (camp.inventory[id] <= 0) delete camp.inventory[id];
     return id;
@@ -230,7 +232,7 @@
     if (win) {
       result.gold = enc.reward.goldBase + kills * enc.reward.goldPerKill;
       result.renown = enc.reward.renown;
-      result.loot = rollLoot(enc, kills);
+      result.loot = rollLoot(enc, kills, camp);
       camp.victories++;
       camp.gold += result.gold;
       camp.renown += result.renown;
@@ -270,14 +272,15 @@
       participants: deployed.map((a) => a.soldierId),
       soldierKills: Object.fromEntries(deployed.map((a) => [a.soldierId, a.kills || 0])),
     };
-    const r = applyBattleResult(CL.campaign, outcome);
-    if (r) CL.companion.afterBattle(CL.campaign, { win, down: g.allies.some((a) => a.companion && !a.alive) });
-    if (r) {
-      CL.world?.onBattleResolved(win, g.siteId);
-      const fallenEnemies = g.enemies.filter((e) => !e.alive).map((e) => e.troop);
-      CL.parties?.onBattleResolved(win, g.partyId, fallenEnemies);
-    }
-    CL.save.write();
+    // The one commit path (V2-02): result, companion, map, band, events and the save, exactly once.
+    const r = /** @type {BattleResult | null} */ (
+      CL.encounter.resolve(CL.campaign, {
+        kind: 'battle',
+        outcome,
+        companionDown: g.allies.some((a) => a.companion && !a.alive),
+        fallenEnemies: g.enemies.filter((e) => !e.alive).map((e) => e.troop),
+      })
+    );
     const html = resultHtml({
       win,
       r,

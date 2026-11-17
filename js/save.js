@@ -1,9 +1,10 @@
 // @ts-check
 /* Crownless save service.
  *
- * Schema v3 (key `crownless_save`, from build 1.2.0; docs/SAVE-FORMAT.md): individual soldiers with
+ * Schema v4 (key `crownless_save`, from build 1.3.0; v3 from 1.2.0; docs/SAVE-FORMAT.md): individual soldiers with
  * troop IDs, XP and wound timers, the item inventory, the campaign day clock and every system's state,
- * plus the world the save belongs to (`worldId`) and the build that wrote it (`contentVersion`).
+ * plus the world the save belongs to (`worldId`) and the build that wrote it (`contentVersion`), and
+ * (v4) the named random streams (`rng`), the encounter result counter and the event ID counter.
  *
  * Loading (design §24.7, V2-01). Anything read back from storage or a file goes through `fromRaw`:
  *   1. structural check for its own schema version: a save missing the fields its version always
@@ -24,7 +25,7 @@
   'use strict';
   const CL = root.Crownless;
 
-  const VERSION = 3;
+  const VERSION = 4;
   const KEY = 'crownless_save';
   const BACKUP_KEY = 'crownless_save_backup';
   const LEGACY_KEY = 'crownless_v03_party';
@@ -50,6 +51,7 @@
    * @param {ContentId} [background] @returns {Campaign}
    */
   function starter(background = 'farmhand') {
+    const seed = CL.autoresolve.newSeed();
     /** @type {Campaign} */
     const c = {
       version: VERSION,
@@ -73,7 +75,10 @@
       starving: false,
       markets: CL.trade.defaultMarkets(), // current scarcity per settlement and good
       cargo: {}, // trade goods carried
-      rngSeed: CL.autoresolve.newSeed(), // seeded randomness for the world and auto-resolve
+      rngSeed: seed, // the world random stream: world parties, contracts, auto-resolve, retreat
+      rng: CL.autoresolve.streamSeeds(seed), // the other named random streams: casualties, loot, upkeep
+      nextResultId: 1, // the next encounter result to commit (exactly once; js/encounter.js)
+      nextEventId: 1, // the next domain event ID (js/events.js)
       parties: [], // patrols, caravans and bands on the map
       partySpawns: {}, // template id → day its next party may appear
       nextPartyId: 1,
@@ -125,34 +130,37 @@
     ['inventory', 'object'],
     ['lastResolvedBattle', 'number'],
   ];
+  /** @type {Array<[string, string]>} */
+  const V3_FIELDS = [
+    ...V2_FIELDS,
+    ['worldId', 'string'],
+    ['contentVersion', 'string'],
+    ['world', 'object'],
+    ['character', 'object|null'],
+    ['equipment', 'object'],
+    ['food', 'number'],
+    ['morale', 'number'],
+    ['nextWagesDay', 'number'],
+    ['markets', 'object'],
+    ['cargo', 'object'],
+    ['rngSeed', 'number'],
+    ['parties', 'array'],
+    ['partySpawns', 'object'],
+    ['nextPartyId', 'number'],
+    ['contract', 'object|null'],
+    ['contractOffers', 'object'],
+    ['reputation', 'object'],
+    ['owners', 'object'],
+    ['story', 'object'],
+    ['companion', 'object|null'],
+    ['news', 'object'],
+  ];
   /** @type {Record<number, Array<[string, string]>>} */
   const REQUIRED = {
     1: [['gold', 'number']],
     2: V2_FIELDS,
-    3: [
-      ...V2_FIELDS,
-      ['worldId', 'string'],
-      ['contentVersion', 'string'],
-      ['world', 'object'],
-      ['character', 'object|null'],
-      ['equipment', 'object'],
-      ['food', 'number'],
-      ['morale', 'number'],
-      ['nextWagesDay', 'number'],
-      ['markets', 'object'],
-      ['cargo', 'object'],
-      ['rngSeed', 'number'],
-      ['parties', 'array'],
-      ['partySpawns', 'object'],
-      ['nextPartyId', 'number'],
-      ['contract', 'object|null'],
-      ['contractOffers', 'object'],
-      ['reputation', 'object'],
-      ['owners', 'object'],
-      ['story', 'object'],
-      ['companion', 'object|null'],
-      ['news', 'object'],
-    ],
+    3: V3_FIELDS,
+    4: [...V3_FIELDS, ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number']],
   };
 
   /** @param {unknown} v @param {string} kind */
@@ -193,6 +201,16 @@
     // 2 → 3 (build 1.2.0, V2-01): the save names its world and the build that wrote it. Every v2
     // save was a Border March campaign; which build wrote it was never recorded.
     2: (d) => ({ ...d, version: 3, worldId: 'border_march', contentVersion: 'unknown' }),
+    // 3 → 4 (build 1.3.0, V2-02): named random streams seeded from the world seed, the encounter
+    // result counter (exactly-once commits) and the event ID counter. Both counters start fresh:
+    // nothing before v4 used them.
+    3: (d) => ({
+      ...d,
+      version: 4,
+      rng: CL.autoresolve.streamSeeds(Number.isInteger(d.rngSeed) ? d.rngSeed : 0),
+      nextResultId: 1,
+      nextEventId: 1,
+    }),
   };
 
   /**
@@ -255,6 +273,14 @@
     CL.news.sanitize(s, d); // recent events and news lines
     CL.parties.sanitize(s, d); // world parties and the RNG seed
     CL.contracts.sanitize(s, d); // after parties: an active hunt needs its band
+    // Named random streams (after parties, which restores rngSeed) and the result and event counters.
+    const seeds = CL.autoresolve.streamSeeds(s.rngSeed);
+    for (const name of CL.autoresolve.STREAMS) {
+      const v = d.rng?.[name];
+      s.rng[name] = Number.isInteger(v) && v >= 0 ? v >>> 0 : seeds[name];
+    }
+    s.nextResultId = Math.max(1, Number.isInteger(d.nextResultId) ? d.nextResultId : 1);
+    s.nextEventId = Math.max(1, Number.isInteger(d.nextEventId) ? d.nextEventId : 1);
     return s; // worldId and contentVersion: this world and this build, from starter()
   }
 

@@ -1,5 +1,5 @@
 // Save schema v3 and migrations (V2-01; design §24.7, SC-30–32; docs/SAVE-FORMAT.md).
-// Saves written by real old builds (0.3, 0.14, 0.28; the 1.0 set is in save-fixtures.test.js) must
+// Saves written by real old builds (0.3, 0.14, 0.28, 1.2; the 1.0 set is in save-fixtures.test.js) must
 // load, partial or damaged saves are rejected instead of being filled in, and nothing reports success
 // until it is really stored.
 const test = require('node:test');
@@ -27,20 +27,20 @@ function same(c, expect) {
   for (const [q, status] of Object.entries(expect.quests || {})) assert.equal(c.story.quests[q]?.status, status, q);
 }
 
-for (const label of ['0.14', '0.28']) {
+for (const label of ['0.14', '0.28', '1.2']) {
   const dir = path.join(FIX, `saves-${label}`);
   const index = JSON.parse(fs.readFileSync(path.join(dir, 'index.json'), 'utf8'));
   for (const f of index) {
     const text = fs.readFileSync(path.join(dir, f.file), 'utf8');
 
-    test(`a ${label} export (${f.file}) imports into schema v3 and keeps everything`, () => {
+    test(`a ${label} export (${f.file}) imports into the current schema and keeps everything`, () => {
       assert.equal(f.expect.build, `${label}.0`, 'made by that build');
       const { CL } = loadGame({ party: false });
       const r = CL.portable.importText(text);
       assert.equal(r.ok, true, `${r.reason} ${r.problems || ''}`);
       assert.equal(r.migrated, true);
       const c = CL.campaign;
-      assert.equal(c.version, 3);
+      assert.equal(c.version, CL.save.VERSION);
       assert.equal(c.worldId, 'border_march');
       assert.equal(c.contentVersion, CL.BUILD, 'stamped by the build that saved it');
       same(c, f.expect);
@@ -56,13 +56,15 @@ for (const label of ['0.14', '0.28']) {
       const { CL } = loadGame({ storage, party: false });
       assert.equal(CL.save.existed, true);
       same(CL.campaign, f.expect);
-      assert.equal(storage.data.crownless_save_v2, old, 'the v2 save is kept exactly as it was');
-      assert.ok(CL.diag.events.some((e) => e.msg === 'Save migrated' && e.data.from === 2));
+      const from = JSON.parse(old).version; // 2 for 0.14 and 0.28, 3 for 1.2
+      const keptAs = CL.save.preMigrationKey(from);
+      assert.equal(storage.data[keptAs], old, 'the old save is kept exactly as it was');
+      assert.ok(CL.diag.events.some((e) => e.msg === 'Save migrated' && e.data.from === from));
       CL.party.advanceDays(3);
       assert.equal(CL.save.write(), true);
-      assert.equal(JSON.parse(storage.data[KEY]).version, 3);
+      assert.equal(JSON.parse(storage.data[KEY]).version, CL.save.VERSION);
       assert.equal(storage.data[BACKUP], old, 'the old save is the backup, and it still loads');
-      assert.equal(storage.data.crownless_save_v2, old, 'the pre-migration copy is written once, never replaced');
+      assert.equal(storage.data[keptAs], old, 'the pre-migration copy is written once, never replaced');
       const back = loadGame({ storage, party: false });
       assert.ok(back.CL.campaign.day >= f.expect.day + 3 - 0.001);
     });
@@ -74,7 +76,7 @@ test('the 0.3 save (schema v1) still migrates: troops become soldiers, and its k
   const storage = memoryStorage({ [LEGACY]: v1 });
   const { CL } = loadGame({ storage, party: false });
   const c = CL.campaign;
-  assert.equal(c.version, 3);
+  assert.equal(c.version, CL.save.VERSION);
   assert.equal(c.gold, 185);
   assert.equal(c.roster.length, 10); // 5 + 3 fit, 1 + 1 wounded
   assert.equal(c.roster.filter((s) => s.troop === 'levy').length, 6);
@@ -93,13 +95,26 @@ test('migrations are pure steps, one schema version at a time', () => {
   const v2 = { ...JSON.parse(JSON.stringify(CL.campaign)), version: 2 };
   delete v2.worldId;
   delete v2.contentVersion;
+  for (const k of ['rng', 'nextResultId', 'nextEventId']) delete v2[k];
   const frozen = JSON.stringify(v2);
-  const v3 = CL.save.migrate(v2);
+  // 2 → 3 (1.2.0): the world and the writing build.
+  const v3 = CL.save.MIGRATIONS[2](v2);
   assert.equal(JSON.stringify(v2), frozen, 'the input is not changed');
   assert.equal(v3.version, 3);
   assert.equal(v3.worldId, 'border_march');
   assert.equal(v3.contentVersion, 'unknown', 'which build wrote a v2 save was never recorded');
-  assert.equal(CL.save.migrate(v3), v3, 'a current save needs no steps');
+  // 3 → 4 (1.3.0): named random streams from the world seed, and fresh result and event counters.
+  const v3text = JSON.stringify(v3);
+  const v4 = CL.save.MIGRATIONS[3](v3);
+  assert.equal(JSON.stringify(v3), v3text, 'the input is not changed');
+  assert.equal(v4.version, 4);
+  assert.deepEqual({ ...v4.rng }, { ...CL.autoresolve.streamSeeds(v2.rngSeed) }, 'same seed, same streams');
+  assert.equal(v4.nextResultId, 1);
+  assert.equal(v4.nextEventId, 1);
+  // All steps in a row.
+  const all = CL.save.migrate(v2);
+  assert.equal(all.version, CL.save.VERSION);
+  assert.equal(CL.save.migrate(all), all, 'a current save needs no steps');
   for (let v = 2; v < CL.save.VERSION; v++) assert.equal(typeof CL.save.MIGRATIONS[v], 'function', `step from v${v}`);
 });
 

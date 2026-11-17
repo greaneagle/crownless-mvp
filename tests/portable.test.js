@@ -30,7 +30,7 @@ test('the file has an envelope with format, version, game build, time and checks
   const { CL, text } = exported();
   const f = JSON.parse(text);
   assert.equal(f.format, 'crownless-save');
-  assert.equal(f.version, 3); // save schema v3 from 1.2.0 (V2-01)
+  assert.equal(f.version, CL.save.VERSION); // the current save schema (v4 from 1.3.0)
   assert.equal(f.game, CL.BUILD);
   assert.ok(!Number.isNaN(Date.parse(f.exportedAt)));
   assert.equal(f.checksum, CL.portable.checksum(JSON.stringify(f.campaign)));

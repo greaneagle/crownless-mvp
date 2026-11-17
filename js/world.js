@@ -253,6 +253,7 @@
       if (siteActive(t.id)) {
         g.siteId = t.id;
         g.partyId = null;
+        CL.encounter.begin(); // whatever the player chooses commits under this result ID
         CL.ui.changeMode('encounter');
       } else {
         const back = CL.party.dayNumber(world().sites[t.id].clearedUntil);

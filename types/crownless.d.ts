@@ -133,7 +133,14 @@ declare global {
     starving: boolean;
     markets: Record<ContentId, Record<ContentId, number>>;
     cargo: Record<ContentId, number>;
+    /** The world random stream's state (world parties, contracts, auto-resolve, retreat). */
     rngSeed: number;
+    /** v4: the other named random streams' states (CL.autoresolve.STREAMS). */
+    rng: Record<'casualties' | 'loot' | 'upkeep', number>;
+    /** v4: the next encounter result ID to commit (js/encounter.js). */
+    nextResultId: number;
+    /** v4: the next domain event ID (js/events.js). */
+    nextEventId: number;
     parties: WorldParty[];
     partySpawns: Record<ContentId, number>;
     nextPartyId: number;
@@ -319,11 +326,53 @@ declare global {
     dayNumber(day?: number): number;
     advanceDays(days: number, camp?: Campaign): number[];
     rest(): number[];
-    rollCasualties(allies: Unit[]): { killed: number[]; wounded: number[] };
-    rollLoot(enc: any, kills: number): Record<ContentId, number>;
+    rollCasualties(allies: Unit[], camp?: Campaign): { killed: number[]; wounded: number[] };
+    rollLoot(enc: any, kills: number, camp?: Campaign): Record<ContentId, number>;
     applyBattleResult(camp: Campaign, outcome: BattleOutcome): BattleResult | null;
     describeItems(map: Record<ContentId, number>): string;
     endBattle(win: boolean): void;
+  }
+
+  /** A domain event (js/events.js): unique ID within the campaign, type, day, and its own data. */
+  interface GameEvent {
+    id: number;
+    type: string;
+    day: number;
+    [data: string]: unknown;
+  }
+
+  interface EventsAPI {
+    TYPES: string[];
+    on(type: string, fn: (e: GameEvent) => void): () => void;
+    emit(c: Campaign, type: string, data?: Record<string, unknown>): GameEvent;
+    /** The last few events, in memory only (diagnostics). */
+    recent: GameEvent[];
+  }
+
+  /** What CL.encounter.resolve commits. */
+  interface EncounterCommit {
+    kind: 'battle' | 'auto' | 'retreat' | 'parley';
+    /** Defaults to the current encounter's ID. */
+    resultId?: number;
+    /** battle and auto: the outcome for party.applyBattleResult. */
+    outcome?: BattleOutcome;
+    companionDown?: boolean;
+    fallenEnemies?: ContentId[];
+    siteId?: string | null;
+    partyId?: number | null;
+    /** retreat and parley: the change to make, run once inside the commit. */
+    commit?: () => void;
+    /** parley: 'toll' or 'intimidate'. */
+    detail?: string;
+  }
+
+  interface EncounterAPI {
+    KINDS: string[];
+    begin(c?: Campaign): number;
+    beginIfClosed(c?: Campaign): number;
+    currentId(c?: Campaign): number;
+    isOpen(c?: Campaign): boolean;
+    resolve(c: Campaign, x: EncounterCommit): BattleResult | true | null;
   }
 
   /** window.Crownless. Modules without an interface yet are `any`. */
@@ -340,6 +389,8 @@ declare global {
     /** The live, transient state (battle, journey, town walk). */
     game: Record<string, any>;
     storage: StorageAPI;
+    events: EventsAPI;
+    encounter: EncounterAPI;
     save: SaveAPI;
     party: PartyAPI;
     [module: string]: any;

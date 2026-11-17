@@ -7,7 +7,7 @@ const vm = require('node:vm');
 const ROOT = path.join(__dirname, '..', '..');
 
 // Logic modules only (no render/input/main — those need a real DOM).
-const LOGIC_MODULES = ['core', 'content', 'state', 'storage', 'save', 'assets', 'units', 'combat', 'party', 'upkeep', 'trade', 'autoresolve', 'parties', 'contracts', 'realm', 'story', 'companion', 'news', 'portable', 'world', 'town', 'character', 'debug', 'settings', 'audio', 'tips', 'fullscreen'];
+const LOGIC_MODULES = ['core', 'content', 'state', 'storage', 'events', 'save', 'assets', 'units', 'combat', 'party', 'upkeep', 'trade', 'autoresolve', 'parties', 'contracts', 'realm', 'story', 'companion', 'news', 'portable', 'world', 'encounter', 'town', 'character', 'debug', 'settings', 'audio', 'tips', 'fullscreen'];
 const CONTENT_MODULES = [
   'factions',
   'settlements',
@@ -63,6 +63,10 @@ function loadGame({ storage = memoryStorage(), random, party = true, worldPartie
     vm.runInContext(fs.readFileSync(file, 'utf8'), sandbox, { filename: file });
   }
   const CL = sandbox.Crownless;
+  // A test's `random` also rolls the dice for the named campaign streams (casualties, loot, upkeep),
+  // which used Math.random before V2-02, so "0.99 = nobody dies, no loot, no desertion" still holds.
+  // The world stream (rngSeed) is never stubbed: it is seeded by `seed` below.
+  if (random) CL.autoresolve.roll = () => random();
   const record =
     (name) =>
     (...args) =>

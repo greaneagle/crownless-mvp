@@ -67,6 +67,7 @@
     g.encounter = enc.id;
     g.encounterDef = enc;
     g.battleId = CL.campaign.battles + 1;
+    if (!enc.practice) CL.encounter.beginIfClosed(); // a failed retreat keeps its encounter; a fresh battle starts one
     g.totalWaves = enc.waves.length;
     g.mode = 'battle';
     CL.audio?.onMode('battle'); // battles don't start through ui.changeMode, so tell the music here

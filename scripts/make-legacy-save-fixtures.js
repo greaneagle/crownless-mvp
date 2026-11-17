@@ -9,8 +9,9 @@
 // tests/helpers/*.js at that commit), plays a seeded campaign there, exports it with that build's own
 // Save & export, and writes tests/fixtures/saves-<label>/ in this repository: the exported files and
 // index.json with what a later build must reproduce on import.
-// Used for 0.14.0 (a00c5b6, Gate C) and 0.28.0 (d96b90d, Gate D). Re-running replaces the set; only do
-// that on purpose. The 0.3.x (schema v1) fixture is hand-written from docs/BASELINE.md §6 instead,
+// Used for 0.14.0 (a00c5b6, Gate C), 0.28.0 (d96b90d, Gate D) and 1.2.0 (2673ca9, save schema v3).
+// Re-running replaces the set; only do that on purpose. The 0.3.x (schema v1) fixture is
+// hand-written from docs/BASELINE.md §6 instead,
 // because that build was a single minified file with no bots.
 const fs = require('node:fs');
 const path = require('node:path');

@@ -317,6 +317,7 @@ The sandbox carries on after the story ends.
 - **Determinism:**
   - The world simulation and auto-resolve use the campaign's seeded RNG (`rngSeed`), so a fixed seed replays the same campaign.
   - News and cosmetic choices never draw from it.
+  - From 1.3.0 (V2-02) the campaign rolls that used to be unseeded have their own seeded streams: casualties, loot (and the capture loss) and desertion. Moment-to-moment rolls inside a fought battle stay unseeded.
 
 ### 3.2 Modules (`js/`, in load order)
 
@@ -326,6 +327,7 @@ The sandbox carries on after the story ends.
 | `content` | ContentDB: typed lookups into `data/` and load-time reference validation (one source per ID) |
 | `state` | `CL.game`, the live battle and game object |
 | `storage` | From 1.2.0: the storage layer every save key goes through (localStorage today; swappable) |
+| `events` | From 1.3.0: domain events with unique IDs (BattleResolved, SoldierWounded, …) and listeners |
 | `save` | Save service: schema v2 at 1.0 (v3 from 1.2.0), backup on every write, fallback to the backup, migration from 0.3.x; from 1.2.0 also structure checks, migration steps and the travel autosave |
 | `assets` | Sprite loading (`assets/u####.png` units, `w####.png` world) and frame tables |
 | `units` | Units built from troop data: facing, swing phases, movement, obstacle steering, spacing |
@@ -340,6 +342,7 @@ The sandbox carries on after the story ends.
 | `story` | The quest and dialogue interpreter (see 3.5) |
 | `companion` | Mara: joining, gear, wounds, skill bonus, being away |
 | `news` | World events into news bulletins and market talk |
+| `encounter` | From 1.3.0: the one commit path for every encounter result (battle and capture, auto-resolve, retreat, toll), applied exactly once |
 | `portable` | Save export and import: file format, checksum, strict validation, restore |
 | `world` | The strategic map: travel, terrain, time passing, settlements and sites, capture release |
 | `town` | Walkable Stonebridge (menu first, streets optional) |
@@ -385,6 +388,7 @@ Everything that is content lives in data files and is checked by `CL.content` at
 - **Fixtures:** five real v1.0 saves in `tests/fixtures/saves-v1.0/` (a new game, day 30, a mid-story escort, the Road Peace with Mara, the Crown ending). `tests/save-fixtures.test.js` keeps them loading in every later build.
   - They are built by `scripts/make-save-fixtures.js`.
   - Don't regenerate them casually; they stand for real players' saves.
+- **Since v1 (1.3.0, V2-02):** schema v4 adds the named random streams and the result and event counters; every encounter result commits once through `CL.encounter.resolve`.
 - **Since v1 (1.2.0, V2-01):** saves are schema v3 (v2 plus `worldId` and `contentVersion`). Loading first checks that a save is complete for its schema version (a partial save is rejected rather than filled with defaults), then migrates it step by step, keeping a v2 save as it was in `crownless_save_v2`. The backup only ever holds a complete save, a write counts only once it reads back, imports and restores report success only once stored, and the game also autosaves once per game day on the map. Saves from the 0.3, 0.14 and 0.28 builds are fixtures too. Details: `docs/SAVE-FORMAT.md`.
 
 ### 3.5 The story interpreter

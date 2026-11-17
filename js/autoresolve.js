@@ -6,7 +6,8 @@
  *
  * The winner always takes losses (no guaranteed zero-casualty victories): each of its troops falls
  * with a chance that grows as the fight gets closer. Rolls come from the campaign's seeded RNG
- * (CL.campaign.rngSeed) so outcomes are reproducible from a save. */
+ * (CL.campaign.rngSeed) so outcomes are reproducible from a save. The other named streams
+ * (casualties, loot, upkeep; V2-02) are here too: `roll(c, stream)`. */
 (function (root) {
   'use strict';
   const CL = root.Crownless;
@@ -40,6 +41,40 @@
   const int = (c, lo, hi) => lo + Math.floor(next(c) * (hi - lo + 1));
   // New-campaign seed from the clock (not Math.random, so other rolls are untouched).
   const newSeed = () => (Date.now() ^ Math.floor(performance.now() * 1000)) >>> 0;
+
+  // ---- Named random streams (V2-02, design §24.8) ----
+  // The world stream is `rngSeed` above: world parties, skirmishes, contract offers, auto-resolve
+  // and retreat. Each other campaign roll has its own stream in `c.rng`, so one system's rolls
+  // never reshuffle another's, and the same save replays the same outcomes:
+  //   casualties  who dies and who is wounded after a fought battle (auto-resolve rolls all of its
+  //               outcome, its casualties included, on the world stream, as before)
+  //   loot        battle loot, and the item taken on capture
+  //   upkeep      desertion
+  // Moment-to-moment rolls inside a fought battle (aim, AI timing) stay unseeded: they depend on the
+  // player's real-time input anyway. News and cosmetics never use any of these.
+  const STREAMS = ['casualties', 'loot', 'upkeep'];
+
+  /** A stream's starting seed from the campaign seed and the stream's name (FNV-1a, then mixed). */
+  function streamSeed(base, name) {
+    let h = (0x811c9dc5 ^ base) >>> 0;
+    for (let i = 0; i < name.length; i++) h = Math.imul(h ^ name.charCodeAt(i), 0x01000193) >>> 0;
+    h = Math.imul(h ^ (h >>> 16), 0x45d9f3b) >>> 0;
+    return (h ^ (h >>> 16)) >>> 0;
+  }
+
+  /** Every named stream's seed, derived from one campaign seed. */
+  const streamSeeds = (base) => Object.fromEntries(STREAMS.map((s) => [s, streamSeed(base >>> 0, s)]));
+
+  /** Next number in [0, 1) from a named stream (mulberry32; the state lives in c.rng, so it is saved). */
+  function roll(c, stream) {
+    if (!c.rng) c.rng = streamSeeds(c.rngSeed);
+    if (!Number.isInteger(c.rng[stream])) c.rng[stream] = streamSeed(c.rngSeed, stream);
+    c.rng[stream] = (c.rng[stream] + 0x6d2b79f5) >>> 0;
+    let t = c.rng[stream];
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  }
 
   // ---- Power ----
 
@@ -113,6 +148,10 @@
     next,
     int,
     newSeed,
+    STREAMS,
+    streamSeed,
+    streamSeeds,
+    roll,
     troopsPower,
     playerPower,
     winChance,

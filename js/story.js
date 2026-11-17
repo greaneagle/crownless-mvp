@@ -137,7 +137,10 @@
       if (left > 0) c.inventory[e.take] = left;
       else delete c.inventory[e.take];
     } else if ('recruit' in e) {
-      for (let i = 0; i < (e.n || 1) && c.roster.length + CL.companion.slots(c) < CL.party.partyCap(c); i++) CL.save.addSoldier(c, e.recruit);
+      for (let i = 0; i < (e.n || 1) && c.roster.length + CL.companion.slots(c) < CL.party.partyCap(c); i++) {
+        const s = CL.save.addSoldier(c, e.recruit);
+        CL.events.emit(c, 'SoldierRecruited', { soldierId: s.id, troop: e.recruit, settlement: c.world?.location ?? null, via: 'story' });
+      }
     } else if ('start' in e) start(c, e.start);
     else if ('stage' in e) setStage(c, e.quest || ctx.quest, e.stage);
     else if ('complete' in e) finish(c, e.complete, 'done');
