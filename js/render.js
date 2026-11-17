@@ -320,7 +320,7 @@
       ctx.arc(u.x, u.y - 13, 26, a - Math.PI / 3, a + Math.PI / 3);
       ctx.stroke();
     }
-    if (u.hp < u.maxhp) {
+    if (u.hp < u.maxhp && (hero || CL.settings?.get('healthBars') !== false)) {
       ctx.fillStyle = '#27191a';
       ctx.fillRect(u.x - 18, y - 9, 36, 5);
       ctx.fillStyle = u.team === 'ally' ? '#8bc3a9' : '#cd6762';
@@ -799,7 +799,7 @@
       ctx.lineTo(a.x - a.dx * 17, a.y - a.dy * 17);
       ctx.stroke();
     }
-    for (const e of g.effects) {
+    for (const e of CL.settings?.get('reducedEffects') ? [] : g.effects) {
       ctx.strokeStyle = e.color;
       ctx.lineWidth = 3;
       ctx.beginPath();

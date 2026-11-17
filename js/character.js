@@ -87,6 +87,7 @@
       gained++;
     }
     if (ch.level >= MAX_LEVEL) ch.xp = 0;
+    if (gained) CL.audio?.play('level');
     if (gained) CL.diag.log('info', 'Level up', { level: ch.level, skillPoints: ch.skillPoints, attributePoints: ch.attributePoints });
     return gained;
   }

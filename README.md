@@ -1,4 +1,4 @@
-# Crownless 0.30.0 — The Border March
+# Crownless 0.31.0 — The Border March
 
 A single-player, top-down party-battle prototype in plain HTML5 Canvas and classic JavaScript. There's no bundler, no runtime dependencies and no server. It's published to GitHub Pages straight from `main`.
 
@@ -37,6 +37,7 @@ A single-player, top-down party-battle prototype in plain HTML5 Canvas and class
 - **Trade:** buy goods where they're cheap and sell them where they're dear. There are six goods, every market prices them differently, prices move as you trade and settle back over time, and a heavy cargo slows you down. You can also sell spare gear from your pack.
 - **Upkeep:** your party eats a ration a day for every 5 people, so buy food in towns and villages. Wages are due every 7 days. Running out of food or missing wages lowers morale, and below 25 soldiers start to desert.
 - **Save & export** (in any settlement or on the title screen): export your game as a file, or copy it as text, and import it in another browser or device. Damaged, edited, newer-version or unknown-content saves are refused without touching your game, and the save from before an import can be restored.
+- **Sound and settings:** synthesized sound effects and three music loops (menu, world, battle), generated in the browser with no sound files. The ⚙ button (on the map, in town and in battle, which pauses) and the title screen open **Settings**: music and effects volume, battle size (20 / 30 / 40 units at once), health bars over soldiers, and reduced effects. Settings stay on the device and are not part of a save.
 - **Developer tools** (the Logs and Debug buttons) show on a local dev server. On the published site they are hidden; open the page with `?dev` added to the address (for example `…/crownless-mvp/?dev`) to show them on that device, and `?dev=0` to hide them again. F3 opens the diagnostics panel either way.
 - The **Debug** button gives testing shortcuts: hero and troop XP, renown, contracts, crowns, trade goods and prices, spawning or clearing world parties, food and morale, soldiers, items, stats, god mode, time, teleport, win or lose a battle, and wiping the save. Every use is logged.
 - The game auto-saves in the browser and keeps a backup of the previous save. Saves from 0.3 and 0.4 are converted automatically. A diagnostics panel (F3) shows logs and can export them as JSON or TXT.
@@ -77,6 +78,8 @@ js/               game runtime, attached to window.Crownless
   portable.js     save export/import: file format, checksum, strict validation
   character.js    hero creation, attributes/skills, equipment, derived stats
   debug.js        Debug panel testing tools
+  settings.js     device settings (volumes, battle size, effects), kept outside the save
+  audio.js        Web Audio synthesizer: sound effects and music loops
   ui.js           overlays, roster, pause, diagnostics panel
   render.js       canvas drawing (battle and world map) and HUD
   input.js        keyboard, mouse, touch buttons, joystick
@@ -132,4 +135,4 @@ On every push to `main`, [`.github/workflows/deploy.yml`](.github/workflows/depl
 
 ## Known limits
 
-Gate C (the two-town campaign loop) is complete; Gate D (the full region and story) is in progress. There is no faction reputation or quest content yet, and no cavalry. Hairstyles wait for sprite art. Ally commands are simple, not a formation system. The sprite crops come from the Sprite Studio assets, and some animations are not yet hand-aligned. Browser saves can be cleared by the browser.
+Gates A–D are complete; Gate E (release quality) is in progress. Hairstyles wait for sprite art. The music is three short synthesized loops, a placeholder the GDD allows until final polish. Ally commands are simple, not a formation system. The sprite crops come from the Sprite Studio assets, and some animations are not yet hand-aligned. Browser saves can be cleared by the browser.

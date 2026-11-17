@@ -8,11 +8,58 @@ _Spec: GDD §6 (scaling), §12 (performance targets), §13 (saves), §14 Gate E,
 |---|---|
 | 5.1 Battle scaling: active-unit cap with reserves, stress test, measured costs | ✅ 0.29.0 |
 | 5.2 Landscape UX pass (the phone-size notes from Gate D; touch targets; dev buttons out of release builds) | ✅ 0.30.0 |
-| 5.3 Settings and audio (battle size, volume, sound effects) | ⬜ |
+| 5.3 Settings and audio (battle size, volume, sound effects) | ✅ 0.31.0 |
 | 5.4 Tutorial and help | ⬜ |
 | 5.5 Save safety and cross-platform export/import QA | ⬜ |
 | 5.6 Asset provenance (original or licensed art, GDD §11) | ⬜ |
 | 5.7 Device QA and Gate E acceptance | ⬜ |
+
+---
+
+## Slice 3 — 0.31.0: Settings and audio (2026-11-17)
+
+### What's in (GDD §11 "Separate Music/SFX volumes; toggle screen shake/reduced particles", "ally/enemy HP bars optional for low-clutter mode"; §12 "12–18 reusable SFX … and 3 music loops (menu, world/town, battle). Audio can use suitably licensed placeholders until final polishing"; screen 12 "Settings/Save/Import/Export")
+- **Settings panel:** open it from the ⚙ button (on the map, in town and in battle, where the battle pauses while it's open) or the title screen's Settings button. It has:
+  - Music volume and sound-effects volume, as separate sliders.
+  - Battle size: 20, 30 or 40 units at once (5.1), with a line explaining reserves.
+  - Health bars over soldiers, which can be turned off for less clutter; the hero's HP stays in the HUD.
+  - Reduced effects: no hit, block and arrow rings. (The game has no screen shake to turn off.)
+- **Settings belong to the device.**
+  - They're kept in their own storage key, never in the save, so exporting a save to another phone doesn't carry this phone's volume or battle size with it, and an import doesn't change them.
+  - Junk values fall back to the defaults, setting by setting.
+  - Defaults: music 50%, effects 70%, health bars on, full effects. Battle size starts at **30 on touch phones** (every current battle still fits: a full company of 20 plus the hero and Mara against an 8-man wave) and 40 elsewhere.
+- **Sound** (`js/audio.js`) is all synthesized with the Web Audio API, from oscillators, filtered noise and envelopes. There are **no sound files**, so it's original by construction and adds nothing to download.
+  - **14 effects** (GDD list):
+    - in battle: swing, hit, block, down, bow, arrow thunk, horse (when riders reach full gallop)
+    - in trade and contracts: coin
+    - for buttons and announcements: select, notification
+    - for story and the hero: quest complete, level up
+    - after a battle: victory, capture
+  - **3 music loops:** menu (title and character creation), world (the map, towns and menus) and battle. They're short modal tunes over a soft drone, with a drum line in battle, fading in and out as the screen changes. After a battle, the battle loop fades under the victory or capture sting.
+  - **A crowded melee stays readable.** Each sound has a minimum gap before it can play again, and at most 10 sound at once. The hero's own swings and hits are full volume; everyone else's are at 40%.
+  - Browsers only allow sound after a gesture, so audio starts on the first tap or key press. It suspends while the page is hidden. Where Web Audio is missing (old browsers, Node tests) everything is silent and nothing breaks.
+- **Bug found in the browser check:** battles start without going through the usual screen change, so the world loop kept playing in battle. `startBattle` now switches the music itself, and a test covers it.
+
+### Checks
+- `tests/settings-audio.test.js` (6 tests) covers:
+  - defaults, validation and fallbacks; the battle size applying at once
+  - settings not appearing in the save, and an import not touching them
+  - silence without Web Audio
+  - against a stand-in AudioContext: 14 effects built from oscillators and noise (no files), the per-sound rate limit, the 10-voice cap, mute
+  - the three loops following the screen, including the result sting
+  - a full battle making swing, hit and down sounds, with the hero loud and the rest quieter, and the battle loop starting with the battle
+- 295 tests pass; lint clean.
+- Browser, with real clicks:
+  - The title screen's Settings started the menu loop (audio unlocked by that tap).
+  - Set music to 30%, battle size to 20, health bars off and reduced effects on. The battle cap became 20 at once, and all of it survived a page reload.
+  - Continue switched to the world loop. A stress battle switched to the battle loop (after the fix above) and showed no health bars.
+  - ⚙ mid-battle froze the battle clock for 2 s; Done resumed it.
+  - No console errors. The save was untouched, and the test settings were cleared afterwards.
+- **Not checkable here:** how it actually sounds. The browser pane can't be listened to, so the mix (levels, how busy a big melee sounds, whether the loops get tiresome) needs your ears.
+
+### For the owner to try
+- [ ] Play a few minutes with sound on (phone and desktop). Are the effects too loud or too busy against the music? Does a loop get tiresome? Are any effects missing or annoying?
+- [ ] Settings → set battle size and volumes, close the browser, reopen: they should be as you left them.
 
 ---
 
@@ -111,4 +158,4 @@ Before the cap, a 60-unit battle put 54 on the field at up to 0.44 ms per frame.
 
 ### For the owner to try on a phone
 - [ ] Open the game with `?dev` added to the address (the Debug button is hidden on the published site since 0.30.0), then Debug → Battle size & stress test → **Stress 40** at size 40. Write down the fps, simulation ms and drawing ms on the result screen.
-- [ ] If it's under about 30 fps, try **Stress 40** at size 30 and at size 20, and note which size feels smooth. That size becomes the default for phones in 5.3.
+- [ ] If it's under about 30 fps, try **Stress 40** at size 30 and at size 20, and note which size feels smooth. Since 5.3, phones start at size 30; the measurement decides whether that stays.

@@ -203,6 +203,7 @@
     r.stage = null;
     r.endedDay = c.day;
     if (status === 'done') {
+      CL.audio?.play('quest');
       const w = q.rewards || {};
       if (w.gold) c.gold += w.gold;
       if (w.renown) c.renown += w.renown;

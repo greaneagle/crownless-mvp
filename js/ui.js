@@ -113,6 +113,7 @@
     CL.game.messageUntil = performance.now() + MESSAGE_MS;
     $('#message').textContent = text;
     fitHud();
+    CL.audio?.play('note', 0.7);
     CL.diag.log('info', text);
   }
 
@@ -135,6 +136,8 @@
     g.mode = mode;
     $('#stage').dataset.mode = mode;
     requestAnimationFrame(fitHud); // the top-right buttons change with the mode
+    CL.audio?.onMode(mode);
+    if (mode === 'result') CL.audio?.play(g.result?.win ? 'win' : 'capture');
     $('#attackBtn').textContent = mode === 'town' ? 'TALK' : 'ATTACK';
     $('#ordersPanel').classList.add('hidden');
     if (mode === 'map' || mode === 'town') {
@@ -913,6 +916,7 @@
 
   function hideBattleOverlays() {
     $('#stage').dataset.mode = 'battle';
+    requestAnimationFrame(fitHud);
     $('#attackBtn').textContent = 'ATTACK';
     $('#blockBtn').disabled = CL.game.hero?.canBlock === false; // no shield, no block
     $('#overlay').classList.add('hidden');
@@ -1095,8 +1099,59 @@
     );
   }
 
+  // ---- Settings panel (GDD screen 12) ----
+
+  let settingsPaused = false;
+
+  function openSettings() {
+    const s = CL.settings.all();
+    $('#setMusic').value = String(s.music);
+    $('#setSfx').value = String(s.sfx);
+    $('#setBattleSize').value = String(s.battleSize);
+    $('#setHealthBars').checked = s.healthBars;
+    $('#setReduced').checked = s.reducedEffects;
+    showVolumes();
+    // A battle waits while you change settings.
+    settingsPaused = CL.game.mode === 'battle' && !CL.game.paused;
+    if (settingsPaused) setPaused(true, 'settings');
+    $('#settingsPanel').classList.remove('hidden');
+  }
+
+  function closeSettings() {
+    $('#settingsPanel').classList.add('hidden');
+    if (settingsPaused) setPaused(false, 'settings');
+    settingsPaused = false;
+  }
+
+  function showVolumes() {
+    $('#setMusicOut').textContent = `${$('#setMusic').value}%`;
+    $('#setSfxOut').textContent = `${$('#setSfx').value}%`;
+  }
+
+  function bindSettings() {
+    $('#settingsBtn').onclick = openSettings;
+    $('#titleSettingsBtn').onclick = openSettings;
+    $('#closeSettings').onclick = closeSettings;
+    $('#doneSettings').onclick = closeSettings;
+    $('#setMusic').oninput = () => {
+      CL.settings.set('music', Number($('#setMusic').value));
+      showVolumes();
+    };
+    $('#setSfx').oninput = () => {
+      CL.settings.set('sfx', Number($('#setSfx').value));
+      showVolumes();
+    };
+    $('#setSfx').onchange = () => CL.audio?.play('coin'); // a sample at the new level
+    $('#setBattleSize').onchange = () => CL.settings.set('battleSize', Number($('#setBattleSize').value));
+    $('#setHealthBars').onchange = () => CL.settings.set('healthBars', $('#setHealthBars').checked);
+    $('#setReduced').onchange = () => CL.settings.set('reducedEffects', $('#setReduced').checked);
+  }
+
   CL.ui = {
     fitHud,
+    openSettings,
+    closeSettings,
+    bindSettings,
     showEnding,
     closeEnding,
     talkTo,

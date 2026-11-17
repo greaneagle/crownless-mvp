@@ -51,6 +51,9 @@
   const fireRange = (u) => (u.ranged ? u.ranged.range : u.reach - 1);
 
   /** GDD §6: Damage = max(1, round(Raw × 100 / (100 + 4 × Armor))). */
+  /** Battle sounds: the hero's own are loudest, everyone else's quieter (js/audio.js rate-limits them). */
+  const sound = (name, ...units) => CL.audio?.play(name, units.some((u) => u?.role === 'hero') ? 1 : 0.4);
+
   function mitigate(raw, armor) {
     return Math.max(1, Math.round((raw * 100) / (100 + 4 * (armor || 0))));
   }
@@ -65,6 +68,7 @@
     g.battleId = CL.campaign.battles + 1;
     g.totalWaves = enc.waves.length;
     g.mode = 'battle';
+    CL.audio?.onMode('battle'); // battles don't start through ui.changeMode, so tell the music here
     g.paused = false;
     g.t = 0;
     g.wave = 0;
@@ -198,6 +202,7 @@
     if (!target.alive) return null;
     if (target === g.hero && g.godMode) return 'blocked'; // debug panel
     if (target.guard && source && inArc(target, source, ARC.block)) {
+      sound('block', target, source);
       g.effects.push({ x: target.x, y: target.y - 17, t: 0.2, color: '#f6daa6', kind: 'block' });
       return 'blocked';
     }
@@ -211,7 +216,11 @@
       color: target.team === 'ally' ? '#f4bb72' : '#f77864',
       kind: 'hit',
     });
-    if (target.hp) return 'hit';
+    if (target.hp) {
+      sound('hit', target, source);
+      return 'hit';
+    }
+    sound('down', target, source);
     target.alive = false;
     target.ground = true;
     target.downAt = g.t;
@@ -230,6 +239,7 @@
       const r = u.ranged;
       u.attackCooldown = r.cooldown;
       u.shot = SHOT_FLASH;
+      sound('bow', u);
       const target = nearestAlive(u, opponentsOf(u));
       if (target && dist(u, target) < r.range + ARROW.rangeSlack) {
         let [dx, dy] = normalize(target.x - u.x, target.y - u.y);
@@ -245,6 +255,7 @@
     if (u.role !== 'hero' && u.target?.alive) aim(u, u.target);
     u.attackCooldown = u.role === 'hero' ? COOLDOWN.hero : COOLDOWN.melee;
     u.swing = { t: 0, hit: [] };
+    sound('swing', u);
     return true;
   }
 
@@ -310,7 +321,9 @@
     }
     const [dx, dy] = normalize(target.x - u.x, target.y - u.y);
     u.runDir = [dx, dy];
+    const was = u.momentum;
     u.momentum = Math.min(1, u.momentum + dt / CAVALRY.rampSeconds);
+    if (was < CAVALRY.chargeMomentum && u.momentum >= CAVALRY.chargeMomentum) sound('horse', u); // hooves at full gallop
     ride(u, dx, dy, dt, 0.5 + 0.5 * u.momentum);
     if (dist(u, target) < u.reach - 1 && !u.swing && u.attackCooldown <= 1e-6) {
       u.chargeBonus = u.momentum >= CAVALRY.chargeMomentum ? CAVALRY.chargeBonus : 1;
@@ -398,6 +411,7 @@
       if (CL.units.arrowBlocked(a.x, a.y)) {
         // GDD §6: arrows collide with terrain — trees, walls and crates stop them.
         a.life = 0;
+        sound('thunk');
         g.effects.push({ x: a.x, y: a.y, t: 0.15, color: '#d9c8a2', kind: 'thunk' });
         continue;
       }

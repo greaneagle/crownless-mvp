@@ -282,6 +282,7 @@
     if (k?.status !== 'done' || (!onTheSpot && c.world.location !== (k.payAt || k.giver))) return null;
     c.gold += k.reward.gold;
     c.renown += k.reward.renown;
+    CL.audio?.play('coin');
     const levels = CL.character.gainXp(k.reward.xp, c);
     c.contractsDone += 1;
     CL.story.emit('contract', { template: k.template, giver: k.giver }, c);

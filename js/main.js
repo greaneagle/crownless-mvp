@@ -5,6 +5,8 @@
   const { diag } = CL;
 
   CL.content.init();
+  CL.settings.load(); // device settings: volumes, battle size, effects
+  CL.audio.bind();
   CL.campaign = CL.save.load();
   CL.assets.preload();
 
@@ -14,6 +16,9 @@
   CL.render.init(canvas);
   CL.input.bind(canvas);
   CL.debugTools.bind();
+  CL.ui.bindSettings();
+  // Every button gives a small click (rate-limited; silent until audio is unlocked by this very tap).
+  root.document.addEventListener('click', (e) => e.target.closest?.('button') && CL.audio.play('select', 0.6), true);
 
   let last = performance.now();
   function loop(ts) {

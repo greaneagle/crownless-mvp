@@ -7,7 +7,7 @@ const vm = require('node:vm');
 const ROOT = path.join(__dirname, '..', '..');
 
 // Logic modules only (no render/input/main — those need a real DOM).
-const LOGIC_MODULES = ['core', 'content', 'state', 'save', 'assets', 'units', 'combat', 'party', 'upkeep', 'trade', 'autoresolve', 'parties', 'contracts', 'realm', 'story', 'companion', 'news', 'portable', 'world', 'town', 'character', 'debug'];
+const LOGIC_MODULES = ['core', 'content', 'state', 'save', 'assets', 'units', 'combat', 'party', 'upkeep', 'trade', 'autoresolve', 'parties', 'contracts', 'realm', 'story', 'companion', 'news', 'portable', 'world', 'town', 'character', 'debug', 'settings', 'audio'];
 const CONTENT_MODULES = [
   'factions',
   'settlements',
@@ -92,7 +92,7 @@ function loadGame({ storage = memoryStorage(), random, party = true, worldPartie
     c.character = CL.character.create({ name: 'Tester', background: 'farmhand' });
     for (const t of ['levy', 'levy', 'levy', 'hunter', 'hunter']) CL.save.addSoldier(c, t);
   }
-  return { CL, storage, uiCalls };
+  return { CL, storage, uiCalls, sandbox };
 }
 
 function runModules(sandbox, dir, names) {
