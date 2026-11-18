@@ -470,13 +470,16 @@ Quests are data. `js/story.js` interprets three small vocabularies; its header c
 | Command | What it does |
 |---|---|
 | `npm run serve` | Serves the game at http://localhost:8123 (opening `index.html` from disk also works) |
-| `npm test` | 332 tests at 1.0.0 with `node:test`: logic modules and data in a Node `vm` sandbox with the UI stubbed out (`tests/helpers/load.js`) |
+| `npm test` | 332 tests at 1.0.0 with `node:test`: logic modules and data in a Node `vm` sandbox with the UI stubbed out (`tests/helpers/load.js`). From 2.1.1 (H-01) each test game has its own seeded `Math`, and the whole-campaign bot tests are in `tests/slow/` |
+| `npm run test:slow` | From 2.1.1: the bot-heavy tests (60-seed story check, stall check, short Prototype G); CI runs them too. `npm run test:all` runs both |
 | `npm run test:browser` | From 2.1.0 (W-00): Playwright browser tests of the real game at desktop and phone size (`tests/browser/`); `npm run test:visual` compares screenshots on Linux. See the README, "Browser tests" |
 | `npm run lint` | Biome; from 1.1.0 it also runs `npm run typecheck` |
 | `npm run typecheck` | From 1.1.0 (V2-00): TypeScript's `tsc --noEmit` over the modules marked `// @ts-check`, using the shared types in `types/crownless.d.ts`. Dev only; no build step and no output |
 | `npm run simulate` | Headless campaign bot: 30 days, 8 seeds |
-| `npm run simulate:story` | Randomized story bot from a fresh start to an ending, 200 seeds; reports endings and soft-locks (the tests run 60) |
+| `npm run simulate:story` | Randomized story bot from a fresh start to an ending, 200 seeds; reports endings and soft-locks (the slow tests run 60) |
 | `npm run bench` | Battle simulation time per frame at 20/30/40/60 units on each map (drawing is measured on a device with the stress test) |
+| `npm run bench:map` | From 2.1.1: world simulation time per game hour for 10–200 parties on the map |
+| `npm run parity` | From 2.1.1: the same encounters fought by a bot and auto-resolved; win rates, losses and the gap against the stated odds |
 | `npm run assets` | Rebuilds `assets/manifest.json`; a test fails if it is stale |
 | `npm run icons` | Regenerates the home-screen icons |
 

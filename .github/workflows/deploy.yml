@@ -23,6 +23,8 @@ jobs:
         with:
           node-version: 22
       - run: npm test
+      # Bot-heavy tests (whole campaigns) kept out of `npm test` so it stays fast (H-01).
+      - run: npm run test:slow
       - run: npm run lint
 
   # Browser regression tests (W-00): Playwright on the static game, Chromium only. Screenshot baselines

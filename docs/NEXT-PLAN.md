@@ -51,7 +51,7 @@ _Written 2026-11-18 at build 2.0.0 (commit 0415109); **reviewed and corrected th
   - Seeded random streams; one campaign clock.
   - A JSDoc type check on the core modules.
 - **Tests and tools:**
-  - **528 Node logic tests**, about 21 s for `npm test` (533 at 2.1.0, plus 86 browser tests from W-00).
+  - **528 Node logic tests**, about 21 s for `npm test` (533 at 2.1.0, plus 86 browser tests from W-00; from 2.1.1, 531 fast tests in about 8 s and 4 slow ones under `npm run test:slow`).
   - Bots: campaign, story, Prototype G, an economy report, a battle benchmark.
 - **CI:** `.github/workflows/deploy.yml` runs `npm test` and `npm run lint` on every push and pull request, then deploys `main` to GitHub Pages.
 - **No dependencies, not even for development:** Biome, TypeScript and http-server run through `npx`; there is no `package-lock.json`.
@@ -135,7 +135,7 @@ Each phase ends playable, measured and documented. The order follows the design'
 | ID | Task | Readiness | Size | Needs | Save |
 |---|---|---|---|---|---|
 | **W-00** | ✅ **Done in 2.1.0.** **Browser regression testing** (new): Playwright on the static game; smoke and flow tests for startup, creation, loading a fixture save, map, settlement, battle, save/export/import, layouts; screenshots of key screens; a CI job. W-01 and W-02 add their own tests to it | Done (D-T1: yes) | **M–L** (5–8 days) | — | — |
-| **H-01** | **Test and measurement hygiene** (new): isolate test games from each other; split fast and slow tests; `scripts/parity.js` (fought versus auto-resolve); a map-simulation benchmark; `.gitattributes` for line endings | Ready | S | — | — |
+| **H-01** | ✅ **Done in 2.1.1.** **Test and measurement hygiene** (new): isolate test games from each other; split fast and slow tests; `scripts/parity.js` (fought versus auto-resolve); a map-simulation benchmark; `.gitattributes` for line endings | Done | S | — | — |
 | **W-01** | **Text size and UI scale:** four sizes; all HTML and canvas text, buttons, menus, overlays, tips and dynamic content; no reload; layout and touch-target rules; automated tests at all four sizes | Ready | M | W-00 | — |
 | **W-02** | **World-map camera and gestures:** a gesture-aware map input (tap, drag, pinch; no travel from a drag or pinch); a reusable camera transform kept apart from gameplay distance; zoom from "fit the map" to 2.4×; follow, pan, clamp, edge markers, hit-testing | Ready | **M–L** | W-00 | — |
 | **W-03** | **Battle zoom:** 0.75×–1.5× on the field and in the overview, with the same gesture handling | Ready | S–M | W-02 | — |

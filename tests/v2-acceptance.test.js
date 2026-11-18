@@ -1,5 +1,6 @@
-// v2.0 acceptance (V2-13): the design's scenarios that no feature test covered on its own, and a short
-// Prototype G. The full map of scenarios to tests and measurements is docs/V2-VALIDATION.md.
+// v2.0 acceptance (V2-13): the design's scenarios that no feature test covered on its own. The short
+// Prototype G is a slow test, in tests/slow/campaign-bots.test.js (H-01). The full map of scenarios
+// to tests and measurements is docs/V2-VALIDATION.md.
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { loadGame, memoryStorage } = require('./helpers/load');
@@ -83,13 +84,3 @@ test('SC-35: a long gap (a backgrounded app) is one short step: no strategic cat
   assert.ok((c.day - day) * 24 <= 0.1 * CL.world.HOURS_PER_SECOND + 1e-9, 'at most a tenth of a second of map time');
 });
 
-test('Prototype G (short): hands-off, presets-only and expert players all get through the same campaign, and resume after a reload', () => {
-  const { run } = require('../scripts/prototype-g');
-  for (const style of ['hands-off', 'presets', 'expert']) {
-    const r = run(2, style, 8);
-    assert.equal(r.stuck, 0, `${style}: never stuck`);
-    assert.ok(r.resumed, `${style}: the reload picked up where it left off`);
-    assert.ok(r.day >= 8 - 0.01, `${style}: reached day 8`);
-    assert.ok(r.money >= 0 && r.soldiers >= 0);
-  }
-});

@@ -29,6 +29,18 @@ const CONTENT_MODULES = [
   'names',
 ];
 
+/** Mulberry32: a small seeded stand-in for Math.random. */
+function mulberry(seed) {
+  let s = seed >>> 0;
+  return () => {
+    s = (s + 0x6d2b79f5) >>> 0;
+    let t = s;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
 function memoryStorage(initial = {}) {
   const data = { ...initial };
   return {
@@ -50,14 +62,18 @@ function memoryStorage(initial = {}) {
  */
 function loadGame({ storage = memoryStorage(), random, party = true, worldParties = false, seed = 12345 } = {}) {
   const uiCalls = [];
+  // No `Math` here: the game gets the context's own, so nothing one game does to Math (or that a
+  // script does to the host's Math.random) reaches another game in the same process (H-01: the host
+  // Math used to be shared, and a run's results depended on what ran before it). Its Math.random is
+  // the test's `random`, or else seeded from `seed`, so every test game is reproducible.
   const sandbox = {
     console,
     performance,
     localStorage: storage,
-    Math: random ? Object.assign(Object.create(Math), { random }) : Math,
   };
   sandbox.window = sandbox;
   vm.createContext(sandbox);
+  vm.runInContext('Math', sandbox).random = random || mulberry((seed ^ 0x5bd1e995) >>> 0);
   runModules(sandbox, 'data', CONTENT_MODULES);
   for (const m of LOGIC_MODULES) {
     const file = path.join(ROOT, 'js', `${m}.js`);
@@ -122,4 +138,4 @@ function loadContent() {
   return sandbox.CROWNLESS_CONTENT;
 }
 
-module.exports = { loadGame, loadContent, memoryStorage, CONTENT_MODULES };
+module.exports = { loadGame, loadContent, memoryStorage, mulberry, CONTENT_MODULES };

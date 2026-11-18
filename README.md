@@ -1,4 +1,4 @@
-# Crownless 2.1.0 — The Border March
+# Crownless 2.1.1 — The Border March
 
 A single-player, top-down party-battle prototype in plain HTML5 Canvas and classic JavaScript. There's no bundler, no runtime dependencies and no server (Playwright, for the browser tests, is the only development dependency). It's published to GitHub Pages straight from `main`.
 
@@ -148,6 +148,14 @@ Then open http://localhost:8123. Opening `index.html` directly from disk also wo
 npm test
 ```
 
+`npm test` runs the fast logic tests (about 8 s). The bot-heavy ones, which play whole campaigns (the 60-seed story check, the eight-seed stall check, a short Prototype G), are in `tests/slow/`:
+
+```bash
+npm run test:slow
+```
+
+CI runs both; `npm run test:all` runs both here. Every test game is isolated: each gets its own `Math`, seeded from its `seed` unless the test passes a `random`, so a seeded run gives the same result alone or after other games in the same process (`tests/isolation.test.js`).
+
 ```bash
 npm run lint
 ```
@@ -164,7 +172,7 @@ npm run simulate
 npm run simulate:story
 ```
 
-`simulate:story` plays whole stories from a fresh start to an ending with a randomized bot (200 seeds by default). It reports the endings and branches reached, and prints the last steps of any run that soft-locks. `tests/gate-d.test.js` runs the same check on 60 seeds.
+`simulate:story` plays whole stories from a fresh start to an ending with a randomized bot (200 seeds by default). It reports the endings and branches reached, and prints the last steps of any run that soft-locks. `tests/slow/gate-d-campaigns.test.js` runs the same check on 60 seeds.
 
 ```bash
 npm run bench
@@ -179,6 +187,18 @@ npm run economy
 `npm run assets` rebuilds `assets/manifest.json` (every image, its source, and whether the game uses it) after adding or removing art; a test fails if it is out of date.
 
 `bench` times the battle simulation per frame at 20, 30, 40 and 60 units on each battle map. Drawing isn't included; measure that on a device with the Debug panel's stress test, which reports fps, simulation and drawing time without touching the campaign.
+
+```bash
+npm run parity
+```
+
+`parity` fights the same encounters in person (the campaign bot's hero) and auto-resolves them from the same seeded game, 40 seeds each by default (`npm run parity -- 100 --preset defensive`, `--json`). It prints the stated odds, both win rates, soldiers lost each way and the gap: the measurement behind design SC-37 and the balance pass B-01, which aims for fought battles 5–15 points over the stated odds. Seeds are spread with a hash, since consecutive mulberry32 seeds correlate their first draws.
+
+```bash
+npm run bench:map
+```
+
+`bench:map` times the world simulation per game hour with 10, 25, 50, 100 and 200 parties on the map (`-- --parties 50,400`, `--json`): the parties alone and everything time drives, and the share of each real second of travel. The baseline for W-07's world simulation.
 
 The tests load the logic modules (`core` → `party`) and the `data/` files into a Node `vm` sandbox with the UI stubbed out, so no browser is needed. Rendering, input and layout are covered by the browser tests below, and finally by playing the game on a phone.
 

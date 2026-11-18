@@ -1,5 +1,16 @@
 # Crownless — Release Notes
 
+## v2.1.1 — Test hygiene (H-01) · 2026-11-18
+
+Nothing new to play.
+
+### Under the hood
+- **Test games are isolated:** each gets its own seeded `Math`, so a seeded run gives the same result alone or after others (before, games shared the host's, and results could depend on run order). A new test checks it in a fresh process.
+- **Faster tests:** `npm test` takes about 8 s instead of 22 s. The whole-campaign bot tests run under `npm run test:slow`; CI runs both.
+- **Measurement tools:** `npm run parity` compares fought and auto-resolved battles over the same encounters (for the coming balance pass), and `npm run bench:map` times the world simulation for 10 to 200 parties (for the bigger world).
+- The repository keeps LF line endings on every machine (`.gitattributes`).
+- 531 fast and 4 slow Node tests, 86 browser tests.
+
 ## v2.1.0 — Browser tests (W-00) · 2026-11-18
 
 The first step of Phase W ("A Bigger World", `docs/NEXT-PLAN.md`). Nothing new to play; two fixes.

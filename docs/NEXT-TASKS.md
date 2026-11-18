@@ -143,7 +143,15 @@ _Written 2026-11-18 at build 2.0.0; **reviewed and corrected the same day agains
 
 ---
 
-### H-01 · Test and measurement hygiene (S) — Ready
+### H-01 · Test and measurement hygiene (S) — ✅ Done in 2.1.1
+
+**Done (2.1.1, 2026-11-18).** As specified, with these notes:
+- **The leak:** every test game's sandbox was handed the host process's own `Math`, so a game loaded without a `random` drew from the host `Math.random`, and a script that patched it (as the V2-T2 parity runs did) made a seed's result depend on what ran before (seen: a seeded 8-day expert campaign changed after another seed ran first). `tests/helpers/load.js` now gives each game the context's own `Math`, with `Math.random` the test's `random` or else mulberry32 seeded from the game's `seed`, so every test game is reproducible. Seeded campaigns and battles give exactly the results they gave before. No other shared state was found: `BATTLE.activeCap` and module caches live inside each sandbox.
+- **Isolation test:** `tests/isolation.test.js` fights a seeded battle (`tests/helpers/seeded-fight.js`) in a fresh child process and again in this one after other games and with the host `Math.random` patched, and requires equal results; a second test checks each game's `Math` is its own. Both fail on the old loader.
+- **Fast and slow:** `npm test` is down from about 22 s to 8 s (531 tests). The bot-heavy ones moved to `tests/slow/` (`npm run test:slow`, 4 tests, about 17 s): the 60-seed story check and the after-the-ending check (from `gate-d.test.js`), the eight-seed stall check (from `acceptance.test.js`) and the short Prototype G (from `v2-acceptance.test.js`). CI's `check` job runs both; `npm run test:all` runs both locally.
+- **`scripts/parity.js`** (`npm run parity`): five encounters from a lone hero to a ten-a-side fight, each fought by the campaign bot's hero and auto-resolved from the same seeded game, 40 hash-spread seeds by default; prints the stated odds, both win rates, soldiers lost and the gap. At 2.1.1 with 20 seeds (Balanced): fought 19–34 points over the stated odds, auto-resolve on them — B-01's baseline.
+- **`scripts/bench-map.js`** (`npm run bench:map`): world simulation per game hour for 10–200 parties. On the development machine: 0.8 ms at 10 parties, 3.9 ms at 50, 10 ms at 100, 27 ms at 200, growing faster than linearly (pairwise contacts); 4 game hours pass per real second of travel. W-07's baseline.
+- **`.gitattributes`** (`* text=auto eol=lf`): every text file in the index was already LF, and renormalising changed no file's content.
 
 **Problem.** B-01, W-07 and W-08 depend on measurements, and those were noisy in V2-T2: test games in one Node process leaked state into each other, so results depended on run order. Bot-heavy tests will slow `npm test` as the world grows.
 
