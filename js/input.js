@@ -200,6 +200,7 @@
         else if (!e.repeat) CL.mapView.step(MAP_KEYS[e.code]);
         return;
       }
+      if (g.mode === 'battle' && e.code === 'KeyZ' && !e.repeat && CL.camera.scrolls(g)) CL.camera.toggleZoom(g); // W-03
       if (g.mode === 'battle' && e.code === 'KeyR' && !e.repeat) CL.morale.rally(g); // V2-08b
       const o = KEY_ORDERS[e.code];
       if (o) CL.combat.order(o[0], o[1]);
@@ -242,6 +243,12 @@
         if (g.prep.drag) canvas.setPointerCapture?.(e.pointerId);
         return;
       }
+      if (g.mode === 'battle' && e.pointerType !== 'mouse') {
+        // W-03: a finger on the field is tracked, so two make a pinch; the minimap and overview taps
+        // (V2-06) come on release, and only from a clean tap, so a pinch never sends a group anywhere.
+        if (battleGestures.down(e)) canvas.setPointerCapture?.(e.pointerId);
+        return;
+      }
       if (g.mode === 'battle') {
         // The minimap (tap to look) and the tactical overview (tap to send a group), V2-06.
         const r = canvas.getBoundingClientRect();
@@ -259,6 +266,10 @@
       g.blockHeld = false;
     });
     canvas.addEventListener('pointermove', (e) => {
+      if (battleGestures.count) {
+        if (g.mode === 'battle') battleGestures.move(e);
+        else battleGestures.cancel();
+      }
       if (mapGestures.count) {
         if (g.mode === 'map') mapGestures.move(e);
         else mapGestures.cancel(); // the map closed under the fingers
@@ -269,6 +280,7 @@
       CL.prep.moveFlag(g.prep.plan, g.prep.map, g.prep.drag, ((e.clientX - r.left) * CL.W) / r.width, ((e.clientY - r.top) * CL.H) / r.height);
     });
     canvas.addEventListener('pointerup', (e) => {
+      if (battleGestures.count) battleGestures.up(e);
       if (mapGestures.count) {
         if (g.mode === 'map') mapGestures.up(e);
         else mapGestures.cancel();
@@ -284,18 +296,25 @@
     canvas.addEventListener(
       'touchmove',
       (e) => {
-        if (g.mode === 'map') e.preventDefault();
+        if (g.mode === 'map' || g.mode === 'battle') e.preventDefault();
       },
       { passive: false },
     );
-    canvas.addEventListener('pointercancel', () => mapGestures.cancel());
-    canvas.addEventListener('lostpointercapture', (e) => mapGestures.lost(e));
+    canvas.addEventListener('pointercancel', () => {
+      mapGestures.cancel();
+      battleGestures.cancel();
+    });
+    canvas.addEventListener('lostpointercapture', (e) => {
+      mapGestures.lost(e);
+      battleGestures.lost(e);
+    });
     canvas.addEventListener(
       'wheel',
       (e) => {
-        if (g.mode !== 'map') return;
+        if (g.mode !== 'map' && g.mode !== 'battle') return;
         e.preventDefault(); // the page itself never scrolls or zooms
-        mapGestures.wheel(e);
+        if (g.mode === 'map') mapGestures.wheel(e);
+        else if (!g.overview) battleGestures.wheel(e);
       },
       { passive: false },
     );
@@ -343,12 +362,55 @@
     });
   }
 
+  // W-03: battle zoom. A pinch on the field (never the joystick, buttons or panels, which are other
+  // elements) zooms between 0.75× and 1.5×; one finger on the field does nothing new; the view keeps
+  // following the hero. Spreading the fingers on the overview goes back to the field; closing them in a
+  // pinch that starts at the widest zoom opens it (a pinch that only reaches the widest zoom doesn't).
+  let battleGestures = { count: 0, down: () => false, move() {}, up() {}, cancel() {}, lost() {}, wheel() {} };
+
+  function bindBattleGestures() {
+    const g = CL.game;
+    const C = () => CL.camera;
+    let pinched = 1;
+    let startZoom = null; // the zoom when this pinch began
+    let wheelTimer = null;
+    battleGestures = CL.gestures.recognizer({
+      onTap: (x, y) => {
+        if (g.mode !== 'battle') return;
+        const r = CL.ui.$('#game').getBoundingClientRect();
+        CL.tactics.tap(g, ((x - r.left) * CL.W) / r.width, ((y - r.top) * CL.H) / r.height);
+      },
+      onPinch: (f) => {
+        if (startZoom == null) startZoom = C().zoomOf(g);
+        pinched *= f;
+        if (!g.overview) C().setZoom(g, C().zoomOf(g) * f);
+      },
+      onZoom: (f) => {
+        C().setZoom(g, C().zoomOf(g) * f);
+        clearTimeout(wheelTimer);
+        wheelTimer = setTimeout(() => C().remember(g), 300);
+      },
+      onEnd: (kind) => {
+        if (kind === 'pinch' || kind === 'pan') {
+          if (g.overview && pinched > 1.3) CL.tactics.overview(g, false);
+          else if (!g.overview && pinched < 0.8 && startZoom != null && startZoom <= C().zoomRange(g).min + 1e-3 && CL.camera.scrolls(g)) CL.tactics.overview(g, true);
+          C().remember(g);
+        }
+        pinched = 1;
+        startZoom = null;
+      },
+    });
+  }
+
   /** W-02: the map's +, − and Centre buttons, and + − C on the keyboard (arrow keys pan: js/mapview.js). */
   function bindMapView($) {
     const V = () => CL.mapView;
     $('#zoomInBtn').onclick = () => V().step(1);
     $('#zoomOutBtn').onclick = () => V().step(-1);
     $('#centreBtn').onclick = () => V().centre(true);
+    $('#zoomBtn').onclick = () => {
+      if (CL.game.mode === 'battle') CL.camera.toggleZoom(CL.game);
+    };
   }
 
   const MAP_KEYS = { Equal: 1, NumpadAdd: 1, Minus: -1, NumpadSubtract: -1 };
@@ -420,6 +482,7 @@
     g.attackQueuedAt = null;
     resetJoystick();
     mapGestures.cancel(); // a lost window ends a drag or pinch with no tap
+    battleGestures.cancel();
   }
 
   /** Pause when the page is hidden; pause and ask to rotate when a touch device is portrait. */
@@ -456,6 +519,7 @@
     bindButtons($);
     bindKeyboardAndMouse($, canvas);
     bindMapGestures(canvas);
+    bindBattleGestures();
     bindMapView($);
     bindHold(
       $,

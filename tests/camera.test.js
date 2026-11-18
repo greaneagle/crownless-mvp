@@ -35,7 +35,7 @@ test('an ordinary battle keeps the camera at 0,0 and its old bounds', () => {
   for (let i = 0; i < 200; i++) {
     g.joystick = { x: 1, y: 1 };
     CL.combat.update(0.05);
-    assert.deepEqual({ ...g.camera }, { x: 0, y: 0 });
+    assert.deepEqual({ ...g.camera }, { x: 0, y: 0, zoom: 1 });
   }
   assert.ok(g.hero.x <= CL.units.BOUNDS.maxX && g.hero.y <= CL.units.BOUNDS.maxY, 'still stopped by the one-screen edge');
 });
@@ -68,10 +68,10 @@ test('the camera follows the hero, eases in, and stops at the arena edges', () =
   assert.ok(Math.abs(centred()[0] - CL.W / 2) < 2, 'caught up');
   Object.assign(g.hero, { x: 0, y: 0 });
   CL.camera.snap(g);
-  assert.deepEqual({ ...g.camera }, { x: 0, y: 0 });
+  assert.deepEqual({ ...g.camera }, { x: 0, y: 0, zoom: 1 });
   Object.assign(g.hero, { x: a.width, y: a.height });
   CL.camera.snap(g);
-  assert.deepEqual({ ...g.camera }, { x: a.width - CL.W, y: a.height - CL.H });
+  assert.deepEqual({ ...g.camera }, { x: a.width - CL.W, y: a.height - CL.H, zoom: 1 });
   const p = CL.camera.toScreen(g, 1234, 987);
   assert.deepEqual({ ...CL.camera.toWorld(g, p.x, p.y) }, { x: 1234, y: 987 });
 });

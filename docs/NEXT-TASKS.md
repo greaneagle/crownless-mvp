@@ -377,7 +377,17 @@ _Written 2026-11-18 at build 2.0.0; **reviewed and corrected the same day agains
 
 ---
 
-### W-03 · Battle zoom (S–M) — Ready (needs W-02)
+### W-03 · Battle zoom (S–M) — ✅ Done in 2.4.0
+
+**Done (2.4.0, 2026-11-18).** As specified, with these notes:
+- **Camera:** `g.camera` is `{ x, y, zoom }`; `CL.camera.toScreen`/`toWorld`, `view`, `visible`, `target` and the render transform use the zoom; `zoomRange`, `clampZoom`, `setZoom` (keeps the view's centre, then the follow brings the hero back to the middle), `toggleZoom`, `remember`. **Only on a large field:** a one-screen field has nothing more to show, so it stays at 1× and the zoom button is hidden there, like MAP. The range is 0.75–1.5, never wider than the field.
+- **Rules stay put:** what the company sees on screen (V2-06 `inSight`) is judged by `CL.camera.sightView`, the 1× view around the same centre, so zooming out never reveals an enemy to the rules. A Node test plays the same seeded battle at 0.75×, 1× and 1.5× and gets the same result to the unit, and `npm run bench` gives the same battles as 2.3.0.
+- **Input:** a touch on the field goes to the W-02 recogniser (the joystick, buttons and panels are other elements, never tracked). A pinch zooms; one finger does nothing new; the minimap and overview taps now act on release from a clean tap, so a pinch never looks somewhere or sends a group (mouse clicks act at once, as before; a left click still attacks). `touchmove` on the field is claimed in battle too, so the browser never swallows the next press of ATTACK after a pinch. Mouse wheel zooms (not while the overview is open); **Z** and the zoom button toggle 1× ↔ 0.75×; the button shows the current zoom.
+- **Overview "plus pinch":** closing the fingers in a pinch that *starts* at the widest zoom opens the overview; spreading them on the overview closes it. A pinch that merely reaches the widest zoom does not open it.
+- **Drawing:** the field is drawn scaled; ground tiles, culling, the minimap's view box and the off-screen enemy markers follow the zoom. HUD, banners and controls stay at their size.
+- **Setting:** `battleZoom` in `crownless_settings` (0.75–1.5, default 1), restored at the start of each battle.
+- **Tests:** `tests/battle-zoom.test.js` (range and clamping, exact conversions, view and culling, the hero central and the edges at every zoom, the same enemies seen and the same battle at every zoom, minimap taps, the toggle and the setting); `tests/browser/battle-zoom.spec.js` (the button and its place among the controls, a pinch that neither swings, moves, looks nor sends, pinch to and from the overview, joystick/WASD, ATTACK and ORDERS while zoomed out, the minimap tap while zoomed, the wheel and Z on desktop, the zoom kept for the next battle).
+- **Not done:** the phone's Big battle 40 + help at 0.75× (Debug panel, zoom button first). If it misses the frame budget, cap the zoom at 0.85× with Reduced effects, as the spec allows.
 
 **Problem.** On a phone, large battles can feel cramped; on desktop, a wider view would help command.
 

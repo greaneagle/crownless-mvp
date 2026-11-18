@@ -280,6 +280,7 @@ The sandbox carries on after the story ends.
 | Orders | 1/2/3 to pick a group, then F/H/C | ORDERS |
 | Look around (large battlefields, from 1.9.0) | Click the small map | Tap the small map |
 | Tactical overview (from 1.9.0) | Hold Tab, or M to toggle | MAP |
+| Battle zoom on large fields (from 2.4.0) | Mouse wheel; Z toggles 1× and 0.75× | Pinch the field; the zoom button |
 | Pause | Esc | Pause |
 | Diagnostics | F3 | Logs (dev mode) |
 
@@ -287,6 +288,7 @@ The sandbox carries on after the story ends.
 - **Settings** (⚙ on the map, in town and in battle, and on the title screen):
   - text size: Small, Normal, Large, Larger (from 2.2.0, W-01): all HTML text and controls and the canvas labels, applied at once; touch targets stay at least 44×44 px and grow with the text
   - the world map's zoom (from 2.3.0, W-02): kept from the last time, set on the map itself with pinch, the wheel or + −
+  - the battle zoom (from 2.4.0, W-03): 0.75×–1.5× on large fields, kept from the last battle, set with pinch, the wheel or the zoom button
   - music and effects volume
   - battle size (20/30/40)
   - battlefield: large or small (from 1.8.0)

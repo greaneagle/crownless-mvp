@@ -1,6 +1,6 @@
 {
   "name": "crownless-mvp",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "private": true,
   "description": "Crownless — HTML5 Canvas party-battle RPG prototype. No runtime dependencies; the only development dependency is Playwright for the browser tests (W-00).",
   "scripts": {

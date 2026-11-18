@@ -59,14 +59,14 @@
     const { w: WW, h: WH } = CL.camera.worldSize(m);
     const v = CL.camera.view(g);
     ctx.fillStyle = gr.base;
-    ctx.fillRect(v.x, v.y, W, H);
+    ctx.fillRect(v.x, v.y, v.w, v.h);
 
     ctx.save();
     ctx.globalAlpha = 0.24;
     const tiles = gr.tiles;
     const [x0, y0] = [Math.floor(v.x / 64) * 64, Math.floor(v.y / 64) * 64];
-    for (let y = y0; y < Math.min(WH, v.y + H); y += 64) {
-      for (let x = x0; x < Math.min(WW, v.x + W); x += 64) {
+    for (let y = y0; y < Math.min(WH, v.y + v.h); y += 64) {
+      for (let x = x0; x < Math.min(WW, v.x + v.w); x += 64) {
         const k = (x * 3 + y * 7) % 5 === 0 ? tiles[1 % tiles.length] : (x + y) % 3 === 0 ? tiles[2 % tiles.length] : tiles[0];
         drawImage(k, x, y, 65, 65);
       }
@@ -391,6 +391,9 @@
     $('#summary').textContent = compactHud()
       ? `${allies} v ${enemies} · Wave ${g.wave}/${g.totalWaves}${reserves ? ` · Res ${reserves[0]}/${reserves[1]}` : ''}`
       : `Allies ${allies} · Enemies ${enemies} · Wave ${g.wave}/${g.totalWaves}${reserves ? ` · Reserves ${reserves[0]}/${reserves[1]}` : ''}`;
+    // W-03: the zoom button shows the current zoom.
+    const z = `${Math.round(CL.camera.zoomOf(g) * 100) / 100}×`;
+    if ($('#zoomBtn').textContent !== z) $('#zoomBtn').textContent = z;
   }
 
   // ---- Walkable town (Stonebridge) ----
@@ -959,9 +962,10 @@
     ctx.drawImage(terrainImage(g.battleMap), r.x, r.y, r.w, r.h);
     const cam = g.camera || { x: 0, y: 0 };
     const v = T.toScreen(r, cam.x, cam.y);
+    const vz = CL.camera.zoomOf(g); // the view box is the zoomed view (W-03)
     ctx.strokeStyle = '#f8ecd0cc';
     ctx.lineWidth = 1;
-    ctx.strokeRect(v.x, v.y, W * r.scale, H * r.scale);
+    ctx.strokeRect(v.x, v.y, (W / vz) * r.scale, (H / vz) * r.scale);
     const pip = (x, y, color, size, hollow) => {
       const p = T.toScreen(r, x, y);
       ctx.beginPath();
@@ -1117,7 +1121,8 @@
     for (const e of g.enemies) {
       // Only enemies the company can see right now (V2-06: nothing unseen is given away).
       if (!e.alive || !e.seen || CL.camera.visible(g, e.x, e.y, 0)) continue;
-      const [dx, dy] = [e.x - cam.x - cx, e.y - cam.y - cy];
+      const z = CL.camera.zoomOf(g);
+      const [dx, dy] = [(e.x - cam.x) * z - cx, (e.y - cam.y) * z - cy];
       const k = Math.min((cx - 18) / Math.abs(dx || 1e-6), (cy - 18) / Math.abs(dy || 1e-6));
       const [x, y] = [cx + dx * k, cy + dy * k];
       const a = Math.atan2(dy, dx);
@@ -1183,8 +1188,10 @@
     }
     // The battlefield is drawn in world pixels through the camera (PROTO-A; a one-screen map keeps it at 0,0).
     const cam = g.camera || { x: 0, y: 0 };
+    const zoom = CL.camera.zoomOf(g); // W-03: 0.75×–1.5× on a large field
     ctx.save();
-    ctx.translate(-Math.round(cam.x), -Math.round(cam.y));
+    ctx.scale(zoom, zoom);
+    ctx.translate(-Math.round(cam.x * zoom) / zoom, -Math.round(cam.y * zoom) / zoom);
     drawGround();
 
     const seen = (x, y, margin) => CL.camera.visible(g, x, y, margin);

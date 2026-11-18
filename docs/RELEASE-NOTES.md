@@ -1,5 +1,19 @@
 # Crownless — Release Notes
 
+## v2.4.0 — Battle zoom (W-03) · 2026-11-18
+
+### New
+- **Zoom the battle** on a large battlefield: pinch the field with two fingers (or use the mouse wheel) for anything from 0.75× to 1.5×, or press the new zoom button beside MAP (Z on a keyboard) to switch between 1× and 0.75×. The view keeps you in the middle, and the game remembers your zoom for the next battle.
+- A pinch never swings, moves you or sends anyone: one finger on the field does nothing, and the joystick and buttons work as before while zoomed.
+- Pinching in again at the widest zoom opens the whole field (the tactical overview); spreading your fingers there closes it.
+- Zoom only changes what you see: your company spots enemies and the battle runs exactly as at 1×.
+
+### Changes
+- On a phone, a tap on the small map or in the overview now acts when your finger lifts (so a pinch can't send a group by accident).
+
+### Under the hood
+- 555 fast and 4 slow Node tests, 123 browser tests (9 more apply to one device only and are skipped on the other). The battle benchmark gives the same battles as 2.3.0.
+
 ## v2.3.0 — Map camera and gestures (W-02) · 2026-11-18
 
 ### New

@@ -61,7 +61,7 @@
 
   /** Is this enemy in sight of the company right now? @param {any} g @param {Unit} e */
   function inSight(g, e) {
-    if (CL.camera.visible(g, e.x, e.y, 0)) return true;
+    if (CL.camera.inSightView(g, e.x, e.y)) return true; // the 1× view, whatever the zoom (W-03)
     const eyes = [g.hero, ...g.allies];
     return eyes.some((a) => a?.alive && Math.hypot(a.x - e.x, a.y - e.y) <= SIGHT);
   }

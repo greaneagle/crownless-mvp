@@ -18,6 +18,8 @@
   // W-02: the world map's zoom is remembered on the device; the map camera keeps it within the
   // current map's own range ("fit" to 2.4×).
   const MAP_ZOOM = { min: 0.25, max: 2.4 };
+  const BATTLE_ZOOM = { min: 0.75, max: 1.5 }; // W-03
+  const battleZoom = (v, d) => (Number.isFinite(v) ? Math.max(BATTLE_ZOOM.min, Math.min(BATTLE_ZOOM.max, Math.round(v * 100) / 100)) : d);
   const mapZoom = (v, d) => (Number.isFinite(v) ? Math.max(MAP_ZOOM.min, Math.min(MAP_ZOOM.max, Math.round(v * 100) / 100)) : d);
 
   /** A remembered Custom setup: each group's offset from the hero's start and its order, or null. */
@@ -41,7 +43,7 @@
       touch = false;
     }
     // Full screen is on by default on phones, where the address bar costs the most room.
-    return { music: 50, sfx: 70, battleSize: touch ? 30 : 40, battlefield: 'large', prepPreset: 'balanced', prepSkip: false, prepCustom: null, reducedEffects: false, healthBars: true, tips: true, fullscreen: touch, textSize: 'normal', mapZoom: 1 };
+    return { music: 50, sfx: 70, battleSize: touch ? 30 : 40, battlefield: 'large', prepPreset: 'balanced', prepSkip: false, prepCustom: null, reducedEffects: false, healthBars: true, tips: true, fullscreen: touch, textSize: 'normal', mapZoom: 1, battleZoom: 1 };
   }
 
   let current = defaults();
@@ -66,6 +68,7 @@
       fullscreen: typeof r.fullscreen === 'boolean' ? r.fullscreen : d.fullscreen,
       textSize: Object.hasOwn(TEXT_SIZES, r.textSize) ? r.textSize : d.textSize,
       mapZoom: mapZoom(r.mapZoom, d.mapZoom),
+      battleZoom: battleZoom(r.battleZoom, d.battleZoom),
     };
   }
 
@@ -122,5 +125,5 @@
     return true;
   }
 
-  CL.settings = { KEY, BATTLE_SIZES, BATTLEFIELDS, PREP_PRESETS, TEXT_SIZES, MAP_ZOOM, defaults, sanitize, load, get, all, set, apply, textScale, font };
+  CL.settings = { KEY, BATTLE_SIZES, BATTLEFIELDS, PREP_PRESETS, TEXT_SIZES, MAP_ZOOM, BATTLE_ZOOM, defaults, sanitize, load, get, all, set, apply, textScale, font };
 })(typeof window !== 'undefined' ? window : globalThis);

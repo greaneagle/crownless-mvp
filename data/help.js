@@ -67,7 +67,8 @@
         'A battle can draw in others nearby. Road Reavers within earshot join their own kind; a kingdom’s patrol helps you only if that kingdom counts you a friend, and comes for you if it is Hostile. They ride in from the side of the field they come from: an hour away on the map is about ten seconds of battle. Those your company can already see are named before you fight; others are announced shortly before they arrive. If the battle ends first, they arrive too late. Enemies cut down by those who came to help are theirs, not yours. Auto-resolve counts the help that would arrive in good time.',
         'Only so many fight at once (Settings → Battle size); the rest wait in reserve and step in as others fall. Enemies may come in waves.',
         'Before you fight, choose a setup: Balanced (the default), Defensive, Aggressive, or Custom, where you drag each group’s flag inside the zone and pick its first order. Simulate settles the fight from your strength and explains the odds (your soldiers count half as much again for fighting in ranks; playing it out yourself still usually costs fewer of them). Tick Skip this screen to go straight in with your setup next time (Settings → Before battles turns it back on). When a band ambushes you, there is less room to form up.',
-        'On a large battlefield the view follows you. The small map at the top shows your company and the enemies your soldiers have seen (red; faded where they were last seen); tap it to look there for a moment. MAP (or hold Tab) opens the whole field with the battle held still: pick a group in Orders, then tap where it should go and hold. You never have to use it.'
+        'On a large battlefield the view follows you. The small map at the top shows your company and the enemies your soldiers have seen (red; faded where they were last seen); tap it to look there for a moment. MAP (or hold Tab) opens the whole field with the battle held still: pick a group in Orders, then tap where it should go and hold. You never have to use it.',
+        'On a large battlefield you can also zoom: pinch the field with two fingers (or use the mouse wheel) for anything from 0.75× to 1.5×, or press the zoom button (Z) to switch between 1× and 0.75×. One finger on the field does nothing, so a pinch never swings, moves you or sends anyone. Zoom only changes what you see: your company spots enemies and fights exactly as at 1×. Pinching in again at the widest zoom opens the whole field; spreading your fingers there closes it. The game remembers your zoom on this device.'
       ],
       controls: [
         ['Joystick', 'WASD / arrows', 'Move'],
@@ -78,6 +79,7 @@
         ['ORDERS → Rally', 'R', 'Steady the soldiers near you (every 30 s)'],
         ['Tap the small map', 'Click the small map', 'Look there for a moment'],
         ['MAP', 'Hold Tab, or M', 'Tactical overview: send a group to a spot'],
+        ['Pinch, or the zoom button', 'Mouse wheel, or Z', 'Zoom the battle (large fields)'],
         ['Pause', 'Esc', 'Pause']
       ]
     },

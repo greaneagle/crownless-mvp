@@ -294,3 +294,7 @@
 #stage[data-mode="map"] #game{touch-action:none}
 #stage[data-mode="map"].panning #game{cursor:grabbing}
 #mapZoom #centreBtn.away{border-color:#ffe7a8;box-shadow:0 0 0 2px #ffe7a866}
+
+/* 2.4.0 — W-03 battle zoom: the zoom button sits with MAP, on a large field only */
+#stage:not([data-field="large"]) #zoomBtn,#stage[data-mode="town"] #zoomBtn{display:none}
+#rightControls #zoomBtn{align-self:flex-start;width:clamp(50px,6.6vw,82px);height:clamp(50px,6.6vw,82px);font-size:calc(clamp(9px,1.1vw,14px) * var(--ui-scale))}
