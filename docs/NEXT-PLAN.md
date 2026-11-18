@@ -1,6 +1,6 @@
 # Crownless — Plan after 2.0: zoom and a bigger world, then Phases 7–9
 
-_Written 2026-11-18 at build 2.0.0 (commit 0415109). This is the working plan for everything after v2.0. It replaces the outlines in `docs/V2-PLAN.md` §6–§8; V2-PLAN stays the record of how v2.0 was built. Sources: the owner's direction (2026-11-18), the v2 design documents (`Crownless_v2_0_Feature_and_Systems_Design_Part_1.md` and `_Part_2.md`, chiefly §11–§24, §26–§28) and the state of the code._
+_Written 2026-11-18 at build 2.0.0 (commit 0415109). This is the working plan for everything after v2.0. It replaces the outlines in `docs/V2-PLAN.md` §6–§8; V2-PLAN stays the record of how v2.0 was built. Sources: the owner's direction (2026-11-18), the v2 design documents (`Crownless_v2_0_Feature_and_Systems_Design_Part_1.md` and `_Part_2.md`, chiefly §11–§24, §26–§28) and the state of the code. **Each task's detailed specification is in [`NEXT-TASKS.md`](NEXT-TASKS.md).**_
 
 ## 0. The owner's direction (2026-11-18)
 
@@ -158,6 +158,9 @@ That gives Phase 8 enough holdings and nobles, and Phase 9 enough realms for all
 | **P9-T** | **Tuning and acceptance** | Long runs (SC-29: 100 simulated years with no exploits or loops), ruler fatigue (SC-41), the full scenario matrix | All core scenarios SC-01–42 covered | M | all above |
 
 ## 7. Order and versions
+
+The specification of each task (problem, starting code, what to build, layers, save, edge cases, tests, acceptance) is in [`NEXT-TASKS.md`](NEXT-TASKS.md).
+
 
 1. **Phase W first:** W-01 and W-02 (zoom), W-04 (data-driven world), then W-03, W-05, W-06, W-07 and W-08. W-01–W-04 are independent of each other and could run in any order.
 2. **B-01 early in Phase 7.** It's independent of the world and improves every later battle feature.
