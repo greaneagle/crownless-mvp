@@ -7,7 +7,7 @@ A single-player, top-down party-battle prototype in plain HTML5 Canvas and class
 - **Current behavior (regression reference):** [`docs/BASELINE.md`](docs/BASELINE.md)
 - **Status and plan:** [`docs/ROADMAP.md`](docs/ROADMAP.md); the v2 plan is [`docs/V2-PLAN.md`](docs/V2-PLAN.md), from the owner's v2.0 design documents
 - **Release notes:** [`docs/RELEASE-NOTES.md`](docs/RELEASE-NOTES.md); v2.0 acceptance: [`docs/V2-VALIDATION.md`](docs/V2-VALIDATION.md)
-- **What comes next:** [`docs/NEXT-PLAN.md`](docs/NEXT-PLAN.md): zoom and a bigger world, then Phases 7–9; every task specified in [`docs/NEXT-TASKS.md`](docs/NEXT-TASKS.md)
+- **What comes next:** [`docs/NEXT-PLAN.md`](docs/NEXT-PLAN.md): browser regression tests, zoom and a bigger world, then Phases 7–9 (with the owner decisions still open); every task specified, with its readiness, in [`docs/NEXT-TASKS.md`](docs/NEXT-TASKS.md)
 
 ## What is playable
 

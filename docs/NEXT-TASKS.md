@@ -1,1037 +1,1121 @@
 # Crownless — Task specifications after 2.0
 
-_Written 2026-11-18 at build 2.0.0. The detailed companion to [`NEXT-PLAN.md`](NEXT-PLAN.md): one specification per task, in the design's ticket format (design Part 2 §26.8), shortened to what a developer needs. NEXT-PLAN gives the order, the phases and the owner's decisions; this file gives what each task is._
+_Written 2026-11-18 at build 2.0.0; **reviewed and corrected the same day against commit c66d94c** (NEXT-PLAN §11). The detailed companion to [`NEXT-PLAN.md`](NEXT-PLAN.md): one specification per task, in the design's ticket format (design Part 2 §26.8), shortened to what a developer needs. NEXT-PLAN gives the order, readiness, schema steps and the owner's decisions; this file gives what each task is._
 
 **How to read a task:**
-- **Problem:** what the player lacks today.
-- **Now:** the code and data it starts from.
+- **Readiness:**
+  - **Ready:** implement now.
+  - **Ready after decision:** waits on an owner decision in NEXT-PLAN §8.
+  - **Specified:** detailed, re-checked when the task starts.
+  - **Provisional:** an outline to be specified when its phase starts.
+- **Problem:** what's missing.
+- **Now:** the code it starts from, verified at c66d94c.
 - **Build:** what to make.
 - **Layers:** the default, one-decision and expert behaviour (design §2.5).
-- **Save:** whether it needs a new schema step.
+- **Save:** whether it needs a schema step.
 - **Edges:** failure, loss and exploit cases.
 - **Out:** what is out of scope.
 - **Tests and acceptance.**
 
-**Size:**
+**Sizes:**
 - S: a day or two of work.
-- M: a few days.
+- M: three to five days.
 - L: a week or more.
+- Ranges (M–L) mean the low end assumes no surprises.
 
-**Versions:** each finished task bumps the minor version (2.1.0, 2.2.0, …) unless the owner decides otherwise (NEXT-PLAN §8).
-
-**Every task follows the contract in NEXT-PLAN §7:**
-- tests and lint green;
-- checked in a real browser at desktop and phone size;
-- docs and the version updated;
-- no commits until the owner asks.
-
-Phases 8 and 9 build on choices made earlier. Their specifications are as complete as can be written now, and each is re-checked when its phase starts.
+**Every task follows the contract in NEXT-PLAN §7.** Green Node and browser tests and lint; new tests for new logic, screens and saved state; checked in a real browser at desktop and 812×375; help text and debug tools; an asset request list when it adds art needs; version and docs updated; no commits, pushes, tags or pull requests until the owner asks.
 
 ---
 
 ## Phase W — A Bigger World
 
-### W-01 · Text size and UI scale (M)
+### W-00 · Browser regression testing (M–L, 5–8 days) — Ready after decision D-T1
 
-**Problem.** Text is fixed in size, and the page blocks pinch-zoom (`user-scalable=no`), so small text can't be enlarged. A bigger world will mean more labels and longer lists.
+**Problem.** The 528 Node tests cover the game's logic, but rendering, input, mobile gestures and layout are only checked by hand in a browser. W-01, W-02 and W-03 change exactly those.
 
 **Now.**
-- Device settings are in `js/settings.js`: music, sfx, battleSize, battlefield, prepPreset, prepSkip, prepCustom, reducedEffects, healthBars, tips, fullscreen.
-- CSS is in `style.css`: mostly `clamp()` sizes, plus fixed pixel sizes on panels.
-- Canvas text (map labels, approach banners, minimap, battle HUD bits) is drawn in `js/render.js` with fixed fonts.
-- `fitHud` in `js/ui.js` places the message line under the top-left panel.
+- The game is a static page: `index.html`, classic scripts, a canvas, HTML panels. `npm run serve` serves it with `http-server` through `npx`.
+- The game exposes its state as `window.Crownless` (CL): campaign, game, save, storage, ui. Saves live in `localStorage` (`crownless_save`, `crownless_save_backup`, `crownless_settings`).
+- Real-build save fixtures are in `tests/fixtures/saves-*`.
+- CI: the `check` job in `.github/workflows/deploy.yml` runs `npm test` and `npm run lint`, then deploys.
+- The project has no `package.json` dependencies and no lockfile.
 
 **Build.**
-- A device setting **Text size**: Small 0.9, Normal 1.0, Large 1.15, Larger 1.3. It is stored in `crownless_settings` and shown in Settings.
-- A CSS custom property `--ui-scale` on `#stage`, applied to every font size and to button padding and minimum heights (with a minimum touch target of 40 CSS px).
-- Panels that can grow taller than the screen scroll (Orders, Prepare panel, Accounts, Journal, Party).
-- `CL.ui.scale()` for canvas text. Render uses it for every font it draws: map labels, banners, the minimap legend, prep labels and damage text, if any.
-- `fitHud` recalculated on change; no reload needed.
-- Pinch-zoom stays blocked in battles and on the map (touch controls). The text size is the accessibility answer.
+- **Tooling** (owner decision D-T1):
+  - `@playwright/test` as a pinned **development** dependency, with a committed `package-lock.json`. The game ships unchanged and still has no runtime dependencies.
+  - `playwright.config.js` starts the static server (`http-server` on a free port, no cache) and runs Chromium.
+  - Two projects: **desktop** (1280×720, mouse) and **phone landscape** (812×375, `hasTouch`, `isMobile`, device scale 3).
+  - One more phone size later where it matters (667×375 and 915×412 for W-01).
+- **Deterministic setup:** helpers in `tests/browser/helpers.js`:
+  - start from an empty `localStorage`, or put a known fixture save into it before load (`addInitScript`); the `saves-1.15` and `saves-2.0` fixtures, and a "fresh campaign" made by the game itself;
+  - fix `Math.random` with a seeded function and fix time with Playwright's clock (`page.clock`), so the game loop and animations are repeatable;
+  - write a fixed `crownless_settings` before load:
+    - tips off, so tip cards don't cover taps (one spec turns them on to test them);
+    - full screen off, since `js/fullscreen.js` requests full screen on any touch `pointerup`;
+    - a fixed battle size;
+  - read state through `window.Crownless` for assertions, rather than reading pixels;
+  - drive the canvas by coordinates computed from game positions (`CL.world.toPx`, and the camera from W-02);
+  - no test calls game functions to skip the interaction it's testing.
+- **Flows covered** (each a short spec in `tests/browser/`):
+  1. **Startup:** the page loads without console errors, the title screen shows the version, Continue is offered when a save exists.
+  2. **Character creation:** name, presentation, background, cloak, begin; the first settlement opens.
+  3. **Loading an existing save:** a fixture save loads into the right day, gold, soldiers and place; a damaged or incompatible save shows its notice (SC-31, SC-33).
+  4. **World map:** a tap on a settlement starts travel and arrives; a tap on a party opens the encounter; Pause and Wait.
+  5. **Settlement:** menu buttons (recruit, buy food, contracts, accounts, journal, party); Walk the streets in Stonebridge and talk to an NPC by tap.
+  6. **Mouse and touch:** the same map and menu flows with mouse clicks (desktop) and touch taps (phone).
+  7. **Battle:**
+     - Attack → Prepare → Fight;
+     - joystick movement and keyboard WASD;
+     - Attack and Block buttons;
+     - Orders panel (group, order, Rally);
+     - minimap tap, MAP overview;
+     - the battle ends in a result screen.
+     
+     Debug-panel battles may be used to reach a battle quickly, but the controls are driven by real input.
+  8. **Save, export and import:**
+     - Save now writes `localStorage`;
+     - Export is intercepted with Playwright's download API (nothing leaves the machine);
+     - Import from a file and from pasted text;
+     - a damaged file is refused with its message;
+     - Restore works.
+  9. **Responsive layout** at desktop and 812×375. Key controls (joystick, Attack, Block, Orders, top-right buttons, the message line) must be:
+     - inside the viewport;
+     - not overlapping each other (bounding-box checks);
+     - at least 44×44 CSS px for touch.
+  10. **Hooks for W-01 and W-02:** the layout checks are written as a reusable helper (`expectLayoutSound(page, screen)`), so W-01 runs them at four text sizes and W-02 adds gesture specs.
+- **Screenshots (visual regression):**
+  - Playwright `toHaveScreenshot` for important screens: title, map, settlement menu, Party, Accounts, Journal, Prepare, battle, result. Each at desktop and phone.
+  - Animated or random parts are masked (the message line, unit sprites in battle if needed). A small pixel tolerance.
+  - **Baselines come from CI's Linux Chromium only** (decision D-T2): fonts and rendering differ between machines.
+  - Locally, `npm run test:browser` runs behaviour tests, and `npm run test:visual` compares screenshots when baselines exist for that platform.
+  - `npm run test:visual:update` regenerates them, inside the Playwright Docker image or through a CI workflow run that uploads new baselines as an artifact.
+- **CI:**
+  - a `browser` job (parallel to `check`): `npm ci`, `npx playwright install --with-deps chromium`, `npm run test:browser`;
+  - the HTML report and failure screenshots and traces uploaded as artifacts;
+  - `deploy` needs both jobs;
+  - the browser download is cached;
+  - `playwright-report/` and `test-results/` go in `.gitignore`. The deploy job uploads a clean checkout, so nothing from a test run or `node_modules` is published.
+- **Documentation:** a "Browser tests" section in the README:
+  - install (`npm ci`, `npx playwright install chromium`);
+  - commands;
+  - how to update screenshots and when (only for intended visual changes, reviewed in the pull request or commit diff);
+  - how to add a spec;
+  - the rule: a task that changes UI or input adds or updates browser specs.
+
+**Layers.** Not player-facing.
+
+**Save.** None.
+
+**Edges.**
+- **Flakiness:**
+  - waits are on state (`window.Crownless.game.mode === 'battle'`), never on fixed sleeps;
+  - the clock is controlled;
+  - each test gets a fresh browser context, so storage is isolated.
+- **Time:** the browser suite should stay under about 3 minutes in CI; slow flows are tagged and can run nightly if needed.
+- **The real `localStorage` of a developer's own browser is never touched.** Playwright uses its own profile.
+
+**Out.**
+- Firefox and WebKit (later, if needed).
+- Real-device testing; the owner's phone stays the final check.
+- Performance tests in the browser (Debug-panel tests cover the phone).
+
+**Tests (of the task itself).**
+- The suite runs green locally on Windows (behaviour) and in CI (behaviour and screenshots).
+- A deliberate break is detected and then reverted: removing the Orders button's handler, or making map taps start travel twice.
+
+**Acceptance.**
+- The browser suite runs in CI on every push and pull request and blocks deploy when it fails.
+- It detects broken interactions (shown by the deliberate-break check).
+- W-01 and W-02 can extend it with their own specs.
+- The Node logic tests are unchanged and still run as before.
+- Tooling, commands and maintenance are documented.
+
+---
+
+### H-01 · Test and measurement hygiene (S) — Ready
+
+**Problem.** B-01, W-07 and W-08 depend on measurements, and those were noisy in V2-T2: test games in one Node process leaked state into each other, so results depended on run order. Bot-heavy tests will slow `npm test` as the world grows.
+
+**Now.**
+- `tests/helpers/load.js` builds a vm sandbox per `loadGame`, but some state is shared across instances.
+- The fought-versus-auto parity script and the map timing exist only as scratch scripts.
+- `npm test` takes about 21 s.
+
+**Build.**
+- **Find and fix the leak:** for example a module-level cache, `Math.random` patched on a shared realm, or the shared `CL.combat.BATTLE.activeCap`. Add a test that runs the same seeded fight in a fresh process and after other games in one process, and requires equal results.
+- **Fast and slow tests:**
+  - `npm test` keeps the fast logic tests;
+  - bot-heavy tests (Prototype G, long campaigns, the story bot at 60 seeds) move under `npm run test:slow`, which CI also runs.
+- **`scripts/parity.js`:** the same encounters fought by the bot and auto-resolved (from V2-T2), with seed spreading done right (consecutive seeds correlate the first draws).
+- **`scripts/bench-map.js`:** world-simulation cost per game hour, for N parties.
+- **`.gitattributes`** (`* text=auto eol=lf`) so the repository stays LF and the commit warnings stop. Check that no file changes content when this lands.
+
+**Save.** None.
+
+**Acceptance.**
+- The isolation test passes.
+- `npm test` stays fast; `npm run test:slow` and CI cover the rest.
+- Both scripts run and are documented in the README.
+
+---
+
+### W-01 · Text size and UI scale (M) — Ready (needs W-00)
+
+**Problem.** Text is fixed in size, and the page blocks browser zoom, so small text can't be enlarged. A bigger world will mean more labels and longer lists.
+
+**Now.**
+- Device settings live in `js/settings.js`.
+- CSS is in `style.css`: mostly `clamp()` sizes, plus fixed pixel sizes on panels.
+- Canvas text (map labels, approach banners, minimap, battle HUD bits, Prepare-screen labels) is drawn in `js/render.js` with fixed fonts.
+- `fitHud` in `js/ui.js` places the message line under the top-left panel.
+- The page sets `user-scalable=no` and `touch-action:none`, so pinch would otherwise zoom the page during battle and map gestures.
+
+**Build.**
+- **A device setting, Text size:** Small 0.9, Normal 1.0, Large 1.15, Larger 1.3. Stored in `crownless_settings`, shown in Settings, applied **at once without a reload**.
+- **What it covers:**
+  - HTML text: HUD, menus, panels, overlays, the tip cards, the help and settings panels, button labels, tooltips' text (`title` attributes become in-game hint text where they carry information);
+  - **dynamically generated content:** result screens, ledgers, journal, soldier cards, encounter options, dialogue;
+  - **canvas text** through one helper, `CL.ui.font(size)` returning a scaled font string, used for every font render draws (map labels, banners, minimap legend, Prepare labels, debug overlays included).
+- **How:**
+  - a CSS custom property `--ui-scale` on `#stage`, used in every font size, padding and min-height;
+  - `fitHud` and the canvas re-layout run on change;
+  - the fixed pixel sizes become scaled ones (for example `#ordersPanel` 13 px, `#result` 13 px, the Settings and Help panels 15 px); the `max-height: 430px` phone rules are kept and scaled too.
+- **Canvas resolution** (decision D-R1):
+  - The canvas stays a 960×540 backing store, so enlarged canvas text is drawn at that resolution.
+  - As a measurement only, W-01 tries a backing store at `min(devicePixelRatio, 2)` with the Debug-panel Big battle and map tests on the owner's phone, and records the numbers.
+  - It's adopted only if the owner agrees and the frame budget holds.
+- **Layout rules:**
+  - **Realistic sizes:** the largest setting stays usable at **812×375 and other realistic landscape phone sizes**: 667×375, 740×360, 844×390, 915×412.
+  - **Touch targets:** at least **44×44 CSS px** at every size (WCAG 2.5.5); buttons grow rather than shrink their tap area when text is larger.
+  - **Combat controls stay clear:**
+    - panels that can be taller than the screen scroll inside themselves: Orders, Prepare, Accounts, Journal, Party, Settings, Help;
+    - **during battle, no scrollable panel may cover the joystick, Attack or Block;** the Orders panel keeps clear of them and scrolls within its own area.
+  - **Nothing essential is lost to truncation.** Truncated names and lines (soldier names, settlement names on the map, long news lines) end in an ellipsis and have a way to see them whole: a tap on the item shows the full text in its detail card or the message line. Numbers, costs and warnings are never truncated.
+  - The HUD abbreviates instead of overlapping at Larger, for example "Allies 12 · Enemies 9" becomes "12 v 9".
+- **Documentation** (README and How to Play):
+  - the page blocks browser pinch-zoom because pinch is used by the game's own map and battle gestures (W-02, W-03);
+  - in-game text size is the substitute. **It is not a full replacement:** it scales the game's text and controls but not the canvas art, and doesn't follow the system font size;
+  - desktop browsers' page zoom (Ctrl +/−) still works and is supported at 100–150%.
+- **Screen-reader and keyboard accessibility** are a separate concern: backlog A-01, not part of W-01.
 
 **Layers.** Default Normal. One decision: pick a size. No expert layer.
 
 **Save.** None (a device setting).
 
 **Edges.**
-- At the largest size on 812×375 nothing may overlap the joystick or the attack and block buttons. The HUD wraps or abbreviates instead: for example "Allies 12 · Enemies 9" becomes "12 v 9" at Larger.
-- Long settlement names and soldier names must truncate with an ellipsis, not overflow.
+- Changing size mid-battle doesn't pause or disturb the battle.
+- A size change while a panel is open re-flows that panel.
+- Saved settings from older builds without the key get Normal.
 
-**Out.** Languages; colour themes; dyslexia fonts (backlog).
+**Out.**
+- A broad UI redesign or a framework migration.
+- Colour themes and dyslexia fonts (backlog).
+- Languages.
 
 **Tests.**
-- **Unit:** the setting is validated and applied; `CL.ui.scale()` follows the setting.
-- **Browser:** every screen at each size at 812×375 and desktop. Screenshot check of the title, map, settlement, Party, Accounts, Journal, Prepare, battle and result.
-- **Phone:** owner check at Larger.
+- **Node:** the setting is validated and applied; `CL.ui.font()` follows it.
+- **Browser (W-00), for each of the four sizes:**
+  - at 812×375 and desktop, on the title, map, settlement, Party (soldier list and card), Accounts, Journal, Settings, Prepare, battle (with the Orders panel open) and result screens, `expectLayoutSound` checks the controls are in the viewport, don't overlap, and are at least 44×44;
+  - a canvas check that labels are drawn with the scaled font;
+  - at the largest size also 667×375 and 915×412.
+- **Screenshots:** baseline at Normal and Larger for the main screens.
+- **Phone:** the owner checks Larger.
 
-**Acceptance.** Every screen is usable at Larger on a phone; nothing is clipped or overlapping; text size changes take effect at once and persist.
+**Acceptance.**
+- Every check above passes at all four sizes.
+- Size changes apply at once and persist.
+- Nothing essential is hidden.
+- The zoom limitation is documented.
 
 ---
 
-### W-02 · World-map camera: pan and zoom (M)
+### W-02 · World-map camera and gestures (M–L) — Ready (needs W-00)
 
-**Problem.** The strategic map can't grow. It always shows the whole 0–100 space on the 960×540 canvas.
+**Problem.** The strategic map can't grow: it always shows the whole 0–100 space on the 960×540 canvas. Taps start travel on pointer-down, which rules out dragging and pinching.
 
 **Now.**
-- `js/world.js` has a fixed `VIEW = { x0: 40, y0: 22, sx: 8.8, sy: 4.96 }`, with `toPx`/`fromPx` converting map units to canvas pixels.
-- `click(px, py)` → `targetAt` hit-tests settlements, sites and parties with `HIT_RADIUS_PX` 28.
-- `mapDist` uses the view's aspect, so a journey's time matches how far it looks.
+- `js/input.js` (~line 217–229) calls `CL.world.click(...)` on **pointerdown** in map mode, which travels at once.
+- Town taps (`CL.town.tap`), Prepare flag drags and battle minimap taps use the same listener.
+- `js/world.js`: a fixed `VIEW = { x0: 40, y0: 22, sx: 8.8, sy: 4.96 }`; `toPx`/`fromPx`; `targetAt` hit-tests parties, settlements and sites with `HIT_RADIUS_PX` 28.
+- `mapDist` uses `Y_ASPECT = VIEW.sy / VIEW.sx`, so gameplay distance is computed from the drawing constants.
 - `drawWorld` in `js/render.js` draws the whole map every frame.
-- The battle camera (`js/camera.js`: follow, snap, toScreen and toWorld) is separate.
 
 **Build.**
-- **A map camera** `g.mapCamera = { x, y, zoom }` in map units:
-  - `toPx`/`fromPx` go through it;
-  - it follows the party while travelling;
-  - it eases, clamps to the map's bounds, and keeps the party in view.
-- **Zoom levels:** 0.6×, 1×, 1.6×, 2.4×, relative to today's scale.
-  - At 1× and today's map size the view is identical to 2.0. That's the regression baseline.
-  - Mouse wheel, pinch on touch, and +/− buttons on the map HUD.
-- **Pan:**
-  - drag with one finger or the mouse;
-  - a "Centre" button returns to the party;
-  - tapping still means "travel there", told apart from a drag by movement under 8 px.
-- **At every zoom:**
-  - icons stay a readable size (drawn at a fixed pixel size, positions scaled);
-  - labels fade out at low zoom except towns and capitals;
-  - the hit radius stays 28 px on screen.
-- **Edge markers** for the player's contract target, active quest bands and the player's own party when off-screen (the same idea as the battle edge markers).
-- **Distances stay in map units.** `mapDist` keeps its aspect constant, so travel time doesn't change with zoom.
-- **Settings:** the zoom level is remembered per device.
 
-**Layers.** Default: follows the party at 1×. One decision: zoom out to plan. No expert layer.
+**1. Gesture-aware map input** (a small module, `js/gestures.js`, used by map mode now and battle zoom in W-03):
+- `pointerdown` **begins tracking** an interaction. It records the pointer, its start position and time, and calls `setPointerCapture`. It **does not travel**.
+- `pointermove` **tells a tap from a drag.** Once a pointer moves more than the threshold (8 CSS px), the interaction becomes a **pan**, and the map camera follows the drag.
+- `pointerup` **confirms a tap only if** movement stayed within the threshold and no second pointer joined. Then it hit-tests and travels (or opens the target), exactly as a tap does today.
+- **Two pointers:** a second pointer turns the interaction into a **pinch**. The distance between the pointers sets the zoom around their midpoint. Lifting one finger never turns the rest of a pinch into a tap.
+- **Cancellation:** `pointercancel`, `lostpointercapture` and window blur end the interaction without a tap.
+- **Mouse and touch are consistent:** a mouse drag pans; the wheel zooms around the cursor; a click is a tap.
+- **Keyboard on desktop:** arrow keys pan, + and − zoom, C centres. WASD stays free for battle.
+- **Other modes:** battle, town, Prepare and title keep their current handlers and behaviour until a task changes them (W-03 for battle zoom). The gesture module is opt-in per mode.
 
-**Save.** None; the camera is transient. The zoom level is a device setting.
+**2. A reusable camera transform** (`CL.mapView`, in `js/world.js` or its own module):
+- **State:** `{ cx, cy, zoom }`: the map point at the screen centre and a zoom factor.
+- **Conversions:**
+  - `toScreen(mx, my)` and `toMap(sx, sy)`, exact inverses;
+  - `visibleRect()`;
+  - `clamp()`;
+  - `follow(party, dt)` (eased, keeps the party inside a central box);
+  - `panBy(dx, dy)`;
+  - `zoomAt(factor, sx, sy)` (keeps the point under the fingers still);
+  - `edgeMarker(mx, my)` for off-screen targets (the contract target, active quest bands, the player's own party when panned away).
+- **Hit-testing** uses `toScreen` with a fixed 28 px radius at every zoom. Icons are drawn at a fixed pixel size. Labels fade out below a zoom threshold, except towns and capitals.
+- **Gameplay distance is separated from the view.**
+  - `mapDist` gets its own constant (`MAP_ASPECT`, equal to today's 4.96 / 8.8), defined with the world data, not the view.
+  - Zoom and pan never change gameplay distance, travel speed, detection, reinforcement eligibility (V2-09), encounter contact or any rule.
+  - A test proves it: the same journey and the same contacts at every zoom.
+
+**3. Zoom behaviour** (decision D-Z1):
+- **Levels:** "fit" (the zoom at which the whole map fits the canvas), 1×, 1.6×, 2.4×, plus continuous pinch between "fit" and 2.4×.
+- **On today's 100 × 100 map, "fit" is 1×,** the current view, so the map can't be zoomed out below 1× and the 0.6× of the first draft doesn't apply. 0.6× would draw the map 528 × 298 px inside a 960 × 540 canvas, with nothing useful around it.
+- **Once W-05 grows the map,** "fit" falls below 1× (about 0.5× for 200 × 200) and zooming out shows the whole region.
+- **When the map is smaller than the view along one axis** (an aspect mismatch at "fit"), it's centred on that axis and the margin is filled with the map's background terrain. Clamping only applies along axes where the map is larger than the view.
+- **At 1× and today's map,** with the camera at its initial position, the projection equals 2.0's `VIEW` for every settlement (the regression baseline).
+- **The zoom level** is remembered as a device setting.
+- **HUD buttons:** +, − and **Centre** (back to the party).
+
+**4. Drawing:**
+- **Through the transform:** `drawWorld` draws through the camera and culls what's outside `visibleRect()`.
+- **A cached terrain layer:**
+  - Today every frame redraws all terrain and calls `terrainAt` for each forest tree dot.
+  - The static ground (grass, forests, hills, rivers, roads) is drawn once into an offscreen canvas per zoom step (or in tiles once W-05a's map is bigger) and copied each frame with the pan applied.
+  - Moving things are drawn on top: parties, the player, markers and labels.
+  - The cache is rebuilt when the zoom step changes or the world's terrain changes.
+- **Decoration in map coordinates:** the grass mottling moves from screen to map coordinates, so it doesn't slide under the camera.
+- **A Debug-panel map drawing test:** the whole map at "fit" and 2.4× while panning, reporting fps and drawing ms like the Big battle test. It's run on the owner's phone again after W-05a.
+
+**Layers.** Default: the map follows the party at 1×. One decision: zoom or pan to plan. No expert layer.
+
+**Save.** None (the camera is transient; the zoom level is a device setting).
 
 **Edges.**
-- A drag that ends on a settlement must not start travel.
+- A drag that ends on a settlement doesn't travel.
+- A pinch that ends with one finger on a party doesn't open it.
 - Pinch while travelling doesn't stop travel.
-- The camera never shows outside the map.
-- Contact with a band opens the encounter whatever the zoom.
+- Contact with a band opens the encounter whatever the zoom or pan.
+- The Centre button and following resume after a pan once travel starts.
 
 **Out.**
 - The bigger map itself (W-05).
-- A separate "world overview" screen; zooming fully out serves that.
+- Battle zoom (W-03).
+- A separate overview screen; zooming fully out serves that.
 
 **Tests.**
-- **Unit:**
-  - `toPx(fromPx(p))` round-trips at every zoom;
+- **Node (gesture state machine):** synthetic pointer sequences show that:
+  - tap → travel;
+  - drag over the threshold → pan, no travel;
+  - pinch → zoom, no travel;
+  - pinch ending with one finger → no tap;
+  - cancel or lost capture → nothing;
+  - mouse wheel → zoom at the cursor.
+- **Node (camera):**
+  - `toMap(toScreen(p)) = p` at every zoom;
   - hit-testing at every zoom;
-  - drag versus tap;
-  - clamping;
-  - at 1× the projection equals 2.0's for every settlement.
-- **Bots:** campaign and story bots unchanged.
-- **Browser:** pinch is emulated with two pointers; the wheel; buttons.
-- **Phone:** owner check.
+  - clamping, and centring below "fit";
+  - at 1× the projection equals 2.0's for every settlement;
+  - **zoom-independence:** the same journey (time and path) and the same contacts at "fit", 1× and 2.4×.
+- **Browser (W-00):**
+  - mouse drag pans without travel;
+  - touch drag (phone project) pans without travel;
+  - a two-pointer pinch zooms without travel (dispatched as two touch pointers);
+  - a tap still travels;
+  - wheel zoom;
+  - the Centre button;
+  - battle and town taps unchanged (their existing specs still pass).
+- **Bots:** campaign and story bots unchanged (they don't use input).
+- **Phone:** the owner checks drag, pinch and taps.
 
-**Acceptance.** At 1× the game plays exactly as 2.0. At every zoom, taps reach the right target and travel times are unchanged.
+**Acceptance.**
+- Dragging or pinching never starts travel (Node and browser tests).
+- At 1× the game plays exactly as 2.0.
+- At every zoom, taps reach the right target and every rule gives the same result.
 
 ---
 
-### W-03 · Battle zoom (S–M)
+### W-03 · Battle zoom (S–M) — Ready (needs W-02)
 
 **Problem.** On a phone, large battles can feel cramped; on desktop, a wider view would help command.
 
 **Now.**
-- `js/camera.js`: world pixels to screen with a translation only (`toScreen`/`toWorld`).
-- `js/tactics.js` overview: its own transform with scale (`{x, y, scale}`).
-- Render culls by camera view.
-- Input converts taps and clicks through the camera.
+- `js/camera.js` translates world pixels to the screen only (`toScreen`/`toWorld`).
+- The `js/tactics.js` overview has its own scaled transform.
+- Render culls by the camera's view.
+- Battle input converts taps through the camera.
 
 **Build.**
-- **Camera scale:** `g.camera.zoom` from 0.75 to 1.5, used by `toScreen`/`toWorld`, `view`, `visible`, and the render transform (`ctx.setTransform`).
+- **Camera:** `g.camera.zoom` from 0.75 to 1.5 in `toScreen`/`toWorld`, `view`, `visible`, and the render transform.
 - **Controls:**
-  - wheel on desktop;
-  - pinch on touch, but only on the field: not on the joystick or the buttons;
-  - a small zoom toggle button (1× ↔ 0.75×) for one-handed play.
-- **Follow:** the camera keeps the hero inside the central area at every zoom; edge markers recomputed at each zoom.
-- **Minimap:** shows the view rectangle at the current zoom.
-- **Tactical overview:** keeps its own zoom-to-fit, plus pinch to zoom in on part of the field.
-- **Remembered:** the zoom as a device setting.
+  - the W-02 gesture module in battle, **on the field only**: pinch zooms; one-finger drags on the field are ignored. They stay unused, so there's no change to movement, which is the joystick;
+  - the joystick, Attack, Block and the panels are excluded from gesture tracking;
+  - wheel zoom on desktop;
+  - a small toggle button (1× ↔ 0.75×).
+- **Follow:** keeps the hero in the central area at every zoom.
+- **Edge markers, minimap view box and the overview** are updated. The overview keeps its zoom-to-fit, plus pinch.
+- **Remembered:** the zoom level as a device setting.
 
-**Layers.** Default 1×; one decision: zoom out.
+**Layers.** Default 1×. One decision: zoom out.
 
 **Save.** None.
 
 **Edges.**
-- Pinch must never fire an attack or move the joystick.
-- At 0.75× on a large map, drawing cost rises: measure, and cap at 0.85× when "Reduced effects" is on, if needed.
+- A pinch never fires an attack or moves the joystick.
+- At 0.75× on a large map the drawing cost rises: measure on the phone with the Big battle test, and cap at 0.85× with Reduced effects if needed.
 
-**Out.** Free camera (detached from the hero) outside the overview.
+**Out.** A free camera outside the overview.
 
 **Tests.**
-- **Unit:** conversions at each zoom; taps on the field at each zoom hit the right unit and spot; culling still exact.
-- **Benchmark:** at 1× unchanged; at 0.75× measured.
-- **Browser and phone checks.**
+- **Node:** conversions, tap targets and culling at each zoom.
+- **Benchmark:** unchanged at 1×.
+- **Browser (W-00):** pinch on the field zooms without attacking or moving; the controls still work while zoomed.
+- **Phone:** the Big battle test at 0.75×.
 
-**Acceptance.** Attacks, taps and orders land correctly at every zoom, and the frame budget is kept at 0.75× on the phone.
+**Acceptance.** Attacks, taps and orders land correctly at every zoom, and the phone keeps its frame budget at 0.75×.
 
 ---
 
-### W-04 · A data-driven world (M)
+### W-04 · A data-driven world (M) — Ready
 
-**Problem.** The game can only be the Border March. A bigger world, more kingdoms, and later mods all need the world to be data.
+**Problem.**
+- The game can only be the Border March, on a 0–100 map.
+- A bigger world (and later mods) needs the world, its kingdoms and its size to be data.
 
-**Now.**
-- `MAP_ID = 'border_march'` in `js/world.js`.
-- `FACTION_EMBLEM` in `js/render.js` (V, A, R).
-- `FACTION_ORDER` in `js/troops.js`.
-- The debug fort switch alternates valedorn and aurelian.
-- Factions in `data/factions.js`: id, name, short, culture, colour, description, initialReputation, recruits, garrison.
-- `realm.js`: kingdoms() comes from the faction data, and default owners from settlements' `ownerFaction`.
-- Story data refers to kingdoms by id, which is fine: that's content.
+**Now** (verified at c66d94c):
+- **Hard-wired world:**
+  - `MAP_ID = 'border_march'` (`js/world.js`).
+  - `FACTION_EMBLEM` (`js/render.js`), `FACTION_ORDER` (`js/troops.js`), the debug fort switch (`js/debug.js` ~307).
+  - The campaign bot's boards (`tests/helpers/campaign-bot.js:134`).
+- **Hard-coded 0–100 bounds:**
+  - `js/parties.js`: clamps to 2–98 at lines 144–145, 178–179, 193–194, 208–209 and 440; to 0–100 at 583–597;
+  - `js/world.js`: 134 and 335–336;
+  - `js/contracts.js`: 332, including the fallback position 50, 50;
+  - `js/story.js`: `bandSpot` caps at 98, line 272;
+  - `js/parties.js:47`: new parties are created at 50, 50 before they're placed.
+- **Kingdoms** come from `data/factions.js` (`realm.kingdoms()`); owners from settlements' `ownerFaction`.
 
 **Build.**
-- **A world package:**
-  - `world_map` entries gain `factions` (the kingdoms in this world), `start`, `regions` (named areas for news and text), `bounds` (map size in map units) and `view` (default zoom and centre).
-  - The game reads the campaign's `worldId` (saved since schema v3) to pick its package.
-  - The first and only package stays `border_march`.
+- **The world package:** `world_map` entries gain:
+  - `bounds` (`{ w, h }` in map units; 100 × 100 for the March today);
+  - `aspect` (gameplay `MAP_ASPECT`; W-02);
+  - `factions` (this world's kingdoms);
+  - `start`;
+  - `regions` (named areas for news and text);
+  - `view` (default zoom and centre).
+  
+  The game picks its package by the campaign's `worldId` (saved since schema v3).
+- **No bounds in code:** every clamp above uses `CL.world.bounds()` (with a margin where it used 2–98); the contract fallback uses the world's start settlement.
 - **Kingdoms from data:**
-  - faction data gains `emblem` (one letter or glyph) and an `order` for the troop tree;
-  - render, the troop tree and debug read them;
-  - debug "switch owner" cycles through the world's kingdoms.
+  - factions gain `emblem` and `order`;
+  - render, the troop tree, debug and the bots read them;
+  - debug "switch owner" cycles through the world's kingdoms;
+  - the bots read contract boards from settlements' services.
 - **Validation:**
-  - every settlement's owner, every party template's faction and every recruit list point at this world's kingdoms;
-  - the world's start settlement exists;
-  - bounds hold every settlement and site.
-- **A test world** (tests only, not shipped): three kingdoms with other names on a small map, proving nothing in code assumes two.
-- **Namespaced ids** reserved: ids may contain `:` (for example `border_march:stonebridge`) without breaking validation or saves. They aren't used yet (Phase 9).
+  - every settlement, site, party frontier point and road inside `bounds`;
+  - every owner, party template faction and recruit list pointing at this world's kingdoms;
+  - the start settlement exists.
+- **A test world** (tests only): three kingdoms with other names, on a **150 × 120** map (bigger than 100, not square). It's loaded through a new `loadGame({ content: … })` option in `tests/helpers/load.js`, and proves nothing assumes two kingdoms or a 100 × 100 square.
 
 **Layers.** Not player-facing.
 
-**Save.** None. `worldId` already exists.
+**Save.** None. `worldId` exists; saved positions keep their 0–100 values in the March, now checked against `bounds` instead of literals.
 
 **Edges.** A save of an unknown world is already refused by name (since 1.2.0).
 
-**Out.** Mod loading (P9-07); multiple worlds selectable in the UI (P9-08).
-
-**Tests.**
-- A grep test: no kingdom or world id appears in `js/`.
-- The three-kingdom test world loads, simulates 30 days with the campaign bot, and renders headless.
-- All existing tests are unchanged.
-
-**Acceptance.** The test world plays. The real game is unchanged byte for byte in its saves.
-
----
-
-### W-05 · The bigger region (L)
-
-**Problem.** Ten settlements and two kingdoms are too small for lords, holdings, sieges, wars and diplomacy to be tested or enjoyed.
-
-**Now.**
-- **Map:** 0–100 map units; two roads, one river, two forest areas, hills; 2 sites.
-- **Settlements:** 10, with markets, gear lists, recruit lists, scarcity baselines and garrisons.
-- **People:** 3 cultures in `data/names.js`; 16 troops; party templates: 3 bands, 2 patrols per kingdom, 1 caravan per kingdom.
-- **Text:** news lines in `data/news.js`; contracts in `data/contracts.js`.
-- **Battle maps:** chosen by terrain (`battleMapAt`).
-
-**Build (proposed defaults; NEXT-PLAN §8).**
-- **Size:**
-  - **Map:** 0–200 × 0–200 map units, four times today's area, at the same travel scale (a map unit takes as long to cross as today).
-  - The Border March is placed whole in the middle at an offset (for example +50, +50), so its settlements, roads, river, lairs and story distances are unchanged.
-- **Kingdoms:** four, plus the Road Reavers and one free city. Working names, all data and easy to rename:
-  - **Valedorn** (west of the March, as now) and **Aurelia** (east, as now);
-  - **a northern kingdom** (highland and forest; a new culture; heavy infantry and axemen);
-  - **a southern or coastal league** (marsh, coast and salt trade; a new culture; crossbowmen and light horse);
-  - **the free city:** a neutral trade hub with mercenaries for hire and the best market.
-- **Settlements:** about 32 in all:
-  - each kingdom: one capital town (walkable later), two castles or forts, three to five villages;
-  - the free city;
-  - the March's ten keep their ids and owners.
-- **Troops:** each new kingdom gets a full tree from tier 1 to tier 3 (five or six troops with upgrade paths, shields and brace flags, and a cavalry branch), names, and gear for its armouries.
-- **Terrain:**
-  - more forest and hills;
-  - a mountain pass (slow, with a defensible chokepoint);
-  - marsh (slow);
-  - a coast edge;
-  - rivers crossed only at fords and bridges, so routes matter and battles at crossings use a new battle map (a ford map, generated like the large maps).
-- **Map content:**
-  - more lairs and sites, two per region;
-  - caravan routes between capitals and the free city;
-  - patrols per kingdom scaled by holdings;
-  - Reaver bands per region.
-- **Text:**
-  - news lines and region names;
-  - contract boards in every capital and the free city;
-  - fort garrisons;
-  - market baselines for the new goods: two new trade goods, for example timber and wine.
-- **Story:** the four quests and the errands stay as they are, inside the March. Two or three new errands in other regions show off the new places, using the existing quest interpreter.
-
-**Layers.** Not a setting; it's the world.
-
-**Save.** Content only. The move of old saves is W-06.
-
-**Edges.**
-- Travel times on long routes: the campaign bot and the economy report re-check food and wage pressure (W-08).
-- Battle map choice for new terrain: every terrain maps to a battle map; nothing falls through to a default that looks wrong.
-
 **Out.**
-- Lords and named nobles (P8-01, P8-07).
-- War between kingdoms beyond today's frontier clashes (W-07 adds simple war and peace).
-- Art for new places: placeholder sprites from the existing set until the art team delivers.
+- Namespaced ids (moved to P9-07: they would ripple through every id validator for no Phase W gain).
+- Mod loading.
+- Selecting a world in the UI.
 
 **Tests.**
-- Content validation (troop trees complete; every recruit list, garrison, market and gear list valid).
-- Reachability: every settlement reachable by road or open ground; no settlement inside impassable terrain.
-- Travel time between the two farthest capitals within a target (for example under 4 game days at base speed).
-- The story and errands still pass; Gate D tests unchanged.
-- Bots: campaign 60 days on the new map; Prototype G.
+- A source test: no kingdom or world id, and no `0, 100` / `2, 98` / `98)` bound literals, in `js/`.
+- The test world loads, the campaign bot plays 30 days on it, and parties reach every corner (positions beyond 100 survive a save and reload).
+- Every existing test is unchanged. Saves written by this build are byte-identical to 2.0's for the March, apart from the version stamp.
 
-**Acceptance.** All of the above, plus an owner play session on the phone at W-02's zoom levels.
+**Acceptance.** The test world plays; the real game is unchanged.
 
 ---
 
-### W-06 · Saves move into the bigger world (M)
+### W-05a · World geometry and terrain (M) — Ready after decisions D-W1, D-W4
 
-**Problem.** Every save so far has migrated forward. The bigger world must not strand anyone's campaign.
+**Problem.** A bigger region needs more kinds of ground, and battles that match them.
 
 **Now.**
-- Save schema v9, migrations 1 → 9 in `js/save.js`, and fixtures from real builds back to 0.3.
-- Positions saved in map units: `c.world.x/y`, parties' `x/y/tx/ty`, sites' state, quest band anchors, the merchant's prices by settlement id.
-- `worldId: 'border_march'`.
+- Terrain kinds: road 1.2, grass 1.0, forest 0.75, computed by `terrainAt` from polygons (forests), road polylines and a river line.
+- `battleMapAt` picks a battle map by terrain.
+- Two large generated battle maps (forest, open).
 
 **Build.**
-- **A schema step (v10):**
-  - offset every saved position by the March's placement in the new map (W-05);
-  - add the new kingdoms' reputation (neutral);
+- **New terrain kinds** as data, each with a speed factor and a battle map:
+  - **hills** 0.8;
+  - **mountain** 0.4: a pass is a road through it;
+  - **marsh** 0.5;
+  - **coast:** the map edge's water is impassable only at the map edge, which the bounds already handle;
+  - **river** 0.3 except at **fords** 0.8 and **bridges** 1.0.
+- **All terrain stays passable** (decision D-W4). Straight-line travel and party movement still work; routes matter through cost, not walls. Impassable terrain waits for W-09.
+- **A generated ford battle map,** made like the large maps, with a shallow crossing that slows units (P7-11 adds formation effects later). Hills and marsh map to the existing open and forest maps until the art team delivers.
+- **Drawing** for the new terrain on the world map, culled by the W-02 camera.
+
+**Save.** None.
+
+**Edges.**
+- Travel never stalls: every point has a speed above 0.
+- A battle at a ford uses the ford map.
+
+**Tests.**
+- `terrainAt` for each kind.
+- Travel time across a river at a ford against elsewhere.
+- Battle map choice for each terrain.
+- The March's travel times are unchanged.
+
+**Acceptance.** As tests; the ford battle plays in the browser at desktop and phone size.
+
+---
+
+### W-05b · The bigger region's content (L) — Ready after decisions D-W1–D-W3; ships with W-06
+
+**Problem.** Ten settlements and two kingdoms are too small for lords, holdings, sieges, wars and diplomacy.
+
+**Now.**
+- 10 settlements with markets, gear lists, recruit lists, scarcity baselines and garrisons.
+- 3 cultures in `data/names.js`; 16 troops.
+- Party templates: 3 bands, 2 patrols per kingdom, 1 caravan per kingdom.
+- News lines in `data/news.js`; contracts in `data/contracts.js`.
+
+**Build (proposed defaults, D-W1–D-W3):**
+- **Map:** 200 × 200 map units at today's travel scale. The March is placed whole at a fixed offset (for example +50, +50); its layout, story distances and lairs are unchanged.
+- **Kingdoms:**
+  - Valedorn and Aurelia, extended westward and eastward;
+  - **a northern kingdom** (highland and forest; a new culture; heavy infantry and axemen);
+  - **a southern or coastal league** (marsh and coast; a new culture; crossbowmen and light horse);
+  - a **free city** (neutral; mercenaries; the best market);
+  - the Reavers in every region.
+- **About 32 settlements:**
+  - each kingdom: a capital town, two forts or castles, three to five villages;
+  - the free city;
+  - two lairs or sites per region.
+  
+  Settlement ids in the March keep their names.
+- **Troops:** each new kingdom gets a full tier 1–3 tree (five or six troops, shields and brace flags, a cavalry branch), names and armoury gear. Two new trade goods (for example timber and wine).
+- **Map content:**
+  - patrols per kingdom scaled by holdings;
+  - caravans between capitals and the free city;
+  - contract boards in every capital and the free city;
+  - news lines naming regions.
+- **Art:** an **asset request list** for the art team in `docs/ASSETS.md` (new troop sprites, settlement icons, terrain tiles, the ford map). New troops render with role art meanwhile.
+- **Bots:** the campaign and story bots read boards, markets and routes from the world, not hard-coded ids. Gate D's story checks stay on the March.
+
+**Save.** Content only, but the build must also carry the v10 migration (**W-06**). Never release W-05b without W-06.
+
+**Edges.**
+- Long journeys: food and wage pressure are re-checked (W-08).
+- Every new settlement has a market or a reason not to.
+- Nothing spawns outside `bounds`.
+
+**Out.**
+- Lords and nobles (Phase 8).
+- War rules beyond today's clashes (W-07).
+- Walkable capitals (only Stonebridge is walkable).
+
+**Tests.**
+- Content validation: troop trees, recruits, garrisons, markets, gear.
+- Reachability and travel time between the farthest capitals (under about 4 game days).
+- The story and errands still pass; Gate D unchanged.
+- The campaign bot (60 days) and Prototype G on the new map.
+- The asset manifest test updated.
+
+**Acceptance.** All of the above, plus an owner session on the phone at W-02's zoom levels.
+
+---
+
+### W-05c · New-region errands and help (S) — Specified
+
+**Build.**
+- Two or three errands outside the March (quest interpreter, `side: true`), each showing a new region's character.
+- How to Play and tips for the bigger map: zoom, Centre, regions and kingdoms.
+
+**Tests.** Each errand walked end to end (as `tests/errands.test.js`); the story bot ignores errands.
+
+**Acceptance.** Errands complete; help text covers the new map.
+
+---
+
+### W-06 · Saves move into the bigger world (M) — Ready after decision D-W2; released with W-05b
+
+**Problem.** Every save so far has migrated forward. The bigger world must not strand anyone's campaign, or move them to the wrong place.
+
+**Now.**
+- Save schema v9; migrations 1 → 9; fixtures from real builds back to 0.3.
+- **Coordinate-bearing saved fields** (verified):
+  - `c.world.x/y`;
+  - every party's `x, y, tx, ty` and `anchor` (quest bands are parties with an anchor);
+  - contract targets' `x, y` (`js/contracts.js` sanitize);
+  - offers' positions, if any.
+- **Not coordinate-bearing:**
+  - news events (they keep ids only);
+  - the merchant's prices (by settlement id);
+  - sites' state (by id).
+
+**Build.**
+- **Fixtures first:** `tests/fixtures/saves-2.0/` from the real 2.0.0 build (`scripts/make-legacy-save-fixtures.js` in a throwaway checkout at 0415109), made **before** any W-05 content lands.
+- **Schema v10 migration:**
+  - offset every coordinate-bearing field by the March's placement;
+  - add reputation (neutral) for new kingdoms;
   - add owners for new holdings from content defaults;
   - add market scarcity for new markets;
   - start party spawns for new templates;
-  - keep `worldId` the same, since the world grew rather than changed: it's still `border_march`, now bigger.
-- **Fixtures** `tests/fixtures/saves-2.0/` from the real 2.0.0 build, made with `scripts/make-legacy-save-fixtures.js` in a throwaway checkout.
-- **Contract targets and quest bands** in mid-hunt keep their positions after the offset; ambush and escort contracts still complete.
+  - keep `worldId` (`border_march`: the world grew, it didn't change);
+  - record the offset in a migration note.
+  
+  **The migration is pure,** like every step in `CL.save.MIGRATIONS`. The offset and the new kingdoms' defaults are constants written into the migration, never read from the current world data, so later content changes can't change how an old save migrates.
+  
+  The migration runs **before** sanitize, so nothing is clamped to the old square.
+- **A one-time message on load:** "The world has grown: new kingdoms lie beyond the March."
+- **A pre-migration copy** kept as for every step.
 
-**Layers.** Invisible to the player, except a one-time note on load: "The world has grown: new kingdoms lie beyond the March."
+**Layers.** Invisible apart from the message.
 
 **Save.** Yes: v10.
 
 **Edges.**
-- A save mid-travel (`g.travel` is transient, so that's fine).
-- A save mid-encounter (results are committed by result ID, unaffected).
-- A pre-migration copy is kept as for every step.
+- A save mid-travel: `g.travel` is transient, so the party simply stands still.
+- A save with an open encounter is committed by result ID, unaffected.
+- An active contract target and its ambush or escort still complete after the offset.
+- A v10 save opened in a 2.0 build is refused as "newer" (as today), never loaded unshifted.
 
-**Out.** Moving a save into a different world (Phase 9).
+**Out.** Moving saves between different worlds (Phase 9).
 
 **Tests.**
-- Every fixture set from 0.14 to 2.0 imports and loads from storage into v10 with the same soldiers, gold, day, quests and position relative to the March.
-- Then it plays on with the campaign bot for 10 days.
+- Every fixture set from 0.14 to 2.0 imports and loads from storage into v10 with the same soldiers, gold, day, quests, and **position relative to the March**.
+- Then the campaign bot plays 10 days.
+- A contract in progress completes after migration.
 
-**Acceptance.** No save from any build is lost or thinned. The player stands where they stood, relative to the March.
+**Acceptance.** No save from any build is lost, thinned or misplaced.
 
 ---
 
-### W-07 · A world simulation that scales (M)
+### W-07 · A world simulation that scales (M–L) — Specified
 
 **Problem.** The world simulation was written for nine parties. A bigger world wants 40–80, and later lords and armies.
 
 **Now.**
-- `js/parties.js` `runSteps`: every 15 game minutes each party chooses a target and moves.
-- `resolveContacts` checks bandit versus caravan or patrol pair by pair.
-- `frontierClash` checks patrol pairs.
-- Detection is distance to the player.
+- `js/parties.js` `runSteps`: every 15 game minutes, every party chooses a target and moves.
+- `resolveContacts` and `frontierClash` check pairs.
+- Detection is a distance test.
 - `reinforce.plan` scans all parties.
 - `drawWorld` draws everything.
-- News: `js/news.js`; clashes only between Valedorn and Aurelia.
+- Clashes only between Valedorn and Aurelia (`js/news.js`).
 
 **Build.**
-- **A spatial grid** over the map (cells of about 10 map units), rebuilt each step. Contacts, detection, chase targets and reinforcement planning query nearby cells only.
-- **Budgets:** a cap on parties per region (spawn rules per region, not just per template); parties far from the player step less often (every hour instead of every 15 minutes) with the same outcomes on average. Fast-forward stays equivalent (design Part 2 §27.4: 90 days in one step is the same as 90 smaller steps).
-- **Map-drawing culling** to the map camera (W-02).
+- **A spatial grid** (cells of about 10 map units) rebuilt each step. Contacts, detection, chase targets and reinforcement planning query nearby cells only.
+- **Budgets:**
+  - a cap on parties per region (spawn rules per region);
+  - parties far from the player may step every game hour instead of every 15 minutes;
+  - **swept contacts on coarse steps:** contact is tested between the two parties' movement segments, not only end points, so two parties can't pass through each other. A party moves about 3.6 map units an hour, and contact needs 1.6.
+- **Fast-forward equivalence** (Part 2 §27.4): resting 90 days in one step gives the same kinds of outcome as 90 one-day steps. This is checked statistically, since step size changes how the random streams are consumed.
+- **Map-drawing culling** to the W-02 camera.
 - **War and peace between kingdoms:**
-  - a small saved table `c.relations[kingdomA][kingdomB] = 'war' | 'peace'`;
-  - clashes and news only between kingdoms at war;
-  - wars start and end on simple rules (border incidents, exhaustion) with a news line;
-  - this is the seed of Phase 9 diplomacy, kept minimal.
-- **News and clashes** for any pair of kingdoms; news lines name regions.
+  - `c.relations[a][b]` is `'war'`, `'tension'` or `'peace'`;
+  - clashes only between kingdoms at war or in tension;
+  - wars start and end on simple rules (border incidents, exhaustion) with a news line.
+  - **The March pair** stays at "tension" until Q4 ends; the endings set it (D-W5). This is the seed of P9-02.
+- **News** for any pair of kingdoms, naming regions.
+- **A Debug-panel map stress test** (many parties, fast time) for the owner's phone. It reports simulation and drawing ms separately, and the time of one save write.
+- **A save size budget:** today's played save is about 15 KB. A 90-day save with 80 parties must stay under 100 KB; a test checks it.
 
-**Layers.** Not a setting.
-
-**Save.** Yes: `relations` (a small schema step, or folded into W-06's v10 if they ship together).
+**Save.** Yes: v11 (`relations`).
 
 **Edges.**
-- Determinism: the same seed gives the same world (seeded streams).
-- No party skips a contact because of stepping less often: contacts near the player always use the fine step.
+- Determinism: the same seed gives the same world.
+- Bots are **re-baselined** and the change recorded, since step changes shift random consumption.
+- Quest bands keep their behaviour.
 
 **Out.** Lords (P8-01); treaties (P9-02).
 
 **Tests.**
-- **Equivalence:** the grid returns exactly the contacts a full scan would (as the battle obstacle grid did).
-- **Performance:** 80 parties over 90 days headless, with the step cost measured.
-- **Determinism:** same seed, same world.
-- **Rules:** war and peace start and end; news follows.
+- **Grid equivalence:** the grid returns exactly what a full scan would.
+- **Swept contacts:** two fast parties crossing within one coarse step meet.
+- **Performance:** 80 parties over 90 days headless (`scripts/bench-map.js`).
+- **Determinism** for a fixed seed.
+- **War and peace rules,** including the March pair and the endings.
 
-**Acceptance.** 60–80 parties run without slowdown spikes on the phone's map screen (owner check), and every existing bot passes.
+**Acceptance.** 60–80 parties run without slowdown spikes on the phone's map test (owner), and every existing bot passes after re-baselining.
 
 ---
 
-### W-08 · Tuning and acceptance of the bigger world (S)
-
-**Problem.** Longer distances change food, wages, contracts and danger.
+### W-08 · Tuning and acceptance of the bigger world (S–M) — Specified
 
 **Build.**
-- Run the economy report, campaign bot, story bot and Prototype G across the whole region for 60 days.
-- Re-tune:
+- **Runs:** the economy report, campaign bot, story bot and Prototype G across the whole region for 60 days.
+- **Re-tune:**
   - contract pay by distance;
   - food prices away from farms;
   - patrol and band density;
-  - travel speed on roads versus open ground;
+  - road versus open-ground speed;
   - caravan effects on far markets.
-- A short validation section added to `docs/NEXT-PLAN.md` (as V2-VALIDATION did for 2.0).
-- Phone session.
+- **Write-up:** a validation section in NEXT-PLAN (as V2-VALIDATION did).
+- **Phone session:** text sizes, map gestures, battle zoom, the bigger map.
 
 **Acceptance.**
 - Bots never stuck.
 - The economy healthy by V2-T1's measures.
-- The story still ends in all 200 runs.
-- The owner has played a session on the phone.
+- The story ends in all 200 runs.
+- The owner's phone session done.
+
+---
+
+### W-09 · Route planning (M) — Ready after decision D-W4
+
+**Problem.** Straight-line travel can't handle impassable terrain, and can't offer "Avoid danger" routes (P7-04).
+
+**Build.**
+- **A planner:** A\* over a coarse cost grid (terrain speed factors, roads, optional danger cost from known bands) for the player's travel and for parties' movement.
+- **Paths:** stored as waypoints (transient; re-planned after load).
+- **The map** shows the planned route while travelling.
+- **Impassable terrain** (if D-W4 allows it): rivers except at fords and bridges, and high mountains.
+
+**Save.** None (routes re-planned on load).
+
+**Edges.**
+- Unreachable targets refuse with a message.
+- Parties never get stuck; a fallback is a direct line where passable.
+- Performance: a budget per step.
+
+**Tests.**
+- Paths across rivers use fords.
+- Travel time equals the sum of segment costs.
+- Parties reach every settlement.
+- Bots never stuck.
+
+**Acceptance.** The above; and with impassable terrain on, the campaign bot plays 60 days without stalls.
 
 ---
 
 ## Phase 7 — The Living Company
 
-### B-01 · Battle balance pass (M) — the owner's deferred goal
+### B-01 · Battle balance pass (M) — Ready (needs H-01)
 
 **Problem.** Fighting in person with a company wins almost every close battle (88–100% at 50–75% odds), so a strong fighter has nothing to turn. Owner, 2026-11-18: Simulate should be only slightly worse than fighting, and fighting yourself a bit more likely to win close battles.
 
 **Now.**
-- V2-T2 measured the gap with a fought-versus-auto parity script.
-- Auto-resolve: company soldiers count ×1.5; winner's loss 0.2 × odds ratio.
+- V2-T2 measured the gap. Auto-resolve: company soldiers count ×1.5; winner's loss 0.2 × odds ratio.
 - Fought battles are easy because of V2-08 (shields, cover, ranks) and enemy routs.
-- Enemy bands (looters, reavers) have no shields; enemy patrols do.
+- Enemy bands (looters, reavers) have no shields; patrols do.
 
 **Build.**
 - **Enemy tactics:**
-  - enemy shield troops use cover and ranks as the company does;
-  - enemy groups keep a loose line instead of streaming in one by one;
+  - enemy shield troops use cover and ranks;
+  - enemy groups keep a loose line instead of streaming in;
   - targeting prefers the exposed (archers, the wounded, the hero when alone).
-- **Morale:**
-  - enemy morale a little steadier (for example the outnumbered penalty halved for bands defending their lair);
-  - check that the rout threshold doesn't hand the player easy wins.
-- **Optionally,** Reaver bands get one shielded troop (a "Reaver shieldman", tier 2).
-- **Check after the changes:**
-  - Balanced and the hero-down charge;
-  - the bot hero's fights;
-  - keep the auto-resolve ×1.5 or lower it back toward 1.2 so the gap is 5–15 points.
+- **Morale:** enemy morale a little steadier, for example the outnumbered penalty halved for bands defending their lair.
+- **Content (optional):** Reaver bands get one shielded troop (content only).
+- **Re-check:** Balanced, the hero-down charge and the bot hero's fights. Keep auto-resolve's ×1.5, or lower it back toward 1.2, so the gap ends 5–15 points.
 
-**Layers.** None new.
+**Save.** None (content only for a new troop).
 
-**Save.** None (unless a new troop: content only).
-
-**Edges.** SC-36 (ten fights on defaults won) must still hold; the presets should still differ.
+**Edges.** SC-36 (ten fights on defaults won) still holds; the presets still differ.
 
 **Tests.**
-- **Parity:** the parity script as a project script (`scripts/parity.js`), with fought results 5–15 points over the stated odds in close fights.
+- **Parity:** `scripts/parity.js` (H-01): fought results 5–15 points over the stated odds in close fights.
 - **Unit:** enemy cover works.
 - **Re-runs:** Prototype G and the economy report.
 
-**Acceptance.**
-- The parity target is met by the bot.
-- The owner's phone session confirms a close fight can be turned by fighting well.
+**Acceptance.** The parity target is met; the owner's phone session confirms a close fight can be turned by fighting well.
 
 ---
 
-### P7-01 · Surgeon (S–M)
+### P7-01 · Surgeon (S–M) — Specified
 
 **Problem.** Every battle kills soldiers at the GDD's fixed 35%, with nothing the player can do but fight better.
 
-**Now.**
-- `party.rollCasualties`: each fallen soldier dies at `DEATH_CHANCE` 0.35, else wounded for `WOUND_DAYS`.
-- Followers framework: `c.followers` (quartermaster, merchant); wages paid at payday; hiring from the Accounts screen.
+**Now.** `party.rollCasualties` (`DEATH_CHANCE` 0.35, `WOUND_DAYS`); followers framework (`c.followers`, payday, the Accounts screen).
 
 **Build.**
 - **The follower:** a Surgeon hired in towns (60 crowns, 10 a week).
-- **Supplies:** uses medicine, a new supply bought like food (the quartermaster can stock it under a per-good rule, the first such rule).
+- **Supplies:** uses medicine, a new supply, with a quartermaster per-good rule (the first such rule).
 - **Triage after battle:**
-  - with the surgeon and medicine, the death chance falls (for example 0.35 → 0.22);
-  - wounds heal faster (2 days → 1.5);
+  - the death chance falls (for example 0.35 → 0.22);
+  - wounds heal faster (2 → 1.5 days);
   - each saved life costs one medicine;
-  - triage reports names: "Surgeon Ada saved Tam Owl and Hob of Stonebridge."
-- **Without medicine,** a smaller benefit.
-- **Auto-resolve** uses the same rule.
+  - triage names who was saved.
+- **Without medicine,** a smaller benefit. Auto-resolve uses the same rule.
+- **Randomness:** the surgeon changes the death threshold, not the number of rolls. There's still one roll per soldier from the seeded `casualties` stream, so seeded results and existing tests stay aligned.
 
-**Layers.** Default: the surgeon just works. One decision: hire. Expert: a medicine reserve rule in the quartermaster.
+**Layers.** Default: just works. One decision: hire. Expert: a medicine reserve rule.
 
-**Save.** Yes (follower and medicine stock).
+**Save.** Yes.
 
-**Edges.**
-- Capture: the surgeon's supplies may be taken.
-- Unpaid: leaves as the others do.
+**Edges.** Capture may take supplies; unpaid, the surgeon leaves.
 
-**Out.** Treating the hero's injuries; disease.
+**Out.** The hero's injuries; disease.
 
-**Tests.**
-- Deaths per battle measured with and without, over the same seeds.
-- Supplies are spent once; the report names the saved; save and reload.
+**Tests.** Deaths per battle measured with and without; supplies spent once; the report; save and reload.
 
-**Acceptance.** Fewer deaths (measured), clearly reported, and costs a real upkeep.
+**Acceptance.** Fewer deaths (measured), clearly reported, at a real upkeep.
 
----
-
-### P7-02 · Scout (S–M)
-
-**Problem.** The map shows every party in the region; there's no reason to scout. P7-04 adds limited vision and this follower makes it manageable.
+### P7-02 · Scout (S–M) — Specified (needs P7-04)
 
 **Build.**
-- **The follower:** a Scout hired in towns or villages.
+- **The follower:** a Scout.
 - **Effects:**
-  - wider detection radius;
-  - earlier warning of a party chasing you, with its size;
-  - a route estimate when choosing a destination (days, danger: bands seen near the route);
-  - better ambush odds for the player (a bigger deployment zone when you catch a band).
-- **Reports** are honest about uncertainty ("about 8 Reavers").
+  - a wider detection radius;
+  - earlier pursuit warnings with sizes;
+  - route estimates (days and danger) when choosing a destination;
+  - a bigger deployment zone when you catch a band.
+- **Honest uncertainty:** "about 8 Reavers".
 
-**Layers.** Default: warnings appear. No decisions beyond hiring.
+**Save.** Yes.
 
-**Save.** Yes (follower).
+**Tests.** Detection with and without; warnings follow detection rules; route estimates within 10% of actual.
 
-**Edges.** No omniscience: only what's in range.
+**Acceptance.** As tests; the owner finds the warnings useful, not noisy.
 
-**Tests.**
-- Detection radius with and without; warnings follow detection rules; route estimates match actual travel time within 10%.
-
-**Acceptance.** As tests, plus the owner judges the warnings useful rather than noisy.
-
-**Needs.** P7-04.
-
----
-
-### P7-03 · Blacksmith (S)
-
-**Problem.** Gear only comes from loot and armouries; there's no way to invest in a favoured soldier or the hero.
+### P7-03 · Blacksmith (S) — Specified
 
 **Build.**
-- **The follower:** a Blacksmith hired in towns.
-- **Hero:** paid upgrades of the hero's weapon and armour (+1 tier of damage or armour, capped twice per item).
-- **Soldiers:** a "fine kit" upgrade for up to five named soldiers (+armour); costs crowns and iron (a trade good).
-- No durability, no decay (design §12.4).
+- **The follower:** a Blacksmith.
+- **Hero:** paid upgrades of the hero's weapon and armour (at most twice per item).
+- **Soldiers:** "fine kit" for up to five named soldiers; costs crowns and iron.
+- **No durability** (design §12.4).
 
-**Save.** Yes (upgrades on items and soldiers).
+**Save.** Yes.
 
-**Edges.** Upgraded items sell for more, but never above the armoury's markup (no flipping).
+**Edges.** Upgraded items sell for more but never above the armoury's markup (no flipping).
 
-**Tests.** Caps; costs; no money loop; save and reload.
+**Tests.** Caps, costs, no money loop, save and reload.
 
 **Acceptance.** Targeted, capped, optional.
 
----
+### P7-04 · Pursuit and detection (L) — Specified (needs W-07; W-09 for routes)
 
-### P7-04 · Pursuit and detection (M)
+**Problem.** Parties see everything within a radius and chase in straight lines.
 
-**Problem.** Parties see everything within a radius and chase in straight lines; the world has no hiding, searching or losing a pursuer.
-
-**Now.** `parties.wantsPlayer` compares distance with the template's `detection`; `chooseTarget` chases the player's current position.
+**Now.** `parties.wantsPlayer` compares distance with `detection`; `chooseTarget` chases the player's current position.
 
 **Build.**
-- **Vision:**
-  - day and night (the clock has hours): night shortens sight;
-  - terrain: forests hide, hills extend sight;
-  - parties remember a **last-seen position** and go there, then search for a few hours before giving up.
-- **The player:**
-  - the company's visibility (larger companies are seen further);
-  - a "Hide" stance when waiting in forest (harder to see, no travel);
-  - pursuit warnings when a party is chasing.
-- **Map:** shows parties only when seen by the company. Others fade to last-seen marks, as in battle (V2-06).
-- **Routes:** prefer roads; an option "Avoid danger" picks a safer route at a time cost.
+- **Vision:** day and night (the clock has hours); forests hide, hills extend sight.
+- **Pursuit:** last-seen positions, searching, then giving up.
+- **The player:** the company's visibility by size; a **Hide** stance in forest; pursuit warnings.
+- **Map:** shows only parties the company sees, with last-seen marks for the rest (as battle detection, V2-06).
+- **Routes:** "Avoid danger" (W-09).
 
-**Layers.** Default: it just happens; warnings explain. One decision: Hide or Avoid danger.
+**Layers.** Default: it just happens, with warnings. One decision: Hide or Avoid danger.
 
-**Save.** Yes (last-seen positions, search timers).
+**Save.** Yes.
 
-**Edges.**
-- Quest bands keep their behaviour (camp or ambush).
-- Contracts' targets remain findable (their last known position is shown).
+**Edges.** Quest bands keep their behaviour; contract targets stay findable (last known position shown).
 
-**Tests.**
-- Each rule (forest hides, night shortens, last-seen chase, giving up).
-- Bots still find contract targets; the story bot still finishes.
+**Tests.** Each rule; bots still find contract targets; the story bot still finishes; browser tests for hidden and last-seen marks.
 
-**Acceptance.** A band loses you in a forest; a patrol searches your last-seen spot; nothing becomes unfindable that a quest needs.
+**Acceptance.** A band loses you in a forest; a patrol searches your last-seen spot; nothing a quest needs becomes unfindable.
 
-**Needs.** W-07.
+### P7-05 · Officers and detached patrols (L) — Specified (needs W-07)
 
----
+**Problem.** Nothing can be delegated; soldiers can't act without the hero.
 
-### P7-05 · Officers and detached patrols (L)
-
-**Problem.** The company is one party; nothing can be delegated; soldiers can't do anything without the hero.
-
-**Now.**
-- One roster `c.roster`; soldiers are named with records.
-- Mara is the companion (`js/companion.js`), with a `send` and `recall` for the story.
-- World parties come from templates.
+**Now.** One roster; Mara with the story's `send` and `recall`; world parties from templates.
 
 **Build.**
-- **Captains:** appoint Mara, a future companion (P7-06), or a veteran soldier (tier 3, at least 10 battles) as a captain.
-- **Detachments:** a separate party on the map with a chosen set of soldiers (each soldier is in exactly one party).
-- **Order package** (design §11.3): objective, area, constraints, resources and autonomy. Constraints are things like "avoid parties stronger than us", "retreat below half strength" and "return by day N"; resources are a food and wage budget from the company chest; autonomy is either "follow the order exactly" or "use judgement". Objectives:
-  - patrol a road between two settlements;
-  - hunt bands in an area;
-  - escort a caravan;
-  - garrison a village (later holdings).
-- **The detachment's life:** it moves and fights with the world simulation's rules (auto-resolve), carrying soldiers' histories (battles count once). Wages and food come from its budget.
-- **Reports:** a short report every day or on events ("Captain Tam: broke 6 Reavers near Oakford; two wounded"), and a final report on return.
-- **Recall and merge:** at any time, by meeting it or by courier (delay); soldiers rejoin the roster.
+- **Captains:** appoint Mara, a companion (P7-06), or a veteran soldier (tier 3, at least 10 battles).
+- **Detachments:** a separate party with chosen soldiers (each soldier in exactly one party).
+- **Order package** (design §11.3):
+  - objective: patrol a road, hunt bands in an area, escort a caravan, garrison a village (later);
+  - constraints: avoid stronger parties, retreat below half strength, return by day N;
+  - resources: a food and wage budget from the chest;
+  - autonomy: exact or judgement.
+- **Its life:** it moves and fights by the world simulation's rules (auto-resolve). Soldiers' histories count once.
+- **Reports:** daily or on events, and a final report.
+- **Recall and merge:** by meeting it or by courier.
 
-**Layers.** Default: none (the company is one party). One decision: send a patrol with a preset order. Expert: constraints and budgets.
+**Layers.** Default: no detachments. One decision: send a patrol with a preset order. Expert: constraints and budgets.
 
-**Save.** Yes: detachments, orders and budgets.
+**Save.** Yes.
 
 **Edges** (SC-17, SC-18):
-- a captain defeated returns wounded with survivors; casualties, equipment, wages and loyalty reconcile once;
-- a detachment can't be in two battles (the V2-09 lock);
-- desertion and pay per detachment.
+- a defeated captain returns wounded with survivors; everything reconciles once;
+- no detachment in two battles (the V2-09 lock);
+- **a companion away on a detachment when a story stage sends them** (Q3's `send: 'mara'`) is recalled first, with a message;
+- pay and desertion per detachment.
 
 **Out.** Armies (P9-05); vassals' parties (P8-01).
 
-**Tests.**
-- Soldier-in-exactly-one-party invariant; reconciliation once.
-- Save and reload mid-order; Prototype C extended (a detached and returned soldier keeps their record).
+**Tests.** The soldier-in-one-party invariant; reconciliation once; save and reload mid-order; Prototype C extended; the Q3 interaction.
 
-**Acceptance.** SC-17 and SC-18 pass; a bot sends a patrol that hunts bands for a week and returns with consistent records.
+**Acceptance.** SC-17 and SC-18 pass; a bot sends a patrol that hunts for a week and returns with consistent records.
 
-**Needs.** W-07.
-
----
-
-### P7-06 · More companions (M)
-
-**Problem.** Mara is the only companion; captains and the later political game need people.
+### P7-06 · More companions (M) — Specified (needs P7-05)
 
 **Build.**
-- Two or three companions (data in `data/companions.js`) found in different regions, each with:
-  - a background;
-  - a motive (for example coin, revenge, a cause);
-  - a small recruitment quest using the interpreter.
-- Each can be a captain (P7-05).
-- **Loyalty:** a few factors (pay, victories, motive met or offended). Low loyalty means warnings, then leaving, never without warning (design §12.5).
+- Two or three companions in different regions, each with a background, a motive and a small recruitment quest.
+- Each can captain.
+- **Loyalty** from pay, victories, and motive met or offended: warnings, then leaving, never without warning.
 
-**Save.** Yes (companions list).
+**Save.** Yes.
 
-**Tests.** Join, leave, lead a detachment; loyalty rules.
+**Tests.** Join, lead, leave; loyalty rules.
 
-**Acceptance.** Each companion can be recruited, can lead, and can leave for stated reasons.
+**Acceptance.** Each can be recruited, lead, and leave for stated reasons.
 
-**Needs.** P7-05.
-
----
-
-### P7-07 · Soldier traits (S)
-
-**Problem.** Soldiers differ only by troop and record.
+### P7-07 · Soldier traits (S) — Specified
 
 **Build.**
-- **Two or three traits** with visible, measured effects and trade-offs (design §10.4):
-  - **Steadfast:** a cohesion bonus for their group;
-  - **Cautious:** less pursuit and fewer losses, but slower to engage;
-  - **Impulsive:** earlier engagement, more kills, more wounds.
-- **Earned at milestones,** not random spam: for example Steadfast after holding through a rout.
+- **Traits:** Steadfast (group cohesion bonus), Cautious (less pursuit, fewer losses, slower to engage), Impulsive (earlier engagement, more kills, more wounds).
+- **Earned at milestones,** not random spam.
 - Shown on the soldier card and the roll of honour.
 
-**Save.** Yes (traits on soldiers).
+**Save.** Yes.
 
-**Tests.** Each trait's effect measured in battle tests; milestone triggers once.
+**Tests.** Each trait's effect measured; milestones trigger once.
 
 **Acceptance.** Traits change battles measurably and are earned visibly.
 
----
-
-### P7-08 · Dynamic world events (M)
-
-**Problem.** The world reacts only through news lines and frontier clashes.
-
-**Now.** `js/news.js` records events and bulletins; contracts are generated from templates; errands use the quest interpreter.
+### P7-08 · Dynamic world events (M) — Specified (needs W-07)
 
 **Build.**
-- **An event system** (data in `data/events.js`): conditions on world state (a region's scarcity, a lost caravan, wars), an effect on state, and a choice for the player when nearby.
-- **First events:**
-  - **food shortage** in a town (prices up; sell food for goodwill or profit);
-  - **wolf or bandit infestation** in a region (more bands; a bounty);
-  - **militia request** (a village asks for help against raiders; the reward is reputation);
-  - **courier on the road** (carry a message for pay; may be ambushed);
-  - **refugees** (food and recruits, at the cost of supplies).
-- **Each event:**
-  - resolves once (result ID, V2-02);
-  - has a duration;
-  - ignoring it has a stated consequence;
-  - feeds the news, and the chronicle when the player takes part.
+- **An event system** (`data/events.js`): conditions on world state, an effect, and a choice for the player when nearby.
+- **First events:** food shortage, infestation (bounty), militia request, courier on the road, refugees.
+- **Each event:** resolves once (result ID); has a duration; ignoring it has a stated consequence; feeds the news and the chronicle.
 
-**Layers.** Default: events happen and are reported. One decision: take part or not.
+**Layers.** Default: reported. One decision: take part or not.
 
-**Save.** Yes (active events).
+**Save.** Yes.
 
-**Edges.** No event loops (cooldowns per region and kind); events never block the story.
+**Edges.** Cooldowns per region and kind; never blocks the story.
 
-**Tests.** Each event's trigger, resolution once, consequence of ignoring, and cooldown; 90-day bot runs without loops.
+**Tests.** Each event's trigger, single resolution, ignore consequence and cooldown; 90-day bot runs without loops.
 
-**Acceptance.** As tests; events show up in the news and the chronicle.
+**Acceptance.** As tests; events show in the news and the chronicle.
 
-**Needs.** W-07.
+### P7-09 · Tournament (M–L) — Specified
 
----
-
-### P7-09 · Tournament (M)
-
-**Problem.** There's no way to win renown and coin without risking the company.
+**Now.** No duel or one-on-one mode exists in the code. Battles are always party against party (`js/combat.js`), on the small or large maps.
 
 **Build.**
-- **When and where:** a foot-melee duel bracket of eight, held in capital towns every couple of weeks (announced in the news).
-- **Entry:** an entry fee; the hero only, with tournament gear (blunted).
-- **Fights:**
-  - one-on-one in a small arena (a new one-screen battle map);
-  - the existing duel mechanics (swing, block, timing);
-  - AI opponents with levels.
-- **Rewards:**
-  - prizes in crowns and renown;
-  - a chronicle line;
-  - reputation with the host kingdom;
-  - a named rival who may meet you again.
-- **Losing:** costs the fee and a little renown, no wounds to the company.
+- **The event:** an eight-entry foot-melee duel bracket in capitals every couple of weeks (announced in the news).
+- **A one-on-one arena mode** (new):
+  - built on the battle engine: the hero against one AI fighter, no soldiers, no reserves, no orders panel;
+  - a one-screen arena map;
+  - loaner tournament gear that replaces the hero's own for the bout and is restored afterwards, never lost;
+  - the result goes to the bracket, not the encounter commit path (no casualties, loot or reputation from bouts).
+- **Entry:** a fee.
+- **Rewards:** prizes, renown, a chronicle line, host reputation, a named rival.
+- **Losing:** costs the fee and a little renown, never the company.
 
-**Layers.** Optional by nature.
+**Save.** Yes.
 
-**Save.** Yes (schedule, rival).
+**Edges.** Anti-farm: a cooldown per town, falling prizes for repeat wins in one town, fees that rise with renown.
 
-**Edges.** No farm: a cooldown per town, prizes that fall with repeated wins in one town, and fees that rise with renown.
-
-**Tests.** Bracket logic; prize and fee bounds; no infinite reward; AI difficulty curve.
+**Tests.**
+- Bracket logic, reward and fee bounds, no infinite reward, the AI difficulty curve.
+- The hero's own gear is restored after every bout, including after a reload mid-bracket.
+- A browser test of a duel on touch.
 
 **Acceptance.** A playable bracket on touch; the anti-farm rules hold.
 
----
-
-### P7-10 · First business: a mill (M)
-
-**Problem.** Money comes only from fighting and trading; there's nothing to build.
+### P7-10 · First business: a mill (M) — Specified (needs V2-11, W-05b)
 
 **Build.**
-- **Buying:** a mill bought in a village or town, a few hundred crowns.
+- **Buying:** a mill in a village or town.
 - **Running it:**
-  - a manager (hired or default) runs it;
-  - it buys grain locally and sells flour, through the same market functions (scarcity included);
-  - income and expenses in the ledger, under its own budget account (V2-11).
-- **Reports:** weekly. Bad weeks and their causes (grain scarce, war, raids) are reported, with no magic profit.
-- **War:** when the settlement changes hands, the new owner's law applies (a tax, or seizure if Hostile), with a warning before and the option to sell. It never vanishes silently (SC-16).
-- **Later:** an inn as the second business type.
+  - a manager (default or hired);
+  - buys grain and sells flour through the same market functions;
+  - a ledger under its own budget account;
+  - weekly reports, including bad weeks and their causes.
+- **When the settlement changes hands:** the new owner's law (a tax, or seizure if Hostile), with a warning and the option to sell; never vanishes silently (SC-16).
+- **Later:** an inn.
 
-**Layers.** Default: the default manager. One decision: buy or sell. Expert: price rules for the manager.
+**Layers.** Default manager. One decision: buy or sell. Expert: price rules.
 
-**Save.** Yes (business, budget account).
+**Save.** Yes.
 
-**Edges.** No infinite money (input-limited, market-limited); selling returns a fair value, not more than the price paid.
+**Edges.** Input- and market-limited (no infinite money); selling never returns more than the price paid.
 
-**Tests.** Ledger exactness over 90 days; no money loop; the war-change cases (SC-15, SC-40).
+**Tests.** Ledger exactness over 90 days; no money loop; the owner-change cases (SC-15, SC-40).
 
-**Acceptance.** Runs without daily clicks, reports costs and failures, and survives changes of owner by the rules.
+**Acceptance.** Runs without daily clicks; reports costs and failures; survives changes of owner by the rules.
 
-**Needs.** V2-11, W-05.
-
----
-
-### P7-11 · Battle extras (M)
-
-**Problem.** Battles have one kind of goal (beat everyone) and few terrain effects.
+### P7-11 · Battle extras (M) — Specified (needs B-01, W-05a)
 
 **Build.**
-- **Formations:**
-  - **shield wall:** infantry on Hold close up, shields up more, slower;
-  - **wedge:** cavalry or infantry charge in a point.
-- **One battle objective:**
-  - protect a wagon (escort contracts and ambushes): lose the wagon and you lose the contract even if you win;
-  - or hold a point for N seconds against waves (militia requests).
-- **Terrain:**
-  - hills give archers range and slow climbers;
-  - fords slow everyone and break formations (the W-05 ford map).
+- **Formations:** shield wall (infantry on Hold close up, more shields, slower) and wedge.
+- **One objective:** protect a wagon (escort ambushes) or hold a point (militia requests).
+- **Terrain:** hills give archers range; fords slow everyone and break formations (W-05a's ford map).
 
 **Layers.** Default: Balanced does the right thing. Expert: pick a formation in Orders.
 
 **Save.** None.
 
-**Tests.** Each effect measured under the same rules (SC-42); objectives' win and loss.
+**Tests.** Each effect measured under the same rules (SC-42); objectives win and lose; browser test of the formation buttons.
 
-**Acceptance.** Each makes a measurable difference, and none is required.
+**Acceptance.** Each makes a measurable difference; none is required.
 
-**Needs.** B-01.
+### P7-T · Phase 7 tuning and acceptance (S) — Specified
 
----
-
-### P7-T · Phase 7 tuning and acceptance (S)
-
-**Build.**
-- Prototype G across the bigger world with the new followers and officers.
-- The design exit as a scripted scenario: an independent company with a surgeon and a merchant, a detached patrol, a business, and dynamic events met, over 90 days, without a title.
-- Economy and battle passes.
-- A validation section.
+**Build.** Prototype G across the bigger world with followers and officers; the design exit as a scripted 90-day scenario; economy and battle passes (parity script); a validation section.
 
 **Acceptance.** The exit holds in the bot and in the owner's play.
 
 ---
 
-## Phase 8 — The Landed World
+## Phase 8 — The Landed World (Provisional: re-specified at the phase's start)
 
-### P8-01 · Lords on the map (M)
-
-**Problem.** Kingdoms are faceless: anonymous patrols and caravans.
+### P8-01 · Lords on the map (M–L)
 
 **Build.**
-- **Named lords** (persons with ids, culture names and a home holding) lead the kingdoms' parties: patrol, hunt bands, escort, gather for war.
-- **Simple goals** shown on hover or tap ("riding to Greywall to muster").
-- **Fights:** lords can be met, talked to, fought, captured and ransomed or released (design §20.6). Captured lords are held at a holding, not in the player's party, until P8-02.
-- **Patrol templates** remain for small fry.
+- Named lords (persons with ids, culture names, a home holding) lead kingdoms' parties: patrol, hunt, escort, gather for war.
+- Intentions are shown on tap.
+- Lords can be met, fought, captured and ransomed.
+- **Integration:** a new party kind (`lord`) handled everywhere parties are:
+  - encounters (`parties.current`);
+  - auto-resolve;
+  - reinforcements (`reinforce.sideOf` today only knows bandit, patrol and caravan);
+  - contracts (as targets or not);
+  - news;
+  - the V2-09 lock.
+- Patrols remain for small fry.
 
-**Save.** Yes (lords, their parties, captives).
+**Save.** Yes.
 
-**Tests.**
-- Lords' intentions are consistent; capture and ransom once.
-- No lord in two battles (the V2-09 lock).
+**Tests.** Intentions consistent; capture and ransom once; no lord in two battles; reinforcement sides for lords.
 
-**Acceptance.** Lords move with readable intent, and can be fought and captured.
-
-**Needs.** W-07.
-
----
-
-### P8-02 · Holdings model (M)
-
-**Problem.** `c.owners` gives each fort one owner; titles, occupation and private ownership can't differ.
+### P8-02 · Holdings model (L)
 
 **Build.**
-- **Per holding** (fort, town, village): sovereign realm, legal holder (a person), occupier (who controls it now), administrator (a castellan), and private owners of businesses inside (design §17.1, §24.2).
-- **A save migration** from `c.owners` (the sovereign is the old owner; the holder is a lord of that kingdom).
-- **APIs** that answer "who controls / who holds / who may tax"; story conditions keep working (`owner` means sovereign).
+- **Per holding:** sovereign realm, legal holder (a person), occupier, administrator, private owners (design §17.1, §24.2), replacing `c.owners`.
+- **Touches:**
+  - `realm.js` (owner, garrison, holdings, welcomes);
+  - the story's `owner` conditions and effects (Q4 sets Greywall's owner);
+  - recruiting;
+  - news;
+  - contracts;
+  - debug.
+- **A save migration:** the sovereign is the old owner; the holder is a lord of that kingdom.
 
-**Save.** Yes (holdings replace owners).
+**Save.** Yes.
 
-**Tests.** Every transition (grant, conquest, occupation, return) without duplicates; old conditions still true.
-
-**Acceptance.** Every place has clear, separate holder and occupier.
-
-**Needs.** W-04.
-
----
+**Tests.** Every transition without duplicates; story conditions unchanged in meaning; fixtures from the build before.
 
 ### P8-03 · Permissions (S)
 
-**Build.** One function, `may(person, action, place)`, computed from oaths, offices and ownership (design §4.3), used by every action that needs a right: recruit, tax, garrison, build, enter. A table of cases.
+**Build.** `may(person, action, place)` from oaths, offices and ownership (design §4.3), used by every right-based action.
 
-**Tests.** The case table.
-
-**Acceptance.** No code checks "is the player a king".
-
----
+**Tests.** A case table.
 
 ### P8-04 · Allegiance (M)
 
 **Build.**
-- **The player's allegiance:** independent, mercenary contract (paid service for a period), sworn vassal (with obligations), rebel, sovereign, deposed (design §16).
-- **Joining, leaving and switching:** a preview of consequences before confirming (reputation, holdings at stake, obligations, enemies made) (design §22.5).
-- **Obligations:** muster when called, service days; refusing has stated costs.
+- Independent, mercenary contract, sworn vassal, rebel, sovereign, deposed (design §16).
+- A consequence preview before confirming (design §22.5).
+- Obligations: muster, service days.
 
-**Save.** Yes (allegiance, obligations).
-
-**Edges.** Switching never loses personal property or the warband; the mercenary contract ends cleanly.
-
-**Tests.** Each switch's preview matches the outcome; obligations tracked.
-
-**Acceptance.** As tests.
-
-**Needs.** P8-02.
-
----
+**Edges.** Personal property and the warband are never lost by switching.
 
 ### P8-05 · Fiefs and castellans (M)
 
 **Build.**
-- **Getting a holding:** granted by a ruler for service, or taken by conquest (P8-06).
-- **Administration:** a castellan or steward with policies:
-  - garrison size and pay;
-  - tax stance (low, normal, high, with unrest);
-  - reserves;
-  - repairs.
-- **A default steward** keeps it running hands-off.
-- **Money:** revenue and costs through accounts (a holding's own budget account); weekly report.
+- **Getting a holding:** granted or conquered.
+- **Administration:** a castellan or steward with policies (garrison, tax stance, reserves, repairs) and a default steward.
+- **Money:** revenue and costs through the holding's own budget account; weekly report.
 
-**Save.** Yes.
-
-**Edges.** Unpaid garrisons desert; high taxes cause unrest (warnings first).
-
-**Tests.** Ledger exactness; hands-off for 90 days without collapse.
-
-**Acceptance.** Works with defaults, and policies matter measurably.
-
-**Needs.** P8-02, V2-11.
-
----
+**Edges.** Unpaid garrisons desert; high taxes cause unrest, with warnings first.
 
 ### P8-06 · Sieges (L)
 
 **Build.**
-- **Phases** (design §20.4–20.6):
-  1. **Encirclement:** the besieger's party or army at the holding.
-  2. **Preparation:** days pass; ladders and a ram built; the defenders' food falls.
-  3. **One assault:** a new siege battle map with walls, gate and ladders; defenders on walls; the existing battle systems.
-  4. **Resolution:** capture, surrender (when starving), or the siege lifted.
-- **Relief armies** arrive by the reinforcement rules.
-- **Afterwards:** capture and ransom of lords; the holder and occupier change by the P8-02 rules.
+- **Phases:** encirclement, preparation (ladders, ram, food), one assault map (walls, gate, ladders), resolution (capture, surrender, lifted) (design §20.4–20.6).
+- **Relief armies** come by the reinforcement rules.
+- **Afterwards:** capture and ransom.
+- A Debug-panel siege test for the phone.
 
-**Save.** Yes (sieges in progress).
-
-**Edges.**
-- Anti-snowball (design §20.7): garrisons rebuild, and conquered places are unstable for a while.
-- The phone budget on the assault map.
-
-**Tests.** Every outcome; no softlock; phone performance.
-
-**Acceptance.** A siege can be won, lost, lifted or surrendered.
-
-**Needs.** P8-01, V2-09.
-
----
+**Edges.** Anti-snowball (design §20.7); the phone budget on the assault map.
 
 ### P8-07 · Named nobles (M)
 
 **Build.**
-- **A handful of nobles per kingdom** (from P8-01's lords) with four factors (design §28): relationship, interest, obligation and fear.
-- **Decisions on orders and petitions:** obey, negotiate or refuse, with reasons the player can read (Prototype F).
-- **Their own goals:** they petition the player (if a ruler or ally) or the ruler.
-
-**Save.** Yes.
-
-**Tests.** Prototype F: the same risky order to two nobles gives different, explained answers.
-
-**Acceptance.** As Prototype F.
-
-**Needs.** P8-01, P8-04.
-
----
+- A handful per kingdom with four factors: relationship, interest, obligation, fear.
+- Obey, negotiate or refuse, with readable reasons (Prototype F).
+- Their own petitions.
 
 ### P8-08 · Losing and retaking land (M)
 
 **Build.**
-- **Losing:** a holding lost while away (besieged by AI armies).
-- **Claims** persist by default (law-dependent later).
-- **The landless captain carries on:** warband, money, businesses (SC-20–23).
-- **Retaking:** by siege or by petition.
-- **Prototype D** as a scripted scenario and a playable debug start.
-
-**Save.** Yes (claims).
-
-**Tests.** Prototype D end to end: gain Greywall, lose it, carry on, switch allegiance, retake it, in one save.
+- Losing a holding while away; claims that persist.
+- The landless captain carries on (SC-20–23).
+- Retaking by siege or petition.
+- **Prototype D** as a scripted scenario and a debug start.
 
 **Acceptance.** Prototype D passes.
 
-**Needs.** P8-02–P8-06.
+### P8-T · Phase 8 tuning and acceptance (S–M)
+
+**Build.** Revenue and war pace, anti-snowball, 90-day bots, Prototype G with a landed player, a validation section.
+
+**Version.** 3.0.0 (proposed, D-V1).
 
 ---
 
-### P8-T · Phase 8 tuning and acceptance (S)
-
-**Build.** Revenue and war pace; anti-snowball checks; 90-day bots; Prototype G with a landed player; validation section.
-
-**Version.** **3.0.0** (proposed).
-
----
-
-## Phase 9 — Kingdoms & Houses
+## Phase 9 — Kingdoms & Houses (Provisional)
 
 ### P9-01 · Realms as organisations (M)
 
-**Build.**
-- **The realm:** a treasury (budget account), laws (taxes, inheritance stance), and offices (marshal, steward, chancellor) held by persons.
-- The ruler's personal wealth stays separate from the realm's (Part 2 §18.1).
-- Realm income and costs reported.
-
-**Save.** Yes.
-
-**Acceptance.** Every realm has accounts and offices that matter.
-
----
+**Build.** Realm treasury, laws and offices; the ruler's wealth separate from the realm's (Part 2 §18.1).
 
 ### P9-02 · Diplomacy and treaties (M)
 
 **Build.**
-- **Treaties:** war, peace, truce, alliance and trade access, with durations and breach rules.
-- **AI kingdoms** make and break them for stated reasons.
-- **The player** negotiates as a ruler or an envoy.
-- **Reputation** reacts to breaches (SC-25).
-- Grows from W-07's war and peace table.
+- War, peace, truce, alliance and trade access, with durations and breach rules.
+- AI kingdoms treat among themselves.
+- Grows from W-07's relations.
 
-**Save.** Yes.
-
-**Acceptance.** Treaties expire and break consistently (SC-25).
-
----
+**Acceptance.** SC-25.
 
 ### P9-03 · Founding or taking a kingdom (M)
 
 **Build.**
-- **Claiming:** declare a realm from held land, with recognition and enforcement separate from the claim (Part 2 §28).
-- **The new realm:** vassals by grant; delegated authority so ruling never forces a management screen (SC-41).
-
-**Acceptance.** A player kingdom with vassals runs while the player fights in person (SC-41).
-
----
+- Declaring a realm from held land; recognition and enforcement separate from the claim.
+- Vassals by grant; delegated authority (SC-41).
 
 ### P9-04 · Rebellion and deposition (L)
 
 **Build.**
-- **Nobles:** ambitions and claimants; escalating warning signs with uncertain details (Part 2 §28); civil war.
-- **Deposition is not game over:** the deposed keep person and warband, and can seek refuge with old enemies or fight for restoration (SC-26, SC-27).
-
-**Acceptance.** SC-26 and SC-27 pass.
-
----
+- Ambitions, claimants, escalating uncertain warnings, civil war.
+- The deposed keep person and warband (SC-26, SC-27).
 
 ### P9-05 · Armies and campaigns (L)
 
 **Build.**
-- **Armies** gathered from lords' retinues and the player's company.
-- **On the move:** muster, march (slower, needs supply), sieges and field battles.
-- **Large battles** through the battle-size cap and reserves; the phone budget kept.
-
-**Acceptance.** A campaign of several sieges without a stall or a snowball, within the phone's budget.
-
----
+- Armies from lords' retinues and the company: muster, march and supply.
+- Sieges and field battles at scale through the battle-size cap and reserves.
+- The phone budget kept; a Debug-panel army test.
 
 ### P9-06 · Houses, marriage and claims (M)
 
 **Build.**
-- **The founding house:** the player's house, its members (spouse, heirs as persons), and its claims.
-- **Marriages:** as alliances, by negotiation.
-- **Rival houses.**
-- **Generational play** optional and later (no forced aging) (Part 2 §19).
+- The founding house; marriages as alliances; rival houses.
+- Generational play optional and later (Part 2 §19).
 
-**Acceptance.** Marriage changes relations and claims consistently.
-
----
-
-### P9-07 · Modding: a declarative content format (M)
+### P9-07 · Modding: a declarative content format (M–L)
 
 **Build.**
-- **The format:** the world manifest (W-04) published as a format; namespaced ids; data-only packs (troops, items, settlements, quests, dialogue, names).
-- **Import:** validation; safe import (no code); a pack list in Settings.
-- **Compatibility errors:** SC-33's protections extended to packs (a save naming a removed pack's content is kept and explained).
+- **The format:** the world package (W-04) published as a format.
+- **Namespaced ids** (moved here from W-04): every id validator, save key and regex audited for `:`.
+- **Packs:** data-only packs, validation, safe import, a pack list in Settings.
+- **Compatibility:** SC-33's protections extended to packs.
 
 **Acceptance.** A sample pack adds a troop line and a settlement without code; removing it gives a precise error.
 
-**Needs.** W-04.
-
----
-
 ### P9-08 · Creator tools and a second world (L)
 
-**Build.**
-- **Tools:** a pack checker (CLI), and a map preview that draws a world package.
-- **A second official world:** smaller, with its own kingdoms, to prove the format (Part 2 §23.1).
+**Build.** A pack checker (CLI), a map preview of a world package, and a smaller second official world.
 
-**Acceptance.** The second world plays end to end with the same bots.
-
----
+**Acceptance.** It plays end to end with the same bots.
 
 ### P9-T · Phase 9 tuning and acceptance (M)
 
 **Build.**
-- Long runs: SC-29, 100 simulated years with no money exploits, ownership collisions or event loops.
+- Long runs: SC-29, 100 simulated years with no exploits or loops.
 - Ruler fatigue (SC-41).
 - The full scenario matrix SC-01–42.
 
-**Version.** **4.0.0** (proposed).
+**Version.** 4.0.0 (proposed).
