@@ -1346,7 +1346,14 @@
 
   function showSelectedGroup(group) {
     const state = CL.game.groupState?.[group]; // forming · formed · advancing · engaged (V2-08a)
-    $('#selectedGroup').textContent = { infantry: 'Infantry', archer: 'Archers', cavalry: 'Cavalry' }[group] + (state ? ` · ${state}` : '');
+    const mood = CL.morale?.word(CL.game, 'ally', group); // wavering · falling back · routing (V2-08b)
+    $('#selectedGroup').textContent = { infantry: 'Infantry', archer: 'Archers', cavalry: 'Cavalry' }[group] + (state && mood !== 'routing' ? ` · ${state}` : '') + (mood ? ` · ${mood}` : '');
+    const wait = CL.game.mode === 'battle' ? Math.ceil(CL.morale?.rallyIn(CL.game) || 0) : 0;
+    const rb = $('#rallyBtn');
+    if (rb) {
+      rb.textContent = wait ? `Rally in ${wait} s` : 'R Rally';
+      rb.disabled = Boolean(wait) || !CL.game.hero?.alive;
+    }
     // GDD §7: unit sets without cavalry show cavalry as unavailable.
     const hasCav = CL.game.allies?.some((a) => a.role === 'cavalry' && a.alive);
     const cavBtn = document.querySelector('[data-group="cavalry"]');

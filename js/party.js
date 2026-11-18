@@ -246,7 +246,7 @@
     const killed = [];
     const wounded = [];
     for (const a of allies) {
-      if (a.alive || a.soldierId == null) continue;
+      if (a.alive || a.routed || a.soldierId == null) continue; // those who fled come back unhurt (V2-08b)
       if (CL.autoresolve.roll(camp, 'casualties') < DEATH_CHANCE) killed.push(a.soldierId);
       else wounded.push(a.soldierId);
     }
@@ -296,7 +296,7 @@
    * @returns {BattleResult | null} null when this battle was already applied
    */
   function applyBattleResult(camp, outcome) {
-    const { battleId, encounterId, encounter, win, kills, killed, wounded } = outcome;
+    const { battleId, encounterId, encounter, win, kills, killed, wounded, routed = 0 } = outcome;
     if (battleId <= camp.lastResolvedBattle) return null;
     const enc = encounter || CL.content.encounter(encounterId);
     camp.lastResolvedBattle = battleId;
@@ -307,9 +307,11 @@
     CL.upkeep.onBattle(camp, win);
     const result = { gold: 0, renown: 0, loot: {}, lostItem: null, xp: awardXp(camp, outcome) };
     if (win) {
-      result.gold = enc.reward.goldBase + kills * enc.reward.goldPerKill;
+      // Enemies who fled (V2-08b) count as beaten but leave half the spoils of a kill, and no kill credit.
+      const spoils = kills + Math.floor(routed / 2);
+      result.gold = enc.reward.goldBase + spoils * enc.reward.goldPerKill;
       result.renown = enc.reward.renown;
-      result.loot = rollLoot(enc, kills, camp);
+      result.loot = rollLoot(enc, spoils, camp);
       camp.victories++;
       camp.gold += result.gold;
       camp.renown += result.renown;
@@ -344,6 +346,7 @@
       encounter: g.encounterDef,
       win,
       kills: g.kills,
+      routed: g.routed || 0,
       killed,
       wounded,
       participants: deployed.map((a) => a.soldierId),
@@ -357,7 +360,7 @@
         kind: 'battle',
         outcome,
         companionDown: g.allies.some((a) => a.companion && !a.alive),
-        fallenEnemies: g.enemies.filter((e) => !e.alive).map((e) => e.troop),
+        fallenEnemies: g.enemies.filter((e) => !e.alive && !e.routed).map((e) => e.troop), // those who fled live on
         enemyTroops: [...new Set(g.enemies.map((e) => e.troop))], // the troops that took the field
       })
     );
@@ -365,9 +368,11 @@
       win,
       r,
       kills: g.kills,
+      routed: g.routed || 0,
+      fled: g.allyRouted || 0,
       killed,
       wounded,
-      survivors: g.allies.filter((u) => u.alive).length,
+      survivors: g.allies.filter((u) => u.alive || u.routed).length,
       waves: `${g.wave}/${g.totalWaves}`,
       names,
     });
@@ -418,11 +423,11 @@
 
   /**
    * Result screen text for a fought or auto-resolved battle. Only numbers and data names are interpolated.
-   * @param {{ win: boolean, r: BattleResult | null, kills: number, killed: number[], wounded: number[],
+   * @param {{ win: boolean, r: BattleResult | null, kills: number, routed?: number, fled?: number, killed: number[], wounded: number[],
    *   survivors: number, waves?: string, auto?: { pp: number, pe: number, reasons?: string[] }, names?: Record<number, string> }} info
    *   names: soldier names by ID, taken before the battle (soldiers can be renamed, so they are escaped)
    */
-  function resultHtml({ win, r, kills, killed, wounded, survivors, waves, auto, names }) {
+  function resultHtml({ win, r, kills, routed = 0, fled = 0, killed, wounded, survivors, waves, auto, names }) {
     const recoverDay = dayNumber(CL.campaign.day + CL.save.WOUND_DAYS);
     const lines = [
       `<strong>${win ? `+${r.gold} crowns · +${r.renown} renown` : `${-r.gold} crowns lost (20%)`}</strong>`,
@@ -433,7 +438,7 @@
       // Why those odds (V2-07): strength part by part, from before the fight.
       if (auto.reasons?.length) lines.push(`<small>${auto.reasons.map(escapeHtml).join('<br>')}</small>`);
     }
-    lines.push(`Enemies defeated: ${kills}`, `Killed: ${killed.length} · Wounded: ${wounded.length}`);
+    lines.push(`Enemies defeated: ${kills}${routed ? ` · ${routed} fled the field` : ''}`, `Killed: ${killed.length} · Wounded: ${wounded.length}${fled ? ` · ${fled} ran but came back` : ''}`);
     const who = (ids) => ids.map((id) => escapeHtml(names?.[id] || '')).filter(Boolean).join(', ');
     if (who(killed)) lines.push(`Fallen: ${who(killed)}`);
     if (who(wounded)) lines.push(`Wounded: ${who(wounded)}`);

@@ -240,6 +240,8 @@ declare global {
     encounter?: any;
     win: boolean;
     kills: number;
+    /** Enemies who fled the field (V2-08b): beaten, half the spoils of a kill, no kill credit. */
+    routed?: number;
     killed: number[];
     wounded: number[];
     participants?: number[];

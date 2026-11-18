@@ -344,6 +344,16 @@
       ctx.fillStyle = u.team === 'ally' ? '#4bc4dc' : '#e76860';
       ctx.fillRect(u.x - 3, y - 13, 6, 3);
     }
+    if (u.routing) {
+      // Running (V2-08b): a white mark over the head.
+      ctx.fillStyle = '#f4efe2';
+      ctx.fillRect(u.x - 1.5, y - 25, 3, 8);
+      ctx.fillRect(u.x - 1.5, y - 15, 3, 3);
+    } else if (u.morale === 'fallback' || u.morale === 'waver') {
+      // Shaken: a short amber mark (brighter when falling back).
+      ctx.fillStyle = u.morale === 'fallback' ? '#f0b65a' : '#d9c58c';
+      ctx.fillRect(u.x - 1.5, y - 22, 3, 6);
+    }
   }
 
   function updateHud() {
@@ -1038,7 +1048,8 @@
       ctx.strokeStyle = e.color;
       ctx.lineWidth = 3;
       ctx.beginPath();
-      ctx.arc(e.x, e.y, 15 * (1 - e.t / 0.4), 0, Math.PI * 2);
+      // A ring that grows as it fades; an effect may bring its own length and size (the Rally ring).
+      ctx.arc(e.x, e.y, Math.max(0, (e.size || 15) * (1 - e.t / (e.life || 0.4))), 0, Math.PI * 2);
       ctx.stroke();
     }
     ctx.restore();

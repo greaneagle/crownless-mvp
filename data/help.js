@@ -59,6 +59,7 @@
         'When a band catches you, or you ride at one, choose: Attack fights the battle yourself; Auto-resolve rolls it from your strength; you can also pay a toll, threaten weaker bands, or try to slip away. Each button shows the odds.',
         'In battle you fight in person. Swings hit what is in front of you; a shield blocks hits from the front only. Your soldiers follow orders by group: Follow keeps them near you, Hold keeps them where they stand, Charge sends them at the nearest enemy.',
         'Soldiers fight as groups. On Follow they keep loose ranks around you, infantry ahead and archers behind. Footmen, Guards, Legionaries, Mercenaries and Sellswords raise their shields at a blow from the front, and a raised shield also covers the friend just to its left: hold Block beside a companion to protect them too. Spearmen and Legionaries stop a cavalry charge that comes at their spears. Archers only shoot when no tree or wall is in the way.',
+        'Groups on both sides have morale. Heavy losses, being outnumbered, blows from the flank or behind and friends running nearby shake a group; veterans and having you close by steady it. A shaken group wavers (it hits a little lighter), then falls back, and at last routs: it runs off the field and stops fighting. Enemies who flee count as beaten but leave less to loot. Your soldiers who flee come back after the battle unhurt. Rally (R, or in Orders) steadies every soldier near you and turns back those running, once every 30 seconds. Nothing about it is luck: the same fight goes the same way.',
         'Only so many fight at once (Settings → Battle size); the rest wait in reserve and step in as others fall. Enemies may come in waves.',
         'Before you fight, choose a setup: Balanced (the default), Defensive, Aggressive, or Custom, where you drag each group’s flag inside the zone and pick its first order. Simulate settles the fight from your strength and explains the odds. Tick Skip this screen to go straight in with your setup next time (Settings → Before battles turns it back on). When a band ambushes you, there is less room to form up.',
         'On a large battlefield the view follows you. The small map at the top shows your company and the enemies your soldiers have seen (red; faded where they were last seen); tap it to look there for a moment. MAP (or hold Tab) opens the whole field with the battle held still: pick a group in Orders, then tap where it should go and hold. You never have to use it.'
@@ -69,6 +70,7 @@
         ['Hold BLOCK', 'Shift / right click', 'Block (needs a shield)'],
         ['ORDERS → group', '1 / 2 / 3', 'Infantry / Archers / Cavalry'],
         ['ORDERS → order', 'F / H / C', 'Follow / Hold / Charge'],
+        ['ORDERS → Rally', 'R', 'Steady the soldiers near you (every 30 s)'],
         ['Tap the small map', 'Click the small map', 'Look there for a moment'],
         ['MAP', 'Hold Tab, or M', 'Tactical overview: send a group to a spot'],
         ['Pause', 'Esc', 'Pause']

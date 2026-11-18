@@ -105,6 +105,10 @@
     $('#mapBtn').onclick = () => CL.tactics.overview(game);
     for (const b of document.querySelectorAll('[data-group]')) b.onclick = () => combat.order(b.dataset.group, null);
     for (const b of document.querySelectorAll('[data-order]')) b.onclick = () => combat.order(null, b.dataset.order);
+    $('#rallyBtn').onclick = () => {
+      CL.morale.rally(game);
+      ui.showSelectedGroup(game.group);
+    };
   }
 
   /** Save & export screen: manual save, export file, copy text, import file/text, restore. */
@@ -188,6 +192,7 @@
         else CL.ui.togglePause();
         return;
       }
+      if (g.mode === 'battle' && e.code === 'KeyR' && !e.repeat) CL.morale.rally(g); // V2-08b
       const o = KEY_ORDERS[e.code];
       if (o) CL.combat.order(o[0], o[1]);
       if (g.mode === 'town' && ['Space', 'Enter', 'KeyE'].includes(e.code) && !e.repeat) {

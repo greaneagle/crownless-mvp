@@ -1,6 +1,6 @@
 # Crownless — Project Status & Roadmap
 
-_Last reviewed: 2026-11-17 · Build 1.11.0 · Spec: `Crownless_MVP_GDD_v1.md` (engine overridden: HTML5 Canvas + classic JS, no bundler, GitHub Pages)._
+_Last reviewed: 2026-11-18 · Build 1.12.0 · Spec: `Crownless_MVP_GDD_v1.md` (engine overridden: HTML5 Canvas + classic JS, no bundler, GitHub Pages)._
 
 This replaces the opencode-swarm plan (`.swarm/plan.md`, removed). The gate structure (A→E) is kept from the GDD; the task list is condensed and re-ordered around what the code actually needs.
 
@@ -105,9 +105,9 @@ From the owner's v2.0 design (`Crownless_v2_0_Feature_and_Systems_Design_Part_1.
   - ✅ (1.8.0) V2-05 a world-space camera and larger arenas: ordinary battles in forests and in the open use generated fields three screens across (Forest Wilds, Open Country) with the PROTO-A camera, culling and edge markers; the Greywall courtyard stays one screen; a device setting Battlefield: Small brings back the one-screen maps; bodies (F-2), reserves and collision checked on the large maps; the large maps are the cheapest to simulate
   - ✅ (1.9.0) V2-06 minimap and tactical overview: detection (only enemies the company has seen are shown, with last-seen marks; the edge markers follow the same rule); a minimap at the top centre of large battles, tap to look; a tactical overview (MAP on phones, hold Tab or M on desktop) that holds the battle still and sends the selected group to a tapped spot to hold
   - ✅ (1.10.0) V2-07 battle preparation: Attack opens a Prepare screen with the real field; Balanced (default), Defensive, Aggressive and Custom (drag group flags inside a legal deployment zone, set each group's first order); Fight in two taps; Simulate with the odds explained; a smaller zone when ambushed; remember the setup and skip the screen (device settings)
-  - 🟡 V2-08 group AI, cohesion and counterplay, split in two (owner decision 2026-11-18):
+  - ✅ V2-08 group AI, cohesion and counterplay, split in two (owner decision 2026-11-18):
     - ✅ (1.11.0) V2-08a group AI, formations and shield cover: shield troops raise shields; shield cover for the adjacent ally on the shield side (hero included, arrows too); braced spears stop charges from the front; archers need a clear shot and step aside for one; loose Follow ranks; group states (forming, formed, advancing, engaged); every impossible order says why
-    - V2-08b group morale, rout and rally
+    - ✅ (1.12.0) V2-08b group morale, rout and rally: every group on both sides holds, wavers, falls back or routs from a worked-out cohesion (losses, odds, flanks, nearby routs, veterans, the hero, supplies), never a roll; routing soldiers run for their own edge and leave; fled enemies count as beaten with no kill credit and half the spoils; your fled soldiers return unhurt; Rally (R / Orders) every 30 s; reserves replace runners at once
   - V2-09 nearby reinforcements
   - V2-10 company chronicle and roll of honour
   - V2-11 accounts and the quartermaster

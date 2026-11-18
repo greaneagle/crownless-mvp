@@ -79,6 +79,7 @@
     g.t = 0;
     g.wave = 0;
     g.kills = 0;
+    Object.assign(g, { routed: 0, allyRouted: 0, morale: {}, moraleState: {}, moraleIn: 0, routEvents: [], rallyReadyAt: 0, concededNote: false });
     g.allies = [];
     g.enemies = [];
     g.arrows = [];
@@ -158,7 +159,8 @@
   }
 
   const enemyCapOf = (g) => g.enemyCap ?? Number.POSITIVE_INFINITY; // older battle states have no cap
-  const aliveCount = (list) => list.reduce((n, u) => n + (u.alive ? 1 : 0), 0);
+  // Those running from the field (V2-08b) no longer hold a place in it: reserves can step in.
+  const aliveCount = (list) => list.reduce((n, u) => n + (u.alive && !u.routing ? 1 : 0), 0);
 
   function addEnemy(g, troopId, art = CL.assets.enemyArt) {
     const box = g.battleMap.spawn.enemies;
@@ -227,6 +229,7 @@
     }
     if (g.practice && g.practice.firstHit == null) g.practice.firstHit = g.t; // camera test: time to contact
     target.hp = Math.max(0, target.hp - mitigate(raw, target.armor));
+    if (source && !inArc(target, source, ARC.block)) target.flankedAt = g.t; // hit from the flank or behind (morale, V2-08b)
     if (source && source.team !== target.team) {
       if (!target.hitBy) target.hitBy = new Set();
       target.hitBy.add(source);
@@ -275,7 +278,7 @@
           const off = rand(MISS_ANGLE[0], MISS_ANGLE[1]) * (Math.random() < 0.5 ? -1 : 1);
           [dx, dy] = [dx * Math.cos(off) - dy * Math.sin(off), dx * Math.sin(off) + dy * Math.cos(off)];
         }
-        game().arrows.push({ x: u.x, y: u.y - 20, dx, dy, speed: r.projectileSpeed, team: u.team, life: ARROW.life, source: u, damage: u.damage });
+        game().arrows.push({ x: u.x, y: u.y - 20, dx, dy, speed: r.projectileSpeed, team: u.team, life: ARROW.life, source: u, damage: u.damage * (u.moraleMul || 1) });
       }
       return true;
     }
@@ -293,7 +296,7 @@
       if (!v?.alive || u.swing.hit.includes(v.id)) continue;
       if (dist(u, v) > u.reach || !inArc(u, v, ARC.attack)) continue;
       u.swing.hit.push(v.id);
-      hit(v, u.damage * (u.chargeBonus || 1), u);
+      hit(v, u.damage * (u.chargeBonus || 1) * (u.moraleMul || 1), u);
     }
   }
 
@@ -330,16 +333,18 @@
     u.momentum ??= 0;
     const target = u.target;
     const g = game();
-    const cmd = u.team === 'ally' ? g.orders.cavalry : 'charge';
+    if (u.routing) return; // running: js/morale.js moves them
+    let cmd = u.team === 'ally' ? g.orders.cavalry : 'charge';
+    if (u.morale === 'fallback') cmd = 'fallback'; // giving ground (V2-08b)
     // Braced spears in front stop the charge and hurt the rider (V2-08a).
     if (CL.groups.braceAgainst(g, u, opponentsOf(u), CAVALRY.chargeMomentum)) return;
     // Hold and Follow keep the horsemen back until enemies come close.
-    if (!target || (cmd === 'hold' && dist(u, target) > CAVALRY.holdRange) || (cmd === 'follow' && dist(u, target) > CAVALRY.followRange)) {
+    if (!target || (cmd === 'hold' && dist(u, target) > CAVALRY.holdRange) || (cmd === 'follow' && dist(u, target) > CAVALRY.followRange) || (cmd === 'fallback' && dist(u, target) > u.reach + 20)) {
       u.momentum = 0;
       u.overrun = 0;
-      const home = cmd === 'hold' ? { x: u.holdX, y: u.holdY } : g.hero;
-      const gap = cmd === 'hold' ? 5 : CAVALRY.followGap;
-      if (u.team === 'ally' && home && dist(u, home) > gap + 5) move(u, home.x - u.x, home.y - u.y, dt);
+      const home = cmd === 'fallback' ? CL.morale.fallbackPoint(g, u) : cmd === 'hold' ? { x: u.holdX, y: u.holdY } : g.hero;
+      const gap = cmd === 'hold' ? 5 : cmd === 'fallback' ? 30 : CAVALRY.followGap;
+      if ((u.team === 'ally' || cmd === 'fallback') && home && dist(u, home) > gap + 5) move(u, home.x - u.x, home.y - u.y, dt);
       return;
     }
     if (u.overrun > 0) {
@@ -373,6 +378,7 @@
       u.target = nearestAlive(u, opponentsOf(u)) || null;
     }
     const target = u.target;
+    if (u.routing) return; // running: js/morale.js moves them (V2-08b)
     // Shield troops raise their shields against a swing coming at them (V2-08a).
     u.guard = CL.groups.shouldGuard(u, opponentsOf(u));
     if (!target) return;
@@ -400,6 +406,11 @@
         }
       }
       // 'charge': chase the nearest enemy (defaults above).
+    }
+    if (u.morale === 'fallback' && dist(u, target) > fireRange(u) + 10) {
+      // Falling back (V2-08b): give ground toward their own side, fighting only what reaches them.
+      dest = CL.morale.fallbackPoint(game(), u);
+      goal = 30;
     }
 
     const d = dist(u, dest);
@@ -488,6 +499,7 @@
     updateArrows(h, dt);
     for (const e of g.effects) e.t -= dt;
     g.effects = g.effects.filter((e) => e.t > 0);
+    CL.morale.update(g, dt); // hold · waver · fall back · rout (V2-08b)
     reinforce(g);
     CL.tactics.scan(g, dt); // what the company can see (V2-06)
     const before = g.groupState;
@@ -528,7 +540,12 @@
           a.holdY = a.y;
         }
       }
-      CL.ui.message(`${g.group.toUpperCase()} — ${cmd.toUpperCase()}`);
+      // A shaken group takes the order but can't carry it out yet (V2-08b; design §8.5).
+      const name = { infantry: 'Infantry', archer: 'Archers', cavalry: 'Cavalry' }[g.group];
+      const mood = CL.morale.word(g, 'ally', g.group);
+      if (mood === 'routing') CL.ui.message(`${name} are routing: Rally them first (R)`);
+      else if (mood === 'falling back') CL.ui.message(`${name} are falling back: they obey once steadied`);
+      else CL.ui.message(`${g.group.toUpperCase()} — ${cmd.toUpperCase()}`);
       CL.diag.log('info', 'Command issued', { group: g.group, cmd });
     }
     CL.ui.showSelectedGroup(g.group);
