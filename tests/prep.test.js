@@ -35,7 +35,7 @@ test('SC-06: Balanced in two taps: infantry in front, archers behind, cavalry on
   assert.ok(centre(by('infantry')).x > hero.x, 'infantry in front of the hero');
   assert.ok(centre(by('archer')).x < hero.x, 'archers behind');
   assert.ok(centre(by('cavalry')).y < hero.y - 100, 'cavalry out on a flank');
-  assert.deepEqual({ ...g.orders }, { infantry: 'follow', archer: 'hold', cavalry: 'hold' });
+  assert.deepEqual({ ...g.orders }, { infantry: 'follow', archer: 'follow', cavalry: 'follow' }, 'everyone goes with the hero (V2-T2)');
   for (const u of g.allies) assert.equal(CL.units.blocked(u.x, u.y), false, `${u.troop} placed clear`);
   const z = CL.prep.zone(map);
   for (const u of g.allies) assert.ok(u.x >= z.x0 - 70 && u.x <= z.x1 && u.y >= z.y0 - 70 && u.y <= z.y1 + 70, 'inside the deployment zone (ranks may step back a little)');
@@ -128,7 +128,7 @@ test('SC-07: a reload during preparation loses nothing: the encounter is still o
 test('Simulate explains the odds: each side part by part, from before the fight', () => {
   const { CL, c, p } = band();
   const lines = CL.autoresolve.explain(c, p.troops);
-  assert.match(lines[0], /^Your side [\d.]+: your hero [\d.]+, 7 T2 soldiers 11\.9, 2 T3 soldiers 5\.0\.$/);
+  assert.match(lines[0], /^Your side [\d.]+: your hero [\d.]+, 7 T2 soldiers 17\.9, 2 T3 soldiers 7\.5\. Soldiers count half as much again for fighting in ranks\.$/);
   assert.match(lines.join(' '), /Their side [\d.]+: 4 Looters, 2 Reavers\./);
   assert.match(lines.at(-1), /^Odds \d+%/);
   const r = CL.parties.autoResolve();

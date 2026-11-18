@@ -592,7 +592,7 @@
 
   const PRESET_NAMES = { balanced: 'Balanced', defensive: 'Defensive', aggressive: 'Aggressive', custom: 'Custom' };
   const PRESET_ABOUT = {
-    balanced: 'Infantry in front and following you, archers behind, cavalry on a flank. Archers and cavalry hold until the enemy comes close.',
+    balanced: 'Infantry in front, archers behind, cavalry on a flank, and all of them go with you: the archers keep behind you, the cavalry rides out at anything close.',
     defensive: 'A tight block. Everyone holds and fights what comes to them.',
     aggressive: 'Infantry and cavalry forward and charging, archers following you.',
     custom: 'Drag the flags on the map to place each group, and choose each group’s starting order below.',

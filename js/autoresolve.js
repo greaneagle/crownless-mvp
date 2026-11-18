@@ -1,6 +1,8 @@
 /* Crownless seeded randomness and auto-resolve (GDD §7).
  *
  *   Power = Σ(Count × TierPower × HealthFactor) × (1 + 0.03 × LeaderTactics)
+ *   (from 1.19.0, V2-T2: your company's soldiers count × 1.5 for fighting in ranks behind shields,
+ *   as they do in a fought battle since 1.11.0; enemy bands don't)
  *   TierPower = { T1: 1, T2: 1.7, T3: 2.5 }
  *   WinChance(A) = clamp(PowerA / (PowerA + PowerB), 0.1, 0.9)
  *
@@ -21,8 +23,12 @@
   const SHIELD_FACTOR = 1.5;
   const TACTICS = 0.03;
   const WIN_CLAMP = [0.1, 0.9];
-  // Winner's per-troop chance to fall: 0.35 × (loser power / winner power), within these bounds.
-  const WINNER_LOSS = { scale: 0.35, min: 0.08, max: 0.6 };
+  // V2-T2: soldiers of the company count this much more (ranks, shields and cover: fought battles
+  // since 1.11.0 are far kinder to a company than auto-resolve was, SC-37).
+  const COMPANY_FACTOR = 1.5;
+  // Winner's per-troop chance to fall: 0.25 × (loser power / winner power), within these bounds
+  // (V2-T2: was 0.35, 8–60%; a won fight in person costs far less).
+  const WINNER_LOSS = { scale: 0.2, min: 0.05, max: 0.5 };
   // Loser's per-troop chance to fall (for a beaten player party; NPC losers are wiped out).
   const LOSER_LOSS = { scale: 0.6, min: 0.4, max: 0.9 };
 
@@ -95,7 +101,7 @@
   /** The player's fighting power: healthy soldiers plus the hero, boosted by Tactics. */
   function playerPower(c = CL.campaign) {
     let p = heroPower(c);
-    for (const s of c.roster) if (s.woundedUntil === null) p += TIER_POWER[CL.content.troop(s.troop).tier];
+    for (const s of c.roster) if (s.woundedUntil === null) p += TIER_POWER[CL.content.troop(s.troop).tier] * COMPANY_FACTOR;
     p += CL.companion?.power(c) || 0; // Mara, if she is fit
     return p * (1 + TACTICS * CL.character.skill('tactics', c));
   }
@@ -113,14 +119,14 @@
       if (s.woundedUntil !== null) wounded++;
       else fit[CL.content.troop(s.troop).tier]++;
     }
-    for (const t of ['T1', 'T2', 'T3']) if (fit[t]) own.push(`${fit[t]} ${t} soldier${fit[t] === 1 ? '' : 's'} ${(fit[t] * TIER_POWER[t]).toFixed(1)}`);
+    for (const t of ['T1', 'T2', 'T3']) if (fit[t]) own.push(`${fit[t]} ${t} soldier${fit[t] === 1 ? '' : 's'} ${(fit[t] * TIER_POWER[t] * COMPANY_FACTOR).toFixed(1)}`);
     const mara = CL.companion?.power(c) || 0;
     if (mara) own.push(`your companion ${mara.toFixed(1)}`);
     const tactics = CL.character.skill('tactics', c);
     const pp = playerPower(c);
     const pe = troopsPower(enemyTroops);
     const foes = Object.entries(enemyTroops).map(([id, n]) => `${n} ${CL.content.troop(id).name}${n === 1 ? '' : 's'}`);
-    const lines = [`Your side ${pp.toFixed(1)}: ${own.join(', ')}${tactics ? `, then +${Math.round(TACTICS * tactics * 100)}% for Tactics` : ''}.`];
+    const lines = [`Your side ${pp.toFixed(1)}: ${own.join(', ')}${tactics ? `, then +${Math.round(TACTICS * tactics * 100)}% for Tactics` : ''}. Soldiers count half as much again for fighting in ranks.`];
     if (wounded) lines.push(`${wounded} wounded soldier${wounded === 1 ? '' : 's'} sat it out.`);
     lines.push(`Their side ${pe.toFixed(1)}: ${foes.join(', ')}.`);
     lines.push(`Odds ${Math.round(winChance(pp, pe) * 100)}%: your share of the total strength, kept between 10% and 90%.`);
@@ -171,6 +177,7 @@
 
   CL.autoresolve = {
     TIER_POWER,
+    COMPANY_FACTOR,
     heroPower,
     WINNER_LOSS,
     LOSER_LOSS,

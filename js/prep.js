@@ -3,8 +3,9 @@
  * choice, and never required.
  *
  * Before a fought battle the player sees the field and chooses a setup:
- *   Balanced    infantry in front, archers behind, cavalry on a flank; infantry follows the hero,
- *               archers and cavalry hold until the enemy comes close (the default)
+ *   Balanced    infantry in front, archers behind, cavalry on a flank; everyone follows the hero
+ *               (archers keep behind, cavalry rides out to anything close). The default. Until 1.19.0
+ *               archers and cavalry held their ground, and the hero went in alone (V2-T2)
  *   Defensive   a tight block, everyone holds
  *   Aggressive  infantry and cavalry forward and charging, archers following
  *   Custom      drag each group's flag inside the deployment zone and pick its starting order
@@ -28,7 +29,7 @@
   const ORDERS = ['follow', 'hold', 'charge'];
   const SETUPS = {
     balanced: {
-      orders: { infantry: 'follow', archer: 'hold', cavalry: 'hold' },
+      orders: { infantry: 'follow', archer: 'follow', cavalry: 'follow' },
       offsets: { infantry: { dx: 70, dy: 0 }, archer: { dx: -90, dy: 0 }, cavalry: { dx: -30, dy: -190 } },
     },
     defensive: {

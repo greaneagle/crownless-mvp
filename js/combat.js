@@ -33,7 +33,7 @@
    * together). Each side's share is fixed when the battle starts; the rest wait in reserve and step in
    * as others fall, a stack at a time. The cap is a setting (20 / 30 / 40) for slower phones.
    */
-  const BATTLE = { activeCap: 40, capChoices: [20, 30, 40], stack: 3, minEnemies: 6 };
+  const BATTLE = { activeCap: 40, capChoices: [20, 30, 40], stack: 3, minEnemies: 6, stall: 45 }; // stall: seconds without a blow (V2-T2)
   const DEFAULT_ENCOUNTER = 'captains_trial';
   const GUARD_SPEED = 0.65;
   const MAX_DT = 0.05;
@@ -79,6 +79,8 @@
     g.t = 0;
     g.wave = 0;
     g.kills = 0;
+    g.lastBlowAt = 0;
+    g.heroDownNote = false;
     g.helpKills = 0; // enemies cut down by parties that rode in to help (V2-09): theirs, not yours
     delete g.prepPlan; // set again by the preparation screen's plan, if any (V2-07)
     Object.assign(g, { routed: 0, allyRouted: 0, morale: {}, moraleState: {}, moraleIn: 0, routEvents: [], rallyReadyAt: 0, concededNote: false });
@@ -244,6 +246,7 @@
       target.hitBy.add(source);
     }
     target.flash = 0.14;
+    g.lastBlowAt = g.t; // the stall guard (V2-T2)
     if (source) push(target, source.x, source.y, KNOCKBACK);
     g.effects.push({
       x: target.x,
@@ -519,6 +522,8 @@
     const before = g.groupState;
     if (CL.groups.updateStates(g, dt) !== before) CL.ui.groupStates?.(g.groupState); // forming · formed · advancing · engaged
     CL.camera.follow(g, dt);
+    heroDownOrders(g);
+    stallGuard(g);
 
     // GDD §15 edge case: the battle only ends when no one is left waiting to step in.
     if (g.enemies.every((e) => !e.alive) && !g.enemyReserve?.length) {
@@ -527,6 +532,34 @@
         spawnWave();
       } else CL.party.endBattle(true);
     } else if (!h.alive && g.allies.every((a) => !a.alive) && !g.allyReserve?.length) CL.party.endBattle(false);
+  }
+
+  /**
+   * V2-T2: when the hero falls, nobody is left to give orders or to follow, so the company fights on
+   * by itself: every group charges (once; the player may still give new orders). Before this, soldiers
+   * on Follow formed up round the fallen hero and those on Hold stayed put, and a battle could stall.
+   * @param {any} g
+   */
+  function heroDownOrders(g) {
+    if (g.hero.alive || g.heroDownNote || !g.allies.some((a) => a.alive && !a.outside)) return;
+    g.heroDownNote = true;
+    for (const grp of ['infantry', 'archer', 'cavalry']) g.orders[grp] = 'charge';
+    CL.ui.message('You are down! Your sergeants take over: the company charges');
+    CL.diag.log('info', 'Hero down: the company charges');
+  }
+
+  /**
+   * V2-T2 safety net: if nobody has landed a blow for STALL seconds and nobody is left to come, the
+   * battle can't go on: the enemies still standing slip away (beaten, no kill credit, as when they rout).
+   * @param {any} g
+   */
+  function stallGuard(g) {
+    if (g.t - (g.lastBlowAt ?? 0) < BATTLE.stall || g.enemyReserve?.length || g.wave < g.totalWaves) return;
+    const left = g.enemies.filter((e) => e.alive);
+    if (!left.length || !(g.hero.alive || g.allies.some((a) => a.alive))) return;
+    for (const e of left) CL.morale.leave(g, e);
+    CL.ui.message('Neither side will close. The enemy slips away');
+    CL.diag.log('warn', 'Battle stalled: the enemy withdrew', { left: left.length, t: g.t });
   }
 
   /** Change the active-unit cap (Settings / debug panel); takes effect from the next battle. */

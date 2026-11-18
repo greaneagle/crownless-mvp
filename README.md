@@ -1,4 +1,4 @@
-# Crownless 1.18.0 — The Border March
+# Crownless 1.19.0 — The Border March
 
 A single-player, top-down party-battle prototype in plain HTML5 Canvas and classic JavaScript. There's no bundler, no runtime dependencies and no server. It's published to GitHub Pages straight from `main`.
 
@@ -43,6 +43,7 @@ A single-player, top-down party-battle prototype in plain HTML5 Canvas and class
 - **Accounts and the quartermaster (1.15.0):** your purse, the company chest and a ledger of every crown in and out; wages come from the chest first. A hired quartermaster keeps the next wages in the chest and food in stock within a weekly budget, warns before shortages and logs every purchase.
 - **Merchant follower (1.16.0):** hire a merchant, give them a budget, and they trade it at the markets you visit, at the same prices as you, knowing only prices they have seen; they report what they did and why, and you can stop them or recover everything at any time.
 - **Errands (1.17.0):** five small optional quests that show the new systems: a veteran's homecoming, a quartermaster's first stores, a merchant's first venture, a border fight where a Crown watch rides to your aid, and a dug-in band best fought to a plan.
+- **Tuning (1.18.0, 1.19.0):** the quartermaster's budget grows with the company and the merchant moves old stock; battles always end (the company fights on when you fall), Balanced brings everyone along, and auto-resolve is fairer to a company that fights in ranks.
 - **Battle preparation (1.10.0):** Attack opens a Prepare screen with the real field: Balanced (default), Defensive, Aggressive or Custom (drag each group's flag inside the deployment zone and pick its first order); Fight, or Simulate (auto-resolve with the odds explained). Ambushed, you get less room. You can remember your setup and skip the screen.
 - **Minimap and tactical overview (1.9.0):** on a large battlefield a small map at the top shows your company and only the enemies your soldiers have seen; tap it to look there. MAP (phone) or holding Tab (desktop, or M to toggle) opens the whole field with the battle held still; pick a group in Orders and tap where it should go and hold.
 - **Time (1.6.0):** a battle takes a fixed 4 game hours of overworld time, fought or auto-resolved; capture 12 hours; a rest a day. The fight's own seconds, pausing and menus pass no time.

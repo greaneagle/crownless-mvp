@@ -57,6 +57,8 @@
     supply: { min: -10, max: 4 },
   };
   const RALLY = { radius: 300, cooldown: 30, bonus: 30, lasts: 20, floor: 50 };
+  // V2-T2: an enemy group falling back that nobody comes near for this long gives up the field.
+  const GIVE_UP = { seconds: 12, radius: 300 };
   const FLEE = { speed: 1.15, edge: 14, minSeconds: 4, clearSeconds: 3, clearRadius: 320, maxSeconds: 10, conceded: 2 };
   const WAVER_DAMAGE = 0.85;
   const GROUPS = ['infantry', 'archer', 'cavalry'];
@@ -255,6 +257,15 @@
         rec.state = stateFor(rec.cohesion, from);
         if (rec.state !== from) announce(team, role, from, rec.state);
         const up = list.filter((u) => inGroup(u, role) && standing(u));
+        // An enemy group falling back that nobody presses gives up the field (V2-T2: no stalemates).
+        if (team === 'enemy' && rec.state === 'fallback') {
+          const pressed = up.some((u) => [g.hero, ...g.allies].some((a) => a && standing(a) && Math.hypot(a.x - u.x, a.y - u.y) < GIVE_UP.radius));
+          rec.alone = pressed ? 0 : (rec.alone || 0) + step;
+          if (rec.alone >= GIVE_UP.seconds) {
+            rec.state = 'rout';
+            announce(team, role, 'fallback', 'rout');
+          }
+        } else rec.alone = 0;
         if (rec.state === 'fallback' && from !== 'fallback') {
           const b = bounds();
           const cx = up.reduce((n, u) => n + u.x, 0) / up.length;
@@ -348,5 +359,5 @@
     return near.length;
   }
 
-  CL.morale = { THRESH, TERMS, RALLY, FLEE, WAVER_DAMAGE, fallbackPoint, targetFor, stateFor, update, flee, leave, rally, rallyIn, word, record };
+  CL.morale = { THRESH, TERMS, RALLY, GIVE_UP, FLEE, WAVER_DAMAGE, fallbackPoint, targetFor, stateFor, update, flee, leave, rally, rallyIn, word, record };
 })(typeof window !== 'undefined' ? window : globalThis);
