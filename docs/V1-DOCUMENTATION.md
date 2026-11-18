@@ -304,7 +304,7 @@ The sandbox carries on after the story ends.
 ### 2.14 Known limits of v1
 - Mercenaries have no upgrade path (finding F-1; from 1.5.0 they train into Sellswords, V2-03b).
 - Soldiers have no names (from 1.4.0 they do: V2-03).
-- A raised shield protects only its holder.
+- A raised shield protects only its holder (from 1.11.0 it also covers the ally beside it on the shield side, V2-08a; soldiers with shields block too).
 - Shield, Archery and Riding skills have no effect yet.
 - No hairstyles (waiting for art).
 - English only; no text size setting; pinch-zoom is off.
@@ -341,6 +341,7 @@ The sandbox carries on after the story ends.
 | `assets` | Sprite loading (`assets/u####.png` units, `w####.png` world) and frame tables |
 | `camera` | From 1.7.0: the battle camera (follows the hero in arenas larger than a screen; one-screen maps stay at 0,0) |
 | `arena` | From 1.7.0: generated battlefields (the camera test's forest; from 1.8.0 the large Forest Wilds and Open Country, built from `generate` specs in `data/battle_maps.js`), and the Battlefield setting's swap to one-screen maps |
+| `groups` | From 1.11.0: group AI: soldiers raise shields; shield cover for the ally beside a raised shield; braced spears stop charges; archers' line of sight; loose Follow ranks; group states |
 | `prep` | From 1.10.0: battle preparation: Balanced / Defensive / Aggressive / Custom setups, deployment zones (smaller when ambushed), placement, remembered setups |
 | `tactics` | From 1.9.0: detection (only enemies your company has seen are shown), the minimap (tap to look) and the tactical overview (battle held; send a group to a spot) |
 | `units` | Units built from troop data: facing, swing phases, movement, obstacle steering, spacing (from 1.7.0: per-map bounds, an obstacle grid on big maps) |

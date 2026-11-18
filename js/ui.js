@@ -1345,7 +1345,8 @@
   }
 
   function showSelectedGroup(group) {
-    $('#selectedGroup').textContent = { infantry: 'Infantry', archer: 'Archers', cavalry: 'Cavalry' }[group];
+    const state = CL.game.groupState?.[group]; // forming · formed · advancing · engaged (V2-08a)
+    $('#selectedGroup').textContent = { infantry: 'Infantry', archer: 'Archers', cavalry: 'Cavalry' }[group] + (state ? ` · ${state}` : '');
     // GDD §7: unit sets without cavalry show cavalry as unavailable.
     const hasCav = CL.game.allies?.some((a) => a.role === 'cavalry' && a.alive);
     const cavBtn = document.querySelector('[data-group="cavalry"]');
@@ -1705,6 +1706,9 @@
     importDone,
     hideBattleOverlays,
     showSelectedGroup,
+    groupStates: () => {
+      if (!$('#ordersPanel').classList.contains('hidden')) showSelectedGroup(CL.game.group);
+    },
     showOverview,
     prepareBattle,
     renderPrep,

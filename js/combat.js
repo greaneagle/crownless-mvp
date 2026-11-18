@@ -217,6 +217,14 @@
       g.effects.push({ x: target.x, y: target.y - 17, t: 0.2, color: '#f6daa6', kind: 'block' });
       return 'blocked';
     }
+    // Shield cover (V2-08a, owner idea): a raised shield beside the target, on its shield side, takes a
+    // frontal blow meant for it.
+    const cover = !target.guard && source ? CL.groups.coverFor(target, source, target.team === 'ally' ? [g.hero, ...g.allies] : g.enemies) : null;
+    if (cover) {
+      sound('block', cover, source);
+      g.effects.push({ x: cover.x, y: cover.y - 17, t: 0.2, color: '#f6daa6', kind: 'block' });
+      return 'blocked';
+    }
     if (g.practice && g.practice.firstHit == null) g.practice.firstHit = g.t; // camera test: time to contact
     target.hp = Math.max(0, target.hp - mitigate(raw, target.armor));
     if (source && source.team !== target.team) {
@@ -323,6 +331,8 @@
     const target = u.target;
     const g = game();
     const cmd = u.team === 'ally' ? g.orders.cavalry : 'charge';
+    // Braced spears in front stop the charge and hurt the rider (V2-08a).
+    if (CL.groups.braceAgainst(g, u, opponentsOf(u), CAVALRY.chargeMomentum)) return;
     // Hold and Follow keep the horsemen back until enemies come close.
     if (!target || (cmd === 'hold' && dist(u, target) > CAVALRY.holdRange) || (cmd === 'follow' && dist(u, target) > CAVALRY.followRange)) {
       u.momentum = 0;
@@ -363,6 +373,8 @@
       u.target = nearestAlive(u, opponentsOf(u)) || null;
     }
     const target = u.target;
+    // Shield troops raise their shields against a swing coming at them (V2-08a).
+    u.guard = CL.groups.shouldGuard(u, opponentsOf(u));
     if (!target) return;
     const p = u.role === 'archer' ? AI.archer : AI.melee;
     let dest = target;
@@ -371,8 +383,9 @@
     if (u.team === 'ally') {
       const cmd = game().orders[u.role];
       if (cmd === 'follow') {
-        dest = game().hero;
-        goal = p.followGoal;
+        // Loose ranks around the hero (V2-08a); break ranks to fight anything close.
+        dest = u.companion ? game().hero : CL.groups.followSlot(game(), u);
+        goal = u.companion ? p.followGoal : 6;
         if (dist(u, target) < p.followEngage) {
           dest = target;
           goal = p.followFight;
@@ -390,9 +403,25 @@
     }
 
     const d = dist(u, dest);
-    if (d > goal + 5) move(u, dest.x - u.x, dest.y - u.y, dt);
-    else if (dest === target) aim(u, target);
-    if (dist(u, target) < fireRange(u)) startAttack(u);
+    if (d > goal + 5) {
+      const s = u.speed;
+      if (u.guard) u.speed *= GUARD_SPEED; // a raised shield slows you, as it does the hero
+      move(u, dest.x - u.x, dest.y - u.y, dt);
+      u.speed = s;
+    } else if (dest === target) aim(u, target);
+    if (dist(u, target) < fireRange(u)) {
+      if (u.ranged && !CL.groups.clearShot(u, target)) {
+        // A tree or wall in the way: step aside for a clear shot instead of wasting arrows (V2-08a).
+        CL.groups.seekShot(u, target, dt);
+        if (u.team === 'ally' && game().t - (game().losNoteAt ?? -99) > 10) {
+          game().losNoteAt = game().t;
+          CL.ui.message('Archers: no clear shot, moving to find one');
+        }
+      } else {
+        u.losBlocked = 0;
+        if (!u.guard) startAttack(u); // no swinging behind a raised shield
+      }
+    }
   }
 
   /** Record an attack press so a tap during late recovery is not lost. */
@@ -461,6 +490,8 @@
     g.effects = g.effects.filter((e) => e.t > 0);
     reinforce(g);
     CL.tactics.scan(g, dt); // what the company can see (V2-06)
+    const before = g.groupState;
+    if (CL.groups.updateStates(g, dt) !== before) CL.ui.groupStates?.(g.groupState); // forming · formed · advancing · engaged
     CL.camera.follow(g, dt);
 
     // GDD §15 edge case: the battle only ends when no one is left waiting to step in.
@@ -484,8 +515,9 @@
   function order(group, cmd) {
     const g = game();
     if (group) g.group = group;
-    if (cmd && g.group === 'cavalry' && !g.allies.some((a) => a.role === 'cavalry' && a.alive)) {
-      CL.ui.message('No cavalry in this battle'); // GDD §7: cavalry shown as unavailable
+    if (cmd && !g.allies.some((a) => a.role === g.group && a.alive && !a.companion)) {
+      // An order nobody can carry out says so (V2-08a; GDD §7 shows cavalry as unavailable).
+      CL.ui.message(`No ${{ infantry: 'infantry', archer: 'archers', cavalry: 'cavalry' }[g.group]} in this battle`);
       return;
     }
     if (cmd) {

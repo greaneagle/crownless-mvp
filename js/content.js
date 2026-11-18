@@ -62,6 +62,8 @@
     for (const t of Object.values(C.troops || {})) {
       if (!C.factions?.[t.faction]) err(`troop ${t.id}: unknown faction ${t.faction}`);
       for (const u of [t.upgradeTo, t.altUpgradeTo]) if (u && !C.troops[u]) err(`troop ${t.id}: unknown upgrade ${u}`);
+      for (const k of ['shield', 'brace']) if (t[k] != null && typeof t[k] !== 'boolean') err(`troop ${t.id}: ${k} must be true or false`);
+      if (t.shield && t.role === 'archer') err(`troop ${t.id}: archers carry no shield`);
       for (const s of ['hp', 'damage', 'armor', 'speed', 'reach']) {
         if (!(Number.isFinite(t[s]) && t[s] >= 0)) err(`troop ${t.id}: bad ${s}`);
       }
