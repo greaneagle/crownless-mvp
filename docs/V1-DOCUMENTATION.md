@@ -284,6 +284,7 @@ The sandbox carries on after the story ends.
 
 ### 2.13 Comfort, settings and saving
 - **Settings** (⚙ on the map, in town and in battle, and on the title screen):
+  - text size: Small, Normal, Large, Larger (from 2.2.0, W-01): all HTML text and controls and the canvas labels, applied at once; touch targets stay at least 44×44 px and grow with the text
   - music and effects volume
   - battle size (20/30/40)
   - battlefield: large or small (from 1.8.0)

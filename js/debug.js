@@ -337,6 +337,15 @@
       case 'god':
         btn.textContent = `God mode: ${toggleGod() ? 'on' : 'off'}`;
         return;
+      case 'sharp': {
+        // D-R1 (W-01): a sharper canvas at min(devicePixelRatio, 2), to measure on a phone with the
+        // Big battle and the map. A view switch for testing only: not saved, nothing else changes.
+        const k = CL.render.backingScale() > 1 ? 1 : Math.min(root.devicePixelRatio || 1, 2);
+        CL.render.setBackingScale(k);
+        btn.textContent = `Sharp canvas: ${k > 1 ? `${k}×` : 'off'}`;
+        log('sharp canvas', { backing: k });
+        return;
+      }
       case 'tree':
         // Show every troop on the troop tree with full details (V2-03b). A view switch for testing:
         // the campaign's own knowledge is not changed or saved.

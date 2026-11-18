@@ -13,6 +13,21 @@
 
   CL.ui.$('#stage').dataset.dev = CL.dev ? 'on' : 'off';
   root.addEventListener('resize', () => CL.ui.fitHud());
+  // The HUD re-fits whenever its panels change size, not only on a window resize: a button's text
+  // changing ("Wait" → "Stop waiting") or a new text size (W-01) would otherwise let the top-left
+  // panel run under the buttons.
+  if (root.ResizeObserver) {
+    let queued = false; // fitting changes the panel being watched, so wait a frame (no observer loop)
+    const hud = new root.ResizeObserver(() => {
+      if (queued) return;
+      queued = true;
+      root.requestAnimationFrame(() => {
+        queued = false;
+        CL.ui.fitHud();
+      });
+    });
+    for (const id of ['#topLeft', '#topRight']) hud.observe(CL.ui.$(id));
+  }
   const canvas = CL.ui.$('#game');
   CL.render.init(canvas);
   CL.input.bind(canvas);

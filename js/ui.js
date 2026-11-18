@@ -138,6 +138,21 @@
     $('#message').style.top = `${Math.ceil(left.getBoundingClientRect().bottom - stage.top + 6)}px`;
   }
 
+  /**
+   * W-01: the player's text size. Every HTML size in style.css is written against --ui-scale, and
+   * touch targets against --ui-grow (never below 1, so a tap area grows with the text but never
+   * shrinks); the stage's data-text-size lets CSS shorten what would otherwise crowd. Applied at once,
+   * mid-battle included (nothing pauses); open panels simply re-flow.
+   */
+  function applyTextScale(scale) {
+    const root = document.documentElement.style;
+    root.setProperty('--ui-scale', String(scale));
+    root.setProperty('--ui-grow', String(Math.max(1, scale)));
+    const stage = $('#stage');
+    if (stage) stage.dataset.textSize = CL.settings?.get('textSize') || 'normal';
+    requestAnimationFrame(fitHud); // the top-left panel and the message line move with the text
+  }
+
   function changeMode(mode) {
     const g = CL.game;
     g.mode = mode;
@@ -1724,6 +1739,7 @@
     const s = CL.settings.all();
     $('#setMusic').value = String(s.music);
     $('#setSfx').value = String(s.sfx);
+    $('#setTextSize').value = s.textSize;
     $('#setBattleSize').value = String(s.battleSize);
     $('#setBattlefield').value = s.battlefield;
     $('#setPrepSkip').value = s.prepSkip ? 'skip' : 'prepare';
@@ -1781,6 +1797,7 @@
       showVolumes();
     };
     $('#setSfx').onchange = () => CL.audio?.play('coin'); // a sample at the new level
+    $('#setTextSize').onchange = () => CL.settings.set('textSize', $('#setTextSize').value);
     $('#setBattleSize').onchange = () => CL.settings.set('battleSize', Number($('#setBattleSize').value));
     $('#setBattlefield').onchange = () => CL.settings.set('battlefield', $('#setBattlefield').value);
     $('#setPrepSkip').onchange = () => CL.settings.set('prepSkip', $('#setPrepSkip').value === 'skip');
@@ -1881,6 +1898,8 @@
     closeHelp,
     bindHelp,
     fitHud,
+    applyTextScale,
+    font: (px, opts) => CL.settings.font(px, opts),
     openSettings,
     closeSettings,
     bindSettings,

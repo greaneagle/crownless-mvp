@@ -3,14 +3,37 @@
   'use strict';
   const CL = root.Crownless;
   const { W, H } = CL;
+  // W-01: every canvas font comes from the player's text size (CL.settings.font); `fixed` is only for
+  // letters that are part of an icon's art (the emblem on a flag or a party marker).
+  const font = (px, opts) => CL.settings?.font(px, opts) ?? `bold ${px}px Georgia`;
+  const ts = () => CL.settings?.textScale() ?? 1;
+  const fixedFont = (px, family = 'system-ui') => `bold ${px}px ${family}`;
+  /** The top-left HUD's short form, at the Larger text size. */
+  const compactHud = () => ts() >= 1.3;
 
   let ctx = null;
 
   const FACE_ANGLE = { up: -Math.PI / 2, right: 0, down: Math.PI / 2, left: Math.PI };
 
+  let backing = 1; // canvas pixels per game pixel (decision D-R1: 1 unless the Debug panel's test is on)
+
   function init(canvas) {
     ctx = canvas.getContext('2d');
     ctx.imageSmoothingEnabled = false;
+  }
+
+  /**
+   * D-R1 measurement only (W-01, Debug panel "Sharp canvas"): draw into a backing store of
+   * min(devicePixelRatio, 2) × 960×540 so enlarged canvas text is sharper, to time it on a phone.
+   * The game still works in 960×540 units: every frame starts from this scale, and input maps taps
+   * through the canvas's on-screen size, so nothing else changes. Not saved.
+   */
+  function setBackingScale(k) {
+    backing = k;
+    ctx.canvas.width = Math.round(W * k);
+    ctx.canvas.height = Math.round(H * k);
+    ctx.imageSmoothingEnabled = false; // a resize resets the context
+    return backing;
   }
 
   function drawImage(key, x, y, w, h) {
@@ -362,10 +385,12 @@
     const maxHp = g.hero.maxhp;
     $('#hptext').textContent = `Hero HP: ${Math.max(0, Math.ceil(g.hero.hp))} / ${maxHp}`;
     $('#hpfill').style.width = `${(g.hero.hp / maxHp) * 100}%`;
-    $('#summary').textContent =
-      `Allies ${g.allies.filter((x) => x.alive).length} · ` +
-      `Enemies ${g.enemies.filter((x) => x.alive).length} · Wave ${g.wave}/${g.totalWaves}` +
-      (g.allyReserve?.length || g.enemyReserve?.length ? ` · Reserves ${g.allyReserve?.length || 0}/${g.enemyReserve?.length || 0}` : '');
+    const [allies, enemies] = [g.allies.filter((x) => x.alive).length, g.enemies.filter((x) => x.alive).length];
+    const reserves = g.allyReserve?.length || g.enemyReserve?.length ? [g.allyReserve?.length || 0, g.enemyReserve?.length || 0] : null;
+    // At the largest text size the line is shortened rather than crowding the field (W-01); numbers stay whole.
+    $('#summary').textContent = compactHud()
+      ? `${allies} v ${enemies} · Wave ${g.wave}/${g.totalWaves}${reserves ? ` · Res ${reserves[0]}/${reserves[1]}` : ''}`
+      : `Allies ${allies} · Enemies ${enemies} · Wave ${g.wave}/${g.totalWaves}${reserves ? ` · Reserves ${reserves[0]}/${reserves[1]}` : ''}`;
   }
 
   // ---- Walkable town (Stonebridge) ----
@@ -398,15 +423,16 @@
       label(n.tag || n.name, n.x, n.y + 20, '#e8f0ff');
       if (t.near === n) {
         const text = `${n.name} — TALK: ${TALK_VERB[n.action]}`;
-        ctx.font = 'bold 14px Georgia';
+        ctx.font = font(14);
         const w = ctx.measureText(text).width + 16;
         const x = Math.max(w / 2 + 14, Math.min(W - w / 2 - 14, n.x));
+        const h = Math.round(22 * ts());
         ctx.fillStyle = '#0c1a26e8';
-        ctx.fillRect(x - w / 2, n.y - 74, w, 22);
+        ctx.fillRect(x - w / 2, n.y - 52 - h, w, h);
         ctx.strokeStyle = '#ffe7a8';
         ctx.lineWidth = 1.5;
-        ctx.strokeRect(x - w / 2, n.y - 74, w, 22);
-        label(text, x, n.y - 58, '#ffe7a8');
+        ctx.strokeRect(x - w / 2, n.y - 52 - h, w, h);
+        label(text, x, n.y - 52 - 6 * ts(), '#ffe7a8');
       }
     }
     const z = t.hub.exitZone;
@@ -443,7 +469,7 @@
   }
 
   function drawLabel(text, x, y, color) {
-    ctx.font = 'bold 14px Georgia'; // stays legible when the canvas is scaled down on phones
+    ctx.font = font(14); // stays legible when the canvas is scaled down on phones
     ctx.textAlign = 'center';
     ctx.lineWidth = 4;
     ctx.strokeStyle = '#1b2417';
@@ -492,7 +518,7 @@
     ctx.fillStyle = '#2a2116';
     ctx.fillRect(x + 9, y - 22, 2, 18);
     ctx.fillStyle = '#fff';
-    ctx.font = 'bold 8px system-ui';
+    ctx.font = fixedFont(8); // the flag's emblem: part of the icon
     ctx.fillText(FACTION_EMBLEM[holder] || '?', x + 13, y - 14.5);
     if (here) {
       ctx.strokeStyle = '#ffe7a8';
@@ -588,14 +614,14 @@
       ctx.fill();
       ctx.stroke();
       ctx.fillStyle = '#fff';
-      ctx.font = 'bold 9px system-ui';
+      ctx.font = fixedFont(9); // the marker's emblem: part of the icon
       ctx.textAlign = 'center';
       ctx.fillText(t.kind === 'bandit' ? 'R' : FACTION_EMBLEM[t.faction], x - 1, y - 1);
       ctx.textAlign = 'left';
     }
     if (p.chasing === 'player') {
       ctx.fillStyle = '#ffd34d';
-      ctx.font = 'bold 16px Georgia';
+      ctx.font = font(16);
       ctx.textAlign = 'center';
       ctx.fillText('!', x, y - 16);
       ctx.textAlign = 'left';
@@ -616,12 +642,12 @@
     ctx.save();
     ctx.fillStyle = hostile ? '#7a1e16' : '#1b2a3a';
     ctx.beginPath();
-    ctx.arc(x + 11, y + 4, 7, 0, Math.PI * 2);
+    ctx.arc(x + 11, y + 4, 7 * ts(), 0, Math.PI * 2);
     ctx.fill();
     ctx.fillStyle = '#fff';
-    ctx.font = 'bold 9px system-ui';
+    ctx.font = font(9, { family: 'system-ui' }); // a count is information: it grows with the text
     ctx.textAlign = 'center';
-    ctx.fillText(String(n), x + 11, y + 7);
+    ctx.fillText(String(n), x + 11, y + 4 + 3 * ts());
     ctx.restore();
   }
 
@@ -634,7 +660,8 @@
   function placeLabels(blockers) {
     const queue = mapLabels;
     mapLabels = null;
-    ctx.font = 'bold 14px Georgia';
+    ctx.font = font(14);
+    const k = ts();
     const placed = [...blockers];
     const overlap = (b) => placed.reduce((n, o) => n + (b.x < o.x + o.w && o.x < b.x + b.w && b.y < o.y + o.h && o.y < b.y + b.h ? 1 : 0), 0);
     queue.sort((a, b) => a.prio - b.prio);
@@ -642,10 +669,10 @@
       const w = ctx.measureText(l.text).width + 6;
       const spots = [
         [l.x, l.y],
-        [l.x, l.iy - 20],
+        [l.x, l.iy - 20 * k],
         [l.x + w / 2 + 14, l.iy + 5],
         [l.x - w / 2 - 14, l.iy + 5],
-      ].map(([cx, cy]) => ({ cx, cy, box: { x: cx - w / 2, y: cy - 13, w, h: 17 } }));
+      ].map(([cx, cy]) => ({ cx, cy, box: { x: cx - w / 2, y: cy - 13 * k, w, h: 17 * k } }));
       const inside = spots.filter((s) => s.box.x >= 0 && s.box.x + s.box.w <= W && s.box.y >= 0 && s.box.y + s.box.h <= H);
       let spot = inside.find((s) => !overlap(s.box));
       if (!spot) {
@@ -777,10 +804,13 @@
           : `Camped, ${ground}`;
     const wounded = CL.party.woundedSoldiers().length;
     const food = CL.upkeep.foodDays(c);
+    const short = compactHud();
     $('#summary').textContent =
-      `${CL.world.clockLabel()} · ${c.gold} crowns · ${c.roster.length} soldiers${wounded ? ` (${wounded} wounded)` : ''}` +
+      (short
+        ? `${CL.world.clockLabel()} · ${c.gold} cr · ${c.roster.length} men${wounded ? ` (${wounded} hurt)` : ''}`
+        : `${CL.world.clockLabel()} · ${c.gold} crowns · ${c.roster.length} soldiers${wounded ? ` (${wounded} wounded)` : ''}`) +
       (c.companion ? ` + ${CL.companion.def(c.companion.id).name}${c.companion.away ? ' (scouting ahead)' : CL.companion.fit(c) ? '' : ' (wounded)'}` : '') +
-      ` · food ${food >= 10 ? Math.floor(food) : food.toFixed(1)}d · morale ${Math.round(c.morale)}` +
+      ` · food ${food >= 10 ? Math.floor(food) : food.toFixed(1)}d · ${short ? 'mor.' : 'morale'} ${Math.round(c.morale)}` +
       (Object.keys(c.cargo).length ? ` · cargo ${CL.trade.cargoWeight(c)}/${CL.trade.capacity(c)}` : '') +
       (c.contract ? ` · ${CL.contracts.summary(c)}` : '') +
       (CL.story.currentQuest(c) ? ` · ▸ ${CL.story.currentQuest(c).title}` : '');
@@ -882,7 +912,7 @@
     const raw = T.toScreen(r, (eb.x0 + eb.x1) / 2, (eb.y0 + eb.y1) / 2);
     const ec = { x: Math.min(raw.x, box.x + box.w - 44), y: raw.y }; // at the edge when off the preview
     ctx.fillStyle = '#ff5a4a';
-    ctx.font = 'bold 15px Georgia';
+    ctx.font = font(15);
     ctx.textAlign = 'center';
     ctx.fillText('enemy', ec.x, ec.y - 12);
     ctx.beginPath();
@@ -915,11 +945,12 @@
       ctx.lineTo(a.x, a.y - 16);
       ctx.stroke();
       ctx.fillStyle = GROUP_COLOR[grp];
-      ctx.fillRect(a.x, a.y - 16, 22, 14);
-      ctx.strokeRect(a.x, a.y - 16, 22, 14);
+      const [fw, fh] = [22 * ts(), 14 * ts()]; // the flag grows with its label
+      ctx.fillRect(a.x, a.y - 2 - fh, fw, fh);
+      ctx.strokeRect(a.x, a.y - 2 - fh, fw, fh);
       ctx.fillStyle = '#1b1208';
-      ctx.font = 'bold 11px Georgia';
-      ctx.fillText(`${letters[grp]}${fit[grp]}`, a.x + 11, a.y - 5);
+      ctx.font = font(11);
+      ctx.fillText(`${letters[grp]}${fit[grp]}`, a.x + fw / 2, a.y - 2 - 3 * ts());
     }
     ctx.textAlign = 'left';
     ctx.restore();
@@ -1008,19 +1039,20 @@
     if (!list.length) return;
     const [cx, cy] = [W / 2, H / 2];
     ctx.save();
-    ctx.font = 'bold 13px system-ui, sans-serif';
+    ctx.font = font(13, { family: 'system-ui, sans-serif' });
+    const k = ts();
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     list.forEach((j, i) => {
       const text = `${j.side === 'ally' ? 'Aid' : 'Foes'}: ${j.name} (${j.size}) · ${Math.max(1, Math.round(j.arriveAt - g.t))} s`;
       const w = ctx.measureText(text).width + 20;
       const x = Math.max(w / 2 + 8, Math.min(W - w / 2 - 8, cx + j.dir.x * (cx - w / 2 - 8)));
-      const y = Math.max(124, Math.min(H - 130, cy + j.dir.y * (cy - 60))) + i * 34; // below the minimap and the HUD
+      const y = Math.max(124, Math.min(H - 130, cy + j.dir.y * (cy - 60))) + i * 34 * k; // below the minimap and the HUD
       ctx.fillStyle = '#101a23d9';
       ctx.strokeStyle = j.side === 'ally' ? '#4bc4dc' : '#e76860';
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.rect(x - w / 2, y - 14, w, 28);
+      ctx.rect(x - w / 2, y - 14 * k, w, 28 * k);
       ctx.fill();
       ctx.stroke();
       ctx.fillStyle = '#f4efe2';
@@ -1031,6 +1063,7 @@
 
   function draw() {
     const g = CL.game;
+    ctx.setTransform(backing, 0, 0, backing, 0, 0);
     ctx.clearRect(0, 0, W, H);
     if (g.town && ['town', 'talk', 'trade', 'contracts', 'saves', 'character', 'settlement', 'journal', 'ending'].includes(g.mode)) {
       drawTown();
@@ -1099,10 +1132,12 @@
       ctx.fillStyle = '#06101a99';
       ctx.fillRect(0, 0, W, H);
       ctx.fillStyle = '#f8e9c5';
-      ctx.font = 'bold 38px Georgia';
-      ctx.fillText('PAUSED', 404, 265);
+      ctx.font = font(38);
+      ctx.textAlign = 'center';
+      ctx.fillText('PAUSED', W / 2, 265);
+      ctx.textAlign = 'left';
     }
   }
 
-  CL.render = { init, draw };
+  CL.render = { init, draw, setBackingScale, backingScale: () => backing };
 })(typeof window !== 'undefined' ? window : globalThis);

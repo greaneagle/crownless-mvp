@@ -11,6 +11,10 @@
   const BATTLEFIELDS = ['large', 'small']; // V2-05: large maps with a following camera, or one screen
   const PREP_PRESETS = ['balanced', 'defensive', 'aggressive', 'custom']; // V2-07
   const PREP_ORDERS = ['follow', 'hold', 'charge'];
+  // W-01: text size, the substitute for the browser's pinch-zoom (the page blocks it, because pinch
+  // belongs to the map and battle gestures). It scales the game's HTML text and controls and the text
+  // drawn on the canvas, not the canvas art.
+  const TEXT_SIZES = { small: 0.9, normal: 1, large: 1.15, larger: 1.3 };
 
   /** A remembered Custom setup: each group's offset from the hero's start and its order, or null. */
   function customSetup(v) {
@@ -33,7 +37,7 @@
       touch = false;
     }
     // Full screen is on by default on phones, where the address bar costs the most room.
-    return { music: 50, sfx: 70, battleSize: touch ? 30 : 40, battlefield: 'large', prepPreset: 'balanced', prepSkip: false, prepCustom: null, reducedEffects: false, healthBars: true, tips: true, fullscreen: touch };
+    return { music: 50, sfx: 70, battleSize: touch ? 30 : 40, battlefield: 'large', prepPreset: 'balanced', prepSkip: false, prepCustom: null, reducedEffects: false, healthBars: true, tips: true, fullscreen: touch, textSize: 'normal' };
   }
 
   let current = defaults();
@@ -56,6 +60,7 @@
       healthBars: typeof r.healthBars === 'boolean' ? r.healthBars : d.healthBars,
       tips: typeof r.tips === 'boolean' ? r.tips : d.tips,
       fullscreen: typeof r.fullscreen === 'boolean' ? r.fullscreen : d.fullscreen,
+      textSize: Object.hasOwn(TEXT_SIZES, r.textSize) ? r.textSize : d.textSize,
     };
   }
 
@@ -83,6 +88,18 @@
   function apply() {
     CL.combat?.setActiveCap(current.battleSize);
     CL.audio?.setVolumes(current.music, current.sfx);
+    CL.ui?.applyTextScale?.(textScale());
+  }
+
+  /** The text-size factor: 0.9, 1, 1.15 or 1.3. */
+  const textScale = () => TEXT_SIZES[current.textSize] ?? 1;
+
+  /**
+   * A canvas font at the player's text size (W-01): `font(14)` is "bold 14px Georgia" at Normal and
+   * "bold 18px Georgia" at Larger. Every font the renderer draws with comes from here (CL.ui.font).
+   */
+  function font(px, { weight = 'bold', family = 'Georgia' } = {}) {
+    return `${weight} ${Math.round(px * textScale())}px ${family}`;
   }
 
   const get = (key) => current[key];
@@ -100,5 +117,5 @@
     return true;
   }
 
-  CL.settings = { KEY, BATTLE_SIZES, BATTLEFIELDS, PREP_PRESETS, defaults, sanitize, load, get, all, set, apply };
+  CL.settings = { KEY, BATTLE_SIZES, BATTLEFIELDS, PREP_PRESETS, TEXT_SIZES, defaults, sanitize, load, get, all, set, apply, textScale, font };
 })(typeof window !== 'undefined' ? window : globalThis);

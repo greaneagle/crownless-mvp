@@ -1,133 +1,137 @@
-*{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;background:#0a131d;color:#f7e8c5;font-family:Georgia,serif;overflow:hidden;touch-action:none}button{background:linear-gradient(#536273,#243748);border:2px solid #c9a977;color:#fff2cb;border-radius:7px;padding:9px 12px;cursor:pointer;font-weight:bold;font-family:inherit;touch-action:manipulation}button:active{filter:brightness(1.5)}button:disabled{opacity:.45;cursor:default}#shell{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}#stage{position:relative;width:min(100vw,177.7778vh);height:min(100vh,56.25vw);overflow:hidden;border:2px solid #b79764;background:#16242b}#game{width:100%;height:100%;display:block;image-rendering:pixelated}#hud{position:absolute;inset:0;pointer-events:none}#hud button,#overlay,#ordersPanel{pointer-events:auto}.panel{border:2px solid #b89b64;background:#0c1a26e8;box-shadow:0 4px 12px #0008;padding:8px 12px}#topLeft{position:absolute;top:2%;left:2%;font-size:clamp(10px,1.25vw,15px);min-width:185px}#topLeft small{font-size:.72em;color:#c9ae7a}#hpbar{height:9px;background:#502a28;border:1px solid #d3af78;margin:4px 0}#hpfill{height:100%;background:#c95c57;width:100%}#topRight{position:absolute;right:2%;top:2%;display:flex;gap:6px}#topRight button{font-size:clamp(10px,1.2vw,15px);padding:6px 9px}#message{position:absolute;top:12%;left:22%;width:56%;text-align:center;color:#fff7df;text-shadow:2px 2px #09131a;font:700 clamp(12px,1.5vw,18px) Georgia}#touch{position:absolute;inset:0;pointer-events:none}#joystick{position:absolute;left:5%;bottom:5%;width:clamp(80px,13vw,140px);aspect-ratio:1;border:3px solid #d3c3a47a;border-radius:50%;background:#8d9a9a36;pointer-events:auto;touch-action:none}#knob{position:absolute;width:42%;height:42%;top:29%;left:29%;border:2px solid #edd5a4;border-radius:50%;background:#a2b1be9c}#rightControls{position:absolute;right:3%;bottom:5%;display:flex;align-items:end;gap:8px}#rightControls button{pointer-events:auto;border-radius:50%;width:clamp(66px,9.5vw,115px);height:clamp(66px,9.5vw,115px);font-size:clamp(10px,1.3vw,17px)}#rightControls #attackBtn{width:clamp(83px,12vw,136px);height:clamp(83px,12vw,136px);border-color:#efd4a2;background:linear-gradient(#9d6852,#643a37)}#ordersPanel{position:absolute;left:34%;bottom:6%;min-width:245px;max-width:41%;z-index:4;font-size:13px}#ordersPanel button{margin:3px;padding:5px}#ordersPanel p{margin:8px 0 4px}#ordersPanel b{font-size:16px}#overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#06101dc7;z-index:6}#overlay.hidden,.hidden{display:none!important}.modal{width:min(82%,540px);max-height:94%;overflow:auto;text-align:center;background:#132333f5;border:3px double #d4b784;box-shadow:0 18px 42px #000c;padding:16px 24px}.modal h1{margin:0 0 9px;font-size:clamp(23px,3vw,38px);letter-spacing:3px;color:#ecd6a4}.modal p{line-height:1.4;font-size:clamp(13px,1.35vw,17px)}.modal .row{justify-content:center}.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.prepare{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin:8px}#result{font-size:13px;line-height:1.6}#version{position:absolute;bottom:1%;left:1%;font:10px system-ui;color:#e7e9e6a9}#debugPanel{position:fixed;right:12px;top:12px;width:min(600px,calc(100vw - 24px));max-height:calc(100vh - 24px);overflow:auto;background:#0c1823fa;border:2px solid #c7aa72;z-index:20;box-shadow:0 0 0 100vmax #0008;padding:14px;font:12px system-ui;touch-action:auto}#debugPanel h2{margin:0}#closeDebug{float:right}#debugPanel pre{white-space:pre-wrap;overflow-wrap:anywhere;padding:8px;background:#070f17;border:1px solid #3a5160}#debugEvents{height:240px;overflow:auto}@media(hover:hover) and (pointer:fine){#joystick,#rightControls{opacity:.29}#joystick:hover,#rightControls:hover{opacity:1}}@media(max-height:430px){.modal{padding:6px 15px}.modal p{margin:5px 0}.modal h1{font-size:22px}#topLeft{padding:4px 8px}#ordersPanel{font-size:11px}}
+/* W-01: text size. Sizes below are written against --ui-scale (0.9 Small, 1 Normal, 1.15 Large, 1.3
+   Larger), and touch targets' minimum sizes against --ui-grow (the same, but never below 1, so a tap
+   area grows with its text and never shrinks). Both are set on :root by CL.ui.applyTextScale. */
+:root{--ui-scale:1;--ui-grow:1}
+*{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;background:#0a131d;color:#f7e8c5;font-family:Georgia,serif;overflow:hidden;touch-action:none}button{background:linear-gradient(#536273,#243748);border:2px solid #c9a977;color:#fff2cb;border-radius:7px;padding:calc(9px * var(--ui-scale)) calc(12px * var(--ui-scale));cursor:pointer;font-weight:bold;font-family:inherit;touch-action:manipulation}button:active{filter:brightness(1.5)}button:disabled{opacity:.45;cursor:default}#shell{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}#stage{position:relative;width:min(100vw,177.7778vh);height:min(100vh,56.25vw);overflow:hidden;border:2px solid #b79764;background:#16242b}#game{width:100%;height:100%;display:block;image-rendering:pixelated}#hud{position:absolute;inset:0;pointer-events:none}#hud button,#overlay,#ordersPanel{pointer-events:auto}.panel{border:2px solid #b89b64;background:#0c1a26e8;box-shadow:0 4px 12px #0008;padding:calc(8px * var(--ui-scale)) calc(12px * var(--ui-scale))}#topLeft{position:absolute;top:2%;left:2%;font-size:calc(clamp(10px,1.25vw,15px) * var(--ui-scale));min-width:calc(185px * var(--ui-grow))}#topLeft small{font-size:.72em;color:#c9ae7a}#hpbar{height:9px;background:#502a28;border:1px solid #d3af78;margin:4px 0}#hpfill{height:100%;background:#c95c57;width:100%}#topRight{position:absolute;right:2%;top:2%;display:flex;gap:6px}#topRight button{font-size:calc(clamp(10px,1.2vw,15px) * var(--ui-scale));padding:calc(6px * var(--ui-scale)) calc(9px * var(--ui-scale))}#message{position:absolute;top:12%;left:22%;width:56%;text-align:center;color:#fff7df;text-shadow:2px 2px #09131a;font:700 calc(clamp(12px,1.5vw,18px) * var(--ui-scale)) Georgia}#touch{position:absolute;inset:0;pointer-events:none}#joystick{position:absolute;left:5%;bottom:5%;width:clamp(80px,13vw,140px);aspect-ratio:1;border:3px solid #d3c3a47a;border-radius:50%;background:#8d9a9a36;pointer-events:auto;touch-action:none}#knob{position:absolute;width:42%;height:42%;top:29%;left:29%;border:2px solid #edd5a4;border-radius:50%;background:#a2b1be9c}#rightControls{position:absolute;right:3%;bottom:5%;display:flex;align-items:end;gap:8px}#rightControls button{pointer-events:auto;border-radius:50%;width:clamp(66px,9.5vw,115px);height:clamp(66px,9.5vw,115px);font-size:calc(clamp(10px,1.3vw,17px) * var(--ui-scale))}#rightControls #attackBtn{width:clamp(83px,12vw,136px);height:clamp(83px,12vw,136px);border-color:#efd4a2;background:linear-gradient(#9d6852,#643a37)}#ordersPanel{position:absolute;left:34%;bottom:6%;min-width:calc(245px * var(--ui-grow));max-width:41%;z-index:4;font-size:calc(13px * var(--ui-scale))}#ordersPanel button{margin:3px;padding:calc(5px * var(--ui-scale))}#ordersPanel p{margin:8px 0 4px}#ordersPanel b{font-size:calc(16px * var(--ui-scale))}#overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#06101dc7;z-index:6}#overlay.hidden,.hidden{display:none!important}.modal{width:min(82%,540px);max-height:94%;overflow:auto;text-align:center;background:#132333f5;border:3px double #d4b784;box-shadow:0 18px 42px #000c;padding:calc(16px * var(--ui-scale)) calc(24px * var(--ui-scale))}.modal h1{margin:0 0 9px;font-size:calc(clamp(23px,3vw,38px) * var(--ui-scale));letter-spacing:3px;color:#ecd6a4}.modal p{line-height:1.4;font-size:calc(clamp(13px,1.35vw,17px) * var(--ui-scale))}.modal .row{justify-content:center}.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.prepare{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin:8px}#result{font-size:calc(13px * var(--ui-scale));line-height:1.6}#version{position:absolute;bottom:1%;left:1%;font:calc(10px * var(--ui-scale)) system-ui;color:#e7e9e6a9}#debugPanel{position:fixed;right:12px;top:12px;width:min(600px,calc(100vw - 24px));max-height:calc(100vh - 24px);overflow:auto;background:#0c1823fa;border:2px solid #c7aa72;z-index:20;box-shadow:0 0 0 100vmax #0008;padding:calc(14px * var(--ui-scale));font:calc(12px * var(--ui-scale)) system-ui;touch-action:auto}#debugPanel h2{margin:0}#closeDebug{float:right}#debugPanel pre{white-space:pre-wrap;overflow-wrap:anywhere;padding:calc(8px * var(--ui-scale));background:#070f17;border:1px solid #3a5160}#debugEvents{height:240px;overflow:auto}@media(hover:hover) and (pointer:fine){#joystick,#rightControls{opacity:.29}#joystick:hover,#rightControls:hover{opacity:1}}@media(max-height:430px){.modal{padding:calc(6px * var(--ui-scale)) calc(15px * var(--ui-scale))}.modal p{margin:5px 0}.modal h1{font-size:calc(22px * var(--ui-scale))}#topLeft{padding:calc(4px * var(--ui-scale)) calc(8px * var(--ui-scale))}#ordersPanel{font-size:calc(11px * var(--ui-scale))}}
 
 /* 0.4.0 — Gate A: safe areas, 48px touch targets, portrait prompt */
 #shell{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
-#topRight button,#ordersPanel button,.modal button{min-height:44px;min-width:48px}
-@media(pointer:coarse){#topRight button,#ordersPanel button,.modal button{min-height:48px}}
-#ordersPanel button{padding:8px 10px}
-#rotate{position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;background:#06101df2;padding:24px}
+#topRight button,#ordersPanel button,.modal button{min-height:calc(44px * var(--ui-grow));min-width:calc(48px * var(--ui-grow))}
+@media(pointer:coarse){#topRight button,#ordersPanel button,.modal button{min-height:calc(48px * var(--ui-grow))}}
+#ordersPanel button{padding:calc(8px * var(--ui-scale)) calc(10px * var(--ui-scale))}
+#rotate{position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;background:#06101df2;padding:calc(24px * var(--ui-scale))}
 #rotate .modal{width:min(92%,420px)}
 
 /* Orders panel sits above Attack/Block (GDD §11) so it never covers the controls or the field centre */
-#ordersPanel{left:auto;right:3%;bottom:calc(5% + clamp(83px,12vw,136px) + 10px);min-width:0;max-width:none;padding:6px 8px}
-/* Grows up from above ATTACK but stops below the top-right buttons (2% + one 48 px button + gap), scrolling inside itself on short phones, so Pause never covers its close button (found by the W-00 browser tests at 812×375). */
-#ordersPanel{max-height:calc(100% - 5% - clamp(83px,12vw,136px) - 10px - 2% - 58px);overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y}
+#ordersPanel{left:auto;right:3%;bottom:calc(5% + clamp(83px,12vw,136px) + 10px);min-width:0;max-width:none;padding:calc(6px * var(--ui-scale)) calc(8px * var(--ui-scale))}
+/* Grows up from above ATTACK but stops below the top-right buttons (2% + one 48 px button, grown with the text size, + gap), scrolling inside itself on short phones, so Pause never covers its close button (found by the W-00 browser tests at 812×375). */
+#ordersPanel{max-height:calc(100% - 5% - clamp(83px,12vw,136px) - 10px - 2% - 10px - 48px * var(--ui-grow));overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y}
 #ordersPanel .ordersHead{display:flex;align-items:center;gap:6px;margin-bottom:4px}
-#ordersPanel .ordersHead #closeOrders{margin:0 0 0 auto;padding:0 12px;font-size:20px;line-height:1}
+#ordersPanel .ordersHead #closeOrders{margin:0 0 0 auto;padding:0 calc(12px * var(--ui-scale));font-size:calc(20px * var(--ui-scale));line-height:1}
 #ordersPanel .ordersRow{display:flex;gap:6px;margin-top:6px}
 #ordersPanel .ordersRow button{margin:0;flex:1;white-space:nowrap}
 #ordersPanel button.active{border-color:#ffe7a8;background:linear-gradient(#8a7346,#4d3d22);box-shadow:0 0 0 2px #ffe7a855}
 
 /* 0.5.0 — Gate B camp roster */
 #rosterSummary{font-weight:bold}
-#rosterList{list-style:none;margin:8px auto;padding:0;font-size:clamp(12px,1.25vw,15px);line-height:1.5}
-#inventory{font-size:clamp(11px,1.15vw,14px);color:#d9c8a2;margin-bottom:4px}
+#rosterList{list-style:none;margin:8px auto;padding:0;font-size:calc(clamp(12px,1.25vw,15px) * var(--ui-scale));line-height:1.5}
+#inventory{font-size:calc(clamp(11px,1.15vw,14px) * var(--ui-scale));color:#d9c8a2;margin-bottom:4px}
 
 /* 0.6.0 — Gate C world map: battle-only HUD pieces hide outside battle */
 #stage:not([data-mode="battle"]):not([data-mode="town"]) #touch,#stage:not([data-mode="battle"]) #pauseBtn,#stage:not([data-mode="battle"]) #ordersPanel{display:none}
 #stage:not([data-mode="battle"]) #hpbar{display:none}
 #stage[data-mode="map"] #game{cursor:pointer}
-#serviceNote{font-size:12px;color:#c9ae7a;min-height:0}
+#serviceNote{font-size:calc(12px * var(--ui-scale));color:#c9ae7a;min-height:0}
 
 /* 0.7.0 — character creator, character sheet, Party/Debug buttons, debug panel */
 #stage:not([data-mode="map"]) #partyBtn{display:none}
 #stage:not([data-mode="map"]):not([data-mode="town"]) #journalBtn{display:none}
 #cheatBtn{background:linear-gradient(#6b5a2e,#3d321a)}
-#create,#sheet{text-align:left;font-size:clamp(12px,1.25vw,15px)}
+#create,#sheet{text-align:left;font-size:calc(clamp(12px,1.25vw,15px) * var(--ui-scale))}
 .createTop{display:flex;gap:12px;align-items:center}
 #heroPreview{width:72px;height:92px;image-rendering:pixelated;background:#0b1620;border:1px solid #6d5a3a;flex:none}
 .createFields{display:flex;flex-direction:column;gap:6px;flex:1}
 .createFields label{display:flex;gap:8px;align-items:center}
-#heroName,#heroGender,#cheatPanel select{font:inherit;font-size:16px;padding:6px 8px;min-height:44px;background:#0c1823;color:#f7e8c5;border:1px solid #b89b64;border-radius:6px}
+#heroName,#heroGender,#cheatPanel select{font:inherit;font-size:max(16px, calc(16px * var(--ui-scale)));padding:calc(6px * var(--ui-scale)) calc(8px * var(--ui-scale));min-height:calc(44px * var(--ui-grow));background:#0c1823;color:#f7e8c5;border:1px solid #b89b64;border-radius:6px}
 #heroName{flex:1;min-width:0}
 .choiceRow{display:flex;gap:6px;flex-wrap:wrap}
-.choiceRow button{min-height:44px;flex:1}
+.choiceRow button{min-height:calc(44px * var(--ui-grow));flex:1}
 .choiceRow button[aria-checked="true"]{border-color:#ffe7a8;background:linear-gradient(#8a7346,#4d3d22);box-shadow:0 0 0 2px #ffe7a855}
 .bgChoices{margin-top:8px}
 .bgChoices button{text-align:left;font-weight:normal;line-height:1.3}
 .bgChoices b{display:block}
 .swatch{display:inline-block;width:14px;height:14px;border-radius:3px;margin-right:6px;vertical-align:-2px;border:1px solid #0008}
-#createNote{font-size:12px;color:#c9ae7a;margin:8px 0 0}
+#createNote{font-size:calc(12px * var(--ui-scale));color:#c9ae7a;margin:8px 0 0}
 #sheetStats{line-height:1.5}
 #sheetStats .statLine{display:flex;flex-wrap:wrap;gap:4px 14px}
 .sheetCols{display:flex;gap:16px;flex-wrap:wrap;margin-top:8px}
-.sheetCols>div{flex:1;min-width:200px}
-.sheetCols h3{margin:4px 0;font-size:15px;color:#ecd6a4}
+.sheetCols>div{flex:1;min-width:calc(200px * var(--ui-grow))}
+.sheetCols h3{margin:4px 0;font-size:calc(15px * var(--ui-scale));color:#ecd6a4}
 .sheetCols ul{list-style:none;margin:0;padding:0}
-.sheetCols li{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:3px 0;border-bottom:1px solid #ffffff14}
-.sheetCols li button{min-height:40px;padding:4px 10px}
-#cheatPanel{position:fixed;left:12px;top:12px;width:min(640px,calc(100vw - 24px));max-height:calc(100vh - 24px);overflow:auto;background:#1a160c;border:2px solid #c7a85a;z-index:21;box-shadow:0 0 0 100vmax #0008;padding:12px 14px;font:13px system-ui;touch-action:auto}
-#cheatPanel h2{margin:0 0 4px;font:bold 16px Georgia}
+.sheetCols li{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:calc(3px * var(--ui-scale)) 0;border-bottom:1px solid #ffffff14}
+.sheetCols li button{min-height:calc(40px * var(--ui-grow));padding:calc(4px * var(--ui-scale)) calc(10px * var(--ui-scale))}
+#cheatPanel{position:fixed;left:12px;top:12px;width:min(640px,calc(100vw - 24px));max-height:calc(100vh - 24px);overflow:auto;background:#1a160c;border:2px solid #c7a85a;z-index:21;box-shadow:0 0 0 100vmax #0008;padding:calc(12px * var(--ui-scale)) calc(14px * var(--ui-scale));font:calc(13px * var(--ui-scale)) system-ui;touch-action:auto}
+#cheatPanel h2{margin:0 0 4px;font:bold calc(16px * var(--ui-scale)) Georgia}
 #cheatPanel p{margin:0 0 8px;color:#d9c8a2}
 #closeCheats{float:right}
 .cheatGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px}
-.cheatGrid section{border:1px solid #5c4a28;border-radius:6px;padding:6px 8px;display:flex;flex-wrap:wrap;gap:6px;align-content:flex-start}
-.cheatGrid h3{width:100%;margin:0;font:bold 13px Georgia;color:#ecd6a4}
-.cheatGrid button{min-height:44px;flex:1}
+.cheatGrid section{border:1px solid #5c4a28;border-radius:6px;padding:calc(6px * var(--ui-scale)) calc(8px * var(--ui-scale));display:flex;flex-wrap:wrap;gap:6px;align-content:flex-start}
+.cheatGrid h3{width:100%;margin:0;font:bold calc(13px * var(--ui-scale)) Georgia;color:#ecd6a4}
+.cheatGrid button{min-height:calc(44px * var(--ui-grow));flex:1}
 .cheatGrid select{flex:1 1 100%;min-width:0}
 #topRight{z-index:7} /* Logs and Debug stay reachable over menu overlays */
 
 /* 0.8.0 — supplies and warnings */
-#supplies{font-size:clamp(12px,1.25vw,15px);margin-top:4px}
+#supplies{font-size:calc(clamp(12px,1.25vw,15px) * var(--ui-scale));margin-top:4px}
 .warn{color:#ff9f86;font-weight:bold}
 #topLeft.warn{border-color:#e0664f;box-shadow:0 0 0 2px #e0664f66}
 
 /* 0.9.0 — market */
-#tradeScreen{text-align:left;font-size:clamp(12px,1.25vw,15px)}
+#tradeScreen{text-align:left;font-size:calc(clamp(12px,1.25vw,15px) * var(--ui-scale))}
 #tradeHeader{font-weight:bold;margin-bottom:6px}
-#tradeTalk{margin:0 0 6px;font-size:13px;font-style:italic;color:#d9c8a2}
-.newsCard{border:1px solid #3e5168;border-radius:6px;padding:8px 10px;margin:10px 0 6px;background:#0c1520}
-.newsCard h3{margin:0 0 4px;font-size:15px}
-.newsCard ul{margin:0;padding:0;list-style:none;font-size:13px}
+#tradeTalk{margin:0 0 6px;font-size:calc(13px * var(--ui-scale));font-style:italic;color:#d9c8a2}
+.newsCard{border:1px solid #3e5168;border-radius:6px;padding:calc(8px * var(--ui-scale)) calc(10px * var(--ui-scale));margin:10px 0 6px;background:#0c1520}
+.newsCard h3{margin:0 0 4px;font-size:calc(15px * var(--ui-scale))}
+.newsCard ul{margin:0;padding:0;list-style:none;font-size:calc(13px * var(--ui-scale))}
 .newsCard li{margin:3px 0}
 .newsCard .day{color:#9fb2c6;margin-right:6px}
 .tradeGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px}
-.tradeCard{border:1px solid #5c4a28;border-radius:6px;padding:6px 8px;background:#0c1823}
+.tradeCard{border:1px solid #5c4a28;border-radius:6px;padding:calc(6px * var(--ui-scale)) calc(8px * var(--ui-scale));background:#0c1823}
 .tradeHead{display:flex;justify-content:space-between;align-items:center}
-.tradeInfo{font-size:12px;color:#d9c8a2;margin:3px 0 5px}
+.tradeInfo{font-size:calc(12px * var(--ui-scale));color:#d9c8a2;margin:3px 0 5px}
 .tradeBtns{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
-.tradeBtns button{min-height:44px;padding:4px 2px;font-size:12px}
-.tag{font-size:11px;padding:1px 6px;border-radius:8px;border:1px solid}
+.tradeBtns button{min-height:calc(44px * var(--ui-grow));padding:calc(4px * var(--ui-scale)) calc(2px * var(--ui-scale));font-size:calc(12px * var(--ui-scale))}
+.tag{font-size:calc(11px * var(--ui-scale));padding:calc(1px * var(--ui-scale)) calc(6px * var(--ui-scale));border-radius:8px;border:1px solid}
 .tag.cheap{color:#9fe0a5;border-color:#4f8a55}
 .tag.fair{color:#d9c8a2;border-color:#6d5a3a}
 .tag.dear{color:#ffb3a1;border-color:#a0503e}
-#tradeScreen h3{margin:10px 0 4px;font-size:15px;color:#ecd6a4}
+#tradeScreen h3{margin:10px 0 4px;font-size:calc(15px * var(--ui-scale));color:#ecd6a4}
 #tradeGear{list-style:none;margin:0;padding:0}
-#tradeGear li{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:3px 0;border-bottom:1px solid #ffffff14}
-#tradeGear li button{min-height:40px}
+#tradeGear li{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:calc(3px * var(--ui-scale)) 0;border-bottom:1px solid #ffffff14}
+#tradeGear li button{min-height:calc(40px * var(--ui-grow))}
 
 /* 0.10.0 — encounters and world parties */
 #stage:not([data-mode="map"]) #waitBtn{display:none}
 #encounterOptions{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:10px}
-#encounterOptions button{min-height:56px;display:flex;flex-direction:column;align-items:center;gap:2px}
-#encounterOptions small{font-weight:normal;font-size:12px;color:#d9c8a2}
+#encounterOptions button{min-height:calc(56px * var(--ui-grow));display:flex;flex-direction:column;align-items:center;gap:2px}
+#encounterOptions small{font-weight:normal;font-size:calc(12px * var(--ui-scale));color:#d9c8a2}
 
 /* 0.11.0 — progression */
-#sheet .plus{min-height:28px;min-width:28px;padding:0 6px;margin-left:4px;font-size:14px;line-height:1}
-@media(pointer:coarse){#sheet .plus{min-height:40px;min-width:40px}}
-.sheetH{margin:10px 0 4px;font-size:15px;color:#ecd6a4}
-.troopRow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid #ffffff14}
+#sheet .plus{min-height:calc(28px * var(--ui-grow));min-width:calc(28px * var(--ui-grow));padding:0 calc(6px * var(--ui-scale));margin-left:4px;font-size:calc(14px * var(--ui-scale));line-height:1}
+@media(pointer:coarse){#sheet .plus{min-height:calc(40px * var(--ui-grow));min-width:calc(40px * var(--ui-grow))}}
+.sheetH{margin:10px 0 4px;font-size:calc(15px * var(--ui-scale));color:#ecd6a4}
+.troopRow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:calc(4px * var(--ui-scale)) 0;border-bottom:1px solid #ffffff14}
 .troopRow span{flex:1 1 220px}
-.troopRow button{min-height:40px;font-size:12px}
+.troopRow button{min-height:calc(40px * var(--ui-grow));font-size:calc(12px * var(--ui-scale))}
 
 /* 0.12.0 — contracts */
-#contractsScreen{text-align:left;font-size:clamp(12px,1.25vw,15px)}
-.contractCard{border:1px solid #5c4a28;border-radius:6px;padding:8px 10px;margin-top:8px;background:#0c1823}
-.contractCard h3{margin:0 0 4px;font-size:15px;color:#ecd6a4}
+#contractsScreen{text-align:left;font-size:calc(clamp(12px,1.25vw,15px) * var(--ui-scale))}
+.contractCard{border:1px solid #5c4a28;border-radius:6px;padding:calc(8px * var(--ui-scale)) calc(10px * var(--ui-scale));margin-top:8px;background:#0c1823}
+.contractCard h3{margin:0 0 4px;font-size:calc(15px * var(--ui-scale));color:#ecd6a4}
 .contractCard p{margin:3px 0}
 .contractCard .row{justify-content:flex-start;margin-top:6px}
 
 /* 0.13.0 — save & export */
-#savesScreen{text-align:left;font-size:clamp(12px,1.25vw,15px)}
-.storageWarn{border-left:3px solid #e0a64f;padding-left:8px;color:#f0dcb0}
+#savesScreen{text-align:left;font-size:calc(clamp(12px,1.25vw,15px) * var(--ui-scale))}
+.storageWarn{border-left:3px solid #e0a64f;padding-left:calc(8px * var(--ui-scale));color:#f0dcb0}
 #savesScreen .row{justify-content:flex-start}
-#importText{width:100%;font:12px ui-monospace,monospace;background:#0c1823;color:#f7e8c5;border:1px solid #b89b64;border-radius:6px;margin:6px 0}
+#importText{width:100%;font:calc(12px * var(--ui-scale)) ui-monospace,monospace;background:#0c1823;color:#f7e8c5;border:1px solid #b89b64;border-radius:6px;margin:6px 0}
 #pasteBox{margin-top:8px}
-#pasteBox summary{cursor:pointer;min-height:32px}
+#pasteBox summary{cursor:pointer;min-height:calc(32px * var(--ui-grow))}
 #importResult.ok{color:#9fe0a5}
-#importResult ul{margin:4px 0;padding-left:18px}
+#importResult ul{margin:4px 0;padding-left:calc(18px * var(--ui-scale))}
 #titleExtras{margin-top:8px}
-#titleExtras button{font-size:13px;background:none;border-color:#6d5a3a}
+#titleExtras button{font-size:calc(13px * var(--ui-scale));background:none;border-color:#6d5a3a}
 
 /* 0.16.0 — walkable town */
 #stage[data-mode="town"] #blockBtn,#stage[data-mode="town"] #ordersBtn{display:none}
@@ -135,134 +139,149 @@
 #stage[data-mode="town"] #partyBtn{display:inline-block}
 #stage[data-mode="town"] #game{cursor:pointer}
 #talkOptions{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;margin-top:10px}
-#talkOptions button{min-height:52px;display:flex;flex-direction:column;align-items:center;gap:2px}
-#talkOptions small{font-weight:normal;font-size:12px;color:#d9c8a2}
+#talkOptions button{min-height:calc(52px * var(--ui-grow));display:flex;flex-direction:column;align-items:center;gap:2px}
+#talkOptions small{font-weight:normal;font-size:calc(12px * var(--ui-scale));color:#d9c8a2}
 
 /* 0.17.0 — armoury */
 #tradeArmoury{list-style:none;margin:0;padding:0}
-#tradeArmoury li{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:3px 0;border-bottom:1px solid #ffffff14}
-#tradeArmoury li button{min-height:40px;white-space:nowrap}
+#tradeArmoury li{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:calc(3px * var(--ui-scale)) 0;border-bottom:1px solid #ffffff14}
+#tradeArmoury li button{min-height:calc(40px * var(--ui-grow));white-space:nowrap}
 
 #journalScreen{text-align:left;max-height:52vh;overflow:auto;margin-top:8px}
-.questCard{border:1px solid #6b5a3a;border-radius:6px;padding:8px 10px;margin:6px 0;background:#0f1a26}
+.questCard{border:1px solid #6b5a3a;border-radius:6px;padding:calc(8px * var(--ui-scale)) calc(10px * var(--ui-scale));margin:6px 0;background:#0f1a26}
 .questCard.done,.questCard.failed{opacity:.75}
-.questCard h3{margin:0 0 4px;font-size:15px}
-.questCard p{margin:3px 0;font-size:13px}
+.questCard h3{margin:0 0 4px;font-size:calc(15px * var(--ui-scale))}
+.questCard p{margin:3px 0;font-size:calc(13px * var(--ui-scale))}
 .questCard .objective{color:#ffd34d}
-.questCard ul{margin:4px 0 0 18px;padding:0;font-size:12px;color:#d9c8a2}
+.questCard ul{margin:4px 0 0 18px;padding:0;font-size:calc(12px * var(--ui-scale));color:#d9c8a2}
 #peopleHere:empty{display:none}
 
-.cheatNote{font-size:12px;color:#d9c8a2;margin:4px 0}
+.cheatNote{font-size:calc(12px * var(--ui-scale));color:#d9c8a2;margin:4px 0}
 
 /* Gate E 5.2 phone layout: dev tools only in dev builds (?dev); the HUD wraps within the room the
    buttons leave (js/ui.js fitHud); announcements get a backing so they read over any scene. */
 #stage[data-dev="off"] #debugBtn,#stage[data-dev="off"] #cheatBtn{display:none}
 #topLeft{overflow-wrap:anywhere}
-#message:not(:empty){background:#0c1a26c4;border-radius:6px;padding:3px 10px;width:auto;max-width:70%;left:50%;transform:translateX(-50%);z-index:5}
+#message:not(:empty){background:#0c1a26c4;border-radius:6px;padding:calc(3px * var(--ui-scale)) calc(10px * var(--ui-scale));width:auto;max-width:70%;left:50%;transform:translateX(-50%);z-index:5}
 
 /* Gate E 5.3 settings panel */
-#settingsPanel{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(440px,calc(100vw - 24px));max-height:calc(100vh - 24px);overflow:auto;background:#132333f8;border:3px double #d4b784;z-index:22;box-shadow:0 0 0 100vmax #0009;padding:12px 16px;font:15px Georgia;touch-action:auto}
-#settingsPanel h2{margin:0 0 2px;font:bold 20px Georgia;color:#ecd6a4}
-#closeSettings{float:right;min-height:36px;min-width:40px;padding:2px 8px}
-.setNote{margin:2px 0 8px;font-size:12px;color:#d9c8a2}
+#settingsPanel{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(440px,calc(100vw - 24px));max-height:calc(100vh - 24px);overflow:auto;background:#132333f8;border:3px double #d4b784;z-index:22;box-shadow:0 0 0 100vmax #0009;padding:calc(12px * var(--ui-scale)) calc(16px * var(--ui-scale));font:calc(15px * var(--ui-scale)) Georgia;touch-action:auto}
+#settingsPanel h2{margin:0 0 2px;font:bold calc(20px * var(--ui-scale)) Georgia;color:#ecd6a4}
+#closeSettings{float:right;min-height:calc(36px * var(--ui-grow));min-width:calc(40px * var(--ui-grow));padding:calc(2px * var(--ui-scale)) calc(8px * var(--ui-scale))}
+.setNote{margin:2px 0 8px;font-size:calc(12px * var(--ui-scale));color:#d9c8a2}
 .setRow{display:flex;align-items:center;gap:10px;margin:8px 0}
-.setRow input[type=range]{flex:1;min-height:36px;accent-color:#c9a977}
+.setRow input[type=range]{flex:1;min-height:calc(36px * var(--ui-grow));accent-color:#c9a977}
 .setRow output{min-width:3em;text-align:right}
-.setRow select{font:inherit;padding:6px 8px;min-height:44px;background:#0c1823;color:#f7e8c5;border:1px solid #b89b64;border-radius:6px}
-.setCheck{display:flex;align-items:center;gap:10px;margin:8px 0;min-height:40px}
+.setRow select{font:inherit;padding:calc(6px * var(--ui-scale)) calc(8px * var(--ui-scale));min-height:calc(44px * var(--ui-grow));background:#0c1823;color:#f7e8c5;border:1px solid #b89b64;border-radius:6px}
+.setCheck{display:flex;align-items:center;gap:10px;margin:8px 0;min-height:calc(40px * var(--ui-grow))}
 .setCheck input{width:22px;height:22px;accent-color:#c9a977}
-#topRight #settingsBtn{font-size:clamp(20px,2.4vw,28px);line-height:1;padding:2px 10px}
+#topRight #settingsBtn{font-size:calc(clamp(20px,2.4vw,28px) * var(--ui-scale));line-height:1;padding:calc(2px * var(--ui-scale)) calc(10px * var(--ui-scale))}
 #stage:not([data-mode="map"]):not([data-mode="town"]):not([data-mode="battle"]) #settingsBtn{display:none}
 
 /* Gate E 5.4 tips and help */
-#tipCard{position:absolute;left:50%;bottom:5%;transform:translateX(-50%);width:min(520px,56%);z-index:8;pointer-events:auto;background:#132333f5;border:2px solid #d4b784;border-radius:8px;box-shadow:0 8px 24px #000a;padding:8px 14px;font-size:clamp(12px,1.35vw,16px)}
+#tipCard{position:absolute;left:50%;bottom:5%;transform:translateX(-50%);width:min(520px,56%);z-index:8;pointer-events:auto;background:#132333f5;border:2px solid #d4b784;border-radius:8px;box-shadow:0 8px 24px #000a;padding:calc(8px * var(--ui-scale)) calc(14px * var(--ui-scale));font-size:calc(clamp(12px,1.35vw,16px) * var(--ui-scale))}
 #tipCard b{color:#ecd6a4;font-size:1.1em}
 #tipCard p{margin:4px 0 2px;line-height:1.35}
 #tipCard .row{margin-top:4px;justify-content:flex-end}
-#tipCard button{min-height:40px;padding:6px 12px}
+#tipCard button{min-height:calc(40px * var(--ui-grow));padding:calc(6px * var(--ui-scale)) calc(12px * var(--ui-scale))}
 #stage[data-mode="battle"] #tipCard{bottom:auto;top:24%}
 /* Over a menu, the tip sits at the top so it never covers the menu's buttons. */
 #stage:not([data-mode="map"]):not([data-mode="town"]):not([data-mode="battle"]) #tipCard{bottom:auto;top:2%;z-index:9}
-#helpPanel{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(620px,calc(100vw - 24px));max-height:calc(100vh - 24px);overflow:auto;background:#132333f8;border:3px double #d4b784;z-index:23;box-shadow:0 0 0 100vmax #0009;padding:12px 16px;font:15px Georgia;touch-action:auto}
-#helpPanel h2{margin:0 0 6px;font:bold 20px Georgia;color:#ecd6a4}
-#closeHelp{float:right;min-height:36px;min-width:40px;padding:2px 8px}
-.helpTopic{border-top:1px solid #3e5168;padding:6px 0}
-.helpTopic summary{cursor:pointer;font-weight:bold;color:#ecd6a4;min-height:32px;line-height:32px}
-.helpTopic p{margin:6px 0;line-height:1.4;font-size:14px}
-.helpKeys{border-collapse:collapse;width:100%;font-size:13px;margin:6px 0}
-.helpKeys th{text-align:left;color:#d9c8a2;font-weight:normal;border-bottom:1px solid #3e5168;padding:3px 6px}
-.helpKeys td{padding:3px 6px;border-bottom:1px solid #22344a}
+#helpPanel{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(620px,calc(100vw - 24px));max-height:calc(100vh - 24px);overflow:auto;background:#132333f8;border:3px double #d4b784;z-index:23;box-shadow:0 0 0 100vmax #0009;padding:calc(12px * var(--ui-scale)) calc(16px * var(--ui-scale));font:calc(15px * var(--ui-scale)) Georgia;touch-action:auto}
+#helpPanel h2{margin:0 0 6px;font:bold calc(20px * var(--ui-scale)) Georgia;color:#ecd6a4}
+#closeHelp{float:right;min-height:calc(36px * var(--ui-grow));min-width:calc(40px * var(--ui-grow));padding:calc(2px * var(--ui-scale)) calc(8px * var(--ui-scale))}
+.helpTopic{border-top:1px solid #3e5168;padding:calc(6px * var(--ui-scale)) 0}
+.helpTopic summary{cursor:pointer;font-weight:bold;color:#ecd6a4;min-height:calc(32px * var(--ui-grow));line-height:calc(32px * var(--ui-scale))}
+.helpTopic p{margin:6px 0;line-height:1.4;font-size:calc(14px * var(--ui-scale))}
+.helpKeys{border-collapse:collapse;width:100%;font-size:calc(13px * var(--ui-scale));margin:6px 0}
+.helpKeys th{text-align:left;color:#d9c8a2;font-weight:normal;border-bottom:1px solid #3e5168;padding:calc(3px * var(--ui-scale)) calc(6px * var(--ui-scale))}
+.helpKeys td{padding:calc(3px * var(--ui-scale)) calc(6px * var(--ui-scale));border-bottom:1px solid #22344a}
 #settingsPanel .row{flex-wrap:wrap}
 
 /* 1.4.0 — named soldiers (V2-03) */
 .viewTabs{display:flex;gap:6px;margin:2px 0 6px}
-.viewTabs button{min-height:36px;font-size:13px}
+.viewTabs button{min-height:calc(36px * var(--ui-grow));font-size:calc(13px * var(--ui-scale))}
 .viewTabs button.active{background:#5c4a28;color:#fff3d6}
-.soldierFilter{display:flex;align-items:center;gap:6px;margin:4px 0;font-size:13px}
-.soldierFilter select{min-height:36px;font:inherit}
-.soldierRow{display:flex;flex-wrap:wrap;gap:2px 10px;align-items:baseline;width:100%;text-align:left;min-height:44px;padding:6px 8px;margin:3px 0;font-size:13px;font-weight:normal}
-.soldierRow b{color:#ecd6a4;font-size:14px}
+.soldierFilter{display:flex;align-items:center;gap:6px;margin:4px 0;font-size:calc(13px * var(--ui-scale))}
+.soldierFilter select{min-height:calc(36px * var(--ui-grow));font:inherit}
+.soldierRow{display:flex;flex-wrap:wrap;gap:2px 10px;align-items:baseline;width:100%;text-align:left;min-height:calc(44px * var(--ui-grow));padding:calc(6px * var(--ui-scale)) calc(8px * var(--ui-scale));margin:3px 0;font-size:calc(13px * var(--ui-scale));font-weight:normal}
+.soldierRow b{color:#ecd6a4;font-size:calc(14px * var(--ui-scale))}
 .soldierRow span{color:#d9c8a2}
 .soldierCard p{margin:4px 0}
 .soldierHead{display:flex;gap:10px;align-items:flex-start;margin-top:6px}
 .soldierHead .portrait{width:64px;height:64px;object-fit:cover;border:1px solid #5c4a28;border-radius:4px;image-rendering:pixelated}
 .soldierName{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
-.soldierName h3{margin:0;font-size:17px;color:#ecd6a4}
-.soldierName input{min-height:36px;font:inherit;max-width:14em}
+.soldierName h3{margin:0;font-size:calc(17px * var(--ui-scale));color:#ecd6a4}
+.soldierName input{min-height:calc(36px * var(--ui-grow));font:inherit;max-width:14em}
 .soldierStats{display:flex;flex-wrap:wrap;gap:4px 14px}
 .soldierStats b{color:#ecd6a4}
-.soldierNotes{margin:6px 0;padding-left:18px;font-size:13px;color:#d9c8a2}
+.soldierNotes{margin:6px 0;padding-left:calc(18px * var(--ui-scale));font-size:calc(13px * var(--ui-scale));color:#d9c8a2}
 .soldierUpgrades{display:flex;flex-wrap:wrap;gap:6px}
-.soldierUpgrades button{min-height:40px;font-size:12px}
+.soldierUpgrades button{min-height:calc(40px * var(--ui-grow));font-size:calc(12px * var(--ui-scale))}
 .muted{color:#a8977a}
-@media(pointer:coarse){.viewTabs button,.soldierFilter select,.soldierName input,.soldierName button{min-height:44px}}
+@media(pointer:coarse){.viewTabs button,.soldierFilter select,.soldierName input,.soldierName button{min-height:calc(44px * var(--ui-grow))}}
 
 /* 1.5.0 — troop tree and Upgrade all ready (V2-03b) */
 .upgradeAll{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:4px 0 6px}
 .upgradeAll:empty{display:none}
 .upgradeAll p{flex:1 1 100%;margin:2px 0}
-.upgradeAll button{min-height:40px;font-size:12px}
-.treeLine h4{margin:8px 0 2px;font-size:14px;color:#ecd6a4}
-.treeLine ul{margin:0;padding-left:16px;list-style:none}
+.upgradeAll button{min-height:calc(40px * var(--ui-grow));font-size:calc(12px * var(--ui-scale))}
+.treeLine h4{margin:8px 0 2px;font-size:calc(14px * var(--ui-scale));color:#ecd6a4}
+.treeLine ul{margin:0;padding-left:calc(16px * var(--ui-scale));list-style:none}
 .treeLine>ul{padding-left:0}
-.treeNode{margin:4px 0;padding-left:8px;border-left:2px solid #5c4a28;font-size:13px}
+.treeNode{margin:4px 0;padding-left:calc(8px * var(--ui-scale));border-left:2px solid #5c4a28;font-size:calc(13px * var(--ui-scale))}
 .treeNode b{color:#ecd6a4}
 .treeNode.unknown>span,.treeNode.seen>span{color:#a8977a}
 .treeButtons{display:flex;flex-wrap:wrap;gap:6px;margin:3px 0}
-.treeButtons button{min-height:36px;font-size:12px}
-@media(pointer:coarse){.upgradeAll button,.treeButtons button{min-height:44px}}
+.treeButtons button{min-height:calc(36px * var(--ui-grow));font-size:calc(12px * var(--ui-scale))}
+@media(pointer:coarse){.upgradeAll button,.treeButtons button{min-height:calc(44px * var(--ui-grow))}}
 
 /* 1.9.0 — minimap and tactical overview (V2-06) */
 #stage:not([data-field="large"]) #mapBtn,#stage[data-mode="town"] #mapBtn{display:none}
-#rightControls #mapBtn{align-self:flex-start;width:clamp(50px,6.6vw,82px);height:clamp(50px,6.6vw,82px);font-size:clamp(9px,1.1vw,14px)}
+#rightControls #mapBtn{align-self:flex-start;width:clamp(50px,6.6vw,82px);height:clamp(50px,6.6vw,82px);font-size:calc(clamp(9px,1.1vw,14px) * var(--ui-scale))}
 #rightControls #mapBtn.active{background:#5c4a28;color:#fff3d6}
 #rightControls:has(#mapBtn.active){opacity:1}
 
 /* 1.10.0 — battle preparation (V2-07) */
-#prepPanel{position:absolute;right:2%;top:3%;bottom:3%;width:38%;overflow:auto;text-align:left;font-size:clamp(11px,1.25vw,15px);pointer-events:auto;z-index:6}
-#prepPanel h2{margin:0 0 4px;font-size:clamp(15px,1.8vw,22px);color:#ecd6a4}
+#prepPanel{position:absolute;right:2%;top:3%;bottom:3%;width:38%;overflow:auto;text-align:left;font-size:calc(clamp(11px,1.25vw,15px) * var(--ui-scale));pointer-events:auto;z-index:6}
+#prepPanel h2{margin:0 0 4px;font-size:calc(clamp(15px,1.8vw,22px) * var(--ui-scale));color:#ecd6a4}
 #prepPanel p{margin:4px 0}
 .prepPresets,.prepActions,.prepGroup{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
-.prepPresets button,.prepGroup button{min-height:40px;font-size:12px}
+.prepPresets button,.prepGroup button{min-height:calc(40px * var(--ui-grow));font-size:calc(12px * var(--ui-scale))}
 .prepGroup{flex-wrap:nowrap;align-items:center}
-.prepGroup span{flex:0 0 5.2em;font-size:11px;color:#d9c8a2}
-.prepGroup button{flex:1 1 0;min-width:0;padding-left:2px;padding-right:2px;font-size:11px}
+.prepGroup span{flex:0 0 5.2em;font-size:calc(11px * var(--ui-scale));color:#d9c8a2}
+.prepGroup button{flex:1 1 0;min-width:0;padding-left:calc(2px * var(--ui-scale));padding-right:calc(2px * var(--ui-scale));font-size:calc(11px * var(--ui-scale))}
 .prepPresets button.active,.prepGroup button.active{background:#5c4a28;color:#fff3d6}
-.prepActions button{min-height:44px;flex:1 1 30%}
+.prepActions button{min-height:calc(44px * var(--ui-grow));flex:1 1 30%}
 .prepActions button.primary{background:linear-gradient(#9d6852,#643a37);border-color:#efd4a2;font-weight:bold}
 #stage[data-mode="prepare"] #touch,#stage[data-mode="prepare"] #topRight{display:none}
-@media(pointer:coarse){.prepPresets button,.prepGroup button{min-height:44px}}
+@media(pointer:coarse){.prepPresets button,.prepGroup button{min-height:calc(44px * var(--ui-grow))}}
 #stage[data-mode="prepare"] #topLeft{display:none}
 
 /* V2-10: roll of honour and retiring */
-.honourRow{display:flex;flex-direction:column;gap:2px;padding:6px 8px;margin:4px 0;border-left:3px solid #8a6d3b;background:#ffffff0a}
+.honourRow{display:flex;flex-direction:column;gap:2px;padding:calc(6px * var(--ui-scale)) calc(8px * var(--ui-scale));margin:4px 0;border-left:3px solid #8a6d3b;background:#ffffff0a}
 .honourRow.fell{border-left-color:#b85a4a}
-.honourRow span{font-size:13px;color:#d9c8a2}
+.honourRow span{font-size:calc(13px * var(--ui-scale));color:#d9c8a2}
 .retireBtn{margin-top:10px;opacity:.85}
 
 /* V2-11: accounts */
-#accountsScreen{text-align:left;font-size:clamp(12px,1.25vw,15px)}
+#accountsScreen{text-align:left;font-size:calc(clamp(12px,1.25vw,15px) * var(--ui-scale))}
 #accountsScreen .row{flex-wrap:wrap;gap:6px}
 .qmRule{align-items:center}
-.qmRule span{min-width:220px}
-.qmRule button{min-width:44px}
+.qmRule span{min-width:calc(220px * var(--ui-grow))}
+.qmRule button{min-width:calc(44px * var(--ui-grow))}
+
+/* W-01: text size and touch targets, found by the browser checks at every size */
+/* The menu's own buttons (Leave, Back, Continue) stay in view at the bottom when its content scrolls. */
+.modal>.row:last-child{position:sticky;bottom:calc(-16px * var(--ui-scale));margin:12px calc(-24px * var(--ui-scale)) calc(-16px * var(--ui-scale));padding:calc(8px * var(--ui-scale)) calc(24px * var(--ui-scale)) calc(16px * var(--ui-scale));background:#132333}
+@media(max-height:430px){.modal>.row:last-child{bottom:calc(-6px * var(--ui-scale));margin:8px calc(-15px * var(--ui-scale)) calc(-6px * var(--ui-scale));padding:calc(6px * var(--ui-scale)) calc(15px * var(--ui-scale))}}
+/* Buttons in flexible rows keep room for their label. */
+.sheetCols li button,#tradeGear li button,#tradeArmoury li button{flex:none}
+/* On touch every control is at least 44×44 CSS px (WCAG 2.5.5), growing with the text size: a floor,
+   so it overrides the smaller desktop minimums set on particular buttons above. */
+@media(pointer:coarse){button,select,summary,input[type=range]{min-height:calc(44px * var(--ui-grow))!important}button{min-width:calc(44px * var(--ui-grow))!important}}
+/* Prepare's actions take the room their labels need and wrap to a second row if they must. */
+.prepActions button{flex:1 1 auto}
+/* The round battle buttons are far above 44 px already (66–136 px), so they keep their size at every
+   text size and give their whole width to the label; the Orders panel keeps its room above them. */
+#rightControls button{padding:0}

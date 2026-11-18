@@ -1,5 +1,22 @@
 # Crownless — Release Notes
 
+## v2.2.0 — Text size (W-01) · 2026-11-18
+
+### New
+- **Text size** (Settings, at the top): Small, Normal, Large or Larger. The game's text and buttons grow at once, without a reload, in every menu and panel, on the map (place names, labels) and in battle (the HUD, banners, Orders), and stay that way on this device. The page doesn't pinch-zoom, because pinching is for the map and the battlefield, so this is how to enlarge the text. It doesn't enlarge the pictures or follow your phone's font size. How to play explains it.
+
+### Fixes
+- **Phones:** every button, slider and list control is now at least 44 px tall (some in Settings, Party and the soldier card were smaller), and grows with the text.
+- The menu's own buttons (Leave, Back, Continue) stay on screen when a menu is taller than the screen.
+- The top-left panel no longer runs under the buttons when one of them changes ("Wait" becomes "Stop waiting").
+- Prepare's "Simulate" button no longer cuts off its odds.
+- "PAUSED" is centred.
+
+### Under the hood
+- Browser checks of every key screen at all four sizes, on a desktop and five phone sizes, and with the desktop zoomed to 150%. Larger screenshots for the main screens.
+- Debug panel → Sharp canvas, to measure a sharper canvas on a phone (decision D-R1); the practice result shows which canvas and text size were measured.
+- 534 fast and 4 slow Node tests, 103 browser tests (5 more apply to one device only and are skipped on the other).
+
 ## v2.1.1 — Test hygiene (H-01) · 2026-11-18
 
 Nothing new to play.

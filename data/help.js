@@ -118,7 +118,8 @@
       title: 'Saving and settings',
       body: [
         'The game saves itself in this browser after battles and in settlements. Browsers can clear that storage, so use Save & export now and then: the file (or text) also moves your game to another device.',
-        'Settings (⚙, or on the title screen) has music and effects volume, battle size, health bars, reduced effects, and tips. Settings stay on this device and are not part of a save.'
+        'Settings (⚙, or on the title screen) has text size, music and effects volume, battle size, health bars, reduced effects, and tips. Settings stay on this device and are not part of a save.',
+        'Text size (Small, Normal, Large, Larger) makes the game’s text and buttons bigger at once, in menus, on the map and in battle. The page doesn’t pinch-zoom, because pinching belongs to the map and the battlefield, so this is the way to enlarge the text. It doesn’t enlarge the pictures, and it doesn’t follow your phone’s own font size. On a computer, the browser’s zoom (Ctrl + and Ctrl −) also works, up to 150%.'
       ]
     },
     credits: {
