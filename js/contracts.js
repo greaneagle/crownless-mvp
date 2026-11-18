@@ -14,7 +14,8 @@
 
   const OFFER_REFRESH_DAYS = 3;
   const Y_ASPECT = 0.5636; // the map is wider than tall; offsets look round on screen
-  const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
+  const TARGET_EDGE = 5; // map units: contract targets are placed this far inside the map's edges
+  const xy = ([x, y]) => ({ x, y });
   const tpl = (id) => CL.content.get('contracts', id);
   const templates = () => Object.values(CL.content.table('contracts'));
   const settlement = (id) => CL.content.get('settlements', id);
@@ -62,8 +63,7 @@
       return {
         ...base,
         troops,
-        x: clamp(s.mapX + Math.cos(angle) * dist, 5, 95),
-        y: clamp(s.mapY + (Math.sin(angle) * dist) / Y_ASPECT, 5, 95),
+        ...xy(CL.world.clampToMap(s.mapX + Math.cos(angle) * dist, s.mapY + (Math.sin(angle) * dist) / Y_ASPECT, TARGET_EDGE)),
         reward: { gold: t.reward.goldBase + t.reward.goldPerTroop * size, renown: t.reward.renown, xp: t.reward.xpBase + t.reward.xpPerTroop * size },
       };
     }
@@ -329,7 +329,8 @@
       } else return null;
     }
     if (Object.keys(troops).length) out.troops = troops;
-    if (t.kind !== 'delivery') Object.assign(out, num(k.x) && num(k.y) ? { x: clamp(k.x, 0, 100), y: clamp(k.y, 0, 100) } : { x: 50, y: 50 });
+    // Off the map's edge is pulled back onto it; no position at all falls back to the world's start.
+    if (t.kind !== 'delivery') Object.assign(out, num(k.x) && num(k.y) ? xy(CL.world.clampToMap(k.x, k.y)) : { x: CL.world.start().mapX, y: CL.world.start().mapY });
     out.reward = { gold: num(r.gold) ? Math.max(0, r.gold) : 0, renown: num(r.renown) ? r.renown : 0, xp: num(r.xp) ? r.xp : 0 };
     if (k.status) out.status = ['active', 'done'].includes(k.status) ? k.status : 'active';
     if (num(k.deadline)) out.deadline = k.deadline;

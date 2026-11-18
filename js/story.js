@@ -269,7 +269,8 @@
       return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
     }
     const p = placeOf(spec.near);
-    return { x: Math.min(98, p.x + 3), y: Math.min(98, p.y + 2) };
+    const [x, y] = CL.world.clampToMap(p.x + 3, p.y + 2, 2); // beside the place, inside the map (W-04)
+    return { x, y };
   }
 
   /** A stage's bands: its `band` and any `bands`. */

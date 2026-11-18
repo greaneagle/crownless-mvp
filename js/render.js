@@ -445,7 +445,8 @@
 
   // ---- Strategic map ----
 
-  const FACTION_EMBLEM = { valedorn: 'V', aurelian: 'A', neutral: 'R' };
+  /** A faction's banner letter (W-04: data/factions.js `emblem`). */
+  const emblem = (f) => CL.content.table('factions')[f]?.emblem || '?';
 
   /** A path through map points, in world pixels (the terrain layer is drawn in them; W-02). */
   function polyPath(points) {
@@ -524,7 +525,7 @@
     ctx.fillRect(x + 9, y - 22, 2, 18);
     ctx.fillStyle = '#fff';
     ctx.font = fixedFont(8); // the flag's emblem: part of the icon
-    ctx.fillText(FACTION_EMBLEM[holder] || '?', x + 13, y - 14.5);
+    ctx.fillText(emblem(holder), x + 13, y - 14.5);
     if (here) {
       ctx.strokeStyle = '#ffe7a8';
       ctx.lineWidth = 2;
@@ -624,7 +625,7 @@
       ctx.fillStyle = '#fff';
       ctx.font = fixedFont(9); // the marker's emblem: part of the icon
       ctx.textAlign = 'center';
-      ctx.fillText(t.kind === 'bandit' ? 'R' : FACTION_EMBLEM[t.faction], x - 1, y - 1);
+      ctx.fillText(emblem(t.faction), x - 1, y - 1);
       ctx.textAlign = 'left';
     }
     if (p.chasing === 'player') {

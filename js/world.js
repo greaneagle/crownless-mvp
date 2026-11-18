@@ -7,7 +7,6 @@
   const CL = root.Crownless;
   const { clamp } = CL.util;
 
-  const MAP_ID = 'border_march';
   // Map units → world pixels: the 2.0 projection, which the map camera (js/mapview.js, W-02) pans
   // and zooms. 1 map unit = 8.8 px across and 4.96 px down, inside a margin of 40 × 22 px.
   const VIEW = { x0: 40, y0: 22, sx: 8.8, sy: 4.96 };
@@ -15,7 +14,32 @@
   const HIT_RADIUS_PX = 28; // ≈ 38 CSS px wide on a small landscape phone
   const ARRIVE_EPSILON = 0.05;
 
-  const map = () => CL.content.get('world_map', MAP_ID);
+  /**
+   * The world being played (W-04): the campaign's own (its saved worldId) when this build has it,
+   * otherwise the first world in the content, which a new game starts in.
+   */
+  const defaultId = () => Object.keys(CL.content.table('world_map'))[0];
+  function id() {
+    const w = CL.campaign?.worldId;
+    return w && CL.content.table('world_map')[w] ? w : defaultId();
+  }
+  const map = () => CL.content.get('world_map', id());
+  /** The map's size in map units: { w, h } (100 × 100 for the Border March). */
+  const bounds = () => map().bounds || { w: 100, h: 100 };
+  /** A map point kept inside the map, `margin` units from its edges. @returns {[number, number]} */
+  function clampToMap(x, y, margin = 0) {
+    const b = bounds();
+    return [clamp(x, margin, b.w - margin), clamp(y, margin, b.h - margin)];
+  }
+  /** Is a map point inside the map? */
+  const inBounds = (x, y) => x >= 0 && y >= 0 && x <= bounds().w && y <= bounds().h;
+  /** The world's start settlement (a new game begins there; fallbacks point at it). */
+  const start = () => settlement(map().start);
+  /** The named area holding a map point (data `regions`), or null. */
+  function regionAt(x, y) {
+    for (const [rid, r] of Object.entries(map().regions || {})) if (x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h) return { id: rid, name: r.name };
+    return null;
+  }
   const world = () => CL.campaign.world;
   const settlement = (id) => CL.content.get('settlements', id);
   const site = (id) => map().sites[id];
@@ -38,7 +62,7 @@
 
   function defaultState() {
     const m = map();
-    const s = settlement(m.startSettlement);
+    const s = settlement(m.start);
     const sites = {};
     for (const id of Object.keys(m.sites)) sites[id] = { clearedUntil: 0 };
     return { x: s.mapX, y: s.mapY, location: s.id, sites };
@@ -145,7 +169,8 @@
       if (Math.hypot(px - sx, py - sy) <= HIT_RADIUS_PX) return { type: 'site', id: st.id, x: st.mapX, y: st.mapY };
     }
     const [x, y] = fromScreen(px, py);
-    return { type: 'point', id: null, x: clamp(x, 0, 100), y: clamp(y, 0, 100) };
+    const [cx, cy] = clampToMap(x, y);
+    return { type: 'point', id: null, x: cx, y: cy };
   }
 
   /** Start travelling toward a target. Clicking where you already stand arrives at once. */
@@ -319,8 +344,9 @@
       CL.clock.pass(CL.campaign, 'capture'); // held captive, then released (data/world_map.js time.capture)
       const c = CL.campaign;
       const s =
-        nearestSettlement(w.x, w.y, (x) => CL.realm.owner(x.id, c) !== 'neutral' && CL.realm.welcomes(c, x.id)) ||
-        nearestSettlement(w.x, w.y, (x) => CL.realm.owner(x.id, c) !== 'neutral');
+        nearestSettlement(w.x, w.y, (x) => CL.realm.isKingdom(CL.realm.owner(x.id, c)) && CL.realm.welcomes(c, x.id)) ||
+        nearestSettlement(w.x, w.y, (x) => CL.realm.isKingdom(CL.realm.owner(x.id, c))) ||
+        start();
       w.x = s.mapX;
       w.y = s.mapY;
       w.location = null;
@@ -346,8 +372,7 @@
     if (!d || typeof d !== 'object') return s;
     const num = (n) => typeof n === 'number' && Number.isFinite(n);
     if (num(d.x) && num(d.y)) {
-      s.x = clamp(d.x, 0, 100);
-      s.y = clamp(d.y, 0, 100);
+      [s.x, s.y] = clampToMap(d.x, d.y);
     }
     s.location = d.location && CL.content.table('settlements')[d.location] ? d.location : null;
     for (const id of Object.keys(s.sites)) {
@@ -363,7 +388,13 @@
   }
 
   CL.world = {
-    MAP_ID,
+    id,
+    defaultId,
+    bounds,
+    clampToMap,
+    inBounds,
+    start,
+    regionAt,
     VIEW,
     HIT_RADIUS_PX,
     HOURS_PER_SECOND,

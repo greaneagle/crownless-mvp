@@ -46,7 +46,10 @@
   const count = (n, fallback) => (isCount(n) ? Math.min(MAX_VALUE, Math.floor(n)) : fallback);
   /** @param {unknown} v @returns {v is Record<string, any>} */
   const isObject = (v) => Boolean(v) && typeof v === 'object' && !Array.isArray(v);
-  const worldId = () => CL.world.map().id;
+  /** The world a new campaign starts in (W-04: the first in the content). */
+  const worldId = () => CL.world.defaultId();
+  /** Does this build have the world a save belongs to? */
+  const knownWorld = (id) => typeof id === 'string' && Boolean(CL.content.table('world_map')[id]);
 
   /**
    * A brand-new campaign (GDD §5): the background's kit — 60 crowns, worn sword, clothing,
@@ -206,7 +209,7 @@
       else if (!isKind(d[field], kind)) problems.push(`"${field}" is not a valid ${kind.replace('|null', '')}`);
     }
     if (problems.length) return { problems };
-    if (v >= 3 && d.worldId !== worldId()) return { problems: [`it belongs to another world ("${d.worldId}")`], otherWorld: true };
+    if (v >= 3 && !knownWorld(d.worldId)) return { problems: [`it belongs to another world ("${d.worldId}")`], otherWorld: true };
     return { problems: [] };
   }
 
@@ -216,7 +219,8 @@
   /** @type {Record<number, (d: Record<string, any>) => Record<string, any>>} */
   const MIGRATIONS = {
     // 2 → 3 (build 1.2.0, V2-01): the save names its world and the build that wrote it. Every v2
-    // save was a Border March campaign; which build wrote it was never recorded.
+    // save was a Border March campaign; which build wrote it was never recorded. (The one world id
+    // in js/: a fixed fact about old saves, W-04.)
     2: (d) => ({ ...d, version: 3, worldId: 'border_march', contentVersion: 'unknown' }),
     // 3 → 4 (build 1.3.0, V2-02): named random streams seeded from the world seed, the encounter
     // result counter (exactly-once commits) and the event ID counter. Both counters start fresh:
@@ -270,6 +274,7 @@
     d = migrate(d);
     if (!d) return null;
     const s = starter();
+    if (knownWorld(d.worldId)) s.worldId = d.worldId; // its own world (W-04), when this build has it
     for (const k of /** @type {const} */ (['gold', 'renown', 'battles', 'victories', 'lastResolvedBattle'])) s[k] = count(d[k], s[k]);
     s.day = isCount(d.day) ? Math.min(MAX_VALUE, d.day) : 0;
     if (Array.isArray(d.roster)) {
@@ -321,7 +326,7 @@
     }
     s.nextResultId = Math.max(1, Number.isInteger(d.nextResultId) ? d.nextResultId : 1);
     s.nextEventId = Math.max(1, Number.isInteger(d.nextEventId) ? d.nextEventId : 1);
-    return s; // worldId and contentVersion: this world and this build, from starter()
+    return s; // contentVersion: this build, from starter()
   }
 
   /**

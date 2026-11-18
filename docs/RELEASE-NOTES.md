@@ -1,5 +1,15 @@
 # Crownless — Release Notes
 
+## v2.5.0 — A data-driven world (W-04) · 2026-11-18
+
+Nothing changes in play: the Border March plays exactly as before. This prepares a bigger world.
+
+### Under the hood
+- The world's size, kingdoms, start, named regions and opening view now come from its data, and the code no longer assumes the Border March, two kingdoms or a 100 × 100 map. Content checks make sure everything on the map lies inside it and belongs to its kingdoms.
+- A three-kingdom test world on a 150 × 120 map, played by the tests and by a bot for 30 days.
+- Debug → Bandits near me no longer caps their position at the old map edge.
+- 560 fast and 5 slow Node tests; the browser tests unchanged.
+
 ## v2.4.0 — Battle zoom (W-03) · 2026-11-18
 
 ### New

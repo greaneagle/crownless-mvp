@@ -253,7 +253,7 @@
         break;
       case 'bandits': {
         const p = CL.parties.spawn(c(), 'bandits');
-        [p.x, p.y] = [Math.min(98, c().world.x + 5), c().world.y];
+        [p.x, p.y] = CL.world.clampToMap(c().world.x + 5, c().world.y, 2); // beside you, inside the map
         p.ignoreUntil = 0;
         log('bandits spawned', { id: p.id, troops: p.troops });
         break;
@@ -326,7 +326,9 @@
         break;
       case 'flipFort': {
         const fort = btn.dataset.fort;
-        const to = CL.realm.owner(fort, c()) === 'valedorn' ? 'aurelian' : 'valedorn';
+        // The next of this world's kingdoms (W-04: any number of them).
+        const ks = CL.realm.kingdoms().map((k) => k.id);
+        const to = ks[(ks.indexOf(CL.realm.owner(fort, c())) + 1) % ks.length];
         CL.realm.setOwner(c(), fort, to, 'debug');
         log('fort owner', { fort, owner: to });
         break;

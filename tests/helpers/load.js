@@ -60,7 +60,12 @@ function memoryStorage(initial = {}) {
  * With `party` (default) a brand-new campaign gets a test fixture: a Farmhand hero, 130 crowns,
  * 3 Levies and 2 Hunters (soldier ids 1–5). Pass { party: false } to see the real GDD new game.
  */
-function loadGame({ storage = memoryStorage(), random, party = true, worldParties = false, seed = 12345 } = {}) {
+/**
+ * `content` (W-04): change the content before the game loads: a function given CROWNLESS_CONTENT (to
+ * edit it in place, or return a replacement), or an object of tables that replace those of the same
+ * name. The test world (tests/helpers/test-world.js) is one.
+ */
+function loadGame({ storage = memoryStorage(), random, party = true, worldParties = false, seed = 12345, content } = {}) {
   const uiCalls = [];
   // No `Math` here: the game gets the context's own, so nothing one game does to Math (or that a
   // script does to the host's Math.random) reaches another game in the same process (H-01: the host
@@ -75,6 +80,8 @@ function loadGame({ storage = memoryStorage(), random, party = true, worldPartie
   vm.createContext(sandbox);
   vm.runInContext('Math', sandbox).random = random || mulberry((seed ^ 0x5bd1e995) >>> 0);
   runModules(sandbox, 'data', CONTENT_MODULES);
+  if (typeof content === 'function') sandbox.CROWNLESS_CONTENT = content(sandbox.CROWNLESS_CONTENT) || sandbox.CROWNLESS_CONTENT;
+  else if (content) Object.assign(sandbox.CROWNLESS_CONTENT, content);
   for (const m of LOGIC_MODULES) {
     const file = path.join(ROOT, 'js', `${m}.js`);
     vm.runInContext(fs.readFileSync(file, 'utf8'), sandbox, { filename: file });

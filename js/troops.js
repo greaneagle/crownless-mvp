@@ -18,7 +18,11 @@
   const CL = root.Crownless;
 
   const LEVELS = ['seen', 'owned'];
-  const FACTION_ORDER = ['valedorn', 'aurelian', 'neutral'];
+  /** Factions in troop-tree order (W-04: data/factions.js `order`, then by id). */
+  const factionOrder = () =>
+    Object.values(CL.content.table('factions'))
+      .sort((a, b) => (a.order ?? 99) - (b.order ?? 99) || (a.id < b.id ? -1 : 1))
+      .map((f) => f.id);
 
   const troops = () => CL.content.table('troops');
   /** @param {string} id */
@@ -98,7 +102,7 @@
       return n;
     };
     const lines = [];
-    for (const f of [...FACTION_ORDER, ...Object.keys(CL.content.table('factions')).filter((x) => !FACTION_ORDER.includes(x))]) {
+    for (const f of factionOrder()) {
       const nodes = roots()
         .filter((id) => troops()[id].faction === f)
         .map(node)

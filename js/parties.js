@@ -10,6 +10,7 @@
   const STEP_HOURS = 0.25;
   const CONTACT = 1.6; // map units: parties this close meet
   const ARRIVE = 0.3;
+  const EDGE = 2; // map units: parties keep this far inside the map's edges (W-04: from its bounds)
   const CHASE_RATIO = 0.5; // bandits only hunt a player at least this weak relative to them
   const INTIMIDATE_RATIO = 2.5; // a player this much stronger scares bandits off
   const IGNORE_AFTER = { retreat: 0.25, toll: 1, intimidate: 1, capture: 1 }; // days
@@ -44,7 +45,8 @@
       if (n > 0) troops[id] = n;
     }
     if (!Object.keys(troops).length) troops[Object.keys(t.troops)[0]] = 1;
-    const p = { id: c.nextPartyId++, template: t.id, x: 50, y: 50, troops, tx: null, ty: null, ignoreUntil: 0, alerted: false };
+    const [mx, my] = [W().bounds().w / 2, W().bounds().h / 2]; // the map's middle until placed below
+    const p = { id: c.nextPartyId++, template: t.id, x: mx, y: my, troops, tx: null, ty: null, ignoreUntil: 0, alerted: false };
     if (t.kind === 'bandit') {
       p.lair = pick(c, t.lairs);
       const s = W().map().sites[p.lair];
@@ -141,8 +143,7 @@
     if (p.questTag && t.kind !== 'bandit') {
       // A story column (a kingdom's patrol) keeps to its post; the player comes to it.
       if (reached(p)) {
-        p.tx = clamp(p.anchor.x + (A().next(c) * 2 - 1) * 3, 2, 98);
-        p.ty = clamp(p.anchor.y + (A().next(c) * 2 - 1) * 3, 2, 98);
+        [p.tx, p.ty] = W().clampToMap(p.anchor.x + (A().next(c) * 2 - 1) * 3, p.anchor.y + (A().next(c) * 2 - 1) * 3, EDGE);
       }
       return;
     }
@@ -175,8 +176,7 @@
       const threat = p.questTag || p.ambush ? null : nearest(c, p, 'patrol', t.detection);
       if (threat && A().troopsPower(threat.troops) > A().troopsPower(p.troops)) {
         p.chasing = 'fleeing';
-        p.tx = clamp(p.x * 2 - threat.x, 2, 98);
-        p.ty = clamp(p.y * 2 - threat.y, 2, 98);
+        [p.tx, p.ty] = W().clampToMap(p.x * 2 - threat.x, p.y * 2 - threat.y, EDGE);
         return;
       }
       const prey = p.questTag || p.ambush ? null : nearest(c, p, 'caravan', t.detection);
@@ -190,8 +190,7 @@
         const lair = W().map().sites[p.lair];
         const [ax, ay] = p.anchor ? [p.anchor.x, p.anchor.y] : [lair.mapX, lair.mapY];
         const roam = p.anchor ? 4 : t.roam;
-        p.tx = clamp(ax + (A().next(c) * 2 - 1) * roam, 2, 98);
-        p.ty = clamp(ay + (A().next(c) * 2 - 1) * roam, 2, 98);
+        [p.tx, p.ty] = W().clampToMap(ax + (A().next(c) * 2 - 1) * roam, ay + (A().next(c) * 2 - 1) * roam, EDGE);
       }
     } else if (t.kind === 'patrol') {
       const quarry = nearest(c, p, 'bandit', t.detection) || (CL.news.clashReady(c, now(c)) ? rival(c, p, t) : null);
@@ -205,8 +204,7 @@
         const f = t.frontier;
         if (f && A().next(c) < f.chance) {
           // The border beat, where rival patrols meet (GDD §12 frontier clashes).
-          p.tx = clamp(f.x + (A().next(c) * 2 - 1) * f.jitter, 2, 98);
-          p.ty = clamp(f.y + (A().next(c) * 2 - 1) * f.jitter, 2, 98);
+          [p.tx, p.ty] = W().clampToMap(f.x + (A().next(c) * 2 - 1) * f.jitter, f.y + (A().next(c) * 2 - 1) * f.jitter, EDGE);
         } else {
           const s = pick(c, CL.realm.holdings(c, t.faction));
           [p.tx, p.ty] = [s.mapX, s.mapY];
@@ -437,7 +435,7 @@
         if (n.kind === 'intimidate') {
           leaveAlone(e, IGNORE_AFTER.intimidate);
           // Send them scurrying away from the player.
-          [e.party.tx, e.party.ty] = [clamp(e.party.x * 2 - c.world.x, 2, 98), clamp(e.party.y * 2 - c.world.y, 2, 98)];
+          [e.party.tx, e.party.ty] = W().clampToMap(e.party.x * 2 - c.world.x, e.party.y * 2 - c.world.y, EDGE);
         } else {
           CL.accounts.spend(c, n.cost, `toll to the ${e.name}`);
           leaveAlone(e, IGNORE_AFTER.toll);
@@ -580,11 +578,11 @@
       const q = {
         id: p.id,
         template: t.id,
-        x: clamp(p.x, 0, 100),
-        y: clamp(p.y, 0, 100),
+        x: W().clampToMap(p.x, p.y)[0],
+        y: W().clampToMap(p.x, p.y)[1],
         troops,
-        tx: num(p.tx) ? clamp(p.tx, 0, 100) : null,
-        ty: num(p.ty) ? clamp(p.ty, 0, 100) : null,
+        tx: num(p.tx) && num(p.ty) ? W().clampToMap(p.tx, p.ty)[0] : null,
+        ty: num(p.tx) && num(p.ty) ? W().clampToMap(p.tx, p.ty)[1] : null,
         ignoreUntil: num(p.ignoreUntil) ? p.ignoreUntil : 0,
         alerted: false,
       };
@@ -594,7 +592,10 @@
       if (q.questTag && p.camp === true) q.camp = true;
       if (p.ambush === true) q.ambush = true;
       if (t.kind === 'caravan' && CL.content.table('settlements')[p.escortTo]) q.escortTo = p.escortTo;
-      if (num(p.anchor?.x) && num(p.anchor?.y)) q.anchor = { x: clamp(p.anchor.x, 0, 100), y: clamp(p.anchor.y, 0, 100) };
+      if (num(p.anchor?.x) && num(p.anchor?.y)) {
+        const [ax, ay] = W().clampToMap(p.anchor.x, p.anchor.y);
+        q.anchor = { x: ax, y: ay };
+      }
       if (t.kind === 'caravan') {
         q.routeIndex = Number.isInteger(p.routeIndex) ? clamp(p.routeIndex, 0, t.route.length - 1) : 0;
         q.good = t.goods.includes(p.good) ? p.good : t.goods[0];

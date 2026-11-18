@@ -79,7 +79,8 @@ test('a map wider than the view: "fit" below 1×, centred along the axis it does
   const { CL } = loadGame();
   const V = CL.mapView;
   const m = CL.world.map();
-  m.size = { w: 200, h: 100 }; // W-05's bigger map, in shape only
+  const bounds = m.bounds;
+  m.bounds = { w: 200, h: 100 }; // W-05's bigger map, in shape only
   try {
     const fit = V.fitZoom();
     assert.ok(fit < 0.55 && fit > 0.5, `fit ${fit}`);
@@ -94,7 +95,7 @@ test('a map wider than the view: "fit" below 1×, centred along the axis it does
     V.panBy(-400, 0);
     assert.ok(V.state.cx > 0 && V.state.cx < 100, 'at 1× the camera pans east–west');
   } finally {
-    delete m.size;
+    m.bounds = bounds;
   }
 });
 
@@ -212,7 +213,7 @@ test('the zoom steps through "fit", 1.6× and 2.4×, and is kept as a device set
   assert.equal(V.state.zoom, 1.37);
   storage.data[CL.settings.KEY] = JSON.stringify({ mapZoom: 'far' });
   CL.settings.load();
-  assert.equal(CL.settings.get('mapZoom'), 1);
+  assert.equal(CL.settings.get('mapZoom'), null, "junk: the world's own opening zoom");
   storage.data[CL.settings.KEY] = JSON.stringify({ mapZoom: 9 });
   CL.settings.load();
   V.restore();

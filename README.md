@@ -1,4 +1,4 @@
-# Crownless 2.4.0 — The Border March
+# Crownless 2.5.0 — The Border March
 
 A single-player, top-down party-battle prototype in plain HTML5 Canvas and classic JavaScript. There's no bundler, no runtime dependencies and no server (Playwright, for the browser tests, is the only development dependency). It's published to GitHub Pages straight from `main`.
 
@@ -60,6 +60,7 @@ A single-player, top-down party-battle prototype in plain HTML5 Canvas and class
 - **Text size (2.2.0):** Settings → Text size (Small, Normal, Large, Larger) enlarges the game's text and buttons at once, in every menu and panel, on the map and in battle, canvas labels included; on touch every control stays at least 44×44 px and grows with the text. The page blocks the browser's pinch-zoom because pinching belongs to the game's own map and battle gestures, so text size is the way to enlarge the text. It is not a full replacement: it doesn't enlarge the canvas art, and it doesn't follow the phone's own font size. Desktop browsers' page zoom (Ctrl + / Ctrl −) still works and is supported from 100% to 150%.
 - **Map camera (2.3.0):** drag the world map to look around, pinch (or + −, the mouse wheel) to zoom from "fit" to 2.4×, Centre to come back; arrow keys pan and C centres on a computer. A tap travels only when the finger lifts without having moved, so a drag or a pinch never sets off. The zoom is a device setting; it changes nothing in the rules (distance lives in the map's data, and a test runs the same journey at every zoom).
 - **Battle zoom (2.4.0):** on a large battlefield, pinch the field (or the mouse wheel) for 0.75×–1.5×, or the zoom button / Z for 1× ↔ 0.75×; the view keeps the hero central and the zoom is a device setting. One finger on the field does nothing and a pinch never attacks or moves; sighting is judged at 1×, so the battle is the same at every zoom.
+- **A data-driven world (2.5.0):** the world's size, kingdoms, start, regions and opening view are data (`data/world_map.js`); nothing in `js/` names a kingdom or the world or assumes a 0–100 map, and the tests play a three-kingdom 150 × 120 test world (`tests/helpers/test-world.js`). Nothing changes in play.
 - **Developer tools** (the Logs and Debug buttons) show on a local dev server. On the published site they are hidden; open the page with `?dev` added to the address (for example `…/crownless-mvp/?dev`) to show them on that device, and `?dev=0` to hide them again. F3 opens the diagnostics panel either way.
 - The Debug panel's **Camera test 30 / 40** (1.7.0, PROTO-A) runs a practice battle in a forest three screens across with the camera following the hero, and reports fps, drawing time, the slowest frame and how long the armies took to meet.
 - The **Debug** button gives testing shortcuts: hero and troop XP, renown, contracts, crowns, trade goods and prices, spawning or clearing world parties, food and morale, soldiers, items, stats, god mode, time, teleport, win or lose a battle, and wiping the save. Every use is logged.
@@ -151,7 +152,7 @@ Then open http://localhost:8123. Opening `index.html` directly from disk also wo
 npm test
 ```
 
-`npm test` runs the fast logic tests (about 8 s). The bot-heavy ones, which play whole campaigns (the 60-seed story check, the eight-seed stall check, a short Prototype G), are in `tests/slow/`:
+`npm test` runs the fast logic tests (about 8 s). The bot-heavy ones, which play whole campaigns (the 60-seed story check, the eight-seed stall check, a short Prototype G, 30 days of the three-kingdom test world), are in `tests/slow/`:
 
 ```bash
 npm run test:slow

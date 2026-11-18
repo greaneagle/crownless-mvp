@@ -47,6 +47,42 @@
   const item = (id) => get('items', id);
   const encounter = (id) => get('encounters', id);
 
+  /**
+   * A world package (W-04): its size, kingdoms and start, and everything on its map inside its bounds:
+   * settlements, sites, terrain, regions and the patrols' frontier points; every owner, party faction
+   * and kingdom recruit list pointing at this world's factions.
+   */
+  function checkWorld(m, C, err) {
+    const w = `world_map ${m.id}`;
+    const b = m.bounds;
+    if (!(b && b.w > 0 && b.h > 0 && b.w <= 1000 && b.h <= 1000)) return err(`${w}: needs bounds { w, h } in map units`);
+    const inside = (x, y) => Number.isFinite(x) && Number.isFinite(y) && x >= 0 && y >= 0 && x <= b.w && y <= b.h;
+    const kingdoms = Array.isArray(m.factions) ? m.factions : [];
+    if (!kingdoms.length) err(`${w}: needs its kingdoms (factions)`);
+    for (const f of kingdoms) if (!C.factions?.[f]) err(`${w}: unknown kingdom ${f}`);
+    if (!C.factions?.[m.outlaws] || kingdoms.includes(m.outlaws)) err(`${w}: outlaws must be a faction that is not a kingdom`);
+    const ours = new Set([...kingdoms, m.outlaws]);
+    for (const s of Object.values(C.settlements || {})) {
+      if (!inside(s.mapX, s.mapY)) err(`${w}: settlement ${s.id} outside the map`);
+      if (!ours.has(s.ownerFaction)) err(`${w}: settlement ${s.id} owned by ${s.ownerFaction}, not one of this world's factions`);
+    }
+    for (const st of Object.values(m.sites || {})) if (!inside(st.mapX, st.mapY)) err(`${w}: site ${st.id} outside the map`);
+    const points = [...(m.river || []), ...(m.forests || []).flat(), ...(m.hills || [])];
+    if (points.some(([x, y]) => !inside(x, y))) err(`${w}: terrain outside the map`);
+    for (const [id, r] of Object.entries(m.regions || {})) {
+      if (!r.name || !inside(r.x, r.y) || !inside(r.x + r.w, r.y + r.h)) err(`${w}: region ${id} needs a name and to lie inside the map`);
+    }
+    if (m.view && m.view.zoom !== undefined && !(m.view.zoom > 0 && m.view.zoom <= 2.4)) err(`${w}: view.zoom must be in (0, 2.4]`);
+    for (const t of Object.values(C.party_templates || {})) {
+      if (!ours.has(t.faction)) err(`${w}: party ${t.id} of ${t.faction}, not one of this world's factions`);
+      if (t.frontier && !inside(t.frontier.x, t.frontier.y)) err(`${w}: party ${t.id} frontier outside the map`);
+    }
+    for (const f of kingdoms) {
+      const rec = C.factions?.[f]?.recruits;
+      if (!Array.isArray(rec) || !rec.length) err(`${w}: kingdom ${f} has no recruits`);
+    }
+  }
+
   /** Return a list of human-readable problems; empty means the content is consistent. */
   function validate() {
     const errors = [];
@@ -148,7 +184,7 @@
       }
     }
     for (const m of Object.values(C.world_map || {})) {
-      if (!C.settlements?.[m.startSettlement]) err(`world_map ${m.id}: unknown start ${m.startSettlement}`);
+      if (!C.settlements?.[m.start]) err(`world_map ${m.id}: unknown start ${m.start}`);
       for (const road of m.roads || []) {
         for (const id of road) if (!C.settlements?.[id]) err(`world_map ${m.id}: road through unknown ${id}`);
       }
@@ -158,6 +194,7 @@
         if (st.id !== key) err(`world_map ${m.id}: site ${key} has id ${st.id}`);
         if (!C.encounters?.[st.encounter]) err(`world_map ${m.id}: site ${key} unknown encounter ${st.encounter}`);
       }
+      checkWorld(m, C, err);
     }
     const SLOTS = ['weapon', 'offhand', 'head', 'body', 'hands', 'feet', 'horse', 'ring'];
     for (const it of Object.values(C.items || {})) {

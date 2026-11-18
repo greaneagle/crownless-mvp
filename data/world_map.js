@@ -1,5 +1,8 @@
 /* Crownless content: world_map. Plain classic script; no modules, no fetch.
- * The Border March strategic map (GDD §3). Coordinates are map units, the same 0–100 space
+ * A world package (W-04): its size, kingdoms, start, regions and default view are data, so nothing in
+ * js/ assumes the Border March, two kingdoms or a 100 × 100 map. The game plays the campaign's world
+ * (its saved worldId), and a new game the first world listed here.
+ * The Border March strategic map (GDD §3). Coordinates are map units inside `bounds`, the same space
  * as settlements' mapX/mapY. Valedorn holds the west, Aurelian the east; the river splits them.
  * Travel speed (GDD §3): baseSpeed map-units/hour × terrain factor. */
 (function (root) {
@@ -9,7 +12,17 @@
     border_march: {
       id: 'border_march',
       name: 'The Border March',
-      startSettlement: 'stonebridge',
+      start: 'stonebridge',
+      bounds: { w: 100, h: 100 }, // map units; every place, road and party stays inside
+      factions: ['valedorn', 'aurelian'], // this world's kingdoms (data/factions.js)
+      outlaws: 'neutral', // the faction of road bands and sell-swords: not a kingdom, never diplomatic
+      // Named areas, for news and text: rectangles in map units (x, y, w, h); the first that holds a
+      // point names it.
+      regions: {
+        west_march: { name: 'the western march', x: 0, y: 0, w: 56, h: 100 },
+        east_march: { name: 'the eastern march', x: 56, y: 0, w: 44, h: 100 }
+      },
+      view: { zoom: 1 }, // the map's opening zoom until the player picks their own
       baseSpeed: 4,
       terrain: { road: 1.2, grass: 1.0, forest: 0.75 },
       roadWidth: 1.6, // map units either side of a road's centre line

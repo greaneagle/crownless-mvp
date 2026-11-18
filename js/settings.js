@@ -43,7 +43,7 @@
       touch = false;
     }
     // Full screen is on by default on phones, where the address bar costs the most room.
-    return { music: 50, sfx: 70, battleSize: touch ? 30 : 40, battlefield: 'large', prepPreset: 'balanced', prepSkip: false, prepCustom: null, reducedEffects: false, healthBars: true, tips: true, fullscreen: touch, textSize: 'normal', mapZoom: 1, battleZoom: 1 };
+    return { music: 50, sfx: 70, battleSize: touch ? 30 : 40, battlefield: 'large', prepPreset: 'balanced', prepSkip: false, prepCustom: null, reducedEffects: false, healthBars: true, tips: true, fullscreen: touch, textSize: 'normal', mapZoom: null, battleZoom: 1 };
   }
 
   let current = defaults();
@@ -67,7 +67,7 @@
       tips: typeof r.tips === 'boolean' ? r.tips : d.tips,
       fullscreen: typeof r.fullscreen === 'boolean' ? r.fullscreen : d.fullscreen,
       textSize: Object.hasOwn(TEXT_SIZES, r.textSize) ? r.textSize : d.textSize,
-      mapZoom: mapZoom(r.mapZoom, d.mapZoom),
+      mapZoom: mapZoom(r.mapZoom, d.mapZoom), // null: the world's own opening zoom
       battleZoom: battleZoom(r.battleZoom, d.battleZoom),
     };
   }

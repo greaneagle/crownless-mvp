@@ -395,7 +395,7 @@ Everything that is content lives in data files and is checked by `CL.content` at
 
 | File | Holds |
 |---|---|
-| `factions.js` | The two kingdoms and the Reavers: recruits, garrisons, colours |
+| `factions.js` | The two kingdoms and the Reavers: recruits, garrisons, colours, banner letter (`emblem`) and troop-tree `order` |
 | `settlements.js` | The ten settlements: type, owner, services, map position, market baseline, armoury |
 | `troops.js` | Every troop's stats, wages, costs and upgrade paths (and the hero's body) |
 | `items.js` | Equipment, food and quest items |
@@ -403,7 +403,7 @@ Everything that is content lives in data files and is checked by `CL.content` at
 | `quests.js`, `dialogue.js` | The story: quests with stages and dialogue trees |
 | `battle_maps.js` | Grass field, forest clearing, Greywall courtyard: obstacles and spawn zones. From 1.8.0 also Forest Wilds and Open Country, generated from a `generate` spec, each naming its one-screen `small` map |
 | `encounters.js` | Scripted encounters (the looter band, the captain's trial) |
-| `world_map.js` | The Border March: terrain, roads, base speed, terrain factors |
+| `world_map.js` | The Border March as a world package (from 2.5.0, W-04): `bounds` (100 × 100), `aspect` (gameplay distance), its kingdoms (`factions`) and `outlaws`, `start`, named `regions`, the opening `view`; terrain, roads, base speed, terrain factors. The game plays the campaign's `worldId`; a new game the first world listed. Nothing in `js/` names a kingdom or the world or assumes a 0–100 map (a test checks the source), and `tests/helpers/test-world.js` turns the content into a three-kingdom 150 × 120 world that the tests and a bot play |
 | `character.js` | Skills, backgrounds, the starting kit |
 | `world_parties.js` | Party templates: bandits, patrols and caravans of both kingdoms |
 | `contracts.js` | The three contract templates and their reward formulas |

@@ -34,8 +34,8 @@
   let test = null; // the Debug panel's map drawing test, while it runs
 
   const view = () => CL.world.VIEW;
-  /** The map's size in map units (100 × 100 today; W-04 gives maps their own). */
-  const size = () => CL.world.map().size || { w: 100, h: 100 };
+  /** The map's size in map units (its world package's `bounds`, W-04). */
+  const size = () => CL.world.bounds();
   /** The whole map with its margin, in world pixels. */
   function extent() {
     const v = view();
@@ -173,7 +173,8 @@
 
   /** The device's remembered zoom (W-02: a setting), within this map's range. */
   function restore() {
-    state.zoom = clampZoom(Number(CL.settings?.get('mapZoom')) || 1);
+    // The player's own zoom, or the world's opening one (W-04 `view.zoom`) until they pick one.
+    state.zoom = clampZoom(Number(CL.settings?.get('mapZoom')) || CL.world.map().view?.zoom || 1);
   }
 
   /** Keep the current zoom as the device setting (after a gesture, not on every frame of it). */

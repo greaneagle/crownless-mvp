@@ -52,7 +52,7 @@
   /** What the player is fighting: { kind, faction } from the open encounter, or null. @param {any} e */
   function foeOf(e) {
     if (!e) return null;
-    if (e.kind === 'site') return { kind: 'bandit', faction: 'neutral', quest: false, partyId: null };
+    if (e.kind === 'site') return { kind: 'bandit', faction: CL.realm.outlaws(), quest: false, partyId: null };
     // A story band's fight gets no help, unless its quest says so (band help: true, V2-Q).
     const spec = e.party.questTag ? CL.story?.bandSpec(e.party.questTag) : null;
     return { kind: e.t.kind, faction: e.t.faction, quest: Boolean(e.party.questTag) && !spec?.help, partyId: e.party.id };

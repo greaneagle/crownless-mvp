@@ -66,7 +66,8 @@
 
   function fill(text, e, c) {
     const good = e.good ? CL.content.table('markets')[e.good]?.name || e.good : 'goods';
-    const owner = e.owner || CL.realm.owner('greywall_fort', c);
+    const fort = e.fort || CL.realm.forts()[0]?.id; // the fort the news is about, or the world's first
+    const owner = e.owner || (fort ? CL.realm.owner(fort, c) : null);
     const vars = {
       place: settlement(e.place)?.name || 'the border',
       dest: settlement(e.dest)?.name || 'town',

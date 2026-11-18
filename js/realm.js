@@ -17,7 +17,10 @@
 
   const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
   const settlement = (id) => CL.content.get('settlements', id);
-  const kingdoms = () => Object.values(CL.content.table('factions')).filter((f) => f.id !== 'neutral');
+  /** This world's kingdoms (W-04: the world package's `factions`, in order). */
+  const kingdoms = () => (CL.world.map().factions || []).map((id) => CL.content.get('factions', id));
+  /** The faction of road bands and sell-swords (the world's `outlaws`): never a kingdom. */
+  const outlaws = () => CL.world.map().outlaws;
   const isKingdom = (id) => kingdoms().some((f) => f.id === id);
   const forts = () => Object.values(CL.content.table('settlements')).filter((s) => s.type === 'fort');
 
@@ -139,6 +142,9 @@
     FRIENDLY_CAP_BONUS,
     STANDING_LABEL,
     kingdoms,
+    outlaws,
+    isKingdom,
+    forts,
     defaultReputation,
     defaultOwners,
     score,

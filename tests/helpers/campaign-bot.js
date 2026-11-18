@@ -131,10 +131,13 @@ function makeBot(CL, { log = () => {}, style = 'hands-off' } = {}) {
       g.siteId = null;
       if (e && odds(e) >= 0.6) return CL.world.travelTo({ type: 'site', id, x: st.mapX, y: st.mapY });
     }
-    const boards = ['stonebridge', 'eastwatch'];
+    // Contract boards: every settlement offering contracts (W-04: read from the world, not named).
+    const boards = Object.values(CL.content.table('settlements'))
+      .filter((s) => s.services?.includes('contracts'))
+      .map((s) => s.id);
     const here = CL.world.nearestSettlement(camp.world.x, camp.world.y);
     // Nothing worth doing nearby: walk to the other contracts board (time passes, things happen).
-    return CL.world.travelTo(town(here.id === boards[0] ? boards[1] : boards[0]));
+    return CL.world.travelTo(town(boards[(boards.indexOf(here.id) + 1) % boards.length]));
   }
 
   function encounterTurn() {
