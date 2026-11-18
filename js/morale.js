@@ -66,7 +66,7 @@
   const bounds = () => CL.game?.battleMap?.bounds || CL.units.BOUNDS;
   const listOf = (g, team) => (team === 'ally' ? g.allies : g.enemies);
   /** A unit that is part of a group's morale: soldiers on either side (not the hero, not the companion). */
-  const inGroup = (u, role) => u.role === role && !u.companion;
+  const inGroup = (u, role) => u.role === role && !u.companion && !u.outside; // helpers from outside keep their own counsel (V2-09)
   const standing = (u) => u.alive && !u.routing;
 
   const GIVE_GROUND = 160; // px a group falling back steps back toward its own side

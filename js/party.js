@@ -354,25 +354,35 @@
       soldierAssists: Object.fromEntries(deployed.map((a) => [a.soldierId, a.assists || 0])),
     };
     const names = rosterNames(CL.campaign); // before the fallen leave the roster
+    const joined = CL.reinforce.outcome(g); // parties that rode in (V2-09)
+    // The band and every party that rode in stay put while the battle's hours pass on the map (§9.5).
+    CL.reinforce.lock(g, [g.partyId, ...joined.filter((j) => j.arrived).map((j) => j.id)]);
     // The one commit path (V2-02): result, companion, map, band, events and the save, exactly once.
-    const r = /** @type {BattleResult | null} */ (
+    let r;
+    try {
+      r = /** @type {BattleResult | null} */ (
       CL.encounter.resolve(CL.campaign, {
         kind: 'battle',
+        reinforcements: joined,
         outcome,
         companionDown: g.allies.some((a) => a.companion && !a.alive),
         fallenEnemies: g.enemies.filter((e) => !e.alive && !e.routed).map((e) => e.troop), // those who fled live on
         enemyTroops: [...new Set(g.enemies.map((e) => e.troop))], // the troops that took the field
       })
-    );
+      );
+    } finally {
+      g.lock = null;
+    }
     const html = resultHtml({
       win,
       r,
       kills: g.kills,
       routed: g.routed || 0,
       fled: g.allyRouted || 0,
+      helped: g.helpKills || 0,
       killed,
       wounded,
-      survivors: g.allies.filter((u) => u.alive || u.routed).length,
+      survivors: g.allies.filter((u) => (u.alive || u.routed) && !u.outside).length,
       waves: `${g.wave}/${g.totalWaves}`,
       names,
     });
@@ -423,11 +433,11 @@
 
   /**
    * Result screen text for a fought or auto-resolved battle. Only numbers and data names are interpolated.
-   * @param {{ win: boolean, r: BattleResult | null, kills: number, routed?: number, fled?: number, killed: number[], wounded: number[],
+   * @param {{ win: boolean, r: BattleResult | null, kills: number, routed?: number, fled?: number, helped?: number, killed: number[], wounded: number[],
    *   survivors: number, waves?: string, auto?: { pp: number, pe: number, reasons?: string[] }, names?: Record<number, string> }} info
    *   names: soldier names by ID, taken before the battle (soldiers can be renamed, so they are escaped)
    */
-  function resultHtml({ win, r, kills, routed = 0, fled = 0, killed, wounded, survivors, waves, auto, names }) {
+  function resultHtml({ win, r, kills, routed = 0, fled = 0, helped = 0, killed, wounded, survivors, waves, auto, names }) {
     const recoverDay = dayNumber(CL.campaign.day + CL.save.WOUND_DAYS);
     const lines = [
       `<strong>${win ? `+${r.gold} crowns · +${r.renown} renown` : `${-r.gold} crowns lost (20%)`}</strong>`,
@@ -438,7 +448,7 @@
       // Why those odds (V2-07): strength part by part, from before the fight.
       if (auto.reasons?.length) lines.push(`<small>${auto.reasons.map(escapeHtml).join('<br>')}</small>`);
     }
-    lines.push(`Enemies defeated: ${kills}${routed ? ` · ${routed} fled the field` : ''}`, `Killed: ${killed.length} · Wounded: ${wounded.length}${fled ? ` · ${fled} ran but came back` : ''}`);
+    lines.push(`Enemies defeated: ${kills}${routed ? ` · ${routed} fled the field` : ''}${helped ? ` · ${helped} felled by those who came to help` : ''}`, `Killed: ${killed.length} · Wounded: ${wounded.length}${fled ? ` · ${fled} ran but came back` : ''}`);
     const who = (ids) => ids.map((id) => escapeHtml(names?.[id] || '')).filter(Boolean).join(', ');
     if (who(killed)) lines.push(`Fallen: ${who(killed)}`);
     if (who(wounded)) lines.push(`Wounded: ${who(wounded)}`);

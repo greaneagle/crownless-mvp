@@ -72,6 +72,7 @@
       CL.companion.afterBattle(c, { win: o.win, down: Boolean(x.companionDown) });
       CL.world.onBattleResolved(o.win, x.siteId ?? g.siteId);
       CL.parties.onBattleResolved(o.win, x.partyId ?? g.partyId, x.fallenEnemies || []);
+      CL.reinforce?.apply(c, o.win, x.reinforcements || []); // parties that rode in (V2-09)
       const enc = o.encounter || (o.encounterId ? CL.content.table('encounters')[o.encounterId] : null);
       const encounterName = enc?.name ?? null;
       CL.events.emit(c, 'BattleResolved', {

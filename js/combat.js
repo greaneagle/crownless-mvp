@@ -79,6 +79,7 @@
     g.t = 0;
     g.wave = 0;
     g.kills = 0;
+    g.helpKills = 0; // enemies cut down by parties that rode in to help (V2-09): theirs, not yours
     Object.assign(g, { routed: 0, allyRouted: 0, morale: {}, moraleState: {}, moraleIn: 0, routEvents: [], rallyReadyAt: 0, concededNote: false });
     g.allies = [];
     g.enemies = [];
@@ -138,6 +139,7 @@
     }
     if (opts.plan && !g.practice) CL.prep.place(g, opts.plan); // the chosen setup (V2-07)
     spawnWave();
+    CL.reinforce.begin(g); // nearby parties that will join, and when (V2-09)
     Object.assign(g, { overview: false, cameraFocus: null, scanIn: 0 });
     CL.camera.snap(g); // one-screen maps keep the camera at 0,0
     CL.tactics.scan(g, 0); // what the company can see from the start
@@ -162,7 +164,9 @@
   // Those running from the field (V2-08b) no longer hold a place in it: reserves can step in.
   const aliveCount = (list) => list.reduce((n, u) => n + (u.alive && !u.routing ? 1 : 0), 0);
 
-  function addEnemy(g, troopId, art = CL.assets.enemyArt) {
+  /** Put an enemy on the field: a troop id (in its spawn area), or { troop, join } for one riding in with a party (V2-09). */
+  function addEnemy(g, spec, art = CL.assets.enemyArt) {
+    const troopId = typeof spec === 'string' ? spec : spec.troop;
     const box = g.battleMap.spawn.enemies;
     let [x, y] = [rand(box.x0, box.x1), rand(box.y0, box.y1)];
     for (let tries = 0; tries < 30 && CL.units.blocked(x, y); tries++) [x, y] = [rand(box.x0, box.x1), rand(box.y0, box.y1)];
@@ -170,6 +174,8 @@
     CL.units.resolveObstacles(e);
     e.face = 'left';
     e.art = art[g.enemies.length % art.length];
+    const j = typeof spec === 'string' ? null : g.joining?.find((x) => x.id === spec.join);
+    if (j) CL.reinforce.place(g, j, e);
     g.enemies.push(e);
     return e;
   }
@@ -181,6 +187,8 @@
     u.face = 'right';
     u.holdX = u.x;
     u.holdY = u.y;
+    const j = r.join != null ? g.joining?.find((x) => x.id === r.join) : null;
+    if (j) CL.reinforce.place(g, j, u); // a helper waiting in reserve rides in from its party's side
     g.allies.push(u);
     return u;
   }
@@ -253,7 +261,11 @@
     target.downAt = g.t;
     target.swing = null;
     target.guard = false;
-    if (target.team === 'enemy') g.kills++;
+    if (target.team === 'enemy') {
+      if (source?.outside) g.helpKills = (g.helpKills || 0) + 1;
+      else g.kills++;
+    }
+    if (target.join != null) CL.reinforce.onDown(g, target);
     if (g.practice && g.practice.firstDown == null) g.practice.firstDown = g.t; // camera test: time to first blood
     if (source) source.kills = (source.kills || 0) + 1; // soldier XP for their own kills
     // Everyone else who wounded it earns an assist (soldiers' service records, V2-03).
@@ -334,7 +346,7 @@
     const target = u.target;
     const g = game();
     if (u.routing) return; // running: js/morale.js moves them
-    let cmd = u.team === 'ally' ? g.orders.cavalry : 'charge';
+    let cmd = u.team === 'ally' && !u.outside ? g.orders.cavalry : 'charge'; // helpers fight for themselves
     if (u.morale === 'fallback') cmd = 'fallback'; // giving ground (V2-08b)
     // Braced spears in front stop the charge and hurt the rider (V2-08a).
     if (CL.groups.braceAgainst(g, u, opponentsOf(u), CAVALRY.chargeMomentum)) return;
@@ -386,7 +398,7 @@
     let dest = target;
     let goal = p.chase;
 
-    if (u.team === 'ally') {
+    if (u.team === 'ally' && !u.outside) {
       const cmd = game().orders[u.role];
       if (cmd === 'follow') {
         // Loose ranks around the hero (V2-08a); break ranks to fight anything close.
@@ -500,6 +512,7 @@
     for (const e of g.effects) e.t -= dt;
     g.effects = g.effects.filter((e) => e.t > 0);
     CL.morale.update(g, dt); // hold · waver · fall back · rout (V2-08b)
+    CL.reinforce.update(g); // nearby parties riding in (V2-09)
     reinforce(g);
     CL.tactics.scan(g, dt); // what the company can see (V2-06)
     const before = g.groupState;
@@ -527,7 +540,7 @@
   function order(group, cmd) {
     const g = game();
     if (group) g.group = group;
-    if (cmd && !g.allies.some((a) => a.role === g.group && a.alive && !a.companion)) {
+    if (cmd && !g.allies.some((a) => a.role === g.group && a.alive && !a.companion && !a.outside)) {
       // An order nobody can carry out says so (V2-08a; GDD §7 shows cavalry as unavailable).
       CL.ui.message(`No ${{ infantry: 'infantry', archer: 'archers', cavalry: 'cavalry' }[g.group]} in this battle`);
       return;
@@ -562,6 +575,7 @@
     mitigate,
     startBattle,
     spawnWave,
+    addEnemy,
     hit,
     startAttack,
     queueAttack,

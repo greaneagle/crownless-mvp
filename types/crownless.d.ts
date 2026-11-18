@@ -418,6 +418,8 @@ declare global {
     fallenEnemies?: ContentId[];
     /** battle and auto: the enemy troops met (they become 'seen' on the troop tree). */
     enemyTroops?: ContentId[];
+    /** battle and auto: parties that rode in to the fight (V2-09): who fell, whether they arrived. */
+    reinforcements?: Array<{ id: number; side: string; arrived: boolean; fallen: string[] }>;
     siteId?: string | null;
     partyId?: number | null;
     /** retreat and parley: the change to make, run once inside the commit. */

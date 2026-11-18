@@ -307,6 +307,7 @@ The sandbox carries on after the story ends.
 - Soldiers have no names (from 1.4.0 they do: V2-03).
 - A raised shield protects only its holder (from 1.11.0 it also covers the ally beside it on the shield side, V2-08a; soldiers with shields block too).
 - Nobody ever breaks and runs in a battle (from 1.12.0 groups on both sides waver, fall back and rout, and the hero can rally the company, V2-08b).
+- A battle is between you and the one band or patrol you met; the rest of the world takes no part (from 1.13.0 nearby parties can join it, V2-09).
 - Shield, Archery and Riding skills have no effect yet.
 - No hairstyles (waiting for art).
 - English only; no text size setting; pinch-zoom is off.
@@ -345,6 +346,7 @@ The sandbox carries on after the story ends.
 | `arena` | From 1.7.0: generated battlefields (the camera test's forest; from 1.8.0 the large Forest Wilds and Open Country, built from `generate` specs in `data/battle_maps.js`), and the Battlefield setting's swap to one-screen maps |
 | `groups` | From 1.11.0: group AI: soldiers raise shields; shield cover for the ally beside a raised shield; braced spears stop charges; archers' line of sight; loose Follow ranks; group states |
 | `morale` | From 1.12.0: battle morale for every group on both sides (hold, waver, fall back, rout) from a worked-out cohesion; routing units flee and leave the field; the hero's Rally; fled enemies are beaten without kill credit and give half the spoils; fled soldiers are not casualties |
+| `reinforce` | From 1.13.0: nearby world parties joining a battle (reach within the battle's hours, earshot, side, at most two); arrival times, warnings and the approach banner; edge entry and reserves; locks the parties in a battle while it commits; their losses applied once; auto-resolve's share |
 | `prep` | From 1.10.0: battle preparation: Balanced / Defensive / Aggressive / Custom setups, deployment zones (smaller when ambushed), placement, remembered setups |
 | `tactics` | From 1.9.0: detection (only enemies your company has seen are shown), the minimap (tap to look) and the tactical overview (battle held; send a group to a spot) |
 | `units` | Units built from troop data: facing, swing phases, movement, obstacle steering, spacing (from 1.7.0: per-map bounds, an obstacle grid on big maps) |

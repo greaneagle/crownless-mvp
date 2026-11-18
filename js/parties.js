@@ -257,10 +257,10 @@
   /** Bandits vs caravans and patrols vs bandits fight it out off-screen. */
   function resolveContacts(c) {
     for (const a of [...c.parties]) {
-      if (!c.parties.includes(a) || a.questTag || a.ambush || tpl(a.template).kind !== 'bandit') continue;
+      if (!c.parties.includes(a) || a.questTag || a.ambush || tpl(a.template).kind !== 'bandit' || CL.reinforce?.locked(a)) continue;
       for (const b of [...c.parties]) {
         const kb = tpl(b.template).kind;
-        if (b === a || b.questTag || b.escortTo || !c.parties.includes(b) || (kb !== 'caravan' && kb !== 'patrol')) continue;
+        if (b === a || b.questTag || b.escortTo || !c.parties.includes(b) || (kb !== 'caravan' && kb !== 'patrol') || CL.reinforce?.locked(b)) continue;
         if (dist(a, b) > CONTACT) continue;
         const r = A().resolveParties(c, a, b);
         const lt = tpl(r.loser.template);
@@ -298,7 +298,7 @@
    */
   function frontierClash(c) {
     if (!CL.news.clashReady(c, now(c))) return;
-    const patrols = c.parties.filter((p) => !p.questTag && tpl(p.template).kind === 'patrol');
+    const patrols = c.parties.filter((p) => !p.questTag && tpl(p.template).kind === 'patrol' && !CL.reinforce?.locked(p));
     for (const a of patrols) {
       for (const b of patrols) {
         if (tpl(a.template).faction >= tpl(b.template).faction || dist(a, b) > CONTACT) continue;
@@ -343,11 +343,13 @@
       simDay = start + ((i + 1) * h) / 24;
       ensure(c);
       for (const p of c.parties) {
+        if (CL.reinforce?.locked(p)) continue; // in the battle being committed: it waits (V2-09, §9.5)
         chooseTarget(c, p);
         move(p, h);
       }
       resolveContacts(c);
       for (const p of c.parties) {
+        if (CL.reinforce?.locked(p)) continue;
         if (wantsPlayer(c, p) && dist(p, c.world) <= CONTACT) {
           CL.game.contactParty = p.id;
           return p.id;
@@ -489,9 +491,12 @@
     const e = current(c);
     if (!e || !CL.encounter.isOpen(c)) return null; // nothing to fight, or already settled (a double tap)
     assaultPenalty(c, e);
-    const pp = A().playerPower(c);
-    const pe = A().troopsPower(e.troops);
+    // Nearby parties that would ride in count here too (V2-09): the same ones a fought battle gets.
+    const help = CL.reinforce.forAuto(c, e);
+    const pp = A().playerPower(c) + help.allyPower;
+    const pe = A().troopsPower(e.troops) + help.enemyPower;
     const reasons = A().explain(c, e.troops); // before anyone falls (V2-07)
+    if (help.list.length) reasons.splice(-1, 1, ...help.lines, `Odds ${Math.round(A().winChance(pp, pe) * 100)}% with them: your side ${pp.toFixed(1)} against ${pe.toFixed(1)}, kept between 10% and 90%.`);
     const win = A().next(c) < A().winChance(pp, pe);
     const healthy = CL.party.healthySoldiers().map((s) => s.id);
     const enemyList = A().expand(e.troops);
@@ -502,17 +507,32 @@
     const killed = [];
     const wounded = [];
     for (const id of fallen) (A().next(c) < 0.35 ? killed : wounded).push(id);
+    // Those who rode in lose men by the same rule as the side they fought on.
+    const joined = help.list.map((j) => {
+      const list = A().expand(j.troops);
+      const ownWin = j.side === 'ally' ? win : !win;
+      const [own, other] = j.side === 'ally' ? [pp, pe] : [pe, pp];
+      const lost = j.side === 'enemy' && win ? list : A().rollFallen(c, list, A().lossChance(ownWin ? A().WINNER_LOSS : A().LOSER_LOSS, own, other), false);
+      return { id: j.id, side: j.side, arrived: true, fallen: lost };
+    });
+    const kills = enemyFallen.length + joined.filter((j) => j.side === 'enemy').reduce((n, j) => n + j.fallen.length, 0);
     g.battleId = c.battles + 1;
-    const outcome = { battleId: g.battleId, encounter: e.def, win, kills: enemyFallen.length, killed, wounded, participants: healthy };
+    const outcome = { battleId: g.battleId, encounter: e.def, win, kills, killed, wounded, participants: healthy };
     const names = CL.party.rosterNames(c); // before the fallen leave the roster
     // The one commit path (V2-02): result, companion, map, band, events and the save, exactly once.
-    const r = /** @type {BattleResult | null} */ (CL.encounter.resolve(c, { kind: 'auto', outcome, fallenEnemies: enemyFallen, enemyTroops: Object.keys(e.troops) }));
+    CL.reinforce.lock(g, [e.party?.id, ...joined.map((j) => j.id)]); // they wait while the hours pass (§9.5)
+    let r;
+    try {
+      r = /** @type {BattleResult | null} */ (CL.encounter.resolve(c, { kind: 'auto', outcome, fallenEnemies: enemyFallen, enemyTroops: Object.keys(e.troops), reinforcements: joined }));
+    } finally {
+      g.lock = null;
+    }
     if (!r) return null; // already applied (a double tap)
     g.result = {
       win,
       auto: true, // drawn over the world map, not a battlefield
       ...r,
-      html: CL.party.resultHtml({ win, r, kills: enemyFallen.length, killed, wounded, survivors: healthy.length - fallen.length, auto: { pp, pe, reasons }, names }),
+      html: CL.party.resultHtml({ win, r, kills, killed, wounded, survivors: healthy.length - fallen.length, auto: { pp, pe, reasons }, names }),
     };
     CL.diag.log('info', 'Auto-resolved', { ...outcome, encounter: e.def.id, pp, pe });
     CL.ui.changeMode('result');

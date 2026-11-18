@@ -999,6 +999,36 @@
     ctx.restore();
   }
 
+  /**
+   * Approaching parties (V2-09): a banner on the side of the screen they ride in from, with who they
+   * are, how many, and about how long until they arrive. Only once they are known (seen, or close).
+   */
+  function drawApproaching(g) {
+    const list = (g.joining || []).filter((j) => j.warned && !j.arrived);
+    if (!list.length) return;
+    const [cx, cy] = [W / 2, H / 2];
+    ctx.save();
+    ctx.font = 'bold 13px system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    list.forEach((j, i) => {
+      const text = `${j.side === 'ally' ? 'Aid' : 'Foes'}: ${j.name} (${j.size}) · ${Math.max(1, Math.round(j.arriveAt - g.t))} s`;
+      const w = ctx.measureText(text).width + 20;
+      const x = Math.max(w / 2 + 8, Math.min(W - w / 2 - 8, cx + j.dir.x * (cx - w / 2 - 8)));
+      const y = Math.max(124, Math.min(H - 130, cy + j.dir.y * (cy - 60))) + i * 34; // below the minimap and the HUD
+      ctx.fillStyle = '#101a23d9';
+      ctx.strokeStyle = j.side === 'ally' ? '#4bc4dc' : '#e76860';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.rect(x - w / 2, y - 14, w, 28);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = '#f4efe2';
+      ctx.fillText(text, x, y + 1);
+    });
+    ctx.restore();
+  }
+
   function draw() {
     const g = CL.game;
     ctx.clearRect(0, 0, W, H);
@@ -1058,6 +1088,7 @@
       if (g.overview) drawOverview(g);
       else drawMinimap(g);
     }
+    if (g.mode === 'battle' && !g.overview) drawApproaching(g); // over the minimap's corner, never under it
     const field = CL.camera.scrolls(g) ? 'large' : 'small';
     if (CL.ui.$('#stage').dataset.field !== field) CL.ui.$('#stage').dataset.field = field; // shows the MAP button
 

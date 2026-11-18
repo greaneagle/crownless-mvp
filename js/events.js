@@ -23,7 +23,7 @@
   'use strict';
   const CL = root.Crownless;
 
-  const TYPES = ['BattleResolved', 'EncounterResolved', 'SoldierRecruited', 'SoldierPromoted', 'SoldierWounded', 'SoldierKilled', 'SoldierDeserted', 'WagesPaid'];
+  const TYPES = ['BattleResolved', 'EncounterResolved', 'SoldierRecruited', 'SoldierPromoted', 'SoldierWounded', 'SoldierKilled', 'SoldierDeserted', 'WagesPaid', 'ReinforcementsArrived'];
   const RECENT = 50;
 
   /** @type {Record<string, Array<(e: GameEvent, c: Campaign) => void>>} */

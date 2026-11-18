@@ -51,7 +51,7 @@
       const them = e.hostile ? ` They number ${count}.` : '';
       return {
         title: e.name.toUpperCase(),
-        text: `${e.text}${them} You have ${ready} soldier${ready === 1 ? '' : 's'} fit to fight.`,
+        text: `${e.text}${them} You have ${ready} soldier${ready === 1 ? '' : 's'} fit to fight.${e.hostile ? CL.reinforce.note(CL.campaign, e) : ''}`,
         button: null,
       };
     }
@@ -427,8 +427,10 @@
       return b;
     };
     const buttons = [];
+    const help = CL.reinforce.forAuto(c, e); // nearby parties that would ride in count too (V2-09)
+    const oddsNow = () => Math.round(A.winChance(A.playerPower(c) + help.allyPower, A.troopsPower(e.troops) + help.enemyPower) * 100);
     if (e.hostile) {
-      const odds = Math.round(A.winChance(A.playerPower(c), A.troopsPower(e.troops)) * 100);
+      const odds = oddsNow();
       buttons.push(choice('Attack', 'Fight the battle yourself', prepareBattle));
       buttons.push(choice('Auto-resolve', `About ${odds}% to win`, () => P.autoResolve()));
       const n = P.negotiation(c, e);
@@ -442,7 +444,7 @@
       const f = e.kind === 'party' && e.t.faction && e.t.kind !== 'bandit' && !e.party.escortTo ? CL.content.get('factions', e.t.faction) : null;
       buttons.push(choice('Leave', 'Go on your way', () => changeMode('map')));
       if (f) {
-        const odds = Math.round(A.winChance(A.playerPower(c), A.troopsPower(e.troops)) * 100);
+        const odds = oddsNow();
         const cost = `−${-CL.realm.REP.attack} reputation with the ${f.name}`;
         buttons.push(choice('Attack them', cost, prepareBattle));
         buttons.push(choice('Attack (auto-resolve)', `About ${odds}% to win · ${cost}`, () => P.autoResolve()));

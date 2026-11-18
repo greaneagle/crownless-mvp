@@ -126,7 +126,7 @@
 
   /** Where this soldier stands in the company's loose ranks around the hero on Follow. @param {any} g @param {Unit} u */
   function followSlot(g, u) {
-    const mates = g.allies.filter((a) => a.alive && a.role === u.role && !a.companion);
+    const mates = g.allies.filter((a) => a.alive && a.role === u.role && !a.companion && !a.outside);
     const i = Math.max(0, mates.indexOf(u));
     const files = Math.min(FORM.perRank, mates.length);
     const rank = Math.floor(i / FORM.perRank);
@@ -148,7 +148,7 @@
     const foes = g.enemies.filter((e) => e.alive);
     const state = {};
     for (const grp of ['infantry', 'archer', 'cavalry']) {
-      const units = g.allies.filter((a) => a.alive && a.role === grp && !a.companion);
+      const units = g.allies.filter((a) => a.alive && a.role === grp && !a.companion && !a.outside);
       if (!units.length) continue;
       const engaged = units.some((u) => foes.some((e) => Math.hypot(e.x - u.x, e.y - u.y) < ENGAGE));
       const order = g.orders[grp];

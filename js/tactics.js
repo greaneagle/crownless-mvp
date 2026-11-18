@@ -123,7 +123,7 @@
    * @param {any} g @param {string} group 'infantry' | 'archer' | 'cavalry' @param {number} wx @param {number} wy
    */
   function sendGroup(g, group, wx, wy) {
-    const units = g.allies.filter((a) => a.alive && a.role === group);
+    const units = g.allies.filter((a) => a.alive && a.role === group && !a.outside);
     if (!units.length) {
       CL.ui.message(`No ${group === 'archer' ? 'archers' : group} in this battle`);
       return 0;
