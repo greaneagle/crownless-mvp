@@ -107,6 +107,8 @@ async function touch(page) {
     down: (fingers) => cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: points(fingers) }),
     move: (fingers) => cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: points(fingers) }),
     up: () => cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }),
+    /** Lift some fingers and keep `staying` down (W-02: the end of a pinch). */
+    lift: (staying) => cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: points(staying) }),
     cancel: () => cdp.send('Input.dispatchTouchEvent', { type: 'touchCancel', touchPoints: [] }),
   };
 }
@@ -144,9 +146,9 @@ async function canvasToPage(page, cx, cy) {
   return { x: box.x + (cx * box.width) / 960, y: box.y + (cy * box.height) / 540 };
 }
 
-/** Page coordinates of a point on the strategic map (map units), through the game's own projection. */
+/** Page coordinates of a point on the strategic map (map units), through the map camera (W-02). */
 async function mapToPage(page, mx, my) {
-  const [cx, cy] = await game(page, (CL, [x, y]) => CL.world.toPx(x, y), [mx, my]);
+  const [cx, cy] = await game(page, (CL, [x, y]) => CL.world.toScreen(x, y), [mx, my]);
   return canvasToPage(page, cx, cy);
 }
 
@@ -195,6 +197,25 @@ async function debug(page, selector) {
     await page.evaluate(() => {
       document.querySelector('#stage').dataset.dev = 'off';
     });
+  }
+}
+
+/**
+ * Drag from one page point to another the way this project's player would: a held mouse button on
+ * desktop, one finger on the phone, moved in `steps` (W-02's map pan).
+ */
+async function drag(page, from, to, steps = 8) {
+  const at = (i) => ({ x: from.x + ((to.x - from.x) * i) / steps, y: from.y + ((to.y - from.y) * i) / steps });
+  if (isTouch(page)) {
+    const t = await touch(page);
+    await t.down([{ id: 1, ...from }]);
+    for (let i = 1; i <= steps; i++) await t.move([{ id: 1, ...at(i) }]);
+    await t.up();
+  } else {
+    await page.mouse.move(from.x, from.y);
+    await page.mouse.down();
+    for (let i = 1; i <= steps; i++) await page.mouse.move(at(i).x, at(i).y);
+    await page.mouse.up();
   }
 }
 
@@ -273,6 +294,7 @@ module.exports = {
   pressAt,
   touch,
   hold,
+  drag,
   canvasToPage,
   mapToPage,
   settlementOnPage,

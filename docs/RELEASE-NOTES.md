@@ -1,5 +1,20 @@
 # Crownless — Release Notes
 
+## v2.3.0 — Map camera and gestures (W-02) · 2026-11-18
+
+### New
+- **Look around the map:** drag it to pan, pinch (or + and −) to zoom in up to 2.4×, mouse wheel and arrow keys on a computer. Only a tap sets off, so dragging or pinching never sends your company anywhere. While zoomed in, the view follows your company; **Centre** brings it back after you have looked away, and arrows at the edge of the screen point to you and to your contract or quest targets. The game remembers your zoom on this device.
+- Zoom only changes what you see: journeys take the same time, bands find you the same way and every rule is the same at any zoom. Today's map fits the screen at 1×, so you can't zoom out further; a bigger map will let you.
+
+### Fixes
+- A tap on the map now acts when your finger lifts, not when it lands.
+
+### Under the hood
+- The ground of the map is drawn once and reused, and what is off screen isn't drawn.
+- The map's sense of distance moved from the drawing into the map's data.
+- Debug panel → Map drawing test: frame rate and drawing time at "fit" and at 2.4×, for phones.
+- 548 fast and 4 slow Node tests, 115 browser tests (7 more apply to one device only and are skipped on the other).
+
 ## v2.2.0 — Text size (W-01) · 2026-11-18
 
 ### New

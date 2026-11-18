@@ -13,6 +13,9 @@
       baseSpeed: 4,
       terrain: { road: 1.2, grass: 1.0, forest: 0.75 },
       roadWidth: 1.6, // map units either side of a road's centre line
+      // Gameplay distance (W-02): a unit north–south counts this much of one east–west, so a journey
+      // takes as long as it looks on 2.0's map. Part of the world, not the view: zoom never changes it.
+      aspect: 4.96 / 8.8,
       // Fixed campaign time, in game hours, for things that happen off the map clock (V2-04, owner
       // decision 2026-11-17: a battle takes a fixed amount of overworld time, however long it is
       // fought). js/clock.js applies them; nothing else charges time.

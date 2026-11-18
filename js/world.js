@@ -8,10 +8,9 @@
   const { clamp } = CL.util;
 
   const MAP_ID = 'border_march';
-  // Map units → canvas pixels. Distances are measured on screen proportions so the time a
-  // journey takes matches how far it looks: 1 map unit = 8.8 px across, 4.96 px down.
+  // Map units → world pixels: the 2.0 projection, which the map camera (js/mapview.js, W-02) pans
+  // and zooms. 1 map unit = 8.8 px across and 4.96 px down, inside a margin of 40 × 22 px.
   const VIEW = { x0: 40, y0: 22, sx: 8.8, sy: 4.96 };
-  const Y_ASPECT = VIEW.sy / VIEW.sx;
   const HOURS_PER_SECOND = 4; // game hours that pass per real second of travel
   const HIT_RADIUS_PX = 28; // ≈ 38 CSS px wide on a small landscape phone
   const ARRIVE_EPSILON = 0.05;
@@ -22,9 +21,20 @@
   const site = (id) => map().sites[id];
   const settlements = () => Object.values(CL.content.table('settlements'));
 
+  /** Map units → world pixels (the whole map at 1×; on today's map, the canvas itself). */
   const toPx = (x, y) => [VIEW.x0 + x * VIEW.sx, VIEW.y0 + y * VIEW.sy];
   const fromPx = (px, py) => [(px - VIEW.x0) / VIEW.sx, (py - VIEW.y0) / VIEW.sy];
-  const mapDist = (ax, ay, bx, by) => Math.hypot(bx - ax, (by - ay) * Y_ASPECT);
+  /** Map units → canvas pixels through the map camera (2.0's toPx until the player pans or zooms). */
+  const toScreen = (x, y) => (CL.mapView ? CL.mapView.toScreen(x, y) : toPx(x, y));
+  const fromScreen = (px, py) => (CL.mapView ? CL.mapView.toMap(px, py) : fromPx(px, py));
+  /**
+   * Gameplay distance (W-02: separate from the view). A unit north–south counts MAP_ASPECT of one
+   * east–west, as 2.0's drawing had it (4.96 / 8.8), but it comes with the map's data, so no zoom,
+   * pan or drawing change can alter a journey, a contact or any rule.
+   */
+  const MAP_ASPECT_DEFAULT = 4.96 / 8.8;
+  const aspect = () => map().aspect ?? MAP_ASPECT_DEFAULT;
+  const mapDist = (ax, ay, bx, by) => Math.hypot(bx - ax, (by - ay) * aspect());
 
   function defaultState() {
     const m = map();
@@ -37,8 +47,9 @@
   // ---- Terrain ----
 
   function distToSegment(px, py, ax, ay, bx, by) {
-    const [dx, dy] = [bx - ax, (by - ay) * Y_ASPECT];
-    const [qx, qy] = [px - ax, (py - ay) * Y_ASPECT];
+    const k = aspect();
+    const [dx, dy] = [bx - ax, (by - ay) * k];
+    const [qx, qy] = [px - ax, (py - ay) * k];
     const len2 = dx * dx + dy * dy || 1;
     const t = clamp((qx * dx + qy * dy) / len2, 0, 1);
     return Math.hypot(qx - t * dx, qy - t * dy);
@@ -103,19 +114,22 @@
 
   // ---- Travel ----
 
-  /** Choose what was clicked at canvas pixel (px, py): a settlement, a site or open ground. */
   /** True when a map point sits on a settlement or site (whose label would collide). */
   function onLandmark(mx, my) {
     const near = (x, y) => mapDist(mx, my, x, y) < 3;
     return settlements().some((s) => near(s.mapX, s.mapY)) || Object.values(map().sites).some((s) => near(s.mapX, s.mapY));
   }
 
-  /** Where a party is drawn: beside a landmark it stands on, otherwise at its position. */
+  /** Where a party is drawn on the canvas: beside a landmark it stands on, otherwise at its position. */
   function partyDrawPos(p) {
-    const [x, y] = toPx(p.x, p.y);
+    const [x, y] = toScreen(p.x, p.y);
     return onLandmark(p.x, p.y) ? { x: x + 20, y: y - 14, crowded: true } : { x, y, crowded: false };
   }
 
+  /**
+   * What is under canvas pixel (px, py), through the map camera: icons are drawn at a fixed size, so
+   * the hit radius is the same 28 px at every zoom.
+   */
   function targetAt(px, py) {
     // Moving parties first: they can stand on top of places.
     for (const p of CL.campaign.parties || []) {
@@ -123,14 +137,14 @@
       if (Math.hypot(px - sx, py - sy) <= HIT_RADIUS_PX * 0.8) return { type: 'party', id: p.id, x: p.x, y: p.y };
     }
     for (const s of settlements()) {
-      const [sx, sy] = toPx(s.mapX, s.mapY);
+      const [sx, sy] = toScreen(s.mapX, s.mapY);
       if (Math.hypot(px - sx, py - sy) <= HIT_RADIUS_PX) return { type: 'settlement', id: s.id, x: s.mapX, y: s.mapY };
     }
     for (const st of Object.values(map().sites)) {
-      const [sx, sy] = toPx(st.mapX, st.mapY);
+      const [sx, sy] = toScreen(st.mapX, st.mapY);
       if (Math.hypot(px - sx, py - sy) <= HIT_RADIUS_PX) return { type: 'site', id: st.id, x: st.mapX, y: st.mapY };
     }
-    const [x, y] = fromPx(px, py);
+    const [x, y] = fromScreen(px, py);
     return { type: 'point', id: null, x: clamp(x, 0, 100), y: clamp(y, 0, 100) };
   }
 
@@ -207,7 +221,7 @@
       w.x += (t.x - w.x) * k;
       w.y += (t.y - w.y) * k;
     }
-    g.travelFace = Math.abs(t.x - w.x) > Math.abs((t.y - w.y) * Y_ASPECT) ? (t.x < w.x ? 'left' : 'right') : t.y < w.y ? 'up' : 'down';
+    g.travelFace = Math.abs(t.x - w.x) > Math.abs((t.y - w.y) * aspect()) ? (t.x < w.x ? 'left' : 'right') : t.y < w.y ? 'up' : 'down';
     CL.clock.advance(CL.campaign, hours, 'travel');
     CL.save.autosave(); // once per game day on the map
     if (checkContact()) return hours;
@@ -351,10 +365,14 @@
   CL.world = {
     MAP_ID,
     VIEW,
+    HIT_RADIUS_PX,
     HOURS_PER_SECOND,
     map,
     toPx,
     fromPx,
+    toScreen,
+    fromScreen,
+    aspect,
     partyDrawPos,
     mapDist,
     defaultState,

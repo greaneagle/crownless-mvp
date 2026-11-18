@@ -23,9 +23,12 @@ test('settlement menu', async ({ page }) => {
 test('world map, with the message line showing', async ({ page }) => {
   await open(page);
   await newGame(page);
+  // An empty road: waiting passes real frame time, and a band that comes for the party meanwhile would
+  // open an encounter over the map (it did, now and then).
+  await debug(page, '[data-cheat="clearParties"]');
   await toMap(page);
   await press(page, '#waitBtn'); // "Waiting… time passes." on the message line
-  await expectLayoutSound(page, TOP_RIGHT_MAP, { info: ['#topLeft', '#message'] });
+  await expectLayoutSound(page, [...TOP_RIGHT_MAP, '#zoomOutBtn', '#zoomInBtn', '#centreBtn'], { info: ['#topLeft', '#message'] });
 });
 
 test('battle on a large field', async ({ page }) => {

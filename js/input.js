@@ -1,4 +1,4 @@
-/* Crownless input: keyboard, mouse, on-screen buttons and the virtual joystick. */
+/* Crownless input: keyboard, mouse, on-screen buttons, the virtual joystick and the map's gestures. */
 (function (root) {
   'use strict';
   const CL = root.Crownless;
@@ -193,6 +193,13 @@
         else CL.ui.togglePause();
         return;
       }
+      if (g.mode === 'map' && !e.ctrlKey && !e.metaKey && (e.code in MAP_KEYS || e.code === 'KeyC')) {
+        // W-02: + and − zoom the map, C centres it on the party.
+        e.preventDefault();
+        if (e.code === 'KeyC') CL.mapView.centre(true);
+        else if (!e.repeat) CL.mapView.step(MAP_KEYS[e.code]);
+        return;
+      }
       if (g.mode === 'battle' && e.code === 'KeyR' && !e.repeat) CL.morale.rally(g); // V2-08b
       const o = KEY_ORDERS[e.code];
       if (o) CL.combat.order(o[0], o[1]);
@@ -222,9 +229,8 @@
         return;
       }
       if (g.mode === 'map') {
-        // Click/tap a destination on the strategic map (GDD §3).
-        const r = canvas.getBoundingClientRect();
-        CL.world.click(((e.clientX - r.left) * CL.W) / r.width, ((e.clientY - r.top) * CL.H) / r.height);
+        // W-02: a press on the map only begins an interaction; a tap travels on release (GDD §3).
+        if (mapGestures.down(e)) canvas.setPointerCapture?.(e.pointerId);
         return;
       }
       if (g.mode === 'prepare' && g.prep) {
@@ -253,18 +259,99 @@
       g.blockHeld = false;
     });
     canvas.addEventListener('pointermove', (e) => {
+      if (mapGestures.count) {
+        if (g.mode === 'map') mapGestures.move(e);
+        else mapGestures.cancel(); // the map closed under the fingers
+        return;
+      }
       if (g.mode !== 'prepare' || !g.prep?.drag) return;
       const r = canvas.getBoundingClientRect();
       CL.prep.moveFlag(g.prep.plan, g.prep.map, g.prep.drag, ((e.clientX - r.left) * CL.W) / r.width, ((e.clientY - r.top) * CL.H) / r.height);
     });
-    canvas.addEventListener('pointerup', () => {
+    canvas.addEventListener('pointerup', (e) => {
+      if (mapGestures.count) {
+        if (g.mode === 'map') mapGestures.up(e);
+        else mapGestures.cancel();
+        return;
+      }
       if (g.mode === 'prepare' && g.prep?.drag) {
         g.prep.drag = null;
         CL.ui.renderPrep(); // the setup is now Custom
       }
     });
+    // A finger moving over the map is the game's: tell the browser, or it treats the drag as a scroll
+    // and swallows the next tap anywhere (the first press of Centre after a pan did nothing).
+    canvas.addEventListener(
+      'touchmove',
+      (e) => {
+        if (g.mode === 'map') e.preventDefault();
+      },
+      { passive: false },
+    );
+    canvas.addEventListener('pointercancel', () => mapGestures.cancel());
+    canvas.addEventListener('lostpointercapture', (e) => mapGestures.lost(e));
+    canvas.addEventListener(
+      'wheel',
+      (e) => {
+        if (g.mode !== 'map') return;
+        e.preventDefault(); // the page itself never scrolls or zooms
+        mapGestures.wheel(e);
+      },
+      { passive: false },
+    );
     canvas.addEventListener('contextmenu', (e) => e.preventDefault());
   }
+
+  // W-02: the strategic map's taps, drags, pinches and wheel, told apart by CL.gestures. Every other
+  // mode keeps the handlers above.
+  let mapGestures = { count: 0, down: () => false, move() {}, up() {}, cancel() {}, lost() {}, wheel() {} };
+
+  function bindMapGestures(canvas) {
+    const g = CL.game;
+    const V = () => CL.mapView;
+    const stage = CL.ui.$('#stage');
+    const rect = () => canvas.getBoundingClientRect();
+    const toCanvas = (x, y) => {
+      const r = rect();
+      return [((x - r.left) * CL.W) / r.width, ((y - r.top) * CL.H) / r.height];
+    };
+    const scale = () => CL.W / (rect().width || CL.W);
+    let wheelTimer = null;
+    mapGestures = CL.gestures.recognizer({
+      onTap: (x, y) => {
+        if (g.mode === 'map') CL.world.click(...toCanvas(x, y));
+      },
+      onPan: (dx, dy) => {
+        V().release();
+        V().panBy(dx * scale(), dy * scale());
+        stage.classList.add('panning');
+      },
+      onPinch: (f, x, y) => {
+        V().release();
+        V().zoomAt(f, ...toCanvas(x, y));
+      },
+      onZoom: (f, x, y) => {
+        V().release();
+        V().zoomAt(f, ...toCanvas(x, y));
+        clearTimeout(wheelTimer);
+        wheelTimer = setTimeout(() => V().remember(), 300); // keep the zoom once the wheel rests
+      },
+      onEnd: () => {
+        stage.classList.remove('panning');
+        V().remember();
+      },
+    });
+  }
+
+  /** W-02: the map's +, − and Centre buttons, and + − C on the keyboard (arrow keys pan: js/mapview.js). */
+  function bindMapView($) {
+    const V = () => CL.mapView;
+    $('#zoomInBtn').onclick = () => V().step(1);
+    $('#zoomOutBtn').onclick = () => V().step(-1);
+    $('#centreBtn').onclick = () => V().centre(true);
+  }
+
+  const MAP_KEYS = { Equal: 1, NumpadAdd: 1, Minus: -1, NumpadSubtract: -1 };
 
   /** Press-and-hold touch button with pointer capture. */
   function bindHold($, selector, start, end) {
@@ -332,6 +419,7 @@
     g.blockHeld = false;
     g.attackQueuedAt = null;
     resetJoystick();
+    mapGestures.cancel(); // a lost window ends a drag or pinch with no tap
   }
 
   /** Pause when the page is hidden; pause and ask to rotate when a touch device is portrait. */
@@ -367,6 +455,8 @@
     const g = CL.game;
     bindButtons($);
     bindKeyboardAndMouse($, canvas);
+    bindMapGestures(canvas);
+    bindMapView($);
     bindHold(
       $,
       '#attackBtn',

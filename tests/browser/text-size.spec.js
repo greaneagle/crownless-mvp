@@ -7,6 +7,7 @@ const { test, expect, open, waitMode, game, press, pressAt, canvasToPage, newGam
 
 const SIZES = { small: 0.9, normal: 1, large: 1.15, larger: 1.3 };
 const TOP_RIGHT_MAP = ['#waitBtn', '#partyBtn', '#journalBtn', '#settingsBtn'];
+const MAP_VIEW = ['#zoomOutBtn', '#zoomInBtn', '#centreBtn']; // W-02
 const BATTLE_CONTROLS = ['#joystick', '#mapBtn', '#ordersBtn', '#blockBtn', '#attackBtn', '#pauseBtn', '#settingsBtn'];
 // Realistic landscape phones besides 812×375 (W-01 layout rules), checked at the largest size.
 const PHONES = [
@@ -110,7 +111,7 @@ async function walkScreens(page, size) {
   await watchCanvasFonts(page);
   await toMap(page);
   await press(page, '#waitBtn');
-  await expectLayoutSound(page, TOP_RIGHT_MAP, { info: ['#topLeft', '#message'] });
+  await expectLayoutSound(page, [...TOP_RIGHT_MAP, ...MAP_VIEW], { info: ['#topLeft', '#message'] });
   await press(page, '#waitBtn');
   const label = `bold ${Math.round(14 * SIZES[size])}px Georgia`;
   await page.waitForFunction((f) => window.crownlessFonts.has(f), label);

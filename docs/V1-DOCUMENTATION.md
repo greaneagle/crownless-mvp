@@ -272,6 +272,7 @@ The sandbox carries on after the story ends.
 | Action | Desktop | Touch |
 |---|---|---|
 | Travel | Click a place or party; Space waits or stops | Tap a place or party; Wait button |
+| Look around the map (from 2.3.0) | Drag, or arrow keys; mouse wheel or + − to zoom; C or Centre to come back | Drag; pinch or + − to zoom; Centre |
 | Walk (town) / move (battle) | WASD or arrows | Left joystick |
 | Talk (town) | Space, E or Enter | TALK |
 | Attack | Space or left click | ATTACK |
@@ -285,6 +286,7 @@ The sandbox carries on after the story ends.
 ### 2.13 Comfort, settings and saving
 - **Settings** (⚙ on the map, in town and in battle, and on the title screen):
   - text size: Small, Normal, Large, Larger (from 2.2.0, W-01): all HTML text and controls and the canvas labels, applied at once; touch targets stay at least 44×44 px and grow with the text
+  - the world map's zoom (from 2.3.0, W-02): kept from the last time, set on the map itself with pinch, the wheel or + −
   - music and effects volume
   - battle size (20/30/40)
   - battlefield: large or small (from 1.8.0)
@@ -372,11 +374,13 @@ The sandbox carries on after the story ends.
 | `encounter` | From 1.3.0: the one commit path for every encounter result (battle and capture, auto-resolve, retreat, toll), applied exactly once |
 | `portable` | Save export and import: file format, checksum, strict validation, restore |
 | `world` | The strategic map: travel, terrain, time passing, settlements and sites, capture release |
+| `mapview` | From 2.3.0: the world map's camera (pan, zoom from "fit" to 2.4×, follow, clamp, edge markers); view only, never a rule |
+| `gestures` | From 2.3.0: tells a tap from a drag from a pinch, so only a clean tap travels |
 | `town` | Walkable Stonebridge (menu first, streets optional) |
 | `character` | Hero creation, attributes, skills, levelling, equipment, derived stats |
 | `ui` | DOM overlays, menus, roster, Journal, the diagnostics panel |
 | `render` | Canvas drawing for battle, map and town, and the HUD |
-| `input` | Keyboard, mouse, on-screen buttons, joystick |
+| `input` | Keyboard, mouse, on-screen buttons, joystick, the map's gestures |
 | `debug` | The Debug panel's testing shortcuts (all logged) |
 | `settings` | Device settings, kept outside the save |
 | `audio` | Web Audio synthesizer: sound effects and music, rate-limited |

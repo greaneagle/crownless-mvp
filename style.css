@@ -285,3 +285,12 @@
 /* The round battle buttons are far above 44 px already (66–136 px), so they keep their size at every
    text size and give their whole width to the label; the Orders panel keeps its room above them. */
 #rightControls button{padding:0}
+
+/* 2.3.0 — W-02 world-map camera: zoom and Centre, on the map only */
+#mapZoom{position:absolute;right:2%;bottom:3%;display:flex;gap:6px}
+#mapZoom button{font-size:calc(clamp(12px,1.4vw,18px) * var(--ui-scale));min-width:calc(40px * var(--ui-grow));padding:calc(6px * var(--ui-scale)) calc(10px * var(--ui-scale))}
+#mapZoom #zoomOutBtn,#mapZoom #zoomInBtn{font-size:calc(clamp(16px,2vw,24px) * var(--ui-scale));line-height:1}
+#stage:not([data-mode="map"]) #mapZoom{display:none}
+#stage[data-mode="map"] #game{touch-action:none}
+#stage[data-mode="map"].panning #game{cursor:grabbing}
+#mapZoom #centreBtn.away{border-color:#ffe7a8;box-shadow:0 0 0 2px #ffe7a866}

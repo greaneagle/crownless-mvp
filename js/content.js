@@ -153,6 +153,7 @@
         for (const id of road) if (!C.settlements?.[id]) err(`world_map ${m.id}: road through unknown ${id}`);
       }
       for (const k of ['road', 'grass', 'forest']) if (!(m.terrain?.[k] > 0)) err(`world_map ${m.id}: bad terrain ${k}`);
+      if (m.aspect !== undefined && !(typeof m.aspect === 'number' && m.aspect > 0 && m.aspect <= 4)) err(`world_map ${m.id}: aspect must be a number in (0, 4]`);
       for (const [key, st] of Object.entries(m.sites || {})) {
         if (st.id !== key) err(`world_map ${m.id}: site ${key} has id ${st.id}`);
         if (!C.encounters?.[st.encounter]) err(`world_map ${m.id}: site ${key} unknown encounter ${st.encounter}`);

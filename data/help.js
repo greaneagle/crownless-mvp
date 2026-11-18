@@ -29,10 +29,14 @@
       body: [
         'Tap a town, village, fort, camp or band to travel there. Time passes as you ride: your soldiers eat, wages come due, wounds heal, and the world moves.',
         'Roads are fastest, forests slowest; heavy cargo slows you too. Patrols and caravans keep the peace and the trade going; Road Reavers prey on both, and on you if you look weak.',
-        'Wait lets time pass where you stand. The panel at the top left shows the day, your crowns, soldiers, food, morale and current quest.'
+        'Wait lets time pass where you stand. The panel at the top left shows the day, your crowns, soldiers, food, morale and current quest.',
+        'Drag the map to look around and pinch (or + and −) to zoom in; only a tap sets off, so dragging or pinching never sends you anywhere. While zoomed in, the view follows your company; Centre brings it back after you have looked away, and arrows at the edge point to you and to your contract or quest targets. Zoom changes only what you see: journeys take the same time and bands find you the same way at any zoom. The game remembers your zoom on this device.'
       ],
       controls: [
         ['Tap the map', 'Click the map', 'Travel there'],
+        ['Drag the map', 'Drag, or arrow keys', 'Look around'],
+        ['Pinch, or + −', 'Mouse wheel, or + −', 'Zoom in and out'],
+        ['Centre button', 'C', 'Back to your company'],
         ['Wait button', 'Space', 'Wait / stop travelling'],
         ['⚙ button', '⚙ button', 'Settings']
       ]

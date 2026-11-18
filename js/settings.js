@@ -15,6 +15,10 @@
   // belongs to the map and battle gestures). It scales the game's HTML text and controls and the text
   // drawn on the canvas, not the canvas art.
   const TEXT_SIZES = { small: 0.9, normal: 1, large: 1.15, larger: 1.3 };
+  // W-02: the world map's zoom is remembered on the device; the map camera keeps it within the
+  // current map's own range ("fit" to 2.4×).
+  const MAP_ZOOM = { min: 0.25, max: 2.4 };
+  const mapZoom = (v, d) => (Number.isFinite(v) ? Math.max(MAP_ZOOM.min, Math.min(MAP_ZOOM.max, Math.round(v * 100) / 100)) : d);
 
   /** A remembered Custom setup: each group's offset from the hero's start and its order, or null. */
   function customSetup(v) {
@@ -37,7 +41,7 @@
       touch = false;
     }
     // Full screen is on by default on phones, where the address bar costs the most room.
-    return { music: 50, sfx: 70, battleSize: touch ? 30 : 40, battlefield: 'large', prepPreset: 'balanced', prepSkip: false, prepCustom: null, reducedEffects: false, healthBars: true, tips: true, fullscreen: touch, textSize: 'normal' };
+    return { music: 50, sfx: 70, battleSize: touch ? 30 : 40, battlefield: 'large', prepPreset: 'balanced', prepSkip: false, prepCustom: null, reducedEffects: false, healthBars: true, tips: true, fullscreen: touch, textSize: 'normal', mapZoom: 1 };
   }
 
   let current = defaults();
@@ -61,6 +65,7 @@
       tips: typeof r.tips === 'boolean' ? r.tips : d.tips,
       fullscreen: typeof r.fullscreen === 'boolean' ? r.fullscreen : d.fullscreen,
       textSize: Object.hasOwn(TEXT_SIZES, r.textSize) ? r.textSize : d.textSize,
+      mapZoom: mapZoom(r.mapZoom, d.mapZoom),
     };
   }
 
@@ -117,5 +122,5 @@
     return true;
   }
 
-  CL.settings = { KEY, BATTLE_SIZES, BATTLEFIELDS, PREP_PRESETS, TEXT_SIZES, defaults, sanitize, load, get, all, set, apply, textScale, font };
+  CL.settings = { KEY, BATTLE_SIZES, BATTLEFIELDS, PREP_PRESETS, TEXT_SIZES, MAP_ZOOM, defaults, sanitize, load, get, all, set, apply, textScale, font };
 })(typeof window !== 'undefined' ? window : globalThis);

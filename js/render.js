@@ -444,6 +444,7 @@
 
   const FACTION_EMBLEM = { valedorn: 'V', aurelian: 'A', neutral: 'R' };
 
+  /** A path through map points, in world pixels (the terrain layer is drawn in them; W-02). */
   function polyPath(points) {
     const { toPx } = CL.world;
     ctx.beginPath();
@@ -481,7 +482,8 @@
 
   /** Settlement icon: shape by type, faction colour plus a letter emblem (not colour alone). */
   function drawSettlement(s, here) {
-    const [x, y] = CL.world.toPx(s.mapX, s.mapY);
+    if (!CL.mapView.inView(s.mapX, s.mapY, 60)) return; // culled: off the screen (W-02)
+    const [x, y] = CL.mapView.toScreen(s.mapX, s.mapY);
     const holder = CL.realm.owner(s.id);
     const color = CL.content.get('factions', holder).color;
     ctx.save();
@@ -528,11 +530,13 @@
       ctx.stroke();
     }
     ctx.restore();
-    label(s.name, x, y + 24, undefined, { prio: LABEL_PRIORITY.settlement, iy: y });
+    // Far out, only towns and capitals keep their names (W-02; from "fit" on today's map, all do).
+    if (s.type === 'town' || s.capital || CL.mapView.showMinorLabels()) label(s.name, x, y + 24, undefined, { prio: LABEL_PRIORITY.settlement, iy: y });
   }
 
   function drawSite(st) {
-    const [x, y] = CL.world.toPx(st.mapX, st.mapY);
+    if (!CL.mapView.inView(st.mapX, st.mapY, 60)) return;
+    const [x, y] = CL.mapView.toScreen(st.mapX, st.mapY);
     const active = CL.world.siteActive(st.id);
     ctx.save();
     ctx.globalAlpha = active ? 1 : 0.45;
@@ -552,13 +556,14 @@
     ctx.lineTo(x - 6, y + 6);
     ctx.stroke();
     ctx.restore();
-    label(active ? st.name : `${st.name} (cleared)`, x, y + 22, active ? '#ffb3a1' : '#c9bda8', { prio: LABEL_PRIORITY.site, iy: y });
+    if (CL.mapView.showMinorLabels()) label(active ? st.name : `${st.name} (cleared)`, x, y + 22, active ? '#ffb3a1' : '#c9bda8', { prio: LABEL_PRIORITY.site, iy: y });
   }
 
   /** A world party: banner in its faction colour, a shape by kind, and its size. */
   function drawParty(p) {
     const t = CL.content.get('party_templates', p.template);
     const { x, y, crowded } = CL.world.partyDrawPos(p); // beside a landmark, not on its name
+    if (x < -60 || x > W + 60 || y < -60 || y > H + 60) return; // culled: off the screen (W-02)
     if ((p.contractId && !p.ambush) || p.questTag) {
       // Contract or quest target (or the caravan you escort): pulsing gold ring.
       const pulse = 17 + Math.sin(performance.now() / 250) * 2;
@@ -628,7 +633,8 @@
     }
     if (crowded) countBadge(x, y, n, hostile);
     ctx.restore();
-    if (!crowded) {
+    if (!crowded && !CL.mapView.showMinorLabels()) countBadge(x, y, n, hostile);
+    else if (!crowded) {
       const marked = (p.contractId && !p.ambush) || p.questTag || p.escortTo;
       const name = p.escortTo ? 'Escort' : p.contractId && !p.ambush ? 'Contract target' : p.questTag ? (t.kind === 'bandit' ? 'Quest: Reavers' : 'Quest: Column') : t.kind === 'bandit' ? 'Reavers' : t.kind === 'patrol' ? 'Patrol' : 'Caravan';
       const prio = marked ? LABEL_PRIORITY.quest : hostile ? LABEL_PRIORITY.hostile : LABEL_PRIORITY.party;
@@ -687,17 +693,21 @@
     }
   }
 
-  function drawWorld() {
-    const { toPx, map } = CL.world;
-    const m = map();
-    const w = CL.campaign.world;
-    const g = CL.game;
+  // ---- The terrain layer (W-02): the static ground drawn once per zoom step, then copied each frame ----
 
+  const terrainLayers = new Map(); // scale → layer, one per zoom step (a pinch crosses steps back and forth)
+  let terrainLayersOf = null; // the map they were drawn for
+  const LAYER_MAX_PX = 4096; // a canvas side limit that phones accept
+
+  /** Grass, mottling, forests, hills, the river and roads, in world pixels (map coordinates). */
+  function drawTerrain(m, e) {
     ctx.fillStyle = '#6f8f4e';
-    ctx.fillRect(0, 0, W, H);
-    // Grass mottling.
+    ctx.fillRect(0, 0, e.w, e.h);
+    // Grass mottling, fixed to the map (it used to be fixed to the screen).
     ctx.fillStyle = '#7d9a59';
-    for (let i = 0; i < 140; i++) ctx.fillRect((i * 211 + 37) % W, (i * 97 + 11) % H, 7, 3);
+    const dots = Math.round((140 * e.w * e.h) / (W * H));
+    for (let i = 0; i < dots; i++) ctx.fillRect((i * 211 + 37) % Math.round(e.w), (i * 97 + 11) % Math.round(e.h), 7, 3);
+    const { toPx } = CL.world;
 
     // Forests.
     for (const poly of m.forests) {
@@ -751,6 +761,89 @@
       ctx.setLineDash([]);
       ctx.stroke();
     }
+  }
+
+  /**
+   * The terrain at a zoom step ("fit", 1×, 1.6× or 2.4×: the smallest at or above the current zoom, so
+   * it is only ever scaled down). Each step's layer is kept (about 19 MB for all three today) and they
+   * are all redrawn when the map changes; the canvas density makes its own.
+   */
+  function terrainLayer(zoom) {
+    const V = CL.mapView;
+    const m = CL.world.map();
+    const step = V.levels().find((l) => l >= zoom - 1e-6) ?? V.maxZoom();
+    const e = V.extent();
+    const k = Math.min(step * backing, LAYER_MAX_PX / e.w, LAYER_MAX_PX / e.h);
+    if (terrainLayersOf !== m) {
+      terrainLayers.clear();
+      terrainLayersOf = m;
+    }
+    const kept = terrainLayers.get(k);
+    if (kept) return kept;
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(e.w * k);
+    canvas.height = Math.round(e.h * k);
+    const layer = canvas.getContext('2d');
+    layer.setTransform(k, 0, 0, k, 0, 0);
+    const main = ctx;
+    ctx = layer;
+    try {
+      drawTerrain(m, e);
+    } finally {
+      ctx = main;
+    }
+    const made = { k, canvas };
+    if (terrainLayers.size >= 6) terrainLayers.delete(terrainLayers.keys().next().value); // oldest first
+    terrainLayers.set(k, made);
+    CL.diag?.log('info', 'Map terrain layer drawn', { step, scale: k, size: `${canvas.width}×${canvas.height}` });
+    return made;
+  }
+
+  /** Arrows on the screen's edge toward what matters off it: contract and quest targets, and you. */
+  function drawEdgeMarkers(w) {
+    const V = CL.mapView;
+    const marks = [];
+    for (const p of CL.campaign.parties || []) if ((p.contractId && !p.ambush) || p.questTag) marks.push([p.x, p.y, '#ffd34d']);
+    marks.push([w.x, w.y, '#fff3cf']);
+    for (const [mx, my, color] of marks) {
+      const e = V.edgeMarker(mx, my);
+      if (!e) continue;
+      ctx.save();
+      ctx.translate(e.x, e.y);
+      ctx.rotate(e.angle);
+      ctx.fillStyle = color;
+      ctx.strokeStyle = '#1b1208';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(10, 0);
+      ctx.lineTo(-7, -8);
+      ctx.lineTo(-3, 0);
+      ctx.lineTo(-7, 8);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  function drawWorld() {
+    const { map } = CL.world;
+    const V = CL.mapView;
+    const m = map();
+    const w = CL.campaign.world;
+    const g = CL.game;
+
+    // The ground: one copy of the cached layer, placed and scaled by the camera (W-02).
+    const z = V.state.zoom;
+    const layer = terrainLayer(z);
+    const [ox, oy] = V.toScreen(...CL.world.fromPx(0, 0));
+    const scale = z / layer.k;
+    ctx.fillStyle = '#6f8f4e'; // the map's own ground beyond its edge, when it is smaller than the view
+    ctx.fillRect(0, 0, W, H);
+    const exact = Math.abs(scale * backing - 1) < 1e-6;
+    ctx.imageSmoothingEnabled = !exact;
+    ctx.drawImage(layer.canvas, exact ? Math.round(ox * backing) / backing : ox, exact ? Math.round(oy * backing) / backing : oy, layer.canvas.width * scale, layer.canvas.height * scale);
+    ctx.imageSmoothingEnabled = false;
 
     mapLabels = [];
     for (const st of Object.values(m.sites)) drawSite(st);
@@ -758,9 +851,9 @@
     for (const p of CL.campaign.parties || []) drawParty(p);
 
     // Journey line.
-    const [px, py] = toPx(w.x, w.y);
+    const [px, py] = V.toScreen(w.x, w.y);
     if (g.travel) {
-      const [tx, ty] = toPx(g.travel.x, g.travel.y);
+      const [tx, ty] = V.toScreen(g.travel.x, g.travel.y);
       ctx.save();
       ctx.strokeStyle = '#fff3cf';
       ctx.lineWidth = 2;
@@ -785,6 +878,7 @@
     ctx.fill();
     drawHeroFrame(CL.assets.key('u', frame), mx - 13, my - 32, 26, 33);
     placeLabels([{ x: mx - 13, y: my - 32, w: 26, h: 33 }]);
+    drawEdgeMarkers(w);
 
     updateMapHud();
   }
@@ -816,6 +910,14 @@
       (CL.story.currentQuest(c) ? ` · ▸ ${CL.story.currentQuest(c).title}` : '');
     $('#topLeft').classList.toggle('warn', food < 1 || c.morale < CL.upkeep.MORALE.desertBelow);
     $('#waitBtn').textContent = CL.game.waiting ? 'Stop waiting' : 'Wait';
+    // W-02: − stops at "fit" and + at 2.4×; Centre is lit while the view has wandered off the party.
+    const V = CL.mapView;
+    const z = V.state.zoom;
+    const outOff = z <= V.minZoom() + 1e-3;
+    const inOff = z >= V.maxZoom() - 1e-3;
+    if ($('#zoomOutBtn').disabled !== outOff) $('#zoomOutBtn').disabled = outOff;
+    if ($('#zoomInBtn').disabled !== inOff) $('#zoomInBtn').disabled = inOff;
+    $('#centreBtn').classList.toggle('away', !V.state.following);
   }
 
   // ---- Minimap and tactical overview (V2-06; js/tactics.js) ----

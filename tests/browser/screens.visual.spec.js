@@ -50,6 +50,11 @@ test.describe('@visual key screens', () => {
     await newGame(page);
     await toMap(page);
     await shot(page, 'map', testInfo);
+    // W-02: zoomed right in on the party.
+    await page.clock.resume();
+    await press(page, '#zoomInBtn');
+    await press(page, '#zoomInBtn');
+    await shot(page, 'map-zoomed', testInfo);
   });
 
   test('Party, Accounts and Journal', async ({ page }, testInfo) => {

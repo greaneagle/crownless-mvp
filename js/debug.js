@@ -172,6 +172,28 @@
     log('camera test', { total, arena: '3x forest', help });
   }
 
+  /**
+   * W-02's map drawing test: the whole map at "fit", then 2.4× while the camera circles the map, four
+   * seconds each. Reports fps and drawing time like the Big battle test (for the phone again after
+   * W-05a). The view returns to where it was; nothing in the campaign changes.
+   */
+  function mapTest() {
+    const g = CL.game;
+    const was = { travel: g.travel, waiting: g.waiting };
+    Object.assign(g, { travel: null, waiting: false }); // the party stands still while it runs
+    CL.ui.message('Map drawing test: 8 seconds…');
+    CL.mapView.startTest((r) => {
+      Object.assign(g, was);
+      const run = (x) => `${x.zoom}×: ${x.fps} fps, drawing ${x.drawMs} ms, slowest frame ${x.worstFrameMs} ms`;
+      const canvas = r.canvas === 1 ? '960×540' : `${r.canvas}× sharp`;
+      g.mapTestResult = r;
+      log('map drawing test', r);
+      CL.ui.message(`Map test: ${r.runs.map(run).join(' · ')} (canvas ${canvas}, text ${r.textSize})`);
+      g.messageUntil = performance.now() + 15000; // long enough to read (also in Logs · F3)
+    });
+    log('map drawing test started', {});
+  }
+
   function wipeSave() {
     const S = CL.save;
     const pre = Array.from({ length: S.VERSION - 2 }, (_, i) => S.preMigrationKey(i + 2)); // crownless_save_v2, …
@@ -354,6 +376,11 @@
         log('reveal troop tree', { on: CL.game.revealTree });
         CL.ui.refresh();
         return;
+      case 'mapTest':
+        if (mode !== 'map') return CL.ui.message('Open the world map first');
+        toggle(false);
+        mapTest();
+        return;
       case 'days':
         passDays(n);
         break;
@@ -429,6 +456,7 @@
     endBattleNow,
     stressBattle,
     cameraTest,
+    mapTest,
     wipeSave,
     toggle,
     bind,

@@ -46,6 +46,7 @@
       const t0 = performance.now();
       CL.combat.update(dt);
       CL.world.update(dt);
+      CL.mapView.update(dt); // the map camera follows the party (W-02)
       CL.town.update(dt);
       const t1 = performance.now();
       CL.render.draw();
@@ -54,6 +55,7 @@
       // Frame timing for the diagnostics panel (smoothed), and a stress battle's tally.
       diag.simMs = diag.simMs * 0.95 + (t1 - t0) * 0.05;
       diag.drawMs = diag.drawMs * 0.95 + (t2 - t1) * 0.05;
+      if (CL.game.mode === 'map') CL.mapView.testFrame(t1 - t0, t2 - t1, dt); // the Debug panel's map test, if running
       const p = CL.game.mode === 'battle' && !CL.game.paused ? CL.game.practice : null;
       if (p) {
         p.frames++;
