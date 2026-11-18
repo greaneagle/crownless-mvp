@@ -38,8 +38,8 @@
   /** A settlement selling food (its market). @param {string | null} id */
   const sellsFood = (id) => Boolean(id && CL.content.table('settlements')[id]?.services?.includes('trade'));
 
-  /** Wages owed at the next payday (the soldiers', plus the quartermaster's own). @param {Campaign} c */
-  const wagesDue = (c) => U().weeklyWages(c) + (get(c) ? WAGE : 0);
+  /** Wages owed at the next payday (the soldiers', plus the followers'). @param {Campaign} c */
+  const wagesDue = (c) => U().weeklyWages(c) + (get(c) ? WAGE : 0) + (CL.merchant?.get(c) ? CL.merchant.WAGE : 0);
 
   function log(c, text) {
     const q = get(c);
@@ -192,7 +192,7 @@
 
   /** Repair the saved followers onto `s`. @param {Campaign} s @param {any} d */
   function sanitize(s, d) {
-    s.followers = { quartermaster: null };
+    s.followers = { quartermaster: null, merchant: null };
     const q = d?.followers?.quartermaster;
     if (!q || typeof q !== 'object') return;
     const num = (n, dflt) => (typeof n === 'number' && Number.isFinite(n) ? n : dflt);

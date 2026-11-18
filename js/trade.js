@@ -67,8 +67,10 @@
 
   // ---- Cargo ----
 
-  const cargoWeight = (c) =>
-    Object.entries(c.cargo).reduce((w, [id, n]) => w + n * CL.content.get('markets', id).weight, 0);
+  /** Weight of a hold of goods. @param {Record<string, number>} hold */
+  const holdWeight = (hold) => Object.entries(hold || {}).reduce((w, [id, n]) => w + n * CL.content.get('markets', id).weight, 0);
+  /** Everything the company carries: your cargo and the merchant's stock (V2-12) share the wagons. */
+  const cargoWeight = (c) => holdWeight(c.cargo) + holdWeight(c.followers?.merchant?.stock);
 
   function capacity(c) {
     return CARRY.base + CARRY.perSoldier * c.roster.length + (c.equipment?.horse ? CARRY.horse : 0);
@@ -82,33 +84,43 @@
 
   // ---- Transactions (atomic: validate everything, then apply everything) ----
 
-  function buy(c, sid, good, qty = 1) {
+  /**
+   * Buy goods at a market: the same prices and scarcity for everyone. By default with your purse into
+   * your cargo; the merchant (V2-12) passes its own budget account and stock.
+   * @param {{ account?: string, hold?: Record<string, number>, by?: string }} [opts]
+   */
+  function buy(c, sid, good, qty = 1, { account = 'purse', hold = c.cargo, by = null } = {}) {
     if (!hasMarket(sid) || !(qty > 0)) return { ok: false, reason: 'No market here' };
     const q = quote(c, sid, good, qty, 'buy');
-    if (c.gold < q.total) return { ok: false, reason: 'Not enough crowns' };
+    if (CL.accounts.balance(c, account) < q.total) return { ok: false, reason: 'Not enough crowns' };
     if (cargoWeight(c) + qty * CL.content.get('markets', good).weight > capacity(c)) {
       return { ok: false, reason: 'Your party cannot carry that much' };
     }
-    CL.accounts.spend(c, q.total, `market: bought ${qty} ${good}`);
-    c.cargo[good] = (c.cargo[good] || 0) + qty;
+    if (!CL.accounts.spend(c, q.total, `${by ? `${by}: ` : 'market: '}bought ${qty} ${good}`, account)) return { ok: false, reason: 'Not enough crowns' };
+    hold[good] = (hold[good] || 0) + qty;
     c.markets[sid][good] = q.scarcity;
-    CL.diag.log('info', 'Bought goods', { at: sid, good, qty, cost: q.total });
-    CL.audio?.play('coin');
-    CL.story.emit('trade', { settlement: sid, good, side: 'buy', qty }, c);
+    CL.diag.log('info', 'Bought goods', { at: sid, good, qty, cost: q.total, by });
+    if (!by) {
+      CL.audio?.play('coin');
+      CL.story.emit('trade', { settlement: sid, good, side: 'buy', qty }, c);
+    }
     return { ok: true, total: q.total };
   }
 
-  function sell(c, sid, good, qty = 1) {
+  /** Sell goods at a market (see `buy`). @param {{ account?: string, hold?: Record<string, number>, by?: string }} [opts] */
+  function sell(c, sid, good, qty = 1, { account = 'purse', hold = c.cargo, by = null } = {}) {
     if (!hasMarket(sid) || !(qty > 0)) return { ok: false, reason: 'No market here' };
-    if ((c.cargo[good] || 0) < qty) return { ok: false, reason: 'You have none to sell' };
+    if ((hold[good] || 0) < qty) return { ok: false, reason: 'You have none to sell' };
     const q = quote(c, sid, good, qty, 'sell');
-    CL.accounts.earn(c, q.total, `market: sold ${qty} ${good}`);
-    c.cargo[good] -= qty;
-    if (!c.cargo[good]) delete c.cargo[good];
+    CL.accounts.earn(c, q.total, `${by ? `${by}: ` : 'market: '}sold ${qty} ${good}`, account);
+    hold[good] -= qty;
+    if (!hold[good]) delete hold[good];
     c.markets[sid][good] = q.scarcity;
-    CL.diag.log('info', 'Sold goods', { at: sid, good, qty, earned: q.total });
-    CL.audio?.play('coin');
-    CL.story.emit('trade', { settlement: sid, good, side: 'sell', qty }, c);
+    CL.diag.log('info', 'Sold goods', { at: sid, good, qty, earned: q.total, by });
+    if (!by) {
+      CL.audio?.play('coin');
+      CL.story.emit('trade', { settlement: sid, good, side: 'sell', qty }, c);
+    }
     return { ok: true, total: q.total };
   }
 
@@ -198,6 +210,7 @@
     unitBuyPrice,
     unitSellPrice,
     quote,
+    holdWeight,
     cargoWeight,
     capacity,
     loadFactor,

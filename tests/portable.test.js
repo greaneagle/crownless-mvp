@@ -60,7 +60,7 @@ test('rejected: a save from a newer version of the game', () => {
   f.version = CL.save.VERSION + 1;
   f.game = '2.0.0';
   assert.match(CL.portable.parse(JSON.stringify(f)).reason, /newer version of Crownless \(2\.0\.0\)/);
-  assert.match(CL.portable.parse(JSON.stringify({ version: 9, gold: 1 })).reason, /newer version/);
+  assert.match(CL.portable.parse(JSON.stringify({ version: 99, gold: 1 })).reason, /newer version/);
 });
 
 test('rejected: unknown IDs, listed — and the current save is untouched', () => {

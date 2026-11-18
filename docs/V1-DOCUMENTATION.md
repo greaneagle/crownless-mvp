@@ -343,6 +343,7 @@ The sandbox carries on after the story ends.
 | `soldiers` | From 1.4.0: named soldiers: culture names, service records kept from events, notes, filters, rename |
 | `accounts` | From 1.15.0: separate accounts (your purse, the company chest, follower budgets); every change of money is a transfer with a source, destination and reason, kept in a ledger |
 | `quartermaster` | From 1.15.0: the hireable quartermaster: wages set aside in the chest, food bought up to a reserve within a weekly budget, warnings before shortages, a log |
+| `merchant` | From 1.16.0: the merchant follower: trades its own budget and stock through the same market functions as the player, knows only prices it has seen, reports what and why; stop and recover at any time |
 | `chronicle` | From 1.14.0: the company chronicle and the roll of honour, kept from events and bounded; retiring with honour; "who did what" on the battle result |
 | `troops` | From 1.5.0: the troop tree as discovered (seen or owned), learned from events and hiring offers |
 | `save` | Save service: schema v2 at 1.0 (v3 from 1.2.0), backup on every write, fallback to the backup, migration from 0.3.x; from 1.2.0 also structure checks, migration steps and the travel autosave |

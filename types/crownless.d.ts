@@ -197,7 +197,7 @@ declare global {
     /** v8: the newest money transfers. */
     ledger: LedgerEntry[];
     /** v8: camp followers. */
-    followers: { quartermaster: Quartermaster | null };
+    followers: { quartermaster: Quartermaster | null; merchant?: Merchant | null };
   }
 
   interface Accounts {
@@ -212,6 +212,24 @@ declare global {
     to: string;
     amount: number;
     why: string;
+  }
+
+  /** A hired merchant (V2-12, js/merchant.js). Their cash is accounts.budgets.merchant. */
+  interface Merchant {
+    name: string;
+    culture: string | null;
+    origin: string | null;
+    hired: number;
+    preset: string;
+    active: boolean;
+    /** Their own goods (not your cargo). */
+    stock: Record<string, number>;
+    /** What each good in stock cost them, in all. */
+    paid: Record<string, number>;
+    /** Prices seen: settlement → good → { buy, sell, day }. */
+    prices: Record<string, Record<string, { buy: number; sell: number; day: number }>>;
+    unpaid: number;
+    log: Array<{ day: number; text: string }>;
   }
 
   /** A hired quartermaster (V2-11, js/quartermaster.js). */

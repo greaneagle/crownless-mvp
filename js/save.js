@@ -26,7 +26,7 @@
   'use strict';
   const CL = root.Crownless;
 
-  const VERSION = 8;
+  const VERSION = 9;
   const KEY = 'crownless_save';
   const BACKUP_KEY = 'crownless_save_backup';
   const LEGACY_KEY = 'crownless_v03_party';
@@ -97,7 +97,7 @@
       honour: CL.chronicle.blankHonour(), // the roll of honour: soldiers who fell or left
       accounts: CL.accounts.blank(), // the company chest and follower budgets; `gold` is your purse (js/accounts.js)
       ledger: [], // the newest money transfers, each with a source, a destination and a reason
-      followers: { quartermaster: null }, // camp followers (js/quartermaster.js)
+      followers: { quartermaster: null, merchant: null }, // camp followers (js/quartermaster.js, js/merchant.js)
     };
     CL.character.applyKit(c, background);
     CL.upkeep.stowFood(c);
@@ -175,6 +175,7 @@
     6: [...V3_FIELDS, ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object']],
     7: [...V3_FIELDS, ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object']],
     8: [...V3_FIELDS, ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object'], ['accounts', 'object'], ['ledger', 'array'], ['followers', 'object']],
+    9: [...V3_FIELDS, ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object'], ['accounts', 'object'], ['ledger', 'array'], ['followers', 'object']],
   };
 
   /** @param {unknown} v @param {string} kind */
@@ -238,6 +239,8 @@
     // 7 → 8 (build 1.15.0, V2-11): separate accounts (an empty company chest, no follower budgets), an
     // empty ledger, and no followers yet. Your purse is the old `gold`.
     7: (d) => ({ ...d, version: 8, accounts: CL.accounts.blank(), ledger: [], followers: { quartermaster: null } }),
+    // 8 → 9 (build 1.16.0, V2-12): room for a merchant follower (none yet).
+    8: (d) => ({ ...d, version: 9, followers: { ...(d.followers || {}), merchant: null } }),
   };
 
   /**
@@ -307,6 +310,7 @@
     CL.chronicle.sanitize(s, d); // the chronicle and the roll of honour
     CL.accounts.sanitize(s, d); // the company chest, budgets and the ledger
     CL.quartermaster.sanitize(s, d); // camp followers
+    CL.merchant.sanitize(s, d); // the merchant and their goods, prices and log
     // Named random streams (after parties, which restores rngSeed) and the result and event counters.
     const seeds = CL.autoresolve.streamSeeds(s.rngSeed);
     for (const name of CL.autoresolve.STREAMS) {

@@ -245,6 +245,7 @@
       CL.story.emit('enter', { settlement: t.id });
       CL.contracts.onArrive(CL.campaign, t.id); // deliveries and escorts are paid on arrival
       CL.quartermaster?.act(CL.campaign); // wages set aside and food bought from the chest (V2-11)
+      CL.merchant?.visit(CL.campaign); // the merchant trades its budget here (V2-12)
       CL.town.enterPlace(); // the settlement menu; walkable places offer "Walk the streets" from it
     } else if (t.type === 'party') {
       // Riding up to the caravan you escort just puts you at its side.

@@ -89,7 +89,7 @@
     if (mode === 'accounts') {
       return {
         title: 'ACCOUNTS',
-        text: 'Your purse and the company chest. Wages are paid from the chest first, then from your purse. A quartermaster buys food from the chest.',
+        text: 'Your purse, the company chest and your followers. Wages are paid from the chest first, then from your purse.',
         button: 'Back',
       };
     }
@@ -250,7 +250,7 @@
       const k = c.contract;
       const pay = k?.status === 'done' && k.giver === c.world.location;
       opt(pay ? 'Notice board — collect pay!' : 'Read the notice board', () => changeMode('contracts'));
-      opt('Accounts and quartermaster', () => changeMode('accounts'), false, CL.quartermaster.get(c) ? `${CL.quartermaster.get(c).name} keeps the stores` : `Hire one · ${CL.quartermaster.HIRE} crowns, ${CL.quartermaster.WAGE}/week`);
+      opt('Accounts and followers', () => changeMode('accounts'), false, 'Your money, a quartermaster, a merchant');
       opt('Save & export', () => openSaves());
     }
     opt('Goodbye', () => CL.town.backToPlace());
@@ -526,13 +526,59 @@
         mk('div', { className: 'row' }, btn('Buy now', () => Q.act(c), !Q.sellsFood(c.world.location)), btn('Let them go', () => Q.dismiss(c) && message('The quartermaster leaves the company'))),
       );
     }
+    const M = CL.merchant;
+    const m = M.get(c);
+    let mc;
+    if (!m) {
+      mc = mk(
+        'div',
+        { className: 'contractCard' },
+        mk('h3', { textContent: 'Merchant' }),
+        mk('p', { textContent: `Trades a budget you give them at the markets you visit, at the same prices as you, and tells you what they did and why. They know only the prices they have seen. ${M.HIRE} crowns to hire, ${M.WAGE} a week.` }),
+        mk('div', { className: 'row' }, btn(CL.trade.hasMarket(c.world.location) ? `Hire a merchant · ${M.HIRE} crowns` : 'Hire one in a market settlement', () => M.hire(c) && message('A merchant joins the company'), !M.canHire(c))),
+      );
+    } else {
+      const budget = A.balance(c, M.ACCOUNT);
+      const stock = Object.entries(m.stock).map(([g, n]) => `${n} ${CL.content.get('markets', g).name.toLowerCase()} (cost ${Math.round(m.paid[g])})`).join(', ');
+      mc = mk(
+        'div',
+        { className: 'contractCard' },
+        mk('h3', { textContent: `Merchant ${m.name}${m.active ? '' : ' · stopped'}` }),
+        mk('p', { textContent: `Budget ${budget} crowns in hand${stock ? `; goods: ${stock}` : ''}. Knows prices in ${Object.keys(m.prices).length} market${Object.keys(m.prices).length === 1 ? '' : 's'}. Paid ${M.WAGE} a week.` }),
+        mk(
+          'div',
+          { className: 'row' },
+          btn('Give 50', () => M.fund(c, Math.min(50, c.gold)), c.gold <= 0),
+          btn('Give 200', () => M.fund(c, Math.min(200, c.gold)), c.gold <= 0),
+          btn('Take 50 back', () => M.fund(c, -Math.min(50, budget)), budget <= 0),
+        ),
+        mk(
+          'div',
+          { className: 'row qmRule' },
+          mk('span', { textContent: m.preset === 'bold' ? 'Bold: thinner margins, all of the budget' : 'Cautious: good margins only, at most 70% in goods' }),
+          btn(m.preset === 'bold' ? 'Be cautious' : 'Be bold', () => M.setPreset(c, m.preset === 'bold' ? 'cautious' : 'bold')),
+        ),
+        m.log.length ? mk('ul', { className: 'soldierNotes' }, ...m.log.slice(-6).reverse().map((e) => mk('li', { textContent: `Day ${CL.party.dayNumber(e.day)}: ${e.text}` }))) : null,
+        mk(
+          'div',
+          { className: 'row' },
+          btn('Trade now', () => M.visit(c), !m.active || !CL.trade.hasMarket(c.world.location)),
+          btn(m.active ? 'Stop trading' : 'Start trading', () => M.setActive(c, !m.active)),
+          btn('Stop and recover all', () => {
+            const r = M.recover(c);
+            if (r) message(`Recovered ${r.cash} crowns${r.goods ? ` and ${r.goods} goods` : ''} from the merchant`);
+          }),
+          btn('Let them go', () => M.dismiss(c) && message('The merchant leaves; budget and goods handed back')),
+        ),
+      );
+    }
     const lines = A.recent(c, 12).map((e) => {
       const sign = e.to === A.WORLD ? '−' : e.from === A.WORLD ? '+' : '';
       const route = e.from === A.WORLD ? `into ${A.label(e.to)}` : e.to === A.WORLD ? `from ${A.label(e.from)}` : `${A.label(e.from)} → ${A.label(e.to)}`;
       return mk('li', { textContent: `Day ${CL.party.dayNumber(e.day)}: ${sign}${e.amount} ${route} · ${e.why}` });
     });
     const ledger = mk('div', { className: 'contractCard' }, mk('h3', { textContent: 'Ledger' }), lines.length ? mk('ul', { className: 'soldierNotes' }, ...lines) : mk('p', { textContent: 'Nothing yet.' }));
-    $('#accountsScreen').replaceChildren(money, qm, ledger);
+    $('#accountsScreen').replaceChildren(money, qm, mc, ledger);
   }
 
   // ---- Battle preparation (V2-07; js/prep.js) ----

@@ -1,4 +1,4 @@
-# Crownless 1.15.0 — The Border March
+# Crownless 1.16.0 — The Border March
 
 A single-player, top-down party-battle prototype in plain HTML5 Canvas and classic JavaScript. There's no bundler, no runtime dependencies and no server. It's published to GitHub Pages straight from `main`.
 
@@ -41,6 +41,7 @@ A single-player, top-down party-battle prototype in plain HTML5 Canvas and class
 - **Nearby reinforcements (1.13.0):** a battle draws in parties close enough to hear it and reach it within its hours: Road Reavers join their own kind, a friendly kingdom's patrol rides to your aid, a Hostile one comes for you. They arrive at a worked-out time from the side they come from, announced in advance; if the battle ends first, they're too late. Auto-resolve counts them too.
 - **Company chronicle and roll of honour (1.14.0):** the Journal keeps your company's own story (recruits, promotions, notable battles, who fell, quests). Soldiers who fall, desert or retire stay on a Roll of honour in Party with where they came from, how long they served and what they did. You can retire a veteran with honour, and the battle result says who did what.
 - **Accounts and the quartermaster (1.15.0):** your purse, the company chest and a ledger of every crown in and out; wages come from the chest first. A hired quartermaster keeps the next wages in the chest and food in stock within a weekly budget, warns before shortages and logs every purchase.
+- **Merchant follower (1.16.0):** hire a merchant, give them a budget, and they trade it at the markets you visit, at the same prices as you, knowing only prices they have seen; they report what they did and why, and you can stop them or recover everything at any time.
 - **Battle preparation (1.10.0):** Attack opens a Prepare screen with the real field: Balanced (default), Defensive, Aggressive or Custom (drag each group's flag inside the deployment zone and pick its first order); Fight, or Simulate (auto-resolve with the odds explained). Ambushed, you get less room. You can remember your setup and skip the screen.
 - **Minimap and tactical overview (1.9.0):** on a large battlefield a small map at the top shows your company and only the enemies your soldiers have seen; tap it to look there. MAP (phone) or holding Tab (desktop, or M to toggle) opens the whole field with the battle held still; pick a group in Orders and tap where it should go and hold.
 - **Time (1.6.0):** a battle takes a fixed 4 game hours of overworld time, fought or auto-resolved; capture 12 hours; a rest a day. The fight's own seconds, pausing and menus pass no time.
@@ -95,6 +96,7 @@ js/               game runtime, attached to window.Crownless
   chronicle.js    the company chronicle, the roll of honour and "who did what"
   accounts.js     money in separate accounts (purse, company chest, follower budgets); every transfer logged
   quartermaster.js the quartermaster: wages set aside, food bought within a budget, warnings
+  merchant.js     the merchant follower: a budget traded through the same market functions, seen prices, reports
   units.js        units built from troop data, swing phases, facing, movement
   combat.js       waves, attacks, AI, arrows, win/loss
   party.js        recruiting, day clock, wounded recovery, battle results and loot

@@ -1,6 +1,6 @@
 # Crownless — Project Status & Roadmap
 
-_Last reviewed: 2026-11-18 · Build 1.15.0 · Spec: `Crownless_MVP_GDD_v1.md` (engine overridden: HTML5 Canvas + classic JS, no bundler, GitHub Pages)._
+_Last reviewed: 2026-11-18 · Build 1.16.0 · Spec: `Crownless_MVP_GDD_v1.md` (engine overridden: HTML5 Canvas + classic JS, no bundler, GitHub Pages)._
 
 This replaces the opencode-swarm plan (`.swarm/plan.md`, removed). The gate structure (A→E) is kept from the GDD; the task list is condensed and re-ordered around what the code actually needs.
 
@@ -111,7 +111,7 @@ From the owner's v2.0 design (`Crownless_v2_0_Feature_and_Systems_Design_Part_1.
   - ✅ (1.13.0) V2-09 nearby reinforcements: world parties that can reach a battle within its 4 hours and hear it join at a worked-out time (an hour away is ten seconds of battle), from the side they come from; Reavers join Reavers, a friend's patrol helps, a Hostile kingdom's patrol comes for you; seen ones are named on the encounter screen, others announced 10 s ahead with a banner; reserves at the unit cap; too late if the battle ends first; helpers' kills are theirs; parties in a live battle are locked so none can lose two battles; one commit; auto-resolve counts the help that would arrive in good time
   - ✅ (1.14.0) V2-10 company chronicle and roll of honour: a Company chronicle in the Journal beside the regional news (the company founded, recruits and promotions folded per day, notable battles with who fell, deserters, the retired, quests completed or failed; at most 80 lines); a Roll of honour tab in Party for soldiers who fell, deserted or retired (who, from where, how long, their record and how they left; newest 60 in full, older ones counted); Retire with honour on a soldier's card; "Who did what" on the battle result; save schema v7; fixtures from the real 1.13.0 build
   - ✅ (1.15.0) V2-11 accounts and the quartermaster: your purse, the company chest and follower budgets, with every change of money going through one transfer function and a ledger (source, destination, reason); wages from the chest first; captors take a share of every account; a hireable quartermaster who keeps the next wages in the chest and buys food up to a reserve within a weekly budget (default 5 days, 60 crowns), drawing from your purse only what the food needs, warns before shortages and logs everything; save schema v8; fixtures from the real 1.14.0 build
-  - V2-12 the merchant follower
+  - ✅ (1.16.0) V2-12 the merchant follower: trades an assigned budget (its own account) at every market you reach through the same buy and sell functions as you; knows only prices seen on your travels (older ones trusted less, a bounded estimate); Cautious by default, Bold optional; sells first, then buys a unit at a time within margin, invested share, cash, cargo room and a per-good cap; reports what and why, or that no safe trade was found; stop, take back, or recover everything at any time; save schema v9; fixtures from the real 1.15.0 build
   - V2-Q a few small quests that use the new systems (no new main story)
   - V2-T1 and V2-T2 tuning passes (economy, then battles)
   - V2-13 v2.0 acceptance; v2.0 is a testing release

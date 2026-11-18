@@ -10,7 +10,7 @@
 // Save & export, and writes tests/fixtures/saves-<label>/ in this repository: the exported files and
 // index.json with what a later build must reproduce on import.
 // Used for 0.14.0 (a00c5b6, Gate C), 0.28.0 (d96b90d, Gate D), 1.2.0 (2673ca9, save schema v3)
-// 1.3.0 (f7a54c4, save schema v4), 1.4.0 (e53ce42, save schema v5), 1.13.0 (7c7f371, save schema v6) and 1.14.0 (a8fc03e, save schema v7).
+// 1.3.0 (f7a54c4, save schema v4), 1.4.0 (e53ce42, save schema v5), 1.13.0 (7c7f371, save schema v6), 1.14.0 (a8fc03e, save schema v7) and 1.15.0 (c692371, save schema v8).
 // Re-running replaces the set; only do that on purpose. The 0.3.x (schema v1) fixture is
 // hand-written from docs/BASELINE.md §6 instead,
 // because that build was a single minified file with no bots.
