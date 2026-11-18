@@ -513,9 +513,16 @@
         'div',
         { className: 'contractCard' },
         mk('h3', { textContent: `Quartermaster ${q.name}` }),
-        mk('p', { textContent: `Spent ${q.spent} of ${q.budget} crowns this week. Paid ${Q.WAGE} a week.` }),
+        mk('p', { textContent: `Spent ${q.spent} of ${Q.budgetOf(c)} crowns this week. Paid ${Q.WAGE} a week.` }),
         mk('div', { className: 'row qmRule' }, mk('span', { textContent: `Keep food for ${q.reserveDays} days` }), step('reserveDays', -1, ...Q.LIMITS.reserveDays), step('reserveDays', 1, ...Q.LIMITS.reserveDays)),
-        mk('div', { className: 'row qmRule' }, mk('span', { textContent: `Spend at most ${q.budget} a week` }), step('budget', -20, ...Q.LIMITS.budget), step('budget', 20, ...Q.LIMITS.budget)),
+        mk(
+          'div',
+          { className: 'row qmRule' },
+          mk('span', { textContent: q.budget === null ? `Spend at most ${Q.budgetOf(c)} a week (automatic: a week’s food and a quarter)` : `Spend at most ${q.budget} a week` }),
+          btn('−', () => Q.setRule(c, 'budget', Q.budgetOf(c) - 20), Q.budgetOf(c) - 20 < Q.LIMITS.budget[0]),
+          btn('+', () => Q.setRule(c, 'budget', Q.budgetOf(c) + 20), Q.budgetOf(c) + 20 > Q.LIMITS.budget[1]),
+          q.budget === null ? null : btn('Automatic', () => Q.setRule(c, 'budget', null)),
+        ),
         mk(
           'div',
           { className: 'row qmRule' },

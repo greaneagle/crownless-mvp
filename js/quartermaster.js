@@ -6,7 +6,9 @@
  * HIRE crowns once and WAGE a week, paid with the soldiers' wages. They buy only necessities (food),
  * always from the company chest. Their rules, set on the Accounts screen:
  *   reserve days  keep this many days of food (default 5; 0 turns buying off)
- *   weekly budget the most they spend on food in a week (default 60)
+ *   weekly budget the most they spend on food in a week. By default automatic (V2-T1): a week's
+ *                 food for the company as it is now, plus a quarter, so it grows with you; or a
+ *                 fixed amount you set (0–1000)
  *   cover wages   keep the next wages in the chest, topping it up from your purse when you reach a
  *                 settlement (default on), and never spend that money on food
  * In a settlement that sells food they first set the wages aside, then buy food up to the reserve,
@@ -23,9 +25,10 @@
 
   const HIRE = 40;
   const WAGE = 6;
-  const DEFAULTS = { reserveDays: 5, budget: 60, coverWages: true };
+  const DEFAULTS = { reserveDays: 5, budget: null, coverWages: true }; // budget null: automatic (V2-T1)
   /** @type {Record<string, [number, number]>} */
-  const LIMITS = { reserveDays: [0, 14], budget: [0, 500] };
+  const LIMITS = { reserveDays: [0, 14], budget: [0, 1000] };
+  const AUTO_MARGIN = 1.25; // the automatic budget: a week's food and a quarter more
   const LOG_MAX = 20;
   const WARN_FOOD_DAYS = 2;
   const WARN_WAGES_DAYS = 2;
@@ -46,6 +49,17 @@
     if (!q) return;
     q.log.push({ day: c.day, text: text.slice(0, 120) });
     if (q.log.length > LOG_MAX) q.log.splice(0, q.log.length - LOG_MAX);
+  }
+
+  /**
+   * This week's spending limit: the fixed budget, or (automatic) a week's food for the company now and
+   * a quarter more, rounded up to 10. @param {Campaign} c
+   */
+  function budgetOf(c) {
+    const q = get(c);
+    if (!q) return 0;
+    if (q.budget !== null) return q.budget;
+    return Math.ceil((7 * U().dailyRations(c) * U().rationPrice(c) * AUTO_MARGIN) / 10) * 10;
   }
 
   /** Can one be hired here? @param {Campaign} c */
@@ -83,6 +97,7 @@
     const q = get(c);
     if (!q) return false;
     if (key === 'coverWages') q.coverWages = Boolean(value);
+    else if (key === 'budget' && value === null) q.budget = null; // back to automatic
     else if (key in LIMITS && Number.isFinite(value)) q[key] = clamp(value, LIMITS[key]);
     else return false;
     return true;
@@ -119,7 +134,7 @@
     if (need > 0) {
       const price = U().rationPrice(c);
       const reserved = q.coverWages ? due : 0;
-      const left = Math.max(0, q.budget - q.spent);
+      const left = Math.max(0, budgetOf(c) - q.spent);
       const want = Math.min(need, Math.floor(left / price)) * price; // what the budget allows
       const lack = want - Math.max(0, A.balance(c, 'chest') - reserved);
       if (lack > 0 && c.gold > 0 && A.transfer(c, 'purse', 'chest', Math.min(lack, c.gold), 'drawn for food')) {
@@ -206,7 +221,7 @@
       origin: CL.content.table('settlements')[q.origin] ? q.origin : null,
       hired: Math.max(0, num(q.hired, 0)),
       reserveDays: clamp(num(q.reserveDays, DEFAULTS.reserveDays), LIMITS.reserveDays),
-      budget: clamp(num(q.budget, DEFAULTS.budget), LIMITS.budget),
+      budget: q.budget === null || q.budget === undefined ? null : clamp(num(q.budget, 0), LIMITS.budget),
       coverWages: q.coverWages === undefined ? DEFAULTS.coverWages : Boolean(q.coverWages),
       weekStart: Math.max(0, num(q.weekStart, 0)),
       spent: Math.max(0, Math.floor(num(q.spent, 0))),
@@ -219,5 +234,5 @@
     };
   }
 
-  CL.quartermaster = { HIRE, WAGE, DEFAULTS, LIMITS, get, canHire, hire, dismiss, setRule, act, daily, payday, wagesDue, sellsFood, sanitize };
+  CL.quartermaster = { HIRE, WAGE, DEFAULTS, LIMITS, get, budgetOf, canHire, hire, dismiss, setRule, act, daily, payday, wagesDue, sellsFood, sanitize };
 })(typeof window !== 'undefined' ? window : globalThis);

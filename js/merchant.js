@@ -36,9 +36,12 @@
   const ACCOUNT = 'budget:merchant';
   const PRESETS = {
     cautious: { margin: 0.1, invest: 0.7, perGood: 6 },
-    bold: { margin: 0.04, invest: 1, perGood: 12 },
+    bold: { margin: 0.06, invest: 0.9, perGood: 12 }, // V2-T1: was 4% and all of it, and got stuck holding goods
   };
   const DECAY = { perDay: 0.01, max: 0.15 };
+  // V2-T1 (design Part 2 §27.4, goods but no cash): stock held this many days sells at cost, and
+  // after the longer wait for what it fetches down to LOSS of its cost, so capital doesn't sit idle.
+  const AGE = { breakEven: 6, cutLosses: 14, loss: 0.85 };
   const LOG_MAX = 20;
   const BY = 'merchant';
 
@@ -73,7 +76,7 @@
     c.followers ??= { quartermaster: null, merchant: null };
     c.accounts.budgets.merchant ??= 0;
     /** @type {Merchant} */
-    const m = { name, culture, origin: place, hired: c.day, preset: 'cautious', active: true, stock: {}, paid: {}, prices: {}, unpaid: 0, log: [] };
+    const m = { name, culture, origin: place, hired: c.day, preset: 'cautious', active: true, stock: {}, paid: {}, since: {}, prices: {}, unpaid: 0, log: [] };
     c.followers.merchant = m;
     log(c, `Hired at ${CL.soldiers.placeName(place)}.`);
     note(c, place);
@@ -118,6 +121,7 @@
     }
     m.stock = {};
     m.paid = {};
+    m.since = {};
     m.active = false;
     log(c, `Handed back ${money} crowns${goods ? ` and ${goods} goods (now in your cargo)` : ''}.`);
     return { cash: money, goods };
@@ -178,16 +182,21 @@
     const skipped = {};
     // 1. Sell what pays here.
     for (const g of Object.keys(m.stock)) {
+      const age = c.day - (m.since[g] ?? c.day);
+      const want = age >= AGE.cutLosses ? AGE.loss : age >= AGE.breakEven ? 1 : 1 + p.margin;
       while (m.stock[g] > 0) {
         const each = m.paid[g] / m.stock[g];
         const price = T().unitSellPrice(c, sid, g);
-        if (price < each * (1 + p.margin)) break;
+        if (price < each * want) break;
         const r = T().sell(c, sid, g, 1, opts);
         if (!r.ok) break;
         profit += r.total - each;
         m.paid[g] -= each;
-        if (!m.stock[g]) delete m.paid[g];
-        sold[g] ??= { n: 0, total: 0 };
+        if (!m.stock[g]) {
+          delete m.paid[g];
+          delete m.since[g];
+        }
+        sold[g] ??= { n: 0, total: 0, old: want <= 1 };
         sold[g].n++;
         sold[g].total += r.total;
       }
@@ -224,6 +233,7 @@
           break;
         }
         m.paid[good] = (m.paid[good] || 0) + r.total;
+        m.since[good] ??= c.day;
         bought[good] ??= { n: 0, total: 0, to: best.sid };
         bought[good].n++;
         bought[good].total += r.total;
@@ -234,7 +244,7 @@
     for (const g of Object.keys(m.paid)) m.paid[g] = Math.round(m.paid[g] * 100) / 100;
     for (const g of Object.keys(bought)) delete skipped[g]; // holding some and buying more is one story
     const where = CL.soldiers.placeName(sid);
-    const list = (o) => Object.entries(o).map(([g, x]) => `${x.n} ${goodName(g)} for ${x.total}`).join(', ');
+    const list = (o) => Object.entries(o).map(([g, x]) => `${x.n} ${goodName(g)} for ${x.total}${x.old ? ' (old stock)' : ''}`).join(', ');
     const parts = [];
     if (Object.keys(sold).length) parts.push(`Sold ${list(sold)}`);
     if (Object.keys(bought).length) parts.push(`${parts.length ? 'bought' : 'Bought'} ${list(bought)}`);
@@ -285,10 +295,13 @@
     const stock = {};
     /** @type {Record<string, number>} */
     const paid = {};
+    /** @type {Record<string, number>} */
+    const since = {};
     for (const [g, n] of Object.entries(m.stock || {})) {
       if (!goods.has(g) || !Number.isInteger(n) || n <= 0) continue;
       stock[g] = Math.min(n, 9999);
       paid[g] = num(m.paid?.[g]) ? m.paid[g] : 0;
+      since[g] = num(m.since?.[g]) ? m.since[g] : num(d?.day) ? d.day : 0; // older saves: from now
     }
     /** @type {Record<string, Record<string, { buy: number, sell: number, day: number }>>} */
     const prices = {};
@@ -306,6 +319,7 @@
       active: m.active !== false,
       stock,
       paid,
+      since,
       prices,
       unpaid: Number.isInteger(m.unpaid) ? Math.max(0, Math.min(1, m.unpaid)) : 0,
       log: (Array.isArray(m.log) ? m.log : [])
@@ -316,5 +330,5 @@
     s.accounts.budgets.merchant ??= 0;
   }
 
-  CL.merchant = { HIRE, WAGE, ACCOUNT, PRESETS, DECAY, get, canHire, hire, fund, setPreset, setActive, recover, dismiss, note, bestElsewhere, visit, payday, worth, stockCost, sanitize };
+  CL.merchant = { HIRE, WAGE, ACCOUNT, PRESETS, DECAY, AGE, get, canHire, hire, fund, setPreset, setActive, recover, dismiss, note, bestElsewhere, visit, payday, worth, stockCost, sanitize };
 })(typeof window !== 'undefined' ? window : globalThis);

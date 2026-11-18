@@ -180,3 +180,29 @@ test('migration 8 → 9 makes room for a merchant; a damaged merchant is repaire
   d.followers.merchant.name = '';
   assert.equal(CL.save.sanitize(d).followers.merchant, null);
 });
+
+test('V2-T1: stock that waits sells at cost after 6 days and at a small loss after 14, so capital never sits idle', () => {
+  const { CL, c } = camp();
+  const M = CL.merchant;
+  M.hire(c);
+  M.fund(c, 200);
+  c.day += 1;
+  goTo(CL, c, 'saltmere');
+  const m = M.get(c);
+  assert.ok(m.stock.salt > 0);
+  // Redfield pays about 92% of what the salt cost: not worth it fresh, nor at a week (below cost)…
+  c.day += 1;
+  assert.ok(!goTo(CL, c, 'redfield').sold.salt);
+  c.day += 6;
+  assert.ok(!goTo(CL, c, 'redfield').sold.salt, 'at a week it would only sell at cost');
+  // …but after 14 days it goes, at no worse than 85% of cost.
+  c.day += 8;
+  const cost = m.paid.salt;
+  const n = m.stock.salt;
+  const r = goTo(CL, c, 'redfield');
+  assert.ok(r.sold.salt?.n > 0, r.text);
+  assert.match(r.text, /salt for \d+ \(old stock\)/);
+  assert.ok(r.sold.salt.total >= (cost / n) * r.sold.salt.n * M.AGE.loss - 1);
+  assert.deepEqual(Object.keys(M.PRESETS), ['cautious', 'bold']);
+  assert.equal(M.PRESETS.bold.margin, 0.06);
+});

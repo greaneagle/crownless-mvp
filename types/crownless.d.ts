@@ -226,6 +226,8 @@ declare global {
     stock: Record<string, number>;
     /** What each good in stock cost them, in all. */
     paid: Record<string, number>;
+    /** The day they first bought each good now in stock (V2-T1: old stock sells at cost, then at a small loss). */
+    since: Record<string, number>;
     /** Prices seen: settlement → good → { buy, sell, day }. */
     prices: Record<string, Record<string, { buy: number; sell: number; day: number }>>;
     unpaid: number;
@@ -239,7 +241,8 @@ declare global {
     origin: string | null;
     hired: number;
     reserveDays: number;
-    budget: number;
+    /** Fixed weekly limit, or null for automatic (V2-T1). */
+    budget: number | null;
     coverWages: boolean;
     weekStart: number;
     spent: number;

@@ -86,7 +86,7 @@ test('the quartermaster: hired from the purse, sets the next wages aside, buys f
   // Nothing was in the chest for food: they drew it from the purse (within the budget) and bought.
   assert.ok(c.ledger.some((e) => e.from === 'purse' && e.to === 'chest' && e.why === 'drawn for food'));
   assert.ok(c.food > 0);
-  assert.ok(q.spent <= q.budget);
+  assert.ok(q.spent <= Q.budgetOf(c));
   assert.match(q.log.at(-1).text, /^Bought \d+ rations at Stonebridge for \d+ from the chest/);
   // Again with an empty larder: they fill the reserve, but not past the weekly budget.
   q.spent = 0;
@@ -94,8 +94,8 @@ test('the quartermaster: hired from the purse, sets the next wages aside, buys f
   const done = Q.act(c);
   const need = q.reserveDays * CL.upkeep.dailyRations(c);
   const price = CL.upkeep.rationPrice(c);
-  assert.equal(done.rations, Math.min(need, Math.floor(q.budget / price)));
-  assert.ok(q.spent <= q.budget);
+  assert.equal(done.rations, Math.min(need, Math.floor(Q.budgetOf(c) / price)));
+  assert.ok(q.spent <= Q.budgetOf(c));
   assert.ok(CL.accounts.balance(c, 'chest') >= due, 'the wage money is never spent on food');
   assert.ok(uiCalls.some((x) => x[0] === 'message' && /^Quartermaster .+: .*bought \d+ rations for \d+/.test(x[1])));
   // A week later the budget starts again.
@@ -165,4 +165,26 @@ test('migration 7 → 8: an empty chest, an empty ledger, no followers; your gol
   assert.equal(v8.gold, 123);
   assert.equal(JSON.stringify([v8.accounts, v8.ledger, v8.followers]), JSON.stringify([{ chest: 0, budgets: {} }, [], { quartermaster: null }]));
   assert.equal(CL.save.check(v8).problems.length, 0);
+});
+
+test('V2-T1: the quartermaster’s budget is automatic by default and grows with the company; a fixed one can be set and undone', () => {
+  const { CL, c } = camp({ gold: 500 });
+  const Q = CL.quartermaster;
+  Q.hire(c);
+  assert.equal(Q.get(c).budget, null, 'automatic');
+  const week = 7 * CL.upkeep.dailyRations(c) * CL.upkeep.rationPrice(c);
+  assert.ok(Q.budgetOf(c) >= week * 1.25 && Q.budgetOf(c) < week * 1.25 + 10, 'a week’s food and a quarter');
+  const small = Q.budgetOf(c);
+  for (let i = 0; i < 12; i++) CL.save.addSoldier(c, 'levy');
+  assert.ok(Q.budgetOf(c) > small, 'more mouths, a bigger budget');
+  Q.setRule(c, 'budget', 80);
+  assert.equal(Q.budgetOf(c), 80);
+  Q.setRule(c, 'budget', null);
+  assert.equal(Q.get(c).budget, null);
+  // A big company left to the quartermaster alone still eats: a week of buying covers a week of food.
+  c.food = 0;
+  Q.get(c).spent = 0;
+  CL.accounts.transfer(c, 'purse', 'chest', 300, 'put in the chest');
+  Q.act(c);
+  assert.ok(CL.upkeep.foodDays(c) >= Q.get(c).reserveDays - 0.01);
 });

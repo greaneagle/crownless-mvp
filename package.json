@@ -1,6 +1,6 @@
 {
   "name": "crownless-mvp",
-  "version": "1.17.0",
+  "version": "1.18.0",
   "private": true,
   "description": "Crownless — HTML5 Canvas party-battle RPG prototype. No runtime dependencies; this file only defines dev scripts.",
   "scripts": {
@@ -11,6 +11,7 @@
     "simulate": "node scripts/simulate-campaign.js",
     "simulate:story": "node scripts/simulate-story.js",
     "bench": "node scripts/bench-battle.js",
+    "economy": "node scripts/economy-report.js",
     "assets": "node scripts/asset-manifest.js",
     "icons": "node scripts/make-icons.js"
   },

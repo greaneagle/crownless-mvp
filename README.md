@@ -1,4 +1,4 @@
-# Crownless 1.17.0 — The Border March
+# Crownless 1.18.0 — The Border March
 
 A single-player, top-down party-battle prototype in plain HTML5 Canvas and classic JavaScript. There's no bundler, no runtime dependencies and no server. It's published to GitHub Pages straight from `main`.
 
@@ -164,6 +164,12 @@ npm run simulate:story
 ```bash
 npm run bench
 ```
+
+```bash
+npm run economy
+```
+
+`economy` plays bot campaigns (60 days, 12 seeds by default) and reports where the money comes from and goes, from every transfer in the ledger, with money, renown and level at days 15, 30 and the end. For tuning passes (V2-T1).
 
 `npm run assets` rebuilds `assets/manifest.json` (every image, its source, and whether the game uses it) after adding or removing art; a test fails if it is out of date.
 
