@@ -4,6 +4,11 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
+    inputs:
+      update_screenshots:
+        description: Make new screenshot baselines (uploaded as an artifact to review and commit); nothing is deployed
+        type: boolean
+        default: false
 permissions:
   contents: read
 concurrency:
@@ -20,9 +25,53 @@ jobs:
       - run: npm test
       - run: npm run lint
 
+  # Browser regression tests (W-00): Playwright on the static game, Chromium only. Screenshot baselines
+  # are made here, on Linux (decision D-T2); a screen with no baseline yet is skipped.
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - id: pw
+        run: echo "version=$(node -p "require('./package-lock.json').packages['node_modules/@playwright/test'].version")" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v4
+        id: browsers
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ runner.os }}-${{ steps.pw.outputs.version }}
+      - if: steps.browsers.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+      - if: steps.browsers.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
+      - if: ${{ !inputs.update_screenshots }}
+        run: npm run test:browser
+      - if: ${{ !inputs.update_screenshots }}
+        run: npm run test:visual
+      - if: ${{ inputs.update_screenshots }}
+        run: npm run test:visual:update
+      - if: ${{ inputs.update_screenshots }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshot-baselines
+          path: tests/browser/screenshots/
+      - if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore
+          retention-days: 14
+
   deploy:
-    needs: check
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: [check, browser]
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && !inputs.update_screenshots
     permissions:
       contents: read
       pages: write

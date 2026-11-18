@@ -471,6 +471,7 @@ Quests are data. `js/story.js` interprets three small vocabularies; its header c
 |---|---|
 | `npm run serve` | Serves the game at http://localhost:8123 (opening `index.html` from disk also works) |
 | `npm test` | 332 tests at 1.0.0 with `node:test`: logic modules and data in a Node `vm` sandbox with the UI stubbed out (`tests/helpers/load.js`) |
+| `npm run test:browser` | From 2.1.0 (W-00): Playwright browser tests of the real game at desktop and phone size (`tests/browser/`); `npm run test:visual` compares screenshots on Linux. See the README, "Browser tests" |
 | `npm run lint` | Biome; from 1.1.0 it also runs `npm run typecheck` |
 | `npm run typecheck` | From 1.1.0 (V2-00): TypeScript's `tsc --noEmit` over the modules marked `// @ts-check`, using the shared types in `types/crownless.d.ts`. Dev only; no build step and no output |
 | `npm run simulate` | Headless campaign bot: 30 days, 8 seeds |

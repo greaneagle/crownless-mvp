@@ -10,6 +10,8 @@
 
 /* Orders panel sits above Attack/Block (GDD §11) so it never covers the controls or the field centre */
 #ordersPanel{left:auto;right:3%;bottom:calc(5% + clamp(83px,12vw,136px) + 10px);min-width:0;max-width:none;padding:6px 8px}
+/* Grows up from above ATTACK but stops below the top-right buttons (2% + one 48 px button + gap), scrolling inside itself on short phones, so Pause never covers its close button (found by the W-00 browser tests at 812×375). */
+#ordersPanel{max-height:calc(100% - 5% - clamp(83px,12vw,136px) - 10px - 2% - 58px);overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y}
 #ordersPanel .ordersHead{display:flex;align-items:center;gap:6px;margin-bottom:4px}
 #ordersPanel .ordersHead #closeOrders{margin:0 0 0 auto;padding:0 12px;font-size:20px;line-height:1}
 #ordersPanel .ordersRow{display:flex;gap:6px;margin-top:6px}

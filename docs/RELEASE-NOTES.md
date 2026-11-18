@@ -1,5 +1,18 @@
 # Crownless — Release Notes
 
+## v2.1.0 — Browser tests (W-00) · 2026-11-18
+
+The first step of Phase W ("A Bigger World", `docs/NEXT-PLAN.md`). Nothing new to play; two fixes.
+
+### Fixes
+- **Phones:** the Orders panel no longer grows up under the Pause button, which covered its close button at 812×375. It stops below the top-right buttons and scrolls if it must.
+- **Battles:** an Attack pressed in the first moments of a battle is no longer lost. The hero started with a short random cooldown meant only to stagger the soldiers' first blows.
+
+### Under the hood
+- **Browser regression tests** with Playwright (the project's first development dependency; the game still has none): startup, character creation, loading saves, the map, settlements and the streets, a battle and its controls, Save & export, and layout checks on a desktop and a landscape phone with touch. Screenshot comparisons against Linux baselines. CI runs them on every push and pull request, and they block the deploy.
+- Save fixtures from the real 2.0.0 build, ready for the save migration into the bigger world (W-06).
+- 533 Node tests, 86 browser tests.
+
 ## v2.0.0 — "The Living Warband" (testing release) · 2026-11-18
 
 The second version of Crownless. The Border March is the same region and story; what changed is the company you lead, the battles you fight and the world around them. Built in 20 steps (1.1.0 to 1.19.0) from the owner's v2.0 design, every step tested and checked in a browser. It's a **testing release**: the evidence is in `docs/V2-VALIDATION.md`, and a few things still wait on a phone run.

@@ -101,6 +101,10 @@
     g.hero = makeUnit(anchor.x, anchor.y, 'ally', 'hero');
     Object.assign(g.hero, CL.character.heroCombat()); // HP, damage, armor, shield from the character
     g.hero.face = 'right';
+    // Units start with a random cooldown so the AI's first blows are staggered; the player's hero must
+    // be ready at once, or an Attack pressed in the first moments outlasts the 100 ms input buffer and
+    // is lost (found by the W-00 browser tests). The random draw is kept, so seeded battles are unchanged.
+    g.hero.attackCooldown = 0;
     // Share the field: the enemies get room for their biggest wave (up to half the cap), the
     // company the rest. Soldiers beyond their formation slots or that share wait in reserve.
     const soldiers = g.practice ? enc.practice.map((troop) => ({ troop, id: null })) : CL.party.healthySoldiers();

@@ -75,8 +75,9 @@ Saves written by real builds, loaded by every later build:
 | `tests/fixtures/saves-1.13/` | 1.13.0 | v6 | The same way | `tests/save-migration.test.js` |
 | `tests/fixtures/saves-1.14/` | 1.14.0 | v7 | The same way | `tests/save-migration.test.js` |
 | `tests/fixtures/saves-1.15/` | 1.15.0 | v8 | The same way | `tests/save-migration.test.js` |
+| `tests/fixtures/saves-2.0/` | 2.0.0 (0415109) | v9 | The same way, made at W-00 (2.1.0) before any Phase W content change; W-06's v10 migration starts from them | `tests/save-migration.test.js`, the browser tests (`tests/browser/load-save.spec.js`) |
 
-Each is imported as a file and, for v2 to v8, also left in storage as the old build would have, then checked against what the old build recorded about it (soldier IDs, troops, XP, gold, day, quests), re-exported, and played on. Never regenerate them casually; they stand for real players' saves.
+Each is imported as a file and, for v2 to v9, also left in storage as the old build would have, then checked against what the old build recorded about it (soldier IDs, troops, XP, gold, day, quests), re-exported, and played on. Never regenerate them casually; they stand for real players' saves.
 
 ## The campaign object (schema v9)
 Schema v9 is schema v2 (below) plus these fields (v3 added the first two, v4 the next three, v6 `troopKnowledge`, v7 `chronicle` and `honour`, v8 the last three; v9 adds the merchant inside `followers`), and every `roster` entry is a named soldier (v5, next section).

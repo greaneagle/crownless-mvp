@@ -1,1 +1,5 @@
 node_modules/
+# Playwright output (W-00): reports, traces and failure screenshots, never committed or published
+playwright-report/
+test-results/
+blob-report/

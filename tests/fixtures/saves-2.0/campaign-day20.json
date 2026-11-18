@@ -1,0 +1,1637 @@
+{
+ "format": "crownless-save",
+ "version": 9,
+ "game": "2.0.0",
+ "exportedAt": "2026-11-18T17:03:42.576Z",
+ "checksum": "286bfde2",
+ "campaign": {
+  "version": 9,
+  "worldId": "border_march",
+  "contentVersion": "2.0.0",
+  "gold": 64,
+  "renown": 31,
+  "battles": 19,
+  "victories": 8,
+  "day": 20.828140014124678,
+  "nextSoldierId": 13,
+  "roster": [
+   {
+    "id": 3,
+    "troop": "footman",
+    "xp": 40,
+    "woundedUntil": 20.84177845853119,
+    "name": "Alys of Stonebridge",
+    "culture": "valedorn",
+    "origin": "stonebridge",
+    "joined": 10.190047717938024,
+    "portrait": null,
+    "record": {
+     "battles": 7,
+     "victories": 3,
+     "kills": 0,
+     "assists": 0,
+     "wounds": 3,
+     "captures": 8,
+     "wagesPaid": 3
+    },
+    "notes": [
+     {
+      "day": 10.190047717938024,
+      "kind": "joined",
+      "place": "stonebridge"
+     },
+     {
+      "day": 15.593468732226496,
+      "kind": "wounded",
+      "foe": "Road Reavers"
+     },
+     {
+      "day": 16.276802065559828,
+      "kind": "captured"
+     },
+     {
+      "day": 17.433460397369434,
+      "kind": "captured"
+     },
+     {
+      "day": 17.805550214609582,
+      "kind": "promoted",
+      "to": "footman"
+     },
+     {
+      "day": 18.57981677523809,
+      "kind": "captured"
+     },
+     {
+      "day": 19.34177845853119,
+      "kind": "captured"
+     },
+     {
+      "day": 19.34177845853119,
+      "kind": "wounded",
+      "foe": "Looter Band"
+     }
+    ]
+   },
+   {
+    "id": 7,
+    "troop": "hunter",
+    "xp": 18,
+    "woundedUntil": null,
+    "name": "Baldric Halfpenny",
+    "culture": "valedorn",
+    "origin": "stonebridge",
+    "joined": 12.526802065559812,
+    "portrait": null,
+    "record": {
+     "battles": 3,
+     "victories": 1,
+     "kills": 0,
+     "assists": 0,
+     "wounds": 3,
+     "captures": 8,
+     "wagesPaid": 6
+    },
+    "notes": [
+     {
+      "day": 12.526802065559812,
+      "kind": "joined",
+      "place": "stonebridge"
+     },
+     {
+      "day": 15.593468732226496,
+      "kind": "captured"
+     },
+     {
+      "day": 15.593468732226496,
+      "kind": "wounded",
+      "foe": "Road Reavers"
+     },
+     {
+      "day": 16.276802065559828,
+      "kind": "captured"
+     },
+     {
+      "day": 17.433460397369434,
+      "kind": "captured"
+     },
+     {
+      "day": 17.700127064036096,
+      "kind": "wounded",
+      "foe": "Road Reavers"
+     },
+     {
+      "day": 18.57981677523809,
+      "kind": "captured"
+     },
+     {
+      "day": 19.34177845853119,
+      "kind": "captured"
+     }
+    ]
+   },
+   {
+    "id": 8,
+    "troop": "levy",
+    "xp": 32,
+    "woundedUntil": null,
+    "name": "Roger",
+    "culture": "valedorn",
+    "origin": "stonebridge",
+    "joined": 16.71679373070277,
+    "portrait": null,
+    "record": {
+     "battles": 3,
+     "victories": 1,
+     "kills": 0,
+     "assists": 0,
+     "wounds": 1,
+     "captures": 3,
+     "wagesPaid": 0
+    },
+    "notes": [
+     {
+      "day": 16.71679373070277,
+      "kind": "joined",
+      "place": "stonebridge"
+     },
+     {
+      "day": 17.433460397369434,
+      "kind": "captured"
+     },
+     {
+      "day": 18.57981677523809,
+      "kind": "captured"
+     },
+     {
+      "day": 18.57981677523809,
+      "kind": "wounded",
+      "foe": "Looter Band"
+     },
+     {
+      "day": 19.34177845853119,
+      "kind": "captured"
+     }
+    ]
+   },
+   {
+    "id": 9,
+    "troop": "hunter",
+    "xp": 32,
+    "woundedUntil": null,
+    "name": "Ivo Tanner",
+    "culture": "valedorn",
+    "origin": "stonebridge",
+    "joined": 16.71679373070277,
+    "portrait": null,
+    "record": {
+     "battles": 3,
+     "victories": 1,
+     "kills": 0,
+     "assists": 0,
+     "wounds": 1,
+     "captures": 3,
+     "wagesPaid": 0
+    },
+    "notes": [
+     {
+      "day": 16.71679373070277,
+      "kind": "joined",
+      "place": "stonebridge"
+     },
+     {
+      "day": 17.433460397369434,
+      "kind": "captured"
+     },
+     {
+      "day": 18.57981677523809,
+      "kind": "captured"
+     },
+     {
+      "day": 18.57981677523809,
+      "kind": "wounded",
+      "foe": "Looter Band"
+     },
+     {
+      "day": 19.34177845853119,
+      "kind": "captured"
+     }
+    ]
+   },
+   {
+    "id": 10,
+    "troop": "mercenary",
+    "xp": 54,
+    "woundedUntil": 21.603740141824293,
+    "name": "Wat of Stonebridge",
+    "culture": "border",
+    "origin": "stonebridge",
+    "joined": 16.71679373070277,
+    "portrait": null,
+    "record": {
+     "battles": 5,
+     "victories": 2,
+     "kills": 0,
+     "assists": 0,
+     "wounds": 1,
+     "captures": 3,
+     "wagesPaid": 0
+    },
+    "notes": [
+     {
+      "day": 16.71679373070277,
+      "kind": "joined",
+      "place": "stonebridge"
+     },
+     {
+      "day": 17.433460397369434,
+      "kind": "captured"
+     },
+     {
+      "day": 18.57981677523809,
+      "kind": "captured"
+     },
+     {
+      "day": 19.34177845853119,
+      "kind": "captured"
+     },
+     {
+      "day": 19.603740141824293,
+      "kind": "wounded",
+      "foe": "Looter Band"
+     }
+    ]
+   },
+   {
+    "id": 11,
+    "troop": "levy",
+    "xp": 4,
+    "woundedUntil": null,
+    "name": "Baldric of Stonebridge",
+    "culture": "valedorn",
+    "origin": "stonebridge",
+    "joined": 17.805550214609582,
+    "portrait": null,
+    "record": {
+     "battles": 1,
+     "victories": 0,
+     "kills": 0,
+     "assists": 0,
+     "wounds": 1,
+     "captures": 2,
+     "wagesPaid": 0
+    },
+    "notes": [
+     {
+      "day": 17.805550214609582,
+      "kind": "joined",
+      "place": "stonebridge"
+     },
+     {
+      "day": 18.57981677523809,
+      "kind": "captured"
+     },
+     {
+      "day": 18.57981677523809,
+      "kind": "wounded",
+      "foe": "Looter Band"
+     },
+     {
+      "day": 19.34177845853119,
+      "kind": "captured"
+     }
+    ]
+   },
+   {
+    "id": 12,
+    "troop": "hunter",
+    "xp": 4,
+    "woundedUntil": null,
+    "name": "Joliet Fowler",
+    "culture": "valedorn",
+    "origin": "stonebridge",
+    "joined": 17.805550214609582,
+    "portrait": null,
+    "record": {
+     "battles": 1,
+     "victories": 0,
+     "kills": 0,
+     "assists": 0,
+     "wounds": 1,
+     "captures": 2,
+     "wagesPaid": 0
+    },
+    "notes": [
+     {
+      "day": 17.805550214609582,
+      "kind": "joined",
+      "place": "stonebridge"
+     },
+     {
+      "day": 18.57981677523809,
+      "kind": "captured"
+     },
+     {
+      "day": 18.57981677523809,
+      "kind": "wounded",
+      "foe": "Looter Band"
+     },
+     {
+      "day": 19.34177845853119,
+      "kind": "captured"
+     }
+    ]
+   }
+  ],
+  "inventory": {
+   "boots": 2,
+   "hand_axe": 1,
+   "gambeson": 1,
+   "leather_cap": 1,
+   "worn_sword": 1,
+   "clothing": 1
+  },
+  "lastResolvedBattle": 19,
+  "world": {
+   "x": 62,
+   "y": 40,
+   "location": "eastwatch",
+   "sites": {
+    "looter_camp": {
+     "clearedUntil": 21.603740141824293
+    },
+    "reaver_hideout": {
+     "clearedUntil": 0
+    }
+   }
+  },
+  "character": {
+   "name": "Bot3",
+   "gender": "unspecified",
+   "cloak": "crimson",
+   "background": "farmhand",
+   "attributes": {
+    "str": 8,
+    "agi": 5,
+    "int": 5,
+    "cha": 5
+   },
+   "skills": {
+    "one_handed": 1,
+    "shield": 0,
+    "archery": 0,
+    "riding": 0,
+    "leadership": 3,
+    "tactics": 0,
+    "pathfinding": 0,
+    "trade": 0
+   },
+   "level": 4,
+   "xp": 220,
+   "skillPoints": 0,
+   "attributePoints": 0
+  },
+  "equipment": {
+   "weapon": "worn_sword",
+   "offhand": "oak_shield",
+   "head": "leather_cap",
+   "body": "clothing",
+   "hands": "gloves",
+   "feet": "boots",
+   "horse": null,
+   "ring": null
+  },
+  "food": 11.060513702453422,
+  "morale": 57.17335640949092,
+  "nextWagesDay": 21,
+  "starving": false,
+  "markets": {
+   "stonebridge": {
+    "grain": 0.818,
+    "salt": 1.1,
+    "wool": 0.833,
+    "iron": 1.1,
+    "cloth": 1.05,
+    "tools": 1
+   },
+   "eastwatch": {
+    "grain": 1.15,
+    "salt": 0.839,
+    "wool": 1.1,
+    "iron": 1,
+    "cloth": 0.8,
+    "tools": 0.9
+   },
+   "oakford": {
+    "grain": 0.8,
+    "salt": 1.3,
+    "wool": 0.8,
+    "iron": 1.3,
+    "cloth": 1.2,
+    "tools": 1.25
+   },
+   "highmere": {
+    "grain": 0.946,
+    "salt": 1.25,
+    "wool": 0.88,
+    "iron": 0.85,
+    "cloth": 1.2,
+    "tools": 1.1
+   },
+   "brackenfield": {
+    "grain": 0.844,
+    "salt": 1.3,
+    "wool": 0.917,
+    "iron": 1.2,
+    "cloth": 1.25,
+    "tools": 1.3
+   },
+   "dunmarsh": {
+    "grain": 1.25,
+    "salt": 0.8,
+    "wool": 1.2,
+    "iron": 1.3,
+    "cloth": 0.844,
+    "tools": 1.2
+   },
+   "redfield": {
+    "grain": 0.85,
+    "salt": 0.848,
+    "wool": 1.05,
+    "iron": 1.25,
+    "cloth": 0.8140000000000001,
+    "tools": 1.2
+   },
+   "saltmere": {
+    "grain": 1.2,
+    "salt": 0.8,
+    "wool": 1.2,
+    "iron": 1.3,
+    "cloth": 0.861,
+    "tools": 1.15
+   }
+  },
+  "cargo": {},
+  "rngSeed": 43628391,
+  "rng": {
+   "casualties": 1876450959,
+   "loot": 1140904364,
+   "upkeep": 4185906768,
+   "names": 2764627552
+  },
+  "nextResultId": 25,
+  "nextEventId": 84,
+  "parties": [
+   {
+    "id": 11,
+    "template": "valedorn_patrol",
+    "x": 45.93889085730953,
+    "y": 52.25674239339514,
+    "troops": {
+     "footman": 3,
+     "hunter": 2,
+     "levy": 3
+    },
+    "tx": 53.344489090144634,
+    "ty": 45.660584496334195,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "chasing": null
+   },
+   {
+    "id": 25,
+    "template": "aurelian_caravan",
+    "x": 80.8803364948907,
+    "y": 65.92934997864991,
+    "troops": {
+     "recruit": 2
+    },
+    "tx": 84,
+    "ty": 80,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "routeIndex": 1,
+    "good": "cloth",
+    "chasing": null
+   },
+   {
+    "id": 33,
+    "template": "aurelian_patrol",
+    "x": 68.83726027806507,
+    "y": 79.4882191658048,
+    "troops": {
+     "skirmisher": 2,
+     "recruit": 2
+    },
+    "tx": 66,
+    "ty": 88,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "chasing": null
+   },
+   {
+    "id": 36,
+    "template": "aurelian_patrol",
+    "x": 69.53811803923746,
+    "y": 68.26794264714049,
+    "troops": {
+     "spearman": 4,
+     "skirmisher": 3,
+     "recruit": 3
+    },
+    "tx": 62,
+    "ty": 40,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "chasing": null
+   },
+   {
+    "id": 38,
+    "template": "bandits",
+    "x": 58.74899051244819,
+    "y": 22.82841884687798,
+    "troops": {
+     "reaver": 2,
+     "looter": 4
+    },
+    "tx": 59.154529482256635,
+    "ty": 22.35467891358444,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lair": "reaver_hideout",
+    "anchor": {
+     "x": 57.523986945059164,
+     "y": 20.713676502561658
+    },
+    "contractId": 25,
+    "chasing": null
+   }
+  ],
+  "partySpawns": {
+   "valedorn_patrol": 21.350111791864524,
+   "valedorn_caravan": 21.72397334745801,
+   "bandits": 21.88022334745801,
+   "aurelian_caravan": 13.31074659836938,
+   "aurelian_patrol": 20.90427845853119
+  },
+  "nextPartyId": 40,
+  "contract": {
+   "id": 25,
+   "template": "bandit_hunt",
+   "giver": "eastwatch",
+   "days": 4,
+   "offeredUntil": 22.828140014124678,
+   "troops": {
+    "reaver": 2,
+    "looter": 5
+   },
+   "x": 57.523986945059164,
+   "y": 20.713676502561658,
+   "reward": {
+    "gold": 82,
+    "renown": 5,
+    "xp": 75
+   },
+   "status": "active",
+   "deadline": 23.828140014124678,
+   "partyId": 38
+  },
+  "contractOffers": {
+   "stonebridge": {
+    "bandit_hunt": null,
+    "escort": {
+     "id": 23,
+     "template": "escort",
+     "giver": "stonebridge",
+     "days": 4,
+     "offeredUntil": 19.71679373070277,
+     "to": "ashgate_fort",
+     "troops": {
+      "reaver": 5,
+      "looter": 4
+     },
+     "x": 60.30883448664099,
+     "y": 62.73162586498074,
+     "reward": {
+      "gold": 96,
+      "renown": 4,
+      "xp": 74
+     }
+    },
+    "delivery": {
+     "id": 24,
+     "template": "delivery",
+     "giver": "stonebridge",
+     "days": 5,
+     "offeredUntil": 19.71679373070277,
+     "to": "dunmarsh",
+     "letter": true,
+     "reward": {
+      "gold": 70,
+      "renown": 2,
+      "xp": 45
+     }
+    },
+    "bandit_hunt_until": 19.71679373070277
+   },
+   "eastwatch": {
+    "bandit_hunt": null,
+    "escort": {
+     "id": 26,
+     "template": "escort",
+     "giver": "eastwatch",
+     "days": 4,
+     "offeredUntil": 22.828140014124678,
+     "to": "dunmarsh",
+     "troops": {
+      "looter": 4,
+      "reaver": 3
+     },
+     "x": 63.851366974879056,
+     "y": 62.216403698548675,
+     "reward": {
+      "gold": 111,
+      "renown": 4,
+      "xp": 84
+     }
+    },
+    "delivery": {
+     "id": 27,
+     "template": "delivery",
+     "giver": "eastwatch",
+     "days": 5,
+     "offeredUntil": 22.828140014124678,
+     "to": "ashgate_fort",
+     "letter": true,
+     "reward": {
+      "gold": 58,
+      "renown": 2,
+      "xp": 39
+     }
+    },
+    "bandit_hunt_until": 22.828140014124678
+   }
+  },
+  "nextContractId": 28,
+  "contractsDone": 3,
+  "reputation": {
+   "valedorn": 32,
+   "aurelian": 14
+  },
+  "owners": {
+   "greywall_fort": "valedorn",
+   "ashgate_fort": "aurelian"
+  },
+  "story": {
+   "flags": {},
+   "quests": {},
+   "visits": {}
+  },
+  "companion": null,
+  "news": {
+   "events": [
+    {
+     "day": 17.750127064036093,
+     "kind": "caravan_arrived",
+     "dest": "dunmarsh",
+     "good": "salt",
+     "faction": "aurelian"
+    },
+    {
+     "day": 17.77512706403609,
+     "kind": "frontier_clash",
+     "place": "eastwatch",
+     "winner": "valedorn",
+     "loser": "aurelian",
+     "told": true
+    },
+    {
+     "day": 17.897216881276243,
+     "kind": "caravan_arrived",
+     "dest": "oakford",
+     "good": "wool",
+     "faction": "valedorn"
+    },
+    {
+     "day": 18.152733441904758,
+     "kind": "caravan_arrived",
+     "dest": "eastwatch",
+     "good": "cloth",
+     "faction": "aurelian"
+    },
+    {
+     "day": 18.29856677523809,
+     "kind": "caravan_arrived",
+     "dest": "highmere",
+     "good": "grain",
+     "faction": "valedorn"
+    },
+    {
+     "day": 18.36106677523809,
+     "kind": "caravan_arrived",
+     "dest": "redfield",
+     "good": "cloth",
+     "faction": "aurelian"
+    },
+    {
+     "day": 18.596483441904756,
+     "kind": "caravan_arrived",
+     "dest": "saltmere",
+     "good": "salt",
+     "faction": "aurelian"
+    },
+    {
+     "day": 18.675111791864524,
+     "kind": "caravan_arrived",
+     "dest": "brackenfield",
+     "good": "wool",
+     "faction": "valedorn"
+    },
+    {
+     "day": 18.91469512519786,
+     "kind": "caravan_arrived",
+     "dest": "dunmarsh",
+     "good": "cloth",
+     "faction": "aurelian"
+    },
+    {
+     "day": 18.96677845853119,
+     "kind": "caravan_arrived",
+     "dest": "stonebridge",
+     "good": "grain",
+     "faction": "valedorn"
+    },
+    {
+     "day": 19.15427845853119,
+     "kind": "caravan_arrived",
+     "dest": "oakford",
+     "good": "grain",
+     "faction": "valedorn"
+    },
+    {
+     "day": 19.21677845853119,
+     "kind": "caravan_lost",
+     "place": "oakford",
+     "dest": "highmere",
+     "good": "grain",
+     "faction": "valedorn"
+    },
+    {
+     "day": 19.32094512519786,
+     "kind": "caravan_arrived",
+     "dest": "eastwatch",
+     "good": "cloth",
+     "faction": "aurelian"
+    },
+    {
+     "day": 19.350111791864524,
+     "kind": "patrol_beaten",
+     "place": "greywall_fort",
+     "faction": "valedorn"
+    },
+    {
+     "day": 19.530823475157625,
+     "kind": "caravan_arrived",
+     "dest": "redfield",
+     "good": "cloth",
+     "faction": "aurelian"
+    },
+    {
+     "day": 19.603740141824293,
+     "kind": "player_deed",
+     "place": "greywall_fort"
+    },
+    {
+     "day": 19.778740141824283,
+     "kind": "caravan_arrived",
+     "dest": "saltmere",
+     "good": "salt",
+     "faction": "aurelian"
+    },
+    {
+     "day": 20.09897334745801,
+     "kind": "caravan_arrived",
+     "dest": "dunmarsh",
+     "good": "salt",
+     "faction": "aurelian"
+    },
+    {
+     "day": 20.31772334745801,
+     "kind": "reavers_broken",
+     "place": "stonebridge",
+     "faction": "aurelian"
+    },
+    {
+     "day": 20.38022334745801,
+     "kind": "reavers_broken",
+     "place": "oakford",
+     "faction": "valedorn"
+    },
+    {
+     "day": 20.401056680791346,
+     "kind": "caravan_arrived",
+     "dest": "oakford",
+     "good": "wool",
+     "faction": "valedorn"
+    },
+    {
+     "day": 20.50522334745801,
+     "kind": "caravan_arrived",
+     "dest": "eastwatch",
+     "good": "cloth",
+     "faction": "aurelian"
+    },
+    {
+     "day": 20.713556680791346,
+     "kind": "caravan_arrived",
+     "dest": "redfield",
+     "good": "cloth",
+     "faction": "aurelian"
+    },
+    {
+     "day": 20.72397334745801,
+     "kind": "caravan_lost",
+     "place": "highmere",
+     "dest": "highmere",
+     "good": "wool",
+     "faction": "valedorn",
+     "told": true
+    }
+   ],
+   "lines": [
+    {
+     "day": 6,
+     "kind": "patrol_beaten",
+     "text": "Road Reavers cut up Valedorn soldiers near Oakford. The roads there are not safe."
+    },
+    {
+     "day": 8,
+     "kind": "player_deed",
+     "text": "Travellers talk of Bot3, who broke a band of Road Reavers near Greywall Fort."
+    },
+    {
+     "day": 10,
+     "kind": "frontier_clash",
+     "text": "Blood on the border near Dunmarsh: Aurelian riders drove Valedorn soldiers off the road."
+    },
+    {
+     "day": 12,
+     "kind": "caravan_lost",
+     "text": "The Aurelian caravan bound for Eastwatch never arrived. Reavers took it near Ashgate Fort."
+    },
+    {
+     "day": 14,
+     "kind": "patrol_beaten",
+     "text": "Road Reavers cut up Aurelian soldiers near Stonebridge. The roads there are not safe."
+    },
+    {
+     "day": 16,
+     "kind": "caravan_lost",
+     "text": "Road Reavers fell on Valedorn wagons near Brackenfield. Grain will cost more in Brackenfield for a while."
+    },
+    {
+     "day": 18,
+     "kind": "frontier_clash",
+     "text": "Valedorn and Aurelian patrols came to blows near Eastwatch. The Valedorn riders held the field."
+    },
+    {
+     "day": 20,
+     "kind": "caravan_lost",
+     "text": "The Valedorn caravan bound for Highmere never arrived. Reavers took it near Highmere."
+    }
+   ],
+   "next": 22,
+   "clashUntil": 21.77512706403609,
+   "turns": {
+    "frontier_clash": 3,
+    "caravan_lost": 4,
+    "patrol_beaten": 2,
+    "player_deed": 1
+   }
+  },
+  "troopKnowledge": {
+   "levy": "owned",
+   "hunter": "owned",
+   "mercenary": "owned",
+   "recruit": "owned",
+   "skirmisher": "owned",
+   "looter": "seen",
+   "reaver": "seen",
+   "spearman": "seen",
+   "marksman": "seen",
+   "footman": "owned",
+   "longbowman": "seen",
+   "sellsword": "seen",
+   "guard": "seen",
+   "rider": "seen"
+  },
+  "chronicle": [
+   {
+    "day": 0,
+    "kind": "founded"
+   },
+   {
+    "day": 1.3204520189771733,
+    "kind": "battle",
+    "foe": "Road Reavers",
+    "win": false,
+    "kills": 1,
+    "fallen": [],
+    "lost": 0,
+    "auto": true
+   },
+   {
+    "day": 4.0758984797041204,
+    "kind": "battle",
+    "foe": "Road Reavers",
+    "win": false,
+    "kills": 0,
+    "fallen": [],
+    "lost": 0,
+    "auto": false
+   },
+   {
+    "day": 4.3909254188723095,
+    "kind": "recruited",
+    "place": "eastwatch",
+    "names": [
+     "Sabina of Eastwatch",
+     "Calla of Eastwatch"
+    ],
+    "n": 2
+   },
+   {
+    "day": 5.277081531520623,
+    "kind": "battle",
+    "foe": "Looter Band",
+    "win": false,
+    "kills": 3,
+    "fallen": [],
+    "lost": 0,
+    "auto": true
+   },
+   {
+    "day": 10.078158917414259,
+    "kind": "battle",
+    "foe": "Looter Band",
+    "win": true,
+    "kills": 7,
+    "fallen": [
+     "Sabina of Eastwatch"
+    ],
+    "lost": 1,
+    "auto": true
+   },
+   {
+    "day": 10.190047717938024,
+    "kind": "recruited",
+    "place": "stonebridge",
+    "names": [
+     "Alys of Stonebridge"
+    ],
+    "n": 1
+   },
+   {
+    "day": 11.6476184225591,
+    "kind": "battle",
+    "foe": "Road Reavers",
+    "win": true,
+    "kills": 5,
+    "fallen": [
+     "Calla of Eastwatch"
+    ],
+    "lost": 1,
+    "auto": true
+   },
+   {
+    "day": 11.758375493021207,
+    "kind": "recruited",
+    "place": "eastwatch",
+    "names": [
+     "Aurel of Eastwatch"
+    ],
+    "n": 1
+   },
+   {
+    "day": 11.885799230149981,
+    "kind": "recruited",
+    "place": "stonebridge",
+    "names": [
+     "Edith of Stonebridge"
+    ],
+    "n": 1
+   },
+   {
+    "day": 12.414913265036047,
+    "kind": "battle",
+    "foe": "Looter Band",
+    "win": true,
+    "kills": 7,
+    "fallen": [
+     "Edith of Stonebridge"
+    ],
+    "lost": 1,
+    "auto": true
+   },
+   {
+    "day": 12.526802065559812,
+    "kind": "recruited",
+    "place": "stonebridge",
+    "names": [
+     "Isolde the Quiet",
+     "Baldric Halfpenny"
+    ],
+    "n": 2
+   },
+   {
+    "day": 13.31013539889315,
+    "kind": "battle",
+    "foe": "Road Reavers",
+    "win": false,
+    "kills": 0,
+    "fallen": [
+     "Aurel of Eastwatch",
+     "Isolde the Quiet"
+    ],
+    "lost": 2,
+    "auto": false
+   },
+   {
+    "day": 14.143468732226491,
+    "kind": "battle",
+    "foe": "Road Reavers",
+    "win": false,
+    "kills": 0,
+    "fallen": [],
+    "lost": 0,
+    "auto": false
+   },
+   {
+    "day": 14.893468732226495,
+    "kind": "battle",
+    "foe": "Road Reavers",
+    "win": false,
+    "kills": 0,
+    "fallen": [],
+    "lost": 0,
+    "auto": false
+   },
+   {
+    "day": 15.593468732226496,
+    "kind": "battle",
+    "foe": "Road Reavers",
+    "win": false,
+    "kills": 0,
+    "fallen": [],
+    "lost": 0,
+    "auto": false
+   },
+   {
+    "day": 16.276802065559828,
+    "kind": "battle",
+    "foe": "Road Reavers",
+    "win": false,
+    "kills": 0,
+    "fallen": [],
+    "lost": 0,
+    "auto": false
+   },
+   {
+    "day": 16.46013539889316,
+    "kind": "battle",
+    "foe": "Road Reavers",
+    "win": true,
+    "kills": 8,
+    "fallen": [],
+    "lost": 0,
+    "auto": false
+   },
+   {
+    "day": 16.71679373070277,
+    "kind": "recruited",
+    "place": "stonebridge",
+    "names": [
+     "Roger",
+     "Ivo Tanner",
+     "Wat of Stonebridge"
+    ],
+    "n": 3
+   },
+   {
+    "day": 17.433460397369434,
+    "kind": "battle",
+    "foe": "Road Reavers",
+    "win": false,
+    "kills": 2,
+    "fallen": [],
+    "lost": 0,
+    "auto": true
+   },
+   {
+    "day": 17.805550214609582,
+    "kind": "promoted",
+    "names": [
+     "Alys of Stonebridge"
+    ],
+    "n": 1,
+    "to": "footman"
+   },
+   {
+    "day": 17.805550214609582,
+    "kind": "recruited",
+    "place": "stonebridge",
+    "names": [
+     "Baldric of Stonebridge",
+     "Joliet Fowler"
+    ],
+    "n": 2
+   },
+   {
+    "day": 18.57981677523809,
+    "kind": "battle",
+    "foe": "Looter Band",
+    "win": false,
+    "kills": 3,
+    "fallen": [],
+    "lost": 0,
+    "auto": true
+   },
+   {
+    "day": 19.34177845853119,
+    "kind": "battle",
+    "foe": "Looter Band",
+    "win": false,
+    "kills": 2,
+    "fallen": [],
+    "lost": 0,
+    "auto": true
+   },
+   {
+    "day": 19.603740141824293,
+    "kind": "battle",
+    "foe": "Looter Band",
+    "win": true,
+    "kills": 13,
+    "fallen": [],
+    "lost": 0,
+    "auto": true
+   }
+  ],
+  "honour": {
+   "list": [
+    {
+     "id": 1,
+     "name": "Sabina of Eastwatch",
+     "troop": "recruit",
+     "culture": "aurelian",
+     "origin": "eastwatch",
+     "joined": 4.3909254188723095,
+     "left": 10.078158917414259,
+     "how": "fell",
+     "foe": "Looter Band",
+     "battles": 3,
+     "victories": 2,
+     "kills": 0,
+     "wounds": 1,
+     "wagesPaid": 3
+    },
+    {
+     "id": 2,
+     "name": "Calla of Eastwatch",
+     "troop": "skirmisher",
+     "culture": "aurelian",
+     "origin": "eastwatch",
+     "joined": 4.3909254188723095,
+     "left": 11.6476184225591,
+     "how": "fell",
+     "foe": "Road Reavers",
+     "battles": 4,
+     "victories": 3,
+     "kills": 0,
+     "wounds": 2,
+     "wagesPaid": 6
+    },
+    {
+     "id": 5,
+     "name": "Edith of Stonebridge",
+     "troop": "levy",
+     "culture": "valedorn",
+     "origin": "stonebridge",
+     "joined": 11.885799230149981,
+     "left": 12.414913265036047,
+     "how": "fell",
+     "foe": "Looter Band",
+     "battles": 1,
+     "victories": 1,
+     "kills": 0,
+     "wounds": 0,
+     "wagesPaid": 0
+    },
+    {
+     "id": 4,
+     "name": "Aurel of Eastwatch",
+     "troop": "recruit",
+     "culture": "aurelian",
+     "origin": "eastwatch",
+     "joined": 11.758375493021207,
+     "left": 13.31013539889315,
+     "how": "fell",
+     "foe": "Road Reavers",
+     "battles": 2,
+     "victories": 1,
+     "kills": 0,
+     "wounds": 0,
+     "wagesPaid": 0
+    },
+    {
+     "id": 6,
+     "name": "Isolde the Quiet",
+     "troop": "levy",
+     "culture": "valedorn",
+     "origin": "stonebridge",
+     "joined": 12.526802065559812,
+     "left": 13.31013539889315,
+     "how": "fell",
+     "foe": "Road Reavers",
+     "battles": 1,
+     "victories": 0,
+     "kills": 0,
+     "wounds": 0,
+     "wagesPaid": 0
+    }
+   ],
+   "earlier": {
+    "fell": 0,
+    "deserted": 0,
+    "retired": 0
+   }
+  },
+  "accounts": {
+   "chest": 0,
+   "budgets": {}
+  },
+  "ledger": [
+   {
+    "day": 0,
+    "from": "purse",
+    "to": "world",
+    "amount": 24,
+    "why": "3 rations"
+   },
+   {
+    "day": 0.12742373712876792,
+    "from": "purse",
+    "to": "world",
+    "amount": 8,
+    "why": "1 rations"
+   },
+   {
+    "day": 0.8204520189771733,
+    "from": "purse",
+    "to": "world",
+    "amount": 6,
+    "why": "taken by captors"
+   },
+   {
+    "day": 3.575898479704121,
+    "from": "purse",
+    "to": "world",
+    "amount": 5,
+    "why": "taken by captors"
+   },
+   {
+    "day": 4.3258984797041204,
+    "from": "world",
+    "to": "purse",
+    "amount": 30,
+    "why": "spoils: Road Reavers"
+   },
+   {
+    "day": 4.3909254188723095,
+    "from": "world",
+    "to": "purse",
+    "amount": 70,
+    "why": "contract reward"
+   },
+   {
+    "day": 4.3909254188723095,
+    "from": "purse",
+    "to": "world",
+    "amount": 32,
+    "why": "4 rations"
+   },
+   {
+    "day": 4.3909254188723095,
+    "from": "purse",
+    "to": "world",
+    "amount": 15,
+    "why": "hiring a Recruit"
+   },
+   {
+    "day": 4.3909254188723095,
+    "from": "purse",
+    "to": "world",
+    "amount": 25,
+    "why": "hiring a Skirmisher"
+   },
+   {
+    "day": 4.777081531520623,
+    "from": "purse",
+    "to": "world",
+    "amount": 9,
+    "why": "taken by captors"
+   },
+   {
+    "day": 5.417736995633468,
+    "from": "purse",
+    "to": "world",
+    "amount": 8,
+    "why": "1 rations"
+   },
+   {
+    "day": 6.417736995633468,
+    "from": "purse",
+    "to": "world",
+    "amount": 8,
+    "why": "1 rations"
+   },
+   {
+    "day": 7.417736995633468,
+    "from": "purse",
+    "to": "world",
+    "amount": 9,
+    "why": "weekly wages"
+   },
+   {
+    "day": 7.69200355626198,
+    "from": "world",
+    "to": "purse",
+    "amount": 41,
+    "why": "spoils: Looter Band"
+   },
+   {
+    "day": 7.803892356785741,
+    "from": "purse",
+    "to": "world",
+    "amount": 8,
+    "why": "1 rations"
+   },
+   {
+    "day": 8.803892356785742,
+    "from": "purse",
+    "to": "world",
+    "amount": 8,
+    "why": "1 rations"
+   },
+   {
+    "day": 9.803892356785742,
+    "from": "purse",
+    "to": "world",
+    "amount": 8,
+    "why": "1 rations"
+   },
+   {
+    "day": 10.078158917414259,
+    "from": "world",
+    "to": "purse",
+    "amount": 41,
+    "why": "spoils: Looter Band"
+   },
+   {
+    "day": 10.190047717938024,
+    "from": "purse",
+    "to": "world",
+    "amount": 8,
+    "why": "1 rations"
+   },
+   {
+    "day": 10.190047717938024,
+    "from": "purse",
+    "to": "world",
+    "amount": 15,
+    "why": "hiring a Levy"
+   },
+   {
+    "day": 11.082013877839444,
+    "from": "purse",
+    "to": "world",
+    "amount": 8,
+    "why": "1 rations"
+   },
+   {
+    "day": 11.6476184225591,
+    "from": "world",
+    "to": "purse",
+    "amount": 30,
+    "why": "spoils: Road Reavers"
+   },
+   {
+    "day": 11.758375493021207,
+    "from": "purse",
+    "to": "world",
+    "amount": 15,
+    "why": "hiring a Recruit"
+   },
+   {
+    "day": 11.885799230149981,
+    "from": "purse",
+    "to": "world",
+    "amount": 15,
+    "why": "hiring a Levy"
+   },
+   {
+    "day": 12.414913265036047,
+    "from": "world",
+    "to": "purse",
+    "amount": 41,
+    "why": "spoils: Looter Band"
+   },
+   {
+    "day": 12.526802065559812,
+    "from": "purse",
+    "to": "world",
+    "amount": 15,
+    "why": "hiring a Levy"
+   },
+   {
+    "day": 12.526802065559812,
+    "from": "purse",
+    "to": "world",
+    "amount": 25,
+    "why": "hiring a Hunter"
+   },
+   {
+    "day": 12.81013539889315,
+    "from": "purse",
+    "to": "world",
+    "amount": 8,
+    "why": "taken by captors"
+   },
+   {
+    "day": 13.643468732226491,
+    "from": "purse",
+    "to": "world",
+    "amount": 7,
+    "why": "taken by captors"
+   },
+   {
+    "day": 14.143468732226491,
+    "from": "purse",
+    "to": "world",
+    "amount": 9,
+    "why": "weekly wages"
+   },
+   {
+    "day": 14.393468732226495,
+    "from": "purse",
+    "to": "world",
+    "amount": 3,
+    "why": "taken by captors"
+   },
+   {
+    "day": 15.093468732226496,
+    "from": "purse",
+    "to": "world",
+    "amount": 3,
+    "why": "taken by captors"
+   },
+   {
+    "day": 15.77680206555983,
+    "from": "purse",
+    "to": "world",
+    "amount": 2,
+    "why": "taken by captors"
+   },
+   {
+    "day": 16.46013539889316,
+    "from": "world",
+    "to": "purse",
+    "amount": 39,
+    "why": "spoils: Road Reavers"
+   },
+   {
+    "day": 16.71679373070277,
+    "from": "world",
+    "to": "purse",
+    "amount": 106,
+    "why": "contract reward"
+   },
+   {
+    "day": 16.71679373070277,
+    "from": "purse",
+    "to": "world",
+    "amount": 16,
+    "why": "armoury: Leather Cap"
+   },
+   {
+    "day": 16.71679373070277,
+    "from": "purse",
+    "to": "world",
+    "amount": 13,
+    "why": "armoury: Work Gloves"
+   },
+   {
+    "day": 16.71679373070277,
+    "from": "purse",
+    "to": "world",
+    "amount": 15,
+    "why": "hiring a Levy"
+   },
+   {
+    "day": 16.71679373070277,
+    "from": "purse",
+    "to": "world",
+    "amount": 25,
+    "why": "hiring a Hunter"
+   },
+   {
+    "day": 16.71679373070277,
+    "from": "purse",
+    "to": "world",
+    "amount": 25,
+    "why": "hiring a Mercenary"
+   },
+   {
+    "day": 16.933460397369434,
+    "from": "purse",
+    "to": "world",
+    "amount": 12,
+    "why": "taken by captors"
+   },
+   {
+    "day": 17.700127064036096,
+    "from": "world",
+    "to": "purse",
+    "amount": 36,
+    "why": "spoils: Road Reavers"
+   },
+   {
+    "day": 17.805550214609582,
+    "from": "world",
+    "to": "purse",
+    "amount": 94,
+    "why": "contract reward"
+   },
+   {
+    "day": 17.805550214609582,
+    "from": "purse",
+    "to": "world",
+    "amount": 20,
+    "why": "armoury: Boots"
+   },
+   {
+    "day": 17.805550214609582,
+    "from": "purse",
+    "to": "world",
+    "amount": 25,
+    "why": "training"
+   },
+   {
+    "day": 17.805550214609582,
+    "from": "purse",
+    "to": "world",
+    "amount": 15,
+    "why": "hiring a Levy"
+   },
+   {
+    "day": 17.805550214609582,
+    "from": "purse",
+    "to": "world",
+    "amount": 25,
+    "why": "hiring a Hunter"
+   },
+   {
+    "day": 18.07981677523809,
+    "from": "purse",
+    "to": "world",
+    "amount": 19,
+    "why": "taken by captors"
+   },
+   {
+    "day": 18.84177845853119,
+    "from": "purse",
+    "to": "world",
+    "amount": 15,
+    "why": "taken by captors"
+   },
+   {
+    "day": 19.603740141824293,
+    "from": "world",
+    "to": "purse",
+    "amount": 59,
+    "why": "spoils: Looter Band"
+   },
+   {
+    "day": 19.62040680849096,
+    "from": "purse",
+    "to": "world",
+    "amount": 52,
+    "why": "toll to the Road Reavers"
+   }
+  ],
+  "followers": {
+   "quartermaster": null,
+   "merchant": null
+  }
+ }
+}

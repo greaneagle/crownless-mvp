@@ -315,3 +315,17 @@ test('hold order snapshots current positions of the selected group', () => {
   assert.equal(inf.holdX, inf.x);
   assert.equal(CL.game.orders.infantry, 'hold');
 });
+
+test('the hero is ready to swing the moment a battle starts: an early Attack is never lost (W-00)', () => {
+  // Units start with a random cooldown of up to 0.4 s so the AI's first blows are staggered. The
+  // hero's would outlast the 100 ms input buffer, so an Attack pressed at once was dropped.
+  for (const r of [0, 0.5, 0.999]) {
+    const { CL } = loadGame({ random: () => r });
+    CL.combat.startBattle({ id: 't', name: 't', map: 'open_country', waves: [{ looter: 1 }], reward: { goldBase: 0, goldPerKill: 0, renown: 0 } });
+    const g = CL.game;
+    assert.equal(g.hero.attackCooldown, 0, `random ${r}`);
+    CL.combat.queueAttack();
+    CL.combat.update(1 / 60);
+    assert.ok(g.hero.swing, `random ${r}: the first frame starts the swing`);
+  }
+});

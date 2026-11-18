@@ -29,7 +29,18 @@ _Written 2026-11-18 at build 2.0.0; **reviewed and corrected the same day agains
 
 ## Phase W — A Bigger World
 
-### W-00 · Browser regression testing (M–L, 5–8 days) — Ready after decision D-T1
+### W-00 · Browser regression testing (M–L, 5–8 days) — ✅ Done in 2.1.0
+
+**Done (2.1.0, 2026-11-18).** As specified, with these notes:
+- **Tooling:** `@playwright/test` 1.64.1 (pinned, `package-lock.json` committed). The test server is `scripts/static-server.js` (no dependency, no cache) instead of `http-server` through `npx`, so Playwright starts it the same way offline and in CI.
+- **Specs** in `tests/browser/` (43 behaviour tests on desktop and on the phone = 86, plus 5 screenshot tests on each): `startup`, `load-save`, `world-map`, `settlement`, `battle`, `save-export`, `layout`, plus `screens.visual` (@visual). Helpers: `open`, `newGame`, `press`/`pressAt` (a click on desktop, a touch tap on the phone), `touch` (raw multi-finger touch through the DevTools protocol, for held controls, the joystick and W-02's pinch), `hold`, `mapToPage`, `debug` and `expectLayoutSound` (with `info` elements and `scrolled` panels).
+- **Determinism:** seeded `Math.random`, Playwright's clock, fixed settings (tips and full screen off), and developer tools hidden as on the published site. Map travel advances with real frame time, so where roaming parties meet isn't repeatable: specs that travel clear the roaming parties first (Debug → Clear all parties).
+- **Fixtures:** `tests/fixtures/saves-2.0/` made from the real 2.0.0 build (0415109) here, before any content change, as W-06 needs. They are also in `tests/save-migration.test.js`.
+- **Bugs found and fixed:** on a 812×375 phone the Orders panel grew up under the Pause button, which covered its close button (`style.css`: the panel now stops below the top-right buttons and scrolls); and the hero started a battle with the random 0–0.4 s cooldown meant to stagger the AI, so an Attack pressed in the first moments outlasted the 100 ms input buffer and was lost (`js/combat.js`, with a Node test).
+- **Screenshots:** baselines only from Linux Chromium (D-T2), made with `npm run test:visual:docker` or the workflow's "update screenshots" run; until they are committed, each screen is skipped with a note.
+- **Deliberate-break check:** with the Orders button's handler removed and the joystick's move handler unbound, exactly the Orders specs (both projects, behaviour and layout) and the phone joystick spec failed; reverted.
+- **Timing:** about 55 s for the behaviour suite with two workers on the development machine.
+
 
 **Problem.** The 528 Node tests cover the game's logic, but rendering, input, mobile gestures and layout are only checked by hand in a browser. W-01, W-02 and W-03 change exactly those.
 

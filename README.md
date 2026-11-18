@@ -1,6 +1,6 @@
-# Crownless 2.0.0 — The Border March
+# Crownless 2.1.0 — The Border March
 
-A single-player, top-down party-battle prototype in plain HTML5 Canvas and classic JavaScript. There's no bundler, no runtime dependencies and no server. It's published to GitHub Pages straight from `main`.
+A single-player, top-down party-battle prototype in plain HTML5 Canvas and classic JavaScript. There's no bundler, no runtime dependencies and no server (Playwright, for the browser tests, is the only development dependency). It's published to GitHub Pages straight from `main`.
 
 - **Design spec:** [`Crownless_MVP_GDD_v1.md`](Crownless_MVP_GDD_v1.md). The engine is HTML5 Canvas, not the Godot the spec recommends.
 - **Full v1 documentation** (rules and numbers, architecture, how to add content, what v2 brings and where its details are): [`docs/V1-DOCUMENTATION.md`](docs/V1-DOCUMENTATION.md)
@@ -125,7 +125,9 @@ js/               game runtime, attached to window.Crownless
   main.js         boot and main loop (loads last)
 data/             content definitions (window.CROWNLESS_CONTENT): troops, encounters, world map, items, backgrounds, name cultures…
 assets/           sprite PNGs (u#### units, w#### world tiles)
-tests/            node:test suite (no dependencies)
+tests/            node:test suite (no dependencies); tests/browser/ holds the Playwright browser specs
+playwright.config.js  browser tests: Chromium, a desktop and a landscape-phone project, the test server
+scripts/static-server.js  the dependency-free static server the browser tests start
 types/            shared types for the type checker only (the page never loads them)
 tsconfig.json     type-checker settings: checks the js/ files marked // @ts-check, emits nothing
 ```
@@ -178,11 +180,41 @@ npm run economy
 
 `bench` times the battle simulation per frame at 20, 30, 40 and 60 units on each battle map. Drawing isn't included; measure that on a device with the Debug panel's stress test, which reports fps, simulation and drawing time without touching the campaign.
 
-The tests load the logic modules (`core` → `party`) and the `data/` files into a Node `vm` sandbox with the UI stubbed out, so no browser is needed. The rendering and input code is checked by playing the game.
+The tests load the logic modules (`core` → `party`) and the `data/` files into a Node `vm` sandbox with the UI stubbed out, so no browser is needed. Rendering, input and layout are covered by the browser tests below, and finally by playing the game on a phone.
+
+## Browser tests
+
+Playwright drives the real game in Chromium (W-00), as a desktop with a mouse (1280×720) and as a landscape phone with touch (812×375, device scale 3). Install once:
+
+```bash
+npm ci
+npx playwright install chromium
+```
+
+```bash
+npm run test:browser
+```
+
+This runs the behaviour specs in `tests/browser/` (about a minute): startup, character creation, loading saves (real ones from `tests/fixtures/`, damaged and incompatible ones), map travel and encounters, the settlement menu and the streets, a battle from Attack to the result with every control, Save & export (downloads are caught, nothing leaves the machine), and layout. Playwright starts `scripts/static-server.js` on port 8131 itself (`CROWNLESS_TEST_PORT` to change it); add `--project desktop` or `--project phone` for one size, `--headed` to watch, `--debug` to step through.
+
+How the specs work (`tests/browser/helpers.js`):
+- Each test gets a fresh browser profile (your own browser's saves are never touched), fixed settings (tips and full screen off, sound muted), a seeded `Math.random`, Playwright's clock, and the developer buttons hidden as on the published site.
+- Controls are driven by real input: a click on desktop, a touch tap on the phone (`press`, `pressAt`), raw touches for held buttons, the joystick and gestures (`touch`, `hold`). State is read through `window.Crownless`; waits are on state, never on fixed sleeps. No test calls a game function to skip the thing it tests; the Debug panel (`debug`) is used only to get somewhere quickly.
+- `expectLayoutSound(page, controls, { info, scrolled })` checks that controls are inside the viewport, don't overlap and are at least 44×44 CSS px on touch.
+- **Rule:** a task that changes the UI or input adds or updates browser specs.
+
+**Screenshots** (`tests/browser/screens.visual.spec.js`, tagged `@visual`) compare nine screens on both projects against baselines in `tests/browser/screenshots/`. The baselines are authoritative only from Linux Chromium, as CI runs it (fonts differ between machines), so on Windows and macOS these tests are skipped, and a screen without a baseline yet is skipped everywhere.
+- `npm run test:visual` compares (on Linux, or anywhere with `CROWNLESS_VISUAL=1`).
+- `npm run test:visual:docker` makes the baselines in the official Playwright Linux image (needs Docker); `-- --check` compares there instead.
+- Without Docker: run the workflow by hand (Actions → "Test and deploy" → Run workflow, tick "update screenshots"), download the `screenshot-baselines` artifact into `tests/browser/screenshots/` and commit it.
+- Update the baselines only for an intended visual change, and look at the new images in the commit diff before committing.
+
+To add a spec, put a `*.spec.js` file in `tests/browser/` that uses `test` and the helpers from `./helpers` (the shared `test` also fails on any page error or console error).
+
 
 ## Deploy
 
-On every push to `main`, [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) runs the tests and lint, then publishes the repository root to GitHub Pages. Pull requests run the checks only. In the repository settings, under **Pages**, set the source to **GitHub Actions**. If the browser shows an old copy after a deploy, hard-refresh with Ctrl+Shift+R.
+On every push to `main`, [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) runs the tests and lint, and the browser tests in a parallel `browser` job (its report, failure screenshots and traces are uploaded as an artifact), then publishes the repository root to GitHub Pages; either job failing stops the deploy. Pull requests run the checks only. A clean checkout is published, so `node_modules/` and test output never are. In the repository settings, under **Pages**, set the source to **GitHub Actions**. If the browser shows an old copy after a deploy, hard-refresh with Ctrl+Shift+R.
 
 ## Known limits
 

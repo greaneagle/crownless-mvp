@@ -51,7 +51,7 @@ _Written 2026-11-18 at build 2.0.0 (commit 0415109); **reviewed and corrected th
   - Seeded random streams; one campaign clock.
   - A JSDoc type check on the core modules.
 - **Tests and tools:**
-  - **528 Node logic tests**, about 21 s for `npm test`.
+  - **528 Node logic tests**, about 21 s for `npm test` (533 at 2.1.0, plus 86 browser tests from W-00).
   - Bots: campaign, story, Prototype G, an economy report, a battle benchmark.
 - **CI:** `.github/workflows/deploy.yml` runs `npm test` and `npm run lint` on every push and pull request, then deploys `main` to GitHub Pages.
 - **No dependencies, not even for development:** Biome, TypeScript and http-server run through `npx`; there is no `package-lock.json`.
@@ -134,7 +134,7 @@ Each phase ends playable, measured and documented. The order follows the design'
 
 | ID | Task | Readiness | Size | Needs | Save |
 |---|---|---|---|---|---|
-| **W-00** | **Browser regression testing** (new): Playwright on the static game; smoke and flow tests for startup, creation, loading a fixture save, map, settlement, battle, save/export/import, layouts; screenshots of key screens; a CI job. W-01 and W-02 add their own tests to it | Ready after decision D-T1 | **M–L** (5–8 days) | — | — |
+| **W-00** | ✅ **Done in 2.1.0.** **Browser regression testing** (new): Playwright on the static game; smoke and flow tests for startup, creation, loading a fixture save, map, settlement, battle, save/export/import, layouts; screenshots of key screens; a CI job. W-01 and W-02 add their own tests to it | Done (D-T1: yes) | **M–L** (5–8 days) | — | — |
 | **H-01** | **Test and measurement hygiene** (new): isolate test games from each other; split fast and slow tests; `scripts/parity.js` (fought versus auto-resolve); a map-simulation benchmark; `.gitattributes` for line endings | Ready | S | — | — |
 | **W-01** | **Text size and UI scale:** four sizes; all HTML and canvas text, buttons, menus, overlays, tips and dynamic content; no reload; layout and touch-target rules; automated tests at all four sizes | Ready | M | W-00 | — |
 | **W-02** | **World-map camera and gestures:** a gesture-aware map input (tap, drag, pinch; no travel from a drag or pinch); a reusable camera transform kept apart from gameplay distance; zoom from "fit the map" to 2.4×; follow, pan, clamp, edge markers, hit-testing | Ready | **M–L** | W-00 | — |
@@ -252,7 +252,7 @@ Decisions marked **blocking** must be made before the named task starts. The oth
 
 | ID | Question | Proposed default | Blocks |
 |---|---|---|---|
-| **D-T1** | Add Playwright as the project's first **development** dependency (with a `package-lock.json`)? | Yes: `@playwright/test`, pinned, Chromium only in CI; the game itself stays dependency-free | **W-00 (blocking)** |
+| **D-T1** | Add Playwright as the project's first **development** dependency (with a `package-lock.json`)? | **Decided yes (owner, 2026-11-18):** `@playwright/test` 1.64.1, pinned, Chromium only; the game itself stays dependency-free | W-00 (done) |
 | **D-T2** | Where are screenshot baselines authoritative? | CI's Linux Chromium; local runs check behaviour and skip pixel comparison unless asked (fonts and rendering differ between machines) | W-00 |
 | **D-W1** | How big should the world be? | About 4× today's area (200 × 200 map units), four kingdoms plus the Reavers and a free city, about 32 settlements | **W-05a, W-05b (blocking)** |
 | **D-W2** | Keep the Border March inside the bigger world, and move existing saves in? | Yes and yes: the March whole in the middle at a fixed offset; every save migrates (W-06) | **W-05b, W-06 (blocking)** |
