@@ -119,9 +119,14 @@ function makeStoryBot(CL, rnd, { winChance = 0.85, reloadChance = 0.04 } = {}) {
     let conv = CL.story.talk(who.id);
     stats.talks++;
     note(`talk ${who.id}@${conv?.node}`);
+    // The bot plays the main story: it leaves the optional errands (V2-Q, quests with side: true) alone,
+    // so the story simulation keeps measuring the story.
+    const quests = CL.content.table('quests');
+    const errand = (o) => String(o.next || '').startsWith('sq_') || (o.do || []).some((e) => e.start && quests[e.start]?.side);
     for (let i = 0; conv && i < 14; i++) {
-      if (!conv.options.length) break;
-      const o = pick(conv.options);
+      const options = conv.options.filter((o) => !errand(o));
+      if (!options.length) break;
+      const o = pick(options);
       stats.choices++;
       note(`  → ${o.text.slice(0, 50)}`);
       conv = CL.story.choose(conv, o.index);

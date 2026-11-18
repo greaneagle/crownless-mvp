@@ -306,6 +306,7 @@ The sandbox carries on after the story ends.
 - Mercenaries have no upgrade path (finding F-1; from 1.5.0 they train into Sellswords, V2-03b).
 - Soldiers have no names (from 1.4.0 they do: V2-03).
 - There is one pot of money, and nobody helps run the camp (from 1.15.0 there is a company chest beside your purse, a ledger, and a quartermaster you can hire, V2-11).
+- There are four story quests and nothing else to do for anyone (from 1.17.0 five small optional errands use the new systems, V2-Q).
 - A soldier who dies or deserts is simply gone (from 1.14.0 the roll of honour remembers them, and the company keeps a chronicle, V2-10).
 - A raised shield protects only its holder (from 1.11.0 it also covers the ally beside it on the shield side, V2-08a; soldiers with shields block too).
 - Nobody ever breaks and runs in a battle (from 1.12.0 groups on both sides waver, fall back and rout, and the hero can rally the company, V2-08b).

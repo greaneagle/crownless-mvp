@@ -53,7 +53,9 @@
   function foeOf(e) {
     if (!e) return null;
     if (e.kind === 'site') return { kind: 'bandit', faction: 'neutral', quest: false, partyId: null };
-    return { kind: e.t.kind, faction: e.t.faction, quest: Boolean(e.party.questTag), partyId: e.party.id };
+    // A story band's fight gets no help, unless its quest says so (band help: true, V2-Q).
+    const spec = e.party.questTag ? CL.story?.bandSpec(e.party.questTag) : null;
+    return { kind: e.t.kind, faction: e.t.faction, quest: Boolean(e.party.questTag) && !spec?.help, partyId: e.party.id };
   }
 
   /**
@@ -61,6 +63,8 @@
    * @param {Campaign} c @param {any} p @param {{ kind: string, faction: string }} foe
    */
   function sideOf(c, p, foe) {
+    // A quest's own helper patrol (band helper: true, V2-Q) comes for the player against bandits.
+    if (p.questTag && CL.story?.bandSpec(p.questTag, c)?.helper) return foe.kind === 'bandit' ? 'ally' : null;
     if (p.questTag || p.ambush || p.escortTo || p.contractId) return null;
     const t = tpl(p.template);
     if (t.kind === 'bandit') return foe.kind === 'bandit' ? 'enemy' : null;

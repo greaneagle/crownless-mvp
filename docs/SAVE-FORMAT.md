@@ -108,7 +108,7 @@ Schema v9 is schema v2 (below) plus these fields (v3 added the first two, v4 the
 | `joined` | number or `null` | Campaign day they joined; `null` before records were kept |
 | `portrait` | string or `null` | An art slot for a later portrait (an asset file name); `null` today |
 | `record` | `{ battles, victories, kills, assists, wounds, captures, wagesPaid }`, integers ≥ 0 | Kept by listening to events (js/soldiers.js). `wagesPaid` counts crowns actually received |
-| `notes` | up to 8 `{ day, kind, … }` | `kind` is `joined` (`place`), `veteran`, `wounded` (`foe`), `promoted` (`to`), `captured` or `notable` (`kills`, `foe`). The joining note stays; the oldest of the rest go first |
+| `notes` | up to 8 `{ day, kind, … }` | `kind` is `joined` (`place`), `veteran`, `wounded` (`foe`), `promoted` (`to`), `captured`, `notable` (`kills`, `foe`) or, from 1.17.0, `feted` (`place`: feasted at home, a V2-Q errand). The joining note stays; the oldest of the rest go first |
 
 ## The campaign object (schema v2, frozen at v1.0)
 Every field is validated on load by `CL.save.sanitize` and the modules it calls, so unknown or out-of-range values fall back to safe defaults. Older v2 saves that lack later fields get their defaults; there is no separate migration step inside v2.

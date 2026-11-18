@@ -64,6 +64,7 @@
     c.followers.quartermaster = q;
     log(c, `Hired at ${CL.soldiers.placeName(place)}.`);
     CL.diag.log('info', 'Quartermaster hired', { name, place });
+    CL.story?.emit('hire', { follower: 'quartermaster' }, c);
     act(c);
     return q;
   }
@@ -137,6 +138,7 @@
       if (n > 0) log(c, `Bought ${n} rations at ${where} for ${done.cost} from the chest${done.short ? `; ${done.short} short (${free < price ? 'no more money' : 'weekly budget spent'})` : ''}.`);
       else log(c, `Needed ${need} rations at ${where} but bought none: ${free < price ? 'no money beyond the wages' : 'the weekly budget is spent'}.`);
     }
+    if (done.rations) CL.story?.emit('stores', { rations: done.rations }, c);
     if (done.setAside || done.rations) {
       CL.ui.message(`Quartermaster ${q.name}: ${[done.setAside ? `${done.setAside} set aside for wages` : '', done.rations ? `bought ${done.rations} rations for ${done.cost}` : ''].filter(Boolean).join(', ')}`);
     }

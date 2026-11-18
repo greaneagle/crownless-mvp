@@ -47,8 +47,23 @@
             { text: 'About that work…', if: { quest: 'q1', stage: 'q1_choose_work' }, next: 'q1_work' },
             { text: 'About that work…', if: { any: [{ quest: 'q1', stage: 'q1_wagon_go' }, { quest: 'q1', stage: 'q1_wagon_back' }, { quest: 'q1', stage: 'q1_bandits' }, { quest: 'q1', stage: 'q1_recruits' }, { quest: 'q1', stage: 'q1_drill' }] }, next: 'q1_progress' },
             { text: 'What troubles Stonebridge?', next: 'troubles' },
-            { text: 'Who holds Greywall now?', if: { flag: 'asked_troubles' }, next: 'greywall' }
+            { text: 'Who holds Greywall now?', if: { flag: 'asked_troubles' }, next: 'greywall' },
+            { text: 'One of my soldiers was born here: {veteran}.', if: [{ veteran: 3 }, { quest: 'sq_homecoming', is: 'unstarted' }], next: 'sq_home_offer' },
+            { text: 'The grain for the feast is bought.', if: { quest: 'sq_homecoming', stage: 'sq_home_report' }, next: 'sq_home_feast' }
           ]
+        },
+        sq_home_offer: {
+          services: false,
+          text: ['{veteran}! I knew the family. Off to the wars with nothing but a borrowed spear, and back with a name. Stonebridge will feast them properly — if you can find the grain. The granary is bare this season.'],
+          options: [
+            { text: 'I’ll buy the grain.', do: [{ start: 'sq_homecoming' }], quest: 'sq_homecoming' },
+            { text: 'Another time.' }
+          ]
+        },
+        sq_home_feast: {
+          services: false,
+          text: ['The whole town turns out. {veteran} is seated at the head of the table, red to the ears, while the children ask for the story of every scar. You will hear about this feast in every tavern on the march.'],
+          options: [{ text: 'To {veteran}!', do: [{ honourVeteran: 30 }, { complete: 'sq_homecoming' }] }]
         },
         q1_work: {
           services: false,
@@ -164,6 +179,32 @@
             'A levy with a full belly fights twice as hard.',
             { if: { quest: 'q1', stage: 'q1_recruits' }, text: 'Three, Maren said. You have hired {flag:q1_hired} so far.' },
             { if: { quest: 'q1', stage: 'q1_drill' }, text: 'Now take them out and win a fight. Nothing teaches like the first one.' }
+          ],
+          options: [
+            { text: 'Any advice for a growing company?', if: [{ soldiers: 3 }, { quest: 'sq_larders', is: 'unstarted' }], next: 'sq_larders_offer' },
+            { text: 'My quartermaster has laid in stores.', if: { quest: 'sq_larders', stage: 'sq_larders_report' }, next: 'sq_larders_done' },
+            { text: 'Teach me to fight to a plan.', if: [{ soldiers: 5 }, { quest: 'sq_planned', is: 'unstarted' }], next: 'sq_planned_offer' }
+          ]
+        },
+        sq_larders_offer: {
+          services: false,
+          text: ['A company marches on its stomach and fights for its pay. Get yourself a quartermaster: they keep the next wages aside and the larder full, and they write down every crown. Then come and tell me you never once ran out of bread.'],
+          options: [
+            { text: 'I’ll find one.', do: [{ start: 'sq_larders' }, { stage: 'sq_larders_stock', quest: 'sq_larders', if: { follower: 'quartermaster' } }] },
+            { text: 'I can count my own bread.' }
+          ]
+        },
+        sq_larders_done: {
+          services: false,
+          text: ['Full larders and the wages in the chest. Now that is a company. Here — for your trouble.'],
+          options: [{ text: 'Thank you, Sergeant.', do: [{ complete: 'sq_larders' }] }]
+        },
+        sq_planned_offer: {
+          services: false,
+          text: ['A band of Reavers has dug in near Oakford: shields locked, sell-swords in the middle. Charge them and you lose good soldiers. Fight them yourself, and before you do, pick a setup on the Prepare screen. Defensive lets them come to your line.'],
+          options: [
+            { text: 'I’ll take them on to a plan.', do: [{ start: 'sq_planned' }] },
+            { text: 'Not now.' }
           ]
         }
       }
@@ -214,7 +255,9 @@
           ],
           options: [
             { text: 'I’ll find your packet.', do: [{ start: 'q2' }], next: 'q2_go' },
-            { text: 'Not my business.' }
+            { text: 'Not my business.' },
+            { text: 'Could a company earn from its wagons?', if: { quest: 'sq_venture', is: 'unstarted' }, next: 'sq_venture_offer' },
+            { text: 'My merchant has turned a profit.', if: { quest: 'sq_venture', stage: 'sq_venture_report' }, next: 'sq_venture_done' }
           ]
         },
         q2_go: {
@@ -227,7 +270,11 @@
         q2_waiting: {
           cycle: true,
           text: ['The river road, between here and Highmere. Fight them, cow them, or buy their secret from the fence in Highmere.', 'Every day that packet is out there, someone is reading it who should not.'],
-          options: [{ text: 'On my way.' }]
+          options: [
+            { text: 'On my way.' },
+            { text: 'Could a company earn from its wagons?', if: { quest: 'sq_venture', is: 'unstarted' }, next: 'sq_venture_offer' },
+            { text: 'My merchant has turned a profit.', if: { quest: 'sq_venture', stage: 'sq_venture_report' }, next: 'sq_venture_done' }
+          ]
         },
         q2_read: {
           services: false,
@@ -253,7 +300,24 @@
             { if: { flag: 'q2_choice', is: 'kept' }, text: 'Still carrying that packet? Good. Neither crown has stopped asking about it.' },
             { if: { flag: 'q2_choice', is: 'valedorn' }, text: 'The Crown’s men walk taller since you gave them that packet. The magistrate does not smile at me any more.' },
             { if: { flag: 'q2_choice', is: 'aurelian' }, text: 'The magistrate says the packet proves the Aurelian claim. Half of Eastwatch believes her.' }
+          ],
+          options: [
+            { text: 'Could a company earn from its wagons?', if: { quest: 'sq_venture', is: 'unstarted' }, next: 'sq_venture_offer' },
+            { text: 'My merchant has turned a profit.', if: { quest: 'sq_venture', stage: 'sq_venture_report' }, next: 'sq_venture_done' }
           ]
+        },
+        sq_venture_offer: {
+          services: false,
+          text: ['Could it! Hire a merchant, give them a purse, and let them trade as you ride. A good one buys only where they know the price elsewhere is better, and tells you every coin. Bring them to a few markets first: nobody knows a price they have not seen.'],
+          options: [
+            { text: 'I’ll try it.', do: [{ start: 'sq_venture' }, { stage: 'sq_venture_trade', quest: 'sq_venture', if: { follower: 'merchant' } }] },
+            { text: 'I’ll stick to the sword.' }
+          ]
+        },
+        sq_venture_done: {
+          services: false,
+          text: ['Profit on the first venture! Most lose their shirts. Here is a little something from the guild, and keep that merchant fed.'],
+          options: [{ text: 'They will be.', do: [{ complete: 'sq_venture' }] }]
         }
       }
     },
@@ -326,6 +390,15 @@
             { if: [{ quest: 'q3', is: 'done' }, { flag: 'q3_side', is: 'valedorn' }], text: 'The Aurelian column will not trouble Greywall again. Good work.' },
             { if: [{ quest: 'q3', is: 'done' }, { flag: 'q3_side', is: 'aurelian' }], text: 'You broke a Crown column. I will not forget whose side you chose.' },
             { if: [{ quest: 'q3', is: 'done' }, { flag: 'q3_side', is: 'road' }], text: 'Neither banner, eh? The carters sing your name. The King does not.' }
+          ],
+          options: [{ text: 'Any work on the frontier?', if: [{ quest: 'sq_border', is: 'unstarted' }, { not: { standing: 'valedorn', is: 'hostile' } }], next: 'sq_border_offer' }]
+        },
+        sq_border_offer: {
+          services: false,
+          text: ['Raiders are burning farms between Brackenfield and Greywall. I have a watch posted near Brackenfield; they are too few to attack, but if they hear a fight they will ride to it. Seventy crowns if you break the raiders.'],
+          options: [
+            { text: 'I’ll break them.', do: [{ start: 'sq_border' }] },
+            { text: 'Not now.' }
           ]
         }
       }

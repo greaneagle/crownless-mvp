@@ -27,8 +27,9 @@ test('Gate D scope: the region, troops, maps, quests, contracts, companion, repu
   assert.equal(t('battle_maps').filter((m) => !m.generate).length, 3, 'the three hand-made maps');
   assert.equal(t('battle_maps').filter((m) => m.generate).length, 2, 'plus two large generated ones from 1.8.0 (V2-05)');
   assert.deepEqual(
-    t('quests').map((q) => q.id),
+    t('quests').filter((q) => !q.side).map((q) => q.id),
     ['q1', 'q2', 'q3', 'q4'],
+    'the four story quests (V2-Q errands are extra and optional)',
   );
   assert.deepEqual(
     t('contracts')
@@ -94,7 +95,8 @@ test('no quest soft-locks, every ending reachable: 60 randomized campaigns from 
     reloads += r.stats.reloads;
   }
   const CL = CL0;
-  const stages = Object.values(CL.content.table('quests')).flatMap((q) => q.stages.map((s) => s.id));
+  // The main story's stages (the bot leaves the V2-Q errands alone; tests/errands.test.js walks them).
+  const stages = Object.values(CL.content.table('quests')).filter((q) => !q.side).flatMap((q) => q.stages.map((s) => s.id));
   assert.deepEqual(
     stages.filter((s) => !seen.stages.has(s)),
     [],

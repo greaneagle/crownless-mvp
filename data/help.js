@@ -107,6 +107,7 @@
       title: 'Story, reputation and news',
       body: [
         'Four quests lead to the fate of Greywall. The Journal lists them with the next step in gold, the company chronicle (your own story: who joined, who was promoted, notable battles, who fell, quests done) and the regional news.',
+        'Besides the story there are a few small errands, marked as such in the Journal and never needed: Elder Maren may want to feast a Stonebridge-born veteran; Sergeant Brun can teach you to keep full larders with a quartermaster, and later to fight a dug-in band to a plan; Caravan Master Oswin in Eastwatch will start you on a merchant’s first venture; and Captain Aldric has raiders on the border where a Crown watch will ride to your aid.',
         'Each kingdom sees you as Friendly, Neutral or Hostile. Helping it raises that; attacking its patrols or caravans lowers it. Friendly gives two extra party slots; Hostile means its patrols hunt you.',
         'Mara, a former imperial scout, may join you after the second quest. After the ending the March goes on: work, trade and the border’s quarrels continue.'
       ]

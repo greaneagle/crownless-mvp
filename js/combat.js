@@ -80,6 +80,7 @@
     g.wave = 0;
     g.kills = 0;
     g.helpKills = 0; // enemies cut down by parties that rode in to help (V2-09): theirs, not yours
+    delete g.prepPlan; // set again by the preparation screen's plan, if any (V2-07)
     Object.assign(g, { routed: 0, allyRouted: 0, morale: {}, moraleState: {}, moraleIn: 0, routEvents: [], rallyReadyAt: 0, concededNote: false });
     g.allies = [];
     g.enemies = [];

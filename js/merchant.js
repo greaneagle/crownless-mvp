@@ -78,6 +78,7 @@
     log(c, `Hired at ${CL.soldiers.placeName(place)}.`);
     note(c, place);
     CL.diag.log('info', 'Merchant hired', { name, place });
+    CL.story?.emit('hire', { follower: 'merchant' }, c);
     return m;
   }
 
@@ -172,6 +173,7 @@
     const opts = { account: ACCOUNT, hold: m.stock, by: BY };
     const sold = {};
     const bought = {};
+    let profit = 0;
     /** @type {Record<string, string>} */
     const skipped = {};
     // 1. Sell what pays here.
@@ -182,6 +184,7 @@
         if (price < each * (1 + p.margin)) break;
         const r = T().sell(c, sid, g, 1, opts);
         if (!r.ok) break;
+        profit += r.total - each;
         m.paid[g] -= each;
         if (!m.stock[g]) delete m.paid[g];
         sold[g] ??= { n: 0, total: 0 };
@@ -240,6 +243,7 @@
     const text = parts.length ? `At ${where}: ${parts.join('; ')}${skips.length ? `; ${skips.join('; ')}` : ''}. Cash ${cash(c)}.` : `At ${where}: no safe trade (${skips.length ? skips.join('; ') : none}). Cash ${cash(c)} kept.`;
     log(c, text);
     CL.ui.message(`Merchant ${m.name}: ${text}`);
+    if (profit > 0) CL.story?.emit('venture', { profit: true }, c);
     return { sold, bought, skipped, text };
   }
 

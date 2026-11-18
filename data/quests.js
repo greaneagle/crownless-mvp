@@ -4,6 +4,7 @@
  *   on: [{ event, match?, if?, do }]   — event: battle | enter | recruit | trade | contract | talk | parley
  * Triggers move the quest on with { stage: 'id' } or close it with { complete: 'q1' } / { fail: 'q1' }.
  * rewards are paid on completion: { gold, renown, xp, rep: { faction: n } }.
+ * side: true marks an errand (V2-Q): optional, small, built on the new systems.
  * GDD §4: four story quests; the stage triggers are authored with each quest (Gate D 4.8–4.12). */
 (function (root) {
   root.CROWNLESS_CONTENT = root.CROWNLESS_CONTENT || {};
@@ -219,6 +220,113 @@
           ]
         }
       }
+    },
+    // ---- V2-Q: errands (owner decision: no new main story; small, optional quests that show the
+    // new systems). Each is side: true, offered by someone you already know, and can be ignored.
+
+    // Named soldiers and the chronicle: a Stonebridge-born veteran is feasted at home.
+    sq_homecoming: {
+      id: 'sq_homecoming',
+      title: 'Home from the Wars',
+      giver: 'stonebridge_elder',
+      side: true,
+      summary: 'Stonebridge wants to feast one of its own who rides with your company.',
+      stages: [
+        {
+          id: 'sq_home_grain',
+          journal: 'Buy grain at any market for the feast, then bring word to Elder Maren in Stonebridge.',
+          on: [{ event: 'trade', match: { good: 'grain', side: 'buy' }, do: [{ stage: 'sq_home_report' }, { note: 'Grain for the feast is in the wagons.' }] }]
+        },
+        { id: 'sq_home_report', journal: 'Tell Elder Maren in Stonebridge the grain is bought.' }
+      ],
+      rewards: { renown: 10, xp: 30, rep: { valedorn: 5 } }
+    },
+    // The quartermaster (V2-11).
+    sq_larders: {
+      id: 'sq_larders',
+      title: 'Full Larders',
+      giver: 'sergeant_brun',
+      side: true,
+      summary: 'Sergeant Brun says a company marches on its stomach, and someone should be minding it.',
+      stages: [
+        {
+          id: 'sq_larders_hire',
+          journal: 'Hire a quartermaster: Accounts, in any town or village with a market.',
+          on: [{ event: 'hire', match: { follower: 'quartermaster' }, do: [{ stage: 'sq_larders_stock' }] }]
+        },
+        {
+          id: 'sq_larders_stock',
+          journal: 'Ride to a market with your quartermaster so they lay in stores.',
+          on: [{ event: 'stores', do: [{ stage: 'sq_larders_report' }, { note: 'The quartermaster bought food from the company chest, and logged every crown.' }] }]
+        },
+        { id: 'sq_larders_report', journal: 'Report to Sergeant Brun in Stonebridge.' }
+      ],
+      rewards: { gold: 30, xp: 40 }
+    },
+    // The merchant follower (V2-12).
+    sq_venture: {
+      id: 'sq_venture',
+      title: 'A Merchant’s First Venture',
+      giver: 'caravan_master',
+      side: true,
+      summary: 'Caravan Master Oswin thinks a company with wagons should earn from them.',
+      stages: [
+        {
+          id: 'sq_venture_hire',
+          journal: 'Hire a merchant (Accounts, in a market town) and give them a budget.',
+          on: [{ event: 'hire', match: { follower: 'merchant' }, do: [{ stage: 'sq_venture_trade' }] }]
+        },
+        {
+          id: 'sq_venture_trade',
+          journal: 'Take your merchant to a few markets until they sell at a profit. They only know prices they have seen.',
+          on: [{ event: 'venture', match: { profit: true }, do: [{ stage: 'sq_venture_report' }, { note: 'Your merchant sold at a profit. Their log says what and why.' }] }]
+        },
+        { id: 'sq_venture_report', journal: 'Tell Caravan Master Oswin in Eastwatch how the venture went.' }
+      ],
+      rewards: { gold: 40, renown: 5, xp: 40 }
+    },
+    // Nearby reinforcements (V2-09): a Valedorn watch close by rides in if you fight here.
+    sq_border: {
+      id: 'sq_border',
+      title: 'Smoke on the Border',
+      giver: 'valedorn_agent',
+      side: true,
+      summary: 'Raiders are burning farms between Brackenfield and Greywall. A Crown watch is posted nearby.',
+      stages: [
+        {
+          id: 'sq_border_fight',
+          journal: 'Break the raiders between Brackenfield and Greywall. The Valedorn watch near Brackenfield will ride to the fight if it hears it.',
+          bands: [
+            { template: 'bandits', tag: 'sq_border_raiders', name: 'Border Raiders', between: ['brackenfield', 'greywall_fort'], troops: { looter: 5, reaver: 3 }, camp: true, help: true, text: 'Smoke rises behind the raiders’ camp. Somewhere to the south a horn answers: the Crown’s watch has heard you.' },
+            { template: 'valedorn_patrol', tag: 'sq_border_watch', name: 'Valedorn Border Watch', near: 'brackenfield', troops: { footman: 3, hunter: 2 }, camp: true, helper: true, text: '“The raiders are north of here. Engage them and we will come — we can hear a fight from here.”' }
+          ],
+          on: [
+            { event: 'battle', match: { win: true, tag: 'sq_border_raiders', reinforced: true }, do: [{ note: 'The Valedorn watch rode in and the raiders broke between you.' }, { rep: 'valedorn', by: 5 }, { complete: 'sq_border' }] },
+            { event: 'battle', match: { win: true, tag: 'sq_border_raiders' }, do: [{ note: 'You broke the raiders before the watch arrived.' }, { complete: 'sq_border' }] }
+          ]
+        }
+      ],
+      rewards: { gold: 70, renown: 10, rep: { valedorn: 5 } }
+    },
+    // Battle preparation (V2-07): a dug-in band, best met with a plan.
+    sq_planned: {
+      id: 'sq_planned',
+      title: 'A Planned Engagement',
+      giver: 'sergeant_brun',
+      side: true,
+      summary: 'Sergeant Brun wants to see the company fight to a plan, not just charge.',
+      stages: [
+        {
+          id: 'sq_planned_fight',
+          journal: 'Fight the drilled Reavers dug in near Oakford yourself. On the Prepare screen try a setup: Defensive lets them come to your line.',
+          band: { template: 'bandits', tag: 'sq_planned_reavers', name: 'Drilled Reavers', near: 'oakford', troops: { looter: 5, reaver: 4, mercenary: 2 }, camp: true, text: 'These Reavers stand in ranks, shields locked, sell-swords in the middle. They will not be rushed. A plan would help.' },
+          on: [
+            { event: 'battle', match: { win: true, tag: 'sq_planned_reavers', fought: true, preset: ['defensive', 'aggressive', 'custom'] }, do: [{ note: 'You chose your setup and it held. Brun will want to hear it.' }, { renown: 5 }, { complete: 'sq_planned' }] },
+            { event: 'battle', match: { win: true, tag: 'sq_planned_reavers' }, do: [{ note: 'The Reavers are broken, if not quite to Brun’s plan.' }, { complete: 'sq_planned' }] }
+          ]
+        }
+      ],
+      rewards: { gold: 60, renown: 10, xp: 50 }
     }
   };
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -517,7 +517,7 @@
     });
     const kills = enemyFallen.length + joined.filter((j) => j.side === 'enemy').reduce((n, j) => n + j.fallen.length, 0);
     g.battleId = c.battles + 1;
-    const outcome = { battleId: g.battleId, encounter: e.def, win, kills, killed, wounded, participants: healthy };
+    const outcome = { battleId: g.battleId, encounter: e.def, win, kills, killed, wounded, participants: healthy, reinforced: help.list.some((j) => j.side === 'ally') };
     const names = CL.party.rosterNames(c); // before the fallen leave the roster
     // The one commit path (V2-02): result, companion, map, band, events and the save, exactly once.
     CL.reinforce.lock(g, [e.party?.id, ...joined.map((j) => j.id)]); // they wait while the hours pass (§9.5)

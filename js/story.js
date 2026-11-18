@@ -13,6 +13,8 @@
  *    { skill: 'trade', gte: n }  { attribute: 'cha', gte: n }  { background: 'scout' }
  *    { has: 'item' }  { owner: 'greywall_fort', is: 'valedorn' }  { at: 'stonebridge' }
  *    { companion: 'mara' } (with you)  { companion: 'mara', is: 'fit' }  { room: 1 } (free party slots)
+ *    { veteran: 3 } (a soldier born where you are, with at least 3 battles; V2-Q)
+ *    { follower: 'quartermaster' | 'merchant' } (hired; V2-Q)
  *
  *  Effects (`do`): a list, applied in order.
  *    { set: 'flag', to: v = true }  { clear: 'flag' }  { add: 'counter', by: 1 }
@@ -23,6 +25,7 @@
  *    { companion: 'mara' } (joins)  { part: 'mara', reason: 'fell' } (leaves for good)
  *    { send: 'mara' } (rides ahead; out of the company until recalled)  { recall: 'mara' }
  *    { ending: 'key', quest: 'q4' } (sets flag ending and shows that quest's ending panel)
+ *    { honourVeteran: xp } (the most-travelled soldier born here gains xp and a 'feted' service note; V2-Q)
  *    Any effect may carry its own `if` condition and is skipped when it fails.
  *
  *  Stages may also have: begin (effects when the stage starts), deadline (days) with expire
@@ -33,24 +36,30 @@
  *    Events: battle {win, encounter, site, party, contract}, enter {settlement}, recruit {troop,
  *    settlement}, trade {settlement, good, side}, contract {template, giver}, talk {dialogue, node},
  *    parley {party, tag, outcome: 'intimidate' | 'toll'}.
+ *    From V2-Q: battle also has {fought, preset, reinforced}; hire {follower}; stores {rations} (the
+ *    quartermaster bought food); venture {profit: true} (the merchant sold at a profit).
  *
  * A stage may also need a band on the map: band: { template, tag, troops, name?, text?, camp?, map?, near | between: [a, b] }
  * (camp: true holds its ground and only fights if the player goes to it; otherwise it ambushes)
  * (settlement or site ids). It is spawned when the stage begins, re-spawned if lost while the stage
  * is active (so nothing soft-locks), and removed once no active stage needs it. Battles against it
- * carry its tag: match: { tag: 'q1_ambush' }.
+ * carry its tag: match: { tag: 'q1_ambush' }. A stage may have several: bands: [spec, …] (V2-Q). A band
+ * with help: true lets nearby parties join its fight (story battles get none otherwise, V2-09); one
+ * with helper: true is a kingdom patrol that rides to the player's aid against bandits, whatever the
+ * kingdom thinks of them.
  *
- * Text may use {name}, {gold}, {renown}, {settlement} and {flag:some_flag}. Story state lives in `campaign.story`. */
+ * Text may use {name}, {gold}, {renown}, {settlement}, {veteran} and {flag:some_flag}.
+ * A quest with side: true is an errand (V2-Q): optional, shown as such in the Journal. Story state lives in `campaign.story`. */
 (function (root) {
   'use strict';
   const CL = root.Crownless;
 
-  const EVENTS = ['battle', 'enter', 'recruit', 'trade', 'contract', 'talk', 'parley'];
+  const EVENTS = ['battle', 'enter', 'recruit', 'trade', 'contract', 'talk', 'parley', 'hire', 'stores', 'venture'];
   const QUEST_STATUS = ['active', 'done', 'failed'];
   const MAX_FLAGS = 200;
   const MAX_NOTES = 20;
-  const COND_KEYS = ['flag', 'not', 'all', 'any', 'quest', 'gold', 'renown', 'level', 'soldiers', 'rep', 'standing', 'skill', 'attribute', 'background', 'has', 'owner', 'at', 'companion', 'room'];
-  const EFFECT_KEYS = ['set', 'clear', 'add', 'gold', 'renown', 'xp', 'food', 'rep', 'give', 'take', 'recruit', 'start', 'stage', 'complete', 'fail', 'owner', 'message', 'note', 'companion', 'part', 'send', 'recall', 'ending'];
+  const COND_KEYS = ['flag', 'not', 'all', 'any', 'quest', 'gold', 'renown', 'level', 'soldiers', 'rep', 'standing', 'skill', 'attribute', 'background', 'has', 'owner', 'at', 'companion', 'room', 'veteran', 'follower'];
+  const EFFECT_KEYS = ['set', 'clear', 'add', 'gold', 'renown', 'xp', 'food', 'rep', 'give', 'take', 'recruit', 'start', 'stage', 'complete', 'fail', 'owner', 'message', 'note', 'companion', 'part', 'send', 'recall', 'ending', 'honourVeteran'];
 
   const camp = () => CL.campaign;
   const quest = (id) => CL.content.table('quests')[id] || null;
@@ -112,7 +121,17 @@
     if ('at' in cond) return c.world.location === cond.at;
     if ('companion' in cond) return cond.is === 'fit' ? CL.companion.fit(c) && CL.companion.has(c, cond.companion) : CL.companion.has(c, cond.companion);
     if ('room' in cond) return CL.party.partyCap(c) - c.roster.length - CL.companion.slots(c) >= cond.room;
+    if ('veteran' in cond) return Boolean(veteranHere(c, cond.veteran));
+    if ('follower' in cond) return Boolean(c.followers?.[cond.follower]);
     return false;
+  }
+
+  /** The most-travelled soldier born where the company is, with at least `n` battles (V2-Q). @param {Campaign} c */
+  function veteranHere(c, n = 1) {
+    const here = c.world?.location;
+    if (!here) return null;
+    const born = c.roster.filter((s) => s.origin === here && s.record.battles >= n);
+    return born.sort((a, b) => b.record.battles - a.record.battles || a.id - b.id)[0] || null;
   }
 
   // ---- Effects ----
@@ -156,6 +175,13 @@
     else if ('send' in e) CL.companion.send(c, e.send);
     else if ('recall' in e) CL.companion.recall(c, e.recall);
     else if ('ending' in e) showEnding(c, e.quest || ctx.quest, e.ending);
+    else if ('honourVeteran' in e) {
+      const v = veteranHere(c);
+      if (v) {
+        v.xp += e.honourVeteran;
+        CL.soldiers.note(v, { day: c.day, kind: 'feted', place: c.world.location });
+      }
+    }
   }
 
   // ---- Endings (GDD §4 Q4: "show a brief ending panel, return to sandbox") ----
@@ -246,11 +272,15 @@
     return { x: Math.min(98, p.x + 3), y: Math.min(98, p.y + 2) };
   }
 
+  /** A stage's bands: its `band` and any `bands`. */
+  const stageBands = (st) => [st?.band, ...(st?.bands || [])].filter(Boolean);
+
   /** The stage band spec behind a quest band's tag (for its encounter text). */
   function bandSpec(tag, c = camp()) {
     for (const [id, r] of Object.entries(state(c).quests)) {
-      const band = r.status === 'active' && quest(id)?.stages.find((st) => st.id === r.stage)?.band;
-      if (band?.tag === tag) return band;
+      if (r.status !== 'active') continue;
+      const band = stageBands(quest(id)?.stages.find((st) => st.id === r.stage)).find((b) => b.tag === tag);
+      if (band) return band;
     }
     return null;
   }
@@ -261,8 +291,7 @@
     const wanted = new Map();
     for (const [id, r] of Object.entries(c.story.quests)) {
       if (r.status !== 'active') continue;
-      const band = quest(id)?.stages.find((st) => st.id === r.stage)?.band;
-      if (band) wanted.set(band.tag, band);
+      for (const band of stageBands(quest(id)?.stages.find((st) => st.id === r.stage))) wanted.set(band.tag, band);
     }
     for (const p of [...c.parties]) {
       if (p.questTag && !wanted.has(p.questTag)) c.parties.splice(c.parties.indexOf(p), 1);
@@ -326,6 +355,7 @@
       .replace(/\{gold\}/g, String(c.gold))
       .replace(/\{renown\}/g, String(c.renown))
       .replace(/\{settlement\}/g, here)
+      .replace(/\{veteran\}/g, veteranHere(c)?.name || 'your veteran')
       .replace(/\{flag:([a-z0-9_]+)\}/g, (_, f) => String(state(c).flags[f] ?? 0));
   }
 
@@ -401,7 +431,7 @@
       const stage = q.stages.find((st) => st.id === r.stage);
       const left = deadlineLeft(c, id);
       const objective = stage ? format(stage.journal, c) + (left !== null ? ` (${Math.max(0, left).toFixed(1)} days left)` : '') : null;
-      rows.push({ id, title: q.title, status: r.status, objective, notes: r.notes.slice(), summary: q.summary });
+      rows.push({ id, title: q.title, status: r.status, objective, notes: r.notes.slice(), summary: q.summary, side: Boolean(q.side) });
     }
     const order = { active: 0, done: 1, failed: 2 };
     return rows.sort((a, b) => order[a.status] - order[b.status]);
@@ -456,6 +486,8 @@
     if (k === 'background' && !C.backgrounds?.[cond.background]) err(`${where}: unknown background ${cond.background}`);
     if (k === 'skill' && !C.skills?.[cond.skill]) err(`${where}: unknown skill ${cond.skill}`);
     if (k === 'companion' && !C.companions?.[cond.companion]) err(`${where}: unknown companion ${cond.companion}`);
+    if (k === 'veteran' && !(Number.isInteger(cond.veteran) && cond.veteran >= 0)) err(`${where}: veteran needs a number of battles`);
+    if (k === 'follower' && !['quartermaster', 'merchant'].includes(cond.follower)) err(`${where}: unknown follower ${cond.follower}`);
   }
 
   function checkEffects(list, C, where, err, questId) {
@@ -482,6 +514,7 @@
       if (k === 'owner' && (C.settlements?.[e.owner]?.type !== 'fort' || !C.factions?.[e.to])) err(`${where}: bad owner effect`);
       if (['companion', 'part', 'send', 'recall'].includes(k) && !C.companions?.[e[k]]) err(`${where}: unknown companion ${e[k]}`);
       if (k === 'ending' && !C.quests?.[e.quest || questId]?.endings?.[e.ending]) err(`${where}: unknown ending ${e.ending}`);
+      if (k === 'honourVeteran' && !Number.isFinite(e.honourVeteran)) err(`${where}: honourVeteran needs a number`);
       if (e.if) checkCond(e.if, C, where, err);
     }
   }
@@ -533,8 +566,7 @@
         checkEffects(st.begin, C, `${w}.${st.id} begin`, err, id);
         checkEffects(st.expire, C, `${w}.${st.id} expire`, err, id);
         if (st.expire && !(st.deadline > 0)) err(`${w}.${st.id}: expire needs a deadline`);
-        if (st.band) {
-          const b = st.band;
+        for (const b of stageBands(st)) {
           const map = Object.values(C.world_map || {})[0];
           const known = (x) => Boolean(C.settlements?.[x] || map?.sites?.[x]);
           if (!['bandit', 'patrol'].includes(C.party_templates?.[b.template]?.kind)) err(`${w}.${st.id}: band needs a bandit or patrol template`);

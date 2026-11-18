@@ -32,7 +32,7 @@ declare global {
   /** One service note; shown as a sentence by CL.soldiers.noteText. */
   interface SoldierNote {
     day: number;
-    kind: 'joined' | 'veteran' | 'wounded' | 'promoted' | 'captured' | 'notable';
+    kind: 'joined' | 'veteran' | 'wounded' | 'promoted' | 'captured' | 'notable' | 'feted';
     place?: string | null;
     foe?: string | null;
     to?: ContentId;
@@ -344,6 +344,10 @@ declare global {
     kills: number;
     /** Enemies who fled the field (V2-08b): beaten, half the spoils of a kill, no kill credit. */
     routed?: number;
+    /** V2-Q: fought in person (not auto-resolved), the setup used, and whether help rode in. */
+    fought?: boolean;
+    preset?: string | null;
+    reinforced?: boolean;
     killed: number[];
     wounded: number[];
     participants?: number[];

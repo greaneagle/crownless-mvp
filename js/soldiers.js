@@ -27,7 +27,7 @@
   const NAME_TRIES = 8;
   const NOTABLE_KILLS = 3; // felling this many in one battle earns a note
   const RECORD_KEYS = ['battles', 'victories', 'kills', 'assists', 'wounds', 'captures', 'wagesPaid'];
-  const NOTE_KINDS = ['joined', 'veteran', 'wounded', 'promoted', 'captured', 'notable'];
+  const NOTE_KINDS = ['joined', 'veteran', 'wounded', 'promoted', 'captured', 'notable', 'feted'];
   const FILTERS = ['all', 'fit', 'wounded', 'ready', 'infantry', 'archer', 'cavalry'];
   const ROMAN = ['', '', ' II', ' III', ' IV', ' V', ' VI', ' VII', ' VIII', ' IX', ' X'];
 
@@ -141,6 +141,8 @@
         return 'Taken captive with the company, then released.';
       case 'notable':
         return `Felled ${n.kills} enemies${n.foe ? ` fighting ${n.foe}` : ''}.`;
+      case 'feted':
+        return n.place ? `Feted at home in ${placeName(n.place)}.` : 'Feted at home.';
       default:
         return '';
     }
@@ -287,7 +289,7 @@
       if (!n || !NOTE_KINDS.includes(n.kind) || typeof n.day !== 'number' || !Number.isFinite(n.day)) continue;
       /** @type {SoldierNote} */
       const out = { day: n.day, kind: n.kind };
-      if (n.kind === 'joined') out.place = settlement(n.place) ? n.place : null;
+      if (n.kind === 'joined' || n.kind === 'feted') out.place = settlement(n.place) ? n.place : null;
       if (n.kind === 'promoted') {
         if (!CL.content.table('troops')[n.to]) continue;
         out.to = n.to;

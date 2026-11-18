@@ -1694,7 +1694,7 @@
     $('#journalScreen').replaceChildren(
       ...rows.map((r) => {
         const card = el('div', `questCard ${r.status}`);
-        card.append(el('h3', '', `${r.title} — ${label[r.status]}`));
+        card.append(el('h3', '', `${r.title}${r.side ? ' (errand)' : ''} — ${label[r.status]}`));
         if (r.summary) card.append(el('p', '', r.summary));
         if (r.objective) card.append(el('p', 'objective', `▸ ${r.objective}`));
         if (r.notes.length) {
