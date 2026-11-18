@@ -435,6 +435,7 @@
       `Per frame: simulation ${stats.simMs} ms · drawing ${stats.drawMs} ms`,
       `Slowest frame: ${stats.worstFrameMs} ms`,
       ...(big ? [`Arena ${stats.arena}: first contact after ${stats.contactS ?? '–'} s, first fall after ${stats.firstDownS ?? '–'} s, battle ${stats.battleS} s of play`] : []),
+      ...(g.joining?.length ? [`Parties that rode in: ${g.joining.filter((j) => j.arrived).map((j) => `${j.name} (${j.size}) at ${Math.round(j.arriveAt)} s`).join(', ') || 'none (the battle ended first)'}`] : []),
       'Nothing in your campaign changed.',
     ].join('<br>');
     g.result = { win, practice: stats, html };

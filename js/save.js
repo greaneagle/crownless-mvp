@@ -30,6 +30,8 @@
   const KEY = 'crownless_save';
   const BACKUP_KEY = 'crownless_save_backup';
   const LEGACY_KEY = 'crownless_v03_party';
+  // V2-13 (SC-33): a save that needs content this build doesn't have is kept here, untouched.
+  const INCOMPATIBLE_KEY = 'crownless_save_incompatible';
   /** @param {number} version @returns {string} key holding a save exactly as it was before migrating */
   const preMigrationKey = (version) => `crownless_save_v${version}`;
   const MAX_VALUE = 99999;
@@ -350,12 +352,22 @@
    * The load path for any saved campaign (storage, a file, the pre-import slot): check its structure
    * and world, migrate it, repair it. Never touches storage.
    * @param {unknown} d parsed JSON
-   * @returns {{ campaign: Campaign | null, problems: string[], from?: number, newer?: boolean, otherWorld?: boolean }}
+   * @returns {{ campaign: Campaign | null, problems: string[], from?: number, newer?: boolean, otherWorld?: boolean, incompatible?: boolean }}
    */
   function fromRaw(d) {
     const r = check(d);
     if (r.problems.length) return { campaign: null, ...r };
     const raw = /** @type {Record<string, any>} */ (d);
+    // SC-33: named soldiers of troops this build doesn't know (a removed or modded troop) are never
+    // dropped quietly: the save is refused, saying who and what.
+    if (raw.version >= 2 && Array.isArray(raw.roster)) {
+      const unknown = raw.roster.filter((e) => e && typeof e === 'object' && !knownTroop(e.troop));
+      if (unknown.length) {
+        const who = unknown.slice(0, 3).map((e) => `${typeof e.name === 'string' && e.name ? e.name : `soldier #${e.id}`} (${String(e.troop).slice(0, 30)})`);
+        const more = unknown.length > 3 ? ` and ${unknown.length - 3} more` : '';
+        return { campaign: null, problems: [`it needs troops this version of the game does not have: ${who.join(', ')}${more}`], incompatible: true };
+      }
+    }
     const campaign = raw.version === 1 ? migrateV1(raw) : sanitize(raw);
     if (!campaign) return { campaign: null, problems: ['it could not be read'] };
     return { campaign, problems: [], from: raw.version };
@@ -378,6 +390,11 @@
     const r = fromRaw(d);
     if (!r.campaign) {
       CL.diag.log('warn', 'Save rejected', { key, problems: r.problems });
+      if (r.incompatible && key === KEY) {
+        // Kept exactly as it was, so a later version (or the right mod) can still open it (SC-33).
+        if (CL.storage.get(INCOMPATIBLE_KEY) == null) CL.storage.set(INCOMPATIBLE_KEY, text);
+        CL.save.notice = `Your save could not be opened: ${r.problems[0]}. It has been kept safe and nothing will overwrite it.`;
+      }
       return null;
     }
     if (r.from >= 2 && r.from < VERSION) {
@@ -397,7 +414,7 @@
       if (c) {
         CL.diag.log('warn', 'Main save unreadable; restored backup');
         // Tell the player rather than quietly losing their last few minutes.
-        CL.save.notice = 'Your latest save could not be read, so the one before it was loaded. You may have lost a few minutes.';
+        CL.save.notice ??= 'Your latest save could not be read, so the one before it was loaded. You may have lost a few minutes.';
       }
     }
     if (!c) {
@@ -491,6 +508,7 @@
     KEY,
     BACKUP_KEY,
     LEGACY_KEY,
+    INCOMPATIBLE_KEY,
     WOUND_DAYS,
     AUTOSAVE_DAYS,
     MIGRATIONS,

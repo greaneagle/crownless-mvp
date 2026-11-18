@@ -418,6 +418,8 @@ declare global {
     newer?: boolean;
     /** Belongs to another world (content package). */
     otherWorld?: boolean;
+    /** Needs content this build does not have, e.g. a removed troop (V2-13, SC-33). */
+    incompatible?: boolean;
   }
 
   interface SaveAPI {
@@ -425,6 +427,8 @@ declare global {
     KEY: string;
     BACKUP_KEY: string;
     LEGACY_KEY: string;
+    /** Where an incompatible save is kept untouched (SC-33). */
+    INCOMPATIBLE_KEY: string;
     WOUND_DAYS: number;
     AUTOSAVE_DAYS: number;
     MIGRATIONS: Record<number, (d: Record<string, any>) => Record<string, any>>;

@@ -141,7 +141,12 @@
    * following the hero and cavalry on both sides. Reports fps, drawing time, the slowest frame and
    * how long the armies took to meet. Nothing in the campaign changes and nothing is saved.
    */
-  function cameraTest(total) {
+  /**
+   * The camera test (PROTO-A); with `help`, the v2.0 phone check (V2-13, SC-34): the same big forest
+   * battle with cavalry, plus an allied party riding in from the north at 8 s and an enemy one from
+   * the south at 12 s. The field is full, so they wait in reserve and step in as others fall.
+   */
+  function cameraTest(total, { help = false } = {}) {
     const allies = Math.floor(total / 2) - 1;
     const mix = ['footman', 'rider', 'hunter', 'footman', 'levy', 'rider', 'longbowman', 'guard'];
     const emix = ['reaver', 'horse_scout', 'looter', 'spearman', 'skirmisher', 'reaver'];
@@ -159,13 +164,18 @@
       reward: { goldBase: 0, goldPerKill: 0, renown: 0 },
       loot: 'low',
     });
-    log('camera test', { total, arena: '3x forest' });
+    if (help) {
+      const g = CL.game;
+      const party = (id, name, side, troops, arriveAt, dir) => ({ id, template: 'test', name, side, troops, size: Object.values(troops).reduce((a, b) => a + b, 0), hours: arriveAt / CL.reinforce.SECONDS_PER_HOUR, arriveAt, seen: false, dir, from: dir.y < 0 ? 'north' : 'south', warned: false, arrived: false });
+      g.joining = [party(-1, 'Valedorn Patrol', 'ally', { footman: 3, hunter: 2, rider: 1 }, 8, { x: 0, y: -1 }), party(-2, 'Road Reavers', 'enemy', { reaver: 4, horse_scout: 2 }, 12, { x: 0, y: 1 })];
+    }
+    log('camera test', { total, arena: '3x forest', help });
   }
 
   function wipeSave() {
     const S = CL.save;
     const pre = Array.from({ length: S.VERSION - 2 }, (_, i) => S.preMigrationKey(i + 2)); // crownless_save_v2, …
-    for (const k of [S.KEY, S.BACKUP_KEY, S.LEGACY_KEY, ...pre]) CL.storage.remove(k);
+    for (const k of [S.KEY, S.BACKUP_KEY, S.LEGACY_KEY, S.INCOMPATIBLE_KEY, ...pre]) CL.storage.remove(k);
     log('save wiped');
   }
 
@@ -357,7 +367,7 @@
       case 'camera':
         if (mode === 'battle' || mode === 'result') return CL.ui.message('Finish the battle first');
         toggle(false);
-        cameraTest(n);
+        cameraTest(n, { help: btn.dataset.help === '1' });
         return;
       case 'win':
       case 'lose':

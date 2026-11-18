@@ -1,6 +1,6 @@
 # Crownless — Project Status & Roadmap
 
-_Last reviewed: 2026-11-18 · Build 1.19.0 · Spec: `Crownless_MVP_GDD_v1.md` (engine overridden: HTML5 Canvas + classic JS, no bundler, GitHub Pages)._
+_Last reviewed: 2026-11-18 · Build 2.0.0 · Spec: `Crownless_MVP_GDD_v1.md` (engine overridden: HTML5 Canvas + classic JS, no bundler, GitHub Pages)._
 
 This replaces the opencode-swarm plan (`.swarm/plan.md`, removed). The gate structure (A→E) is kept from the GDD; the task list is condensed and re-ordered around what the code actually needs.
 
@@ -115,7 +115,7 @@ From the owner's v2.0 design (`Crownless_v2_0_Feature_and_Systems_Design_Part_1.
   - ✅ (1.17.0) V2-Q five small errands that use the new systems (no new main story): Home from the Wars (a Stonebridge-born veteran feasted; named soldiers and the chronicle), Full Larders (the quartermaster), A Merchant’s First Venture (the merchant), Smoke on the Border (a Crown watch rides in: reinforcements), A Planned Engagement (battle setups); optional, marked as errands in the Journal; the quest interpreter learned a few words for them
   - ✅ (1.18.0) V2-T1 economy tuning pass: measured with a new economy report (`npm run economy`); the warband economy kept as it is (no hoarding, almost no hardship); the quartermaster's weekly budget now automatic by default (it starved companies that left food to it); the merchant sells stock that waits (at cost after 6 days, at up to 15% loss after 14) and Bold is retuned; Prototype E passed
   - ✅ (1.19.0) V2-T2 battle tuning pass: battles always end (the company charges when the hero falls; an enemy left alone while falling back gives up; 45 s without a blow and the enemy slips away), Balanced has archers and cavalry go with the hero, and auto-resolve meets fought battles part way (soldiers ×1.5 for fighting in ranks, a won fight costs fewer); arena, spacing, morale and reinforcement timing measured and kept
-  - V2-13 v2.0 acceptance; v2.0 is a testing release
+  - ✅ (2.0.0) V2-13 v2.0 acceptance: every core scenario (SC-01–14, SC-30–39) mapped to its evidence in `docs/V2-VALIDATION.md`; Prototype G (hands-off, presets-only and expert players over the same campaigns, with a save, reload and resume) all viable; SC-33 fixed (a save naming a troop this version lacks is refused by name and kept, not thinned); a Debug-panel **Big battle 40 + help** for the SC-34 phone run; release notes. **v2.0 is a testing release.** Waiting on the phone: SC-34 and the feel of the new battles; SC-37 balance deferred by the owner
   - **Release track** (the goal is to sell eventually; never blocks v2.0): R-01 commercial readiness, including OpenAI's terms for the ChatGPT-made sprites; R-02 packaging trial; R-03 demo plan
   - **Later backlog:** text size and zoom, other languages (English only for now)
 - **Phase 7, v2.1–2.2 "Company & World":** more followers, officers and detached patrols, pursuit and detection, dynamic events, a duel tournament, a first business.

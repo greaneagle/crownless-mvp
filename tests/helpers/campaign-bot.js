@@ -1,8 +1,15 @@
 // A headless player for acceptance runs: plays the real campaign logic (no DOM) with simple,
 // sensible choices, and records what happened. Used by tests/acceptance.test.js and by
 // scripts/simulate-campaign.js for multi-seed balance checks.
+//
+// style (V2-13, Prototype G: the same campaign played three ways):
+//   'hands-off'  auto-resolves every fight and never changes a setting (the default)
+//   'presets'    fights in person, choosing only a preset: Defensive when the odds are close, else Balanced
+//   'expert'     fights in person with Aggressive, Defensive or Balanced as the odds suggest, rallies its
+//                soldiers, and keeps a quartermaster and a merchant
+// The in-person fights use a simple hero (walk at the nearest enemy, swing); a real player does better.
 
-function makeBot(CL, { log = () => {} } = {}) {
+function makeBot(CL, { log = () => {}, style = 'hands-off' } = {}) {
   const c = () => CL.campaign;
   const g = CL.game;
   const stats = {
@@ -20,6 +27,11 @@ function makeBot(CL, { log = () => {} } = {}) {
     foodBought: 0,
     minGold: Infinity,
     stuck: 0,
+    fought: 0,
+    heroDown: 0,
+    rallies: 0,
+    presets: {},
+    screens: 0, // non-default screens visited (the Prepare screen's choice, Accounts)
   };
   const U = () => CL.upkeep;
   const odds = (e) => CL.autoresolve.winChance(CL.autoresolve.playerPower(c()), CL.autoresolve.troopsPower(e.troops));
@@ -83,6 +95,7 @@ function makeBot(CL, { log = () => {} } = {}) {
         log(`day ${camp.day.toFixed(1)}: contract accepted at ${sid}`);
       }
     }
+    if (style === 'expert') followers(camp);
     const wounded = CL.party.woundedSoldiers().length;
     if (wounded && wounded * 2 >= camp.roster.length && CL.party.canRest() && camp.food >= U().dailyRations(camp)) {
       CL.party.rest();
@@ -149,7 +162,8 @@ function makeBot(CL, { log = () => {} } = {}) {
       stats.retreats++;
       if (!CL.parties.retreat()) {
         // Failed retreat → a real battle started; settle it.
-        CL.debugTools.endBattleNow(CL.autoresolve.next(camp) < p);
+        if (style === 'hands-off') CL.debugTools.endBattleNow(CL.autoresolve.next(camp) < p);
+        else drive();
         tally();
       }
       return;
@@ -158,8 +172,58 @@ function makeBot(CL, { log = () => {} } = {}) {
   }
 
   function resolve() {
-    CL.parties.autoResolve();
+    if (style === 'hands-off') CL.parties.autoResolve();
+    else fightInPerson();
     tally();
+  }
+
+  /** The expert keeps a quartermaster and a merchant (V2-11, V2-12), funded from what is spare. */
+  function followers(camp) {
+    if (!CL.quartermaster.get(camp) && CL.quartermaster.canHire(camp) && camp.gold >= 160) {
+      CL.quartermaster.hire(camp);
+      stats.screens++;
+    }
+    if (!CL.merchant.get(camp) && CL.merchant.canHire(camp) && camp.gold >= 400) {
+      CL.merchant.hire(camp);
+      CL.merchant.fund(camp, 150);
+      stats.screens++;
+    }
+  }
+
+  /** Which setup to fight with. */
+  function presetFor(e) {
+    const p = odds(e);
+    if (style === 'presets') return p < 0.65 ? 'defensive' : 'balanced';
+    return p < 0.6 ? 'defensive' : p > 0.75 ? 'aggressive' : 'balanced';
+  }
+
+  /** Fight the open encounter in person with a chosen setup, to the end. */
+  function fightInPerson() {
+    const e = CL.parties.current();
+    const preset = presetFor(e);
+    stats.presets[preset] = (stats.presets[preset] || 0) + 1;
+    if (preset !== 'balanced') stats.screens++;
+    CL.parties.attack(CL.prep.plan(preset, CL.arena.mapFor(e.def.map)));
+    drive();
+  }
+
+  /** The bot hero: walk at the nearest enemy and swing; the expert rallies anyone running. */
+  function drive() {
+    stats.fought++;
+    for (let i = 0; i < 30000 && g.mode === 'battle'; i++) {
+      const h = g.hero;
+      const foe = g.enemies.filter((x) => x.alive && !x.routing).sort((a, b) => Math.hypot(a.x - h.x, a.y - h.y) - Math.hypot(b.x - h.x, b.y - h.y))[0] || g.enemies.find((x) => x.alive);
+      if (foe && h.alive) {
+        const [dx, dy] = [foe.x - h.x, foe.y - h.y];
+        const L = Math.hypot(dx, dy) || 1;
+        g.joystick = L > 45 || !CL.units.inArc(h, foe, CL.units.ARC.attack) ? { x: dx / L, y: dy / L } : { x: 0, y: 0 };
+        g.attackHeld = L < 70;
+      }
+      if (style === 'expert' && h.alive && !CL.morale.rallyIn(g) && g.allies.some((a) => a.alive && a.routing) && CL.morale.rally(g)) stats.rallies++;
+      CL.combat.update(0.02);
+    }
+    if (g.mode === 'battle') CL.debugTools.endBattleNow(true); // never: battles end (V2-T2); just in case
+    if (!g.hero.alive) stats.heroDown++;
   }
 
   function tally() {
@@ -183,7 +247,9 @@ function makeBot(CL, { log = () => {} } = {}) {
         if (!g.travel) chooseDestination();
         CL.world.update(0.1);
       } else if (m === 'battle') {
-        CL.debugTools.endBattleNow(true);
+        // A failed retreat: the battle has begun.
+        if (style === 'hands-off') CL.debugTools.endBattleNow(true);
+        else drive();
         tally();
       } else CL.ui.changeMode('map');
       if (c().day > lastDay) {
