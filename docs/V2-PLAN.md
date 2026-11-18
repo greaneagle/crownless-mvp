@@ -126,6 +126,8 @@ Each task's validation section answers the design's ticket questions (§26.8), c
 
 ## 6. Phase 7 — v2.1–2.2 "The Living Company & World" (outline)
 
+_Superseded on 2026-11-18 by [`docs/NEXT-PLAN.md`](NEXT-PLAN.md), which plans everything after 2.0 (zoom and a bigger world first, then Phases 7–9). The outlines below are kept as they were written._
+
 Detailed tasks get written when Phase 6 ends; candidates, in rough order:
 - **More followers:** surgeon (triage and recovery), scout (detection, route risk), then blacksmith (upgrades rather than durability chores) (§12).
 - **Officers and detached patrols:** an order package (objective, constraints, resources, autonomy), transfers that keep soldier histories, reports (§11.3, SC-17–18).
