@@ -305,6 +305,7 @@ The sandbox carries on after the story ends.
 ### 2.14 Known limits of v1
 - Mercenaries have no upgrade path (finding F-1; from 1.5.0 they train into Sellswords, V2-03b).
 - Soldiers have no names (from 1.4.0 they do: V2-03).
+- A soldier who dies or deserts is simply gone (from 1.14.0 the roll of honour remembers them, and the company keeps a chronicle, V2-10).
 - A raised shield protects only its holder (from 1.11.0 it also covers the ally beside it on the shield side, V2-08a; soldiers with shields block too).
 - Nobody ever breaks and runs in a battle (from 1.12.0 groups on both sides waver, fall back and rout, and the hero can rally the company, V2-08b).
 - A battle is between you and the one band or patrol you met; the rest of the world takes no part (from 1.13.0 nearby parties can join it, V2-09).
@@ -339,6 +340,7 @@ The sandbox carries on after the story ends.
 | `clock` | From 1.6.0: the campaign clock: the one way time moves, with fixed hours for battle, capture and rest |
 | `events` | From 1.3.0: domain events with unique IDs (BattleResolved, SoldierWounded, …) and listeners |
 | `soldiers` | From 1.4.0: named soldiers: culture names, service records kept from events, notes, filters, rename |
+| `chronicle` | From 1.14.0: the company chronicle and the roll of honour, kept from events and bounded; retiring with honour; "who did what" on the battle result |
 | `troops` | From 1.5.0: the troop tree as discovered (seen or owned), learned from events and hiring offers |
 | `save` | Save service: schema v2 at 1.0 (v3 from 1.2.0), backup on every write, fallback to the backup, migration from 0.3.x; from 1.2.0 also structure checks, migration steps and the travel autosave |
 | `assets` | Sprite loading (`assets/u####.png` units, `w####.png` world) and frame tables |

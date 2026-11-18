@@ -1,0 +1,76 @@
+[
+ {
+  "file": "campaign-day20.json",
+  "about": "20 days of mercenary life by that build’s campaign bot.",
+  "expect": {
+   "build": "1.13.0",
+   "name": "Bot3",
+   "day": 20.014,
+   "gold": 52,
+   "renown": 34,
+   "battles": 14,
+   "victories": 7,
+   "soldierIds": [
+    4,
+    8,
+    9,
+    10,
+    11
+   ],
+   "troops": [
+    "levy",
+    "hunter",
+    "levy",
+    "levy",
+    "levy"
+   ],
+   "xp": [
+    92,
+    64,
+    46,
+    20,
+    0
+   ],
+   "location": null,
+   "quests": {}
+  }
+ },
+ {
+  "file": "story-played.json",
+  "about": "A funded company playing the story with that build’s story bot until a middle quest is under way or the story ends (seed 4 reaches the Q4 ending).",
+  "expect": {
+   "build": "1.13.0",
+   "name": "Bot4",
+   "day": 9.643,
+   "gold": 3623,
+   "renown": 78,
+   "battles": 5,
+   "victories": 5,
+   "soldierIds": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "troops": [
+    "footman",
+    "footman",
+    "hunter",
+    "levy"
+   ],
+   "xp": [
+    100,
+    100,
+    100,
+    100
+   ],
+   "location": "greywall_fort",
+   "quests": {
+    "q2": "done",
+    "q3": "done",
+    "q1": "done",
+    "q4": "done"
+   }
+  }
+ }
+]

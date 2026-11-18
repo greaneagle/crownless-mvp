@@ -1,4 +1,4 @@
-# Crownless 1.13.0 — The Border March
+# Crownless 1.14.0 — The Border March
 
 A single-player, top-down party-battle prototype in plain HTML5 Canvas and classic JavaScript. There's no bundler, no runtime dependencies and no server. It's published to GitHub Pages straight from `main`.
 
@@ -39,6 +39,7 @@ A single-player, top-down party-battle prototype in plain HTML5 Canvas and class
 - **Group AI and shield cover (1.11.0):** soldiers follow in loose ranks; shield troops raise their shields, and a raised shield also covers the ally just beside it (the hero's too); spearmen stop cavalry charges from the front; archers only shoot with a clear line; orders that can't be carried out say so.
 - **Morale, rout and rally (1.12.0):** groups on both sides waver, fall back and rout from heavy losses, being outnumbered, flank attacks and friends running, and veterans and the hero steady them; nothing is rolled. Fleeing enemies count as beaten but leave less loot; your own come back after the battle. Rally (R, or in Orders) steadies the soldiers near you every 30 seconds.
 - **Nearby reinforcements (1.13.0):** a battle draws in parties close enough to hear it and reach it within its hours: Road Reavers join their own kind, a friendly kingdom's patrol rides to your aid, a Hostile one comes for you. They arrive at a worked-out time from the side they come from, announced in advance; if the battle ends first, they're too late. Auto-resolve counts them too.
+- **Company chronicle and roll of honour (1.14.0):** the Journal keeps your company's own story (recruits, promotions, notable battles, who fell, quests). Soldiers who fall, desert or retire stay on a Roll of honour in Party with where they came from, how long they served and what they did. You can retire a veteran with honour, and the battle result says who did what.
 - **Battle preparation (1.10.0):** Attack opens a Prepare screen with the real field: Balanced (default), Defensive, Aggressive or Custom (drag each group's flag inside the deployment zone and pick its first order); Fight, or Simulate (auto-resolve with the odds explained). Ambushed, you get less room. You can remember your setup and skip the screen.
 - **Minimap and tactical overview (1.9.0):** on a large battlefield a small map at the top shows your company and only the enemies your soldiers have seen; tap it to look there. MAP (phone) or holding Tab (desktop, or M to toggle) opens the whole field with the battle held still; pick a group in Orders and tap where it should go and hold.
 - **Time (1.6.0):** a battle takes a fixed 4 game hours of overworld time, fought or auto-resolved; capture 12 hours; a rest a day. The fight's own seconds, pausing and menus pass no time.
@@ -90,6 +91,7 @@ js/               game runtime, attached to window.Crownless
   groups.js       group AI: soldiers' shields and shield cover, braced spears, archers' line of sight, Follow ranks
   morale.js       battle morale: hold, waver, fall back, rout; fleeing the field; the hero's Rally
   reinforce.js    nearby reinforcements: who joins a battle, when and from where; locked parties; one commit
+  chronicle.js    the company chronicle, the roll of honour and "who did what"
   units.js        units built from troop data, swing phases, facing, movement
   combat.js       waves, attacks, AI, arrows, win/loss
   party.js        recruiting, day clock, wounded recovery, battle results and loot

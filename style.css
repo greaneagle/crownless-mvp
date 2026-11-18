@@ -251,3 +251,9 @@
 #stage[data-mode="prepare"] #touch,#stage[data-mode="prepare"] #topRight{display:none}
 @media(pointer:coarse){.prepPresets button,.prepGroup button{min-height:44px}}
 #stage[data-mode="prepare"] #topLeft{display:none}
+
+/* V2-10: roll of honour and retiring */
+.honourRow{display:flex;flex-direction:column;gap:2px;padding:6px 8px;margin:4px 0;border-left:3px solid #8a6d3b;background:#ffffff0a}
+.honourRow.fell{border-left-color:#b85a4a}
+.honourRow span{font-size:13px;color:#d9c8a2}
+.retireBtn{margin-top:10px;opacity:.85}

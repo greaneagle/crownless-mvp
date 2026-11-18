@@ -85,6 +85,7 @@
         'Everyone you hire takes a slot, eats a ration a day for every five people, and draws a weekly wage. Hungry or unpaid soldiers lose morale; at very low morale they desert.',
         'Fallen soldiers are wounded or killed. The wounded sit out battles for about two days. Soldiers gain experience and can be upgraded for crowns in the Party screen; Leadership and renown raise how many you can lead.',
         'Every soldier has a name, a home and a service record: battles, kills, wounds and the wages they were actually paid. Party lists them by name (filter by who is fit, wounded or ready to upgrade); tap one for their card, where you can rename them or upgrade them on their own. By type groups them as before.',
+        'Soldiers who fall, desert or retire are not forgotten: the Roll of honour in Party keeps who they were, where they came from, how long they served and what they did. A soldier’s card has Retire with honour (tap twice) to let a veteran go. After a fought battle, the result says who did what.',
         'Troop tree shows every troop line as you discover it: troops you have met by name, troops you have hired or trained in full, with their upgrade costs. A troop at the end of its line is at max tier. Upgrade all ready upgrades everyone who has earned it, after showing you the total.',
         'Party also shows your hero: equip loot, and spend skill and attribute points as you level.'
       ]
@@ -103,7 +104,7 @@
       order: 7,
       title: 'Story, reputation and news',
       body: [
-        'Four quests lead to the fate of Greywall. The Journal lists them with the next step in gold, and the regional news.',
+        'Four quests lead to the fate of Greywall. The Journal lists them with the next step in gold, the company chronicle (your own story: who joined, who was promoted, notable battles, who fell, quests done) and the regional news.',
         'Each kingdom sees you as Friendly, Neutral or Hostile. Helping it raises that; attacking its patrols or caravans lowers it. Friendly gives two extra party slots; Hostile means its patrols hunt you.',
         'Mara, a former imperial scout, may join you after the second quest. After the ending the March goes on: work, trade and the border’s quarrels continue.'
       ]
@@ -141,7 +142,7 @@
     trade: { id: 'trade', on: 'trade', help: 'trade', title: 'The market', text: 'Goods are cheap where plentiful and dear where short: buy low here, sell somewhere else. Cargo slows you down.' },
     contracts: { id: 'contracts', on: 'contracts', help: 'trade', title: 'Contracts', text: 'One job at a time: hunt a band, escort a caravan or deliver. Each shows its reward and time limit; failing costs renown.' },
     character: { id: 'character', on: 'character', help: 'party', title: 'Party and gear', text: 'Equip what you find, spend skill and attribute points, and upgrade soldiers who have earned it.' },
-    journal: { id: 'journal', on: 'journal', help: 'story', title: 'The Journal', text: 'Your quests, with the next step in gold, and the regional news.' },
+    journal: { id: 'journal', on: 'journal', help: 'story', title: 'The Journal', text: 'Your quests, with the next step in gold, your company’s chronicle, and the regional news.' },
     saves: { id: 'saves', on: 'saves', help: 'saving', title: 'Keep a copy', text: 'The game saves itself in this browser, but browsers can clear it. Export a copy now and then — it also moves your game to another device.' },
     points: { id: 'points', on: 'map', when: 'points', help: 'party', title: 'Points to spend', text: 'You have skill or attribute points to spend. Open Party: Leadership lets you lead more soldiers, One-Handed hits harder.' },
     lowFood: { id: 'lowFood', on: 'map', when: 'lowFood', help: 'party', title: 'Food is running low', text: 'Buy food in any town or village. Hungry soldiers lose morale and may desert.' },

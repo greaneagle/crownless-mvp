@@ -216,6 +216,7 @@
       CL.ui.message(`Quest complete: ${q.title}${w.gold ? ` · +${w.gold} crowns` : ''}${w.renown ? ` · +${w.renown} renown` : ''}`);
     } else CL.ui.message(`Quest failed: ${q.title}`);
     CL.diag.log('info', 'Quest ended', { quest: id, status });
+    CL.chronicle?.quest(c, id, status); // the company chronicle (V2-10)
     ensureBands(c);
     return true;
   }

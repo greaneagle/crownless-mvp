@@ -1,6 +1,6 @@
 # Crownless — Project Status & Roadmap
 
-_Last reviewed: 2026-11-18 · Build 1.13.0 · Spec: `Crownless_MVP_GDD_v1.md` (engine overridden: HTML5 Canvas + classic JS, no bundler, GitHub Pages)._
+_Last reviewed: 2026-11-18 · Build 1.14.0 · Spec: `Crownless_MVP_GDD_v1.md` (engine overridden: HTML5 Canvas + classic JS, no bundler, GitHub Pages)._
 
 This replaces the opencode-swarm plan (`.swarm/plan.md`, removed). The gate structure (A→E) is kept from the GDD; the task list is condensed and re-ordered around what the code actually needs.
 
@@ -109,7 +109,7 @@ From the owner's v2.0 design (`Crownless_v2_0_Feature_and_Systems_Design_Part_1.
     - ✅ (1.11.0) V2-08a group AI, formations and shield cover: shield troops raise shields; shield cover for the adjacent ally on the shield side (hero included, arrows too); braced spears stop charges from the front; archers need a clear shot and step aside for one; loose Follow ranks; group states (forming, formed, advancing, engaged); every impossible order says why
     - ✅ (1.12.0) V2-08b group morale, rout and rally: every group on both sides holds, wavers, falls back or routs from a worked-out cohesion (losses, odds, flanks, nearby routs, veterans, the hero, supplies), never a roll; routing soldiers run for their own edge and leave; fled enemies count as beaten with no kill credit and half the spoils; your fled soldiers return unhurt; Rally (R / Orders) every 30 s; reserves replace runners at once
   - ✅ (1.13.0) V2-09 nearby reinforcements: world parties that can reach a battle within its 4 hours and hear it join at a worked-out time (an hour away is ten seconds of battle), from the side they come from; Reavers join Reavers, a friend's patrol helps, a Hostile kingdom's patrol comes for you; seen ones are named on the encounter screen, others announced 10 s ahead with a banner; reserves at the unit cap; too late if the battle ends first; helpers' kills are theirs; parties in a live battle are locked so none can lose two battles; one commit; auto-resolve counts the help that would arrive in good time
-  - V2-10 company chronicle and roll of honour
+  - ✅ (1.14.0) V2-10 company chronicle and roll of honour: a Company chronicle in the Journal beside the regional news (the company founded, recruits and promotions folded per day, notable battles with who fell, deserters, the retired, quests completed or failed; at most 80 lines); a Roll of honour tab in Party for soldiers who fell, deserted or retired (who, from where, how long, their record and how they left; newest 60 in full, older ones counted); Retire with honour on a soldier's card; "Who did what" on the battle result; save schema v7; fixtures from the real 1.13.0 build
   - V2-11 accounts and the quartermaster
   - V2-12 the merchant follower
   - V2-Q a few small quests that use the new systems (no new main story)

@@ -912,7 +912,7 @@
   function renderTroops() {
     const g = CL.game;
     const c = CL.campaign;
-    const view = ['types', 'tree'].includes(g.troopView) ? g.troopView : 'soldiers';
+    const view = ['types', 'tree', 'honour'].includes(g.troopView) ? g.troopView : 'soldiers';
     const tab = (id, label) =>
       el('button', {
         type: 'button',
@@ -925,7 +925,11 @@
           renderTroops();
         },
       });
-    const tabs = el('div', { className: 'viewTabs' }, tab('soldiers', 'Soldiers'), tab('types', 'By type'), tab('tree', 'Troop tree'));
+    const tabs = el('div', { className: 'viewTabs' }, tab('soldiers', 'Soldiers'), tab('types', 'By type'), tab('tree', 'Troop tree'), tab('honour', 'Roll of honour'));
+    if (view === 'honour') {
+      $('#sheetTroops').replaceChildren(tabs, ...honourRoll());
+      return;
+    }
     if (view === 'tree') {
       $('#sheetTroops').replaceChildren(tabs, upgradeAllBlock(), ...troopTree());
       return;
@@ -982,6 +986,22 @@
       el('label', { className: 'soldierFilter' }, 'Show ', select),
       ...(rows.length ? rows : [el('p', { textContent: 'Nobody matches.' })]),
     );
+  }
+
+  /** The roll of honour (V2-10): those who fell or left, newest first, then how many before them. */
+  function honourRoll() {
+    const h = CL.campaign.honour || CL.chronicle.blankHonour();
+    const rows = [...h.list].reverse().map((e) => {
+      const t = CL.chronicle.honourText(e);
+      return el('div', { className: `honourRow ${e.how}` }, el('b', { textContent: t.title }), el('span', { textContent: t.line }));
+    });
+    const before = h.earlier;
+    const older = (before.fell || 0) + (before.deserted || 0) + (before.retired || 0);
+    const out = [el('p', { className: 'muted', textContent: 'Those who fell, deserted or retired. They are remembered here.' })];
+    if (!rows.length && !older) out.push(el('p', { textContent: 'Nobody yet. May it stay that way.' }));
+    out.push(...rows);
+    if (older) out.push(el('p', { className: 'muted', textContent: `And ${older} before them: ${before.fell || 0} fallen, ${before.deserted || 0} deserted, ${before.retired || 0} retired.` }));
+    return out;
   }
 
   /** One soldier's profile card: who they are, their record and notes, rename and upgrade. */
@@ -1054,7 +1074,27 @@
       ),
       el('ul', { className: 'soldierNotes' }, ...s.notes.map((n) => el('li', { textContent: `Day ${P.dayNumber(n.day)}: ${CL.soldiers.noteText(n)}` }))),
       upgrades.length ? el('div', { className: 'soldierUpgrades' }, ...upgrades) : el('p', { className: 'muted', textContent: `${t.name} is at max tier; experience still counts toward the record.` }),
+      retireButton(s),
     );
+  }
+
+  /** Retire with honour (V2-10): a second tap confirms; it can't be undone. */
+  function retireButton(s) {
+    const b = el('button', { type: 'button', className: 'retireBtn', textContent: 'Retire with honour' });
+    b.onclick = () => {
+      if (!b.dataset.confirm) {
+        b.dataset.confirm = '1';
+        b.textContent = `Retire ${s.name}? They leave the company for good. Tap again`;
+        return;
+      }
+      if (CL.party.retireSoldier(CL.campaign, s.id)) {
+        CL.save.write();
+        message(`${s.name} retires from the company with honour`);
+        CL.game.soldierProfile = null;
+      }
+      renderSheet();
+    };
+    return b;
   }
 
   /** "3× Levy (T1 infantry) · 1 wounded · best XP 30/40 · 1 ready", or "… · max tier" (F-1). */
@@ -1507,8 +1547,18 @@
       }
       newsCard.append(ul);
     } else newsCard.append(el('p', '', 'No news yet. Word travels every couple of days.'));
+    // The company chronicle (V2-10): the company's own history, newest first, beside the news.
+    const chronCard = el('div', 'newsCard chronicleCard');
+    chronCard.append(el('h3', '', 'Company chronicle'));
+    const cl = el('ul');
+    for (const e of CL.chronicle.recent(CL.campaign, 15)) {
+      const li = el('li');
+      li.append(el('span', 'day', `Day ${CL.party.dayNumber(e.day)}`), document.createTextNode(CL.chronicle.text(e)));
+      cl.append(li);
+    }
+    chronCard.append(cl);
     if (!rows.length) {
-      $('#journalScreen').replaceChildren(el('p', '', 'No quests yet. People in Stonebridge may have work for a stranger — try the Elder.'), newsCard);
+      $('#journalScreen').replaceChildren(el('p', '', 'No quests yet. People in Stonebridge may have work for a stranger — try the Elder.'), chronCard, newsCard);
       return;
     }
     const label = { active: 'In progress', done: 'Complete', failed: 'Failed' };
@@ -1525,6 +1575,7 @@
         }
         return card;
       }),
+      chronCard,
       newsCard,
     );
   }

@@ -112,6 +112,19 @@
    * Upgrade one named soldier along one path. Returns true when done.
    * @param {Campaign} camp @param {number} soldierId @param {ContentId} toId
    */
+  /**
+   * Retire a soldier from the company with honour (V2-10): they leave the roster for the roll of
+   * honour. Not while a battle is on. Returns the soldier, or null. @param {Campaign} camp @param {number} soldierId
+   */
+  function retireSoldier(camp, soldierId) {
+    const i = camp.roster.findIndex((x) => x.id === soldierId);
+    if (i < 0 || CL.game.mode === 'battle') return null;
+    const [s] = camp.roster.splice(i, 1);
+    CL.events.emit(camp, 'SoldierRetired', { soldierId: s.id, troop: s.troop, soldier: s });
+    CL.diag.log('info', 'Soldier retired', { id: s.id, troop: s.troop });
+    return s;
+  }
+
   function upgradeSoldier(camp, soldierId, toId) {
     const s = camp.roster.find((x) => x.id === soldierId);
     const opt = s && soldierUpgrades(s, camp).find((o) => o.to === toId);
@@ -380,6 +393,7 @@
       routed: g.routed || 0,
       fled: g.allyRouted || 0,
       helped: g.helpKills || 0,
+      standouts: CL.chronicle.standouts(g, names),
       killed,
       wounded,
       survivors: g.allies.filter((u) => (u.alive || u.routed) && !u.outside).length,
@@ -433,11 +447,11 @@
 
   /**
    * Result screen text for a fought or auto-resolved battle. Only numbers and data names are interpolated.
-   * @param {{ win: boolean, r: BattleResult | null, kills: number, routed?: number, fled?: number, helped?: number, killed: number[], wounded: number[],
+   * @param {{ win: boolean, r: BattleResult | null, kills: number, routed?: number, fled?: number, helped?: number, standouts?: string[], killed: number[], wounded: number[],
    *   survivors: number, waves?: string, auto?: { pp: number, pe: number, reasons?: string[] }, names?: Record<number, string> }} info
    *   names: soldier names by ID, taken before the battle (soldiers can be renamed, so they are escaped)
    */
-  function resultHtml({ win, r, kills, routed = 0, fled = 0, helped = 0, killed, wounded, survivors, waves, auto, names }) {
+  function resultHtml({ win, r, kills, routed = 0, fled = 0, helped = 0, standouts = [], killed, wounded, survivors, waves, auto, names }) {
     const recoverDay = dayNumber(CL.campaign.day + CL.save.WOUND_DAYS);
     const lines = [
       `<strong>${win ? `+${r.gold} crowns · +${r.renown} renown` : `${-r.gold} crowns lost (20%)`}</strong>`,
@@ -450,6 +464,7 @@
     }
     lines.push(`Enemies defeated: ${kills}${routed ? ` · ${routed} fled the field` : ''}${helped ? ` · ${helped} felled by those who came to help` : ''}`, `Killed: ${killed.length} · Wounded: ${wounded.length}${fled ? ` · ${fled} ran but came back` : ''}`);
     const who = (ids) => ids.map((id) => escapeHtml(names?.[id] || '')).filter(Boolean).join(', ');
+    if (standouts.length) lines.push(`Who did what: ${standouts.map(escapeHtml).join(' · ')}`); // V2-10
     if (who(killed)) lines.push(`Fallen: ${who(killed)}`);
     if (who(wounded)) lines.push(`Wounded: ${who(wounded)}`);
     lines.push(`Survivors: ${survivors}${waves ? ` · Battle waves reached: ${waves}` : ''}`);
@@ -477,6 +492,7 @@
     upgrade,
     soldierUpgrades,
     upgradeSoldier,
+    retireSoldier,
     upgradeAllPlan,
     upgradeAll,
     awardXp,

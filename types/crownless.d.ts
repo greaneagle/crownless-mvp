@@ -188,6 +188,54 @@ declare global {
     news: NewsState;
     /** v6: what the company knows of each troop: 'seen' (name only) or 'owned' (full details). */
     troopKnowledge: Record<ContentId, 'seen' | 'owned'>;
+    /** v7: the company chronicle, oldest first (js/chronicle.js). */
+    chronicle: ChronicleEntry[];
+    /** v7: the roll of honour: soldiers who fell or left the company. */
+    honour: HonourRoll;
+  }
+
+  /** One line of the company chronicle (V2-10). Fields beyond day and kind depend on the kind. */
+  interface ChronicleEntry {
+    day: number;
+    kind: string;
+    place?: string | null;
+    names?: string[];
+    n?: number;
+    to?: ContentId;
+    id?: number;
+    name?: string;
+    foe?: string | null;
+    win?: boolean;
+    kills?: number;
+    fallen?: string[];
+    lost?: number;
+    auto?: boolean;
+    quest?: string;
+    status?: string;
+  }
+
+  /** A soldier remembered on the roll of honour (V2-10). */
+  interface HonourEntry {
+    id: number;
+    name: string;
+    troop: ContentId;
+    culture: string | null;
+    origin: string | null;
+    joined: number | null;
+    left: number;
+    how: string;
+    foe: string | null;
+    battles: number;
+    victories: number;
+    kills: number;
+    wounds: number;
+    wagesPaid: number;
+  }
+
+  interface HonourRoll {
+    list: HonourEntry[];
+    /** Older entries, only counted: fell, deserted, retired. */
+    earlier: Record<string, number>;
   }
 
   /** A troop on the troop tree as the player knows it (js/troops.js). */
@@ -368,6 +416,8 @@ declare global {
     upgrade(fromId: ContentId, toId: ContentId, max?: number, camp?: Campaign): number;
     soldierUpgrades(s: Soldier, camp?: Campaign): Array<UpgradeOption & { can: boolean; why: string | null }>;
     upgradeSoldier(camp: Campaign, soldierId: number, toId: ContentId): boolean;
+    /** Retire a soldier with honour (V2-10): off the roster, onto the roll of honour. */
+    retireSoldier(camp: Campaign, soldierId: number): Soldier | null;
     upgradeAllPlan(camp?: Campaign): { items: Array<{ soldierId: number; from: ContentId; to: ContentId; cost: number }>; total: number; wounded: number; unaffordable: number };
     upgradeAll(camp?: Campaign): { done: number; cost: number };
     awardXp(camp: Campaign, outcome: BattleOutcome): XpAward;

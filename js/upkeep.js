@@ -83,7 +83,7 @@
     if (CL.autoresolve.roll(c, 'upkeep') >= chance) return null;
     const i = Math.floor(CL.autoresolve.roll(c, 'upkeep') * c.roster.length);
     const [s] = c.roster.splice(i, 1);
-    CL.events.emit(c, 'SoldierDeserted', { soldierId: s.id, troop: s.troop, morale: c.morale });
+    CL.events.emit(c, 'SoldierDeserted', { soldierId: s.id, troop: s.troop, morale: c.morale, soldier: s });
     const name = CL.content.troop(s.troop).name;
     CL.ui.message(`A ${name} deserted in the night. Morale is dangerously low.`);
     CL.diag.log('warn', 'Desertion', { troop: s.troop, morale: c.morale });

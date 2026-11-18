@@ -26,7 +26,7 @@
   'use strict';
   const CL = root.Crownless;
 
-  const VERSION = 6;
+  const VERSION = 7;
   const KEY = 'crownless_save';
   const BACKUP_KEY = 'crownless_save_backup';
   const LEGACY_KEY = 'crownless_v03_party';
@@ -93,6 +93,8 @@
       companion: null, // Mara, once she joins (GDD §10)
       news: CL.news.blank(), // recent world events and regional news lines
       troopKnowledge: {}, // troop → 'seen' | 'owned': the troop tree as discovered (js/troops.js)
+      chronicle: CL.chronicle.blank(), // the company's own history (js/chronicle.js)
+      honour: CL.chronicle.blankHonour(), // the roll of honour: soldiers who fell or left
     };
     CL.character.applyKit(c, background);
     CL.upkeep.stowFood(c);
@@ -168,6 +170,7 @@
     4: [...V3_FIELDS, ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number']],
     5: [...V3_FIELDS, ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number']],
     6: [...V3_FIELDS, ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object']],
+    7: [...V3_FIELDS, ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object']],
   };
 
   /** @param {unknown} v @param {string} kind */
@@ -225,6 +228,9 @@
     // 5 → 6 (build 1.5.0, V2-03b): what the company knows of each troop (the troop tree). An older
     // company knows the troops it has and what they were trained from; nothing was ever seen.
     5: (d) => ({ ...CL.troopTree.migrateKnowledge(d), version: 6 }),
+    // 6 → 7 (build 1.14.0, V2-10): the company chronicle (it begins on the day of the migration) and
+    // an empty roll of honour; nobody who left before was remembered.
+    6: (d) => CL.chronicle.migrate(d),
   };
 
   /**
@@ -291,6 +297,7 @@
     CL.parties.sanitize(s, d); // world parties and the RNG seed
     CL.contracts.sanitize(s, d); // after parties: an active hunt needs its band
     CL.troopTree.sanitize(s, d); // what the company knows of each troop
+    CL.chronicle.sanitize(s, d); // the chronicle and the roll of honour
     // Named random streams (after parties, which restores rngSeed) and the result and event counters.
     const seeds = CL.autoresolve.streamSeeds(s.rngSeed);
     for (const name of CL.autoresolve.STREAMS) {

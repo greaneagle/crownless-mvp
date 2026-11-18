@@ -63,6 +63,8 @@
     if (x.kind === 'battle' || x.kind === 'auto') {
       const o = x.outcome;
       const troopOf = Object.fromEntries(c.roster.map((s) => [s.id, s.troop]));
+      // Those who fall, as they were before they leave the roster: for the roll of honour (V2-10).
+      const fallen = Object.fromEntries(c.roster.filter((s) => o.killed.includes(s.id)).map((s) => [s.id, JSON.parse(JSON.stringify(s))]));
       r = CL.party.applyBattleResult(c, o);
       if (!r) {
         CL.diag.log('warn', 'Battle result ignored (already applied)', { resultId, battleId: o.battleId });
@@ -88,9 +90,10 @@
         win: o.win,
         kills: o.kills,
         killed: [...o.killed],
+        fallenNames: o.killed.map((id) => fallen[id]?.name).filter(Boolean),
         wounded: [...o.wounded],
       });
-      for (const id of o.killed) CL.events.emit(c, 'SoldierKilled', { soldierId: id, troop: troopOf[id], resultId });
+      for (const id of o.killed) CL.events.emit(c, 'SoldierKilled', { soldierId: id, troop: troopOf[id], resultId, soldier: fallen[id], encounterName, win: o.win, kills: o.soldierKills?.[id] || 0 });
       for (const s of c.roster) {
         if (o.wounded.includes(s.id)) CL.events.emit(c, 'SoldierWounded', { soldierId: s.id, troop: s.troop, until: s.woundedUntil, resultId, encounterName });
       }

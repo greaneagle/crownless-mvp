@@ -1,6 +1,6 @@
 # Crownless — Save Format
 
-_Current: **schema v6**, from build 1.5.0 (V2-03b); v5 came with 1.4.0 (V2-03), v4 with 1.3.0 (V2-02), v3 with 1.2.0 (V2-01). Schema v2 was frozen with the v1.0 release (build 1.0.0, 2026-11-17); its full field list is kept below as the reference, because v3 to v6 only add fields to it. Saves from every older build still load: see "Loading" and the fixtures._
+_Current: **schema v7**, from build 1.14.0 (V2-10); v6 came with 1.5.0 (V2-03b), v5 with 1.4.0 (V2-03), v4 with 1.3.0 (V2-02), v3 with 1.2.0 (V2-01). Schema v2 was frozen with the v1.0 release (build 1.0.0, 2026-11-17); its full field list is kept below as the reference, because v3 to v7 only add fields to it. Saves from every older build still load: see "Loading" and the fixtures._
 
 ## Where saves live
 All save keys are read and written through the storage layer (`CL.storage`, `js/storage.js`). In the browser that is localStorage; a packaged build can swap in another backend (IndexedDB, a desktop app's files) with `CL.storage.use(backend)`.
@@ -38,12 +38,14 @@ Everything read back, from storage, a file or the pre-import slot, goes through 
    - v4: all of v3, plus `rng`, `nextResultId`, `nextEventId`.
    - v5: the same top-level fields as v4 (the new soldier fields are repaired one by one, see below).
    - v6: all of v5, plus `troopKnowledge`.
+   - v7: all of v6, plus `chronicle` (an array) and `honour` (an object).
 2. **World:** a v3 save must belong to this world (`worldId`).
 3. **Migrations** (`CL.save.MIGRATIONS`): pure steps from schema n to n + 1, applied in order. v1 → current is `migrateV1` (it builds soldiers from the old counts).
    - **2 → 3 (1.2.0):** adds `worldId: "border_march"` and `contentVersion: "unknown"` (which build wrote a v2 save was never recorded). Nothing else changes.
    - **3 → 4 (1.3.0):** adds `rng`, the named random streams, each seeded from `rngSeed` and the stream's name (so the same save always gets the same streams), and `nextResultId: 1` and `nextEventId: 1`. Nothing used them before. Nothing else changes.
    - **4 → 5 (1.4.0):** every soldier becomes a named person: a name and culture (from the troop's faction, drawn from a `names` stream seeded by the save's own seed, so the same save always gets the same names), `origin: null` and `joined: null` (never recorded), `portrait: null`, an empty record and one note, `veteran` ("served before the company kept records"). Adds `rng.names`. Nothing else changes.
    - **5 → 6 (1.5.0):** adds `troopKnowledge`: every troop in the roster, and the troops they were trained from, as `owned`, and what those can be trained into as `seen`. Nothing else changes.
+   - **6 → 7 (1.14.0):** adds `chronicle: [{ day, kind: "begun" }]` (the chronicle begins on the day of the migration) and an empty roll of honour, `honour: { list: [], earlier: { fell: 0, deserted: 0, retired: 0 } }`. Nobody who left before was recorded. Nothing else changes.
 4. **Repair** (`CL.save.sanitize`): field by field, as in v2. Unknown or out-of-range values fall back to safe defaults.
 
 If the main save fails any step, the backup is tried, then the 0.3 key, then a new game.
@@ -66,21 +68,24 @@ Saves written by real builds, loaded by every later build:
 | `tests/fixtures/saves-1.2/` | 1.2.0 | v3 | That build's campaign and story bots (`scripts/make-legacy-save-fixtures.js`) | `tests/save-migration.test.js` |
 | `tests/fixtures/saves-1.3/` | 1.3.0 | v4 | The same way | `tests/save-migration.test.js` |
 | `tests/fixtures/saves-1.4/` | 1.4.0 | v5 | The same way | `tests/save-migration.test.js` |
+| `tests/fixtures/saves-1.13/` | 1.13.0 | v6 | The same way | `tests/save-migration.test.js` |
 
-Each is imported as a file and, for v2 to v5, also left in storage as the old build would have, then checked against what the old build recorded about it (soldier IDs, troops, XP, gold, day, quests), re-exported, and played on. Never regenerate them casually; they stand for real players' saves.
+Each is imported as a file and, for v2 to v6, also left in storage as the old build would have, then checked against what the old build recorded about it (soldier IDs, troops, XP, gold, day, quests), re-exported, and played on. Never regenerate them casually; they stand for real players' saves.
 
-## The campaign object (schema v6)
-Schema v6 is schema v2 (below) plus these fields (v3 added the first two, v4 the next three, v6 the last), and every `roster` entry is a named soldier (v5, next section).
+## The campaign object (schema v7)
+Schema v7 is schema v2 (below) plus these fields (v3 added the first two, v4 the next three, v6 `troopKnowledge`, v7 the last two), and every `roster` entry is a named soldier (v5, next section).
 
 | Field | Type | Owner module | Notes |
 |---|---|---|---|
-| `version` | `6` | save | |
+| `version` | `7` | save | |
 | `worldId` | string | save | The world (content package) the campaign belongs to: `"border_march"`. A save from another world is refused |
 | `contentVersion` | string | save | The build that last wrote the save, for example `"1.2.0"`; `"unknown"` right after migrating a v2 save. Later content migrations can key off it |
 | `rng` | `{ casualties, loot, upkeep, names }`, integers | autoresolve | v4. The named random streams' states (mulberry32). `casualties`: who dies or is wounded after a fought battle (auto-resolve rolls its whole outcome, casualties included, on the world stream, as before); `loot`: battle loot and the item taken on capture; `upkeep`: desertion; `names` (v5): soldiers' names. The world stream stays in `rngSeed` (world parties, contract offers, auto-resolve, retreat). Moment-to-moment rolls inside a fought battle are not seeded |
 | `nextResultId` | integer ≥ 1 | encounter | v4. The ID the next encounter result commits under. Each encounter takes it when it opens; the commit goes through only for that ID and then moves it on, so a result is applied exactly once |
 | `nextEventId` | integer ≥ 1 | events | v4. The next domain event's ID; event IDs never repeat within a campaign |
 | `troopKnowledge` | `{ troopId: 'seen' or 'owned' }` | troops | v6. The troop tree as discovered. `seen`: met in battle or offered for hire (name only); `owned`: hired, trained or upgraded into (full details); its upgrade targets are then at least `seen`. Only grows. Unknown troops and values are dropped on load |
+| `chronicle` | up to 80 `{ day, kind, … }`, oldest first | chronicle | v7. The company chronicle. `kind`: `founded` (a new game), `begun` (a migrated save), `recruited` (`place`, `names` ≤ 6, `n`: one entry per place and day), `promoted` (`names`, `n`, `to`: one per troop and day), `battle` (`foe`, `win`, `kills`, `fallen` names ≤ 6, `lost`, `auto`: losses, battles where someone fell, or 8+ enemies defeated), `deserted` and `retired` (`id`, `name`), `quest` (`quest`, `status`: `done` or `failed`). Once full, the oldest go, but the first entry stays. Unknown kinds, quests and troops are dropped on load |
+| `honour` | `{ list, earlier }` | chronicle | v7. The roll of honour. `list`: up to 60 `{ id, name, troop, culture, origin, joined, left, how, foe, battles, victories, kills, wounds, wagesPaid }`, oldest first; `how` is `fell`, `deserted` or `retired`; a fallen soldier's last battle is counted. `earlier`: `{ fell, deserted, retired }`, counts of those pushed off the list |
 
 ### A soldier (`roster` entry, schema v5)
 `{ id, troop, xp, woundedUntil, name, culture, origin, joined, portrait, record, notes }`. Each field is repaired on load by `CL.soldiers.sanitize`; a soldier is never dropped for a bad person field (a missing name is drawn again).
@@ -133,6 +138,7 @@ Each task that changes the save's shape adds the next schema version and its mig
 - ✅ v4 (1.3.0, V2-02): named random streams (`rng`), the encounter result counter (`nextResultId`) and the event ID counter (`nextEventId`).
 - ✅ v5 (1.4.0, V2-03): named soldiers with origin, joining day, portrait slot, service record and notes; existing soldiers get names on load.
 - ✅ v6 (1.5.0, V2-03b): what the company knows of each troop (`troopKnowledge`).
+- ✅ v7 (1.14.0, V2-10): the company chronicle (`chronicle`) and the roll of honour (`honour`).
 - A canonical clock (V2-04): the flat 6-hour battle charge goes away, and saved timers stay valid.
 - Accounts (V2-11): split `gold` into the player's purse, the company chest and follower budgets.
 - Holdings (Phase 8): `owners` grows into sovereign, holder, occupier and administrator.
