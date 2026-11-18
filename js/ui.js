@@ -86,6 +86,13 @@
         button: 'Back',
       };
     }
+    if (mode === 'accounts') {
+      return {
+        title: 'ACCOUNTS',
+        text: 'Your purse and the company chest. Wages are paid from the chest first, then from your purse. A quartermaster buys food from the chest.',
+        button: 'Back',
+      };
+    }
     if (mode === 'trade') {
       const s = CL.party.currentSettlement();
       return {
@@ -159,6 +166,7 @@
     $('#tradeScreen').classList.toggle('hidden', mode !== 'trade');
     $('#encounterOptions').classList.toggle('hidden', mode !== 'encounter');
     $('#contractsScreen').classList.toggle('hidden', mode !== 'contracts');
+    $('#accountsScreen').classList.toggle('hidden', mode !== 'accounts');
     $('#journalScreen').classList.toggle('hidden', mode !== 'journal');
     $('#savesScreen').classList.toggle('hidden', mode !== 'saves');
     $('#talkOptions').classList.toggle('hidden', mode !== 'talk');
@@ -178,6 +186,7 @@
     if (mode === 'trade') renderTrade();
     if (mode === 'encounter') renderEncounter();
     if (mode === 'contracts') renderContracts();
+    if (mode === 'accounts') renderAccounts();
     if (mode === 'saves') renderSaves();
     if (mode === 'talk') renderTalk();
     if (mode === 'journal') renderJournal();
@@ -241,6 +250,7 @@
       const k = c.contract;
       const pay = k?.status === 'done' && k.giver === c.world.location;
       opt(pay ? 'Notice board — collect pay!' : 'Read the notice board', () => changeMode('contracts'));
+      opt('Accounts and quartermaster', () => changeMode('accounts'), false, CL.quartermaster.get(c) ? `${CL.quartermaster.get(c).name} keeps the stores` : `Hire one · ${CL.quartermaster.HIRE} crowns, ${CL.quartermaster.WAGE}/week`);
       opt('Save & export', () => openSaves());
     }
     opt('Goodbye', () => CL.town.backToPlace());
@@ -451,6 +461,78 @@
       }
     }
     box.replaceChildren(...buttons);
+  }
+
+  // ---- Accounts and the quartermaster (V2-11; js/accounts.js, js/quartermaster.js) ----
+
+  function renderAccounts() {
+    const c = CL.campaign;
+    const A = CL.accounts;
+    const Q = CL.quartermaster;
+    const q = Q.get(c);
+    const mk = (tag, props = {}, ...kids) => {
+      const n = Object.assign(document.createElement(tag), props);
+      n.append(...kids.filter(Boolean));
+      return n;
+    };
+    const btn = (text, onClick, disabled = false) => mk('button', { type: 'button', textContent: text, disabled, onclick: () => {
+        onClick();
+        CL.save.write();
+        renderAccounts();
+        refreshRoster();
+      } });
+    const chest = A.balance(c, 'chest');
+    const move = (from, to, n, why) => A.transfer(c, from, to, Math.min(n, A.balance(c, from)), why);
+    const money = mk(
+      'div',
+      { className: 'contractCard' },
+      mk('h3', { textContent: `Purse ${c.gold} · Company chest ${chest}` }),
+      mk('p', { textContent: `Next wages: ${Q.wagesDue(c)} crowns on day ${CL.party.dayNumber(c.nextWagesDay)}. The chest pays first, then your purse. Captors take a share of both.` }),
+      mk(
+        'div',
+        { className: 'row' },
+        btn('Put 50 in the chest', () => move('purse', 'chest', 50, 'put in the chest'), c.gold <= 0),
+        btn('Put all in the chest', () => move('purse', 'chest', c.gold, 'put in the chest'), c.gold <= 0),
+        btn('Take 50 out', () => move('chest', 'purse', 50, 'taken from the chest'), chest <= 0),
+        btn('Take all out', () => move('chest', 'purse', chest, 'taken from the chest'), chest <= 0),
+      ),
+    );
+    let qm;
+    if (!q) {
+      const here = Q.sellsFood(c.world.location);
+      qm = mk(
+        'div',
+        { className: 'contractCard' },
+        mk('h3', { textContent: 'Quartermaster' }),
+        mk('p', { textContent: `Keeps the next wages in the chest and food in stock, buying only food, within a weekly budget, and warns you before shortages. ${Q.HIRE} crowns to hire, ${Q.WAGE} a week.` }),
+        mk('div', { className: 'row' }, btn(here ? `Hire a quartermaster · ${Q.HIRE} crowns` : 'Hire one in a town or village with a market', () => Q.hire(c) && message('A quartermaster joins the company'), !Q.canHire(c))),
+      );
+    } else {
+      const step = (key, d, lo, hi) => btn(d > 0 ? '+' : '−', () => Q.setRule(c, key, q[key] + d), q[key] + d < lo || q[key] + d > hi);
+      qm = mk(
+        'div',
+        { className: 'contractCard' },
+        mk('h3', { textContent: `Quartermaster ${q.name}` }),
+        mk('p', { textContent: `Spent ${q.spent} of ${q.budget} crowns this week. Paid ${Q.WAGE} a week.` }),
+        mk('div', { className: 'row qmRule' }, mk('span', { textContent: `Keep food for ${q.reserveDays} days` }), step('reserveDays', -1, ...Q.LIMITS.reserveDays), step('reserveDays', 1, ...Q.LIMITS.reserveDays)),
+        mk('div', { className: 'row qmRule' }, mk('span', { textContent: `Spend at most ${q.budget} a week` }), step('budget', -20, ...Q.LIMITS.budget), step('budget', 20, ...Q.LIMITS.budget)),
+        mk(
+          'div',
+          { className: 'row qmRule' },
+          mk('span', { textContent: q.coverWages ? 'Keeps the next wages in the chest' : 'Does not set wages aside' }),
+          btn(q.coverWages ? 'Stop' : 'Start', () => Q.setRule(c, 'coverWages', !q.coverWages)),
+        ),
+        q.log.length ? mk('ul', { className: 'soldierNotes' }, ...q.log.slice(-6).reverse().map((e) => mk('li', { textContent: `Day ${CL.party.dayNumber(e.day)}: ${e.text}` }))) : null,
+        mk('div', { className: 'row' }, btn('Buy now', () => Q.act(c), !Q.sellsFood(c.world.location)), btn('Let them go', () => Q.dismiss(c) && message('The quartermaster leaves the company'))),
+      );
+    }
+    const lines = A.recent(c, 12).map((e) => {
+      const sign = e.to === A.WORLD ? '−' : e.from === A.WORLD ? '+' : '';
+      const route = e.from === A.WORLD ? `into ${A.label(e.to)}` : e.to === A.WORLD ? `from ${A.label(e.from)}` : `${A.label(e.from)} → ${A.label(e.to)}`;
+      return mk('li', { textContent: `Day ${CL.party.dayNumber(e.day)}: ${sign}${e.amount} ${route} · ${e.why}` });
+    });
+    const ledger = mk('div', { className: 'contractCard' }, mk('h3', { textContent: 'Ledger' }), lines.length ? mk('ul', { className: 'soldierNotes' }, ...lines) : mk('p', { textContent: 'Nothing yet.' }));
+    $('#accountsScreen').replaceChildren(money, qm, ledger);
   }
 
   // ---- Battle preparation (V2-07; js/prep.js) ----
@@ -1361,8 +1443,9 @@
       span(` · Morale: ${Math.round(c.morale)} ${moraleWord}`, c.morale < U.MORALE.desertBelow),
       span(
         wages ? ` · Wages: ${wages} crowns due day ${CL.party.dayNumber(c.nextWagesDay)}` : ' · No wages owed',
-        wages > c.gold,
+        wages > c.gold + CL.accounts.balance(c, 'chest'),
       ),
+      span(CL.accounts.balance(c, 'chest') ? ` · Chest: ${CL.accounts.balance(c, 'chest')} crowns` : ''),
     ];
   }
 

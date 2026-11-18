@@ -439,7 +439,7 @@
           // Send them scurrying away from the player.
           [e.party.tx, e.party.ty] = [clamp(e.party.x * 2 - c.world.x, 2, 98), clamp(e.party.y * 2 - c.world.y, 2, 98)];
         } else {
-          c.gold -= n.cost;
+          CL.accounts.spend(c, n.cost, `toll to the ${e.name}`);
           leaveAlone(e, IGNORE_AFTER.toll);
         }
       },

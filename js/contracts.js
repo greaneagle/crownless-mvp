@@ -136,7 +136,7 @@
       k.partyId = caravan.id;
       k.ambushId = markParty(c, t.band, o.troops, o.x, o.y, { contractId: o.id, ambush: true }).id;
     } else if (o.good) {
-      c.gold -= o.deposit;
+      CL.accounts.spend(c, o.deposit, 'contract deposit');
       c.cargo[o.good] = (c.cargo[o.good] || 0) + o.qty;
     }
     c.contract = k;
@@ -280,7 +280,7 @@
   function collect(c, onTheSpot = false) {
     const k = c.contract;
     if (k?.status !== 'done' || (!onTheSpot && c.world.location !== (k.payAt || k.giver))) return null;
-    c.gold += k.reward.gold;
+    CL.accounts.earn(c, k.reward.gold, 'contract reward');
     c.renown += k.reward.renown;
     CL.audio?.play('coin');
     const levels = CL.character.gainXp(k.reward.xp, c);

@@ -26,7 +26,7 @@
   'use strict';
   const CL = root.Crownless;
 
-  const VERSION = 7;
+  const VERSION = 8;
   const KEY = 'crownless_save';
   const BACKUP_KEY = 'crownless_save_backup';
   const LEGACY_KEY = 'crownless_v03_party';
@@ -95,6 +95,9 @@
       troopKnowledge: {}, // troop → 'seen' | 'owned': the troop tree as discovered (js/troops.js)
       chronicle: CL.chronicle.blank(), // the company's own history (js/chronicle.js)
       honour: CL.chronicle.blankHonour(), // the roll of honour: soldiers who fell or left
+      accounts: CL.accounts.blank(), // the company chest and follower budgets; `gold` is your purse (js/accounts.js)
+      ledger: [], // the newest money transfers, each with a source, a destination and a reason
+      followers: { quartermaster: null }, // camp followers (js/quartermaster.js)
     };
     CL.character.applyKit(c, background);
     CL.upkeep.stowFood(c);
@@ -171,6 +174,7 @@
     5: [...V3_FIELDS, ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number']],
     6: [...V3_FIELDS, ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object']],
     7: [...V3_FIELDS, ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object']],
+    8: [...V3_FIELDS, ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object'], ['accounts', 'object'], ['ledger', 'array'], ['followers', 'object']],
   };
 
   /** @param {unknown} v @param {string} kind */
@@ -231,6 +235,9 @@
     // 6 → 7 (build 1.14.0, V2-10): the company chronicle (it begins on the day of the migration) and
     // an empty roll of honour; nobody who left before was remembered.
     6: (d) => CL.chronicle.migrate(d),
+    // 7 → 8 (build 1.15.0, V2-11): separate accounts (an empty company chest, no follower budgets), an
+    // empty ledger, and no followers yet. Your purse is the old `gold`.
+    7: (d) => ({ ...d, version: 8, accounts: CL.accounts.blank(), ledger: [], followers: { quartermaster: null } }),
   };
 
   /**
@@ -298,6 +305,8 @@
     CL.contracts.sanitize(s, d); // after parties: an active hunt needs its band
     CL.troopTree.sanitize(s, d); // what the company knows of each troop
     CL.chronicle.sanitize(s, d); // the chronicle and the roll of honour
+    CL.accounts.sanitize(s, d); // the company chest, budgets and the ledger
+    CL.quartermaster.sanitize(s, d); // camp followers
     // Named random streams (after parties, which restores rngSeed) and the result and event counters.
     const seeds = CL.autoresolve.streamSeeds(s.rngSeed);
     for (const name of CL.autoresolve.STREAMS) {

@@ -126,7 +126,10 @@
     if ('set' in e) s.flags[e.set] = 'to' in e ? e.to : true;
     else if ('clear' in e) delete s.flags[e.clear];
     else if ('add' in e) s.flags[e.add] = (Number(s.flags[e.add]) || 0) + ('by' in e ? e.by : 1);
-    else if ('gold' in e) c.gold = Math.max(0, c.gold + e.gold);
+    else if ('gold' in e) {
+      if (e.gold > 0) CL.accounts.earn(c, e.gold, 'story');
+      else CL.accounts.spend(c, Math.min(c.gold, -e.gold), 'story');
+    }
     else if ('renown' in e) c.renown = Math.max(0, c.renown + e.renown);
     else if ('xp' in e) CL.character.gainXp(e.xp, c);
     else if ('food' in e) c.food = Math.max(0, c.food + e.food);
@@ -209,7 +212,7 @@
     if (status === 'done') {
       CL.audio?.play('quest');
       const w = q.rewards || {};
-      if (w.gold) c.gold += w.gold;
+      if (w.gold) CL.accounts.earn(c, w.gold, `quest: ${q.title}`);
       if (w.renown) c.renown += w.renown;
       if (w.xp) CL.character.gainXp(w.xp, c);
       for (const [f, n] of Object.entries(w.rep || {})) CL.realm.adjust(c, f, n, `quest ${id}`);

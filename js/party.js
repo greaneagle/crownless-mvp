@@ -82,7 +82,7 @@
     for (const s of camp.roster) {
       if (done >= max || camp.gold < opt.cost) break;
       if (s.troop !== fromId || !readyFor(s)) continue;
-      camp.gold -= opt.cost;
+      CL.accounts.spend(camp, opt.cost, 'training');
       s.xp -= opt.xp;
       s.troop = toId;
       CL.events.emit(camp, 'SoldierPromoted', { soldierId: s.id, from: fromId, to: toId, cost: opt.cost });
@@ -130,7 +130,7 @@
     const opt = s && soldierUpgrades(s, camp).find((o) => o.to === toId);
     if (!opt?.can) return false;
     const from = s.troop;
-    camp.gold -= opt.cost;
+    CL.accounts.spend(camp, opt.cost, 'training');
     s.xp -= opt.xp;
     s.troop = toId;
     CL.events.emit(camp, 'SoldierPromoted', { soldierId: s.id, from, to: toId, cost: opt.cost });
@@ -203,7 +203,7 @@
   function recruit(troopId) {
     if (!recruitsHere().includes(troopId) || !canRecruit(c(), troopId)) return false;
     const price = CL.content.troop(troopId).recruitCost;
-    c().gold -= price;
+    CL.accounts.spend(c(), price, `hiring a ${CL.content.troop(troopId).name}`);
     const s = CL.save.addSoldier(c(), troopId);
     CL.events.emit(c(), 'SoldierRecruited', { soldierId: s.id, troop: troopId, settlement: c().world.location, via: 'hire' });
     CL.save.write();
@@ -326,14 +326,13 @@
       result.renown = enc.reward.renown;
       result.loot = rollLoot(enc, spoils, camp);
       camp.victories++;
-      camp.gold += result.gold;
+      CL.accounts.earn(camp, result.gold, `spoils: ${enc.name}`);
       camp.renown += result.renown;
       for (const [id, n] of Object.entries(result.loot)) camp.inventory[id] = (camp.inventory[id] || 0) + n;
       CL.upkeep.stowFood(camp); // looted food goes into the ration stock
     } else {
-      const kept = Math.floor(camp.gold * DEFEAT_GOLD_KEPT);
-      result.gold = kept - camp.gold;
-      camp.gold = kept;
+      // Captors take a share of every account, the company chest included (V2-11).
+      result.gold = -CL.accounts.seize(camp, DEFEAT_GOLD_KEPT, 'taken by captors');
       result.lostItem = loseItemOnCapture(camp);
     }
     const g = CL.game;

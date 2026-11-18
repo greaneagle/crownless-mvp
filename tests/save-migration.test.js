@@ -1,5 +1,5 @@
 // Save schema v3 and migrations (V2-01; design §24.7, SC-30–32; docs/SAVE-FORMAT.md).
-// Saves written by real old builds (0.3, 0.14, 0.28, 1.2, 1.3, 1.4, 1.13; the 1.0 set is in save-fixtures.test.js) must
+// Saves written by real old builds (0.3, 0.14, 0.28, 1.2, 1.3, 1.4, 1.13, 1.14; the 1.0 set is in save-fixtures.test.js) must
 // load, partial or damaged saves are rejected instead of being filled in, and nothing reports success
 // until it is really stored.
 const test = require('node:test');
@@ -27,7 +27,7 @@ function same(c, expect) {
   for (const [q, status] of Object.entries(expect.quests || {})) assert.equal(c.story.quests[q]?.status, status, q);
 }
 
-for (const label of ['0.14', '0.28', '1.2', '1.3', '1.4', '1.13']) {
+for (const label of ['0.14', '0.28', '1.2', '1.3', '1.4', '1.13', '1.14']) {
   const dir = path.join(FIX, `saves-${label}`);
   const index = JSON.parse(fs.readFileSync(path.join(dir, 'index.json'), 'utf8'));
   for (const f of index) {
@@ -56,7 +56,7 @@ for (const label of ['0.14', '0.28', '1.2', '1.3', '1.4', '1.13']) {
       const { CL } = loadGame({ storage, party: false });
       assert.equal(CL.save.existed, true);
       same(CL.campaign, f.expect);
-      const from = JSON.parse(old).version; // 2 for 0.14 and 0.28, 3 for 1.2, 4 for 1.3, 5 for 1.4, 6 for 1.13
+      const from = JSON.parse(old).version; // 2 for 0.14 and 0.28, 3 for 1.2, 4 for 1.3, 5 for 1.4, 6 for 1.13, 7 for 1.14
       const keptAs = CL.save.preMigrationKey(from);
       assert.equal(storage.data[keptAs], old, 'the old save is kept exactly as it was');
       assert.ok(CL.diag.events.some((e) => e.msg === 'Save migrated' && e.data.from === from));

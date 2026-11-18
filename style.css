@@ -257,3 +257,10 @@
 .honourRow.fell{border-left-color:#b85a4a}
 .honourRow span{font-size:13px;color:#d9c8a2}
 .retireBtn{margin-top:10px;opacity:.85}
+
+/* V2-11: accounts */
+#accountsScreen{text-align:left;font-size:clamp(12px,1.25vw,15px)}
+#accountsScreen .row{flex-wrap:wrap;gap:6px}
+.qmRule{align-items:center}
+.qmRule span{min-width:220px}
+.qmRule button{min-width:44px}

@@ -47,12 +47,13 @@
     }
   }
 
-  function buyFood(c, rations) {
+  /** Buy rations from an account (your purse; the quartermaster uses the company chest, V2-11). */
+  function buyFood(c, rations, from = 'purse') {
     const cost = rations * rationPrice(c);
-    if (rations <= 0 || c.gold < cost) return false;
-    c.gold -= cost;
+    if (rations <= 0 || CL.accounts.balance(c, from) < cost) return false;
+    if (!CL.accounts.spend(c, cost, `${rations} rations`, from)) return false;
     c.food += rations;
-    CL.diag.log('info', 'Food bought', { rations, cost });
+    CL.diag.log('info', 'Food bought', { rations, cost, from });
     return true;
   }
 
@@ -63,8 +64,7 @@
   function payWages(c) {
     const owed = weeklyWages(c);
     if (!owed) return { owed: 0, paid: 0 };
-    const paid = Math.min(owed, c.gold);
-    c.gold -= paid;
+    const paid = CL.accounts.pay(c, owed, 'weekly wages'); // the company chest first, then your purse (V2-11)
     CL.events.emit(c, 'WagesPaid', { owed, paid, shares: CL.soldiers.wageShares(c, paid) });
     if (paid < owed) {
       changeMorale(c, -MORALE.unpaid);
@@ -123,9 +123,11 @@
     for (let d = Math.floor(from) + 1; d <= Math.floor(to + 1e-9); d++) {
       if (d >= c.nextWagesDay) {
         payWages(c);
+        CL.quartermaster?.payday(c);
         c.nextWagesDay += WAGE_INTERVAL;
       }
       desertionCheck(c);
+      CL.quartermaster?.daily(c); // buys in a market town, otherwise warns before shortages
     }
   }
 

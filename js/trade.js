@@ -89,7 +89,7 @@
     if (cargoWeight(c) + qty * CL.content.get('markets', good).weight > capacity(c)) {
       return { ok: false, reason: 'Your party cannot carry that much' };
     }
-    c.gold -= q.total;
+    CL.accounts.spend(c, q.total, `market: bought ${qty} ${good}`);
     c.cargo[good] = (c.cargo[good] || 0) + qty;
     c.markets[sid][good] = q.scarcity;
     CL.diag.log('info', 'Bought goods', { at: sid, good, qty, cost: q.total });
@@ -102,7 +102,7 @@
     if (!hasMarket(sid) || !(qty > 0)) return { ok: false, reason: 'No market here' };
     if ((c.cargo[good] || 0) < qty) return { ok: false, reason: 'You have none to sell' };
     const q = quote(c, sid, good, qty, 'sell');
-    c.gold += q.total;
+    CL.accounts.earn(c, q.total, `market: sold ${qty} ${good}`);
     c.cargo[good] -= qty;
     if (!c.cargo[good]) delete c.cargo[good];
     c.markets[sid][good] = q.scarcity;
@@ -132,7 +132,7 @@
     if (!gearStock(sid).includes(itemId)) return { ok: false, reason: 'Not sold here' };
     const price = gearBuyPrice(c, itemId);
     if (c.gold < price) return { ok: false, reason: 'Not enough crowns' };
-    c.gold -= price;
+    CL.accounts.spend(c, price, `armoury: ${CL.content.item(itemId).name}`);
     c.inventory[itemId] = (c.inventory[itemId] || 0) + 1;
     CL.upkeep.stowFood(c);
     CL.diag.log('info', 'Bought gear', { at: sid, item: itemId, cost: price });
@@ -146,7 +146,7 @@
     if (!price || !(c.inventory[itemId] > 0)) return { ok: false, reason: 'Cannot sell that' };
     c.inventory[itemId] -= 1;
     if (!c.inventory[itemId]) delete c.inventory[itemId];
-    c.gold += price;
+    CL.accounts.earn(c, price, `sold ${CL.content.item(itemId).name}`);
     CL.diag.log('info', 'Sold gear', { at: sid, item: itemId, earned: price });
     CL.audio?.play('coin');
     return { ok: true, total: price };

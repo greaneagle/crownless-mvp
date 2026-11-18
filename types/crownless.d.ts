@@ -192,6 +192,42 @@ declare global {
     chronicle: ChronicleEntry[];
     /** v7: the roll of honour: soldiers who fell or left the company. */
     honour: HonourRoll;
+    /** v8: the company chest and follower budgets; `gold` is the player's purse (js/accounts.js). */
+    accounts: Accounts;
+    /** v8: the newest money transfers. */
+    ledger: LedgerEntry[];
+    /** v8: camp followers. */
+    followers: { quartermaster: Quartermaster | null };
+  }
+
+  interface Accounts {
+    chest: number;
+    budgets: Record<string, number>;
+  }
+
+  interface LedgerEntry {
+    day: number;
+    /** 'purse', 'chest', 'budget:<name>' or 'world'. */
+    from: string;
+    to: string;
+    amount: number;
+    why: string;
+  }
+
+  /** A hired quartermaster (V2-11, js/quartermaster.js). */
+  interface Quartermaster {
+    name: string;
+    culture: string | null;
+    origin: string | null;
+    hired: number;
+    reserveDays: number;
+    budget: number;
+    coverWages: boolean;
+    weekStart: number;
+    spent: number;
+    unpaid: number;
+    warnedDay: number;
+    log: Array<{ day: number; text: string }>;
   }
 
   /** One line of the company chronicle (V2-10). Fields beyond day and kind depend on the kind. */
