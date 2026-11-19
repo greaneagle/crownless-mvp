@@ -95,7 +95,10 @@
     const at = c.world;
     const limit = CL.clock.hours('battle');
     const out = [];
-    for (const p of c.parties) {
+    // W-07: only parties near enough to hear the fight (the grid narrows the search; the order of
+    // the result is by arrival, so it is the same as a full scan's).
+    const hear = Math.max(0, ...Object.values(CL.content.table('party_templates')).map((t) => t.detection || 0)) * AWARE;
+    for (const p of CL.spatial.near(CL.spatial.build(c.parties), at.x, at.y, hear)) {
       if (p.id === foe.partyId || !troopCount(p.troops)) continue;
       const side = sideOf(c, p, foe);
       if (!side) continue;

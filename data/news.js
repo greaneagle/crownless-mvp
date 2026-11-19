@@ -5,12 +5,37 @@
  * more lines, picked in turn. `market` is the line the Trade screen shows at the town concerned.
  * Placeholders: {place} nearest settlement, {region} the region it lies in (W-05b: "the northern
  * highlands"), {dest} destination, {good}, {faction} / {winner} /
- * {loser} (a kingdom's short name: "Valedorn"), {owner} (its full name), {fort}, {hero}.
+ * {loser} / {other} (a kingdom's short name: "Valedorn"), {owner} (its full name), {fort}, {hero}.
+ * W-07: war_declared, tension_rising, truce and peace_made tell of relations between kingdoms
+ * ({faction} and {other}; {region} where it happened, or "the border").
  * `tensions` is the quiet-days fallback, varied by ending. */
 (function (root) {
   root.CROWNLESS_CONTENT = root.CROWNLESS_CONTENT || {};
   var C = root.CROWNLESS_CONTENT;
   C.news = {
+    war_declared: {
+      id: 'war_declared',
+      priority: 7,
+      lines: [
+        '{faction} and {other} are at war. Blood was spilled in {region}, and now their patrols fight on sight.',
+        'War: {faction} has called its levies against {other}. Travellers in {region} keep off the roads.'
+      ]
+    },
+    tension_rising: {
+      id: 'tension_rising',
+      priority: 5,
+      lines: ['Bad blood between {faction} and {other} after a border incident near {place}. Their patrols eye each other in {region}.']
+    },
+    truce: {
+      id: 'truce',
+      priority: 5,
+      lines: ['{faction} and {other} have stopped fighting, worn out. An uneasy truce holds in {region}.']
+    },
+    peace_made: {
+      id: 'peace_made',
+      priority: 4,
+      lines: ['Tempers cool between {faction} and {other}: the border is quiet again.']
+    },
     fort_taken: {
       id: 'fort_taken',
       priority: 6,
@@ -21,7 +46,8 @@
       priority: 5,
       lines: [
         '{winner} and {loser} patrols came to blows near {place}. The {winner} riders held the field.',
-        'Blood on the border near {place}: {winner} riders drove {loser} soldiers off the road.'
+        'Blood on the border near {place}: {winner} riders drove {loser} soldiers off the road.',
+        'In {region}, {winner} patrols drove {loser} soldiers off the road near {place}.'
       ],
       // Clashes go on after every ending (GDD §12); under the road peace they read as it fraying.
       byEnding: {

@@ -189,7 +189,9 @@
       ],
       rewards: { gold: 200, renown: 15, xp: 150 },
       endings: {
+        // W-07 (D-W5): each ending sets the March kingdoms' relation; from then on the usual rules apply.
         valedorn: {
+          relations: { between: ['valedorn', 'aurelian'], to: 'war' },
           title: 'The Crown Holds Greywall',
           text: [
             'The blue banner flies over Greywall, and the Crown’s lawyers call the Aurelian charter a forgery. Valedorn remembers who rode for it.',
@@ -200,6 +202,7 @@
           ]
         },
         aurelian: {
+          relations: { between: ['valedorn', 'aurelian'], to: 'war' },
           title: 'The Remnant Takes Greywall',
           text: [
             'The red banner rises over Greywall for the first time in thirty years. Imperial law has its fort back, and the Remnant remembers who won it.',
@@ -210,6 +213,7 @@
           ]
         },
         compromise: {
+          relations: { between: ['valedorn', 'aurelian'], to: 'peace' },
           title: 'The Road Peace',
           text: [
             'You lay both charters on the parley table — two eagles, two heirs, both forged. With the proof in front of them and no battle to hide behind, the envoys sign a road peace.',

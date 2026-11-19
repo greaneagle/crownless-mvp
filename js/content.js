@@ -96,6 +96,14 @@
       const rec = C.factions?.[f]?.recruits;
       if (!Array.isArray(rec) || !rec.length) err(`${w}: kingdom ${f} has no recruits`);
     }
+    // Starting relations between kingdoms (W-07).
+    for (const r of m.relations || []) {
+      const ok = Array.isArray(r.between) && r.between.length === 2 && r.between[0] !== r.between[1] && r.between.every((f) => kingdoms.includes(f));
+      if (!ok) err(`${w}: relations need two of this world's kingdoms`);
+      if (!['peace', 'tension', 'war'].includes(r.state)) err(`${w}: relations state must be peace, tension or war`);
+    }
+    const cap = m.simulation?.partiesPerRegion;
+    if (cap != null && !(Number.isInteger(cap) && cap >= 1)) err(`${w}: simulation.partiesPerRegion must be a whole number of at least 1`);
   }
 
   /** Return a list of human-readable problems; empty means the content is consistent. */

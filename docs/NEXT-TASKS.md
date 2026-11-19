@@ -695,7 +695,23 @@ _Written 2026-11-18 at build 2.0.0; **reviewed and corrected the same day agains
 
 ---
 
-### W-07 · A world simulation that scales (M–L) — Specified
+### W-07 · A world simulation that scales (M–L) — ✅ Done in 2.9.0
+
+**Done (2.9.0, 2026-11-19).** Decision D-W5 taken as its proposed default (not marked blocking). As specified, with these notes:
+- **Spatial grid** (`js/spatial.js`, cells of 10 map units): each step builds one; sight, chases, rival patrols, contacts, clashes and border incidents query nearby cells, and reinforcement planning (`js/reinforce.js`) does too. Results keep the order of the full list, so a test plays the same seeded world with and without the grid and gets byte-identical parties, news, relations and markets.
+- **Steps:** every party now chooses its target from where things stand, then all move (before, each moved straight after choosing, so later ones saw earlier ones already moved). Parties more than 25 map units from the player, and not on the player's business (a quest, a contract, an escort, a chase), save up their time and act once an hour.
+- **Swept contacts:** bands against caravans and patrols, patrols against patrols, and parties against the player meet if they came within contact distance at any moment of the step, not only where they end it.
+- **Budget:** the world's `simulation.partiesPerRegion` (16): a regular party that would spawn into a fuller region doesn't, and its template tries again later. A long rest in one step and the same rest a day at a time give the same kinds and amounts of events, within a quarter (slow test, 90 days, three seeds).
+- **Speed:** `node scripts/bench-map.js --season 80 90` (new): 80 parties over 90 days, about 270 ms per game day in Node against about 640 for 2.8.0, with an even worst day; the save of that world is about 28 KB (budget 100 KB, slow test).
+- **Map drawing** culls sites, settlements and parties outside the camera's view.
+- **War and peace** (`js/realm.js`, `c.relations`, save schema **v10**, not v11: v10 was left free when W-06 was dropped): every pair of kingdoms is at peace, in tension or at war. Patrols at peace that meet may cause a border incident (a quarter of the time, at most one a day per pair), which sours peace to tension; patrols in tension or at war clash (the existing skirmish, at most one every 4 days in all), four clashes make tension a war; a war ends in an exhausted truce (tension) after at least 12 days once 12 soldiers have fallen, or after 45 days; 8 quiet days cool one clash, and 30 days of quiet tension make peace. The world's data sets the start (`relations`: the March pair in tension, marked `story`); **D-W5:** the story holds that pair until Q4's ending, whose data sets it (the road peace: peace; a crown taking Greywall: war), and the rules take over after.
+- **News:** war declared, tension rising, a truce, peace made, for any pair, naming the region; frontier clashes gain a line naming the region.
+- **Debug → Map stress 80:** 80 parties scattered over the world and a game day every second, through the map test's two views; reports fps, simulation ms and drawing ms apart, the slowest frame, and one save write (to a scratch key) with its size. The campaign is put back exactly as it was.
+- **Help:** The lands explains war and peace.
+- **Bots re-baselined:** the step changes shift how the random streams are drawn. The campaign bots and the test world's bot pass unchanged. Gate D's 60 random story campaigns no longer happened on the rarest branch, selling Aurelian's plans to the Crown (about 1 run in 100; once in 96 seeds tried). The two mirror-image sales now count as one branch there, and `tests/q3.test.js` walks both directions deterministically (the Crown's way already, the Remnant's way new).
+- **Tests:** `tests/world-sim.test.js` (grid against a full scan; the same world with and without the grid; determinism; a swept crossing in one coarse step; far parties act hourly; the region budget; the starting relations; the story's hold and the endings; the rules end to end; patrols at peace don't fight and at war do; relations saved, repaired, and the 9 → 10 migration from a 2.7 save; the map stress test restoring the campaign), `tests/slow/world-sim.test.js` (80 parties over 90 days: a full world, no slow-day spikes, the save under 100 KB; fast-forward equivalence).
+- **Not done here:** the owner's phone run of Map stress 80 (acceptance).
+
 
 **Problem.** The world simulation was written for nine parties. A bigger world wants 40–80, and later lords and armies.
 

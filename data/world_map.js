@@ -20,6 +20,12 @@
       bounds: { w: 200, h: 200 }, // map units; every place, road and party stays inside
       factions: ['valedorn', 'aurelian', 'hrothmark', 'vessaro', 'merrow'], // this world's kingdoms (data/factions.js)
       outlaws: 'neutral', // the faction of road bands and sell-swords: not a kingdom, never diplomatic
+      // Relations between kingdoms at the start (W-07); any pair not listed is at peace. `story`: the
+      // story holds it until its ending, which sets it (decision D-W5: the March pair stays in
+      // tension, its frontier clashes going on, until Q4 ends).
+      relations: [{ between: ['valedorn', 'aurelian'], state: 'tension', story: true }],
+      // The world simulation's budget (W-07): no more than this many regular parties spawn in one region.
+      simulation: { partiesPerRegion: 16 },
       // Named areas, for news and text: rectangles in map units (x, y, w, h); the first that holds a
       // point names it. `home` marks the story's own land (W-05c: the Border March): leaving it shows
       // the "Beyond the March" tip, and the story bot keeps to it.

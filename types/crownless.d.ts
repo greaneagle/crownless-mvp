@@ -183,6 +183,8 @@ declare global {
     contractsDone: number;
     reputation: Record<ContentId, number>;
     owners: Record<ContentId, ContentId>;
+    /** v10 (W-07): each pair of kingdoms ("a|b", ids in order): peace, tension or war, and its counters. */
+    relations: Record<string, { state: 'peace' | 'tension' | 'war'; since: number; heat: number; losses: number; lastClash: number | null; incidentUntil: number }>;
     story: StoryState;
     companion: CompanionState | null;
     news: NewsState;

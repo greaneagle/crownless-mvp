@@ -969,9 +969,11 @@
     ctx.imageSmoothingEnabled = false;
 
     mapLabels = [];
-    for (const st of Object.values(m.sites)) drawSite(st);
-    for (const s of Object.values(CL.content.table('settlements'))) drawSettlement(s, s.id === w.location);
-    for (const p of CL.campaign.parties || []) drawParty(p);
+    // W-07: only what the camera can see (with room for labels and banners at the edge).
+    const seen = (x, y) => V.inView(x, y, 90);
+    for (const st of Object.values(m.sites)) if (seen(st.mapX, st.mapY)) drawSite(st);
+    for (const s of Object.values(CL.content.table('settlements'))) if (seen(s.mapX, s.mapY)) drawSettlement(s, s.id === w.location);
+    for (const p of CL.campaign.parties || []) if (seen(p.x, p.y)) drawParty(p);
 
     // Journey line.
     const [px, py] = V.toScreen(w.x, w.y);

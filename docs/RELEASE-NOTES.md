@@ -1,5 +1,30 @@
 # Crownless — Release Notes
 
+## v2.9.0 — War and peace, and a world that scales (W-07) · 2026-11-19
+
+### New
+- **Kingdoms go to war and make peace.** Every pair of kingdoms is at peace, in tension or at war:
+  - At peace, their patrols pass each other by, but a border incident can sour things.
+  - In tension or at war, their patrols fight wherever they meet, and enough clashes turn tension into war.
+  - Wars end when both sides are worn out, and a long quiet cools tension into peace.
+  - The news tells you each time, and names the region.
+  - Valedorn and Aurelian stay in tension over Greywall until the story's ending decides: peace after the road peace, war if a crown takes the fort.
+- **Debug → Map stress 80**, for checking on a phone: 80 parties and a day every second on the map. It reports simulation and drawing time separately, and how long a save takes, then puts your campaign back as it was.
+
+### Changes
+- The world simulation is faster and steadier: about two and a half times faster with 80 parties.
+  - It only looks at nearby parties.
+  - Parties far from you act once an hour.
+  - Two parties can no longer slip past each other between steps.
+  - Each region has a limit on how many parties it fills with.
+- The map draws only what is in view.
+- How to Play → The lands explains war and peace.
+
+### Under the hood
+- Saves are now schema v10, adding relations between kingdoms. 2.7 and 2.8 saves update on load, and a copy is kept as it was.
+- `node scripts/bench-map.js --season` runs 90 days of a full world without the browser.
+- 596 fast and 7 slow Node tests, 125 browser tests (9 more apply to one device only and are skipped on the other). Gate D's random story check counts the two mirror-image Q3 sales as one branch (a fixed test walks both).
+
 ## v2.8.0 — Errands beyond the March (W-05c) · 2026-11-19
 
 ### New
@@ -14,7 +39,7 @@
 - Merrow listed the Mercenary twice for hire.
 
 ### Under the hood
-- 584 fast Node tests (17 for the errands, 7 for tips and help).
+- 584 fast and 5 slow Node tests, 125 browser tests (9 more apply to one device only and are skipped on the other); 17 tests for the errands, 7 for tips and help.
 
 ## v2.7.0 — The bigger world (W-05b) · 2026-11-19
 

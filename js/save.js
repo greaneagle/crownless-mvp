@@ -26,7 +26,7 @@
   'use strict';
   const CL = root.Crownless;
 
-  const VERSION = 9;
+  const VERSION = 10;
   const KEY = 'crownless_save';
   const BACKUP_KEY = 'crownless_save_backup';
   const LEGACY_KEY = 'crownless_v03_party';
@@ -97,6 +97,7 @@
       contractsDone: 0,
       reputation: CL.realm.defaultReputation(), // kingdom → score [-100, 100] (GDD §10)
       owners: CL.realm.defaultOwners(), // fort → owning kingdom (GDD §12 territory)
+      relations: CL.realm.defaultRelations(), // kingdom pair → peace, tension or war (W-07)
       story: CL.story.blank(), // quest progress, story flags, conversation visits (GDD §13)
       companion: null, // Mara, once she joins (GDD §10)
       news: CL.news.blank(), // recent world events and regional news lines
@@ -184,6 +185,7 @@
     7: [...V3_FIELDS, ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object']],
     8: [...V3_FIELDS, ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object'], ['accounts', 'object'], ['ledger', 'array'], ['followers', 'object']],
     9: [...V3_FIELDS, ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object'], ['accounts', 'object'], ['ledger', 'array'], ['followers', 'object']],
+    10: [...V3_FIELDS, ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object'], ['accounts', 'object'], ['ledger', 'array'], ['followers', 'object'], ['relations', 'object']],
   };
 
   /** @param {unknown} v @param {string} kind */
@@ -250,6 +252,9 @@
     7: (d) => ({ ...d, version: 8, accounts: CL.accounts.blank(), ledger: [], followers: { quartermaster: null } }),
     // 8 → 9 (build 1.16.0, V2-12): room for a merchant follower (none yet).
     8: (d) => ({ ...d, version: 9, followers: { ...(d.followers || {}), merchant: null } }),
+    // 9 → 10 (build 2.9.0, W-07): relations between kingdoms. None were recorded before, so every pair
+    // starts as the world's data says (sanitize fills them in): an empty record here.
+    9: (d) => ({ ...d, version: 10, relations: {} }),
   };
 
   /**

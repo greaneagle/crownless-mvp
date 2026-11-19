@@ -194,6 +194,64 @@
     log('map drawing test started', {});
   }
 
+  const STRESS_HOURS_PER_SECOND = 24; // the map stress test runs a game day every second
+  const STRESS_PROBE_KEY = 'crownless_stress_probe';
+
+  /**
+   * W-07's map stress test, for the owner's phone: the map topped up to `n` parties scattered over
+   * the world, time running a day a second, through the map drawing test's two views (all of it,
+   * then 2.4× circling). Reports simulation and drawing ms apart, and how long one save of that world
+   * takes to write (to a scratch key). The campaign is put back exactly as it was afterwards.
+   */
+  function mapStress(n) {
+    const g = CL.game;
+    const c = CL.campaign;
+    const snapshot = JSON.stringify(c);
+    const was = { travel: g.travel, waiting: g.waiting };
+    Object.assign(g, { travel: null, waiting: false });
+    const ids = Object.keys(CL.content.table('party_templates'));
+    const b = CL.world.bounds();
+    for (let k = 0; c.parties.length < n; k++) {
+      const p = CL.parties.spawn(c, ids[k % ids.length]);
+      [p.x, p.y] = CL.world.clampToMap(CL.autoresolve.next(c) * b.w, CL.autoresolve.next(c) * b.h, 2);
+    }
+    g.mapStress = { parties: n, days: 0 };
+    CL.ui.message(`Map stress test: ${n} parties, a day a second, 8 seconds…`);
+    log('map stress test started', { parties: n });
+    CL.mapView.startTest((r) => {
+      const t0 = performance.now();
+      const text = JSON.stringify(c);
+      CL.storage.set(STRESS_PROBE_KEY, text);
+      const saveMs = Number((performance.now() - t0).toFixed(1));
+      CL.storage.remove(STRESS_PROBE_KEY);
+      const result = { ...r, parties: n, days: Number(g.mapStress.days.toFixed(1)), saveMs, saveKb: Math.round(text.length / 1024) };
+      g.mapStress = null;
+      g.contactParty = null;
+      const back = JSON.parse(snapshot);
+      for (const k of Object.keys(c)) delete c[k];
+      Object.assign(c, back);
+      Object.assign(g, was);
+      g.mapStressResult = result;
+      log('map stress test', result);
+      const run = (x) => `${x.zoom}×: ${x.fps} fps, sim ${x.simMs} ms, drawing ${x.drawMs} ms, slowest ${x.worstFrameMs} ms`;
+      CL.ui.message(`Map stress ${n}: ${r.runs.map(run).join(' · ')} · ${result.days} days · save ${saveMs} ms (${result.saveKb} KB)`);
+      g.messageUntil = performance.now() + 15000;
+    });
+  }
+
+  /** One frame of the map stress test (from the main loop, inside its simulation timing). */
+  function stressFrame(dt) {
+    const s = CL.game.mapStress;
+    if (!s || CL.game.mode !== 'map') return;
+    const c = CL.campaign;
+    const hours = Math.min(dt, 0.1) * STRESS_HOURS_PER_SECOND;
+    for (const p of c.parties) p.ignoreUntil = 1e9; // nobody comes for the player: the test never stops
+    c.day += hours / 24;
+    CL.parties.tick(c, hours);
+    CL.game.contactParty = null;
+    s.days += hours / 24;
+  }
+
   /**
    * W-05a: a practice battle of `total` units at the river ford (always the large map, whatever the
    * Battlefield setting): the armies meet in the shallows, which slow everyone. Reports like the camera
@@ -408,6 +466,11 @@
         toggle(false);
         mapTest();
         return;
+      case 'mapStress':
+        if (mode !== 'map') return CL.ui.message('Open the world map first');
+        toggle(false);
+        mapStress(n);
+        return;
       case 'days':
         passDays(n);
         break;
@@ -473,6 +536,8 @@
   }
 
   CL.debugTools = {
+    mapStress,
+    stressFrame,
     addGold,
     addSoldiers,
     healAll,

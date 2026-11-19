@@ -1,7 +1,14 @@
 /* Crownless world parties (GDD §8): patrols, caravans and Road Reaver bands moving on the map,
  * off-screen fights between them, caravans shifting market prices, and the player's encounter
  * choices — Attack, Auto-resolve, Negotiate, Retreat — for both bands and lair sites.
- * State: CL.campaign.parties (saved). Time advances through CL.party.advanceDays → tick(). */
+ * State: CL.campaign.parties (saved). Time advances through CL.party.advanceDays → tick().
+ *
+ * W-07, a simulation that scales: each step builds a spatial grid (js/spatial.js), so sight, chases,
+ * contacts and clashes look only at nearby parties. Every party first chooses where to go, then all
+ * move. Parties far from the player act once a game hour instead of every quarter hour; contacts are
+ * swept (the closest approach of two parties' moves within the step, not just where they end), so a
+ * coarse step never carries two parties through each other. Patrols of kingdoms at peace meet without
+ * a fight, and may cause a border incident; in tension or at war they clash (js/realm.js). */
 (function (root) {
   'use strict';
   const CL = root.Crownless;
@@ -18,6 +25,16 @@
   const WAVE_SIZE = 8;
   const AMBUSH_RANGE = 3.5; // map units: a contract ambush springs only on travellers passing close
   const SKIRMISH_LOSS = { loser: [1, 2], winnerChance: 0.5 }; // frontier clashes: men lost
+  const NEAR_PLAYER = 25; // map units: parties within this of the player act every step (W-07)…
+  const COARSE_HOURS = 1; // …the rest once their time adds up to this
+  /** Switches for tests: `grid: false` makes every search a full scan (the grid must change nothing). */
+  const options = { grid: true };
+
+  // One step's working state (W-07): the grid of where parties stood when they chose, each mover's
+  // start point and hours, and time saved up by far parties (not saved: it only shapes the steps).
+  let stepGrid = null;
+  let moved = new Map();
+  const banked = new WeakMap();
 
   // The world sim runs in steps inside a span of time the clock has already advanced, so it keeps
   // its own "now" for spawn timers, deaths and cooldowns (null outside a tick → the campaign day).
@@ -73,14 +90,30 @@
     c.partySpawns[t.id] = Math.max(c.partySpawns[t.id] || 0, now(c) + t.respawnDays);
   }
 
+  /** Is a newly spawned party one too many for its region (the world's simulation budget)? */
+  function crowded(c, p) {
+    const cap = W().map().simulation?.partiesPerRegion;
+    const region = cap ? W().regionAt(p.x, p.y)?.id : null;
+    if (!region) return false;
+    const here = c.parties.filter((o) => !o.contractId && !o.questTag && W().regionAt(o.x, o.y)?.id === region).length;
+    return here > cap;
+  }
+
   /** Keep each template at its target count once its respawn timer has passed. */
   function ensure(c, ignoreTimers = false) {
     for (const t of Object.values(CL.content.table('party_templates'))) {
       let active = c.parties.filter((p) => p.template === t.id && !p.contractId && !p.questTag).length;
       while (active < t.count && (ignoreTimers || now(c) >= (c.partySpawns[t.id] || 0))) {
-        spawn(c, t.id);
+        const p = spawn(c, t.id);
         active++;
         if (!ignoreTimers) c.partySpawns[t.id] = now(c) + t.respawnDays;
+        if (crowded(c, p)) {
+          // W-07: the region is full; this one never sets out, and the template tries again later.
+          c.parties.splice(c.parties.indexOf(p), 1);
+          c.partySpawns[t.id] = now(c) + t.respawnDays;
+          CL.diag.log('info', 'Spawn skipped: region full', { template: t.id });
+          break;
+        }
       }
     }
     CL.story?.ensureBands(c); // bands the story needs right now (re-spawned if lost)
@@ -112,9 +145,14 @@
     return A().troopsPower(p.troops) >= CHASE_RATIO * A().playerPower(c);
   }
 
+  /** The parties near (x, y) within `range`: through this step's grid, or all of them. */
+  function around(c, x, y, range) {
+    return stepGrid && options.grid ? CL.spatial.near(stepGrid, x, y, range) : c.parties;
+  }
+
   function nearest(c, p, kind, range) {
     let best = null;
-    for (const o of c.parties) {
+    for (const o of around(c, p.x, p.y, range)) {
       // Quest bands are the story's: patrols leave them be and they leave caravans alone.
       if (o === p || o.questTag || o.ambush || o.escortTo || tpl(o.template).kind !== kind) continue;
       const d = dist(p, o);
@@ -123,12 +161,12 @@
     return best?.o || null;
   }
 
-  /** A rival kingdom's regular patrol in sight (story columns keep out of border fights). */
+  /** A rival kingdom's regular patrol in sight, of a kingdom at war or in tension with its own (W-07). */
   function rival(c, p, t) {
     let best = null;
-    for (const o of c.parties) {
+    for (const o of around(c, p.x, p.y, t.detection)) {
       const ot = tpl(o.template);
-      if (o.questTag || ot.kind !== 'patrol' || ot.faction === t.faction) continue;
+      if (o.questTag || ot.kind !== 'patrol' || ot.faction === t.faction || !CL.realm.atOdds(c, t.faction, ot.faction)) continue;
       const d = dist(p, o);
       if (d <= t.detection && (!best || d < best.d)) best = { o, d };
     }
@@ -238,6 +276,30 @@
     p.tx = null;
   }
 
+  /**
+   * Swept contact distance (W-07): the closest two parties came during this step, each moving in a
+   * straight line from where it started the step to where it is now (gameplay distance).
+   */
+  function sweptDist(a, b) {
+    const [ax, ay] = moved.get(a) || [a.x, a.y];
+    const [bx, by] = moved.get(b) || [b.x, b.y];
+    const k = W().map().aspect ?? 1;
+    const rx = ax - bx;
+    const ry = (ay - by) * k;
+    const dx = a.x - ax - (b.x - bx);
+    const dy = (a.y - ay - (b.y - by)) * k;
+    const dd = dx * dx + dy * dy;
+    const t = dd > 0 ? clamp(-(rx * dx + ry * dy) / dd, 0, 1) : 0;
+    return Math.hypot(rx + t * dx, ry + t * dy);
+  }
+
+  /** How far parties may have moved this step, for the contact search's reach. */
+  function reach() {
+    let m = 0;
+    for (const [p, [x, y]] of moved) m = Math.max(m, W().mapDist(x, y, p.x, p.y));
+    return CONTACT + 2 * m;
+  }
+
   function move(p, hours) {
     if (p.tx === null) return;
     const t = tpl(p.template);
@@ -254,12 +316,15 @@
 
   /** Bandits vs caravans and patrols vs bandits fight it out off-screen. */
   function resolveContacts(c) {
-    for (const a of [...c.parties]) {
+    const all = [...c.parties];
+    const grid = options.grid ? CL.spatial.build(all) : null;
+    const r0 = reach();
+    for (const a of all) {
       if (!c.parties.includes(a) || a.questTag || a.ambush || tpl(a.template).kind !== 'bandit' || CL.reinforce?.locked(a)) continue;
-      for (const b of [...c.parties]) {
+      for (const b of grid ? CL.spatial.near(grid, a.x, a.y, r0) : all) {
         const kb = tpl(b.template).kind;
         if (b === a || b.questTag || b.escortTo || !c.parties.includes(b) || (kb !== 'caravan' && kb !== 'patrol') || CL.reinforce?.locked(b)) continue;
-        if (dist(a, b) > CONTACT) continue;
+        if (sweptDist(a, b) > CONTACT) continue;
         const r = A().resolveParties(c, a, b);
         const lt = tpl(r.loser.template);
         if (lt.kind === 'caravan') {
@@ -289,17 +354,33 @@
     frontierClash(c);
   }
 
+  /** Two patrols of kingdoms at peace that touch: no fight, but perhaps a border incident (W-07). */
+  function borderIncidents(c, patrols, grid, r0) {
+    for (const a of patrols) {
+      const fa = tpl(a.template).faction;
+      for (const b of grid ? CL.spatial.near(grid, a.x, a.y, r0) : patrols) {
+        const fb = tpl(b.template).faction;
+        if (!patrols.includes(b) || fa >= fb || CL.realm.relation(c, fa, fb) !== 'peace' || sweptDist(a, b) > CONTACT) continue;
+        CL.realm.incident(c, fa, fb, { x: b.x, y: b.y }, now(c));
+      }
+    }
+  }
+
   /**
    * GDD §12 "recurring small frontier clashes": rival kingdoms' patrols that meet skirmish, at
    * most once every few days: a few men fall and the loser limps home, so no road is stripped bare.
    * Story columns keep out.
    */
   function frontierClash(c) {
-    if (!CL.news.clashReady(c, now(c))) return;
     const patrols = c.parties.filter((p) => !p.questTag && tpl(p.template).kind === 'patrol' && !CL.reinforce?.locked(p));
+    const grid = options.grid ? CL.spatial.build(patrols) : null;
+    const r0 = reach();
+    borderIncidents(c, patrols, grid, r0);
+    if (!CL.news.clashReady(c, now(c))) return;
     for (const a of patrols) {
-      for (const b of patrols) {
-        if (tpl(a.template).faction >= tpl(b.template).faction || dist(a, b) > CONTACT) continue;
+      for (const b of grid ? CL.spatial.near(grid, a.x, a.y, r0) : patrols) {
+        const [fa, fb] = [tpl(a.template).faction, tpl(b.template).faction];
+        if (fa >= fb || !CL.realm.atOdds(c, fa, fb) || sweptDist(a, b) > CONTACT) continue;
         // A skirmish, not a war: the loser loses a man or two and falls back home, the winner at
         // most one, so the border fights never strip either kingdom's roads of patrols.
         const aWins = A().next(c) < A().winChance(A().troopsPower(a.troops), A().troopsPower(b.troops));
@@ -311,6 +392,7 @@
         const [fw, fl] = [tpl(winner.template).faction, tpl(loser.template).faction];
         CL.news.record(c, 'frontier_clash', { x: loser.x, y: loser.y, winner: fw, loser: fl }, now(c));
         CL.news.clashed(c, now(c));
+        CL.realm.clashed(c, fw, fl, won.length + lost.length, { x: loser.x, y: loser.y }, now(c));
         CL.diag.log('info', 'Frontier clash', { winner: winner.template, loser: loser.template, losses: [won.length, lost.length] });
         for (const p of [winner, loser]) if (!troopCount(p)) remove(c, p);
         const home = settlement(tpl(loser.template).home);
@@ -336,25 +418,65 @@
     }
   }
 
+  /**
+   * How long a party acts for this step (W-07): the whole step near the player or on business of the
+   * player's (a quest, a contract, an escort, a chase), else nothing until its saved-up time reaches
+   * an hour, then all of it at once.
+   */
+  function hoursFor(c, p, h) {
+    if (p.questTag || p.contractId || p.escortTo || p.ambush || p.chasing || dist(p, c.world) <= NEAR_PLAYER) {
+      banked.delete(p);
+      return h;
+    }
+    const t = (banked.get(p) || 0) + h;
+    if (t + 1e-9 < COARSE_HOURS) {
+      banked.set(p, t);
+      return 0;
+    }
+    banked.delete(p);
+    return t;
+  }
+
   function runSteps(c, steps, h, start) {
-    for (let i = 0; i < steps; i++) {
-      simDay = start + ((i + 1) * h) / 24;
-      ensure(c);
-      for (const p of c.parties) {
-        if (CL.reinforce?.locked(p)) continue; // in the battle being committed: it waits (V2-09, §9.5)
-        chooseTarget(c, p);
-        move(p, h);
-      }
-      resolveContacts(c);
-      for (const p of c.parties) {
-        if (CL.reinforce?.locked(p)) continue;
-        if (wantsPlayer(c, p) && dist(p, c.world) <= CONTACT) {
-          CL.game.contactParty = p.id;
-          return p.id;
+    try {
+      for (let i = 0; i < steps; i++) {
+        simDay = start + ((i + 1) * h) / 24;
+        ensure(c);
+        // Everyone chooses from where things stand, then everyone moves (W-07).
+        const acting = [];
+        for (const p of c.parties) {
+          if (CL.reinforce?.locked(p)) continue; // in the battle being committed: it waits (V2-09, §9.5)
+          const hours = hoursFor(c, p, h);
+          if (hours > 0) acting.push([p, hours]);
+        }
+        stepGrid = options.grid ? CL.spatial.build(c.parties) : null;
+        for (const [p] of acting) chooseTarget(c, p);
+        stepGrid = null;
+        moved = new Map();
+        for (const [p, hours] of acting) {
+          moved.set(p, [p.x, p.y]);
+          move(p, hours);
+        }
+        resolveContacts(c);
+        for (const p of c.parties) {
+          if (CL.reinforce?.locked(p)) continue;
+          if (wantsPlayer(c, p) && sweptToPlayer(c, p) <= CONTACT) {
+            CL.game.contactParty = p.id;
+            return p.id;
+          }
         }
       }
+      return null;
+    } finally {
+      stepGrid = null;
+      moved = new Map();
     }
-    return null;
+  }
+
+  /** The closest a party came to the (standing) player during the step. */
+  function sweptToPlayer(c, p) {
+    const w = c.world;
+    return sweptDist(p, { x: w.x, y: w.y });
   }
 
   // ---- Encounters with the player (bands and lair sites share one flow) ----
@@ -612,6 +734,9 @@
 
   CL.parties = {
     CONTACT,
+    NEAR_PLAYER,
+    COARSE_HOURS,
+    options,
     CHASE_RATIO,
     INTIMIDATE_RATIO,
     CARAVAN_EFFECT,

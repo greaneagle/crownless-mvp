@@ -50,6 +50,7 @@ Everything read back, from storage, a file or the pre-import slot, goes through 
    - **6 → 7 (1.14.0):** adds `chronicle: [{ day, kind: "begun" }]` (the chronicle begins on the day of the migration) and an empty roll of honour, `honour: { list: [], earlier: { fell: 0, deserted: 0, retired: 0 } }`. Nobody who left before was recorded. Nothing else changes.
    - **7 → 8 (1.15.0):** adds `accounts: { chest: 0, budgets: {} }`, `ledger: []` and `followers: { quartermaster: null }`. The old `gold` stays as it was: it is your purse. Nothing else changes.
    - **8 → 9 (1.16.0):** adds `followers.merchant: null`. Nothing else changes.
+   - **9 → 10 (2.9.0, W-07):** adds `relations: {}`. Repair then fills in every pair of the world's kingdoms as its data starts them (the March pair in tension). Nothing else changes.
 4. **Repair** (`CL.save.sanitize`): field by field, as in v2. Unknown or out-of-range values fall back to safe defaults.
 
 If the main save fails any step, the backup is tried, then the 0.3 key, then a new game.
@@ -75,16 +76,17 @@ Saves written by real builds, loaded by every later build:
 | `tests/fixtures/saves-1.13/` | 1.13.0 | v6 | The same way | `tests/save-migration.test.js` |
 | `tests/fixtures/saves-1.14/` | 1.14.0 | v7 | The same way | `tests/save-migration.test.js` |
 | `tests/fixtures/saves-1.15/` | 1.15.0 | v8 | The same way | `tests/save-migration.test.js` |
-| `tests/fixtures/saves-2.0/` | 2.0.0 (0415109) | v9 | The same way, made at W-00 (2.1.0) before any Phase W content change; W-06's v10 migration starts from them | `tests/save-migration.test.js`, the browser tests (`tests/browser/load-save.spec.js`) |
+| `tests/fixtures/saves-2.0/` | 2.0.0 (0415109) | v9 | The same way, made at W-00 (2.1.0) before any Phase W content change. Border March saves: refused from 2.7.0, so their tests run on the March as it was (`tests/helpers/old-march.js`) | `tests/save-migration.test.js`, the browser tests (`tests/browser/load-save.spec.js`) |
+| `tests/fixtures/saves-2.7/` | 2.7.0 (W-05b) | v9 | The same way, from the working tree: the first saves of the bigger world; the 9 → 10 step starts from them | `tests/realm-world.test.js`, `tests/world-sim.test.js`, the browser tests |
 
 Each is imported as a file and, for v2 to v9, also left in storage as the old build would have, then checked against what the old build recorded about it (soldier IDs, troops, XP, gold, day, quests), re-exported, and played on. Never regenerate them casually; they stand for real players' saves.
 
-## The campaign object (schema v9)
-Schema v9 is schema v2 (below) plus these fields (v3 added the first two, v4 the next three, v6 `troopKnowledge`, v7 `chronicle` and `honour`, v8 the last three; v9 adds the merchant inside `followers`), and every `roster` entry is a named soldier (v5, next section).
+## The campaign object (schema v10)
+Schema v10 is schema v2 (below) plus these fields (v3 added the first two, v4 the next three, v6 `troopKnowledge`, v7 `chronicle` and `honour`, v8 `accounts`, `ledger` and `followers`; v9 adds the merchant inside `followers`; v10 `relations`), and every `roster` entry is a named soldier (v5, next section).
 
 | Field | Type | Owner module | Notes |
 |---|---|---|---|
-| `version` | `9` | save | |
+| `version` | `10` | save | |
 | `worldId` | string | save | The world (content package) the campaign belongs to: `"sundered_realm"` from 2.7.0 (`"border_march"` before). A save from another world is refused (and, on load, kept in `crownless_save_other_world`) |
 | `contentVersion` | string | save | The build that last wrote the save, for example `"1.2.0"`; `"unknown"` right after migrating a v2 save. Later content migrations can key off it |
 | `rng` | `{ casualties, loot, upkeep, names }`, integers | autoresolve | v4. The named random streams' states (mulberry32). `casualties`: who dies or is wounded after a fought battle (auto-resolve rolls its whole outcome, casualties included, on the world stream, as before); `loot`: battle loot and the item taken on capture; `upkeep`: desertion; `names` (v5): soldiers' names. The world stream stays in `rngSeed` (world parties, contract offers, auto-resolve, retreat). Moment-to-moment rolls inside a fought battle are not seeded |
@@ -95,6 +97,7 @@ Schema v9 is schema v2 (below) plus these fields (v3 added the first two, v4 the
 | `honour` | `{ list, earlier }` | chronicle | v7. The roll of honour. `list`: up to 60 `{ id, name, troop, culture, origin, joined, left, how, foe, battles, victories, kills, wounds, wagesPaid }`, oldest first; `how` is `fell`, `deserted` or `retired`; a fallen soldier's last battle is counted. `earlier`: `{ fell, deserted, retired }`, counts of those pushed off the list |
 | `accounts` | `{ chest, budgets }`, whole crowns ≥ 0 | accounts | v8. `gold` (v2) is your purse; `chest` is the company chest (wages are paid from it first, then the purse; the quartermaster buys from it; captors take the same share of it as of the purse); `budgets` are followers' own funds by name (`merchant`, from 1.16.0). Every change of money goes through `CL.accounts.transfer` |
 | `ledger` | up to 60 `{ day, from, to, amount, why }` | accounts | v8. The newest money transfers. `from` and `to` are `purse`, `chest`, `budget:<name>` or `world`; `amount` is a whole number above 0; `why` is at most 60 characters. Bad entries are dropped on load |
+| `relations` | `{ "a|b": { state, since, heat, losses, lastClash, incidentUntil } }` | realm | v10 (W-07). One entry per pair of the world's kingdoms, keyed by their ids in order. `state`: `peace`, `tension` or `war`; `since`: the day it began; `heat`: clashes in tension (four make war), cooling one per 8 quiet days; `losses`: soldiers fallen in this war's clashes; `lastClash`: a day or null; `incidentUntil`: no new border incident before this day. Unknown pairs are dropped and missing ones filled from the world's data on load |
 | `followers` | `{ quartermaster }` | quartermaster | v8. `quartermaster` is `null` or `{ name, culture, origin, hired, reserveDays (0–14), budget (null: automatic, from 1.18.0; or 0–1000 a week), coverWages, weekStart, spent, unpaid (0–1), warnedDay, log }` (log: up to 20 `{ day, text }`). A follower without a name is dropped on load. v9: `merchant` is `null` or `{ name, culture, origin, hired, preset ('cautious' or 'bold'), active, stock { good: units }, paid { good: crowns they cost }, since { good: day first bought } (from 1.18.0; an older save counts from the day it loads), prices { settlement: { good: { buy, sell, day } } }, unpaid (0–1), log }` (log: up to 20 `{ day, text }`); its cash is `accounts.budgets.merchant`. Unknown goods and markets are dropped on load |
 
 ### A soldier (`roster` entry, schema v5)
@@ -150,6 +153,7 @@ Each task that changes the save's shape adds the next schema version and its mig
 - ✅ v6 (1.5.0, V2-03b): what the company knows of each troop (`troopKnowledge`).
 - ✅ v7 (1.14.0, V2-10): the company chronicle (`chronicle`) and the roll of honour (`honour`).
 - ✅ v9 (1.16.0, V2-12): the merchant follower (`followers.merchant`, with its cash in `accounts.budgets.merchant`).
+- ✅ v10 (2.9.0, W-07): relations between kingdoms (`relations`).
 - ✅ v8 (1.15.0, V2-11): separate accounts (`accounts`: the company chest and follower budgets; `gold` is your purse), the `ledger`, and camp `followers` (the quartermaster).
 - A canonical clock (V2-04): the flat 6-hour battle charge goes away, and saved timers stay valid.
 - Holdings (Phase 8): `owners` grows into sovereign, holder, occupier and administrator.

@@ -127,6 +127,20 @@ test('sell one side’s plans to the other: paid, but no road-peace credit', () 
   assert.equal(Boolean(CL.story.state(c).flags.road_protector), false);
 });
 
+test('and the mirror: hear Aldric out, then sell the Crown’s plans to Vell', () => {
+  const { CL } = ready({ opts: { random: () => 0.99 } });
+  const c = CL.campaign;
+  assert.equal(say(CL, CL.story.talk('valedorn_agent'), /think about it/), null);
+  const gold = c.gold;
+  say(CL, CL.story.talk('aurelian_agent'), /Sell the Crown’s plans/);
+  assert.equal(c.gold, gold + 100);
+  assert.deepEqual({ ...c.reputation }, { valedorn: -25, aurelian: 10, hrothmark: 0, vessaro: 0, merrow: 0 });
+  assert.equal(CL.story.state(c).flags.q3_side, 'sold_to_aurelian');
+  assert.equal(stage(CL), 'q3_road');
+  winAgainst(CL, band(CL, 'q3_raiders'));
+  assert.equal(CL.story.questStatus(c, 'q3'), 'done');
+});
+
 test('Mara not yet recruited: she scouts anyway, leaves the inn, and owes you if you come', () => {
   const { CL } = ready({ opts: { random: () => 0.99 } });
   const c = CL.campaign;

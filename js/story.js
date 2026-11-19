@@ -199,6 +199,9 @@
     if (!v) return;
     state(c).flags.ending = key;
     CL.diag.log('info', 'Ending', { quest: questId, ending: key });
+    // W-07 (D-W5): the ending sets the kingdoms' relation it names; the usual rules take over after.
+    const rel = quest(questId).endings[key].relations;
+    if (rel) CL.realm.setRelation(c, rel.between[0], rel.between[1], rel.to, `ending ${key}`);
     CL.ui.showEnding?.(v);
   }
 
@@ -590,6 +593,11 @@
       for (const f of Object.keys(q.rewards?.rep || {})) if (!C.factions?.[f]) err(`${w}: unknown faction ${f} in rewards`);
       for (const [key, e] of Object.entries(q.endings || {})) {
         if (!e.title || !e.text) err(`${w}: ending ${key} needs a title and text`);
+        if (e.relations) {
+          const r = e.relations;
+          const ok = Array.isArray(r.between) && r.between.length === 2 && r.between[0] !== r.between[1] && r.between.every((f) => C.factions?.[f]) && ['peace', 'tension', 'war'].includes(r.to);
+          if (!ok) err(`${w}: ending ${key} relations need two kingdoms and peace, tension or war`);
+        }
         for (const x of Array.isArray(e.text) ? e.text : [e.text]) if (typeof x === 'object') checkCond(x.if, C, `${w}: ending ${key}`, err);
       }
     }

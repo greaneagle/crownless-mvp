@@ -57,7 +57,7 @@
     const n = state(c);
     const e = { day, kind };
     if (num(data.x) && num(data.y)) e.place = nearestPlace(data.x, data.y);
-    for (const k of ['place', 'dest', 'good', 'faction', 'winner', 'loser', 'fort', 'owner']) {
+    for (const k of ['place', 'dest', 'good', 'faction', 'other', 'winner', 'loser', 'fort', 'owner']) {
       if (typeof data[k] === 'string') e[k] = data[k];
     }
     n.events.push(e);
@@ -79,6 +79,7 @@
       dest: settlement(e.dest)?.name || 'town',
       good: good.toLowerCase(),
       faction: factionShort(e.faction),
+      other: factionShort(e.other), // W-07: the other kingdom in a relations line
       winner: factionShort(e.winner),
       loser: factionShort(e.loser),
       fort: settlement(e.fort)?.name || 'a fort',
@@ -200,7 +201,7 @@
 
   /** Content checks (from content.validate). */
   function validate(C, err) {
-    const known = new Set(['place', 'region', 'dest', 'good', 'faction', 'winner', 'loser', 'fort', 'owner', 'hero']);
+    const known = new Set(['place', 'region', 'dest', 'good', 'faction', 'other', 'winner', 'loser', 'fort', 'owner', 'hero']);
     const check = (where, text) => {
       if (typeof text !== 'string' || !text) return err(`${where}: needs text`);
       for (const [, k] of text.matchAll(/\{(\w+)\}/g)) if (!known.has(k)) err(`${where}: unknown placeholder {${k}}`);

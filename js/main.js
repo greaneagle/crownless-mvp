@@ -47,6 +47,7 @@
       CL.combat.update(dt);
       CL.world.update(dt);
       CL.mapView.update(dt); // the map camera follows the party (W-02)
+      CL.debugTools.stressFrame(dt); // the Debug panel's map stress test, if running (W-07)
       CL.town.update(dt);
       const t1 = performance.now();
       CL.render.draw();

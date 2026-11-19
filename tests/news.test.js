@@ -76,7 +76,7 @@ test('a caravan that arrives eases prices and is talked about at that market', (
   const s = S(CL, dest);
   Object.assign(caravan, { x: s.mapX, y: s.mapY });
   c.world.location = 'stonebridge';
-  CL.parties.tick(c, 0.25);
+  CL.parties.tick(c, CL.parties.COARSE_HOURS); // W-07: far from the player, a caravan acts once an hour
   assert.match(CL.news.marketTalk(c, dest), new RegExp(`came in with ${CL.content.get('markets', good).name.toLowerCase()}`));
 });
 

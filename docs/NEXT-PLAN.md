@@ -144,7 +144,7 @@ Each phase ends playable, measured and documented. The order follows the design'
 | **W-05b** | ✅ **Done in 2.7.0.** **The bigger region's content** (split from W-05): kingdoms, cultures, troop trees, settlements, parties, markets, garrisons, news and contracts; the asset request list for the art team; bots that read the world's boards. Old saves refused and kept (D-W2) | Done (D-W1, D-W3: defaults; D-W2: refuse old saves) | L | W-05a | — (world id) |
 | **W-05c** | ✅ **Done in 2.8.0.** **New-region errands and help** (split from W-05): two or three errands outside the March; How to Play and tips for the bigger map | Done | S | W-05b | — |
 | **W-06** | ✖ **Not needed** (D-W2, owner 2026-11-19: old saves are refused, not moved in). Was: saves move into the bigger world by a v10 migration | Dropped | — | — | — |
-| **W-07** | **A world simulation that scales:** spatial grid, swept contacts for coarse steps, step budgets, map culling, war and peace between kingdoms (the March pair kept as the story needs) | Specified | M–L | W-05b, H-01 | v11 |
+| **W-07** | ✅ **Done in 2.9.0.** **A world simulation that scales:** spatial grid, swept contacts for coarse steps, step budgets, map culling, war and peace between kingdoms (the March pair kept as the story needs) | Done (D-W5: default) | M–L | W-05b, H-01 | v10 |
 | **W-08** | **Tuning and acceptance** of the bigger world, with a validation section | Specified | S–M | W-00–W-07 | — |
 | **W-09** | **Route planning** (new, optional in Phase W): a terrain-cost route planner for the player's travel and for parties; required before any impassable terrain and before P7-04's "Avoid danger" | Ready after decision D-W4 | M | W-05a | — |
 
@@ -231,7 +231,7 @@ All of Phase 9 is **Provisional**.
 | Schema | Task | Change |
 |---|---|---|
 | — | W-05b | No schema step: the world id changed (`sundered_realm`), so saves of the old March are refused and kept (D-W2). v10 is free for the next change |
-| v11 | W-07 | Relations between kingdoms (war, peace) |
+| v10 | W-07 (2.9.0) | Relations between kingdoms (war, peace) |
 | v12+ | Phase 7 tasks with "Save: yes", in the order they ship | One step per task, never two tasks in one step |
 | later | Phases 8–9 | Holdings (P8-02) is the biggest: owners → holdings |
 
@@ -258,7 +258,7 @@ Decisions marked **blocking** must be made before the named task starts. The oth
 | **D-W2** | Keep the Border March inside the bigger world, and move existing saves in? | Yes and yes: the March whole in the middle at a fixed offset; every save migrates (W-06). **Owner, 2026-11-19: keep the March, but refuse old saves (kept safe, not migrated); W-06 dropped.** | W-05b, W-06 |
 | **D-W3** | New kingdoms' names, cultures and feel? | Placeholder names fitting each culture, data-driven and renameable later; troop lines with a distinct style each (northern heavy infantry, southern crossbows and light horse). **Owner, 2026-11-19: the default.** | W-05b |
 | **D-W4** | Impassable terrain (rivers crossed only at fords and bridges, mountains)? | **No in Phase W:** all terrain passable at a cost (rivers very slow except at fords and bridges); impassable terrain only after W-09 route planning. **Owner, 2026-11-18: the default.** | W-05a |
-| **D-W5** | The two March kingdoms in W-07's war and peace | Valedorn and Aurelia stay at "tension" (frontier clashes, as now) until Q4 ends; the endings set peace (road peace) or war (one side holds Greywall) | W-07 |
+| **D-W5** | The two March kingdoms in W-07's war and peace | Valedorn and Aurelia stay at "tension" (frontier clashes, as now) until Q4 ends; the endings set peace (road peace) or war (one side holds Greywall). **Taken as the default in 2.9.0 (not blocking).** | W-07 |
 | **D-Z1** | Zoom range | Map: from "fit the whole map" to 2.4× (on today's 100 × 100 map that means no zoom-out below 1×); battle: 0.75×–1.5×; text size: four steps | W-02, W-03 |
 | **D-R1** | Sharper canvas: draw the canvas at the screen's pixel density instead of a fixed 960×540? | **Not in Phase W by default.** W-01 and W-02 work at 960×540. W-01 measures a backing store at `min(devicePixelRatio, 2)` × 960×540 with the Debug-panel battle and map tests on the Zenfone. It's adopted only if the frame budget holds (60 fps, about 2 ms of drawing); otherwise it goes to the backlog. **2.2.0:** the switch is in (Debug → Sharp canvas; the practice result names the canvas mode); waiting on the owner's phone numbers | W-01 (measurement only) |
 | **D-V1** | Version numbering after 2.0 | Minor per task; 3.0.0 at Prototype D; 4.0.0 at the end of Phase 9 | — |

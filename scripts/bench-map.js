@@ -2,6 +2,8 @@
 // world parties' simulation (CL.parties.tick: targets, movement, contacts and off-screen fights) and
 // everything time drives (CL.party.advanceDays: upkeep, markets, contracts, story, news and parties).
 //   node scripts/bench-map.js [hours=240] [--parties 10,25,50,100,200] [--json]
+//   node scripts/bench-map.js --season [parties=80] [days=90]   (W-07: a long rest with a full world:
+//     ms per game day, the worst day, and the size of the save at the end)
 //
 // Before each measured hour the map is topped up to N parties (outside the timing), drawn from the
 // real templates in turn, scattered over the map; parties ignore the player so the hour always runs
@@ -27,8 +29,8 @@ function topUp(CL, n) {
   let k = c.parties.length;
   while (c.parties.length < n) {
     const p = CL.parties.spawn(c, ids[k++ % ids.length]);
-    p.x = 4 + CL.autoresolve.next(c) * 92;
-    p.y = 4 + CL.autoresolve.next(c) * 92;
+    const b = CL.world.bounds(); // W-07: anywhere on the world's own map
+    [p.x, p.y] = CL.world.clampToMap(CL.autoresolve.next(c) * b.w, CL.autoresolve.next(c) * b.h, 4);
   }
   for (const p of c.parties) p.ignoreUntil = 1e9;
 }
@@ -63,7 +65,32 @@ function bench(n, hours, seed = 12345) {
   return { parties: n, ...out };
 }
 
-if (require.main === module) {
+/**
+ * W-07: `days` game days of rest with the map kept at `n` parties (topped up each morning), one day
+ * at a time as the clock passes them. Returns ms per day, the worst day and the save's size.
+ */
+function season(n = 80, days = 90, seed = 12345) {
+  const CL = setup(seed);
+  const c = CL.campaign;
+  c.food = 1e5;
+  c.gold = 1e5;
+  const times = [];
+  for (let d = 0; d < days; d++) {
+    topUp(CL, n);
+    const t0 = now();
+    CL.party.advanceDays(1);
+    times.push(now() - t0);
+  }
+  const text = JSON.stringify(c);
+  return { parties: n, days, msPerDay: times.reduce((a, b) => a + b, 0) / days, median: median(times), worst: Math.max(...times), saveKb: text.length / 1024, live: c.parties.length };
+}
+
+if (require.main === module && process.argv.includes('--season')) {
+  const [n = 80, days = 90] = process.argv.slice(2).filter((a) => /^\d+$/.test(a)).map(Number);
+  const r = season(n, days);
+  if (process.argv.includes('--json')) console.log(JSON.stringify(r, null, 2));
+  else console.log(`${r.days} days with ${r.parties} parties: ${r.msPerDay.toFixed(1)} ms per game day (median ${r.median.toFixed(1)}, worst ${r.worst.toFixed(1)}); save ${r.saveKb.toFixed(1)} KB with ${r.live} parties`);
+} else if (require.main === module) {
   const args = process.argv.slice(2);
   const i = args.indexOf('--parties');
   const sizes = i >= 0 ? args[i + 1].split(',').map(Number) : [10, 25, 50, 100, 200];
@@ -80,4 +107,4 @@ if (require.main === module) {
   }
 }
 
-module.exports = { bench };
+module.exports = { bench, season };

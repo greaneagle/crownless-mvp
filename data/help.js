@@ -50,7 +50,8 @@
         'The Border March, where the story is told, lies in the middle of the realm. Valedorn holds its west and the shires beyond; Aurelian its east and the old imperial provinces beyond that.',
         'North, over the mountains, are the highland clans of Hrothmark: heavy, slow infantry and axemen. The road from Greywall climbs to them through a pass. South, on the marshy coast, the merchant towns of the Vessaro League field crossbowmen and fast light horse. In the south-east the Free City of Merrow answers to no crown: it hires out sell-swords and has the best market in the land.',
         'Every kingdom has its own troops to hire, and every town posts contracts. Each capital has someone with work for a stranger. Prices differ by land: timber is cheap in the north and wine on the coast, so a company that carries goods between them can do well.',
-        'Each land has Reaver lairs of its own, and the news says where trouble is: “the roads of the northern highlands are not safe”. The farthest capitals are a day and a half apart on the road.'
+        'Each land has Reaver lairs of its own, and the news says where trouble is: “the roads of the northern highlands are not safe”. The farthest capitals are a day and a half apart on the road.',
+        'Kingdoms are at peace, in tension or at war with each other. At peace their patrols pass each other by, though a border incident can sour things; in tension or at war they fight wherever they meet, and enough fighting turns tension into war. Wars end when both sides are worn out, and long quiet cools tension back to peace. Valedorn and Aurelian stay in tension over Greywall until the story settles it. The news tells you when things change.'
       ]
     },
     towns: {
