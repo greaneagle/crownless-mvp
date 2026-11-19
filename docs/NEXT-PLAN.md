@@ -145,7 +145,7 @@ Each phase ends playable, measured and documented. The order follows the design'
 | **W-05c** | ✅ **Done in 2.8.0.** **New-region errands and help** (split from W-05): two or three errands outside the March; How to Play and tips for the bigger map | Done | S | W-05b | — |
 | **W-06** | ✖ **Not needed** (D-W2, owner 2026-11-19: old saves are refused, not moved in). Was: saves move into the bigger world by a v10 migration | Dropped | — | — | — |
 | **W-07** | ✅ **Done in 2.9.0.** **A world simulation that scales:** spatial grid, swept contacts for coarse steps, step budgets, map culling, war and peace between kingdoms (the March pair kept as the story needs) | Done (D-W5: default) | M–L | W-05b, H-01 | v10 |
-| **W-08** | **Tuning and acceptance** of the bigger world, with a validation section | Specified | S–M | W-00–W-07 | — |
+| **W-08** | ✅ **Done in 2.10.0** (the owner's phone session still to come). **Tuning and acceptance** of the bigger world, with a validation section (below) | Done | S–M | W-00–W-07 | — |
 | **W-09** | **Route planning** (new, optional in Phase W): a terrain-cost route planner for the player's travel and for parties; required before any impassable terrain and before P7-04's "Avoid danger" | Ready after decision D-W4 | M | W-05a | — |
 
 **Proposed size of the world (owner decision D-W1):**
@@ -153,6 +153,55 @@ Each phase ends playable, measured and documented. The order follows the design'
 - **Kingdoms:** four (Valedorn and Aurelia as now, a northern kingdom, a southern or coastal league), plus the Reavers and a free city.
 - **Settlements:** about 32.
 - **The Border March** stays whole in the middle, so its story, errands and tests stay valid.
+
+### Phase W validation (W-08, build 2.10.0, 2026-11-19)
+
+How the bigger world was checked, as `docs/V2-VALIDATION.md` did for 2.0. Every run is headless on the real game logic; "local" is the campaign bot working where it is, "roaming" (`--roam`, new) is the same bot touring every capital's contract board and taking on lairs up to two days away.
+
+**What was found and changed**
+- **The bot, not the economy, had broken.** The economy report at 2.7–2.9 looked like a collapse next to 2.6: contracts 9–11 crowns a day against 40, 3–4 soldiers at day 60 against 17, renown halved. The cause was the campaign bot: since 2.7 it took on the nearest beatable lair *anywhere*, so it crossed the realm for one fight and spent days riding. It now takes lairs within about a day's ride (30 map units; 60 when roaming), as a player would. Nothing in the game changed for this.
+- **Food follows the grain.** Rations cost 8 everywhere. They now follow the local grain price at half strength: 7 among the western farms (Oakford, Redfield, Ashby, Fernley), 8 at most markets, 9 in the highlands and the eastern March, moving with the market.
+- **Checked and kept:**
+  - contract pay (already per league of distance, and the bot's contract income is as before);
+  - patrol and band density (about 0.4–0.8 parties per 1,000 square map units in every region; the March a little thinner than in 2.6.0, about 7 parties in it against 9);
+  - road and open-ground speeds (the farthest capitals are about 1.3 days apart);
+  - caravans' effect on the markets they reach.
+
+**Economy (12 campaigns × 60 days, `npm run economy`), against V2-T1's measures**
+
+| | 2.6.0 (the March alone) | 2.10.0 local | 2.10.0 roaming |
+|---|---|---|---|
+| Income per day: spoils / contracts | 44.2 / 39.5 | 47.4 / 43.8 | 54.6 / 30.7 |
+| Spending per day: training, hiring, wages, food, captors, gear | 32.7, 19.0, 10.7, 7.3, 6.7, 4.7 | 37.7, 19.3, 12.0, 7.2, 6.8, 5.2 | 24.8, 20.1, 9.0, 4.8, 11.1, 11.8 |
+| Money (median) at days 15 / 30 / 60 | 85 / 60 / 221 | 74 / 157 / 244 | 86 / 137 / 245 |
+| Renown at days 30 / 60; level | 82 / 216; 9 | 110 / 236; 9 | 103 / 220; 9 |
+| Soldiers at day 60 (T3 share) | 17 (67%) | 18 (72%) | 13 (40%) |
+| Per campaign: wages short, out of food, desertions | 1.6, 0.3, 0 | 1.3, 0.5, 0.2 | 0.3, 0, 0 |
+
+Healthy by V2-T1's measures: money grows without hoarding, and hardship is rare. A roaming company earns less from contracts (more of its time is riding between capitals), is captured more often (harder lairs and bands away from the March) and spends more on gear, but ends as rich.
+
+**Campaign bot (8 × 60 days, `npm run simulate`):** local 418 wins, 154 losses, 182 contracts; roaming 369 wins, 207 losses, 117 contracts. **No run stuck** in either.
+
+**Story (`npm run simulate:story`, 200 runs):** all 200 reach an ending (85 Valedorn, 98 Aurelian, 17 compromise; 2.0.0: 85 / 87 / 28). Every Q1, Q2 and Q3 branch comes up, both mirror-image Q3 sales included (7 and 6). Mara saved 135 times, lost 65. Days to an ending: median 33.8 (2.0.0: 11.7), from 8.3 to 103.1. The story bot now wanders only the March's regions, and a busier world (war and peace, more parties) slows it down; that is worth watching in the phone session, not a soft-lock.
+
+**Prototype G (6 campaigns × 60 days, each saved at day 30, reloaded and played on):**
+
+| Style | Money (median) | Soldiers | Won / lost | Hero down | Extra screens | Warnings | Stuck | Resumed |
+|---|---|---|---|---|---|---|---|---|
+| Hands-off | 229 | 17 | 358 / 117 | – | 0 | 7 | 0 | 6/6 |
+| Presets | 1,893 | 20 | 434 / 10 | 55 | 38 | 3 | 0 | 6/6 |
+| Expert | 1,192 | 20 | 417 / 14 | 54 | 362 | 2 | 0 | 6/6 |
+
+All three styles are viable over 60 days and every run resumed exactly. The gap between auto-resolving and fighting in person is still wide: that is B-01's.
+
+**Tests:** fast, slow and browser suites green at 2.10.0 (counts in the release notes).
+
+**Waiting on the owner's phone** (W-08's acceptance, and W-02, W-03, W-05b and W-07's):
+1. text sizes on the map and in battle;
+2. map gestures: drag, pinch and Centre on the bigger map, at "fit" and at 2.4×;
+3. battle zoom: Big battle 40 at 0.75×;
+4. Debug → **Map stress 80**: fps, simulation and drawing ms and the slowest frame at both zooms (target: no slowdown spikes);
+5. a look at the whole realm: labels, the lands' errands, the Beyond the March tip.
 
 ## 4. Phase 7 — "The Living Company" (independent captain)
 

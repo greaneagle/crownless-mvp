@@ -1,6 +1,6 @@
 // Multi-seed campaign simulation: a headless bot plays brand-new games (the GDD start: 60 crowns,
 // no soldiers) for N days on the real game logic and reports how each campaign went.
-//   node scripts/simulate-campaign.js [days=30] [seeds=8]
+//   node scripts/simulate-campaign.js [days=30] [seeds=8] [--roam]   (--roam, W-08: the bot tours the realm)
 const { loadGame } = require('../tests/helpers/load');
 const { makeBot, headlessUi } = require('../tests/helpers/campaign-bot');
 
@@ -33,9 +33,9 @@ function newCampaign(seed, background = 'farmhand') {
   return { ...env, messages };
 }
 
-function run(seed, days) {
+function run(seed, days, { roam = false } = {}) {
   const { CL, messages } = newCampaign(seed);
-  const bot = makeBot(CL);
+  const bot = makeBot(CL, { roam });
   const s = bot.play(days);
   const c = CL.campaign;
   const count = (msg) => CL.diag.events.filter((e) => e.msg === msg).length;
@@ -65,10 +65,12 @@ function run(seed, days) {
 }
 
 if (require.main === module) {
-  const days = Number(process.argv[2] || 30);
-  const seeds = Number(process.argv[3] || 8);
+  const nums = process.argv.slice(2).filter((a) => /^\d+$/.test(a));
+  const days = Number(nums[0] || 30);
+  const seeds = Number(nums[1] || 8);
+  const roam = process.argv.includes('--roam'); // W-08: tour the realm's boards
   const rows = [];
-  for (let seed = 1; seed <= seeds; seed++) rows.push(run(seed, days));
+  for (let seed = 1; seed <= seeds; seed++) rows.push(run(seed, days, { roam }));
   console.table(rows);
 }
 

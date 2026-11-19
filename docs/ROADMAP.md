@@ -1,6 +1,6 @@
 # Crownless — Project Status & Roadmap
 
-_Last reviewed: 2026-11-19 · Build 2.9.0 · Spec: `Crownless_MVP_GDD_v1.md` (engine overridden: HTML5 Canvas + classic JS, no bundler, GitHub Pages)._
+_Last reviewed: 2026-11-19 · Build 2.10.0 · Spec: `Crownless_MVP_GDD_v1.md` (engine overridden: HTML5 Canvas + classic JS, no bundler, GitHub Pages)._
 
 This replaces the opencode-swarm plan (`.swarm/plan.md`, removed). The gate structure (A→E) is kept from the GDD; the task list is condensed and re-ordered around what the code actually needs.
 
@@ -131,6 +131,7 @@ From the owner's v2.0 design (`Crownless_v2_0_Feature_and_Systems_Design_Part_1.
   - ✅ (2.7.0) W-05b the bigger region: the Sundered Realm, 200 × 200, with the March whole in the middle (+50, +50; its travel times unchanged, tested); Valedorn and Aurelian extended west and east, Hrothmark in the north and the Vessaro League on the south coast (new cultures, six-troop trees each), the Free City of Merrow; 31 settlements, two lairs per region, timber and wine, 11 bands, 13 patrols and 5 caravans; region news; real terrain; the asset request list (docs/ASSETS.md). Old March saves are refused and kept safe (D-W2, owner 2026-11-19), so W-06 is dropped
   - ✅ (2.8.0) W-05c errands beyond the March: Wolves in the Pass (Hrothmark), Timber for the Shipwrights (the Vessaro League), False Lights (Merrow), each from a new person in its capital; How to Play's new topic The lands, the map's zoom out to the whole realm, and a Beyond the March tip (regions marked `home` in the world's data)
   - ✅ (2.9.0) W-07 a world simulation that scales: a spatial grid for every nearby-party search, choose-then-move steps, far parties acting hourly, swept contacts, a per-region spawn budget, map culling; war and peace between every pair of kingdoms (save v10), the March pair held in tension until Q4's ending sets it (D-W5); Debug → Map stress 80; 80 parties over 90 days at about 270 ms a game day headless (2.8.0: 640) with a 28 KB save
+  - ✅ (2.10.0) W-08 tuning and acceptance of the bigger world: economy, campaign bot (local and `--roam`), 200 stories and Prototype G over 60 days; the bot keeps to lairs within a day's ride (its far trips had looked like an economic collapse); food follows the local grain; a Phase W validation section in NEXT-PLAN; the owner's phone session to come
   - **Phase 7, "The Living Company":** the deferred battle balance pass (B-01), surgeon, scout and blacksmith, pursuit and detection, officers and detached patrols, more companions, soldier traits, world events, a tournament, a first business, battle extras.
   - **Phase 8, "The Landed World":** lords on the map, holdings and claims, permissions, allegiance, fiefs and castellans, sieges, named nobles, losing and retaking land. Acceptance is "The Dispossessed Lord".
   - **Phase 9, "Kingdoms & Houses":** realms, diplomacy and treaties, founding a kingdom, rebellion and deposition, armies, houses and marriage, modding and a second world.

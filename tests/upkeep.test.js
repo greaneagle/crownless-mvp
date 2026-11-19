@@ -25,6 +25,21 @@ test('time eats food: resting a day with 6 people uses 2 rations', () => {
   assert.ok(near(CL.campaign.food, 8));
 });
 
+test('W-08: food follows the local grain: cheaper among the farms, dearer in the highlands, base price off the market', () => {
+  const { CL } = loadGame();
+  const c = CL.campaign;
+  const at = (id) => {
+    c.world.location = id;
+    return CL.upkeep.rationPrice(c);
+  };
+  assert.equal(at('oakford'), 7, 'farm country (grain 0.8)');
+  assert.equal(at('stonebridge'), 8);
+  assert.equal(at('hrothgard'), 9, 'the highlands (grain 1.2)');
+  c.markets.hrothgard.grain = 1.4;
+  assert.equal(at('hrothgard'), 10, 'and it moves with the grain market');
+  assert.equal(at(null), 8, 'on the road: the base price');
+});
+
 test('rations cost 8 crowns, less 1% per Trade point, and need the gold', () => {
   const { CL } = loadGame();
   const c = CL.campaign;

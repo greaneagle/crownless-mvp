@@ -1,5 +1,15 @@
 # Crownless — Release Notes
 
+## v2.10.0 — The bigger world, tuned (W-08) · 2026-11-19
+
+### Changes
+- **Food follows the price of grain:** a little cheaper among the western farms (7 crowns a ration), dearer up in the highlands (9), and it moves with the market. Most markets still sell at 8.
+
+### Under the hood
+- The whole realm was played headlessly for 60 days at a time: the economy report, the campaign bot (now also touring every capital, `--roam`), 200 stories and Prototype G. No run got stuck, every story reached an ending, and the economy is as healthy as before the world grew. The figures are in `docs/NEXT-PLAN.md` ("Phase W validation").
+- The test bot no longer rides across the whole realm to clear one lair.
+- 597 fast and 7 slow Node tests, 125 browser tests (9 more apply to one device only and are skipped on the other).
+
 ## v2.9.0 — War and peace, and a world that scales (W-07) · 2026-11-19
 
 ### New

@@ -1,12 +1,14 @@
 // Economy report (V2-T1): where the money comes from and goes, across seeded campaigns played by the
 // campaign bot, from every transfer in the ledger. For tuning passes.
-//   node scripts/economy-report.js [days=60] [seeds=12]
+//   node scripts/economy-report.js [days=60] [seeds=12] [--roam]   (--roam, W-08: the bot tours the realm)
 const path = require('node:path');
 const ROOT = process.env.CL_ROOT || path.join(__dirname, '..');
 const { loadGame } = require(path.join(ROOT, 'tests/helpers/load'));
 const { makeBot, headlessUi } = require(path.join(ROOT, 'tests/helpers/campaign-bot'));
 function mulberry(seed) { let s = seed >>> 0; return () => { s = (s + 0x6d2b79f5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
-const days = Number(process.argv[2] || 60), seeds = Number(process.argv[3] || 12);
+const nums = process.argv.slice(2).filter((a) => /^\d+$/.test(a));
+const days = Number(nums[0] || 60), seeds = Number(nums[1] || 12);
+const roam = process.argv.includes('--roam'); // W-08: the bot tours every capital's board
 const cat = (why) => {
   if (/^spoils/.test(why)) return 'spoils';
   if (/contract/.test(why)) return 'contracts';
@@ -33,7 +35,7 @@ for (let seed = 1; seed <= seeds; seed++) {
     c.ledger = [];
     c.ledger.push = function (e) { if (e.from === 'world') tot.in[cat(e.why)] = (tot.in[cat(e.why)] || 0) + e.amount; if (e.to === 'world') tot.out[cat(e.why)] = (tot.out[cat(e.why)] || 0) + e.amount; return Array.prototype.push.call(this, e); };
   }
-  const bot = makeBot(CL);
+  const bot = makeBot(CL, { roam });
   let s = { wins: 0, losses: 0 };
   for (const [upto, key] of [[15, 'gold15'], [30, 'gold30'], [days, 'gold60']].filter(([u], i) => u < days || i === 2)) {
     const r = bot.play(upto - Math.floor(c.day));

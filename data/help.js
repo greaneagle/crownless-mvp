@@ -101,7 +101,7 @@
       order: 6,
       title: 'Your company',
       body: [
-        'Everyone you hire takes a slot, eats a ration a day for every five people, and draws a weekly wage. Hungry or unpaid soldiers lose morale; at very low morale they desert.',
+        'Everyone you hire takes a slot, eats a ration a day for every five people, and draws a weekly wage. Food follows the price of grain: a little cheaper among the farms, dearer up in the highlands. Hungry or unpaid soldiers lose morale; at very low morale they desert.',
         'Fallen soldiers are wounded or killed. The wounded sit out battles for about two days. Soldiers gain experience and can be upgraded for crowns in the Party screen; Leadership and renown raise how many you can lead.',
         'Every soldier has a name, a home and a service record: battles, kills, wounds and the wages they were actually paid. Party lists them by name (filter by who is fit, wounded or ready to upgrade); tap one for their card, where you can rename them or upgrade them on their own. By type groups them as before.',
         'Soldiers who fall, desert or retire are not forgotten: the Roll of honour in Party keeps who they were, where they came from, how long they served and what they did. A soldier’s card has Retire with honour (tap twice) to let a veteran go. After a fought battle, the result says who did what.',

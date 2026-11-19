@@ -760,7 +760,15 @@ _Written 2026-11-18 at build 2.0.0; **reviewed and corrected the same day agains
 
 ---
 
-### W-08 · Tuning and acceptance of the bigger world (S–M) — Specified
+### W-08 · Tuning and acceptance of the bigger world (S–M) — ✅ Done in 2.10.0 (phone session to come)
+
+**Done (2.10.0, 2026-11-19).** The runs, findings and numbers are in NEXT-PLAN, "Phase W validation". In short:
+- **Measured across the region:** the economy report, the campaign bot, 200 stories and Prototype G, 60 days each. The campaign bot and the economy report gain `--roam`: the bot tours every capital's contract board and takes on lairs up to two days away.
+- **The apparent economic collapse since 2.7 was the bot's.** It took on the nearest beatable lair anywhere in the realm and spent days crossing it. It now keeps to lairs within about a day's ride (60 map units when roaming). With that, the economy is as healthy as 2.6.0's, or slightly richer.
+- **Re-tuned:** food follows the local grain price at half strength (7 crowns among the western farms, 8 at most markets, 9 in the highlands). How to Play says so. `tests/upkeep.test.js` covers it.
+- **Checked and kept:** contract pay (already per league), patrol and band density (even across regions), road and open-ground speeds, caravans' market effects.
+- **Acceptance:** no bot run stuck; the economy healthy by V2-T1's measures; the story ends in all 200 runs. The owner's phone session is still to do (the list is in NEXT-PLAN).
+
 
 **Build.**
 - **Runs:** the economy report, campaign bot, story bot and Prototype G across the whole region for 60 days.

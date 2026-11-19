@@ -8,8 +8,16 @@
 //   'expert'     fights in person with Aggressive, Defensive or Balanced as the odds suggest, rallies its
 //                soldiers, and keeps a quartermaster and a merchant
 // The in-person fights use a simple hero (walk at the nearest enemy, swing); a real player does better.
+//
+// roam (W-08): tour the realm, walking to every contract board in turn instead of the nearest other
+// one, and taking on lairs further afield. Without it the bot works where it is: lairs within about a
+// day's ride (LAIR_REACH), and the nearest other board.
 
-function makeBot(CL, { log = () => {}, style = 'hands-off' } = {}) {
+const LAIR_REACH = 30; // map units: about a day's ride; further lairs aren't worth the trip
+const ROAM_REACH = 60;
+
+function makeBot(CL, { log = () => {}, style = 'hands-off', roam = false } = {}) {
+  const recentBoards = []; // roam: the boards visited lately, so it moves on round the realm
   const c = () => CL.campaign;
   const g = CL.game;
   const stats = {
@@ -124,8 +132,9 @@ function makeBot(CL, { log = () => {}, style = 'hands-off' } = {}) {
     }
     // Otherwise: clear a lair we can beat (the nearest first: W-05b's world is big), or go look for work.
     const near = (a, b) => CL.world.mapDist(camp.world.x, camp.world.y, a.mapX, a.mapY) - CL.world.mapDist(camp.world.x, camp.world.y, b.mapX, b.mapY);
+    const reachOf = roam ? ROAM_REACH : LAIR_REACH;
     for (const [id, st] of Object.entries(CL.world.map().sites).sort(([, a], [, b]) => near(a, b))) {
-      if (!CL.world.siteActive(id)) continue;
+      if (!CL.world.siteActive(id) || CL.world.mapDist(camp.world.x, camp.world.y, st.mapX, st.mapY) > reachOf) continue;
       g.siteId = id;
       g.partyId = null;
       const e = CL.parties.current();
@@ -137,8 +146,14 @@ function makeBot(CL, { log = () => {}, style = 'hands-off' } = {}) {
     const boards = Object.values(CL.content.table('settlements'))
       .filter((s) => s.services?.includes('contracts') && s.id !== here.id)
       .sort(near);
-    // Nothing worth doing nearby: walk to the nearest other contracts board (time passes, things happen).
-    return CL.world.travelTo(town(boards[0].id));
+    // Nothing worth doing nearby: walk to the nearest other contracts board (time passes, things happen),
+    // or when roaming the nearest one not visited lately.
+    const next = (roam && boards.find((b) => !recentBoards.includes(b.id))) || boards[0];
+    if (roam) {
+      recentBoards.push(next.id);
+      if (recentBoards.length > Math.max(1, boards.length - 1)) recentBoards.shift();
+    }
+    return CL.world.travelTo(town(next.id));
   }
 
   function encounterTurn() {

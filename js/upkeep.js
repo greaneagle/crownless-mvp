@@ -31,10 +31,16 @@
   /** GDD §7: wounded troops still count toward wages. */
   const weeklyWages = (c) => c.roster.reduce((sum, s) => sum + CL.content.troop(s.troop).wage, 0);
 
-  /** GDD §9: LocalBuyPrice = round(BasePrice × Scarcity × (1 − 0.01 × Trade)); scarcity 1 until trading. */
+  /**
+   * GDD §9: LocalBuyPrice = round(BasePrice × Scarcity × (1 − 0.01 × Trade)). W-08: a ration's scarcity
+   * follows the local grain, half as strongly (so food is a little cheaper among the farms and dearer
+   * in the highlands: 0.9–1.2 of the base); 1 where there is no market.
+   */
   function rationPrice(c) {
     const base = CL.content.get('markets', RATION_ITEM).basePrice;
-    return Math.max(1, Math.round(base * (1 - 0.01 * CL.character.skill('trade', c))));
+    const grain = c.markets?.[c.world?.location]?.grain;
+    const scarcity = typeof grain === 'number' ? 0.5 + 0.5 * grain : 1;
+    return Math.max(1, Math.round(base * scarcity * (1 - 0.01 * CL.character.skill('trade', c))));
   }
 
   /** Move food items (e.g. "Three Days of Food") from the pack into the ration stock. */
