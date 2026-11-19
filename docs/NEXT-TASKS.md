@@ -1077,9 +1077,16 @@ _Written 2026-11-18 at build 2.0.0; **reviewed and corrected the same day agains
 
 **Acceptance.** Each can be recruited, lead, and leave for stated reasons.
 
-### P7-07 · Soldier traits (S) — Specified
+### P7-07 · Soldier traits (S) — ✅ Done in 2.18.0
 
-**Build.**
+**Done (2.18.0, 2026-11-19).** `js/traits.js`:
+- **Milestones** (from the soldier's own record, checked after each battle and each wound; the first reached decides, once, never changed): Steadfast at 8 battles, Cautious at 2 wounds, Impulsive at 8 kills. Told as a message ("Tam Owl has become Steadfast after 8 battles with the company."), kept as a `trait` note, shown on the soldier's row and card (with the milestones still to reach when they have none) and on the roll of honour.
+- **Fought battles:** Steadfast +6 cohesion to their group for each standing (up to +18, `parts.steadfast` in js/morale.js); Cautious engages at × 0.7 the distance, strikes a runner only within 60 px, takes × 0.8 from each blow; Impulsive engages at × 1.5, deals × 1.15 and takes × 1.2.
+- **Auto-resolve and patrols:** strength × 1.05 / 0.95 / 1.1 and the chance to fall × 1 / 0.75 / 1.3 (a per-soldier factor in `rollFallen`; the same rolls are drawn, so the stream is unchanged without traits).
+- **Measured** (`tests/traits.test.js`): over eight seeded fights of six footmen against eight looters, an impulsive company takes over 10% more damage and a cautious one over 10% less; a steadfast group that lost half its number keeps at least +9 cohesion.
+- **Save:** an optional `trait` on soldiers, their `trait` notes and roll-of-honour entries; unknown values dropped on load. No schema step: nobody had one before.
+
+**Build** (as specified).
 - **Traits:** Steadfast (group cohesion bonus), Cautious (less pursuit, fewer losses, slower to engage), Impulsive (earlier engagement, more kills, more wounds).
 - **Earned at milestones,** not random spam.
 - Shown on the soldier card and the roll of honour.

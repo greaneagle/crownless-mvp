@@ -145,6 +145,8 @@
     const runs = (g.routEvents || []).filter((e) => e.team === team && g.t - e.t < TERMS.routSeconds && Math.hypot(e.x - cx, e.y - cy) < TERMS.routRadius).length;
     parts.routsNearby = -Math.min(TERMS.routNearbyMax, TERMS.routNearby * runs);
     parts.veterans = up.reduce((n, u) => n + (TERMS.tier[CL.content.troop(u.troop).tier] || 0), 0) / up.length;
+    const steady = CL.traits?.cohesion(up) || 0; // steadfast soldiers hold their group together (P7-07)
+    if (steady) parts.steadfast = steady;
     const close = up.some((u) => foes.some((f) => f && standing(f) && Math.hypot(f.x - u.x, f.y - u.y) < TERMS.regroupRadius));
     parts.regroup = close ? 0 : TERMS.regroup;
     if (team === 'ally') {

@@ -161,6 +161,7 @@ Each task that changes the save's shape adds the next schema version and its mig
 - ✅ v7 (1.14.0, V2-10): the company chronicle (`chronicle`) and the roll of honour (`honour`).
 - ✅ v9 (1.16.0, V2-12): the merchant follower (`followers.merchant`, with its cash in `accounts.budgets.merchant`).
 - ✅ v10 (2.9.0, W-07): relations between kingdoms (`relations`).
+- (2.18.0, P7-07, no schema step) optional fields: a soldier's `trait` (`steadfast`, `cautious` or `impulsive`), a soldier note `{ kind: 'trait', trait }` and a roll-of-honour entry's `trait`; unknown values are dropped on load.
 - ✅ v15 (2.17.0, P7-06): companions of the wider world (`retinue`: `[{ id, woundedUntil, equipment, loyalty (0–100), unpaid, warned, warnedDay?, why, detached? }]`); unknown ids, duplicates, Mara and companions whose `<id>_gone` flag is set are dropped; a detachment captain of the retinue is relinked by its `detached`.
 - ✅ v14 (2.16.0, P7-05): detachments (`detachments`).
 - ✅ v13 (2.15.0, P7-02): the scout (`followers.scout`: `{ name, culture, origin, hired, unpaid (0–1), log }`).

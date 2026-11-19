@@ -216,6 +216,7 @@
 .soldierStats{display:flex;flex-wrap:wrap;gap:4px 14px}
 .soldierStats b{color:#ecd6a4}
 .soldierNotes{margin:6px 0;padding-left:calc(18px * var(--ui-scale));font-size:calc(13px * var(--ui-scale));color:#d9c8a2}
+.soldierTrait{margin:6px 0 0;color:#ecd6a4}
 .soldierUpgrades{display:flex;flex-wrap:wrap;gap:6px}
 .soldierUpgrades button{min-height:calc(40px * var(--ui-grow));font-size:calc(12px * var(--ui-scale))}
 .muted{color:#a8977a}

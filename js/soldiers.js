@@ -27,7 +27,7 @@
   const NAME_TRIES = 8;
   const NOTABLE_KILLS = 3; // felling this many in one battle earns a note
   const RECORD_KEYS = ['battles', 'victories', 'kills', 'assists', 'wounds', 'captures', 'wagesPaid'];
-  const NOTE_KINDS = ['joined', 'veteran', 'wounded', 'promoted', 'captured', 'notable', 'feted'];
+  const NOTE_KINDS = ['joined', 'veteran', 'wounded', 'promoted', 'captured', 'notable', 'feted', 'trait'];
   const FILTERS = ['all', 'fit', 'wounded', 'ready', 'infantry', 'archer', 'cavalry'];
   const ROMAN = ['', '', ' II', ' III', ' IV', ' V', ' VI', ' VII', ' VIII', ' IX', ' X'];
 
@@ -143,6 +143,10 @@
         return `Felled ${n.kills} enemies${n.foe ? ` fighting ${n.foe}` : ''}.`;
       case 'feted':
         return n.place ? `Feted at home in ${placeName(n.place)}.` : 'Feted at home.';
+      case 'trait': {
+        const t = CL.traits?.def(n.trait);
+        return t ? `Became ${t.name} ${t.why}.` : '';
+      }
       default:
         return '';
     }
@@ -166,6 +170,7 @@
       s.record.kills += kills[id] || 0;
       s.record.assists += assists[id] || 0;
       if ((kills[id] || 0) >= NOTABLE_KILLS) note(s, { day: c.day, kind: 'notable', kills: kills[id], foe });
+      CL.traits?.check(c, s); // a milestone reached: a trait, once (P7-07)
     }
     if (!win) {
       for (const s of c.roster) {
@@ -180,6 +185,7 @@
     if (!s) return;
     s.record.wounds++;
     note(s, { day: c.day, kind: 'wounded', foe: typeof e.encounterName === 'string' ? e.encounterName : null });
+    CL.traits?.check(c, s); // a milestone reached: a trait, once (P7-07)
   });
 
   CL.events.on('SoldierPromoted', (e, c) => {
@@ -297,10 +303,15 @@
       }
       if (n.kind === 'wounded' || n.kind === 'notable') out.foe = typeof n.foe === 'string' ? n.foe.slice(0, 40) : null;
       if (n.kind === 'notable') out.kills = count(n.kills);
+      if (n.kind === 'trait') {
+        if (!CL.traits?.def(n.trait)) continue;
+        out.trait = n.trait;
+      }
       s.notes.push(out);
       if (s.notes.length >= NOTES_MAX) break;
     }
     if (e?.kit === true) s.kit = true; // fine kit (P7-03; the cap is checked with the blacksmith)
+    if (CL.traits?.def(e?.trait)) s.trait = e.trait; // earned at a milestone (P7-07)
   }
 
   /**

@@ -1,6 +1,6 @@
 # Crownless — Project Status & Roadmap
 
-_Last reviewed: 2026-11-19 · Build 2.17.0 · Spec: `Crownless_MVP_GDD_v1.md` (engine overridden: HTML5 Canvas + classic JS, no bundler, GitHub Pages)._
+_Last reviewed: 2026-11-19 · Build 2.18.0 · Spec: `Crownless_MVP_GDD_v1.md` (engine overridden: HTML5 Canvas + classic JS, no bundler, GitHub Pages)._
 
 This replaces the opencode-swarm plan (`.swarm/plan.md`, removed). The gate structure (A→E) is kept from the GDD; the task list is condensed and re-ordered around what the code actually needs.
 
@@ -138,7 +138,8 @@ From the owner's v2.0 design (`Crownless_v2_0_Feature_and_Systems_Design_Part_1.
   - ✅ (2.14.0) P7-04 pursuit and detection: sight by night, hills and forests; a company's size and a Hide stance; chases end at a last-seen spot, a search, then giving up; the map shows what you see, with faded marks for the rest (contract targets kept); "Avoid danger" routes wait for W-09
   - ✅ (2.15.0) P7-02 the scout: sees half as far again, warns of hostile parties with honest numbers and a heading, estimates each ride and what is known on the way, and gives more ground to set up on when you attack; save v13
   - ✅ (2.16.0) P7-05 officers and detached patrols: a veteran or the companion leads part of the company out with an order (hunt or patrol a road), food and pay; it fights by the world's rules, reports, turns back for its reasons or a courier, and rejoins on meeting with everything reconciled once
-  - ✅ (2.17.0) P7-06 more companions: Sigrun, Iacopo and Livia, each in their own land, join after an errand of their own; they fight, lend a skill, can captain a patrol and draw a wage; loyalty from pay, victories and their motive, with a warning before any leaving; save v15 (SC-17); beaten, the captain comes back wounded (SC-18); save v14
+  - ✅ (2.17.0) P7-06 more companions: Sigrun, Iacopo and Livia, each in their own land, join after an errand of their own; they fight, lend a skill, can captain a patrol and draw a wage; loyalty from pay, victories and their motive, with a warning before any leaving; save v15
+  - ✅ (2.18.0) P7-07 soldier traits: Steadfast, Cautious or Impulsive, earned once at a milestone of the soldier's own record (8 battles, 2 wounds, 8 kills); each measurably changes fought and simulated battles; shown on the card and the roll of honour (SC-17); beaten, the captain comes back wounded (SC-18); save v14
   - **Phase 7, "The Living Company":** the deferred battle balance pass (B-01), surgeon, scout and blacksmith, pursuit and detection, officers and detached patrols, more companions, soldier traits, world events, a tournament, a first business, battle extras.
   - **Phase 8, "The Landed World":** lords on the map, holdings and claims, permissions, allegiance, fiefs and castellans, sieges, named nobles, losing and retaking land. Acceptance is "The Dispossessed Lord".
   - **Phase 9, "Kingdoms & Houses":** realms, diplomacy and treaties, founding a kingdom, rebellion and deposition, armies, houses and marriage, modding and a second world.

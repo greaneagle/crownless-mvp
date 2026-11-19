@@ -74,6 +74,7 @@
       wounds: r.wounds,
       wagesPaid: r.wagesPaid,
     };
+    if (s.trait) entry.trait = s.trait; // P7-07
     c.honour.list.push(entry);
     while (c.honour.list.length > HONOUR_MAX) {
       const old = c.honour.list.shift();
@@ -194,7 +195,8 @@
     const from = h.origin ? ` of ${place(h.origin)}` : '';
     const served = h.joined === null ? 'served before the records' : `served ${Math.max(0, Math.round(h.left - h.joined))} days`;
     const stats = [`${h.battles} battle${h.battles === 1 ? '' : 's'}`, `${h.kills} kill${h.kills === 1 ? '' : 's'}`, `${h.wounds} wound${h.wounds === 1 ? '' : 's'}`, `${h.wagesPaid} crowns paid`].join(' · ');
-    return { title: `${h.name}${from}, ${troopName(h.troop)}`, line: `${how} on day ${P.dayNumber(h.left)} · ${served} · ${stats}` };
+    const trait = CL.traits?.def(h.trait);
+    return { title: `${h.name}${from}, ${troopName(h.troop)}${trait ? ` · ${trait.name}` : ''}`, line: `${how} on day ${P.dayNumber(h.left)} · ${served} · ${stats}` };
   }
 
   // ---- Who did what (the result screen) ----
@@ -271,6 +273,7 @@
         kills: count(e.kills),
         wounds: count(e.wounds),
         wagesPaid: count(e.wagesPaid),
+        ...(CL.traits?.def(e.trait) ? { trait: e.trait } : {}),
       });
     }
   }

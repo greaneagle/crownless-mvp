@@ -105,7 +105,7 @@
   /** The player's fighting power: healthy soldiers plus the hero, boosted by Tactics. */
   function playerPower(c = CL.campaign) {
     let p = heroPower(c);
-    for (const s of c.roster) if (s.woundedUntil === null) p += TIER_POWER[CL.content.troop(s.troop).tier] * COMPANY_FACTOR * (CL.blacksmith?.powerFactor(s) ?? 1); // fine kit (P7-03)
+    for (const s of c.roster) if (s.woundedUntil === null) p += TIER_POWER[CL.content.troop(s.troop).tier] * COMPANY_FACTOR * (CL.blacksmith?.powerFactor(s) ?? 1) * (CL.traits?.power(s) ?? 1); // fine kit (P7-03), trait (P7-07)
     p += CL.companion?.power(c) || 0; // Mara, if she is fit
     p += CL.retinue?.power(c) || 0; // the other companions with you (P7-06)
     return p * (1 + TACTICS * CL.character.skill('tactics', c));
@@ -151,8 +151,8 @@
    * Roll which of `units` fall. `units` is a list of anything; at least one falls when `atLeastOne`
    * (the winner of a real fight is never untouched).
    */
-  function rollFallen(c, units, chance, atLeastOne) {
-    const fallen = units.filter(() => next(c) < chance);
+  function rollFallen(c, units, chance, atLeastOne, factor = null) {
+    const fallen = units.filter((u) => next(c) < (factor ? Math.min(1, chance * factor(u)) : chance)); // factor: a soldier's trait (P7-07)
     if (atLeastOne && units.length && !fallen.length) fallen.push(units[Math.floor(next(c) * units.length)]);
     return fallen;
   }

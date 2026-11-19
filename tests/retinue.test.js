@@ -111,7 +111,7 @@ test('battle: they fight beside you; down, they are wounded, never killed, and h
 });
 
 test('loyalty: pay and victories raise it, their motive moves it, and every change has its reason', () => {
-  const { CL, c, R } = camp();
+  const { c, R } = camp();
   R.join(c, 'sigrun');
   R.join(c, 'iacopo');
   R.join(c, 'livia');

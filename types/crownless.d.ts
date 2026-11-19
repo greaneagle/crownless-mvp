@@ -32,11 +32,12 @@ declare global {
   /** One service note; shown as a sentence by CL.soldiers.noteText. */
   interface SoldierNote {
     day: number;
-    kind: 'joined' | 'veteran' | 'wounded' | 'promoted' | 'captured' | 'notable' | 'feted';
+    kind: 'joined' | 'veteran' | 'wounded' | 'promoted' | 'captured' | 'notable' | 'feted' | 'trait';
     place?: string | null;
     foe?: string | null;
     to?: ContentId;
     kills?: number;
+    trait?: string;
   }
 
   /** One soldier in the player's company: a named person (save schema v5). IDs are never reused. */
@@ -46,6 +47,8 @@ declare global {
     xp: number;
     /** P7-03: fitted with fine kit by the blacksmith (only present when true). */
     kit?: boolean;
+    /** P7-07: earned at a milestone of their record (js/traits.js). */
+    trait?: string;
     /** Campaign day the wound heals, or null when fit. */
     woundedUntil: number | null;
     name: string;
@@ -309,6 +312,8 @@ declare global {
     kills: number;
     wounds: number;
     wagesPaid: number;
+    /** P7-07: their trait, if they had earned one. */
+    trait?: string;
   }
 
   interface HonourRoll {

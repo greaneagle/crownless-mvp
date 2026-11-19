@@ -672,9 +672,10 @@
     const win = A().next(c) < A().winChance(pp, pe);
     const healthy = CL.party.healthySoldiers().map((s) => s.id);
     const enemyList = A().expand(e.troops);
+    const traitFall = (id) => CL.traits.fall(c.roster.find((s) => s.id === id)); // traits (P7-07)
     const fallen = win
-      ? A().rollFallen(c, healthy, A().lossChance(A().WINNER_LOSS, pp, pe), true)
-      : A().rollFallen(c, healthy, A().lossChance(A().LOSER_LOSS, pp, pe), false);
+      ? A().rollFallen(c, healthy, A().lossChance(A().WINNER_LOSS, pp, pe), true, traitFall)
+      : A().rollFallen(c, healthy, A().lossChance(A().LOSER_LOSS, pp, pe), false, traitFall);
     const enemyFallen = win ? enemyList : A().rollFallen(c, enemyList, A().lossChance(A().WINNER_LOSS, pe, pp), true);
     // The surgeon's triage (P7-01), one roll each from the world stream as before.
     const { killed, wounded, saved, medicineUsed } = CL.surgeon.triage(

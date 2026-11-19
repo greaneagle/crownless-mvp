@@ -146,7 +146,7 @@
           : role === 'archer'
             ? [anchor.x - 166 + (i % 3) * 40, anchor.y + 58 + Math.floor(i / 3) * 44]
             : [anchor.x - 210 + (i % 2) * 52, anchor.y - 120 + Math.floor(i / 2) * 56]; // cavalry on the left wing
-      const u = CL.blacksmith.applyKit(makeUnit(x, y, 'ally', s.troop, s.id), s); // fine kit (P7-03)
+      const u = CL.traits.apply(CL.blacksmith.applyKit(makeUnit(x, y, 'ally', s.troop, s.id), s), s); // fine kit (P7-03), trait (P7-07)
       CL.units.resolveObstacles(u); // form up around trees and walls
       g.allies.push(u);
     }
@@ -214,7 +214,10 @@
   function addAlly(g, r) {
     const a = g.battleMap.spawn.hero;
     const u = makeUnit(a.x - 150 + rand(-30, 30), a.y + rand(-90, 90), 'ally', r.troop, r.soldierId);
-    if (r.soldierId != null) CL.blacksmith.applyKit(u, CL.campaign.roster.find((s) => s.id === r.soldierId)); // fine kit (P7-03)
+    if (r.soldierId != null) {
+      const s = CL.campaign.roster.find((x) => x.id === r.soldierId);
+      CL.traits.apply(CL.blacksmith.applyKit(u, s), s); // fine kit (P7-03), trait (P7-07)
+    }
     CL.units.resolveObstacles(u);
     u.face = 'right';
     u.holdX = u.x;
@@ -268,7 +271,7 @@
       return 'blocked';
     }
     if (g.practice && g.practice.firstHit == null) g.practice.firstHit = g.t; // camera test: time to contact
-    target.hp = Math.max(0, target.hp - mitigate(raw, target.armor));
+    target.hp = Math.max(0, target.hp - mitigate(CL.traits.blow(raw, source, target), target.armor)); // traits (P7-07)
     if (source && !inArc(target, source, ARC.block)) target.flankedAt = g.t; // hit from the flank or behind (morale, V2-08b)
     if (source && source.team !== target.team) {
       if (!target.hitBy) target.hitBy = new Set();
@@ -420,7 +423,7 @@
     // Retarget at once when the current target falls, instead of swinging at a body.
     if (u.aiTimer <= 0 || (u.target && !u.target.alive)) {
       u.aiTimer = rand(0.17, 0.41);
-      u.target = (u.team === 'enemy' && ENEMY.use.target ? enemyTarget(u) : nearestAlive(u, opponentsOf(u))) || null;
+      u.target = (u.team === 'enemy' && ENEMY.use.target ? enemyTarget(u) : nearestAlive(u, u.trait ? opponentsOf(u).filter((o) => CL.traits.pursues(u, o)) : opponentsOf(u))) || null; // a cautious soldier lets runners go (P7-07)
     }
     const target = u.target;
     if (u.routing) return; // running: js/morale.js moves them (V2-08b)
@@ -437,12 +440,12 @@
         // Loose ranks around the hero (V2-08a); break ranks to fight anything close.
         dest = u.companion ? game().hero : CL.groups.followSlot(game(), u);
         goal = u.companion ? p.followGoal : 6;
-        if (dist(u, target) < p.followEngage) {
+        if (dist(u, target) < p.followEngage * CL.traits.engage(u)) {
           dest = target;
           goal = p.followFight;
         }
       } else if (cmd === 'hold') {
-        if (dist(u, target) < p.holdEngage) {
+        if (dist(u, target) < p.holdEngage * CL.traits.engage(u)) {
           dest = target;
           goal = p.holdFight;
         } else {
@@ -679,6 +682,7 @@
 
   CL.combat = {
     ENEMY,
+    AI,
     BATTLE,
     setActiveCap,
     reinforce,

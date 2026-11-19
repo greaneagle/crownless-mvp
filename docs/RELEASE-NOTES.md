@@ -1,5 +1,19 @@
 # Crownless — Release Notes
 
+## v2.18.0 — Soldier traits (P7-07) · 2026-11-19
+
+### New
+- **Service shapes your soldiers.** Each earns one trait, once, at a milestone of their own record (never at random):
+  - **Steadfast** after 8 battles: their group holds together longer;
+  - **Cautious** after a second wound: slower to engage, lets runners go, takes less from each blow and falls less often;
+  - **Impulsive** after felling 8 enemies: goes in early and hits harder, but takes more wounds.
+- You are told when it happens. The trait shows on the soldier's row and card, and on the roll of honour. A card without a trait shows the milestones still ahead.
+- Traits count in fought battles, in Simulate and on patrols.
+
+### Under the hood
+- No save schema step: the trait is a new optional field, and older saves load unchanged.
+- 654 fast and 8 slow Node tests, 139 browser tests (9 more apply to one device only and are skipped on the other).
+
 ## v2.17.0 — More companions (P7-06) · 2026-11-19
 
 ### New

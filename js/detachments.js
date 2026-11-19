@@ -185,7 +185,7 @@
 
   /** Its strength, the way auto-resolve counts a company (in ranks), with the companion if she leads it. */
   function power(c, d) {
-    let p = fit(d).reduce((n, s) => n + tierPower(s) * A().COMPANY_FACTOR, 0);
+    let p = fit(d).reduce((n, s) => n + tierPower(s) * A().COMPANY_FACTOR * CL.traits.power(s), 0); // traits (P7-07)
     const m = memberOf(c, d.captain);
     if (m && m === c.companion && m.woundedUntil === null) p += CL.companion.power({ ...c, companion: { ...c.companion, detached: null, away: false } }) || 0;
     else if (m && m.woundedUntil === null) p += CL.retinue.powerOf(m);
@@ -261,7 +261,7 @@
     const theirs = A().troopsPower(band.troops);
     const win = A().next(c) < A().winChance(mine, theirs);
     const ready = fit(d);
-    const fallen = A().rollFallen(c, ready.map((s) => s.id), A().lossChance(win ? A().WINNER_LOSS : A().LOSER_LOSS, mine, theirs), win);
+    const fallen = A().rollFallen(c, ready.map((s) => s.id), A().lossChance(win ? A().WINNER_LOSS : A().LOSER_LOSS, mine, theirs), win, (id) => CL.traits.fall(d.soldiers.find((s) => s.id === id))); // traits (P7-07)
     const killed = [];
     const wounded = [];
     for (const id of fallen) (A().next(c) < DEATH ? killed : wounded).push(id);

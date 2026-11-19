@@ -1382,7 +1382,7 @@
           },
         },
         el('b', { textContent: s.name }),
-        el('span', { textContent: `${t.name} · ${t.tier} ${t.role} · ${xpText(s)}${status}${ready}` }),
+        el('span', { textContent: `${t.name} · ${t.tier} ${t.role}${CL.traits.def(s.trait) ? ` · ${CL.traits.def(s.trait).name}` : ''} · ${xpText(s)}${status}${ready}` }),
       );
     });
     $('#sheetTroops').replaceChildren(
@@ -1477,10 +1477,22 @@
         stat('captures', r.captures),
         stat('crowns paid', r.wagesPaid),
       ),
+      traitLine(s),
       el('ul', { className: 'soldierNotes' }, ...s.notes.map((n) => el('li', { textContent: `Day ${P.dayNumber(n.day)}: ${CL.soldiers.noteText(n)}` }))),
       upgrades.length ? el('div', { className: 'soldierUpgrades' }, ...upgrades) : el('p', { className: 'muted', textContent: `${t.name} is at max tier; experience still counts toward the record.` }),
       retireButton(s),
     );
+  }
+
+  /** A soldier's trait (P7-07), or how far they are from each milestone. */
+  function traitLine(s) {
+    const T = CL.traits;
+    const t = T.def(s.trait);
+    if (t) return el('p', { className: 'soldierTrait', textContent: `${t.name}: ${t.text}` });
+    const next = T.ORDER.map((id) => T.TRAITS[id])
+      .map((x) => `${x.name} at ${x.at} ${x.record}`)
+      .join(', ');
+    return el('p', { className: 'soldierTrait muted', textContent: `No trait yet (${next}).` });
   }
 
   /** Retire with honour (V2-10): a second tap confirms; it can't be undone. */
