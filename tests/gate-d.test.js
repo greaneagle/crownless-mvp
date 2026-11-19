@@ -35,7 +35,7 @@ test('Gate D scope: the region, troops, maps, quests, contracts, companion, repu
     ['delivery', 'escort', 'hunt'],
   );
   assert.deepEqual(
-    t('companions').map((m) => m.id),
+    t('companions').filter((m) => !m.retinue).map((m) => m.id), // the story's companion (P7-06's others live beyond the March)
     ['mara'],
   );
   for (const k of ['valedorn', 'aurelian']) assert.ok(k in CL.campaign.reputation, k);

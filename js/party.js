@@ -47,7 +47,7 @@
    */
   /** Everyone who takes a slot: the company, the companion, and soldiers away on detachments (P7-05). */
   function headcount(camp = c()) {
-    return camp.roster.length + CL.companion.slots(camp) + (CL.detachments?.away(camp) || 0);
+    return camp.roster.length + CL.companion.slots(camp) + (CL.retinue?.slots(camp) || 0) + (CL.detachments?.away(camp) || 0);
   }
 
   function partyCap(camp = c()) {
@@ -241,6 +241,7 @@
     }
     if (healed.length) CL.diag.log('info', 'Wounded recovered', { soldiers: healed, day: camp.day });
     CL.companion.heal(camp);
+    CL.retinue.heal(camp); // the other companions (P7-06)
     CL.story.tick(camp); // quest stage deadlines
     CL.news.tick(camp); // a regional news line every couple of days
     return healed;
@@ -395,7 +396,8 @@
         kind: 'battle',
         reinforcements: joined,
         outcome,
-        companionDown: g.allies.some((a) => a.companion && !a.alive),
+        companionDown: g.allies.some((a) => a.companion && a.companion === CL.campaign.companion?.id && !a.alive),
+        companionsDown: g.allies.filter((a) => a.companion && a.companion !== CL.campaign.companion?.id && !a.alive).map((a) => a.companion), // the retinue (P7-06)
         fallenEnemies: g.enemies.filter((e) => !e.alive && !e.routed).map((e) => e.troop), // those who fled live on
         enemyTroops: [...new Set(g.enemies.map((e) => e.troop))], // the troops that took the field
       })

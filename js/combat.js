@@ -125,7 +125,8 @@
     // Share the field: the enemies get room for their biggest wave (up to half the cap), the
     // company the rest. Soldiers beyond their formation slots or that share wait in reserve.
     const soldiers = g.practice ? enc.practice.map((troop) => ({ troop, id: null })) : CL.party.healthySoldiers();
-    const withMara = !g.practice && CL.companion.fit() ? 1 : 0;
+    const retinue = g.practice ? [] : CL.retinue.fighters(CL.campaign); // the other companions (P7-06)
+    const withMara = (!g.practice && CL.companion.fit() ? 1 : 0) + retinue.length;
     const biggestWave = Math.max(...enc.waves.map((w) => Object.values(w).reduce((a, b) => a + b, 0)));
     const enemyShare = Math.max(Math.min(biggestWave, Math.floor(BATTLE.activeCap / 2)), BATTLE.minEnemies);
     g.allyCap = Math.max(1 + withMara, Math.min(1 + withMara + soldiers.length, BATTLE.activeCap - enemyShare));
@@ -150,13 +151,19 @@
       g.allies.push(u);
     }
     // The companion fights beside the hero (GDD §10), with the infantry's orders.
-    if (withMara) {
+    if (!g.practice && CL.companion.fit()) {
       const m = CL.companion.get();
       const u = makeUnit(anchor.x - 40, anchor.y + 34, 'ally', 'mercenary');
       Object.assign(u, CL.companion.combat(), { companion: m.id, frames: CL.companion.def(m.id).frames, role: 'infantry' });
       CL.units.resolveObstacles(u);
       g.allies.push(u);
     }
+    retinue.forEach((m, i) => {
+      const u = makeUnit(anchor.x - 40 - (i + 1) * 30, anchor.y + 34 + ((i % 2) * 2 - 1) * 26, 'ally', 'mercenary');
+      Object.assign(u, CL.retinue.combat(m), { companion: m.id, frames: CL.retinue.def(m.id).frames, role: 'infantry' });
+      CL.units.resolveObstacles(u);
+      g.allies.push(u);
+    });
     for (const a of g.allies) {
       a.holdX = a.x;
       a.holdY = a.y;

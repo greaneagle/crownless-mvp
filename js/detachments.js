@@ -55,9 +55,24 @@
   /** Soldiers away on detachments now (for the party cap: they are still the company's). @param {Campaign} c */
   const away = (c) => active(c).reduce((n, d) => n + d.soldiers.length, 0);
 
+  /** The companion leading it (Mara, or one of the retinue, P7-06), or null. @param {Campaign} c */
+  function memberOf(c, cap) {
+    if (cap?.kind !== 'companion') return null;
+    if (c.companion && c.companion.id === cap.id) return c.companion;
+    return CL.retinue?.find(c, cap.id) || null;
+  }
+
+  /** Its companion captain is hurt (beaten, or the patrol lost). */
+  function woundCaptain(c, d) {
+    const m = memberOf(c, d.captain);
+    if (!m) return;
+    if (m === c.companion) CL.companion.wound(c, 'down');
+    else CL.retinue.wound(c, m);
+  }
+
   /** The captain's name. */
   function captainName(_c, d) {
-    if (d.captain.kind === 'companion') return CL.companion.def(d.captain.id)?.name || 'the companion';
+    if (d.captain.kind === 'companion') return CL.content.table('companions')[d.captain.id]?.name || 'the companion';
     return d.soldiers.find((s) => s.id === d.captain.id)?.name || d.captainName || 'its sergeant';
   }
 
@@ -81,6 +96,7 @@
       .map((s) => ({ kind: 'soldier', id: s.id, name: s.name }));
     const m = c.companion;
     if (m && CL.companion.fit(c) && !m.detached) out.unshift({ kind: 'companion', id: m.id, name: CL.companion.def(m.id).name });
+    for (const r of CL.retinue?.fighters(c) || []) out.push({ kind: 'companion', id: r.id, name: CL.retinue.name(r) }); // the other companions (P7-06)
     return out;
   }
 
@@ -146,7 +162,8 @@
       log: [],
       tally: { battles: 0, won: 0, lost: 0, kills: 0, fallen: [], wounded: 0, spoils: 0, deserted: 0 },
     };
-    if (cap.kind === 'companion') c.companion.detached = id;
+    const member = memberOf(c, cap);
+    if (member) member.detached = id;
     list(c).push(d);
     const p = /** @type {any} */ ({ id: c.nextPartyId++, template: TEMPLATE, x: c.world.x, y: c.world.y, troops: troopsOf(d), tx: null, ty: null, ignoreUntil: 0, alerted: false, detachment: id });
     c.parties.push(p);
@@ -169,7 +186,9 @@
   /** Its strength, the way auto-resolve counts a company (in ranks), with the companion if she leads it. */
   function power(c, d) {
     let p = fit(d).reduce((n, s) => n + tierPower(s) * A().COMPANY_FACTOR, 0);
-    if (d.captain.kind === 'companion' && c.companion?.woundedUntil === null) p += CL.companion.power({ ...c, companion: { ...c.companion, detached: null, away: false } }) || 0;
+    const m = memberOf(c, d.captain);
+    if (m && m === c.companion && m.woundedUntil === null) p += CL.companion.power({ ...c, companion: { ...c.companion, detached: null, away: false } }) || 0;
+    else if (m && m.woundedUntil === null) p += CL.retinue.powerOf(m);
     return p;
   }
 
@@ -290,7 +309,7 @@
           cap.woundedUntil = day + CL.save.WOUND_DAYS;
           cap.record.wounds++;
         }
-      } else if (c.companion) CL.companion.wound(c, 'down');
+      } else woundCaptain(c, d);
       d.status = 'returning';
       say(c, d, `beaten by ${foe}${near} (${losses}). Coming back.`);
     }
@@ -308,9 +327,10 @@
     CL.accounts.transfer(c, ACCOUNT, CL.accounts.WORLD, d.purse, 'lost with a patrol');
     d.purse = 0;
     d.food = 0;
-    if (d.captain.kind === 'companion' && c.companion) {
-      delete c.companion.detached; // she makes her way back alone
-      CL.companion.wound(c, 'down');
+    const m = memberOf(c, d.captain);
+    if (m) {
+      delete m.detached; // they make their way back alone
+      woundCaptain(c, d);
     }
     finish(c, d, 'lost');
     CL.ui.message(`${d.captainName}’s patrol was wiped out. ${d.tally.fallen.length} fell.`);
@@ -337,7 +357,8 @@
     c.roster.sort((a, b) => a.id - b.id);
     if (d.purse > 0) CL.accounts.transfer(c, ACCOUNT, 'chest', d.purse, `back from ${d.captainName}’s patrol`);
     c.food += d.food;
-    if (d.captain.kind === 'companion' && c.companion?.detached === d.id) delete c.companion.detached;
+    const m = memberOf(c, d.captain);
+    if (m?.detached === d.id) delete m.detached;
     const t = d.tally;
     const days = Math.max(0, c.day - d.since);
     const report = `${d.captainName}’s patrol is back after ${days.toFixed(1)} days: ${t.won} won, ${t.lost} lost, ${t.kills} enemies beaten, ${t.fallen.length} fell${t.fallen.length ? ` (${t.fallen.join(', ')})` : ''}, ${t.wounded} wounded${t.deserted ? `, ${t.deserted} deserted` : ''}; ${d.purse} crowns and ${d.food} rations returned${t.spoils ? `, ${t.spoils} in spoils` : ''}.`;
@@ -433,6 +454,15 @@
     return true;
   }
 
+  /** A companion of the retinue leaves the company while leading a patrol: it heads home without them. @param {Campaign} c */
+  function loseCaptain(c, id, name) {
+    const d = find(c, id);
+    if (!d || d.status === 'back') return false;
+    d.captain = { kind: 'none', id: null };
+    turnBack(c, d, `${name} has left the company`);
+    return true;
+  }
+
   // ---- Saves ----
 
   /**
@@ -462,7 +492,8 @@
         avoidStronger: o.avoidStronger !== false,
         autonomy: o.autonomy === 'exact' ? 'exact' : 'judgement',
       };
-      const cap = x.captain?.kind === 'companion' && s.companion && x.captain.id === s.companion.id ? { kind: 'companion', id: s.companion.id } : x.captain?.kind === 'soldier' && soldiers.some((y) => y.id === x.captain.id) ? { kind: 'soldier', id: x.captain.id } : { kind: 'none', id: null };
+      const leader = x.captain?.kind === 'companion' && status !== 'back' ? memberOf(s, x.captain) : null;
+      const cap = leader && !leader.detached ? { kind: 'companion', id: leader.id } : x.captain?.kind === 'companion' && status === 'back' && s.companion && x.captain.id === s.companion.id ? { kind: 'companion', id: s.companion.id } : x.captain?.kind === 'soldier' && soldiers.some((y) => y.id === x.captain.id) ? { kind: 'soldier', id: x.captain.id } : { kind: 'none', id: null };
       const t = x.tally || {};
       s.detachments.push({
         id: x.id,
@@ -492,7 +523,7 @@
         ...(typeof x.report === 'string' ? { report: text(x.report, 400) } : {}),
         ...(x.ended && Number.isFinite(x.ended.day) ? { ended: { day: x.ended.day, how: x.ended.how === 'lost' ? 'lost' : 'merged' } } : {}),
       });
-      if (cap.kind === 'companion' && status !== 'back') s.companion.detached = x.id;
+      if (leader && cap.kind === 'companion') leader.detached = x.id;
     }
   }
 
@@ -517,5 +548,5 @@
     if (!held) delete s.accounts.budgets.detachments;
   }
 
-  CL.detachments = { TEMPLATE, ACCOUNT, CAPTAIN, HUNT_RADIUS, JUDGEMENT, COURIER_SPEED, MEET, DEFAULTS, LIMITS, RETREATS, list, active, find, partyOf, away, captainName, captains, needs, send, troopsOf, power, chooseTarget, fight, merge, step, canMeet, recall, daily, payday, callBackCompanion, sanitize, relink };
+  CL.detachments = { TEMPLATE, ACCOUNT, CAPTAIN, HUNT_RADIUS, JUDGEMENT, COURIER_SPEED, MEET, DEFAULTS, LIMITS, RETREATS, list, active, find, partyOf, away, captainName, captains, needs, send, troopsOf, power, chooseTarget, fight, merge, step, canMeet, recall, daily, payday, callBackCompanion, loseCaptain, memberOf, sanitize, relink };
 })(typeof window !== 'undefined' ? window : globalThis);

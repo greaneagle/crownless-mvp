@@ -50,6 +50,7 @@ Everything read back, from storage, a file or the pre-import slot, goes through 
    - **6 → 7 (1.14.0):** adds `chronicle: [{ day, kind: "begun" }]` (the chronicle begins on the day of the migration) and an empty roll of honour, `honour: { list: [], earlier: { fell: 0, deserted: 0, retired: 0 } }`. Nobody who left before was recorded. Nothing else changes.
    - **7 → 8 (1.15.0):** adds `accounts: { chest: 0, budgets: {} }`, `ledger: []` and `followers: { quartermaster: null }`. The old `gold` stays as it was: it is your purse. Nothing else changes.
    - **8 → 9 (1.16.0):** adds `followers.merchant: null`. Nothing else changes.
+   - **14 → 15 (2.17.0, P7-06):** adds `retinue: []`. Nothing else changes.
    - **13 → 14 (2.16.0, P7-05):** adds `detachments: []`. Nothing else changes.
    - **12 → 13 (2.15.0, P7-02):** adds `followers.scout: null`. Nothing else changes.
    - **11 → 12 (2.13.0, P7-03):** adds `followers.blacksmith: null`. Forged gear (`arming_sword+1`) and a soldier's `kit` need no step: nobody had them. Nothing else changes.
@@ -160,6 +161,7 @@ Each task that changes the save's shape adds the next schema version and its mig
 - ✅ v7 (1.14.0, V2-10): the company chronicle (`chronicle`) and the roll of honour (`honour`).
 - ✅ v9 (1.16.0, V2-12): the merchant follower (`followers.merchant`, with its cash in `accounts.budgets.merchant`).
 - ✅ v10 (2.9.0, W-07): relations between kingdoms (`relations`).
+- ✅ v15 (2.17.0, P7-06): companions of the wider world (`retinue`: `[{ id, woundedUntil, equipment, loyalty (0–100), unpaid, warned, warnedDay?, why, detached? }]`); unknown ids, duplicates, Mara and companions whose `<id>_gone` flag is set are dropped; a detachment captain of the retinue is relinked by its `detached`.
 - ✅ v14 (2.16.0, P7-05): detachments (`detachments`).
 - ✅ v13 (2.15.0, P7-02): the scout (`followers.scout`: `{ name, culture, origin, hired, unpaid (0–1), log }`).
 - (2.14.0, P7-04, no schema step) optional fields: `world.hidden` (the Hide stance, only while true), and a party's `lastSeen: { x, y, until }` (where it last saw the company, and until when it searches there) and `seenAt: { x, y, day }` (where the company last saw it); all repaired or dropped on load.

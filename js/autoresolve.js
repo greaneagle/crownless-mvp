@@ -107,6 +107,7 @@
     let p = heroPower(c);
     for (const s of c.roster) if (s.woundedUntil === null) p += TIER_POWER[CL.content.troop(s.troop).tier] * COMPANY_FACTOR * (CL.blacksmith?.powerFactor(s) ?? 1); // fine kit (P7-03)
     p += CL.companion?.power(c) || 0; // Mara, if she is fit
+    p += CL.retinue?.power(c) || 0; // the other companions with you (P7-06)
     return p * (1 + TACTICS * CL.character.skill('tactics', c));
   }
 
@@ -126,6 +127,8 @@
     for (const t of ['T1', 'T2', 'T3']) if (fit[t]) own.push(`${fit[t]} ${t} soldier${fit[t] === 1 ? '' : 's'} ${(fit[t] * TIER_POWER[t] * COMPANY_FACTOR).toFixed(1)}`);
     const mara = CL.companion?.power(c) || 0;
     if (mara) own.push(`your companion ${mara.toFixed(1)}`);
+    const others = CL.retinue?.power(c) || 0;
+    if (others) own.push(`your other companions ${others.toFixed(1)}`);
     const tactics = CL.character.skill('tactics', c);
     const pp = playerPower(c);
     const pe = troopsPower(enemyTroops);

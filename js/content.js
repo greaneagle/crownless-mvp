@@ -311,6 +311,7 @@
     for (const h of Object.values(C.town_hubs || {})) {
       for (const n of h.npcs || []) if (n.visible) CL.story?.checkCondition(n.visible, C, `town_hub ${h.id}: ${n.id}`, err);
     }
+    CL.retinue?.validate(C, err); // the other companions (P7-06)
     // Dialogue trees and quests: node links, conditions, effects and triggers (js/story.js).
     CL.story?.validate(C, err);
     CL.news?.validate(C, err);

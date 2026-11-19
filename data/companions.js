@@ -1,5 +1,5 @@
 /* Crownless content: companions. Plain classic script; no modules, no fetch.
- * GDD §10: one named companion, Mara, a former imperial scout. Recruitable after Q2 for a modest
+ * GDD §10: one named companion, Mara, a former imperial scout (the story's), and from P7-06 others (below). Recruitable after Q2 for a modest
  * cost or through a short trust dialogue. She fights autonomously, equips a weapon and armour, and
  * gives +1 Pathfinding while conscious. She takes one party slot and eats like anyone else.
  *   hp, armor, speed, reach   her own numbers in battle (armour adds to her body armour)
@@ -28,6 +28,75 @@
       startGear: { weapon: 'worn_sword', body: 'gambeson' },
       hireCost: 100,
       woundDays: 2
+    },
+    // P7-06: companions of the wider world (js/retinue.js). Each lives in one land, joins after a small
+    // errand of their own, rides with Mara or without her, can captain a patrol (P7-05), draws a weekly
+    // wage, and stays only while loyal. Loyalty (0–100, starting at `loyalty.start`) moves with pay,
+    // victories and defeats, and their motive: `likes` and `dislikes` name events (bandits_beaten,
+    // kingdom_attacked, toll_paid, caravan_saved, paid, unpaid) with how much each moves it.
+    // Placeholder characters (data only), like the kingdoms of W-05b.
+    sigrun: {
+      id: 'sigrun',
+      name: 'Sigrun Ashfoot',
+      title: 'huntress of the Hrothmark clans',
+      retinue: true,
+      home: 'hrothgard',
+      motive: 'Raiders burned her steading. She wants every band of them broken, and has no patience for paying them off.',
+      frames: [72, 73, 74, 75],
+      hp: 88,
+      armor: 2,
+      speed: 96,
+      reach: 52,
+      weaponFactor: 0.8,
+      unarmedDamage: 6,
+      skills: { tactics: 1 },
+      gearSlots: ['weapon', 'body'],
+      startGear: { weapon: 'hand_axe', body: 'leather_chest' },
+      wage: 8,
+      woundDays: 2,
+      loyalty: { start: 60, likes: { bandits_beaten: 4 }, dislikes: { toll_paid: -10 } }
+    },
+    iacopo: {
+      id: 'iacopo',
+      name: 'Iacopo Lanza',
+      title: 'disgraced crossbow captain of the League',
+      retinue: true,
+      home: 'vessara',
+      motive: 'He sold his sword to pay his debts and will sell it again to whoever pays on time. Coin keeps him; a missed wage loses him fast.',
+      frames: [85, 86, 87, 88],
+      hp: 76,
+      armor: 1,
+      speed: 98,
+      reach: 50,
+      weaponFactor: 0.8,
+      unarmedDamage: 6,
+      skills: { trade: 1 },
+      gearSlots: ['weapon', 'body'],
+      startGear: { weapon: 'arming_sword', body: 'gambeson' },
+      wage: 12,
+      woundDays: 2,
+      loyalty: { start: 55, likes: { paid: 3 }, dislikes: { unpaid: -15 } }
+    },
+    livia: {
+      id: 'livia',
+      name: 'Livia Corvo',
+      title: 'legion medic turned deserter',
+      retinue: true,
+      home: 'tessaro',
+      motive: 'She left the legion over what it did to ordinary people. She will follow a captain who protects the roads, never one who preys on them.',
+      frames: [96, 97, 98, 99],
+      hp: 80,
+      armor: 2,
+      speed: 96,
+      reach: 50,
+      weaponFactor: 0.7,
+      unarmedDamage: 6,
+      skills: { shield: 1 },
+      gearSlots: ['weapon', 'body'],
+      startGear: { weapon: 'worn_sword', body: 'leather_chest' },
+      wage: 8,
+      woundDays: 2,
+      loyalty: { start: 60, likes: { caravan_saved: 5, bandits_beaten: 1 }, dislikes: { kingdom_attacked: -15 } }
     }
   };
 })(typeof window !== 'undefined' ? window : globalThis);

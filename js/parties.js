@@ -612,6 +612,7 @@
         } else {
           CL.accounts.spend(c, n.cost, `toll to the ${e.name}`);
           leaveAlone(e, IGNORE_AFTER.toll);
+          CL.retinue?.onEvent(c, 'toll_paid'); // some companions mind this (P7-06)
         }
       },
     });

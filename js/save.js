@@ -26,7 +26,7 @@
   'use strict';
   const CL = root.Crownless;
 
-  const VERSION = 14;
+  const VERSION = 15;
   const KEY = 'crownless_save';
   const BACKUP_KEY = 'crownless_save_backup';
   const LEGACY_KEY = 'crownless_v03_party';
@@ -109,6 +109,7 @@
       followers: { quartermaster: null, merchant: null, surgeon: null, blacksmith: null, scout: null }, // camp followers (js/quartermaster.js, js/merchant.js, js/surgeon.js, js/blacksmith.js, js/scout.js)
       medicine: 0, // the surgeon's supply (P7-01)
       detachments: [], // parts of the company sent off under a captain (P7-05)
+      retinue: [], // companions of the wider world (P7-06)
     };
     CL.character.applyKit(c, background);
     CL.upkeep.stowFood(c);
@@ -192,6 +193,7 @@
     12: [...V3_FIELDS, ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object'], ['accounts', 'object'], ['ledger', 'array'], ['followers', 'object'], ['relations', 'object'], ['medicine', 'number']],
     13: [...V3_FIELDS, ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object'], ['accounts', 'object'], ['ledger', 'array'], ['followers', 'object'], ['relations', 'object'], ['medicine', 'number']],
     14: [...V3_FIELDS, ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object'], ['accounts', 'object'], ['ledger', 'array'], ['followers', 'object'], ['relations', 'object'], ['medicine', 'number'], ['detachments', 'array']],
+    15: [...V3_FIELDS, ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object'], ['accounts', 'object'], ['ledger', 'array'], ['followers', 'object'], ['relations', 'object'], ['medicine', 'number'], ['detachments', 'array'], ['retinue', 'array']],
   };
 
   /** @param {unknown} v @param {string} kind */
@@ -269,6 +271,8 @@
     12: (d) => ({ ...d, version: 13, followers: { ...(d.followers || {}), scout: null } }),
     // 13 → 14 (build 2.16.0, P7-05): no detachments yet.
     13: (d) => ({ ...d, version: 14, detachments: [] }),
+    // 14 → 15 (build 2.17.0, P7-06): no other companions yet.
+    14: (d) => ({ ...d, version: 15, retinue: [] }),
   };
 
   /**
@@ -334,6 +338,7 @@
     CL.surgeon.sanitize(s, d); // the surgeon and the medicine (P7-01)
     CL.blacksmith.sanitize(s, d); // the blacksmith, and fine kit within its cap (P7-03)
     CL.scout.sanitize(s, d); // the scout (P7-02)
+    CL.retinue.sanitize(s, d); // the other companions (P7-06), before the detachments some may lead
     // Detachments (P7-05): their soldiers (IDs unique across every party), then their map parties and
     // purses, once the companion, the parties and the accounts are in place.
     CL.detachments.sanitize(s, d, (e) => soldierOf(e, seen, s));

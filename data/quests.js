@@ -398,6 +398,52 @@
         { id: 'sq_lights_report', journal: 'Report to the Clerk of the Council in Merrow.' }
       ],
       rewards: { gold: 90, renown: 10, xp: 50, rep: { merrow: 10 } }
+    },
+
+    // ---- P7-06: companions of the wider world. Each joins after a small errand of their own, which
+    // shows what they care about (data/companions.js `motive`). Their trees are in data/dialogue.js.
+    sq_sigrun: {
+      id: 'sq_sigrun',
+      title: 'Sigrun’s Feud',
+      giver: 'sigrun',
+      side: true,
+      summary: 'Sigrun of Hrothgard wants the raiders of the Steading broken before she will ride with anyone.',
+      stages: [
+        {
+          id: 'sq_sigrun_fight',
+          journal: 'Break the raiders at the Raider Steading, in the hills of the north.',
+          band: { template: 'highland_raiders', tag: 'sq_sigrun_raiders', name: 'Steading Raiders', near: 'raider_steading', troops: { reaver: 3, looter: 3 }, camp: true, text: 'Smoke over the Steading, and the raiders who burned Sigrun’s hall drinking in front of it.' },
+          on: [{ event: 'battle', match: { win: true, tag: 'sq_sigrun_raiders' }, do: [{ stage: 'sq_sigrun_report' }, { note: 'The Steading raiders are broken.' }] }]
+        },
+        { id: 'sq_sigrun_report', journal: 'Tell Sigrun in Hrothgard the raiders are broken.' }
+      ],
+      rewards: { renown: 5, xp: 30 }
+    },
+    sq_iacopo: {
+      id: 'sq_iacopo',
+      title: 'Iacopo’s Debt',
+      giver: 'iacopo',
+      side: true,
+      summary: 'Iacopo, a League crossbow captain fallen on hard times, owes 120 crowns. Settle it and he is yours.',
+      stages: [{ id: 'sq_iacopo_pay', journal: 'Bring 120 crowns to Iacopo in Vessara to settle his debt.' }],
+      rewards: { xp: 20 }
+    },
+    sq_livia: {
+      id: 'sq_livia',
+      title: 'Livia’s Deserters',
+      giver: 'livia',
+      side: true,
+      summary: 'Livia, once a medic of the Aurelian legion, wants the deserters who robbed her village dealt with.',
+      stages: [
+        {
+          id: 'sq_livia_fight',
+          journal: 'Break the deserters at the Deserter Camp, in the east.',
+          band: { template: 'eastern_deserters', tag: 'sq_livia_deserters', name: 'Deserters', near: 'deserter_camp', troops: { mercenary: 2, looter: 3 }, camp: true, text: 'Stolen grain sacks piled by the fire, and men in torn Aurelian colours who reach for their swords.' },
+          on: [{ event: 'battle', match: { win: true, tag: 'sq_livia_deserters' }, do: [{ stage: 'sq_livia_report' }, { note: 'The deserters are broken.' }] }]
+        },
+        { id: 'sq_livia_report', journal: 'Tell Livia in Tessaro the deserters are broken.' }
+      ],
+      rewards: { renown: 5, xp: 30 }
     }
   };
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -37,7 +37,7 @@ const stage = (CL, c, id) => CL.story.state(c).quests[id]?.stage;
 test('every errand is optional (side: true), offered by someone you know, and can be turned down', () => {
   const { CL } = loadGame();
   const errands = Object.values(CL.content.table('quests')).filter((q) => q.side);
-  assert.deepEqual(errands.map((q) => q.id).sort(), ['sq_border', 'sq_homecoming', 'sq_larders', 'sq_lights', 'sq_pass', 'sq_planned', 'sq_timber', 'sq_venture']);
+  assert.deepEqual(errands.map((q) => q.id).sort(), ['sq_border', 'sq_homecoming', 'sq_iacopo', 'sq_larders', 'sq_lights', 'sq_livia', 'sq_pass', 'sq_planned', 'sq_sigrun', 'sq_timber', 'sq_venture']);
   for (const q of errands) {
     const t = CL.content.table('dialogue')[q.giver];
     const offer = Object.entries(t.nodes).find(([id, n]) => id.startsWith('sq_') && (n.options || []).some((o) => (o.do || []).some((e) => e.start === q.id)));
@@ -171,7 +171,7 @@ test('the new lands’ errands: each giver lives in a new capital, and only ther
     assert.equal(CL.content.get('quests', q).giver, giver);
     const s = CL.content.get('settlements', place);
     assert.equal(CL.world.regionAt(s.mapX, s.mapY).id, region, `${q} is a ${region} errand`);
-    assert.deepEqual(Array.from(CL.story.peopleAt(place), (t) => t.id), [giver]);
+    assert.deepEqual(Array.from(CL.story.peopleAt(place), (t) => t.id).filter((id) => !CL.retinue.def(id)), [giver]); // and a companion of the land (P7-06)
   }
 });
 

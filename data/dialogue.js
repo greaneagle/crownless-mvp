@@ -683,6 +683,109 @@
           options: [{ text: 'I will.', do: [{ complete: 'sq_lights' }] }]
         }
       }
+    },
+    // ---- P7-06: companions of the wider world (data/companions.js, js/retinue.js) ----
+    sigrun: {
+      id: 'sigrun',
+      speaker: 'Sigrun',
+      place: 'hrothgard',
+      visible: { not: { flag: 'sigrun_joined' } },
+      start: 'talk',
+      nodes: {
+        talk: {
+          cycle: true,
+          text: ['Sigrun sharpens an axe by the hearth and does not look up. Raiders burned my hall at the Steading. I ride with no one until they are broken.', 'The clans fight in a wedge. You would do well to learn it.'],
+          options: [
+            { text: 'Will you ride with my company?', if: { quest: 'sq_sigrun', is: 'unstarted' }, next: 'sq_sigrun_offer' },
+            { text: 'The Steading raiders are broken.', if: { quest: 'sq_sigrun', stage: 'sq_sigrun_report' }, next: 'sq_sigrun_done' }
+          ]
+        },
+        sq_sigrun_offer: {
+          services: false,
+          text: ['Break the raiders at the Steading, north in the hills, and I will ride with you. Not for coin alone: I want to see them broken.'],
+          options: [
+            { text: 'I’ll break them.', do: [{ start: 'sq_sigrun' }] },
+            { text: 'Not my feud.' }
+          ]
+        },
+        sq_sigrun_done: {
+          services: false,
+          text: ['Then my feud is done, and my axe is yours. Eight crowns a week, and never pay a Reaver to pass: I would sooner fight.'],
+          options: [
+            { text: 'Ride with us, Sigrun.', if: [{'room': 1}], do: [{'complete': 'sq_sigrun'}, {'retinue': 'sigrun'}] },
+            { text: 'My company is full. Wait for me.', if: { not: { room: 1 } } },
+            { text: 'Not yet.' }
+          ]
+        }
+      }
+    },
+    iacopo: {
+      id: 'iacopo',
+      speaker: 'Iacopo',
+      place: 'vessara',
+      visible: { not: { flag: 'iacopo_joined' } },
+      start: 'talk',
+      nodes: {
+        talk: {
+          cycle: true,
+          text: ['A thin man with ink on his fingers counts coins that are not his. Iacopo, once a crossbow captain of the League. Now I owe a moneylender 120 crowns.', 'My bolts go where I point them, and I know the price of everything. Pay me on time and I will never leave you.'],
+          options: [
+            { text: 'Would you keep my company’s books?', if: { quest: 'sq_iacopo', is: 'unstarted' }, next: 'sq_iacopo_offer' },
+            { text: 'Here are your 120 crowns.', if: { quest: 'sq_iacopo', stage: 'sq_iacopo_pay' }, next: 'sq_iacopo_done' }
+          ]
+        },
+        sq_iacopo_offer: {
+          services: false,
+          text: ['Settle my debt, 120 crowns, and I am yours. Twelve a week after that, and on time: a man who is not paid does not stay.'],
+          options: [
+            { text: 'I’ll settle it.', do: [{ start: 'sq_iacopo' }] },
+            { text: 'Too dear.' }
+          ]
+        },
+        sq_iacopo_done: {
+          services: false,
+          text: ['Paid, and logged. Iacopo of Vessara is at your service.'],
+          options: [
+            { text: 'Welcome to the company.', if: [{'room': 1}, {'gold': 120}], do: [{'gold': -120}, {'complete': 'sq_iacopo'}, {'retinue': 'iacopo'}] },
+            { text: 'My company is full. Wait for me.', if: { not: { room: 1 } } },
+            { text: 'Not yet.' }
+          ]
+        }
+      }
+    },
+    livia: {
+      id: 'livia',
+      speaker: 'Livia',
+      place: 'tessaro',
+      visible: { not: { flag: 'livia_joined' } },
+      start: 'talk',
+      nodes: {
+        talk: {
+          cycle: true,
+          text: ['A woman with an Aurelian shield on her back binds a farmer’s hand. Livia. Six years I patched up the legion’s wounded, until I saw what it did to people like these.', 'Deserters from my own legion robbed this village. I want them answered for.'],
+          options: [
+            { text: 'Will you join my company?', if: { quest: 'sq_livia', is: 'unstarted' }, next: 'sq_livia_offer' },
+            { text: 'The deserters are broken.', if: { quest: 'sq_livia', stage: 'sq_livia_report' }, next: 'sq_livia_done' }
+          ]
+        },
+        sq_livia_offer: {
+          services: false,
+          text: ['Break the deserters at their camp in the east. And know this: I will not ride against the people of any kingdom who did us no harm.'],
+          options: [
+            { text: 'I’ll deal with them.', do: [{ start: 'sq_livia' }] },
+            { text: 'Not now.' }
+          ]
+        },
+        sq_livia_done: {
+          services: false,
+          text: ['Then the village can sleep. My shield is yours: eight crowns a week, and keep your hands off honest caravans.'],
+          options: [
+            { text: 'Join us, Livia.', if: [{'room': 1}], do: [{'complete': 'sq_livia'}, {'retinue': 'livia'}] },
+            { text: 'My company is full. Wait for me.', if: { not: { room: 1 } } },
+            { text: 'Not yet.' }
+          ]
+        }
+      }
     }
   };
 })(typeof window !== 'undefined' ? window : globalThis);

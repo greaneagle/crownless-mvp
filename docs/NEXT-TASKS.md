@@ -1028,7 +1028,7 @@ _Written 2026-11-18 at build 2.0.0; **reviewed and corrected the same day agains
 **Now.** One roster; Mara with the story's `send` and `recall`; world parties from templates.
 
 **Build.**
-- **Captains:** appoint Mara, a companion (P7-06), or a veteran soldier (tier 3, at least 10 battles).
+- **Captains:** appoint Mara, a companion (P7-06, ✅ 2.17.0), or a veteran soldier (tier 3, at least 10 battles).
 - **Detachments:** a separate party with chosen soldiers (each soldier in exactly one party).
 - **Order package** (design §11.3):
   - objective: patrol a road, hunt bands in an area, escort a caravan, garrison a village (later);
@@ -1055,9 +1055,18 @@ _Written 2026-11-18 at build 2.0.0; **reviewed and corrected the same day agains
 
 **Acceptance.** SC-17 and SC-18 pass; a bot sends a patrol that hunts for a week and returns with consistent records.
 
-### P7-06 · More companions (M) — Specified (needs P7-05)
+### P7-06 · More companions (M) — ✅ Done in 2.17.0
 
-**Build.**
+**Done (2.17.0, 2026-11-19).** `js/retinue.js`, three entries with `retinue: true` in `data/companions.js`, their errands (`data/quests.js`) and trees (`data/dialogue.js`):
+- **Who:** Sigrun (Hrothgard, Hrothmark; +1 Tactics, 8 a week; likes bands broken, hates tolls paid to Reavers), Iacopo (Vessara, the League; +1 Trade, 12 a week; likes a wage on time, hates a missed one) and Livia (Tessaro, Aurelian; +1 Shield, 8 a week; likes caravans brought through and bands broken, hates attacks on a kingdom's patrols or caravans). Mara stays the story's companion (`c.companion`); these are `c.retinue`.
+- **Joining:** each is met in their home and joins after a small errand: Sigrun's raiders at the Raider Steading, Iacopo's 120-crown debt, Livia's deserters at the Deserter Camp. The join option needs room in the company (`{ room: 1 }`); a full company is told to come back. The story effect `{ retinue: id }` joins them.
+- **With the company:** a party slot (all of them, away or not), food, a weekly wage on payday (and in the quartermaster's wages due), a unit beside the hero in battle (wounded when they fall, never killed; `woundDays` 2), their skill while fit, and their strength in auto-resolve.
+- **Captains:** fit retinue companions are offered as detachment captains (`kind: 'companion'`, their id); they are `detached` while they lead; beaten or lost, they come back wounded; leaving the company while out, the patrol turns home without them (`CL.detachments.loseCaptain`).
+- **Loyalty** (0–100, from `loyalty.start`): +2 paid, −12 unpaid, +1 a victory, −3 a defeat, plus their own `likes` / `dislikes` (bands beaten, a kingdom attacked, a toll paid, a caravan saved, paid, unpaid). Below 35 they warn you and say why (once a day); below 15, and only once warned on an earlier day, they leave for good, saying why. Shown on the Party sheet with their mood and what they care about.
+- **Save v15:** `retinue: [{ id, woundedUntil, equipment, loyalty, unpaid, warned, warnedDay?, why, detached? }]`; the gone (`<id>_gone` flag) never come back.
+- **Tests:** `tests/retinue.test.js` (join, lead, leave, loyalty rules, battle wounds, saves) and `tests/browser/retinue.spec.js`.
+
+**Build** (as specified).
 - Two or three companions in different regions, each with a background, a motive and a small recruitment quest.
 - Each can captain.
 - **Loyalty** from pay, victories, and motive met or offended: warnings, then leaving, never without warning.

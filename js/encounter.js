@@ -72,6 +72,10 @@
       }
       c.nextResultId = resultId + 1;
       CL.companion.afterBattle(c, { win: o.win, down: Boolean(x.companionDown) });
+      // The other companions (P7-06): wounds, and how the fight sits with them.
+      const foeParty = (x.partyId ?? g.partyId) != null ? CL.parties.find(c, x.partyId ?? g.partyId) : null;
+      const foeKind = foeParty ? CL.content.get('party_templates', foeParty.template).kind : (x.siteId ?? g.siteId) ? 'bandit' : null;
+      CL.retinue.afterBattle(c, { win: o.win, down: x.companionsDown || [], foe: foeKind, attacked: Boolean(foeParty && foeParty.chasing !== 'player') });
       CL.world.onBattleResolved(o.win, x.siteId ?? g.siteId);
       CL.parties.onBattleResolved(o.win, x.partyId ?? g.partyId, x.fallenEnemies || []);
       CL.reinforce?.apply(c, o.win, x.reinforcements || []); // parties that rode in (V2-09)

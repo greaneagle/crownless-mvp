@@ -1128,12 +1128,33 @@
     const c = CL.campaign;
     const M = CL.companion;
     const m = M.get(c);
-    $('#companionHead').classList.toggle('hidden', !m);
-    $('#sheetCompanion').classList.toggle('hidden', !m);
-    if (!m) return;
+    const others = CL.retinue.list(c);
+    $('#companionHead').classList.toggle('hidden', !m && !others.length);
+    $('#sheetCompanion').classList.toggle('hidden', !m && !others.length);
+    const el = (tag, text) => Object.assign(document.createElement(tag), { textContent: text || '' });
+    const retinueRows = others.map((r) => {
+      const R = CL.retinue;
+      const rd = R.def(r.id);
+      const rs = R.combat(r);
+      const where = r.detached ? 'leading a patrol' : r.woundedUntil !== null ? `wounded — back in ${Math.max(0, r.woundedUntil - c.day).toFixed(1)} days` : 'fit to fight';
+      const lend = Object.entries(rd.skills || {})
+        .map(([k, n]) => `+${n} ${CL.content.get('skills', k).name}`)
+        .join(', ');
+      const card = el('div');
+      card.className = 'retinueCard';
+      card.dataset.companion = r.id;
+      card.append(
+        el('p', `${rd.name}, ${rd.title} · ${R.mood(r)} (${r.loyalty}) · ${where} · HP ${rs.hp} · Damage ${Math.round(rs.damage * 10) / 10} · Armor ${rs.armor}${lend ? ` · ${lend} while fit` : ''} · ${rd.wage} crowns a week`),
+        el('p', `Cares about: ${rd.motive}${r.loyalty < R.WARN_BELOW && r.why ? `. Unhappy: ${R.REASONS[r.why] || r.why}` : ''}`),
+      );
+      return card;
+    });
+    if (!m) {
+      $('#sheetCompanion').replaceChildren(...retinueRows);
+      return;
+    }
     const d = M.def(m.id);
     const s = M.combat(c);
-    const el = (tag, text) => Object.assign(document.createElement(tag), { textContent: text || '' });
     const btn = (label, onClick) => {
       const b = Object.assign(document.createElement('button'), { type: 'button', textContent: label });
       b.onclick = () => {
@@ -1160,7 +1181,7 @@
       rows.push(row);
     }
     rows.push(btn(`Talk to ${d.name}`, () => talkTo(m.id)));
-    $('#sheetCompanion').replaceChildren(...rows);
+    $('#sheetCompanion').replaceChildren(...rows, ...retinueRows);
   }
 
   function renderSheet() {

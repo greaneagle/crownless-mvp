@@ -219,7 +219,10 @@
     if (good && c.markets[k.to]?.[good] != null) {
       c.markets[k.to][good] = Math.max(T.SCARCITY.min, Math.round((c.markets[k.to][good] - CL.parties.CARAVAN_EFFECT) * 1000) / 1000);
     }
-    if (kind === 'escort') CL.news.record(c, 'escort_arrived', { dest: k.to, good, faction: CL.realm.owner(k.giver, c) });
+    if (kind === 'escort') {
+      CL.news.record(c, 'escort_arrived', { dest: k.to, good, faction: CL.realm.owner(k.giver, c) });
+      CL.retinue?.onEvent(c, 'caravan_saved'); // some companions like this (P7-06)
+    }
     else if (good) CL.news.record(c, 'delivered', { dest: k.to, good });
   }
 

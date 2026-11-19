@@ -60,7 +60,7 @@
   const MAX_FLAGS = 200;
   const MAX_NOTES = 20;
   const COND_KEYS = ['flag', 'not', 'all', 'any', 'quest', 'gold', 'renown', 'level', 'soldiers', 'rep', 'standing', 'skill', 'attribute', 'background', 'has', 'owner', 'at', 'companion', 'room', 'veteran', 'follower'];
-  const EFFECT_KEYS = ['set', 'clear', 'add', 'gold', 'renown', 'xp', 'food', 'rep', 'give', 'take', 'recruit', 'start', 'stage', 'complete', 'fail', 'owner', 'message', 'note', 'companion', 'part', 'send', 'recall', 'ending', 'honourVeteran'];
+  const EFFECT_KEYS = ['set', 'clear', 'add', 'gold', 'renown', 'xp', 'food', 'rep', 'give', 'take', 'recruit', 'start', 'stage', 'complete', 'fail', 'owner', 'message', 'note', 'companion', 'part', 'send', 'recall', 'ending', 'honourVeteran', 'retinue'];
 
   const camp = () => CL.campaign;
   const quest = (id) => CL.content.table('quests')[id] || null;
@@ -173,6 +173,7 @@
     else if ('note' in e) note(c, e.quest || ctx.quest, format(e.note, c));
     else if ('companion' in e) CL.companion.join(c, e.companion);
     else if ('part' in e) CL.companion.part(c, e.part, e.reason || 'parted');
+    else if ('retinue' in e) CL.retinue.join(c, e.retinue); // a companion of the wider world joins (P7-06)
     else if ('send' in e) {
       CL.detachments?.callBackCompanion(c); // away leading a patrol: called back first (P7-05)
       CL.companion.send(c, e.send);
@@ -522,6 +523,7 @@
       }
       if (k === 'owner' && (C.settlements?.[e.owner]?.type !== 'fort' || !C.factions?.[e.to])) err(`${where}: bad owner effect`);
       if (['companion', 'part', 'send', 'recall'].includes(k) && !C.companions?.[e[k]]) err(`${where}: unknown companion ${e[k]}`);
+      if (k === 'retinue' && !C.companions?.[e.retinue]?.retinue) err(`${where}: unknown retinue companion ${e.retinue}`);
       if (k === 'ending' && !C.quests?.[e.quest || questId]?.endings?.[e.ending]) err(`${where}: unknown ending ${e.ending}`);
       if (k === 'honourVeteran' && !Number.isFinite(e.honourVeteran)) err(`${where}: honourVeteran needs a number`);
       if (e.if) checkCond(e.if, C, where, err);

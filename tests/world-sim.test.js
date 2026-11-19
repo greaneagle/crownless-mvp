@@ -231,7 +231,7 @@ test('relations are saved; junk is repaired; a v9 save of the bigger world migra
   const old = JSON.stringify(file.campaign);
   const s2 = memoryStorage({ crownless_save: old });
   const g = loadGame({ storage: s2, party: false }).CL;
-  assert.equal(g.campaign.version, 14); // on through v10 (relations), v11–v13 (followers) and v14 (detachments)
+  assert.equal(g.campaign.version, 15); // on through v10 (relations), v11–v13 (followers), v14 (detachments) and v15 (companions)
   assert.equal(s2.data[g.save.preMigrationKey(9)], old);
   assert.equal(g.realm.relation(g.campaign, 'valedorn', 'aurelian'), 'tension');
   assert.equal(g.realm.relation(g.campaign, 'hrothmark', 'merrow'), 'peace');

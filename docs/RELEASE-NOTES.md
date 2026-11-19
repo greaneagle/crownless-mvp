@@ -1,5 +1,22 @@
 # Crownless — Release Notes
 
+## v2.17.0 — More companions (P7-06) · 2026-11-19
+
+### New
+- **Three companions beyond the March,** each in their own land, each joining after a small errand of their own:
+  - **Sigrun** in Hrothgard: a huntress of the clans who wants the raiders of the Steading broken (+1 Tactics);
+  - **Iacopo** in Vessara: a League crossbow captain with a 120-crown debt (+1 Trade);
+  - **Livia** in Tessaro: a legion medic who wants the deserters who robbed her village dealt with (+1 Shield).
+- **With you,** they take a party slot, eat, draw a weekly wage and fight beside you. When they fall they are wounded, never killed. They lend their skill while fit and can captain a patrol.
+- **Loyalty,** shown on the Party sheet with what each one cares about:
+  - wages paid and victories raise it; missed wages and defeats lower it;
+  - so does what you do: Sigrun hates paying Reavers to pass, Iacopo hates a late wage, and Livia hates attacks on a kingdom's patrols and caravans.
+- **Leaving:** unhappy, they warn you and say why. If it goes on, they leave for good, but never without warning.
+
+### Under the hood
+- Saves are now schema v15 (the companions). Older saves update on load, and a copy is kept as it was.
+- 648 fast and 8 slow Node tests, 137 browser tests (9 more apply to one device only and are skipped on the other).
+
 ## v2.16.0 — Detachments (P7-05) · 2026-11-19
 
 ### New

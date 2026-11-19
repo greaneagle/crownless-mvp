@@ -214,6 +214,8 @@ declare global {
     followers: { quartermaster: Quartermaster | null; merchant?: Merchant | null; surgeon?: any; blacksmith?: any; scout?: any };
     /** v14 (P7-05): detachments sent off under a captain (js/detachments.js), and the last few back. */
     detachments: any[];
+    /** v15 (P7-06): companions of the wider world (js/retinue.js). */
+    retinue: { id: ContentId; woundedUntil: number | null; equipment: Record<string, string | null>; loyalty: number; unpaid: number; warned: boolean; why: string | null; warnedDay?: number; detached?: number }[];
     /** v11 (P7-01): medicine in the company's stores (0–99). */
     medicine: number;
   }
@@ -559,6 +561,8 @@ declare global {
     /** battle and auto: the outcome for party.applyBattleResult. */
     outcome?: BattleOutcome;
     companionDown?: boolean;
+    /** P7-06: the retinue companions who went down. */
+    companionsDown?: string[];
     fallenEnemies?: ContentId[];
     /** battle and auto: the enemy troops met (they become 'seen' on the troop tree). */
     enemyTroops?: ContentId[];
