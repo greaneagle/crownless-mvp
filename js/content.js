@@ -72,6 +72,21 @@
     for (const [id, r] of Object.entries(m.regions || {})) {
       if (!r.name || !inside(r.x, r.y) || !inside(r.x + r.w, r.y + r.h)) err(`${w}: region ${id} needs a name and to lie inside the map`);
     }
+    // Terrain (W-05a): every kind of ground has a speed above 0 (D-W4: all of it is passable), the
+    // features lie inside the map, and every kind's battle map exists.
+    const KINDS = ['road', 'grass', 'forest', 'hills', 'mountain', 'marsh', 'river', 'ford', 'bridge'];
+    for (const k of KINDS) if (!(m.terrain?.[k] > 0)) err(`${w}: terrain ${k} needs a speed above 0`);
+    for (const a of m.areas || []) {
+      if (!['hills', 'mountain', 'marsh'].includes(a.kind)) err(`${w}: unknown area kind ${a.kind}`);
+      if (!(Array.isArray(a.poly) && a.poly.length >= 3 && a.poly.every(([x, y]) => inside(x, y)))) err(`${w}: a ${a.kind} area needs 3+ points inside the map`);
+    }
+    for (const wt of m.waters || []) {
+      if (!(Array.isArray(wt.line) && wt.line.length >= 2 && wt.line.every(([x, y]) => inside(x, y)) && wt.width > 0)) err(`${w}: a water needs a line inside the map and a width`);
+      for (const c of wt.crossings || []) if (!['ford', 'bridge'].includes(c.kind) || !inside(c.x, c.y) || !(c.r > 0)) err(`${w}: bad crossing ${JSON.stringify(c)}`);
+    }
+    for (const side of m.coast || []) if (!['north', 'south', 'east', 'west'].includes(side)) err(`${w}: unknown coast ${side}`);
+    for (const k of ['open', 'fort']) if (!m.battleMaps?.[k]) err(`${w}: battleMaps needs ${k}`);
+    for (const [k, id] of Object.entries(m.battleMaps || {})) if (!C.battle_maps?.[id]) err(`${w}: battle map for ${k} is unknown: ${id}`);
     if (m.view && m.view.zoom !== undefined && !(m.view.zoom > 0 && m.view.zoom <= 2.4)) err(`${w}: view.zoom must be in (0, 2.4]`);
     for (const t of Object.values(C.party_templates || {})) {
       if (!ours.has(t.faction)) err(`${w}: party ${t.id} of ${t.faction}, not one of this world's factions`);
@@ -143,7 +158,7 @@
     for (const m of Object.values(C.battle_maps || {})) {
       if (!m.generate) continue;
       const gen = m.generate;
-      if (!['forest', 'field'].includes(gen.kind)) err(`battle_map ${m.id}: unknown generator ${gen.kind}`);
+      if (!['forest', 'field', 'ford'].includes(gen.kind)) err(`battle_map ${m.id}: unknown generator ${gen.kind}`);
       if (!(Number.isInteger(gen.scale) && gen.scale >= 1 && gen.scale <= 4)) err(`battle_map ${m.id}: scale must be 1–4 screens`);
       if (!Number.isInteger(gen.seed)) err(`battle_map ${m.id}: needs a whole-number seed`);
       if (m.small != null && (!C.battle_maps[m.small] || C.battle_maps[m.small].generate)) err(`battle_map ${m.id}: small must be a one-screen map`);

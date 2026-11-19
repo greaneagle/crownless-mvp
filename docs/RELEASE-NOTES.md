@@ -1,5 +1,17 @@
 # Crownless — Release Notes
 
+## v2.6.0 — Terrain and the river ford (W-05a) · 2026-11-18
+
+The Border March plays as before; this prepares the bigger region's ground.
+
+### New
+- **A new battlefield, the River Ford:** two armies meet across a shallow river, and everyone wading through it moves at half speed. Try it from Debug → Ford battle 30; in the bigger region it will be where fights at river crossings happen.
+
+### Under the hood
+- New kinds of ground for the bigger region, each with its travel speed and its battlefield: hills, mountains (crossed fastest by a road through a pass), marsh, rivers (slow to wade, quick at fords and bridges) and the sea along a coast. Everything stays passable, just slower.
+- Which battlefield a fight uses now comes from the world's data.
+- 567 fast and 5 slow Node tests, 125 browser tests (9 more apply to one device only and are skipped on the other).
+
 ## v2.5.0 — A data-driven world (W-04) · 2026-11-18
 
 Nothing changes in play: the Border March plays exactly as before. This prepares a bigger world.

@@ -194,6 +194,31 @@
     log('map drawing test started', {});
   }
 
+  /**
+   * W-05a: a practice battle of `total` units at the river ford (always the large map, whatever the
+   * Battlefield setting): the armies meet in the shallows, which slow everyone. Reports like the camera
+   * test; nothing in the campaign changes.
+   */
+  function fordTest(total) {
+    const allies = Math.floor(total / 2) - 1;
+    const mix = ['footman', 'hunter', 'footman', 'rider', 'levy', 'longbowman'];
+    const emix = ['reaver', 'looter', 'spearman', 'skirmisher'];
+    const wave = {};
+    for (let i = 0; i < total - allies - 1; i++) wave[emix[i % emix.length]] = (wave[emix[i % emix.length]] || 0) + 1;
+    CL.game.siteId = null;
+    CL.game.partyId = null;
+    CL.combat.startBattle({
+      id: `ford_${total}`,
+      name: `Ford test (${total})`,
+      mapDef: CL.arena.build(CL.content.get('battle_maps', 'river_ford')),
+      waves: [wave],
+      practice: Array.from({ length: allies }, (_, i) => mix[i % mix.length]),
+      reward: { goldBase: 0, goldPerKill: 0, renown: 0 },
+      loot: 'low',
+    });
+    log('ford test', { total });
+  }
+
   function wipeSave() {
     const S = CL.save;
     const pre = Array.from({ length: S.VERSION - 2 }, (_, i) => S.preMigrationKey(i + 2)); // crownless_save_v2, …
@@ -407,6 +432,11 @@
         toggle(false);
         cameraTest(n, { help: btn.dataset.help === '1' });
         return;
+      case 'ford':
+        if (mode === 'battle' || mode === 'result') return CL.ui.message('Finish the battle first');
+        toggle(false);
+        fordTest(n);
+        return;
       case 'win':
       case 'lose':
         if (!endBattleNow(act === 'win')) CL.ui.message('Not in a battle');
@@ -458,6 +488,7 @@
     endBattleNow,
     stressBattle,
     cameraTest,
+    fordTest,
     mapTest,
     wipeSave,
     toggle,

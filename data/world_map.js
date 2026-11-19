@@ -24,7 +24,21 @@
       },
       view: { zoom: 1 }, // the map's opening zoom until the player picks their own
       baseSpeed: 4,
-      terrain: { road: 1.2, grass: 1.0, forest: 0.75 },
+      // Travel speed factor of each kind of ground (W-05a). Every kind is passable (decision D-W4):
+      // routes differ by cost, never by walls. A river is slow to cross except at a ford or bridge;
+      // a mountain pass is a road through the mountains.
+      terrain: { road: 1.2, grass: 1.0, forest: 0.75, hills: 0.8, mountain: 0.4, marsh: 0.5, river: 0.3, ford: 0.8, bridge: 1.0 },
+      // The battle map for a fight on each kind of ground (W-05a); anything else is `open`, or `fort`
+      // within a few units of a fort. Hills and marsh borrow the open and forest maps until their art
+      // exists.
+      battleMaps: { forest: 'forest_wilds', hills: 'open_country', mountain: 'open_country', marsh: 'forest_wilds', river: 'river_ford', ford: 'river_ford', open: 'open_country', fort: 'greywall_courtyard' },
+      // Terrain features (W-05a), for worlds that have them: `areas` of hills, mountain or marsh
+      // ({ kind, poly }), `waters` that cost travel ({ line, width, crossings: [{ kind: 'ford' |
+      // 'bridge', x, y, r }] }) and `coast` (the sides of the map that meet the sea). The Border March
+      // has none yet: its river and hills below are drawn only, so its travel is as it was.
+      areas: [],
+      waters: [],
+      coast: [],
       roadWidth: 1.6, // map units either side of a road's centre line
       // Gameplay distance (W-02): a unit north–south counts this much of one east–west, so a journey
       // takes as long as it looks on 2.0's map. Part of the world, not the view: zoom never changes it.

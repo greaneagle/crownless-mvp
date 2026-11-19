@@ -50,6 +50,8 @@
     // V2-05: the large battlefields (the camera test passed at 60 fps on the owner's phone).
     forest_wilds: { id: 'forest_wilds', name: 'Forest Wilds', generate: { kind: 'forest', scale: 3, seed: 7 }, small: 'forest_clearing' },
     open_country: { id: 'open_country', name: 'Open Country', generate: { kind: 'field', scale: 3, seed: 11 }, small: 'grass_field' },
+    // W-05a: a river crossing, fought in the shallows (they slow everyone wading through them).
+    river_ford: { id: 'river_ford', name: 'River Ford', generate: { kind: 'ford', scale: 3, seed: 13 }, small: 'grass_field' },
     greywall_courtyard: {
       id: 'greywall_courtyard',
       name: 'Greywall Courtyard',

@@ -6,6 +6,8 @@
  *
  *   forest  trees (block arrows) and bushes, about as dense as the Forest Clearing, with glades
  *   field   open grass with a few copses, rocks and bushes, and dirt patches
+ *   ford    (W-05a) open banks either side of a river the armies meet in: its shallows (`slow`)
+ *           slow everyone wading through them, and nothing grows in the water
  *
  * `mapFor(id)` is how battles get their map: a generated map is built once and kept; and with the
  * device setting "Battlefield: Small" a large map is swapped for its one-screen counterpart
@@ -14,7 +16,8 @@
   'use strict';
   const CL = root.Crownless;
 
-  const KINDS = ['forest', 'field'];
+  const KINDS = ['forest', 'field', 'ford'];
+  const FORD_SLOW = 0.5; // speed in the shallows (W-05a)
 
   /** Small seeded generator (mulberry32), local to the arena. @param {number} seed */
   function mulberry(seed) {
@@ -98,6 +101,30 @@
     return finish(f, { id: `field_${scale}x`, name: `Field (${scale}×)`, ground: { base: '#71904e', tiles: ['w0000', 'w0001', 'w0002'], patches }, decor });
   }
 
+  /**
+   * A river crossing `scale` screens across (W-05a): grass banks with a few copses and rocks, and a
+   * river running north–south between the two armies. All of it is a ford: shallow enough to cross
+   * anywhere, at half speed. Arrows fly over it.
+   * @param {number} [scale] @param {number} [seed]
+   */
+  function ford(scale = 3, seed = 13) {
+    const rand = mulberry(seed);
+    const f = frame(scale, rand);
+    const river = { x: Math.round(f.W * 0.44), y: 0, w: Math.round(f.W * 0.12), h: f.H };
+    // Nothing is placed in the water or on its edge.
+    f.open.push({ x: river.x + river.w / 2, y: f.H / 2, rx: river.w / 2 + 50, ry: f.H });
+    const copses = Array.from({ length: 2 * scale }, () => [200 + rand() * (f.W - 400), 160 + rand() * (f.H - 320)]);
+    for (const [cx, cy] of copses) f.place(3, 70, tree, () => [cx + (rand() - 0.5) * 240, cy + (rand() - 0.5) * 180]);
+    f.place(2 * scale * scale, 80, rock);
+    f.place(2 * scale * scale, 60, bush(rand));
+    const flowers = ['w0091', 'w0110', 'w0121', 'w0034'];
+    const decor = Array.from({ length: 2 * scale * scale }, () => [flowers[Math.floor(rand() * flowers.length)], Math.round(rand() * (f.W - 60)), Math.round(rand() * (f.H - 60)), 52, 56]).filter((d) => Number(d[1]) + 52 < river.x - 20 || Number(d[1]) > river.x + river.w + 20);
+    return {
+      ...finish(f, { id: `ford_${scale}x`, name: `River ford (${scale}×)`, ground: { base: '#71904e', tiles: ['w0000', 'w0001', 'w0002'], patches: [], waters: [river] }, decor }),
+      slow: [{ ...river, factor: FORD_SLOW }],
+    };
+  }
+
   function finish(f, parts) {
     return {
       ...parts,
@@ -110,7 +137,7 @@
     };
   }
 
-  const GENERATORS = { forest, field };
+  const GENERATORS = { forest, field, ford };
   const built = new Map();
 
   /** Build a generated map record from the data (once; later calls get the same object). @param {any} rec */
@@ -133,5 +160,5 @@
     return build(rec);
   }
 
-  CL.arena = { KINDS, forest, field, build, mapFor };
+  CL.arena = { KINDS, FORD_SLOW, forest, field, ford, build, mapFor };
 })(typeof window !== 'undefined' ? window : globalThis);

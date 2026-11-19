@@ -5,7 +5,9 @@
 //   third, the Iron Reach, takes Redfield and Saltmere;
 // - a 150 × 120 map (bigger than 100 and not square): every place and terrain point is stretched
 //   1.5× east–west and 1.2× north–south;
-// - its own world id.
+// - its own world id;
+// - (W-05a) every kind of terrain: mountain with a pass, marsh, hills, a river with a ford and a bridge,
+//   and a coast.
 
 const RENAME = { valedorn: 'northmark', aurelian: 'sunhold' };
 const SX = 1.5;
@@ -55,6 +57,25 @@ function testWorld(content) {
       south: { name: 'the south', x: 0, y: 60, w: 150, h: 60 },
     },
     view: { zoom: 1 },
+    // W-05a terrain: a mountain range the Eastwatch–Redfield road crosses by a pass, a marsh in the
+    // south-west, hills in the far south-east, a river across the south with a bridge where the
+    // Stonebridge–Ashgate road crosses it and a ford further east, and the sea along the south.
+    areas: [
+      { kind: 'mountain', poly: [[100, 38], [116, 38], [116, 70], [100, 70]] },
+      { kind: 'marsh', poly: [[5, 92], [40, 92], [40, 116], [5, 116]] },
+      { kind: 'hills', poly: [[128, 100], [148, 100], [148, 118], [128, 118]] },
+    ],
+    waters: [
+      {
+        line: [[50, 118], [80, 78], [110, 76], [150, 74]],
+        width: 1.2,
+        crossings: [
+          { kind: 'bridge', x: 95, y: 77.5, r: 2.5 },
+          { kind: 'ford', x: 130, y: 75, r: 2 },
+        ],
+      },
+    ],
+    coast: ['south'],
   };
   m.sites = {};
   for (const [id, st] of Object.entries(march.sites)) {

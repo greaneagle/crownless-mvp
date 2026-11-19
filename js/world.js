@@ -101,10 +101,25 @@
     return inside;
   }
 
-  /** 'road' | 'forest' | 'grass'. Roads run through forests, so road wins. */
+  /** Is (x, y) within `width` map units of a polyline? */
+  function nearLine(x, y, line, width) {
+    for (let i = 1; i < line.length; i++) if (distToSegment(x, y, ...line[i - 1], ...line[i]) <= width) return true;
+    return false;
+  }
+
+  /**
+   * The kind of ground at a map point (W-05a; every kind has a speed factor in the world's `terrain`):
+   * a ford or bridge first (they are where rivers are crossed, roads too); then a road (it runs
+   * through forests and is the pass through mountains); a river; an area of hills, mountain or marsh;
+   * a forest; otherwise grass. The Border March has roads, forests and grass only.
+   */
   function terrainAt(x, y) {
     const m = map();
+    const waters = m.waters || [];
+    for (const w of waters) for (const c of w.crossings || []) if (mapDist(x, y, c.x, c.y) <= c.r) return c.kind;
     if (roadSegments().some((s) => distToSegment(x, y, ...s) <= m.roadWidth)) return 'road';
+    for (const w of waters) if (nearLine(x, y, w.line, w.width)) return 'river';
+    for (const a of m.areas || []) if (inPolygon(x, y, a.poly)) return a.kind;
     if (m.forests.some((poly) => inPolygon(x, y, poly))) return 'forest';
     return 'grass';
   }
@@ -119,15 +134,19 @@
   }
 
   /**
-   * Which battle map a fight at (x, y) uses: the forest clearing in woodland, the fort approach
-   * near Greywall or Ashgate, otherwise the open field.
+   * Which battle map a fight at (x, y) uses (W-05a: the world's `battleMaps`): the one for the ground
+   * there (forest, a river or ford, hills, marsh, mountain), otherwise the fort approach near a fort,
+   * otherwise open country. On the Border March: the forest wilds in woodland, the courtyard near
+   * Greywall or Ashgate, the open country elsewhere.
    */
   const FORT_RADIUS = 6;
   function battleMapAt(x, y) {
     // Large battlefields (V2-05); js/arena.js swaps in the one-screen maps with Battlefield: Small.
-    if (terrainAt(x, y) === 'forest') return 'forest_wilds';
+    const maps = map().battleMaps;
+    const kind = maps[terrainAt(x, y)];
+    if (kind) return kind;
     const nearFort = settlements().some((s) => s.type === 'fort' && mapDist(x, y, s.mapX, s.mapY) <= FORT_RADIUS);
-    return nearFort ? 'greywall_courtyard' : 'open_country';
+    return nearFort ? maps.fort : maps.open;
   }
 
   // ---- Sites ----

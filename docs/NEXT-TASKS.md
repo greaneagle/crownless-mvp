@@ -498,7 +498,16 @@ _Written 2026-11-18 at build 2.0.0; **reviewed and corrected the same day agains
 
 ---
 
-### W-05a · World geometry and terrain (M) — Ready after decisions D-W1, D-W4
+### W-05a · World geometry and terrain (M) — ✅ Done in 2.6.0
+
+**Done (2.6.0, 2026-11-18).** Decisions D-W1 and D-W4 taken as their defaults by the owner (a world about 4× the March's area; all terrain passable at a cost). As specified, with these notes:
+- **Terrain as data** (`data/world_map.js`): `terrain` gains hills 0.8, mountain 0.4, marsh 0.5, river 0.3, ford 0.8 and bridge 1.0; features are `areas` (`{ kind: hills | mountain | marsh, poly }`), `waters` (`{ line, width, crossings: [{ kind: ford | bridge, x, y, r }] }`) and `coast` (sides of the map that meet the sea, drawn in the margin past the edge; the bounds already stop travel there). `terrainAt` order: a ford or bridge, a road (also the pass through mountains), a river, an area, a forest, grass.
+- **The March stays as it was:** its existing `river` and `hills` are drawn only, as before, and it has no new features, so every travel time and battle map is unchanged (a test compares travel times from Stonebridge with 2.5.0's to the last digit). W-05b lays out the bigger region with real terrain. The help text gains terrain then, when players can meet it.
+- **Battle maps from data:** `battleMaps` names the map for each kind (forest and marsh → Forest Wilds, hills and mountain → Open Country, river and ford → River Ford), with `open` and `fort` for the rest (a fort approach within 6 units of a fort). No battle map id is left in `js/world.js`.
+- **River Ford** (`river_ford`, generated `{ kind: 'ford', scale: 3, seed: 13 }`): grass banks either side of a river between the armies, all of it a shallow ford; the map's `slow` ground halves the speed of anyone in it (`CL.units.groundFactor`, in `move`; maps without `slow` are unaffected). Drawn with ripples and on the minimap. Its one-screen counterpart is the Grass Field. Debug → **Ford battle 30** plays it on the large map whatever the Battlefield setting.
+- **Drawing:** the sea, marsh reeds, hill arcs, snow-capped peaks, rivers by their width, ford stones and bridge planks, all in the cached terrain layer under the roads (W-02).
+- **Validation:** every kind has a speed above 0; areas, waters and crossings lie inside the map and are of known kinds; coasts are known sides; `battleMaps` names known maps, with `open` and `fort`.
+- **Tests:** `tests/terrain.test.js` (each kind at a point of the test world, its speed, every point passable, the ford against wading against grass, a journey straight across a river arrives, the battle map for each kind, the March unchanged, the ford map, wading at half speed, validation); `tests/browser/ford.spec.js` (the ford battle at desktop and phone size: the river drawn, walking and wading by real input at about half speed, the controls sound, a result). The test world gained every kind of terrain; its 30-day bot run still passes.
 
 **Problem.** A bigger region needs more kinds of ground, and battles that match them.
 

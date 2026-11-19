@@ -80,6 +80,27 @@
       ctx.ellipse(p.x, p.y, p.rx, p.ry, 0, 0, Math.PI * 2);
       ctx.fill();
     }
+    for (const w of gr.waters || []) {
+      // A ford's shallows (W-05a): water with lighter ripples, only the part in view.
+      const [x0, x1] = [Math.max(w.x, v.x), Math.min(w.x + w.w, v.x + v.w)];
+      const [y0, y1] = [Math.max(w.y, v.y), Math.min(w.y + w.h, v.y + v.h)];
+      if (x1 <= x0 || y1 <= y0) continue;
+      ctx.fillStyle = '#3f7393';
+      ctx.fillRect(x0, y0, x1 - x0, y1 - y0);
+      ctx.fillStyle = '#5d93b5';
+      for (const bank of [w.x, w.x + w.w - 10]) if (bank + 10 > x0 && bank < x1) ctx.fillRect(Math.max(bank, x0), y0, 10, y1 - y0);
+      ctx.strokeStyle = '#a9cfe299';
+      ctx.lineWidth = 2;
+      for (let y = Math.floor(y0 / 46) * 46; y < y1; y += 46) {
+        for (let x = w.x + 24 + ((y / 46) % 2) * 30; x < w.x + w.w - 30; x += 60) {
+          if (x < x0 - 30 || x > x1) continue;
+          ctx.beginPath();
+          ctx.moveTo(x, y);
+          ctx.quadraticCurveTo(x + 9, y - 5, x + 18, y);
+          ctx.stroke();
+        }
+      }
+    }
     for (const r of gr.roads || []) {
       // Packed-earth streets.
       ctx.fillStyle = '#a58c62';
@@ -732,6 +753,7 @@
         }
       }
     }
+    drawTerrainFeatures(m, e);
     // Hills.
     ctx.strokeStyle = '#5b5236';
     ctx.lineWidth = 3;
@@ -764,6 +786,103 @@
       ctx.lineWidth = 4;
       ctx.setLineDash([]);
       ctx.stroke();
+    }
+  }
+
+  /** A map polygon's bounding box in map units, for scattering marks inside it. */
+  function polyBox(poly) {
+    const xs = poly.map((p) => p[0]);
+    const ys = poly.map((p) => p[1]);
+    return { x0: Math.min(...xs), x1: Math.max(...xs), y0: Math.min(...ys), y1: Math.max(...ys) };
+  }
+
+  /**
+   * W-05a terrain, in world pixels: the sea along coasts (in the margin past the map's edge), areas
+   * of marsh, hills and mountain, rivers that cost travel, and their fords and bridges. Drawn into the
+   * cached terrain layer, under the roads.
+   */
+  function drawTerrainFeatures(m, e) {
+    const { toPx, terrainAt } = CL.world;
+    const b = CL.world.bounds();
+    const [left, top] = toPx(0, 0);
+    const [right, bottom] = toPx(b.w, b.h);
+    ctx.fillStyle = '#3c6f93';
+    for (const side of m.coast || []) {
+      if (side === 'north') ctx.fillRect(0, 0, e.w, top);
+      if (side === 'south') ctx.fillRect(0, bottom, e.w, e.h - bottom);
+      if (side === 'west') ctx.fillRect(0, 0, left, e.h);
+      if (side === 'east') ctx.fillRect(right, 0, e.w - right, e.h);
+    }
+    const LOOK = { marsh: ['#58745a', '#7aa08f'], hills: ['#7d8a4f', '#5b5236'], mountain: ['#8b8678', '#5e5a50'] };
+    for (const a of m.areas || []) {
+      const [fill, mark] = LOOK[a.kind];
+      polyPath(a.poly);
+      ctx.closePath();
+      ctx.fillStyle = fill;
+      ctx.fill();
+      const box = polyBox(a.poly);
+      ctx.strokeStyle = mark;
+      ctx.fillStyle = mark;
+      ctx.lineWidth = 2;
+      for (let x = box.x0; x <= box.x1; x += a.kind === 'marsh' ? 2.4 : 4.4) {
+        for (let y = box.y0; y <= box.y1; y += a.kind === 'marsh' ? 4 : 6) {
+          if (terrainAt(x, y) !== a.kind) continue;
+          const [px, py] = toPx(x + ((y * 3) % 2), y);
+          ctx.beginPath();
+          if (a.kind === 'marsh') {
+            ctx.moveTo(px - 3, py);
+            ctx.lineTo(px - 3, py - 6);
+            ctx.moveTo(px + 1, py);
+            ctx.lineTo(px + 1, py - 8);
+            ctx.stroke();
+          } else if (a.kind === 'hills') {
+            ctx.arc(px, py + 6, 11, Math.PI * 1.15, Math.PI * 1.85);
+            ctx.stroke();
+          } else {
+            ctx.moveTo(px - 10, py + 6);
+            ctx.lineTo(px, py - 9);
+            ctx.lineTo(px + 10, py + 6);
+            ctx.closePath();
+            ctx.fill();
+            ctx.fillStyle = '#e8e4da';
+            ctx.beginPath();
+            ctx.moveTo(px - 3, py - 4);
+            ctx.lineTo(px, py - 9);
+            ctx.lineTo(px + 3, py - 4);
+            ctx.closePath();
+            ctx.fill();
+            ctx.fillStyle = mark;
+          }
+        }
+      }
+    }
+    for (const w of m.waters || []) {
+      const px = CL.world.VIEW.sx; // map units → world px, across
+      polyPath(w.line);
+      ctx.lineJoin = 'round';
+      ctx.strokeStyle = '#3c6f93';
+      ctx.lineWidth = w.width * 2 * px * 0.6;
+      ctx.stroke();
+      ctx.strokeStyle = '#5d93b5';
+      ctx.lineWidth = w.width * 2 * px * 0.3;
+      ctx.stroke();
+      for (const c of w.crossings || []) {
+        const [cx, cy] = toPx(c.x, c.y);
+        const r = c.r * px * 0.7;
+        if (c.kind === 'ford') {
+          ctx.fillStyle = '#c9b58a';
+          for (let i = -2; i <= 2; i++) {
+            ctx.beginPath();
+            ctx.arc(cx + i * r * 0.35, cy + (i % 2) * 2, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        } else {
+          ctx.fillStyle = '#6b4a2a';
+          ctx.fillRect(cx - r, cy - 4, r * 2, 8);
+          ctx.fillStyle = '#a07a4a';
+          for (let x = cx - r + 2; x < cx + r - 2; x += 5) ctx.fillRect(x, cy - 3, 3, 6);
+        }
+      }
     }
   }
 
@@ -947,6 +1066,8 @@
       c.ellipse(p.x * k, p.y * k, p.rx * k, p.ry * k, 0, 0, Math.PI * 2);
       c.fill();
     }
+    c.fillStyle = '#3f7393'; // a ford's water (W-05a)
+    for (const w of m.ground.waters || []) c.fillRect(w.x * k, w.y * k, w.w * k, w.h * k);
     for (const o of m.obstacles) {
       c.fillStyle = o.blocksArrows ? '#24361f' : '#5d6b49';
       c.beginPath();

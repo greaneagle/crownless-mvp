@@ -298,12 +298,22 @@
   /** Does a flying arrow at (x, y) hit cover that stops arrows (trees, walls, crates)? */
   const arrowBlocked = (x, y) => obstaclesNear(x, y).some((o) => o.blocksArrows !== false && inside(o, x, y));
 
+  /**
+   * How fast a unit can move where it stands: a map's `slow` ground (a ford's shallows, W-05a) gives
+   * its factor; anywhere else 1.
+   */
+  function groundFactor(x, y) {
+    for (const z of CL.game?.battleMap?.slow || []) if (x >= z.x && x <= z.x + z.w && y >= z.y && y <= z.y + z.h) return z.factor;
+    return 1;
+  }
+
   function move(u, dx, dy, dt) {
     let [vx, vy] = normalize(dx, dy);
     if (Math.abs(dx) + Math.abs(dy) < 0.5) return;
     if (u.role !== 'hero') [vx, vy] = steer(u, vx, vy); // the player steers the hero
-    u.x = clamp(u.x + vx * u.speed * dt, bounds().minX, bounds().maxX);
-    u.y = clamp(u.y + vy * u.speed * dt, bounds().minY, bounds().maxY);
+    const speed = u.speed * groundFactor(u.x, u.y);
+    u.x = clamp(u.x + vx * speed * dt, bounds().minX, bounds().maxX);
+    u.y = clamp(u.y + vy * speed * dt, bounds().minY, bounds().maxY);
     resolveObstacles(u);
     if (!isCommitted(u)) u.face = faceFromVector(vx, vy);
     u.anim += dt * 6;
@@ -330,6 +340,7 @@
     isCommitted,
     aim,
     move,
+    groundFactor,
     push,
     inside,
     blocked,
