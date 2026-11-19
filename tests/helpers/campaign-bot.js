@@ -122,8 +122,9 @@ function makeBot(CL, { log = () => {}, style = 'hands-off' } = {}) {
       const p = CL.parties.find(camp, k.partyId);
       if (p) return CL.world.travelTo({ type: 'party', id: p.id, x: p.x, y: p.y });
     }
-    // Otherwise: clear a lair we can beat, or go look for work.
-    for (const [id, st] of Object.entries(CL.world.map().sites)) {
+    // Otherwise: clear a lair we can beat (the nearest first: W-05b's world is big), or go look for work.
+    const near = (a, b) => CL.world.mapDist(camp.world.x, camp.world.y, a.mapX, a.mapY) - CL.world.mapDist(camp.world.x, camp.world.y, b.mapX, b.mapY);
+    for (const [id, st] of Object.entries(CL.world.map().sites).sort(([, a], [, b]) => near(a, b))) {
       if (!CL.world.siteActive(id)) continue;
       g.siteId = id;
       g.partyId = null;
@@ -132,12 +133,12 @@ function makeBot(CL, { log = () => {}, style = 'hands-off' } = {}) {
       if (e && odds(e) >= 0.6) return CL.world.travelTo({ type: 'site', id, x: st.mapX, y: st.mapY });
     }
     // Contract boards: every settlement offering contracts (W-04: read from the world, not named).
-    const boards = Object.values(CL.content.table('settlements'))
-      .filter((s) => s.services?.includes('contracts'))
-      .map((s) => s.id);
     const here = CL.world.nearestSettlement(camp.world.x, camp.world.y);
-    // Nothing worth doing nearby: walk to the other contracts board (time passes, things happen).
-    return CL.world.travelTo(town(boards[(boards.indexOf(here.id) + 1) % boards.length]));
+    const boards = Object.values(CL.content.table('settlements'))
+      .filter((s) => s.services?.includes('contracts') && s.id !== here.id)
+      .sort(near);
+    // Nothing worth doing nearby: walk to the nearest other contracts board (time passes, things happen).
+    return CL.world.travelTo(town(boards[0].id));
   }
 
   function encounterTurn() {

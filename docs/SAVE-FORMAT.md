@@ -41,7 +41,7 @@ Everything read back, from storage, a file or the pre-import slot, goes through 
    - v7: all of v6, plus `chronicle` (an array) and `honour` (an object).
    - v8: all of v7, plus `accounts` (an object), `ledger` (an array) and `followers` (an object).
    - v9: the same top-level fields as v8 (the merchant lives inside `followers`).
-2. **World:** a v3 save must belong to this world (`worldId`).
+2. **World:** a v3 save must belong to this world (`worldId`). From 2.7.0 (W-05b, decision D-W2) the world is `sundered_realm`, so every save of the old Border March (`border_march`, every build up to 2.6.0) is refused: on load the game begins a new campaign, says so once, and keeps the old save untouched in `crownless_save_other_world`; an import is refused with the reason. The schema did not change (still v9).
 3. **Migrations** (`CL.save.MIGRATIONS`): pure steps from schema n to n + 1, applied in order. v1 → current is `migrateV1` (it builds soldiers from the old counts).
    - **2 → 3 (1.2.0):** adds `worldId: "border_march"` and `contentVersion: "unknown"` (which build wrote a v2 save was never recorded). Nothing else changes.
    - **3 → 4 (1.3.0):** adds `rng`, the named random streams, each seeded from `rngSeed` and the stream's name (so the same save always gets the same streams), and `nextResultId: 1` and `nextEventId: 1`. Nothing used them before. Nothing else changes.
@@ -85,7 +85,7 @@ Schema v9 is schema v2 (below) plus these fields (v3 added the first two, v4 the
 | Field | Type | Owner module | Notes |
 |---|---|---|---|
 | `version` | `9` | save | |
-| `worldId` | string | save | The world (content package) the campaign belongs to: `"border_march"`. A save from another world is refused |
+| `worldId` | string | save | The world (content package) the campaign belongs to: `"sundered_realm"` from 2.7.0 (`"border_march"` before). A save from another world is refused (and, on load, kept in `crownless_save_other_world`) |
 | `contentVersion` | string | save | The build that last wrote the save, for example `"1.2.0"`; `"unknown"` right after migrating a v2 save. Later content migrations can key off it |
 | `rng` | `{ casualties, loot, upkeep, names }`, integers | autoresolve | v4. The named random streams' states (mulberry32). `casualties`: who dies or is wounded after a fought battle (auto-resolve rolls its whole outcome, casualties included, on the world stream, as before); `loot`: battle loot and the item taken on capture; `upkeep`: desertion; `names` (v5): soldiers' names. The world stream stays in `rngSeed` (world parties, contract offers, auto-resolve, retreat). Moment-to-moment rolls inside a fought battle are not seeded |
 | `nextResultId` | integer ≥ 1 | encounter | v4. The ID the next encounter result commits under. Each encounter takes it when it opens; the commit goes through only for that ID and then moves it on, so a result is applied exactly once |

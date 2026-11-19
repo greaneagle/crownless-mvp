@@ -46,7 +46,7 @@ test('the ford battle: the river between the armies, wading at half speed, and a
     await page.waitForFunction(({ x, y }) => {
       const c = document.querySelector('#game');
       const k = c.width / 960;
-      const [r, g, b] = c.getContext('2d').getImageData(Math.round(x * k), Math.round(y * k), 1, 1).data;
+      const [r, , b] = c.getContext('2d').getImageData(Math.round(x * k), Math.round(y * k), 1, 1).data;
       return b > r && b > 100; // blue water, not grass
     }, water);
   }

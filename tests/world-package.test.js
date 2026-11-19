@@ -10,18 +10,21 @@ const { testWorld, WORLD, THIRD, THIRD_LANDS } = require('./helpers/test-world')
 
 const ROOT = path.join(__dirname, '..');
 
-test('the Border March package: its bounds, kingdoms, outlaws, start, regions and view', () => {
+test('the Sundered Realm package (W-05b): its bounds, kingdoms, outlaws, start, regions and view', () => {
   const { CL } = loadGame();
   const m = CL.world.map();
-  assert.equal(CL.world.id(), 'border_march');
-  assert.deepEqual({ ...CL.world.bounds() }, { w: 100, h: 100 });
-  assert.deepEqual(Array.from(CL.realm.kingdoms(), (k) => k.id), ['valedorn', 'aurelian']);
+  assert.equal(CL.world.id(), 'sundered_realm');
+  assert.deepEqual({ ...CL.world.bounds() }, { w: 200, h: 200 });
+  assert.deepEqual(Array.from(CL.realm.kingdoms(), (k) => k.id), ['valedorn', 'aurelian', 'hrothmark', 'vessaro', 'merrow']);
   assert.equal(CL.realm.outlaws(), 'neutral');
   assert.equal(CL.world.start().id, 'stonebridge');
-  assert.equal(CL.world.regionAt(20, 50).name, 'the western march');
-  assert.equal(CL.world.regionAt(80, 50).name, 'the eastern march');
+  assert.equal(CL.world.regionAt(70, 100).name, 'the western march');
+  assert.equal(CL.world.regionAt(130, 100).name, 'the eastern march');
+  assert.equal(CL.world.regionAt(100, 20).name, 'the northern highlands');
+  assert.equal(CL.world.regionAt(80, 180).name, 'the southern coast');
+  assert.equal(CL.world.regionAt(180, 170).name, 'the Merrow coast');
   assert.equal(m.view.zoom, 1);
-  assert.deepEqual(Array.from(CL.world.clampToMap(120, -4, 2)), [98, 2]);
+  assert.deepEqual(Array.from(CL.world.clampToMap(220, -4, 2)), [198, 2]);
   assert.deepEqual(Array.from(CL.content.validate()), []);
 });
 
@@ -32,14 +35,14 @@ test('validation: places, terrain and parties inside the bounds; owners and part
     edit(sandbox.CROWNLESS_CONTENT);
     return Array.from(CL.content.validate()).join('\n');
   };
-  assert.match(problems((C) => (C.settlements.redfield.mapX = 104)), /settlement redfield outside the map/);
-  assert.match(problems((C) => (C.world_map.border_march.sites.looter_camp.mapY = -1)), /site looter_camp outside the map/);
-  assert.match(problems((C) => C.world_map.border_march.river.push([50, 130])), /terrain outside the map/);
+  assert.match(problems((C) => (C.settlements.redfield.mapX = 204)), /settlement redfield outside the map/);
+  assert.match(problems((C) => (C.world_map.sundered_realm.sites.looter_camp.mapY = -1)), /site looter_camp outside the map/);
+  assert.match(problems((C) => C.world_map.sundered_realm.river.push([50, 230])), /terrain outside the map/);
   assert.match(problems((C) => (C.settlements.oakford.ownerFaction = 'nobody')), /oakford/);
-  assert.match(problems((C) => (C.world_map.border_march.factions = ['valedorn', 'ghosts'])), /unknown kingdom ghosts/);
-  assert.match(problems((C) => (C.world_map.border_march.start = 'atlantis')), /unknown start atlantis/);
-  assert.match(problems((C) => delete C.world_map.border_march.bounds), /needs bounds/);
-  assert.match(problems((C) => (C.world_map.border_march.factions = ['valedorn'])), /owned by aurelian, not one of this world's factions/);
+  assert.match(problems((C) => (C.world_map.sundered_realm.factions = ['valedorn', 'ghosts'])), /unknown kingdom ghosts/);
+  assert.match(problems((C) => (C.world_map.sundered_realm.start = 'atlantis')), /unknown start atlantis/);
+  assert.match(problems((C) => delete C.world_map.sundered_realm.bounds), /needs bounds/);
+  assert.match(problems((C) => (C.world_map.sundered_realm.factions = ['valedorn'])), /owned by aurelian, not one of this world's factions/);
 });
 
 test('the test world: three kingdoms with other names on a 150 × 120 map', () => {
@@ -73,14 +76,14 @@ test('the test world: three kingdoms with other names on a 150 × 120 map', () =
   assert.equal(seen[3], seen[0], 'and back');
 });
 
-test('a save of the March and of the test world each loads only where its world exists', () => {
+test('a save of the realm and of the test world each loads only where its world exists', () => {
   const march = loadGame();
   march.CL.save.write();
   const text = march.storage.data[march.CL.save.KEY];
-  assert.equal(march.CL.save.fromRaw(JSON.parse(text)).campaign.worldId, 'border_march');
+  assert.equal(march.CL.save.fromRaw(JSON.parse(text)).campaign.worldId, 'sundered_realm');
   const other = loadGame({ content: testWorld });
   const r = other.CL.save.fromRaw(JSON.parse(text));
-  assert.equal(r.campaign, null, 'a Border March save in a build without that world is refused');
+  assert.equal(r.campaign, null, 'a save of the realm in a build without that world is refused');
   assert.equal(r.otherWorld, true);
   other.CL.save.write();
   assert.equal(other.CL.save.fromRaw(JSON.parse(other.storage.data[other.CL.save.KEY])).campaign.worldId, WORLD);

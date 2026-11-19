@@ -1,5 +1,31 @@
 # Crownless — Release Notes
 
+## v2.7.0 — The bigger world (W-05b) · 2026-11-19
+
+The Border March is now the heart of a world about four times its size.
+
+### New
+- **The Sundered Realm.** The March lies whole in the middle, as it was: the same places, roads and distances, and the same story. Around it:
+  - **Valedorn and Aurelian** reach further west and east, each with a new castle and two villages.
+  - **Hrothmark**, a kingdom of highland clans in the northern forests and mountains, fields heavy infantry and axemen.
+  - **The Vessaro League**, merchant towns of the southern marsh and coast, fields crossbowmen and light horse.
+  - **The Free City of Merrow**, a free port in the south-east, hires out sell-swords and has the best market and armoury in the land.
+  - 31 settlements in all, every town with a contract board.
+- **Twelve new troops:** each new kingdom has its own tier 1 to 3 tree with a cavalry branch, and soldiers with names of their own culture. They use the existing figures until their own art is drawn.
+- **Real terrain:** a mountain range with a pass, hills, a marsh, a river to the sea with a ford and a bridge, and the coast.
+- **Two new trade goods:** timber (cheap in the north) and wine (cheap on the coast).
+- **The wider world is busy:** Reaver bands with two lairs in every region and two new lair fights, patrols for every kingdom, and caravans running between the capitals and Merrow.
+- **News names the region** ("The roads of the northern highlands are not safe…").
+
+### Changes
+- **Campaigns from before 2.7.0 can't continue in the bigger world.** The game starts a new campaign and tells you why. Your old save is kept in the browser, untouched. Importing an old save file is refused with the same reason.
+- How to Play mentions the lands beyond the March and the new kinds of ground.
+
+### Under the hood
+- The art team's asset request list is in `docs/ASSETS.md`.
+- The test bots pick the nearest lair and contract board, and the story bot keeps to the March.
+- 578 fast and 5 slow Node tests, 125 browser tests (9 more apply to one device only and are skipped on the other). New fixture set `tests/fixtures/saves-2.7`: the first saves of the bigger world.
+
 ## v2.6.0 — Terrain and the river ford (W-05a) · 2026-11-18
 
 The Border March plays as before; this prepares the bigger region's ground.

@@ -20,12 +20,14 @@ function ambushSetup(opts = {}) {
   return { ...env, p };
 }
 
-test('a new world has 3 bandit bands, 2 patrols per kingdom and a caravan each', () => {
+test('a new world has its bands, patrols by holdings and caravans (W-05b)', () => {
   const { CL } = loadGame({ worldParties: true });
   const k = kinds(CL);
-  assert.equal(count(k, 'bandit'), 3);
-  assert.equal(count(k, 'patrol'), 4);
-  assert.equal(count(k, 'caravan'), 2);
+  const want = (kind) => Object.values(CL.content.table('party_templates')).filter((t) => t.kind === kind).reduce((n, t) => n + t.count, 0);
+  assert.equal(count(k, 'bandit'), want('bandit'));
+  assert.equal(count(k, 'patrol'), want('patrol'));
+  assert.equal(count(k, 'caravan'), want('caravan'));
+  assert.deepEqual([want('bandit'), want('patrol'), want('caravan')], [11, 13, 5]);
   for (const p of CL.campaign.parties) {
     const t = CL.content.get('party_templates', p.template);
     for (const [id, n] of Object.entries(p.troops)) {
@@ -177,7 +179,7 @@ test('retreat odds follow the GDD speed formula', () => {
   assert.ok(Math.abs(CL.parties.retreatChance(c, e) - 0.52) < 1e-9);
   c.cargo = { tools: 23 }; // 69/70 weight: heavily laden
   assert.ok(CL.parties.retreatChance(c, e) < 0.45);
-  Object.assign(p, { x: 20, y: 30 }); // band in the forest (slow)
+  Object.assign(p, { x: 70, y: 80 }); // band in the forest (slow)
   c.cargo = {};
   assert.ok(Math.abs(CL.parties.retreatChance(c, CL.parties.current()) - (0.5 + 0.1 * (4 - 3.8 * 0.75))) < 1e-9);
 });
@@ -284,8 +286,8 @@ test('saved parties are validated; older saves get a populated world', () => {
     parties: [
       { id: 3, template: 'bandits', x: 50, y: 60, troops: { looter: 4, dragon: 2 }, lair: 'nowhere' },
       { id: 4, template: 'ghosts', x: 1, y: 1, troops: { looter: 1 } },
-      { id: 5, template: 'valedorn_caravan', x: 200, y: 10, troops: { levy: 0 } },
-      { id: 6, template: 'aurelian_caravan', x: 200, y: -10, troops: { recruit: 2 }, routeIndex: 9, good: 'gold' },
+      { id: 5, template: 'valedorn_caravan', x: 300, y: 10, troops: { levy: 0 } },
+      { id: 6, template: 'aurelian_caravan', x: 300, y: -10, troops: { recruit: 2 }, routeIndex: 9, good: 'gold' },
     ],
   });
   assert.equal(s.rngSeed, 42);
@@ -295,10 +297,10 @@ test('saved parties are validated; older saves get a populated world', () => {
   );
   assert.deepEqual({ ...s.parties[0].troops }, { looter: 4 });
   assert.equal(s.parties[0].lair, 'looter_camp');
-  assert.deepEqual([s.parties[1].x, s.parties[1].y, s.parties[1].routeIndex, s.parties[1].good], [100, 0, 3, 'salt']);
+  assert.deepEqual([s.parties[1].x, s.parties[1].y, s.parties[1].routeIndex, s.parties[1].good], [200, 0, 3, 'salt']);
   assert.equal(s.nextPartyId, 7);
   const old = CL.save.sanitize({ version: 2, roster: [] });
-  assert.equal(old.parties.length, 9);
+  assert.equal(old.parties.length, 29); // W-05b: 11 bands, 13 patrols, 5 caravans
 });
 
 test('waiting on the map passes time', () => {

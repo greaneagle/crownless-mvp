@@ -16,10 +16,10 @@ const overlaps = (CL, u) => CL.game.battleMap.obstacles.some((o) => CL.units.ins
 
 test('the map follows where you fight: forest, near a fort, or open ground', () => {
   const { CL } = loadGame();
-  assert.equal(CL.world.battleMapAt(20, 30), 'forest_wilds', 'forests are large from 1.8.0 (V2-05)');
-  assert.equal(CL.world.battleMapAt(43, 32), 'greywall_courtyard', 'Greywall approach');
-  assert.equal(CL.world.battleMapAt(70, 66), 'greywall_courtyard', 'Ashgate approach');
-  assert.equal(CL.world.battleMapAt(75, 20), 'open_country');
+  assert.equal(CL.world.battleMapAt(70, 80), 'forest_wilds', 'forests are large from 1.8.0 (V2-05)');
+  assert.equal(CL.world.battleMapAt(93, 82), 'greywall_courtyard', 'Greywall approach');
+  assert.equal(CL.world.battleMapAt(120, 116), 'greywall_courtyard', 'Ashgate approach');
+  assert.equal(CL.world.battleMapAt(125, 70), 'open_country');
   assert.equal(CL.content.encounter('captains_trial').map, 'forest_wilds', 'the Reaver Hideout among the trees');
   const t = CL.content.get('party_templates', 'bandits');
   assert.equal(CL.parties.battleDef(t, { looter: 2 }, 'forest_clearing').map, 'forest_clearing');

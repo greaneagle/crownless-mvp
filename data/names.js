@@ -12,7 +12,7 @@
  *               a form whose part is missing is skipped)
  *
  * A mod or a new world adds a culture by adding an entry here and pointing a faction at it: no code.
- * All names are invented for the Border March; none belongs to a real person. Checked at load by
+ * All names are invented for the game's world; none belongs to a real person. Checked at load by
  * js/content.js. */
 (function (root) {
   root.CROWNLESS_CONTENT = root.CROWNLESS_CONTENT || {};
@@ -39,6 +39,33 @@
       given: ['Cassian', 'Decimo', 'Severin', 'Corvin', 'Tullio', 'Aurel', 'Varo', 'Lucan', 'Quintil', 'Marcel', 'Faustin', 'Oren', 'Silvan', 'Drusian', 'Livia', 'Octavia', 'Junia', 'Calla', 'Fausta', 'Marcia', 'Valeria', 'Sabina', 'Aelia', 'Domitia', 'Lucia', 'Prisca'],
       trades: ['Ferox', 'Corvo', 'Lupo', 'Rufo', 'Celer', 'Vatro', 'Aquila', 'Pertinax', 'Sabo', 'Crasso', 'Stellan', 'Magno'],
       epithets: ['the Scribe', 'Ironsandal', 'of the Ninth', 'the Younger', 'Half-Legion', 'the Cartographer'],
+      forms: [
+        { pattern: '{given} {trade}', weight: 5 },
+        { pattern: '{given} of {origin}', weight: 2 },
+        { pattern: '{given} {epithet}', weight: 1 },
+      ],
+    },
+    hrothmark: {
+      id: 'hrothmark',
+      name: 'Hrothmark',
+      about: 'Highland clans of the north (W-05b placeholder): Norse-sounding given names and clan bynames.',
+      given: ['Ulfar', 'Hakon', 'Brand', 'Eirik', 'Torvald', 'Ragnar', 'Sten', 'Orm', 'Kettil', 'Halvar', 'Gunnar', 'Asbjorn', 'Vigge', 'Thrand', 'Ingrid', 'Sigrun', 'Astrid', 'Hilde', 'Ragna', 'Tove', 'Gudrun', 'Solveig', 'Freydis', 'Runa'],
+      trades: ['Axehand', 'Smith', 'Skinner', 'Woodcutter', 'Netter', 'Boatwright', 'Charcoaler', 'Herder'],
+      epithets: ['the Bear', 'Frostbeard', 'Ironside', 'the Tall', 'Wolfskin', 'Ashfoot', 'the Silent', 'Stormborn', 'Hollowcheek'],
+      forms: [
+        { pattern: '{given} {epithet}', weight: 4 },
+        { pattern: '{given} of {origin}', weight: 3 },
+        { pattern: '{given} {trade}', weight: 2 },
+        { pattern: '{given}', weight: 1 },
+      ],
+    },
+    vessaro: {
+      id: 'vessaro',
+      name: 'Vessaro',
+      about: 'Merchant towns of the southern coast (W-05b placeholder): Italianate given names and family names.',
+      given: ['Matteo', 'Lorenzo', 'Piero', 'Bastiano', 'Nero', 'Tommaso', 'Iacopo', 'Ottavio', 'Ruggero', 'Andrea', 'Salvo', 'Dario', 'Gianna', 'Lucrezia', 'Bettina', 'Chiara', 'Fiora', 'Nella', 'Orsola', 'Rosa', 'Vanna', 'Simona'],
+      trades: ['Salviati', 'Morosco', 'Bellini', 'Ferraro', 'Vescovo', 'Canale', 'Remari', 'Torrigo', 'Pescara', 'Lanza'],
+      epithets: ['the Quick', 'Saltwater', 'Two-Bolts', 'the Fox', 'Redsleeve', 'the Lucky'],
       forms: [
         { pattern: '{given} {trade}', weight: 5 },
         { pattern: '{given} of {origin}', weight: 2 },

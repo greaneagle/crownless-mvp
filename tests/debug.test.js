@@ -75,7 +75,7 @@ test('world: pass days, reset sites, teleport', () => {
   D.resetSites();
   assert.equal(CL.world.siteActive('reaver_hideout'), true);
   D.teleport('saltmere');
-  assert.deepEqual([CL.campaign.world.x, CL.campaign.world.y, CL.campaign.world.location], [84, 80, 'saltmere']);
+  assert.deepEqual([CL.campaign.world.x, CL.campaign.world.y, CL.campaign.world.location], [134, 130, 'saltmere']);
 });
 
 test('wipe removes the main, backup and legacy saves', () => {

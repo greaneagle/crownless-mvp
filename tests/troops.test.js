@@ -149,9 +149,9 @@ test('Reveal troop tree (debug) shows everything without changing what the campa
   const c = CL.campaign;
   CL.game.revealTree = true;
   const lines = CL.troopTree.view(c);
-  assert.deepEqual(plain(lines.map((l) => l.faction)), ['valedorn', 'aurelian', 'neutral']);
+  assert.deepEqual(plain(lines.map((l) => l.faction)), ['valedorn', 'aurelian', 'hrothmark', 'vessaro', 'neutral']);
   const count = (nodes) => nodes.reduce((n, x) => n + 1 + count(x.children), 0);
-  assert.equal(lines.reduce((n, l) => n + count(l.nodes), 0), 16, 'every troop, the Sellsword included');
+  assert.equal(lines.reduce((n, l) => n + count(l.nodes), 0), 28, 'every troop, the Sellsword and the new kingdoms’ included');
   assert.deepEqual(plain(c.troopKnowledge), {});
   CL.game.revealTree = false;
 });

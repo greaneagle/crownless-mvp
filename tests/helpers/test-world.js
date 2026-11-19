@@ -1,5 +1,6 @@
-// The W-04 test world (tests only): the real content turned into a different world, to prove nothing
-// in js/ assumes the Border March, two kingdoms or a 100 × 100 square. Use it as
+// The W-04 test world (tests only): the Border March as it was (tests/helpers/old-march.js) turned into
+// a different world, to prove nothing in js/ assumes the Border March, two kingdoms or a 100 × 100
+// square. Use it as
 //   loadGame({ content: testWorld })
 // - three kingdoms with other names: Valedorn becomes Northmark, Aurelian becomes Sunhold, and a
 //   third, the Iron Reach, takes Redfield and Saltmere;
@@ -8,6 +9,8 @@
 // - its own world id;
 // - (W-05a) every kind of terrain: mountain with a pass, marsh, hills, a river with a ford and a bridge,
 //   and a coast.
+
+const { oldMarch } = require('./old-march');
 
 const RENAME = { valedorn: 'northmark', aurelian: 'sunhold' };
 const SX = 1.5;
@@ -32,7 +35,7 @@ const scalePoint = ([x, y]) => [x * SX, y * SY];
 
 /** @param {Record<string, any>} content CROWNLESS_CONTENT, as the data files built it */
 function testWorld(content) {
-  const C = renameIds(content);
+  const C = renameIds(oldMarch(content));
   // The third kingdom: Sunhold's troops, its own name, banner and lands.
   const sun = C.factions.sunhold;
   C.factions[THIRD] = { ...sun, id: THIRD, name: 'Iron Reach Compact', short: 'Iron Reach', emblem: 'I', order: 3, color: '#6b6b2a', description: 'Hill clans of the far south-east (test world).' };

@@ -3,6 +3,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { loadGame } = require('./helpers/load');
+const { oldMarch } = require('./helpers/old-march');
 const { newCampaign, mulberry } = require('../scripts/simulate-campaign');
 const { makeStoryBot } = require('./helpers/story-bot');
 
@@ -91,12 +92,13 @@ test('cross-device: games at every stage export on one device and import identic
 });
 
 test('a save exported by an older build (before reputation, quests, Mara and news) still imports and plays', () => {
-  const { CL } = loadGame();
+  // Schema v2 saves are Border March saves: the March as it was (tests/helpers/old-march.js).
+  const { CL } = loadGame({ content: oldMarch });
   const old = JSON.parse(JSON.stringify(CL.campaign));
   for (const k of ['story', 'companion', 'news', 'owners', 'reputation', 'contractOffers', 'worldId', 'contentVersion']) delete old[k];
   old.version = 2; // an older build wrote save schema v2, which had none of these yet
   const file = JSON.stringify({ format: 'crownless-save', version: 2, game: '0.14.0', exportedAt: '2026-11-16T10:00:00Z', checksum: CL.portable.checksum(JSON.stringify(old)), campaign: old });
-  const other = loadGame({ party: false });
+  const other = loadGame({ party: false, content: oldMarch });
   const r = other.CL.portable.importText(file);
   assert.equal(r.ok, true, r.reason);
   const c = other.CL.campaign;

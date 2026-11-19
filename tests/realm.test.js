@@ -7,7 +7,7 @@ test('three visible states from a hidden score: hostile below −25, friendly ab
   const { CL } = loadGame();
   const c = CL.campaign;
   const R = CL.realm;
-  assert.deepEqual({ ...c.reputation }, { valedorn: 0, aurelian: 0 });
+  assert.deepEqual({ ...c.reputation }, { valedorn: 0, aurelian: 0, hrothmark: 0, vessaro: 0, merrow: 0 });
   for (const [score, st] of [
     [-26, 'hostile'],
     [-25, 'neutral'],
@@ -144,7 +144,7 @@ test('reputation and fort owners persist through save and reload, and bad values
   c.reputation = { valedorn: 33, aurelian: -60 };
   CL.realm.setOwner(c, 'greywall_fort', 'aurelian');
   const s = CL.save.sanitize(JSON.parse(JSON.stringify(c)));
-  assert.deepEqual({ ...s.reputation }, { valedorn: 33, aurelian: -60 });
+  assert.deepEqual({ ...s.reputation }, { valedorn: 33, aurelian: -60, hrothmark: 0, vessaro: 0, merrow: 0 });
   assert.equal(s.owners.greywall_fort, 'aurelian');
   assert.equal(s.owners.ashgate_fort, 'aurelian');
 
@@ -154,11 +154,13 @@ test('reputation and fort owners persist through save and reload, and bad values
     reputation: { valedorn: 'lots', aurelian: 900, neutral: 50, dragons: 5 },
     owners: { greywall_fort: 'neutral', ashgate_fort: 'dragons', stonebridge: 'aurelian' },
   });
-  assert.deepEqual({ ...junk.reputation }, { valedorn: 0, aurelian: 100 });
-  assert.deepEqual({ ...junk.owners }, { greywall_fort: 'valedorn', ashgate_fort: 'aurelian' });
+  assert.deepEqual({ ...junk.reputation }, { valedorn: 0, aurelian: 100, hrothmark: 0, vessaro: 0, merrow: 0 });
+  // Bad owners fall back to each fort's own (W-05b: every fort in the world).
+  const own = Object.fromEntries(CL.realm.forts().map((f) => [f.id, f.ownerFaction]));
+  assert.deepEqual({ ...junk.owners }, { ...own, greywall_fort: 'valedorn', ashgate_fort: 'aurelian' });
 
   const old = CL.save.sanitize({ version: 2, roster: [] });
-  assert.deepEqual({ ...old.reputation }, { valedorn: 0, aurelian: 0 }, 'older saves start neutral');
+  assert.deepEqual({ ...old.reputation }, { valedorn: 0, aurelian: 0, hrothmark: 0, vessaro: 0, merrow: 0 }, 'older saves start neutral');
 });
 
 test('captured heroes are released at a settlement that will have them', () => {

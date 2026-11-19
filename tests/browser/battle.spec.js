@@ -15,7 +15,7 @@ async function toEncounter(page) {
   await toMap(page);
   const [cx, cy] = await game(page, (CL) => {
     const s = CL.world.map().sites.looter_camp;
-    return CL.world.toPx(s.mapX, s.mapY);
+    return CL.world.toScreen(s.mapX, s.mapY);
   });
   const p = await canvasToPage(page, cx, cy);
   await pressAt(page, p.x, p.y);

@@ -543,7 +543,23 @@ _Written 2026-11-18 at build 2.0.0; **reviewed and corrected the same day agains
 
 ---
 
-### W-05b · The bigger region's content (L) — Ready after decisions D-W1–D-W3; ships with W-06
+### W-05b · The bigger region's content (L) — ✅ Done in 2.7.0
+
+**Done (2.7.0, 2026-11-19).** Decisions by the owner: D-W1 the default (2026-11-18); **D-W2: the March kept whole in the middle, but old saves are refused, not moved in** (2026-11-19), so W-06's migration is not needed; D-W3 the default (placeholder names and cultures). As specified, with these notes:
+- **The Sundered Realm** (`data/world_map.js`, world id `sundered_realm`), 200 × 200. The March sits whole at + 50, + 50: its places, roads, forests, river, hills and lairs are where they were relative to each other, and its travel times are 2.5.0's (tested). Its river and hills stay drawn only, so travel inside it is as it was.
+- **Kingdoms:** Valedorn adds Westholt Castle, Ashby and Fernley in the western shires; Aurelian adds Castra Nova, Calvinum and Tessaro in the eastern provinces; **Hrothmark** (the northern highlands: Hrothgard, Ulfstead Hold, Skarnwall and four villages) and the **Vessaro League** (the southern coast: Vessara, Torre Salina, Castel Verro and four villages) are new, with their own name cultures; the **Free City of Merrow** is a kingdom in the data's sense (reputation, a patrol, recruits) that hires out Mercenaries and has the cheapest market and the fullest armoury. 31 settlements; every town has a contract board and recruits, every village a market, no fort trades.
+- **Troops:** six each for Hrothmark (Clansman → Axeman → Huscarl or Hill Rider; Fell Archer → Fell Warden: heavier, slower foot) and the League (Militia → Pikeman → Pavisier or Light Horse; Crossbowman → Arbalester: crossbows hit hard but load slowly, the light horse is fast and thin-skinned). They render with role art until their sprites exist.
+- **Goods:** timber (cheap in the north) and wine (cheap on the coast). The content check no longer insists on exactly six goods.
+- **Map content:** terrain from W-05a for real (the Hrothmark range with the Hrothgard–Greywall road as its pass, hills in the north-west and east, a marsh in the south-west, the Vess from the March to the sea with a ford and a bridge, the sea along the south); eight roads; two lairs in each of the five regions, with two new lair fights (Raider Warband, Deserters); four new Reaver bands, patrols by holdings (three per kingdom, the Merrow Watch), and caravans between the capitals and Merrow. 11 bands, 13 patrols and 5 caravans in all.
+- **News:** a `{region}` placeholder ("the northern highlands"), and lines that use it.
+- **Bots:** the campaign bot takes the nearest lair it can beat and walks to the nearest other contract board; the story bot wanders only the March (its regions), where Gate D's checks stay.
+- **Old saves** (any save of the Border March world, every build to 2.6.0) are refused on load and on import. The game begins a new campaign, says once "The world has grown: new kingdoms lie beyond the March…", and keeps the old save untouched in `crownless_save_other_world`. The save schema stays v9. The migrations stay in `js/save.js`, and their tests (every fixture set from 0.14 to 2.0) run on the March as it was (`tests/helpers/old-march.js`), on which the W-04 test world is now built.
+- **Art:** the asset request list is in `docs/ASSETS.md` ("Asset requests for the art team"). No image files were added, so the manifest is unchanged.
+- **Help:** How to Play mentions the lands beyond the March and the new kinds of ground, and says every town posts contracts. The full help for the bigger map stays with W-05c.
+- **Tests:** `tests/realm-world.test.js` (the kingdoms, settlements and lairs; markets and boards; the troop trees; the farthest capitals reached in under four days; the world's parties stay on the map; region news; old saves refused and kept). Existing tests moved to the new coordinates or, for 2.0's projection and the saves, to the old March.
+- **Prototype G on the new map** (6 seeds × 30 days): no run stuck, every one resumed from its halfway save; hands-off median 132 crowns, 109 won / 62 lost; presets 1,190 crowns, 196 / 17; expert 1,235 crowns, 203 / 11. The gap between fighting and Simulate stays B-01's to close.
+- **Not done here:** the owner's phone session at W-02's zoom levels (acceptance).
+
 
 **Problem.** Ten settlements and two kingdoms are too small for lords, holdings, sieges, wars and diplomacy.
 
@@ -611,7 +627,10 @@ _Written 2026-11-18 at build 2.0.0; **reviewed and corrected the same day agains
 
 ---
 
-### W-06 · Saves move into the bigger world (M) — Ready after decision D-W2; released with W-05b
+### W-06 · Saves move into the bigger world (M) — ✖ Not needed (decision D-W2, 2026-11-19)
+
+**Owner, 2026-11-19:** keep the March inside the bigger world, but don't move old saves in: they are refused (and kept safe) instead. W-05b did that in 2.7.0. The spec below is kept for the record.
+
 
 **Problem.** Every save so far has migrated forward. The bigger world must not strand anyone's campaign, or move them to the wrong place.
 

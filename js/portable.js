@@ -189,7 +189,7 @@
     if (!Number.isInteger(raw.version)) return { ok: false, reason: 'This is not a Crownless save file.' };
     const check = CL.save.check(raw);
     if (check.newer) return { ok: false, reason: 'This save was made by a newer version of Crownless. Update the game first.' };
-    if (check.otherWorld) return { ok: false, reason: 'This save belongs to a different world than this game has.', problems: check.problems };
+    if (check.otherWorld) return { ok: false, reason: 'This save belongs to a world this version no longer has: campaigns begun before the world grew cannot continue in it.', problems: check.problems };
     if (check.problems.length) return { ok: false, reason: 'The save is incomplete or damaged, so it was not loaded.', problems: check.problems };
 
     if (raw.version === 1) {

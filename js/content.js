@@ -184,7 +184,7 @@
       }
     }
     const tradeGoods = Object.values(C.markets || {}).filter((g) => g.tradeGood);
-    if (tradeGoods.length !== 6) err(`markets: expected 6 trade goods, found ${tradeGoods.length}`);
+    if (!tradeGoods.length) err('markets: needs trade goods');
     for (const s of Object.values(C.settlements || {})) {
       if (!s.services?.includes('trade')) continue;
       for (const g of tradeGoods) {

@@ -13,7 +13,7 @@ test('a new game follows GDD §5: 60 crowns, sword, clothing, shield, food, no s
   const c = CL.campaign;
   assert.equal(CL.save.existed, false);
   assert.equal(c.version, 9); // save schema v9 from 1.16.0 (V2-12)
-  assert.equal(c.worldId, 'border_march');
+  assert.equal(c.worldId, 'sundered_realm'); // W-05b: the bigger world
   assert.equal(c.contentVersion, CL.BUILD);
   assert.equal(c.gold, 60);
   assert.equal(c.roster.length, 0);

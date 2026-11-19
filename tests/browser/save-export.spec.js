@@ -5,7 +5,7 @@
 const fs = require('node:fs');
 const { test, expect, open, waitMode, game, press, newGame, fixtureText, fixtureExpect } = require('./helpers');
 
-const FIXTURE = ['saves-2.0', 'story-played.json'];
+const FIXTURE = ['saves-2.7', 'story-played.json']; // the first saves of the bigger world (W-05b)
 
 async function openSaves(page) {
   await press(page, '#savesBtn');

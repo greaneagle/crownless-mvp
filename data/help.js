@@ -17,7 +17,7 @@
       order: 1,
       title: 'Getting started',
       body: [
-        'You are a wanderer on the Border March, where two crowns claim an empire that is gone. Earn a name with your sword, hire soldiers, and decide who Greywall belongs to — or whether it belongs to either.',
+        'You are a wanderer on the Border March, where two crowns claim an empire that is gone. Earn a name with your sword, hire soldiers, and decide who Greywall belongs to — or whether it belongs to either. Beyond the March lie the highlands of Hrothmark to the north, the Vessaro League’s southern coast and the free port of Merrow.',
         'Begin in Stonebridge: Elder Maren has work for a stranger. Her quest teaches the rest. The Journal always says what to do next.',
         'Nothing ends the game. Lose a battle and you are captured, lose some crowns and gear, and are let go near a settlement.'
       ]
@@ -28,7 +28,7 @@
       title: 'The map',
       body: [
         'Tap a town, village, fort, camp or band to travel there. Time passes as you ride: your soldiers eat, wages come due, wounds heal, and the world moves.',
-        'Roads are fastest, forests slowest; heavy cargo slows you too. Patrols and caravans keep the peace and the trade going; Road Reavers prey on both, and on you if you look weak.',
+        'Roads are fastest. Hills, forests and marsh slow you, mountains most of all (a road through them is a pass), and a river is slow to wade except at a ford or a bridge; heavy cargo slows you too. Patrols and caravans keep the peace and the trade going; Road Reavers prey on both, and on you if you look weak.',
         'Wait lets time pass where you stand. The panel at the top left shows the day, your crowns, soldiers, food, morale and current quest.',
         'Drag the map to look around and pinch (or + and −) to zoom in; only a tap sets off, so dragging or pinching never sends you anywhere. While zoomed in, the view follows your company; Centre brings it back after you have looked away, and arrows at the edge point to you and to your contract or quest targets. Zoom changes only what you see: journeys take the same time and bands find you the same way at any zoom. The game remembers your zoom on this device.'
       ],
@@ -104,7 +104,7 @@
       title: 'Trade and contracts',
       body: [
         'Six goods are cheap where they are plentiful and dear where they are short. Caravans that arrive make a good cheaper; caravans the Reavers rob make it dearer. Market talk on the Trade screen says what moved prices. Cargo slows your march.',
-        'Stonebridge and Eastwatch post contracts: hunt a marked band, escort a caravan (it only rolls while you ride beside it), or deliver goods or a letter. One contract at a time; each shows its reward and time limit, and failing one costs renown. Finished work wins favour with the town’s kingdom.'
+        'Every town posts contracts: hunt a marked band, escort a caravan (it only rolls while you ride beside it), or deliver goods or a letter. One contract at a time; each shows its reward and time limit, and failing one costs renown. Finished work wins favour with the town’s kingdom.'
       ]
     },
     story: {

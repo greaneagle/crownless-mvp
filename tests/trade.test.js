@@ -3,9 +3,9 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { loadGame } = require('./helpers/load');
 
-const GOODS = ['grain', 'salt', 'wool', 'iron', 'cloth', 'tools'];
+const GOODS = ['grain', 'salt', 'wool', 'iron', 'cloth', 'tools', 'timber', 'wine']; // W-05b: timber and wine
 
-test('six trade goods; every trading settlement has a market, forts do not', () => {
+test('eight trade goods; every trading settlement has a market, forts do not', () => {
   const { CL } = loadGame();
   assert.deepEqual(
     Array.from(CL.trade.goods(), (g) => g.id),

@@ -29,6 +29,31 @@
       ],
       reward: { goldBase: 52, goldPerKill: 3, renown: 4 },
       loot: 'mid'
+    },
+    // W-05b: lairs of the wider world.
+    raider_warband: {
+      id: 'raider_warband',
+      name: 'Raider Warband',
+      enemyFaction: 'neutral',
+      map: 'open_country',
+      waves: [
+        { reaver: 4, looter: 2 },
+        { reaver: 3, mercenary: 2 }
+      ],
+      reward: { goldBase: 60, goldPerKill: 4, renown: 5 },
+      loot: 'mid'
+    },
+    deserter_band: {
+      id: 'deserter_band',
+      name: 'Deserters',
+      enemyFaction: 'neutral',
+      map: 'forest_wilds',
+      waves: [
+        { mercenary: 3, looter: 3 },
+        { mercenary: 2, reaver: 3 }
+      ],
+      reward: { goldBase: 55, goldPerKill: 4, renown: 4 },
+      loot: 'mid'
     }
   };
 })(typeof window !== 'undefined' ? window : globalThis);

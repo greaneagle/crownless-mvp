@@ -103,7 +103,7 @@ test('guard the road: the caravan saved, both banners pleased, the compromise fl
   assert.deepEqual({ ...raiders.troops }, { looter: 5, reaver: 3 });
   winAgainst(CL, raiders);
   assert.equal(CL.story.questStatus(c, 'q3'), 'done');
-  assert.deepEqual({ ...c.reputation }, { valedorn: 10, aurelian: 10 });
+  assert.deepEqual({ ...c.reputation }, { valedorn: 10, aurelian: 10, hrothmark: 0, vessaro: 0, merrow: 0 });
   assert.equal(CL.story.state(c).flags.road_protector, true);
 });
 
@@ -119,7 +119,7 @@ test('sell one side’s plans to the other: paid, but no road-peace credit', () 
   assert.match(v.text, /offer too/);
   say(CL, v, /Sell the magistrate’s plans/);
   assert.equal(c.gold, gold + 100);
-  assert.deepEqual({ ...c.reputation }, { valedorn: 10, aurelian: -25 });
+  assert.deepEqual({ ...c.reputation }, { valedorn: 10, aurelian: -25, hrothmark: 0, vessaro: 0, merrow: 0 });
   assert.equal(CL.story.state(c).flags.q3_side, 'sold_to_valedorn');
   assert.equal(stage(CL), 'q3_road');
   winAgainst(CL, band(CL, 'q3_raiders'));

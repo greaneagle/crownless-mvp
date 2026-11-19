@@ -45,8 +45,11 @@ test('the 15 GDD troop definitions exist', () => {
   for (const id of required) assert.ok(C.troops[id], `missing troop ${id}`);
 });
 
-test('settlements match GDD geography: 2 towns, 2 forts, 6 villages', () => {
-  const list = Object.values(C.settlements);
+// The Border March: since W-05b at + 50, + 50 in the middle of the bigger world.
+const inMarch = (s) => s.mapX >= 50 && s.mapX <= 150 && s.mapY >= 50 && s.mapY <= 150;
+
+test('the Border March matches GDD geography: 2 towns, 2 forts, 6 villages', () => {
+  const list = Object.values(C.settlements).filter(inMarch);
   assert.equal(list.length, 10);
   const count = (type) => list.filter((s) => s.type === type).length;
   assert.equal(count('town'), 2);

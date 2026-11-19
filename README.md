@@ -1,4 +1,4 @@
-# Crownless 2.6.0 — The Border March
+# Crownless 2.7.0 — The Border March
 
 A single-player, top-down party-battle prototype in plain HTML5 Canvas and classic JavaScript. There's no bundler, no runtime dependencies and no server (Playwright, for the browser tests, is the only development dependency). It's published to GitHub Pages straight from `main`.
 
@@ -62,6 +62,7 @@ A single-player, top-down party-battle prototype in plain HTML5 Canvas and class
 - **Battle zoom (2.4.0):** on a large battlefield, pinch the field (or the mouse wheel) for 0.75×–1.5×, or the zoom button / Z for 1× ↔ 0.75×; the view keeps the hero central and the zoom is a device setting. One finger on the field does nothing and a pinch never attacks or moves; sighting is judged at 1×, so the battle is the same at every zoom.
 - **A data-driven world (2.5.0):** the world's size, kingdoms, start, regions and opening view are data (`data/world_map.js`); nothing in `js/` names a kingdom or the world or assumes a 0–100 map, and the tests play a three-kingdom 150 × 120 test world (`tests/helpers/test-world.js`). Nothing changes in play.
 - **Terrain (2.6.0):** hills, mountains with passes, marsh, rivers with fords and bridges, and coasts are world data with travel speeds and battlefields of their own, all passable; the River Ford battlefield slows everyone in its shallows (Debug → Ford battle 30). The March has none of the new terrain yet.
+- **The bigger world (2.7.0):** the Sundered Realm, about four times the March's area, with the March whole in the middle: Valedorn and Aurelian reach west and east, Hrothmark holds the northern highlands and the Vessaro League the southern coast (their own troops, names and goods), and the Free City of Merrow hires out sell-swords. 31 settlements, lairs in every region, caravans to Merrow, news that names the region. Campaigns saved before 2.7.0 can't continue in it: they are kept safe in the browser, untouched, and a new campaign begins.
 - **Developer tools** (the Logs and Debug buttons) show on a local dev server. On the published site they are hidden; open the page with `?dev` added to the address (for example `…/crownless-mvp/?dev`) to show them on that device, and `?dev=0` to hide them again. F3 opens the diagnostics panel either way.
 - The Debug panel's **Camera test 30 / 40** (1.7.0, PROTO-A) runs a practice battle in a forest three screens across with the camera following the hero, and reports fps, drawing time, the slowest frame and how long the armies took to meet.
 - The **Debug** button gives testing shortcuts: hero and troop XP, renown, contracts, crowns, trade goods and prices, spawning or clearing world parties, food and morale, soldiers, items, stats, god mode, time, teleport, win or lose a battle, and wiping the save. Every use is logged.
@@ -230,6 +231,7 @@ How the specs work (`tests/browser/helpers.js`):
 - `map-camera.spec.js` (W-02) drags (mouse and one finger), pinches with two fingers, wheels and presses + − and Centre on the world map, and checks that none of it ever starts travel while a tap still does, at 2.4× too.
 - `battle-zoom.spec.js` (W-03) pinches the battlefield with two fingers, wheels and presses the zoom button and Z, and checks that nothing attacks, moves or is sent meanwhile, and that the joystick, ATTACK, ORDERS and the minimap still work while zoomed.
 - `ford.spec.js` (W-05a) plays the River Ford battle at both sizes: the river drawn, walking and wading by real input, a result.
+- `load-save.spec.js` loads real saves of the bigger world (`tests/fixtures/saves-2.7`, W-05b) and checks that a save from before it grew is refused, kept safe and explained on the title screen.
 - **Rule:** a task that changes the UI or input adds or updates browser specs.
 
 **Screenshots** (`tests/browser/screens.visual.spec.js`, tagged `@visual`) compare ten screens at the Normal text size (the map also zoomed in) and four (title, settlement, map, battle with Orders open) at Larger, on both projects, against baselines in `tests/browser/screenshots/`. The baselines are authoritative only from Linux Chromium, as CI runs it (fonts differ between machines), so on Windows and macOS these tests are skipped, and a screen without a baseline yet is skipped everywhere.

@@ -102,6 +102,13 @@ function makeStoryBot(CL, rnd, { winChance = 0.85, reloadChance = 0.04 } = {}) {
 
   // ---- Conversations ----
 
+  /** The March's settlements: those in its regions (`*_march`) of the world's data. */
+  function marchPlaces() {
+    return Object.values(CL.content.table('settlements'))
+      .filter((s) => /_march$/.test(CL.world.regionAt(s.mapX, s.mapY)?.id || ''))
+      .map((s) => s.id);
+  }
+
   /** Everyone the player could talk to right now, and where. */
   function people() {
     const out = [];
@@ -219,7 +226,9 @@ function makeStoryBot(CL, rnd, { winChance = 0.85, reloadChance = 0.04 } = {}) {
         stats.waits++;
         note(`waited ${days.toFixed(1)}d`);
       } else {
-        const sid = pick(Object.keys(CL.content.table('settlements')));
+        // The story is the Border March's: wander among its places (W-05b: the March is two regions
+        // in the middle of a bigger world; Gate D's checks stay there).
+        const sid = pick(marchPlaces());
         note(`ride to ${sid}`);
         goTo(sid);
       }

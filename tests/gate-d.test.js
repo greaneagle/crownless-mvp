@@ -16,8 +16,11 @@ test('Gate D scope: the region, troops, maps, quests, contracts, companion, repu
     for (const x of list) o[x[key]] = (o[x[key]] || 0) + 1;
     return o;
   };
-  assert.deepEqual(by(t('settlements'), 'type'), { town: 2, fort: 2, village: 6 });
-  assert.equal(t('troops').filter((x) => x.id !== 'hero').length, 16, '15 troop types, plus the Sellsword from 1.5.0 (V2-03b)');
+  // Gate D's region is the Border March: since W-05b it lies whole in the middle of a bigger world.
+  const march = t('settlements').filter((s) => /_march$/.test(CL.world.regionAt(s.mapX, s.mapY)?.id || ''));
+  assert.deepEqual(by(march, 'type'), { town: 2, fort: 2, village: 6 });
+  const marchTroops = t('troops').filter((x) => x.id !== 'hero' && ['valedorn', 'aurelian', 'neutral'].includes(x.faction));
+  assert.equal(marchTroops.length, 16, '15 troop types, plus the Sellsword from 1.5.0 (V2-03b)');
   assert.equal(t('battle_maps').filter((m) => !m.generate).length, 3, 'the three hand-made maps');
   assert.equal(t('battle_maps').filter((m) => m.generate).length, 3, 'plus two large generated ones from 1.8.0 (V2-05) and the river ford from 2.6.0 (W-05a)');
   assert.deepEqual(
@@ -35,7 +38,7 @@ test('Gate D scope: the region, troops, maps, quests, contracts, companion, repu
     t('companions').map((m) => m.id),
     ['mara'],
   );
-  assert.deepEqual(Object.keys(CL.campaign.reputation).sort(), ['aurelian', 'valedorn']);
+  for (const k of ['valedorn', 'aurelian']) assert.ok(k in CL.campaign.reputation, k);
   assert.deepEqual(Object.keys(CL.content.get('quests', 'q4').endings).sort(), ['aurelian', 'compromise', 'valedorn']);
   assert.ok(t('items').length >= 25, 'about 30 items including gear, horses and goods');
   assert.deepEqual(Array.from(CL.content.validate()), [], 'all content references check out');

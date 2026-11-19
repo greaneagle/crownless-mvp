@@ -6,7 +6,11 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { loadGame } = require('./helpers/load');
+const { loadGame: loadAny } = require('./helpers/load');
+const { oldMarch } = require('./helpers/old-march');
+// Saves from before W-05b belong to the Border March as it was; the real build refuses them
+// (tests/world-grown.test.js). Their migrations are proved on the March as it was.
+const loadGame = (o = {}) => loadAny({ content: oldMarch, ...o });
 const { summary } = require('../scripts/make-save-fixtures');
 
 const DIR = path.join(__dirname, 'fixtures', 'saves-v1.0');

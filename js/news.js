@@ -42,6 +42,12 @@
     return best?.id || null;
   }
 
+  /** The name of the region a settlement lies in (the world's `regions`), or null. */
+  function regionOf(id) {
+    const s = settlement(id);
+    return s ? CL.world.regionAt(s.mapX, s.mapY)?.name || null : null;
+  }
+
   /**
    * Note something that happened. data: { x, y } (→ the nearest place), dest, good, faction,
    * winner, loser, fort, owner. Unknown kinds are ignored.
@@ -78,6 +84,7 @@
       fort: settlement(e.fort)?.name || 'a fort',
       owner: factionName(owner),
       hero: c.character?.name || 'a wanderer',
+      region: regionOf(e.place) || 'the border', // W-05b: the named area the place lies in
     };
     const out = text.replace(/\{(\w+)\}/g, (m, k) => (k in vars ? vars[k] : m));
     return out.replace(/(^|[.!?]\s+)([a-z])/g, (_m, a, b) => a + b.toUpperCase()); // sentence starts
@@ -193,7 +200,7 @@
 
   /** Content checks (from content.validate). */
   function validate(C, err) {
-    const known = new Set(['place', 'dest', 'good', 'faction', 'winner', 'loser', 'fort', 'owner', 'hero']);
+    const known = new Set(['place', 'region', 'dest', 'good', 'faction', 'winner', 'loser', 'fort', 'owner', 'hero']);
     const check = (where, text) => {
       if (typeof text !== 'string' || !text) return err(`${where}: needs text`);
       for (const [, k] of text.matchAll(/\{(\w+)\}/g)) if (!known.has(k)) err(`${where}: unknown placeholder {${k}}`);

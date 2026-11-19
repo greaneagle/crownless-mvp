@@ -13,7 +13,7 @@ test('the page loads without errors and the title screen shows the version', asy
 });
 
 test('with a save in the browser, the title offers Continue (and New game behind a confirmation)', async ({ page }) => {
-  await open(page, { storage: { crownless_save: fixtureCampaign('saves-2.0', 'campaign-day20.json') } });
+  await open(page, { storage: { crownless_save: fixtureCampaign('saves-2.7', 'campaign-day20.json') } });
   await expect(page.locator('#primaryBtn')).toHaveText('Continue');
   await expect(page.locator('#secondaryBtn')).toHaveText('New game');
   await press(page, '#secondaryBtn');

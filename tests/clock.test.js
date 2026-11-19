@@ -24,7 +24,7 @@ function band(opts = {}) {
 test('the fixed times come from the world data and are checked at load', () => {
   const { CL, sandbox } = loadGame();
   assert.deepEqual([CL.clock.hours('battle'), CL.clock.hours('capture'), CL.clock.hours('rest')], [4, 12, 24]);
-  const time = sandbox.CROWNLESS_CONTENT.world_map.border_march.time;
+  const time = sandbox.CROWNLESS_CONTENT.world_map.sundered_realm.time;
   time.battle = -1;
   time.nap = 2;
   const errors = Array.from(CL.content.validate()).join('\n');

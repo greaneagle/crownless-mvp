@@ -109,7 +109,9 @@
     const existed = CL.save.existed;
     return {
       title: 'CROWNLESS',
-      text: 'The Border March: travel between towns, hire soldiers, and break the Road Reavers who prey on the roads.',
+      // A save that could not be opened (SC-33, or W-05b's old world) is explained here, where it can't
+      // be missed, as well as in the passing message.
+      text: CL.save.notice || 'The Border March: travel between towns, hire soldiers, and break the Road Reavers who prey on the roads.',
       button: existed ? 'Continue' : 'New game',
       secondary: existed ? (g.confirmNew ? 'Erase save and start over?' : 'New game') : null,
     };

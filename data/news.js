@@ -3,7 +3,8 @@
  * events (caravan losses, patrol defeats, frontier clashes, forts changing hands, the player's
  * deeds). Each kind has a priority (the bulletin tells the most important recent event) and one or
  * more lines, picked in turn. `market` is the line the Trade screen shows at the town concerned.
- * Placeholders: {place} nearest settlement, {dest} destination, {good}, {faction} / {winner} /
+ * Placeholders: {place} nearest settlement, {region} the region it lies in (W-05b: "the northern
+ * highlands"), {dest} destination, {good}, {faction} / {winner} /
  * {loser} (a kingdom's short name: "Valedorn"), {owner} (its full name), {fort}, {hero}.
  * `tensions` is the quiet-days fallback, varied by ending. */
 (function (root) {
@@ -35,14 +36,18 @@
       priority: 4,
       lines: [
         'Road Reavers fell on {faction} wagons near {place}. {good} will cost more in {dest} for a while.',
-        'The {faction} caravan bound for {dest} never arrived. Reavers took it near {place}.'
+        'The {faction} caravan bound for {dest} never arrived. Reavers took it near {place}.',
+        'Bad news from {region}: Reavers fell on {faction} wagons near {place}, and {dest} goes short of {good}.'
       ],
       market: 'Traders grumble: Reavers took the {faction} caravan bound here, and {good} costs more for it.'
     },
     patrol_beaten: {
       id: 'patrol_beaten',
       priority: 4,
-      lines: ['Road Reavers cut up {faction} soldiers near {place}. The roads there are not safe.']
+      lines: [
+        'Road Reavers cut up {faction} soldiers near {place}. The roads there are not safe.',
+        'The roads of {region} are not safe: Reavers cut up {faction} soldiers near {place}.'
+      ]
     },
     escort_arrived: {
       id: 'escort_arrived',
@@ -55,13 +60,14 @@
       priority: 3,
       lines: [
         'Travellers talk of {hero}, who broke a band of Road Reavers near {place}.',
-        'Word on the road: a band of Reavers near {place} met {hero} and did not walk away.'
+        'Word on the road: a band of Reavers near {place} met {hero} and did not walk away.',
+        'They are telling it all over {region}: {hero} broke a Reaver band near {place}.'
       ]
     },
     reavers_broken: {
       id: 'reavers_broken',
       priority: 2,
-      lines: ['{faction} soldiers broke a band of Road Reavers near {place}.']
+      lines: ['{faction} soldiers broke a band of Road Reavers near {place}.', '{faction} soldiers are clearing {region} of Reavers: they broke a band near {place}.']
     },
     delivered: {
       id: 'delivered',

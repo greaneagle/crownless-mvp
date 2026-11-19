@@ -19,14 +19,14 @@ const walk = (CL, keys, seconds) => {
 test('Stonebridge is a walkable town that opens on its menu (F-3); other settlements are menus only', () => {
   const { CL, uiCalls } = loadGame();
   CL.world.leaveSettlement();
-  CL.world.travelTo({ type: 'settlement', id: 'stonebridge', x: 50, y: 55 });
+  CL.world.travelTo({ type: 'settlement', id: 'stonebridge', x: 100, y: 105 });
   assert.equal(CL.game.mode, 'settlement', 'arriving opens the menu');
   assert.equal(CL.game.placeMode, 'settlement');
   assert.equal(CL.town.enter(), true, 'Walk the streets');
   assert.equal(CL.game.mode, 'town');
   assert.equal(CL.game.placeMode, 'town');
   CL.world.leaveSettlement();
-  CL.world.travelTo({ type: 'settlement', id: 'eastwatch', x: 62, y: 40 });
+  CL.world.travelTo({ type: 'settlement', id: 'eastwatch', x: 112, y: 90 });
   for (let i = 0; i < 400 && CL.game.travel; i++) CL.world.update(0.05);
   assert.equal(CL.game.mode, 'settlement');
   assert.equal(CL.town.hubFor('eastwatch'), null);

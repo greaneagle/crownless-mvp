@@ -6,7 +6,11 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { loadGame, memoryStorage } = require('./helpers/load');
+const { loadGame: loadAny, memoryStorage } = require('./helpers/load');
+const { oldMarch } = require('./helpers/old-march');
+// Saves from before W-05b belong to the Border March as it was; the real build refuses them
+// (tests/world-grown.test.js). Their migrations are proved on the March as it was.
+const loadGame = (o = {}) => loadAny({ content: oldMarch, ...o });
 
 const FIX = path.join(__dirname, 'fixtures');
 const KEY = 'crownless_save';
@@ -153,7 +157,7 @@ test('a save from another world, or a newer save schema, is refused by name', ()
   const other = { ...JSON.parse(JSON.stringify(CL.campaign)), worldId: 'far_isles' };
   const r = CL.portable.parse(JSON.stringify(other));
   assert.equal(r.ok, false);
-  assert.match(r.reason, /different world/);
+  assert.match(r.reason, /world this version no longer has/);
   assert.match(r.problems[0], /far_isles/);
   assert.match(CL.portable.parse(JSON.stringify({ ...CL.campaign, version: CL.save.VERSION + 1 })).reason, /newer version/);
 });

@@ -141,9 +141,9 @@ Each phase ends playable, measured and documented. The order follows the design'
 | **W-03** | ✅ **Done in 2.4.0.** **Battle zoom:** 0.75×–1.5× on the field and in the overview, with the same gesture handling | Done (phone numbers pending) | S–M | W-02 | — |
 | **W-04** | ✅ **Done in 2.5.0.** **A data-driven world:** no kingdom ids, world id or 0–100 bounds in code; map bounds, start and kingdoms from the world package; a three-kingdom test world in the tests | Done | M | — | — |
 | **W-05a** | ✅ **Done in 2.6.0.** **World geometry and terrain** (split from W-05): map bounds over 100; new terrain kinds (mountain, marsh, coast, ford, bridge) as passable terrain with costs; battle maps for each; a ford battle map | Done (D-W1, D-W4: defaults) | M | W-02, W-04 | — |
-| **W-05b** | **The bigger region's content** (split from W-05): kingdoms, cultures, troop trees, settlements, parties, markets, garrisons, news and contracts; the asset request list for the art team; bots that read the world's boards. **Ships in the same build as W-06** | Ready after decisions D-W1–D-W3 | L | W-05a | v10, with W-06 |
+| **W-05b** | ✅ **Done in 2.7.0.** **The bigger region's content** (split from W-05): kingdoms, cultures, troop trees, settlements, parties, markets, garrisons, news and contracts; the asset request list for the art team; bots that read the world's boards. Old saves refused and kept (D-W2) | Done (D-W1, D-W3: defaults; D-W2: refuse old saves) | L | W-05a | — (world id) |
 | **W-05c** | **New-region errands and help** (split from W-05): two or three errands outside the March; How to Play and tips for the bigger map | Specified | S | W-05b | — |
-| **W-06** | **Saves move into the bigger world:** the v10 migration (every coordinate-bearing field offset); fixtures from the real 2.0.0 build made **before** any content change. **Released together with W-05b** | Ready after decision D-W2 | M | W-04 | v10 |
+| **W-06** | ✖ **Not needed** (D-W2, owner 2026-11-19: old saves are refused, not moved in). Was: saves move into the bigger world by a v10 migration | Dropped | — | — | — |
 | **W-07** | **A world simulation that scales:** spatial grid, swept contacts for coarse steps, step budgets, map culling, war and peace between kingdoms (the March pair kept as the story needs) | Specified | M–L | W-05b, H-01 | v11 |
 | **W-08** | **Tuning and acceptance** of the bigger world, with a validation section | Specified | S–M | W-00–W-07 | — |
 | **W-09** | **Route planning** (new, optional in Phase W): a terrain-cost route planner for the player's travel and for parties; required before any impassable terrain and before P7-04's "Avoid danger" | Ready after decision D-W4 | M | W-05a | — |
@@ -215,7 +215,7 @@ All of Phase 9 is **Provisional**.
 2. **W-01 and W-02,** each extending W-00's browser tests. Then **W-03**.
 3. **W-04** (data-driven world, no hard-coded bounds). It can run in parallel with W-01–W-03, since it touches different files.
 4. **W-06's fixtures:** generated from the real 2.0.0 build **before** any content changes (as for every earlier schema step).
-5. **W-05a,** then **W-05b + W-06 together in one build,** then **W-05c**.
+5. **W-05a,** then **W-05b + W-06 together in one build,** then **W-05c**. (2026-11-19: W-06 dropped by decision D-W2; W-05b refuses old saves instead, in 2.7.0.)
    
    **Why together:** a build with the bigger map but no migration would load 2.0 saves with unshifted coordinates; with `main` deployed to Pages, that would hit real players.
 6. **W-07,** then **W-08.** **W-09** if the owner chooses impassable terrain (D-W4), or before P7-04's "Avoid danger" routes.
@@ -230,7 +230,7 @@ All of Phase 9 is **Provisional**.
 ### Save schema steps (each with a migration, fixtures from the build before it, and SAVE-FORMAT updated)
 | Schema | Task | Change |
 |---|---|---|
-| v10 | W-05b + W-06 | Positions offset into the bigger map; new kingdoms' reputation; owners, markets and spawns for new places |
+| — | W-05b | No schema step: the world id changed (`sundered_realm`), so saves of the old March are refused and kept (D-W2). v10 is free for the next change |
 | v11 | W-07 | Relations between kingdoms (war, peace) |
 | v12+ | Phase 7 tasks with "Save: yes", in the order they ship | One step per task, never two tasks in one step |
 | later | Phases 8–9 | Holdings (P8-02) is the biggest: owners → holdings |
@@ -255,8 +255,8 @@ Decisions marked **blocking** must be made before the named task starts. The oth
 | **D-T1** | Add Playwright as the project's first **development** dependency (with a `package-lock.json`)? | **Decided yes (owner, 2026-11-18):** `@playwright/test` 1.64.1, pinned, Chromium only; the game itself stays dependency-free | W-00 (done) |
 | **D-T2** | Where are screenshot baselines authoritative? | CI's Linux Chromium; local runs check behaviour and skip pixel comparison unless asked (fonts and rendering differ between machines) | W-00 |
 | **D-W1** | How big should the world be? | About 4× today's area (200 × 200 map units), four kingdoms plus the Reavers and a free city, about 32 settlements. **Owner, 2026-11-18: the default.** | **W-05a, W-05b (blocking)** |
-| **D-W2** | Keep the Border March inside the bigger world, and move existing saves in? | Yes and yes: the March whole in the middle at a fixed offset; every save migrates (W-06) | **W-05b, W-06 (blocking)** |
-| **D-W3** | New kingdoms' names, cultures and feel? | Placeholder names fitting each culture, data-driven and renameable later; troop lines with a distinct style each (northern heavy infantry, southern crossbows and light horse) | **W-05b (blocking)** |
+| **D-W2** | Keep the Border March inside the bigger world, and move existing saves in? | Yes and yes: the March whole in the middle at a fixed offset; every save migrates (W-06). **Owner, 2026-11-19: keep the March, but refuse old saves (kept safe, not migrated); W-06 dropped.** | W-05b, W-06 |
+| **D-W3** | New kingdoms' names, cultures and feel? | Placeholder names fitting each culture, data-driven and renameable later; troop lines with a distinct style each (northern heavy infantry, southern crossbows and light horse). **Owner, 2026-11-19: the default.** | W-05b |
 | **D-W4** | Impassable terrain (rivers crossed only at fords and bridges, mountains)? | **No in Phase W:** all terrain passable at a cost (rivers very slow except at fords and bridges); impassable terrain only after W-09 route planning. **Owner, 2026-11-18: the default.** | W-05a |
 | **D-W5** | The two March kingdoms in W-07's war and peace | Valedorn and Aurelia stay at "tension" (frontier clashes, as now) until Q4 ends; the endings set peace (road peace) or war (one side holds Greywall) | W-07 |
 | **D-Z1** | Zoom range | Map: from "fit the whole map" to 2.4× (on today's 100 × 100 map that means no zoom-out below 1×); battle: 0.75×–1.5×; text size: four steps | W-02, W-03 |

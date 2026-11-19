@@ -133,7 +133,7 @@ test('a fort changing hands and the player’s own fights make the news; endings
   CL.story.state(c).flags.ending = 'compromise';
   assert.match(CL.news.bulletin(c).text, /road peace at Greywall holds/);
   // Border clashes go on, but under the road peace the news calls them what they are.
-  CL.news.record(c, 'frontier_clash', { x: 60, y: 40, winner: 'valedorn', loser: 'aurelian' });
+  CL.news.record(c, 'frontier_clash', { x: 110, y: 90, winner: 'valedorn', loser: 'aurelian' });
   assert.match(CL.news.bulletin(c).text, /^The road peace frays: Valedorn and Aurelian patrols came to blows near Eastwatch\.$/);
 });
 

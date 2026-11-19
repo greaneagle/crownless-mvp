@@ -81,18 +81,26 @@ test('the battle map for each kind of ground: the ford map at a river or ford', 
   assert.equal(CL.world.battleMapAt(fort.mapX + 2, fort.mapY), 'greywall_courtyard', 'grass near a fort: the fort approach');
 });
 
-test('the Border March is unchanged: only roads, forests and grass, the same travel times and battle maps', () => {
+test('the Border March is unchanged inside the bigger world: only roads, forests and grass, the same travel times and battle maps', () => {
   const { CL } = loadGame();
   const kinds = new Set();
-  for (let x = 0; x <= 100; x += 1) for (let y = 0; y <= 100; y += 1) kinds.add(CL.world.terrainAt(x, y));
+  // W-05b: the March sits at + 50, + 50; the Vess flows on south from its edge.
+  for (let x = 50; x <= 150; x += 1) for (let y = 50; y < 150; y += 1) kinds.add(CL.world.terrainAt(x, y));
   assert.deepEqual([...kinds].sort(), ['forest', 'grass', 'road']);
   for (const [id, h] of Object.entries(MARCH_HOURS)) {
     const p = CL.content.table('settlements')[id] || CL.world.map().sites[id];
-    assert.equal(CL.world.estimateHours(p.mapX, p.mapY), h, id);
+    assert.ok(Math.abs(CL.world.estimateHours(p.mapX, p.mapY) - h) < 1e-9, id);
   }
-  assert.equal(CL.world.battleMapAt(20, 30), 'forest_wilds');
-  assert.equal(CL.world.battleMapAt(42, 33), 'greywall_courtyard');
-  assert.equal(CL.world.battleMapAt(75, 20), 'open_country');
+  assert.equal(CL.world.battleMapAt(70, 80), 'forest_wilds');
+  assert.equal(CL.world.battleMapAt(92, 83), 'greywall_courtyard');
+  assert.equal(CL.world.battleMapAt(125, 70), 'open_country');
+});
+
+test('the bigger world has every kind of ground: the Hrothmark range and its pass, hills, marsh, the Vess with a ford and a bridge, and the sea', () => {
+  const { CL } = loadGame();
+  const at = { mountain: [120, 42], road: [96, 43], hills: [190, 50], marsh: [20, 158], river: [104, 172], ford: [106, 164], bridge: [101.8, 181.9], forest: [64, 12] };
+  for (const [kind, [x, y]] of Object.entries(at)) assert.equal(CL.world.terrainAt(x, y), kind, `${kind} at ${x},${y}`);
+  assert.deepEqual(Array.from(CL.world.map().coast), ['south']);
 });
 
 test('the river ford battle map: the river between the armies, its shallows at half speed', () => {

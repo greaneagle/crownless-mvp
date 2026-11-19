@@ -25,6 +25,22 @@ _GDD §11–§12 art bible ("No real Pokémon sprites, tiles, trademarks, or ass
 
 **Runtime dependencies:** none. The page loads only its own files: no CDN, web fonts, analytics or trackers. Development tools (`@biomejs/biome` for lint, `http-server` for local serving) run through `npx` on the developer's machine and are not shipped.
 
+## Asset requests for the art team (W-05b, build 2.7.0)
+
+The bigger world shipped with no new image files. Everything new is drawn with what exists, so nothing waits on art. This is the list of what would replace the stand-ins, most visible first. Sprites should match the existing sheets: 16-bit fantasy style, 4-frame walk cycles, cropped like the `u####` files.
+
+| # | Asset | Where it shows | Stand-in today |
+|---|---|---|---|
+| 1 | **Hrothmark troop sprites** (6): Clansman, Axeman, Huscarl, Fell Archer, Fell Warden, Hill Rider. Green and grey northern kit, fur, round shields, axes; the rider on a shaggy hill pony | Battles, recruit and party screens | Role art: the infantry, archer and Valedorn rider frames |
+| 2 | **Vessaro League troop sprites** (6): Militia, Pikeman, Pavisier (big painted pavise shield), Crossbowman, Arbalester, Light Horse. Ochre and white southern kit, brimmed helmets, crossbows | Battles, recruit and party screens | Role art, as above |
+| 3 | **Settlement icons on the world map**, one per type and culture: northern longhall town, southern port town, the free city's harbour, a castle (Westholt, Castra Nova, the Hrothmark holds) beside today's fort, northern and southern villages | World map | Canvas shapes (`js/render.js`), coloured by owner |
+| 4 | **World-map terrain**: mountain range with a pass, hills, marsh, the sea and coastline, a river with a ford and a bridge | World map | Canvas shapes and strokes (W-05a) |
+| 5 | **Battle-map tiles for the new ground**: river water, ford stones and reeds; hills; marsh; a mountain pass | River Ford battles; hills and marsh borrow Open Country and Forest Wilds today | Canvas fills (the ford) and the existing `w####` tiles |
+| 6 | **Banners and emblems** for Hrothmark (H), the Vessaro League (L) and the Free City of Merrow (M) | World-map party and settlement markers, troop tree | A letter on the faction colour |
+| 7 | **Trade-good icons** for Timber and Wine | Trade screen | Emoji (🪵, 🍷), like the other goods |
+
+When files arrive: add them to `assets/`, point the troop ids at their frames in `js/assets.js` (`troopArt`), and run `node scripts/asset-manifest.js`.
+
 ## Things to keep in mind (not legal advice)
 - **AI-generated images.** The sheets were generated with **ChatGPT**'s image tools (OpenAI). How copyright applies to AI-generated images depends on the country, and OpenAI's terms of use govern the outputs. Before selling, read the then-current terms on ownership and commercial use of outputs and keep a dated copy with the release records (`docs/V2-PLAN.md` R-01).
 - **The GDD's "no Pokémon" rule.** The sprites are a generic 16-bit fantasy style: hooded wanderers, helmeted soldiers, tabards and pennants. None of them are characters, tiles or logos from an existing game. The rule is about copying; a similar era look is fine.

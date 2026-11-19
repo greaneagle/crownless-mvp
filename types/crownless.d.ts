@@ -429,6 +429,8 @@ declare global {
     LEGACY_KEY: string;
     /** Where an incompatible save is kept untouched (SC-33). */
     INCOMPATIBLE_KEY: string;
+    /** Where a save of a world this build no longer has is kept untouched (W-05b). */
+    OTHER_WORLD_KEY: string;
     WOUND_DAYS: number;
     AUTOSAVE_DAYS: number;
     MIGRATIONS: Record<number, (d: Record<string, any>) => Record<string, any>>;

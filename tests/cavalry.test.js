@@ -126,7 +126,7 @@ test('Mercenaries are for hire in towns, not villages', () => {
   assert.equal(CL.party.recruitsHere().includes('mercenary'), false);
 });
 
-test('every troop type can appear in play (the 15 from the GDD, plus the Sellsword from 1.5.0)', () => {
+test('every troop type can appear in play (the 15 from the GDD, the Sellsword from 1.5.0, and the two new kingdoms’ 12 from 2.7.0)', () => {
   const { CL } = loadGame();
   const reach = new Set();
   // Hireable: faction recruits wherever recruiting is offered, plus town Mercenaries.
@@ -151,6 +151,6 @@ test('every troop type can appear in play (the 15 from the GDD, plus the Sellswo
   for (const e of Object.values(CL.content.table('encounters'))) for (const w of e.waves) for (const id of Object.keys(w)) reach.add(id);
   for (const t of Object.values(CL.content.table('party_templates'))) for (const id of Object.keys(t.troops)) reach.add(id);
   const all = Object.keys(CL.content.table('troops')).filter((id) => id !== 'hero');
-  assert.equal(all.length, 16); // 15 from the GDD; the Sellsword (V2-03b) is trained from Mercenaries
+  assert.equal(all.length, 28); // 15 from the GDD; the Sellsword (V2-03b) is trained from Mercenaries; 6 each for Hrothmark and Vessaro (W-05b)
   assert.deepEqual(all.filter((id) => !reach.has(id)), []);
 });

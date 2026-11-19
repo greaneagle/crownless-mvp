@@ -3,7 +3,12 @@
 // contacts whatever the view.
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { loadGame } = require('./helpers/load');
+const { loadGame: loadAny } = require('./helpers/load');
+const { oldMarch } = require('./helpers/old-march');
+
+// W-02's camera was built against 2.0's map, where "fit" is exactly 1×: these tests keep proving it on
+// the March as it was (tests/helpers/old-march.js). The bigger world's own view is tested at the end.
+const loadGame = (o = {}) => loadAny({ content: oldMarch, ...o });
 
 const ZOOMS = [1, 1.3, 1.6, 2, 2.4];
 const close = (a, b, eps = 1e-9) => Math.abs(a - b) < eps;
@@ -234,4 +239,22 @@ test('gameplay distance comes from the map data, not the view', () => {
     Object.assign(VIEW, saved);
   }
   assert.deepEqual(Array.from(CL.content.validate()), []);
+});
+
+test('the bigger world (W-05b): "fit" shows all of it below 1×, and a new game opens at 1× on Stonebridge', () => {
+  const { CL } = loadAny();
+  const V = CL.mapView;
+  CL.settings.load();
+  assert.ok(V.fitZoom() < 0.6, `fit ${V.fitZoom()}`);
+  assert.equal(V.levels()[0], V.fitZoom());
+  V.restore();
+  V.centre(true);
+  assert.equal(V.state.zoom, 1, "the world's opening zoom: the March at 2.0's scale");
+  const sb = CL.world.start();
+  const [sx, sy] = V.toScreen(sb.mapX, sb.mapY);
+  assert.ok(Math.abs(sx - 480) < 1 && Math.abs(sy - 270) < 1, `Stonebridge in the middle: ${sx},${sy}`);
+  for (const p of [...Object.values(CL.content.table('settlements')), ...Object.values(CL.world.map().sites)]) {
+    const [bx, by] = V.toMap(...V.toScreen(p.mapX, p.mapY));
+    assert.ok(close(bx, p.mapX) && close(by, p.mapY), p.id);
+  }
 });

@@ -32,6 +32,9 @@
   const LEGACY_KEY = 'crownless_v03_party';
   // V2-13 (SC-33): a save that needs content this build doesn't have is kept here, untouched.
   const INCOMPATIBLE_KEY = 'crownless_save_incompatible';
+  // W-05b (decision D-W2, owner 2026-11-19): a save of a world this build doesn't have (the Border
+  // March of 2.0–2.6, before the world grew) is refused, and kept here untouched.
+  const OTHER_WORLD_KEY = 'crownless_save_other_world';
   /** @param {number} version @returns {string} key holding a save exactly as it was before migrating */
   const preMigrationKey = (version) => `crownless_save_v${version}`;
   const MAX_VALUE = 99999;
@@ -400,6 +403,10 @@
         if (CL.storage.get(INCOMPATIBLE_KEY) == null) CL.storage.set(INCOMPATIBLE_KEY, text);
         CL.save.notice = `Your save could not be opened: ${r.problems[0]}. It has been kept safe and nothing will overwrite it.`;
       }
+      if (r.otherWorld && key === KEY) {
+        if (CL.storage.get(OTHER_WORLD_KEY) == null) CL.storage.set(OTHER_WORLD_KEY, text);
+        CL.save.notice = 'The world has grown: new kingdoms lie beyond the March, and campaigns begun before cannot continue in it, so a new one begins. Your old save has been kept safe and nothing will overwrite it.';
+      }
       return null;
     }
     if (r.from >= 2 && r.from < VERSION) {
@@ -514,6 +521,7 @@
     BACKUP_KEY,
     LEGACY_KEY,
     INCOMPATIBLE_KEY,
+    OTHER_WORLD_KEY,
     WOUND_DAYS,
     AUTOSAVE_DAYS,
     MIGRATIONS,
