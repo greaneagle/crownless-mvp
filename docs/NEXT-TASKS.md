@@ -919,7 +919,21 @@ _Written 2026-11-18 at build 2.0.0; **reviewed and corrected the same day agains
 
 **Acceptance.** As tests; the owner finds the warnings useful, not noisy.
 
-### P7-03 · Blacksmith (S) — Specified
+### P7-03 · Blacksmith (S) — ✅ Done in 2.13.0
+
+**Done (2.13.0, 2026-11-19).** The numbers the spec left open were set here (`data/items.js` `forge`, `js/blacksmith.js`):
+- **The follower:** hired in a town (Accounts), 50 crowns and 8 a week with the wages; works wherever the company is; unpaid twice, they leave.
+- **Forging** the hero's equipped weapon, shield, helmet, body armour, gloves or boots, at most twice each:
+  - each level adds damage +2 (weapon), armour +2 (body) or +1 (the rest);
+  - it costs 30% of the piece's value × the level in crowns (at least 10) and 1 iron × the level (2 for body armour) from your cargo.
+  - The piece becomes its own item, "Arming Sword +1" (`arming_sword+1`), worth 30% more per level. These items are made from the rules when the content loads, so inventory, equipment, saves and selling need nothing new. No armoury stocks them. Horses, rings and quest items aren't forged.
+- **No money loop:** a forged piece sells at half its value, at most 0.8 × the plain value, never reaching the armoury's 1.3 × for the plain piece. A test checks every forged item at the best Trade.
+- **Fine kit** for up to five named soldiers: +1 armour and +8 hit points in battle, ×1.15 strength in auto-resolve, for 40 crowns and 2 iron each. It stays through promotions and is lost with the soldier.
+- **No durability** (design §12.4).
+- **Fixed on the way:** fine kit must reach soldiers in the first deployment too, not only those stepping in from reserve (the test caught it).
+- **Save:** schema **v12** (`followers.blacksmith`; forged ids and `kit` need no step).
+- **Tests:** `tests/blacksmith.test.js` (6: the forged items and armouries; forging, its costs, the cap and the reasons; no money loop; fine kit's cap, costs and effect in battle and auto-resolve; towns, wages, leaving unpaid; saves, repair and 11 → 12), `tests/browser/blacksmith.spec.js` (hire, forge and fit by real input at both sizes).
+
 
 **Build.**
 - **The follower:** a Blacksmith.

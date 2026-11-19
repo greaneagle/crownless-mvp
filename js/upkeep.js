@@ -132,6 +132,7 @@
         CL.quartermaster?.payday(c);
         CL.merchant?.payday(c);
         CL.surgeon?.payday(c);
+        CL.blacksmith?.payday(c);
         c.nextWagesDay += WAGE_INTERVAL;
       }
       desertionCheck(c);

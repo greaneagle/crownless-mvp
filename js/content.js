@@ -31,7 +31,26 @@
   const raw = () => root.CROWNLESS_CONTENT || {};
 
   function table(name) {
-    return raw()[name] || {};
+    const t = raw()[name] || {};
+    if (name === 'items' && raw().forge && forgedFor !== t) addForged(t, raw().forge);
+    return t;
+  }
+
+  // P7-03: forged pieces ("Arming Sword +1") are items made from the blacksmith's rules (data/items.js
+  // `forge`) the first time the items are looked at; `forgedFrom` and `forgeLevel` say what they are.
+  let forgedFor = null;
+  function addForged(items, F) {
+    forgedFor = items;
+    for (const it of Object.values(items)) {
+      if (it.forgedFrom || it.questItem || !F.slots?.[it.slot]) continue;
+      for (let n = 1; n <= (F.maxLevel || 0); n++) {
+        const id = `${it.id}+${n}`;
+        if (items[id]) continue;
+        const stats = { ...it.stats };
+        for (const [k, v] of Object.entries(F.slots[it.slot])) stats[k] = (stats[k] || 0) + v * n;
+        items[id] = { ...it, id, name: `${it.name} +${n}`, value: Math.round(it.value * (1 + F.valuePerLevel * n)), stats, forgedFrom: it.id, forgeLevel: n };
+      }
+    }
   }
 
   /** Look up a record; throws on unknown IDs so bad references fail loudly. */

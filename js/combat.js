@@ -145,7 +145,7 @@
           : role === 'archer'
             ? [anchor.x - 166 + (i % 3) * 40, anchor.y + 58 + Math.floor(i / 3) * 44]
             : [anchor.x - 210 + (i % 2) * 52, anchor.y - 120 + Math.floor(i / 2) * 56]; // cavalry on the left wing
-      const u = makeUnit(x, y, 'ally', s.troop, s.id);
+      const u = CL.blacksmith.applyKit(makeUnit(x, y, 'ally', s.troop, s.id), s); // fine kit (P7-03)
       CL.units.resolveObstacles(u); // form up around trees and walls
       g.allies.push(u);
     }
@@ -207,6 +207,7 @@
   function addAlly(g, r) {
     const a = g.battleMap.spawn.hero;
     const u = makeUnit(a.x - 150 + rand(-30, 30), a.y + rand(-90, 90), 'ally', r.troop, r.soldierId);
+    if (r.soldierId != null) CL.blacksmith.applyKit(u, CL.campaign.roster.find((s) => s.id === r.soldierId)); // fine kit (P7-03)
     CL.units.resolveObstacles(u);
     u.face = 'right';
     u.holdX = u.x;

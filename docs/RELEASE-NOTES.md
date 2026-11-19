@@ -1,5 +1,17 @@
 # Crownless — Release Notes
 
+## v2.13.0 — The blacksmith (P7-03) · 2026-11-19
+
+### New
+- **A blacksmith** to hire in any town (Accounts, 50 crowns and 8 a week). They work wherever you are:
+  - **Forge your gear**, up to twice per piece. A forged weapon hits 2 harder per level, forged armour stops 1 or 2 more. It costs crowns and iron from your cargo (buy iron at a market), and the piece becomes "+1" or "+2".
+  - **Fine kit** for up to five of your soldiers: tougher in battle (+1 armour, +8 hit points), and they count for a little more when you simulate.
+- Forged gear sells for more, but never for what the plain piece costs to buy. Nothing wears out.
+
+### Under the hood
+- Saves are now schema v12 (the blacksmith). Older saves update on load, and a copy is kept as it was.
+- 617 fast and 8 slow Node tests, 129 browser tests (9 more apply to one device only and are skipped on the other).
+
 ## v2.12.0 — The surgeon (P7-01) · 2026-11-19
 
 ### New

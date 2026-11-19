@@ -274,7 +274,8 @@
    * @param {any} e the saved entry @param {Soldier} s @param {Campaign} c the campaign being built
    */
   function sanitize(e, s, c) {
-    // Same field order as a new recruit (fresh), so a save and a reload give identical JSON.
+    // Same field order as a new recruit (fresh), so a save and a reload give identical JSON; `kit`
+    // (P7-03, fine kit) comes last and only when given, as the blacksmith adds it.
     const origin = settlement(e?.origin) ? e.origin : null;
     const culture = cultures()[e?.culture] ? e.culture : cultureFor(s.troop, origin, c);
     s.name = cleanName(e?.name) || makeName(culture, origin, () => CL.autoresolve.roll(c, 'names'), namesIn(c.roster));
@@ -299,6 +300,7 @@
       s.notes.push(out);
       if (s.notes.length >= NOTES_MAX) break;
     }
+    if (e?.kit === true) s.kit = true; // fine kit (P7-03; the cap is checked with the blacksmith)
   }
 
   /**

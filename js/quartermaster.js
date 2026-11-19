@@ -45,7 +45,7 @@
   const sellsFood = (id) => Boolean(id && CL.content.table('settlements')[id]?.services?.includes('trade'));
 
   /** Wages owed at the next payday (the soldiers', plus the followers'). @param {Campaign} c */
-  const wagesDue = (c) => U().weeklyWages(c) + (get(c) ? WAGE : 0) + (CL.merchant?.get(c) ? CL.merchant.WAGE : 0) + (CL.surgeon?.get(c) ? CL.surgeon.WAGE : 0);
+  const wagesDue = (c) => U().weeklyWages(c) + (get(c) ? WAGE : 0) + (CL.merchant?.get(c) ? CL.merchant.WAGE : 0) + (CL.surgeon?.get(c) ? CL.surgeon.WAGE : 0) + (CL.blacksmith?.get(c) ? CL.blacksmith.WAGE : 0);
 
   function log(c, text) {
     const q = get(c);

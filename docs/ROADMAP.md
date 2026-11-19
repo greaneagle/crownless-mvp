@@ -1,6 +1,6 @@
 # Crownless — Project Status & Roadmap
 
-_Last reviewed: 2026-11-19 · Build 2.12.0 · Spec: `Crownless_MVP_GDD_v1.md` (engine overridden: HTML5 Canvas + classic JS, no bundler, GitHub Pages)._
+_Last reviewed: 2026-11-19 · Build 2.13.0 · Spec: `Crownless_MVP_GDD_v1.md` (engine overridden: HTML5 Canvas + classic JS, no bundler, GitHub Pages)._
 
 This replaces the opencode-swarm plan (`.swarm/plan.md`, removed). The gate structure (A→E) is kept from the GDD; the task list is condensed and re-ordered around what the code actually needs.
 
@@ -134,6 +134,7 @@ From the owner's v2.0 design (`Crownless_v2_0_Feature_and_Systems_Design_Part_1.
   - ✅ (2.10.0) W-08 tuning and acceptance of the bigger world: economy, campaign bot (local and `--roam`), 200 stories and Prototype G over 60 days; the bot keeps to lairs within a day's ride (its far trips had looked like an economic collapse); food follows the local grain; a Phase W validation section in NEXT-PLAN; the owner's phone session to come
   - ✅ (2.11.0) B-01 battle balance: the odds follow the square law; the enemy keeps a loose line (unless it has the numbers), goes for archers, the wounded and a lone hero, and holds a little longer, more so at its lair; the stall guard works between waves. Fought close fights about 7 points over the stated odds on average (were 26–34), Simulate within 18 points of fighting (was 30–40)
   - ✅ (2.12.0) P7-01 the surgeon: a follower who saves about a third of those who would die after a battle (one medicine each), wounds heal in a day and a half; medicine at markets and in the quartermaster's first per-good rule; save v11
+  - ✅ (2.13.0) P7-03 the blacksmith: forges the hero's weapon and armour (twice at most, for crowns and iron; forged pieces are items of their own, never worth flipping) and fits up to five soldiers with fine kit; no durability; save v12
   - **Phase 7, "The Living Company":** the deferred battle balance pass (B-01), surgeon, scout and blacksmith, pursuit and detection, officers and detached patrols, more companions, soldier traits, world events, a tournament, a first business, battle extras.
   - **Phase 8, "The Landed World":** lords on the map, holdings and claims, permissions, allegiance, fiefs and castellans, sieges, named nobles, losing and retaking land. Acceptance is "The Dispossessed Lord".
   - **Phase 9, "Kingdoms & Houses":** realms, diplomacy and treaties, founding a kingdom, rebellion and deposition, armies, houses and marriage, modding and a second world.

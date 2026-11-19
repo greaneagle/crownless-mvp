@@ -44,6 +44,8 @@ declare global {
     id: number;
     troop: ContentId;
     xp: number;
+    /** P7-03: fitted with fine kit by the blacksmith (only present when true). */
+    kit?: boolean;
     /** Campaign day the wound heals, or null when fit. */
     woundedUntil: number | null;
     name: string;
@@ -199,7 +201,7 @@ declare global {
     /** v8: the newest money transfers. */
     ledger: LedgerEntry[];
     /** v8: camp followers. */
-    followers: { quartermaster: Quartermaster | null; merchant?: Merchant | null; surgeon?: any };
+    followers: { quartermaster: Quartermaster | null; merchant?: Merchant | null; surgeon?: any; blacksmith?: any };
     /** v11 (P7-01): medicine in the company's stores (0–99). */
     medicine: number;
   }

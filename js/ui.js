@@ -269,7 +269,7 @@
       const k = c.contract;
       const pay = k?.status === 'done' && k.giver === c.world.location;
       opt(pay ? 'Notice board — collect pay!' : 'Read the notice board', () => changeMode('contracts'));
-      opt('Accounts and followers', () => changeMode('accounts'), false, 'Your money, a quartermaster, a merchant, a surgeon');
+      opt('Accounts and followers', () => changeMode('accounts'), false, 'Your money and your followers: quartermaster, merchant, surgeon, blacksmith');
       opt('Save & export', () => openSaves());
     }
     opt('Goodbye', () => CL.town.backToPlace());
@@ -629,13 +629,73 @@
           mk('div', { className: 'row' }, btn(S.canHire(c) || CL.content.table('settlements')[c.world.location]?.type === 'town' ? `Hire a surgeon · ${S.HIRE} crowns` : 'Hire one in a town', () => S.hire(c) && message('A surgeon joins the company'), !S.canHire(c))),
           c.medicine ? medRow : null,
         );
+    // The blacksmith (P7-03; js/blacksmith.js): forging the hero's gear, fine kit for soldiers.
+    const B = CL.blacksmith;
+    const smith = B.get(c);
+    const F = B.rules();
+    const iron = c.cargo?.[B.IRON] || 0;
+    let bc;
+    if (!smith) {
+      bc = mk(
+        'div',
+        { className: 'contractCard' },
+        mk('h3', { textContent: 'Blacksmith' }),
+        mk('p', { textContent: `Improves your weapon and armour (at most ${F.maxLevel} times each) and fits up to ${F.kit.max} soldiers with fine kit, for crowns and iron from your cargo. ${B.HIRE} crowns to hire in a town, ${B.WAGE} a week.` }),
+        mk('div', { className: 'row' }, btn(CL.content.table('settlements')[c.world.location]?.type === 'town' ? `Hire a blacksmith · ${B.HIRE} crowns` : 'Hire one in a town', () => B.hire(c) && message('A blacksmith joins the company'), !B.canHire(c))),
+      );
+    } else {
+      const SLOT_NAMES = { weapon: 'Weapon', offhand: 'Shield', head: 'Head', body: 'Body', hands: 'Hands', feet: 'Feet' };
+      const forgeRows = Object.keys(SLOT_NAMES)
+        .map((slot) => B.forgeOffer(c, slot))
+        .filter((o) => o.from && !/not something/.test(o.reason || ''))
+        .map((o) => {
+          const name = CL.content.item(o.from).name;
+          if (o.reason) return mk('div', { className: 'row qmRule' }, mk('span', { textContent: `${name}: ${o.reason}` }));
+          return mk(
+            'div',
+            { className: 'row qmRule' },
+            mk('span', { textContent: `${name} → ${CL.content.item(o.to).name}` }),
+            btn(`Forge · ${o.crowns} crowns, ${o.iron} iron`, () => {
+              const r = B.forge(c, o.slot);
+              message(r.ok ? `${CL.content.item(o.to).name} is ready` : `Can't forge: ${r.reason}`);
+            }, c.gold < o.crowns || iron < o.iron),
+          );
+        });
+      const fit = c.roster
+        .filter((s) => !s.kit)
+        .sort((a, b) => CL.content.troop(b.troop).tier.localeCompare(CL.content.troop(a.troop).tier) || a.id - b.id)
+        .slice(0, 6);
+      const kitRows = fit.map((s) =>
+        mk(
+          'div',
+          { className: 'row qmRule' },
+          mk('span', { textContent: `${s.name} (${CL.content.troop(s.troop).name})` }),
+          btn(`Fine kit · ${F.kit.cost} crowns, ${F.kit.iron} iron`, () => {
+            const r = B.giveKit(c, s.id);
+            message(r.ok ? `${s.name} has fine kit` : `Can't: ${r.reason}`);
+          }, Boolean(B.kitBlocked(c, s.id))),
+        ),
+      );
+      const withKit = c.roster.filter((s) => s.kit).map((s) => s.name);
+      bc = mk(
+        'div',
+        { className: 'contractCard' },
+        mk('h3', { textContent: `Blacksmith ${smith.name}` }),
+        mk('p', { textContent: `Iron in your cargo: ${iron} (buy it at a market). Paid ${B.WAGE} a week.` }),
+        ...forgeRows,
+        mk('p', { textContent: `Fine kit (+${F.kit.armor} armour, +${F.kit.hp} hit points): ${withKit.length ? withKit.join(', ') : 'nobody yet'} · ${B.kitted(c)} of ${F.kit.max}` }),
+        ...(B.kitted(c) < F.kit.max ? kitRows : []),
+        smith.log.length ? mk('ul', { className: 'soldierNotes' }, ...smith.log.slice(-4).reverse().map((e) => mk('li', { textContent: `Day ${CL.party.dayNumber(e.day)}: ${e.text}` }))) : null,
+        mk('div', { className: 'row' }, btn('Let them go', () => B.dismiss(c) && message('The blacksmith leaves the company'))),
+      );
+    }
     const lines = A.recent(c, 12).map((e) => {
       const sign = e.to === A.WORLD ? '−' : e.from === A.WORLD ? '+' : '';
       const route = e.from === A.WORLD ? `into ${A.label(e.to)}` : e.to === A.WORLD ? `from ${A.label(e.from)}` : `${A.label(e.from)} → ${A.label(e.to)}`;
       return mk('li', { textContent: `Day ${CL.party.dayNumber(e.day)}: ${sign}${e.amount} ${route} · ${e.why}` });
     });
     const ledger = mk('div', { className: 'contractCard' }, mk('h3', { textContent: 'Ledger' }), lines.length ? mk('ul', { className: 'soldierNotes' }, ...lines) : mk('p', { textContent: 'Nothing yet.' }));
-    $('#accountsScreen').replaceChildren(money, qm, sc, mc, ledger);
+    $('#accountsScreen').replaceChildren(money, qm, sc, bc, mc, ledger);
   }
 
   // ---- Battle preparation (V2-07; js/prep.js) ----

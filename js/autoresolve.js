@@ -105,7 +105,7 @@
   /** The player's fighting power: healthy soldiers plus the hero, boosted by Tactics. */
   function playerPower(c = CL.campaign) {
     let p = heroPower(c);
-    for (const s of c.roster) if (s.woundedUntil === null) p += TIER_POWER[CL.content.troop(s.troop).tier] * COMPANY_FACTOR;
+    for (const s of c.roster) if (s.woundedUntil === null) p += TIER_POWER[CL.content.troop(s.troop).tier] * COMPANY_FACTOR * (CL.blacksmith?.powerFactor(s) ?? 1); // fine kit (P7-03)
     p += CL.companion?.power(c) || 0; // Mara, if she is fit
     return p * (1 + TACTICS * CL.character.skill('tactics', c));
   }
