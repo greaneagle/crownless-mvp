@@ -52,6 +52,21 @@
     open_country: { id: 'open_country', name: 'Open Country', generate: { kind: 'field', scale: 3, seed: 11 }, small: 'grass_field' },
     // W-05a: a river crossing, fought in the shallows (they slow everyone wading through them).
     river_ford: { id: 'river_ford', name: 'River Ford', generate: { kind: 'ford', scale: 3, seed: 13 }, small: 'grass_field' },
+    // P7-09: the tourney ground, one screen: a fenced list of beaten sand for a single bout.
+    tourney_lists: {
+      id: 'tourney_lists',
+      name: 'The Lists',
+      tileset: '16x16',
+      ground: { base: '#6f8a4c', tiles: ['w0000', 'w0001'], patch: { color: '#b49a68', x: 480, y: 275, rx: 300, ry: 150 } },
+      decor: [['w0174', 90, 90, 52, 37], ['w0174', 860, 90, 52, 37], ['w0174', 90, 450, 52, 37], ['w0174', 860, 450, 52, 37]],
+      obstacles: [
+        { shape: 'rect', x: 150, y: 110, w: 660, h: 14, blocksArrows: false, look: 'wall' },
+        { shape: 'rect', x: 150, y: 430, w: 660, h: 14, blocksArrows: false, look: 'wall' },
+        { shape: 'rect', x: 150, y: 110, w: 14, h: 334, blocksArrows: false, look: 'wall' },
+        { shape: 'rect', x: 796, y: 110, w: 14, h: 334, blocksArrows: false, look: 'wall' }
+      ],
+      spawn: { hero: { x: 330, y: 275 }, enemies: { x0: 610, x1: 650, y0: 255, y1: 295 } }
+    },
     greywall_courtyard: {
       id: 'greywall_courtyard',
       name: 'Greywall Courtyard',

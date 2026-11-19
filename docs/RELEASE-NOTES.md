@@ -1,5 +1,21 @@
 # Crownless — Release Notes
 
+## v2.20.0 — Tournaments (P7-09) · 2026-11-19
+
+### New
+- **Tournaments in the great towns.** Stonebridge, Eastwatch, Hrothgard, Vessara and Merrow each hold one every two weeks. The news announces it, and entries stay open three days.
+- **The bracket.** Eight fighters on foot and three bouts. You fight each bout yourself, alone, with ATTACK and BLOCK on one fenced field, and each round is harder.
+- **Loaner gear.** You fight in tournament gear. Your own gear stays in your pack and can never be lost there.
+- **Prizes.** The champion wins crowns, renown and the host's goodwill; the finalist wins less. Falling in the first bout costs a little renown, never your company.
+- **Rivals.** Whoever beats you becomes your rival and may turn up in later tournaments, met only in a final.
+- **No farming one town.** Entry fees rise with your renown, each win in a town is worth less than the last, and you can enter the same town again only after four weeks.
+
+### Under the hood
+- A new one-on-one duel mode on the battle engine, with no soldiers, reserves, morale or orders. A bout's result goes to the bracket, never the battle results. A bout left unfinished (the page reloaded mid-fight) counts as lost.
+- Save schema v17 (tournaments); older saves migrate.
+- Debug tools: Tournament here.
+- 675 fast and 9 slow Node tests, 145 browser tests (9 more apply to one device only and are skipped on the other).
+
 ## v2.19.0 — World events (P7-08) · 2026-11-19
 
 ### New

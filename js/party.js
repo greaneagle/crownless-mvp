@@ -244,6 +244,7 @@
     CL.retinue.heal(camp); // the other companions (P7-06)
     CL.story.tick(camp); // quest stage deadlines
     CL.happenings?.tick(camp); // world events start, hold and end (P7-08), before the news tells them
+    CL.tourney?.tick(camp); // tournaments announced and closed (P7-09)
     CL.news.tick(camp); // a regional news line every couple of days
     return healed;
   }
@@ -366,6 +367,7 @@
     if (g.mode !== 'battle') return;
     g.mode = 'result';
     if (g.practice) return endPractice(win);
+    if (g.duel) return CL.tourney.endBout(win); // a tournament bout: to the bracket, nothing else (P7-09)
     const { killed, wounded, saved, medicineUsed } = rollCasualties(g.allies);
     const deployed = g.allies.filter((a) => a.soldierId != null);
     const outcome = {

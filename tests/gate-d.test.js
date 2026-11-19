@@ -21,7 +21,7 @@ test('Gate D scope: the region, troops, maps, quests, contracts, companion, repu
   assert.deepEqual(by(march, 'type'), { town: 2, fort: 2, village: 6 });
   const marchTroops = t('troops').filter((x) => x.id !== 'hero' && ['valedorn', 'aurelian', 'neutral'].includes(x.faction));
   assert.equal(marchTroops.length, 16, '15 troop types, plus the Sellsword from 1.5.0 (V2-03b)');
-  assert.equal(t('battle_maps').filter((m) => !m.generate).length, 3, 'the three hand-made maps');
+  assert.equal(t('battle_maps').filter((m) => !m.generate && m.id !== 'tourney_lists').length, 3, 'the three hand-made maps (and, from 2.20.0, the tourney ground)');
   assert.equal(t('battle_maps').filter((m) => m.generate).length, 3, 'plus two large generated ones from 1.8.0 (V2-05) and the river ford from 2.6.0 (W-05a)');
   assert.deepEqual(
     t('quests').filter((q) => !q.side).map((q) => q.id),

@@ -19,6 +19,17 @@
       priority: 6,
       lines: ['Word comes of trouble at {place}.']
     },
+    // P7-09: tournaments write their own lines too.
+    tourney: {
+      id: 'tourney',
+      priority: 5,
+      lines: ['A tournament is called at {place}.']
+    },
+    tourney_end: {
+      id: 'tourney_end',
+      priority: 4,
+      lines: ['The tournament at {place} is over.']
+    },
     happening_end: {
       id: 'happening_end',
       priority: 3,

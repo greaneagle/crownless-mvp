@@ -57,6 +57,7 @@
       else if (game.mode === 'ending') ui.closeEnding();
       else if (game.mode === 'settlement') world.leaveSettlement();
       else if (game.mode === 'encounter') world.attackSite();
+      else if (game.mode === 'result' && game.result?.duel) CL.town.enterPlace(); // a tournament bout: back to the town (P7-09)
       else if (game.mode === 'result') world.returnToMap();
     };
     $('#secondaryBtn').onclick = () => {

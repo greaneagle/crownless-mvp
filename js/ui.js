@@ -14,6 +14,9 @@
     if (mode === 'result' && g.result.practice) {
       return { title: g.result.practice.arena ? 'CAMERA TEST' : 'STRESS TEST', text: 'How this device handled the battle:', button: 'Continue' };
     }
+    if (mode === 'result' && g.result.duel) {
+      return { title: g.result.win ? 'BOUT WON' : 'BOUT LOST', text: 'The lists:', button: 'Continue' };
+    }
     if (mode === 'result') {
       return {
         title: g.result.win ? 'VICTORY' : 'CAPTURED',
@@ -1759,6 +1762,7 @@
       }),
     );
     $('#happeningsHere').replaceChildren(...happeningCards(c, c.world.location));
+    $('#tourneyHere').replaceChildren(...tourneyCard(c, c.world.location));
     const barred = !CL.realm.welcomes(c, c.world.location);
     $('#serviceNote').textContent = barred
       ? `The ${CL.content.get('factions', CL.realm.owner(c.world.location, c)).name} will not hire out soldiers or work to an enemy.`
@@ -1805,6 +1809,45 @@
     });
   }
 
+  /** The tournament here (P7-09): its prizes and fee and Enter, or your place in the bracket and Fight. */
+  function tourneyCard(c, sid) {
+    const v = CL.tourney.view(c, sid);
+    if (!v) return [];
+    const el = (tag, cls, text) => Object.assign(document.createElement(tag), { className: cls || '', textContent: text || '' });
+    const card = el('div', 'happening tourney');
+    card.dataset.tourney = v.kind;
+    card.append(el('b', '', v.title));
+    for (const l of v.lines) card.append(el('p', '', l));
+    const row = el('div', 'row');
+    const button = (text, id, fn, reason = '') => {
+      const b = el('button', '', text);
+      b.type = 'button';
+      b.id = id;
+      b.disabled = Boolean(reason);
+      if (reason) b.title = reason;
+      b.onclick = fn;
+      row.append(b);
+      if (reason) row.append(el('span', 'why', reason));
+    };
+    if (v.kind === 'open') {
+      button(v.enter, 'tourneyEnter', () => {
+        const r = CL.tourney.enter(c, sid);
+        if (!r.ok) message(r.reason);
+        CL.save.write();
+        refreshRoster();
+      }, v.reason);
+    } else {
+      button(v.fight, 'tourneyFight', () => CL.tourney.fight(c));
+      button('Withdraw', 'tourneyWithdraw', () => {
+        CL.tourney.withdraw(c);
+        CL.save.write();
+        refreshRoster();
+      });
+    }
+    card.append(row);
+    return [card];
+  }
+
   /** Food / morale / wages readout, with warnings highlighted (GDD §11). */
   function supplyParts(c) {
     const U = CL.upkeep;
@@ -1825,6 +1868,7 @@
 
   function hideBattleOverlays() {
     $('#stage').dataset.mode = 'battle';
+    $('#stage').toggleAttribute('data-duel', Boolean(CL.game.duel)); // a tournament bout: no orders (P7-09)
     if (CL.tips?.showing()) hideTip();
     setTimeout(() => CL.tips?.check('battle'), 0); // at once: the first battle waits on its card (battles don't start through changeMode)
     requestAnimationFrame(fitHud);

@@ -7,7 +7,7 @@ const vm = require('node:vm');
 const ROOT = path.join(__dirname, '..', '..');
 
 // Logic modules only (no render/input/main — those need a real DOM).
-const LOGIC_MODULES = ['core', 'content', 'state', 'storage', 'events', 'clock', 'soldiers', 'traits', 'chronicle', 'accounts', 'quartermaster', 'surgeon', 'blacksmith', 'scout', 'detachments', 'retinue', 'merchant', 'troops', 'save', 'assets', 'camera', 'arena', 'tactics', 'prep', 'groups', 'morale', 'reinforce', 'units', 'combat', 'party', 'upkeep', 'trade', 'autoresolve', 'spatial', 'sight', 'parties', 'contracts', 'realm', 'story', 'companion', 'news', 'happenings', 'portable', 'world', 'mapview', 'gestures', 'encounter', 'town', 'character', 'debug', 'settings', 'audio', 'tips', 'fullscreen'];
+const LOGIC_MODULES = ['core', 'content', 'state', 'storage', 'events', 'clock', 'soldiers', 'traits', 'chronicle', 'accounts', 'quartermaster', 'surgeon', 'blacksmith', 'scout', 'detachments', 'retinue', 'merchant', 'troops', 'save', 'assets', 'camera', 'arena', 'tactics', 'prep', 'groups', 'morale', 'reinforce', 'units', 'combat', 'party', 'upkeep', 'trade', 'autoresolve', 'spatial', 'sight', 'parties', 'contracts', 'realm', 'story', 'companion', 'news', 'happenings', 'tourney', 'portable', 'world', 'mapview', 'gestures', 'encounter', 'town', 'character', 'debug', 'settings', 'audio', 'tips', 'fullscreen'];
 const CONTENT_MODULES = [
   'factions',
   'settlements',
@@ -26,6 +26,7 @@ const CONTENT_MODULES = [
   'companions',
   'news',
   'world_events',
+  'tournaments',
   'help',
   'names',
 ];
@@ -121,9 +122,12 @@ function loadGame({ storage = memoryStorage(), random, party = true, worldPartie
   CL.campaign.nextPartyId = 1;
   if (worldParties) CL.parties.ensure(CL.campaign, true);
   else for (const id of Object.keys(CL.content.table('party_templates'))) CL.campaign.partySpawns[id] = 1e9;
-  // World events (P7-08) are off too unless asked for, like the world parties: tests that pass days
+  // World events (P7-08) and tournaments (P7-09) are off too unless asked for, like the world parties: tests that pass days
   // see only what they set up.
-  if (!worldEvents) CL.campaign.happenings.next = 1e9;
+  if (!worldEvents) {
+    CL.campaign.happenings.next = 1e9;
+    for (const h of Object.values(CL.campaign.tourney.hosts)) h.next = 1e9; // and no tournaments (P7-09)
+  }
   if (party && !CL.save.existed) {
     const c = CL.campaign;
     c.gold = 130;

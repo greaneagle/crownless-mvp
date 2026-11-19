@@ -1126,7 +1126,17 @@ _Written 2026-11-18 at build 2.0.0; **reviewed and corrected the same day agains
 
 **Acceptance.** As tests; events show in the news and the chronicle.
 
-### P7-09 · Tournament (M–L) — Specified
+### P7-09 · Tournament (M–L) — ✅ Done in 2.20.0
+
+**Done (2.20.0, 2026-11-19).** `js/tourney.js` (`CL.tourney`), rules in `data/tournaments.js`, the tourney ground `tourney_lists` in `data/battle_maps.js`:
+- **Schedule:** the five great towns (no "capital" flag exists; these are the capitals and the free city) each hold one every 14 days, staggered by 3 from day 4, announced in the news; entries open 3 days. Seven named fighters of the town's people (from its culture's names), skill 0.8–1.2; your rival takes the last place 60% of the time, in the other half of the draw.
+- **The duel** (`enc.duel` in `js/combat.js`): the hero alone on a one-screen fenced list against one fighter; no soldiers, companions, reserves, help riding in, prepared setup, morale or stall guard; the orders and MAP buttons hidden. The hero's numbers come from the loaner kit (arming sword, kite shield, iron helm, gambeson, boots) through `CL.character.heroCombat(c, kit)`: the hero's own gear is never moved, so there is nothing to restore or lose. `CL.party.endBattle` hands the result to `CL.tourney.endBout`: no encounter commit, no casualties, loot, time or reputation from a bout.
+- **Bracket:** three bouts; the other bouts are settled by skill (`a / (a + b)`, from the tournament's own seeded rolls). The fighter you meet: a mercenary, then a tougher mercenary, then a sellsword, multiplied by round, by the fighter's skill and +8% for each earlier win in that town.
+- **Fee and prizes:** fee 20 + ½ renown (20–150). Champion 150 crowns, 5 renown, +4 with the host's kingdom; finalist 50, 2, +1; out in the first bout −1 renown. Each earlier win in the town multiplies the prize by 0.6 (never below 0.2). Cooldown 28 days per town; one bracket at a time. Measured: winning every time allowed in one town pays at first and then costs, under 500 crowns net over 30 wins.
+- **Rival:** whoever beats you (or, if you win, the finalist you beat), with their skill rising by 0.05 each time they beat you; besting them in a bout gives +2 renown. A chronicle line for every tournament fought; the news tells the result.
+- **Reload mid-bout:** the bracket is saved with `bout` set before the fight; outside a battle `settle` counts an unfinished bout as lost (never replayed).
+- **Save v17:** `tourney` = `{ hosts, open, bracket, rival }`. Tests: `tests/tourney.test.js`, `tests/browser/tourney.spec.js` (a bout won with ATTACK by touch). Debug: Tournament here.
+
 
 **Now.** No duel or one-on-one mode exists in the code. Battles are always party against party (`js/combat.js`), on the small or large maps.
 

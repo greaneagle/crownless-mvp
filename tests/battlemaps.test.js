@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const { loadGame } = require('./helpers/load');
 const { mulberry } = require('../scripts/simulate-campaign');
 
-const MAPS = ['grass_field', 'forest_clearing', 'greywall_courtyard'];
+const MAPS = ['grass_field', 'forest_clearing', 'greywall_courtyard', 'tourney_lists'];
 
 function onMap(mapId, opts) {
   const env = loadGame(opts);

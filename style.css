@@ -155,7 +155,9 @@
 .questCard .objective{color:#ffd34d}
 .questCard ul{margin:4px 0 0 18px;padding:0;font-size:calc(12px * var(--ui-scale));color:#d9c8a2}
 #peopleHere:empty{display:none}
-#happeningsHere:empty{display:none}
+#happeningsHere:empty,#tourneyHere:empty{display:none}
+.happening.tourney{border-color:#5a6f8f;background:#0f1724}
+#stage[data-duel] #ordersBtn,#stage[data-duel] #ordersPanel,#stage[data-duel] #mapBtn{display:none}
 .happening{border:1px solid #6b5530;border-radius:6px;padding:calc(6px * var(--ui-scale)) calc(10px * var(--ui-scale));margin:8px 0 0;background:#1a140b;font-size:calc(13px * var(--ui-scale));text-align:left}
 .happening b{color:#e8c47a}
 .happening p{margin:4px 0}

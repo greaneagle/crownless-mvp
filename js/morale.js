@@ -242,6 +242,7 @@
    * combat.update each frame. @param {any} g
    */
   function update(g, dt) {
+    if (g.duel) return; // a tournament bout (P7-09): a duel is fought to the end, nobody routs
     for (const u of [...g.allies, ...g.enemies]) if (u.routing && u.alive) flee(g, u, dt);
     g.moraleIn = (g.moraleIn ?? 0) - dt;
     if (g.moraleIn > 0) return;

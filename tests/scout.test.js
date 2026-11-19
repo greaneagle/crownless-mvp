@@ -135,6 +135,6 @@ test('saves: the scout is kept; a v12 save migrates to v13', () => {
   v12.version = 12;
   delete v12.followers.scout;
   const r = CL.save.fromRaw(v12);
-  assert.equal(r.campaign.version, 16);
+  assert.equal(r.campaign.version, 17);
   assert.equal(r.campaign.followers.scout, null);
 });

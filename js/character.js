@@ -123,8 +123,8 @@
 
   // ---- Derived numbers ----
 
-  const equippedItems = (c = camp()) =>
-    SLOTS.map((s) => c.equipment?.[s])
+  const equippedItems = (c = camp(), equipment = c.equipment) =>
+    SLOTS.map((s) => equipment?.[s])
       .filter(Boolean)
       .map((id) => CL.content.item(id));
 
@@ -138,17 +138,20 @@
     return c.character?.attributes?.[id] ?? BASE_ATTRIBUTE;
   }
 
-  /** The hero's battle numbers (GDD §5–6). */
-  function heroCombat(c = camp()) {
-    const weapon = c.equipment?.weapon ? CL.content.item(c.equipment.weapon) : null;
-    const shield = c.equipment?.offhand ? CL.content.item(c.equipment.offhand) : null;
+  /**
+   * The hero's battle numbers (GDD §5–6). `equipment`: the gear to fight in (the hero's own, or the
+   * tournament's loaner kit, P7-09); the hero's own gear is never moved for it.
+   */
+  function heroCombat(c = camp(), equipment = c.equipment) {
+    const weapon = equipment?.weapon ? CL.content.item(equipment.weapon) : null;
+    const shield = equipment?.offhand ? CL.content.item(equipment.offhand) : null;
     const hp = 60 + 5 * attribute('str', c);
     const baseDamage = weapon ? weapon.stats.damage : UNARMED_DAMAGE;
     return {
       hp,
       maxhp: hp,
       damage: baseDamage * (1 + SKILL_DAMAGE * skill('one_handed', c)),
-      armor: equippedItems(c).reduce((sum, it) => sum + (it.stats.armor || 0), 0),
+      armor: equippedItems(c, equipment).reduce((sum, it) => sum + (it.stats.armor || 0), 0),
       canBlock: Boolean(shield?.stats.block),
     };
   }

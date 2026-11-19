@@ -224,6 +224,8 @@ declare global {
     /** v11 (P7-01): medicine in the company's stores (0–99). */
     medicine: number;
     /** v16 (P7-08): world events: those open, the last few ended, cooldowns per kind and region. */
+    /** v17 (P7-09): tournaments: each host's schedule and wins, those open, your bracket, your rival. */
+    tourney: { hosts: Record<string, { next: number; wins: number; entered: number | null }>; open: any[]; bracket: any; rival: { name: string; culture: string; skill: number; from: string; beatYou: number; beaten: number } | null };
     happenings: { open: Happening[]; past: { id: number; kind: ContentId; place: string; day: number; result: string; dest?: string }[]; cool: Record<string, number>; next: number; nextId: number };
   }
 
@@ -301,6 +303,8 @@ declare global {
     /** P7-08 'happening': the world event's kind, its result and the courier's destination. */
     event?: ContentId;
     result?: string;
+    /** P7-09 'tourney': the round you went out in (0–2). */
+    round?: number;
     dest?: string;
   }
 

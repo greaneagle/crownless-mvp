@@ -236,7 +236,7 @@ test('take part: drill the militia (a day passes) and take on refugees', () => {
   assert.equal(CL.chronicle.text(c.chronicle.at(-1)), 'Took on 2 of the refugees at Oakford as soldiers.');
 });
 
-test('saves: kept; junk repaired; a band’s event needs its band; a v15 save migrates to v16', () => {
+test('saves: kept; junk repaired; a band’s event needs its band; a v15 save migrates on (v16 and later)', () => {
   const storage = memoryStorage();
   const { CL, c, H } = camp('stonebridge', { storage });
   const a = H.start(c, 'courier', 'stonebridge', { dest: 'highmere' });
@@ -268,7 +268,7 @@ test('saves: kept; junk repaired; a band’s event needs its band; a v15 save mi
   v15.version = 15;
   delete v15.happenings;
   const m = CL.save.fromRaw(v15);
-  assert.equal(m.campaign.version, 16);
+  assert.equal(m.campaign.version, 17);
   assert.deepEqual(plain(m.campaign.happenings.open), []);
   assert.ok(m.campaign.happenings.next > c.day);
 });

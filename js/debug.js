@@ -474,6 +474,18 @@
       case 'days':
         passDays(n);
         break;
+      case 'tourney': {
+        // P7-09: a tournament opens here now (a host town), as if its day had come.
+        const sid = c().world.location;
+        const t = CL.tourney.state(c());
+        if (!t.hosts[sid]) return CL.ui.message('Only the great towns hold tournaments');
+        t.hosts[sid].next = c().day;
+        t.hosts[sid].entered = null;
+        CL.tourney.tick(c());
+        log('tournament', { host: sid });
+        CL.ui.refresh();
+        break;
+      }
       case 'happening': {
         // P7-08: a world event where you stand: the first kind the world calls for here, else any.
         const sid = c().world.location;

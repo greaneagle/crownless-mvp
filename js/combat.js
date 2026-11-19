@@ -88,7 +88,7 @@
     g.encounterDef = enc;
     g.lairDefence = Boolean(g.siteId); // B-01: a band fighting for its own lair is steadier
     g.battleId = CL.campaign.battles + 1;
-    if (!enc.practice) CL.encounter.beginIfClosed(); // a failed retreat keeps its encounter; a fresh battle starts one
+    if (!enc.practice && !enc.duel) CL.encounter.beginIfClosed(); // a failed retreat keeps its encounter; a fresh battle starts one
     g.totalWaves = enc.waves.length;
     g.mode = 'battle';
     CL.audio?.onMode('battle'); // battles don't start through ui.changeMode, so tell the music here
@@ -110,13 +110,16 @@
     g.enemyReserve = [];
     // A practice battle (the debug panel's stress test) brings its own soldiers and changes nothing.
     g.practice = Array.isArray(enc.practice) ? { started: performance.now(), frames: 0, sim: 0, draw: 0, worst: 0, peak: 0 } : null;
+    // A tournament bout (P7-09): the hero alone, in the loaner kit, against one fighter; its result goes
+    // to the bracket (js/tourney.js), never the encounter commit path.
+    g.duel = enc.duel ? { opponent: { ...enc.duel.opponent }, kit: { ...enc.duel.kit } } : null;
     g.group = 'infantry';
     g.orders = { infantry: 'follow', archer: 'hold', cavalry: 'charge' };
     // A ready-made arena (the debug camera test, PROTO-A) or a battle map from the content.
     g.battleMap = enc.mapDef || CL.arena.mapFor(enc.map || 'open_country');
     const anchor = g.battleMap.spawn.hero;
     g.hero = makeUnit(anchor.x, anchor.y, 'ally', 'hero');
-    Object.assign(g.hero, CL.character.heroCombat()); // HP, damage, armor, shield from the character
+    Object.assign(g.hero, CL.character.heroCombat(CL.campaign, g.duel ? g.duel.kit : CL.campaign?.equipment)); // HP, damage, armor, shield from the character (and the kit worn)
     g.hero.face = 'right';
     // Units start with a random cooldown so the AI's first blows are staggered; the player's hero must
     // be ready at once, or an Attack pressed in the first moments outlasts the 100 ms input buffer and
@@ -124,9 +127,10 @@
     g.hero.attackCooldown = 0;
     // Share the field: the enemies get room for their biggest wave (up to half the cap), the
     // company the rest. Soldiers beyond their formation slots or that share wait in reserve.
-    const soldiers = g.practice ? enc.practice.map((troop) => ({ troop, id: null })) : CL.party.healthySoldiers();
-    const retinue = g.practice ? [] : CL.retinue.fighters(CL.campaign); // the other companions (P7-06)
-    const withMara = (!g.practice && CL.companion.fit() ? 1 : 0) + retinue.length;
+    const alone = Boolean(g.practice || g.duel); // nobody of the company's own comes along
+    const soldiers = g.practice ? enc.practice.map((troop) => ({ troop, id: null })) : g.duel ? [] : CL.party.healthySoldiers();
+    const retinue = alone ? [] : CL.retinue.fighters(CL.campaign); // the other companions (P7-06)
+    const withMara = (!alone && CL.companion.fit() ? 1 : 0) + retinue.length;
     const biggestWave = Math.max(...enc.waves.map((w) => Object.values(w).reduce((a, b) => a + b, 0)));
     const enemyShare = Math.max(Math.min(biggestWave, Math.floor(BATTLE.activeCap / 2)), BATTLE.minEnemies);
     g.allyCap = Math.max(1 + withMara, Math.min(1 + withMara + soldiers.length, BATTLE.activeCap - enemyShare));
@@ -151,7 +155,7 @@
       g.allies.push(u);
     }
     // The companion fights beside the hero (GDD §10), with the infantry's orders.
-    if (!g.practice && CL.companion.fit()) {
+    if (!alone && CL.companion.fit()) {
       const m = CL.companion.get();
       const u = makeUnit(anchor.x - 40, anchor.y + 34, 'ally', 'mercenary');
       Object.assign(u, CL.companion.combat(), { companion: m.id, frames: CL.companion.def(m.id).frames, role: 'infantry' });
@@ -168,8 +172,9 @@
       a.holdX = a.x;
       a.holdY = a.y;
     }
-    if (opts.plan && !g.practice) CL.prep.place(g, opts.plan); // the chosen setup (V2-07)
+    if (opts.plan && !alone) CL.prep.place(g, opts.plan); // the chosen setup (V2-07)
     spawnWave();
+    if (g.duel) Object.assign(g.enemies[0], { hp: g.duel.opponent.hp, maxhp: g.duel.opponent.hp, damage: g.duel.opponent.damage, armor: g.duel.opponent.armor, duelist: g.duel.opponent.name });
     CL.reinforce.begin(g); // nearby parties that will join, and when (V2-09)
     Object.assign(g, { overview: false, cameraFocus: null, scanIn: 0 });
     CL.camera.snap(g); // one-screen maps keep the camera at 0,0
@@ -187,7 +192,7 @@
     const room = enemyCapOf(g);
     for (const troopId of troops.slice(0, room)) addEnemy(g, troopId, art);
     g.enemyReserve = troops.slice(room);
-    CL.ui.message(`Enemy wave ${g.wave} / ${g.totalWaves}${g.enemyReserve.length ? ` · ${g.enemyReserve.length} more waiting` : ''}`);
+    if (!g.duel) CL.ui.message(`Enemy wave ${g.wave} / ${g.totalWaves}${g.enemyReserve.length ? ` · ${g.enemyReserve.length} more waiting` : ''}`);
     CL.diag.log('info', 'Enemy wave spawned', { wave: g.wave, enemies: wave, reserve: g.enemyReserve.length });
   }
 
@@ -634,6 +639,7 @@
    * @param {any} g
    */
   function stallGuard(g) {
+    if (g.duel) return; // a bout is fought out: nobody slips away (or keeping away would win it)
     if (g.t - (g.lastBlowAt ?? 0) < BATTLE.stall || g.enemyReserve?.length) return;
     const left = g.enemies.filter((e) => e.alive);
     if (!left.length || !(g.hero.alive || g.allies.some((a) => a.alive))) return;

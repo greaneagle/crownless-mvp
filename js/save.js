@@ -26,7 +26,7 @@
   'use strict';
   const CL = root.Crownless;
 
-  const VERSION = 16;
+  const VERSION = 17;
   const KEY = 'crownless_save';
   const BACKUP_KEY = 'crownless_save_backup';
   const LEGACY_KEY = 'crownless_v03_party';
@@ -111,6 +111,7 @@
       detachments: [], // parts of the company sent off under a captain (P7-05)
       retinue: [], // companions of the wider world (P7-06)
       happenings: CL.happenings.blank(0), // world events: open, past, cooldowns (P7-08)
+      tourney: CL.tourney.blank(0), // tournaments: each host's next, the open ones, your bracket and rival (P7-09)
     };
     CL.character.applyKit(c, background);
     CL.upkeep.stowFood(c);
@@ -196,6 +197,7 @@
     14: [...V3_FIELDS, ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object'], ['accounts', 'object'], ['ledger', 'array'], ['followers', 'object'], ['relations', 'object'], ['medicine', 'number'], ['detachments', 'array']],
     15: [...V3_FIELDS, ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object'], ['accounts', 'object'], ['ledger', 'array'], ['followers', 'object'], ['relations', 'object'], ['medicine', 'number'], ['detachments', 'array'], ['retinue', 'array']],
     16: [...V3_FIELDS, ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object'], ['accounts', 'object'], ['ledger', 'array'], ['followers', 'object'], ['relations', 'object'], ['medicine', 'number'], ['detachments', 'array'], ['retinue', 'array'], ['happenings', 'object']],
+    17: [...V3_FIELDS, ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object'], ['accounts', 'object'], ['ledger', 'array'], ['followers', 'object'], ['relations', 'object'], ['medicine', 'number'], ['detachments', 'array'], ['retinue', 'array'], ['happenings', 'object'], ['tourney', 'object']],
   };
 
   /** @param {unknown} v @param {string} kind */
@@ -277,6 +279,8 @@
     14: (d) => ({ ...d, version: 15, retinue: [] }),
     // 15 → 16 (build 2.19.0, P7-08): world events, none yet.
     15: (d) => CL.happenings.migrate(d),
+    // 16 → 17 (build 2.20.0, P7-09): tournaments, none fought yet.
+    16: (d) => CL.tourney.migrate(d),
   };
 
   /**
@@ -335,6 +339,7 @@
     CL.parties.sanitize(s, d); // world parties and the RNG seed
     CL.contracts.sanitize(s, d); // after parties: an active hunt needs its band
     CL.happenings.sanitize(s, d); // world events (P7-08), after parties: an infestation needs its band
+    CL.tourney.sanitize(s, d); // tournaments and your rival (P7-09)
     CL.troopTree.sanitize(s, d); // what the company knows of each troop
     CL.chronicle.sanitize(s, d); // the chronicle and the roll of honour
     CL.accounts.sanitize(s, d); // the company chest, budgets and the ledger

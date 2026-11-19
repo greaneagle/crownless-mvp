@@ -141,7 +141,7 @@
   /** Start of a battle: the plan for this fight (combat.startBattle). @param {any} g */
   function begin(g) {
     g.joining = [];
-    if (g.practice || !CL.campaign || !CL.parties) return;
+    if (g.practice || g.duel || !CL.campaign || !CL.parties) return;
     const e = CL.parties.current(CL.campaign);
     g.joining = plan(CL.campaign, e).map((j) => ({ ...j, warned: false, arrived: false }));
     for (const j of g.joining) if (j.seen) announce(g, j);
