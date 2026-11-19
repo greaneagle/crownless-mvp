@@ -176,6 +176,8 @@
       return;
     }
     $('#overlay').classList.remove('hidden');
+    const modal = $('#overlay .modal');
+    if (modal) modal.scrollTop = 0; // a new screen starts at its top (not where a long one was scrolled to)
     $('#prep').classList.toggle('hidden', mode !== 'settlement');
     $('#result').classList.toggle('hidden', mode !== 'result');
     $('#create').classList.toggle('hidden', mode !== 'create');
@@ -267,7 +269,7 @@
       const k = c.contract;
       const pay = k?.status === 'done' && k.giver === c.world.location;
       opt(pay ? 'Notice board — collect pay!' : 'Read the notice board', () => changeMode('contracts'));
-      opt('Accounts and followers', () => changeMode('accounts'), false, 'Your money, a quartermaster, a merchant');
+      opt('Accounts and followers', () => changeMode('accounts'), false, 'Your money, a quartermaster, a merchant, a surgeon');
       opt('Save & export', () => openSaves());
     }
     opt('Goodbye', () => CL.town.backToPlace());
@@ -546,6 +548,13 @@
           mk('span', { textContent: q.coverWages ? 'Keeps the next wages in the chest' : 'Does not set wages aside' }),
           btn(q.coverWages ? 'Stop' : 'Start', () => Q.setRule(c, 'coverWages', !q.coverWages)),
         ),
+        mk(
+          'div',
+          { className: 'row qmRule' },
+          mk('span', { textContent: q.medicine ? `Keep ${q.medicine} medicine while a surgeon rides with us` : 'Buys no medicine' }),
+          step('medicine', -1, ...Q.LIMITS.medicine),
+          step('medicine', 1, ...Q.LIMITS.medicine),
+        ),
         q.log.length ? mk('ul', { className: 'soldierNotes' }, ...q.log.slice(-6).reverse().map((e) => mk('li', { textContent: `Day ${CL.party.dayNumber(e.day)}: ${e.text}` }))) : null,
         mk('div', { className: 'row' }, btn('Buy now', () => Q.act(c), !Q.sellsFood(c.world.location)), btn('Let them go', () => Q.dismiss(c) && message('The quartermaster leaves the company'))),
       );
@@ -596,13 +605,37 @@
         ),
       );
     }
+    // The surgeon and medicine (P7-01; js/surgeon.js).
+    const S = CL.surgeon;
+    const doc = S.get(c);
+    const medPrice = S.medicinePrice(c);
+    const buyMed = (n) => btn(`Buy ${n} · ${n * medPrice}`, () => S.buyMedicine(c, n), !S.sellsMedicine(c) || c.gold < n * medPrice || c.medicine + n > S.MEDICINE_MAX);
+    const medRow = mk('div', { className: 'row' }, mk('span', { textContent: `Medicine: ${c.medicine}` }), buyMed(1), buyMed(5));
+    const sc = doc
+      ? mk(
+          'div',
+          { className: 'contractCard' },
+          mk('h3', { textContent: `Surgeon ${doc.name}` }),
+          mk('p', { textContent: `After each battle saves those who would otherwise die, one medicine each (a few even without), and wounds heal in a day and a half. Has saved ${doc.saved}. Paid ${S.WAGE} a week.` }),
+          medRow,
+          doc.log.length ? mk('ul', { className: 'soldierNotes' }, ...doc.log.slice(-4).reverse().map((e) => mk('li', { textContent: `Day ${CL.party.dayNumber(e.day)}: ${e.text}` }))) : null,
+          mk('div', { className: 'row' }, btn('Let them go', () => S.dismiss(c) && message('The surgeon leaves the company'))),
+        )
+      : mk(
+          'div',
+          { className: 'contractCard' },
+          mk('h3', { textContent: 'Surgeon' }),
+          mk('p', { textContent: `Fewer of your soldiers die after a battle: about a third fewer with medicine (one each, ${medPrice} crowns at a market), and wounds heal faster. ${S.HIRE} crowns to hire in a town, ${S.WAGE} a week.` }),
+          mk('div', { className: 'row' }, btn(S.canHire(c) || CL.content.table('settlements')[c.world.location]?.type === 'town' ? `Hire a surgeon · ${S.HIRE} crowns` : 'Hire one in a town', () => S.hire(c) && message('A surgeon joins the company'), !S.canHire(c))),
+          c.medicine ? medRow : null,
+        );
     const lines = A.recent(c, 12).map((e) => {
       const sign = e.to === A.WORLD ? '−' : e.from === A.WORLD ? '+' : '';
       const route = e.from === A.WORLD ? `into ${A.label(e.to)}` : e.to === A.WORLD ? `from ${A.label(e.from)}` : `${A.label(e.from)} → ${A.label(e.to)}`;
       return mk('li', { textContent: `Day ${CL.party.dayNumber(e.day)}: ${sign}${e.amount} ${route} · ${e.why}` });
     });
     const ledger = mk('div', { className: 'contractCard' }, mk('h3', { textContent: 'Ledger' }), lines.length ? mk('ul', { className: 'soldierNotes' }, ...lines) : mk('p', { textContent: 'Nothing yet.' }));
-    $('#accountsScreen').replaceChildren(money, qm, mc, ledger);
+    $('#accountsScreen').replaceChildren(money, qm, sc, mc, ledger);
   }
 
   // ---- Battle preparation (V2-07; js/prep.js) ----

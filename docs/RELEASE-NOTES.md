@@ -1,5 +1,22 @@
 # Crownless — Release Notes
 
+## v2.12.0 — The surgeon (P7-01) · 2026-11-19
+
+### New
+- **A surgeon** to hire in any town (Accounts, 60 crowns and 10 a week). After every battle, fought or simulated, they tend the fallen:
+  - about a third of those who would have died are saved, one medicine each;
+  - a few are saved even without medicine;
+  - wounds heal in a day and a half instead of two;
+  - the result screen names who was saved.
+- **Medicine** at any market (15 crowns). Your quartermaster keeps some in stock while a surgeon rides with you (4 to start, changeable). Captors take half of it.
+
+### Fixes
+- Going back from a long screen such as Accounts no longer leaves the settlement menu scrolled down on a phone.
+
+### Under the hood
+- Saves are now schema v11 (the surgeon and medicine). Older saves update on load, and a copy is kept as it was.
+- 611 fast and 8 slow Node tests, 127 browser tests (9 more apply to one device only and are skipped on the other).
+
 ## v2.11.0 — Battle balance (B-01) · 2026-11-19
 
 Simulate is now only a little worse than fighting, and a close fight is a fight.

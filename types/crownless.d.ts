@@ -199,7 +199,9 @@ declare global {
     /** v8: the newest money transfers. */
     ledger: LedgerEntry[];
     /** v8: camp followers. */
-    followers: { quartermaster: Quartermaster | null; merchant?: Merchant | null };
+    followers: { quartermaster: Quartermaster | null; merchant?: Merchant | null; surgeon?: any };
+    /** v11 (P7-01): medicine in the company's stores (0–99). */
+    medicine: number;
   }
 
   interface Accounts {
@@ -246,6 +248,8 @@ declare global {
     /** Fixed weekly limit, or null for automatic (V2-T1). */
     budget: number | null;
     coverWages: boolean;
+    /** P7-01: keep this much medicine while a surgeon rides with the company (0–20). */
+    medicine: number;
     weekStart: number;
     spent: number;
     unpaid: number;
@@ -355,6 +359,9 @@ declare global {
     reinforced?: boolean;
     killed: number[];
     wounded: number[];
+    /** P7-01: soldiers the surgeon saved (also in `wounded`), and the medicine that took. */
+    saved?: number[];
+    medicineUsed?: number;
     participants?: number[];
     soldierKills?: Record<number, number>;
     /** Enemies each soldier helped down without the final blow (V2-03). */
@@ -374,6 +381,8 @@ declare global {
     renown: number;
     loot: Record<ContentId, number>;
     lostItem: ContentId | null;
+    /** P7-01: medicine your captors took. */
+    medicineTaken?: number;
     xp: XpAward;
   }
 

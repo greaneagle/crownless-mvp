@@ -211,7 +211,7 @@ test('patrols of kingdoms at peace meet without a fight; at odds they clash', ()
 
 // ---- Saves (schema v10) ----
 
-test('relations are saved; junk is repaired; a v9 save of the bigger world migrates to v10', () => {
+test('relations are saved; junk is repaired; a v9 save of the bigger world migrates on (v10: relations)', () => {
   const storage = memoryStorage();
   const { CL } = loadGame({ storage });
   const c = CL.campaign;
@@ -231,7 +231,7 @@ test('relations are saved; junk is repaired; a v9 save of the bigger world migra
   const old = JSON.stringify(file.campaign);
   const s2 = memoryStorage({ crownless_save: old });
   const g = loadGame({ storage: s2, party: false }).CL;
-  assert.equal(g.campaign.version, 10);
+  assert.equal(g.campaign.version, 11); // on through v10 (relations) to v11 (P7-01)
   assert.equal(s2.data[g.save.preMigrationKey(9)], old);
   assert.equal(g.realm.relation(g.campaign, 'valedorn', 'aurelian'), 'tension');
   assert.equal(g.realm.relation(g.campaign, 'hrothmark', 'merrow'), 'peace');

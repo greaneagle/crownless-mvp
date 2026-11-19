@@ -11,6 +11,9 @@
  *                 fixed amount you set (0–1000)
  *   cover wages   keep the next wages in the chest, topping it up from your purse when you reach a
  *                 settlement (default on), and never spend that money on food
+ *   medicine      (P7-01, the first rule for one good) keep this much medicine, while a surgeon rides
+ *                 with the company (default 4; 0 turns it off); bought after the food, within the same
+ *                 weekly budget
  * In a settlement that sells food they first set the wages aside, then buy food up to the reserve,
  * through the same food purchase and price as you. If the chest holds too little beyond the wages,
  * they draw what the food needs from your purse into the chest first (never more than the budget
@@ -25,9 +28,9 @@
 
   const HIRE = 40;
   const WAGE = 6;
-  const DEFAULTS = { reserveDays: 5, budget: null, coverWages: true }; // budget null: automatic (V2-T1)
+  const DEFAULTS = { reserveDays: 5, budget: null, coverWages: true, medicine: 4 }; // budget null: automatic (V2-T1)
   /** @type {Record<string, [number, number]>} */
-  const LIMITS = { reserveDays: [0, 14], budget: [0, 1000] };
+  const LIMITS = { reserveDays: [0, 14], budget: [0, 1000], medicine: [0, 20] };
   const AUTO_MARGIN = 1.25; // the automatic budget: a week's food and a quarter more
   const LOG_MAX = 20;
   const WARN_FOOD_DAYS = 2;
@@ -42,7 +45,7 @@
   const sellsFood = (id) => Boolean(id && CL.content.table('settlements')[id]?.services?.includes('trade'));
 
   /** Wages owed at the next payday (the soldiers', plus the followers'). @param {Campaign} c */
-  const wagesDue = (c) => U().weeklyWages(c) + (get(c) ? WAGE : 0) + (CL.merchant?.get(c) ? CL.merchant.WAGE : 0);
+  const wagesDue = (c) => U().weeklyWages(c) + (get(c) ? WAGE : 0) + (CL.merchant?.get(c) ? CL.merchant.WAGE : 0) + (CL.surgeon?.get(c) ? CL.surgeon.WAGE : 0);
 
   function log(c, text) {
     const q = get(c);
@@ -92,7 +95,7 @@
     return true;
   }
 
-  /** Change a rule; values are kept within limits. @param {Campaign} c @param {'reserveDays' | 'budget' | 'coverWages'} key */
+  /** Change a rule; values are kept within limits. @param {Campaign} c @param {'reserveDays' | 'budget' | 'coverWages' | 'medicine'} key */
   function setRule(c, key, value) {
     const q = get(c);
     if (!q) return false;
@@ -121,7 +124,7 @@
     if (!q || !sellsFood(c.world?.location)) return null;
     rollWeek(c, q);
     const A = CL.accounts;
-    const done = { setAside: 0, drawn: 0, rations: 0, cost: 0, short: 0 };
+    const done = { setAside: 0, drawn: 0, rations: 0, cost: 0, short: 0, medicine: 0 };
     const due = wagesDue(c);
     if (q.coverWages && A.balance(c, 'chest') < due && c.gold > 0) {
       const n = Math.min(due - A.balance(c, 'chest'), c.gold);
@@ -153,9 +156,27 @@
       if (n > 0) log(c, `Bought ${n} rations at ${where} for ${done.cost} from the chest${done.short ? `; ${done.short} short (${free < price ? 'no more money' : 'weekly budget spent'})` : ''}.`);
       else log(c, `Needed ${need} rations at ${where} but bought none: ${free < price ? 'no money beyond the wages' : 'the weekly budget is spent'}.`);
     }
+    // P7-01: medicine to the reserve, while a surgeon rides with the company.
+    const S = CL.surgeon;
+    const wantMed = S?.get(c) ? Math.max(0, q.medicine - (c.medicine || 0)) : 0;
+    if (wantMed > 0 && S.sellsMedicine(c)) {
+      const price = S.medicinePrice(c);
+      const reserved = q.coverWages ? due : 0;
+      const left = Math.max(0, budgetOf(c) - q.spent);
+      // As for food: what the budget allows comes from your purse into the chest first, if need be.
+      const lack = Math.min(wantMed * price, Math.floor(left / price) * price) - Math.max(0, A.balance(c, 'chest') - reserved);
+      if (lack > 0 && c.gold > 0) A.transfer(c, 'purse', 'chest', Math.min(lack, c.gold), 'drawn for medicine');
+      const free = A.balance(c, 'chest') - reserved;
+      const n = Math.min(wantMed, Math.floor(Math.max(0, Math.min(free, left)) / price));
+      if (n > 0 && S.buyMedicine(c, n, 'chest')) {
+        done.medicine = n;
+        q.spent += n * price;
+        log(c, `Bought ${n} medicine for ${n * price} from the chest${n < wantMed ? `; ${wantMed - n} short` : ''}.`);
+      } else log(c, `Needed ${wantMed} medicine but bought none: ${free < price ? 'no money beyond the wages' : 'the weekly budget is spent'}.`);
+    }
     if (done.rations) CL.story?.emit('stores', { rations: done.rations }, c);
-    if (done.setAside || done.rations) {
-      CL.ui.message(`Quartermaster ${q.name}: ${[done.setAside ? `${done.setAside} set aside for wages` : '', done.rations ? `bought ${done.rations} rations for ${done.cost}` : ''].filter(Boolean).join(', ')}`);
+    if (done.setAside || done.rations || done.medicine) {
+      CL.ui.message(`Quartermaster ${q.name}: ${[done.setAside ? `${done.setAside} set aside for wages` : '', done.rations ? `bought ${done.rations} rations for ${done.cost}` : '', done.medicine ? `bought ${done.medicine} medicine` : ''].filter(Boolean).join(', ')}`);
     }
     return done;
   }
@@ -223,6 +244,7 @@
       reserveDays: clamp(num(q.reserveDays, DEFAULTS.reserveDays), LIMITS.reserveDays),
       budget: q.budget === null || q.budget === undefined ? null : clamp(num(q.budget, 0), LIMITS.budget),
       coverWages: q.coverWages === undefined ? DEFAULTS.coverWages : Boolean(q.coverWages),
+      medicine: clamp(num(q.medicine, DEFAULTS.medicine), LIMITS.medicine), // P7-01: older saves get the default
       weekStart: Math.max(0, num(q.weekStart, 0)),
       spent: Math.max(0, Math.floor(num(q.spent, 0))),
       unpaid: Math.max(0, Math.min(1, Math.floor(num(q.unpaid, 0)))),

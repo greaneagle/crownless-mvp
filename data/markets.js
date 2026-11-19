@@ -15,6 +15,8 @@
     tools: {id:'tools',name:'Tools',basePrice:40,weight:3,tradeGood:true,icon:'🔨'},
     timber: {id:'timber',name:'Timber',basePrice:22,weight:3,tradeGood:true,icon:'🪵'},
     wine: {id:'wine',name:'Wine',basePrice:36,weight:2,tradeGood:true,icon:'🍷'},
-    food_ration: {id:'food_ration',name:'Food Ration',basePrice:8,weight:1,tradeGood:false,icon:'🍞'}
+    food_ration: {id:'food_ration',name:'Food Ration',basePrice:8,weight:1,tradeGood:false,icon:'🍞'},
+    // P7-01: the surgeon's supply, bought at any market like food (js/surgeon.js); one saves one life.
+    medicine: {id:'medicine',name:'Medicine',basePrice:15,weight:0,tradeGood:false,icon:'⚕️'}
   };
 })(typeof window !== 'undefined' ? window : globalThis);

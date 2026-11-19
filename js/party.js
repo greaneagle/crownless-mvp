@@ -10,7 +10,6 @@
   // Battle XP. Hero: per battle + per enemy defeated. Soldiers: per battle they fought in (half if
   // wounded) + per enemy they personally felled in a real battle.
   const XP = { heroWin: 25, heroLoss: 5, heroPerKill: 8, heroPerKillLoss: 4, troopWin: 20, troopLoss: 8, troopPerKill: 5 };
-  const DEATH_CHANCE = 0.35; // otherwise wounded (GDD §7)
   const DEFEAT_GOLD_KEPT = 0.8; // GDD §6: lose ~20% of carried crowns
 
   const c = () => CL.campaign;
@@ -257,15 +256,18 @@
    * Roll each fallen ally as killed or wounded (the seeded casualties stream). Returns soldier-id lists.
    * @param {Unit[]} allies @param {Campaign} [camp] @returns {{ killed: number[], wounded: number[] }}
    */
+  /**
+   * Who of the fallen dies and who is wounded: one roll each from the casualties stream, sorted by the
+   * surgeon's triage (P7-01; without a surgeon, below DEATH_CHANCE dies, as in the GDD).
+   * @returns {{ killed: number[], wounded: number[], saved: number[], medicineUsed: number }}
+   */
   function rollCasualties(allies, camp = c()) {
-    const killed = [];
-    const wounded = [];
+    const fallen = [];
     for (const a of allies) {
       if (a.alive || a.routed || a.soldierId == null) continue; // those who fled come back unhurt (V2-08b)
-      if (CL.autoresolve.roll(camp, 'casualties') < DEATH_CHANCE) killed.push(a.soldierId);
-      else wounded.push(a.soldierId);
+      fallen.push({ id: a.soldierId, roll: CL.autoresolve.roll(camp, 'casualties') });
     }
-    return { killed, wounded };
+    return CL.surgeon.triage(camp, fallen);
   }
 
   /** Entry whose cumulative weight first exceeds `roll` (0 ≤ roll < total weight). */
@@ -317,7 +319,9 @@
     camp.lastResolvedBattle = battleId;
     camp.roster = camp.roster.filter((s) => !killed.includes(s.id));
     CL.clock.pass(camp, 'battle'); // a fixed amount of overworld time per battle (V2-04)
-    for (const s of camp.roster) if (wounded.includes(s.id)) s.woundedUntil = camp.day + CL.save.WOUND_DAYS;
+    const healIn = CL.surgeon.woundDays(camp); // 1.5 days with a surgeon (P7-01), else 2
+    for (const s of camp.roster) if (wounded.includes(s.id)) s.woundedUntil = camp.day + healIn;
+    CL.surgeon.onResult(camp, outcome); // medicine spent once, with the result
     camp.battles++;
     CL.upkeep.onBattle(camp, win);
     const result = { gold: 0, renown: 0, loot: {}, lostItem: null, xp: awardXp(camp, outcome) };
@@ -336,6 +340,7 @@
       // Captors take a share of every account, the company chest included (V2-11).
       result.gold = -CL.accounts.seize(camp, DEFEAT_GOLD_KEPT, 'taken by captors');
       result.lostItem = loseItemOnCapture(camp);
+      result.medicineTaken = CL.surgeon.onCapture(camp); // captors take half the medicine (P7-01)
     }
     const g = CL.game;
     const band = g.partyId != null ? CL.parties?.find(camp, g.partyId) : null;
@@ -354,7 +359,7 @@
     if (g.mode !== 'battle') return;
     g.mode = 'result';
     if (g.practice) return endPractice(win);
-    const { killed, wounded } = rollCasualties(g.allies);
+    const { killed, wounded, saved, medicineUsed } = rollCasualties(g.allies);
     const deployed = g.allies.filter((a) => a.soldierId != null);
     const outcome = {
       battleId: g.battleId,
@@ -367,6 +372,8 @@
       reinforced: (g.joining || []).some((j) => j.side === 'ally' && j.arrived),
       killed,
       wounded,
+      saved,
+      medicineUsed,
       participants: deployed.map((a) => a.soldierId),
       soldierKills: Object.fromEntries(deployed.map((a) => [a.soldierId, a.kills || 0])),
       soldierAssists: Object.fromEntries(deployed.map((a) => [a.soldierId, a.assists || 0])),
@@ -401,6 +408,8 @@
       standouts: CL.chronicle.standouts(g, names),
       killed,
       wounded,
+      saved,
+      medicineUsed,
       survivors: g.allies.filter((u) => (u.alive || u.routed) && !u.outside).length,
       waves: `${g.wave}/${g.totalWaves}`,
       names,
@@ -455,12 +464,12 @@
 
   /**
    * Result screen text for a fought or auto-resolved battle. Only numbers and data names are interpolated.
-   * @param {{ win: boolean, r: BattleResult | null, kills: number, routed?: number, fled?: number, helped?: number, standouts?: string[], killed: number[], wounded: number[],
+   * @param {{ win: boolean, r: BattleResult | null, kills: number, routed?: number, fled?: number, helped?: number, standouts?: string[], killed: number[], wounded: number[], saved?: number[], medicineUsed?: number,
    *   survivors: number, waves?: string, auto?: { pp: number, pe: number, reasons?: string[] }, names?: Record<number, string> }} info
    *   names: soldier names by ID, taken before the battle (soldiers can be renamed, so they are escaped)
    */
-  function resultHtml({ win, r, kills, routed = 0, fled = 0, helped = 0, standouts = [], killed, wounded, survivors, waves, auto, names }) {
-    const recoverDay = dayNumber(CL.campaign.day + CL.save.WOUND_DAYS);
+  function resultHtml({ win, r, kills, routed = 0, fled = 0, helped = 0, standouts = [], killed, wounded, saved = [], medicineUsed = 0, survivors, waves, auto, names }) {
+    const recoverDay = dayNumber(CL.campaign.day + CL.surgeon.woundDays(CL.campaign));
     const lines = [
       `<strong>${win ? `+${r.gold} crowns · +${r.renown} renown` : `${-r.gold} crowns lost (20%)`}</strong>`,
     ];
@@ -475,6 +484,9 @@
     if (standouts.length) lines.push(`Who did what: ${standouts.map(escapeHtml).join(' · ')}`); // V2-10
     if (who(killed)) lines.push(`Fallen: ${who(killed)}`);
     if (who(wounded)) lines.push(`Wounded: ${who(wounded)}`);
+    // P7-01: the surgeon's triage, by name.
+    const doc = CL.surgeon.get(CL.campaign);
+    if (doc && saved.length) lines.push(`Surgeon ${escapeHtml(doc.name)} saved ${who(saved) || `${saved.length}`}${medicineUsed ? ` (${medicineUsed} medicine used, ${CL.campaign.medicine} left)` : ' (no medicine left)'}`);
     lines.push(`Survivors: ${survivors}${waves ? ` · Battle waves reached: ${waves}` : ''}`);
     if (r.xp) {
       const lv = r.xp.levels ? ` · <strong>Level up! Now level ${CL.campaign.character.level}</strong>` : '';
@@ -483,6 +495,7 @@
     }
     if (win) lines.push(`Loot: ${describeItems(r.loot) || 'nothing of value'}`);
     else if (r.lostItem) lines.push(`Taken by your captors: ${CL.content.item(r.lostItem).name}`);
+    if (!win && r.medicineTaken) lines.push(`Your captors took ${r.medicineTaken} medicine`);
     lines.push(
       wounded.length
         ? `<small>Wounded soldiers can't fight until day ${recoverDay}. Travel or rest in a settlement to pass the time.</small>`

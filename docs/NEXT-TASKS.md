@@ -863,7 +863,17 @@ _Written 2026-11-18 at build 2.0.0; **reviewed and corrected the same day agains
 
 ---
 
-### P7-01 · Surgeon (S–M) — Specified
+### P7-01 · Surgeon (S–M) — ✅ Done in 2.12.0
+
+**Done (2.12.0, 2026-11-19).** As specified, with these notes (`js/surgeon.js`):
+- **The follower:** hired in a town (Accounts), 60 crowns and 10 a week with the wages; unpaid twice, they leave.
+- **Medicine:** a supply in `data/markets.js` (15 crowns, weightless), bought at any market on the Accounts screen, and by the quartermaster to a reserve while a surgeon rides with the company: the first per-good rule (`medicine`, default 4, 0–20, within the same weekly budget, drawing from your purse into the chest as for food). Captors take half (rounded up).
+- **Triage** (fought and auto-resolved alike): each fallen soldier still gets one roll from the same stream as before. Without a surgeon, below 0.35 dies. With one, below 0.22 dies; 0.22–0.35 is saved with one medicine while there is any, and without medicine only from 0.30 up. The saved are wounded instead; wounds heal in 1.5 days, not 2. Medicine is spent when the result commits (exactly once). The result screen names who was saved and the medicine used and left.
+- **Measured:** over 2,000 rolls, deaths among the fallen are 35% without, 22% with medicine, 30% without medicine. Campaign bot, 8 × 30 days with a surgeon and quartermaster from day 0: 74 soldiers fell against 154 without, 42 lives saved, about 300 crowns less at the end (wages and medicine).
+- **Also fixed:** a screen now opens at its top. Coming back from a long one (Accounts) left the settlement menu scrolled with its top buttons out of view on a phone.
+- **Save:** schema **v11** (`medicine`, `followers.surgeon`).
+- **Tests:** `tests/surgeon.test.js` (8: the thresholds; deaths measured; one roll each either way; committed once, faster healing, the saved named; auto-resolve's triage; towns only, wages, leaving unpaid; medicine bought, the quartermaster's rule, capture; saves, repair and the 10 → 11 migration), `tests/browser/surgeon.spec.js` (hire and buy on the Accounts screen at both sizes).
+
 
 **Problem.** Every battle kills soldiers at the GDD's fixed 35%, with nothing the player can do but fight better.
 

@@ -210,7 +210,7 @@ All three styles are viable over 60 days and every run resumed exactly. The gap 
 | ID | Task | Readiness | Size | Needs | Save |
 |---|---|---|---|---|---|
 | **B-01** | ✅ **Done in 2.11.0** (phone check to come). **Battle balance pass** (owner, deferred): make fought company battles harder (enemy cover and ranks, steadier enemy morale, smarter targeting) rather than inflating Simulate; target 5–15 points over the stated odds | Done | M | H-01 (parity script) | — |
-| **P7-01** | Surgeon (fewer deaths, faster healing, medicine) | Specified | S–M | V2-11 | yes |
+| **P7-01** | ✅ **Done in 2.12.0.** Surgeon (fewer deaths, faster healing, medicine) | Done | S–M | V2-11 | v11 |
 | **P7-02** | Scout (detection, pursuit warnings, route estimates) | Specified | S–M | P7-04 | yes |
 | **P7-03** | Blacksmith (capped, targeted upgrades; no durability) | Specified | S | V2-11 | yes |
 | **P7-04** | Pursuit and detection (vision, night, last-seen, search, hiding; "Avoid danger" routes) | Specified | **L** (was M) | W-07; W-09 for routes | yes |

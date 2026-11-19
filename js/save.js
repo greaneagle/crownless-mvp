@@ -26,7 +26,7 @@
   'use strict';
   const CL = root.Crownless;
 
-  const VERSION = 10;
+  const VERSION = 11;
   const KEY = 'crownless_save';
   const BACKUP_KEY = 'crownless_save_backup';
   const LEGACY_KEY = 'crownless_v03_party';
@@ -106,7 +106,8 @@
       honour: CL.chronicle.blankHonour(), // the roll of honour: soldiers who fell or left
       accounts: CL.accounts.blank(), // the company chest and follower budgets; `gold` is your purse (js/accounts.js)
       ledger: [], // the newest money transfers, each with a source, a destination and a reason
-      followers: { quartermaster: null, merchant: null }, // camp followers (js/quartermaster.js, js/merchant.js)
+      followers: { quartermaster: null, merchant: null, surgeon: null }, // camp followers (js/quartermaster.js, js/merchant.js, js/surgeon.js)
+      medicine: 0, // the surgeon's supply (P7-01)
     };
     CL.character.applyKit(c, background);
     CL.upkeep.stowFood(c);
@@ -186,6 +187,7 @@
     8: [...V3_FIELDS, ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object'], ['accounts', 'object'], ['ledger', 'array'], ['followers', 'object']],
     9: [...V3_FIELDS, ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object'], ['accounts', 'object'], ['ledger', 'array'], ['followers', 'object']],
     10: [...V3_FIELDS, ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object'], ['accounts', 'object'], ['ledger', 'array'], ['followers', 'object'], ['relations', 'object']],
+    11: [...V3_FIELDS, ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object'], ['accounts', 'object'], ['ledger', 'array'], ['followers', 'object'], ['relations', 'object'], ['medicine', 'number']],
   };
 
   /** @param {unknown} v @param {string} kind */
@@ -255,6 +257,8 @@
     // 9 → 10 (build 2.9.0, W-07): relations between kingdoms. None were recorded before, so every pair
     // starts as the world's data says (sanitize fills them in): an empty record here.
     9: (d) => ({ ...d, version: 10, relations: {} }),
+    // 10 → 11 (build 2.12.0, P7-01): room for a surgeon (none yet) and no medicine.
+    10: (d) => ({ ...d, version: 11, medicine: 0, followers: { ...(d.followers || {}), surgeon: null } }),
   };
 
   /**
@@ -326,6 +330,7 @@
     CL.accounts.sanitize(s, d); // the company chest, budgets and the ledger
     CL.quartermaster.sanitize(s, d); // camp followers
     CL.merchant.sanitize(s, d); // the merchant and their goods, prices and log
+    CL.surgeon.sanitize(s, d); // the surgeon and the medicine (P7-01)
     // Named random streams (after parties, which restores rngSeed) and the result and event counters.
     const seeds = CL.autoresolve.streamSeeds(s.rngSeed);
     for (const name of CL.autoresolve.STREAMS) {

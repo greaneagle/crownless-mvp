@@ -624,9 +624,11 @@
       ? A().rollFallen(c, healthy, A().lossChance(A().WINNER_LOSS, pp, pe), true)
       : A().rollFallen(c, healthy, A().lossChance(A().LOSER_LOSS, pp, pe), false);
     const enemyFallen = win ? enemyList : A().rollFallen(c, enemyList, A().lossChance(A().WINNER_LOSS, pe, pp), true);
-    const killed = [];
-    const wounded = [];
-    for (const id of fallen) (A().next(c) < 0.35 ? killed : wounded).push(id);
+    // The surgeon's triage (P7-01), one roll each from the world stream as before.
+    const { killed, wounded, saved, medicineUsed } = CL.surgeon.triage(
+      c,
+      fallen.map((id) => ({ id, roll: A().next(c) })),
+    );
     // Those who rode in lose men by the same rule as the side they fought on.
     const joined = help.list.map((j) => {
       const list = A().expand(j.troops);
@@ -637,7 +639,7 @@
     });
     const kills = enemyFallen.length + joined.filter((j) => j.side === 'enemy').reduce((n, j) => n + j.fallen.length, 0);
     g.battleId = c.battles + 1;
-    const outcome = { battleId: g.battleId, encounter: e.def, win, kills, killed, wounded, participants: healthy, reinforced: help.list.some((j) => j.side === 'ally') };
+    const outcome = { battleId: g.battleId, encounter: e.def, win, kills, killed, wounded, saved, medicineUsed, participants: healthy, reinforced: help.list.some((j) => j.side === 'ally') };
     const names = CL.party.rosterNames(c); // before the fallen leave the roster
     // The one commit path (V2-02): result, companion, map, band, events and the save, exactly once.
     CL.reinforce.lock(g, [e.party?.id, ...joined.map((j) => j.id)]); // they wait while the hours pass (§9.5)
@@ -652,7 +654,7 @@
       win,
       auto: true, // drawn over the world map, not a battlefield
       ...r,
-      html: CL.party.resultHtml({ win, r, kills, killed, wounded, survivors: healthy.length - fallen.length, auto: { pp, pe, reasons }, names }),
+      html: CL.party.resultHtml({ win, r, kills, killed, wounded, saved, medicineUsed, survivors: healthy.length - fallen.length, auto: { pp, pe, reasons }, names }),
     };
     CL.diag.log('info', 'Auto-resolved', { ...outcome, encounter: e.def.id, pp, pe });
     CL.ui.changeMode('result');
