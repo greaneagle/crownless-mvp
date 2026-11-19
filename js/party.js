@@ -221,7 +221,7 @@
   /**
    * Advance the campaign clock; wounded soldiers whose time is up return to duty. Game code moves
    * time through CL.clock (js/clock.js), which calls this; tests and tools may call it directly.
-   * The one way campaign time passes (upkeep, markets, world parties, contracts, story, news).
+   * The one way campaign time passes (upkeep, markets, world parties, contracts, story, world events, news).
    * @param {number} days @param {Campaign} [camp] @returns {number[]} IDs of soldiers who healed
    */
   function advanceDays(days, camp = c()) {
@@ -243,6 +243,7 @@
     CL.companion.heal(camp);
     CL.retinue.heal(camp); // the other companions (P7-06)
     CL.story.tick(camp); // quest stage deadlines
+    CL.happenings?.tick(camp); // world events start, hold and end (P7-08), before the news tells them
     CL.news.tick(camp); // a regional news line every couple of days
     return healed;
   }

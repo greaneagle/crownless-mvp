@@ -179,7 +179,7 @@ test('a companion of the retinue can captain a patrol; leaving while out, the pa
   assert.deepEqual(plain(r.detachment.captain), { kind: 'none', id: null });
 });
 
-test('saves: kept; junk repaired; the gone stay gone; a v14 save migrates to v15', () => {
+test('saves: kept; junk repaired; the gone stay gone; a v14 save migrates on (v15, then v16)', () => {
   const storage = memoryStorage();
   const { CL, c, R } = camp('hrothgard', { storage });
   R.join(c, 'sigrun');
@@ -201,6 +201,6 @@ test('saves: kept; junk repaired; the gone stay gone; a v14 save migrates to v15
   v14.version = 14;
   delete v14.retinue;
   const m = CL.save.fromRaw(v14);
-  assert.equal(m.campaign.version, 15);
+  assert.equal(m.campaign.version, 16);
   assert.deepEqual(plain(m.campaign.retinue), []);
 });

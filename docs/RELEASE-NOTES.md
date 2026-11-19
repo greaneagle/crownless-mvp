@@ -1,5 +1,24 @@
 # Crownless — Release Notes
 
+## v2.19.0 — World events (P7-08) · 2026-11-19
+
+### New
+- **The world has things going on.** As it changes, events start in its settlements, and the news says where:
+  - **food shortage** where grain is dear: sell rations to the reeve at the old price;
+  - **Reavers in a village's fields**, with a bounty for whoever drives them off: take it and the band is marked on your map;
+  - **a militia asking to be drilled** where a kingdom is at odds with its neighbours: a day of drill for crowns, reputation and experience;
+  - **a courier** with a letter to carry to another town in time;
+  - **refugees** near a war: feed them, or take on those who can fight.
+- In that settlement each event has a card: what is going on, what happens if no one helps, how long it has, and one decision. A choice you cannot make says why.
+- Each event lasts a few days and ends once. Ignored, it has the consequence its card states: grain stays dear, farms are plundered, or, if you were asked and rode on, you lose a little reputation.
+- What your company had a hand in goes into its chronicle. The Journal lists the events you know of.
+- The same kind of event does not come back to a region for a while. None of it stands in the story's way.
+
+### Under the hood
+- Save schema v16 (world events); older saves migrate and start with none.
+- Debug tools: World event here.
+- 664 fast and 9 slow Node tests, 143 browser tests (9 more apply to one device only and are skipped on the other).
+
 ## v2.18.0 — Soldier traits (P7-07) · 2026-11-19
 
 ### New

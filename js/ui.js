@@ -1758,12 +1758,51 @@
         return b;
       }),
     );
+    $('#happeningsHere').replaceChildren(...happeningCards(c, c.world.location));
     const barred = !CL.realm.welcomes(c, c.world.location);
     $('#serviceNote').textContent = barred
       ? `The ${CL.content.get('factions', CL.realm.owner(c.world.location, c)).name} will not hire out soldiers or work to an enemy.`
       : offers.length
         ? ''
         : 'No one here is looking to take up arms.';
+  }
+
+  /**
+   * World events here (P7-08): what is going on, what happens if no one helps, and the one decision
+   * (take part or not); a choice that cannot be made says why.
+   */
+  function happeningCards(c, sid) {
+    const H = CL.happenings;
+    const el = (tag, cls, text) => Object.assign(document.createElement(tag), { className: cls || '', textContent: text || '' });
+    return H.here(c, sid).map((e) => {
+      const d = CL.content.get('world_events', e.kind);
+      const card = el('div', 'happening');
+      card.dataset.happening = e.kind;
+      const left = Math.max(0, e.until - c.day);
+      card.append(el('b', '', `${d.name} · ${left < 1 ? 'today only' : `${Math.floor(left)} days left`}`));
+      card.append(el('p', '', H.fill(d.text, e, c)));
+      const taken = H.takenText(e);
+      if (taken) card.append(el('p', 'taken', taken));
+      else card.append(el('p', 'ignored', H.fill(d.ignored, e, c)));
+      const row = el('div', 'row');
+      for (const o of H.options(c, e)) {
+        const b = el('button', '', o.text);
+        b.type = 'button';
+        b.dataset.choice = o.id;
+        b.disabled = Boolean(o.reason);
+        if (o.reason) b.title = o.reason;
+        b.onclick = () => {
+          const r = H.choose(c, e.id, o.id);
+          if (!r.ok) message(r.reason);
+          CL.save.write();
+          refreshRoster();
+        };
+        row.append(b);
+        if (o.reason) row.append(el('span', 'why', o.reason));
+      }
+      if (row.childElementCount) card.append(row);
+      return card;
+    });
   }
 
   /** Food / morale / wages readout, with warnings highlighted (GDD §11). */
@@ -1975,8 +2014,22 @@
       cl.append(li);
     }
     chronCard.append(cl);
+    // World events the company knows of first-hand (P7-08): where, what, and how long they have.
+    const known = CL.happenings.journal();
+    const eventsCard = el('div', 'newsCard happeningsCard');
+    if (known.length) {
+      eventsCard.append(el('h3', '', 'Happenings'));
+      const ul = el('ul');
+      for (const k of known) {
+        const li = el('li');
+        li.append(el('b', '', `${k.title} (${k.left}). `), document.createTextNode(`${k.text} `), el('i', '', k.ignored));
+        ul.append(li);
+      }
+      eventsCard.append(ul);
+    }
+    const extra = known.length ? [eventsCard] : [];
     if (!rows.length) {
-      $('#journalScreen').replaceChildren(el('p', '', 'No quests yet. People in Stonebridge may have work for a stranger — try the Elder.'), chronCard, newsCard);
+      $('#journalScreen').replaceChildren(el('p', '', 'No quests yet. People in Stonebridge may have work for a stranger — try the Elder.'), ...extra, chronCard, newsCard);
       return;
     }
     const label = { active: 'In progress', done: 'Complete', failed: 'Failed' };
@@ -1993,6 +2046,7 @@
         }
         return card;
       }),
+      ...extra,
       chronCard,
       newsCard,
     );

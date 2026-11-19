@@ -217,7 +217,7 @@ All three styles are viable over 60 days and every run resumed exactly. The gap 
 | **P7-05** | ✅ **Done in 2.16.0.** Officers and detached patrols (SC-17, SC-18) | Done | L | W-07 | v14 |
 | **P7-06** | ✅ **Done in 2.17.0.** More companions | Done | M | P7-05 | v15 |
 | **P7-07** | ✅ **Done in 2.18.0.** Soldier traits | Done | S | — | optional field |
-| **P7-08** | Dynamic world events | Specified | M | W-07 | yes |
+| **P7-08** | ✅ **Done in 2.19.0.** Dynamic world events | Done | M | W-07 | v16 |
 | **P7-09** | Tournament (foot-melee duels; needs a new one-on-one arena mode, since none exists) | Specified | **M–L** | — | yes |
 | **P7-10** | First business: a mill | Specified | M | V2-11, W-05b | yes |
 | **P7-11** | Battle extras (formations, an objective, terrain) | Specified | M | B-01, W-05a | — |

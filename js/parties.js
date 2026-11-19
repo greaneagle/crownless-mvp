@@ -88,7 +88,7 @@
   function remove(c, p) {
     const i = c.parties.indexOf(p);
     if (i >= 0) c.parties.splice(i, 1);
-    if (p.contractId || p.questTag) return; // contract and quest bands are extra; they don't hold up regular respawns
+    if (p.contractId || p.questTag || p.eventId) return; // contract, quest and event bands are extra; they don't hold up regular respawns
     const t = tpl(p.template);
     c.partySpawns[t.id] = Math.max(c.partySpawns[t.id] || 0, now(c) + t.respawnDays);
   }
@@ -98,14 +98,14 @@
     const cap = W().map().simulation?.partiesPerRegion;
     const region = cap ? W().regionAt(p.x, p.y)?.id : null;
     if (!region) return false;
-    const here = c.parties.filter((o) => !o.contractId && !o.questTag && W().regionAt(o.x, o.y)?.id === region).length;
+    const here = c.parties.filter((o) => !o.contractId && !o.questTag && !o.eventId && W().regionAt(o.x, o.y)?.id === region).length;
     return here > cap;
   }
 
   /** Keep each template at its target count once its respawn timer has passed. */
   function ensure(c, ignoreTimers = false) {
     for (const t of Object.values(CL.content.table('party_templates'))) {
-      let active = c.parties.filter((p) => p.template === t.id && !p.contractId && !p.questTag).length;
+      let active = c.parties.filter((p) => p.template === t.id && !p.contractId && !p.questTag && !p.eventId).length;
       while (active < t.count && (ignoreTimers || now(c) >= (c.partySpawns[t.id] || 0))) {
         const p = spawn(c, t.id);
         active++;
@@ -725,12 +725,14 @@
     }
     if (!p) return;
     if (win && p.contractId) CL.contracts.onTargetDefeated(c, p);
+    if (win && p.eventId) CL.happenings.onBandBeaten(c, p); // a village's bounty (P7-08)
     if (win) remove(c, p);
     else {
       A().removeTroops(p.troops, fallenEnemyTroops);
       if (!troopCount(p)) {
         // A pyrrhic loss: the player was beaten but took the whole band down with them.
         if (p.contractId) CL.contracts.onTargetDefeated(c, p);
+        if (p.eventId) CL.happenings.onBandBeaten(c, p);
         remove(c, p);
       } else p.ignoreUntil = c.day + IGNORE_AFTER.capture;
     }
@@ -765,6 +767,7 @@
       };
       if (t.kind === 'bandit') q.lair = t.lairs.includes(p.lair) ? p.lair : t.lairs[0];
       if (Number.isInteger(p.contractId)) q.contractId = p.contractId;
+      if (Number.isInteger(p.eventId)) q.eventId = p.eventId; // a world event's band (P7-08): checked against its event later
       if (typeof p.questTag === 'string' && /^[a-z0-9_]{1,40}$/.test(p.questTag)) q.questTag = p.questTag;
       if (q.questTag && p.camp === true) q.camp = true;
       if (p.ambush === true) q.ambush = true;

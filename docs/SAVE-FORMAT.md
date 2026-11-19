@@ -1,6 +1,6 @@
 # Crownless — Save Format
 
-_Current: **schema v9**, from build 1.16.0 (V2-12); v8 came with 1.15.0 (V2-11), v7 with 1.14.0 (V2-10), v6 with 1.5.0 (V2-03b), v5 with 1.4.0 (V2-03), v4 with 1.3.0 (V2-02), v3 with 1.2.0 (V2-01). Schema v2 was frozen with the v1.0 release (build 1.0.0, 2026-11-17); its full field list is kept below as the reference, because v3 to v9 only add fields to it. Saves from every older build still load: see "Loading" and the fixtures._
+_Current: **schema v16**, from build 2.19.0 (P7-08); v9 came with build 1.16.0 (V2-12); v8 came with 1.15.0 (V2-11), v7 with 1.14.0 (V2-10), v6 with 1.5.0 (V2-03b), v5 with 1.4.0 (V2-03), v4 with 1.3.0 (V2-02), v3 with 1.2.0 (V2-01). Schema v2 was frozen with the v1.0 release (build 1.0.0, 2026-11-17); its full field list is kept below as the reference, because v3 to v9 only add fields to it. Saves from every older build still load: see "Loading" and the fixtures._
 
 ## Where saves live
 All save keys are read and written through the storage layer (`CL.storage`, `js/storage.js`). In the browser that is localStorage; a packaged build can swap in another backend (IndexedDB, a desktop app's files) with `CL.storage.use(backend)`.
@@ -86,12 +86,14 @@ Saves written by real builds, loaded by every later build:
 
 Each is imported as a file and, for v2 to v9, also left in storage as the old build would have, then checked against what the old build recorded about it (soldier IDs, troops, XP, gold, day, quests), re-exported, and played on. Never regenerate them casually; they stand for real players' saves.
 
-## The campaign object (schema v14)
-Schema v14 is schema v2 (below) plus these fields (v3 added the first two, v4 the next three, v6 `troopKnowledge`, v7 `chronicle` and `honour`, v8 `accounts`, `ledger` and `followers`; v9 adds the merchant inside `followers`; v10 `relations`; v11 `medicine` and the surgeon inside `followers`; v12 the blacksmith inside `followers`; v13 the scout inside `followers`; v14 `detachments`), and every `roster` entry is a named soldier (v5, next section).
+## The campaign object (schema v16)
+Schema v16 is schema v2 (below) plus these fields (v3 added the first two, v4 the next three, v6 `troopKnowledge`, v7 `chronicle` and `honour`, v8 `accounts`, `ledger` and `followers`; v9 adds the merchant inside `followers`; v10 `relations`; v11 `medicine` and the surgeon inside `followers`; v12 the blacksmith inside `followers`; v13 the scout inside `followers`; v14 `detachments`; v15 `retinue`; v16 `happenings`), and every `roster` entry is a named soldier (v5, next section).
 
 | Field | Type | Owner module | Notes |
 |---|---|---|---|
-| `version` | `14` | save | |
+| `version` | `16` | save | |
+| `happenings` | `{ open, past, cool, next, nextId }` | happenings | v16 (P7-08). World events. `open`: up to 3 `{ id, kind, place, start, until, seen, taken, gold?, dest?, partyId? }` (`kind` from `data/world_events.js`; one per place; a courier's `dest`; an infestation's band `partyId`, whose party carries `eventId`, and without which the event is dropped). `past`: the last 20 `{ id, kind, place, day, result, dest? }`, `result` one of that kind's results. `cool`: `"kind|region" → day` before that kind may start again in that region. `next`: the day of the next daily check. Junk is dropped; a band whose event is gone becomes an ordinary band |
+| `retinue` | up to 3 `{ id, woundedUntil, equipment, loyalty, unpaid, warned, warnedDay?, why, detached? }` | retinue | v15 (P7-06). Companions of the wider world (see "Schema steps") |
 | `detachments` | up to 12 `{ id, captain: { kind: 'soldier' \| 'companion' \| 'none', id }, captainName, soldiers, order, status, since, start, purse, food, unpaid, leg, recallAt, log, tally, report?, ended? }` | detachments | v14 (P7-05). Parts of the company sent off under a captain: `soldiers` are full soldier records (out of `roster`; IDs unique across both), `order` `{ objective: 'hunt' \| 'road', x, y, road, days, until, retreatBelow (0.5, 0.34 or 0), avoidStronger, autonomy: 'judgement' \| 'exact' }`, `status` `out`, `returning` or `back` (the last few kept as reports). Each active one has a world party with `detachment: id` (template `company_detachment`), re-made at the company if missing; their purses together are `accounts.budgets.detachments`. The companion leading one carries `detached: id` |
 | `medicine` | integer 0–99 | surgeon | v11 (P7-01). The company's medicine: one saves one soldier the surgeon tends after a battle. Bought at markets; captors take half |
 | `worldId` | string | save | The world (content package) the campaign belongs to: `"sundered_realm"` from 2.7.0 (`"border_march"` before). A save from another world is refused (and, on load, kept in `crownless_save_other_world`) |
@@ -161,6 +163,7 @@ Each task that changes the save's shape adds the next schema version and its mig
 - ✅ v7 (1.14.0, V2-10): the company chronicle (`chronicle`) and the roll of honour (`honour`).
 - ✅ v9 (1.16.0, V2-12): the merchant follower (`followers.merchant`, with its cash in `accounts.budgets.merchant`).
 - ✅ v10 (2.9.0, W-07): relations between kingdoms (`relations`).
+- ✅ v16 (2.19.0, P7-08): world events (`happenings`, see the campaign object); a migrated save starts with none, its first check the next day. Also optional: a news event's `text` (a line already written, ≤ 300 characters), a world party's `eventId` and a chronicle entry `{ kind: 'happening', event, result, place, dest?, n? }`.
 - (2.18.0, P7-07, no schema step) optional fields: a soldier's `trait` (`steadfast`, `cautious` or `impulsive`), a soldier note `{ kind: 'trait', trait }` and a roll-of-honour entry's `trait`; unknown values are dropped on load.
 - ✅ v15 (2.17.0, P7-06): companions of the wider world (`retinue`: `[{ id, woundedUntil, equipment, loyalty (0–100), unpaid, warned, warnedDay?, why, detached? }]`); unknown ids, duplicates, Mara and companions whose `<id>_gone` flag is set are dropped; a detachment captain of the retinue is relinked by its `detached`.
 - ✅ v14 (2.16.0, P7-05): detachments (`detachments`).

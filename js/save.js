@@ -26,7 +26,7 @@
   'use strict';
   const CL = root.Crownless;
 
-  const VERSION = 15;
+  const VERSION = 16;
   const KEY = 'crownless_save';
   const BACKUP_KEY = 'crownless_save_backup';
   const LEGACY_KEY = 'crownless_v03_party';
@@ -110,6 +110,7 @@
       medicine: 0, // the surgeon's supply (P7-01)
       detachments: [], // parts of the company sent off under a captain (P7-05)
       retinue: [], // companions of the wider world (P7-06)
+      happenings: CL.happenings.blank(0), // world events: open, past, cooldowns (P7-08)
     };
     CL.character.applyKit(c, background);
     CL.upkeep.stowFood(c);
@@ -194,6 +195,7 @@
     13: [...V3_FIELDS, ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object'], ['accounts', 'object'], ['ledger', 'array'], ['followers', 'object'], ['relations', 'object'], ['medicine', 'number']],
     14: [...V3_FIELDS, ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object'], ['accounts', 'object'], ['ledger', 'array'], ['followers', 'object'], ['relations', 'object'], ['medicine', 'number'], ['detachments', 'array']],
     15: [...V3_FIELDS, ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object'], ['accounts', 'object'], ['ledger', 'array'], ['followers', 'object'], ['relations', 'object'], ['medicine', 'number'], ['detachments', 'array'], ['retinue', 'array']],
+    16: [...V3_FIELDS, ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object'], ['accounts', 'object'], ['ledger', 'array'], ['followers', 'object'], ['relations', 'object'], ['medicine', 'number'], ['detachments', 'array'], ['retinue', 'array'], ['happenings', 'object']],
   };
 
   /** @param {unknown} v @param {string} kind */
@@ -273,6 +275,8 @@
     13: (d) => ({ ...d, version: 14, detachments: [] }),
     // 14 → 15 (build 2.17.0, P7-06): no other companions yet.
     14: (d) => ({ ...d, version: 15, retinue: [] }),
+    // 15 → 16 (build 2.19.0, P7-08): world events, none yet.
+    15: (d) => CL.happenings.migrate(d),
   };
 
   /**
@@ -330,6 +334,7 @@
     CL.news.sanitize(s, d); // recent events and news lines
     CL.parties.sanitize(s, d); // world parties and the RNG seed
     CL.contracts.sanitize(s, d); // after parties: an active hunt needs its band
+    CL.happenings.sanitize(s, d); // world events (P7-08), after parties: an infestation needs its band
     CL.troopTree.sanitize(s, d); // what the company knows of each troop
     CL.chronicle.sanitize(s, d); // the chronicle and the roll of honour
     CL.accounts.sanitize(s, d); // the company chest, budgets and the ledger

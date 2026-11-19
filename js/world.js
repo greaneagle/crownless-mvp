@@ -305,6 +305,7 @@
       CL.diag.log('info', 'Entered settlement', { id: t.id, day: CL.campaign.day });
       CL.story.emit('enter', { settlement: t.id });
       CL.contracts.onArrive(CL.campaign, t.id); // deliveries and escorts are paid on arrival
+      CL.happenings?.onArrive(CL.campaign, t.id); // what is going on here; a carried letter handed over (P7-08)
       CL.quartermaster?.act(CL.campaign); // wages set aside and food bought from the chest (V2-11)
       CL.merchant?.visit(CL.campaign); // the merchant trades its budget here (V2-12)
       CL.town.enterPlace(); // the settlement menu; walkable places offer "Walk the streets" from it

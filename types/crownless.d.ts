@@ -106,6 +106,8 @@ declare global {
     good?: ContentId;
     contractId?: number;
     questTag?: string;
+    /** P7-08: the world event (an infestation) this band belongs to. */
+    eventId?: number;
     camp?: boolean;
     anchor?: string;
     ambush?: boolean;
@@ -221,6 +223,8 @@ declare global {
     retinue: { id: ContentId; woundedUntil: number | null; equipment: Record<string, string | null>; loyalty: number; unpaid: number; warned: boolean; why: string | null; warnedDay?: number; detached?: number }[];
     /** v11 (P7-01): medicine in the company's stores (0–99). */
     medicine: number;
+    /** v16 (P7-08): world events: those open, the last few ended, cooldowns per kind and region. */
+    happenings: { open: Happening[]; past: { id: number; kind: ContentId; place: string; day: number; result: string; dest?: string }[]; cool: Record<string, number>; next: number; nextId: number };
   }
 
   interface Accounts {
@@ -294,6 +298,24 @@ declare global {
     auto?: boolean;
     quest?: string;
     status?: string;
+    /** P7-08 'happening': the world event's kind, its result and the courier's destination. */
+    event?: ContentId;
+    result?: string;
+    dest?: string;
+  }
+
+  /** P7-08: an open world event (js/happenings.js). */
+  interface Happening {
+    id: number;
+    kind: ContentId;
+    place: string;
+    start: number;
+    until: number;
+    seen: boolean;
+    taken: boolean;
+    gold?: number;
+    dest?: string;
+    partyId?: number;
   }
 
   /** A soldier remembered on the roll of honour (V2-10). */

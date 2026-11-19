@@ -1097,7 +1097,19 @@ _Written 2026-11-18 at build 2.0.0; **reviewed and corrected the same day agains
 
 **Acceptance.** Traits change battles measurably and are earned visibly.
 
-### P7-08 · Dynamic world events (M) — Specified (needs W-07)
+### P7-08 · Dynamic world events (M) — ✅ Done in 2.19.0
+
+**Done (2.19.0, 2026-11-19).** `js/happenings.js` (`CL.happenings`), content in `data/world_events.js` (not `data/events.js`: `CL.events` is already the domain event bus):
+- **Starting:** once a day from day 2, a 45% chance that one event starts, at most 3 open, one per settlement, chosen by weight among the (kind, place) pairs whose conditions hold and whose cooldown (per kind and region) has passed. The rolls come from the campaign's seed and the day, never the world random stream.
+- **Five kinds**, each with its condition, its one decision (take part or not) on a card in that settlement, and its stated consequence if ignored:
+  - food shortage (grain 0.08 above usual, a kingdom at war, or a lost caravan): sell 20 rations at the old price → eased | grain left 0.2 above usual;
+  - infestation (a village): a band near it, sized against the company, with a bounty paid to whoever beats it (taking it marks the band) → cleared, or others if someone else does | farms plundered (grain and wool dearer);
+  - militia request (a kingdom at odds): drill them for a day (XP, crowns, +4 reputation) → drilled | −2 reputation, only if you were there and rode on;
+  - courier (a town): carry a letter 20–70 leagues → delivered (crowns, renown, reputation) | late (−2, if you took it) or ignored;
+  - refugees (near a war or a clash in the region): feed them (15 rations) or take on two levies → fed / took | grain dearer.
+- **Reported and remembered:** each start and end is a news line (written by the event); what the company had a hand in (took part, or was there and rode on) goes into the chronicle; the Journal lists open events you know of. Events never touch story flags, quests, owners or services.
+- **Save v16:** `happenings` (open, past, cooldowns, next check); a band's `eventId`; news events may carry a written `text`. Tests: `tests/happenings.test.js`, a 90-day bot run in `tests/slow/happenings-bots.test.js`, `tests/browser/happenings.spec.js`. A debug button, World event here, starts one where you are.
+
 
 **Build.**
 - **An event system** (`data/events.js`): conditions on world state, an effect, and a choice for the player when nearby.

@@ -3,6 +3,7 @@
  * changing hands, the player's deeds); every INTERVAL days one news line is written from the most
  * important event not yet told, or a line about the border's tensions when the roads were quiet.
  * The Trade screen also shows "market talk": the latest recent event that moved that town's prices.
+ * P7-08: world events (js/happenings.js) record a line already written (`text`), told as it is.
  * State: CL.campaign.news = { events, lines, next, clashUntil, turns } (saved). Lines take turns,
  * never from the world RNG, so news never changes how the simulation plays out. */
 (function (root) {
@@ -16,6 +17,7 @@
   const MARKET_DAYS = 4; // how long a price-moving event is talked about at the market
   const MAX_CATCH_UP = 2; // after a long wait, at most this many bulletins at once
   const REPEAT_PENALTY = 3; // priority lost by the kind told in the last bulletin
+  const MAX_TEXT = 300; // a line written by its teller: world events (P7-08)
 
   const kinds = () => CL.content.table('news');
   const settlement = (id) => CL.content.table('settlements')[id];
@@ -60,6 +62,7 @@
     for (const k of ['place', 'dest', 'good', 'faction', 'other', 'winner', 'loser', 'fort', 'owner']) {
       if (typeof data[k] === 'string') e[k] = data[k];
     }
+    if (typeof data.text === 'string' && data.text) e.text = data.text.slice(0, MAX_TEXT); // a line written by its teller (P7-08)
     n.events.push(e);
     prune(c);
     return e;
@@ -93,6 +96,7 @@
 
   /** Pick a kind's line in turn (by how many lines have been written), never from the RNG. */
   function lineFor(c, kindId, e) {
+    if (e.text) return e.text; // already written (world events, P7-08)
     const k = kinds()[kindId];
     const ending = CL.story.state(c).flags.ending;
     const pool = k.byEnding?.[ending] || k.lines; // after an ending, some news reads differently
@@ -189,6 +193,7 @@
         for (const k of ['faction', 'winner', 'loser', 'owner']) if (id(e[k], 'factions')) q[k] = e[k];
         if (id(e.good, 'markets')) q.good = e.good;
         if (e.told === true) q.told = true;
+        if (typeof e.text === 'string' && e.text && e.text.length <= MAX_TEXT) q.text = e.text;
         n.events.push(q);
       }
       for (const l of Array.isArray(raw.lines) ? raw.lines.slice(-MAX_LINES) : []) {

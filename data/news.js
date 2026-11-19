@@ -13,6 +13,17 @@
   root.CROWNLESS_CONTENT = root.CROWNLESS_CONTENT || {};
   var C = root.CROWNLESS_CONTENT;
   C.news = {
+    // P7-08: world events (data/world_events.js) write their own line; these are only fallbacks.
+    happening: {
+      id: 'happening',
+      priority: 6,
+      lines: ['Word comes of trouble at {place}.']
+    },
+    happening_end: {
+      id: 'happening_end',
+      priority: 3,
+      lines: ['The trouble at {place} is over.']
+    },
     war_declared: {
       id: 'war_declared',
       priority: 7,

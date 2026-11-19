@@ -474,6 +474,19 @@
       case 'days':
         passDays(n);
         break;
+      case 'happening': {
+        // P7-08: a world event where you stand: the first kind the world calls for here, else any.
+        const sid = c().world.location;
+        if (!sid) return CL.ui.message('Enter a settlement first');
+        const H = CL.happenings;
+        const kinds = [...H.KINDS.filter((k) => H.fits(c(), CL.content.get('world_events', k), sid)), ...H.KINDS];
+        let e = null;
+        for (const k of kinds) if (!e) e = H.start(c(), k, sid);
+        if (!e) return CL.ui.message('Something is already going on here');
+        log('world event', { kind: e.kind, place: sid });
+        CL.ui.refresh();
+        break;
+      }
       case 'sites':
         resetSites();
         break;

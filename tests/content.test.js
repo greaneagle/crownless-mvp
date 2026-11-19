@@ -10,7 +10,7 @@ const C = loadContent();
 const ASSET_DIR = path.join(__dirname, '..', 'assets');
 
 test('every content module loads and every table is non-empty', () => {
-  assert.equal(CONTENT_MODULES.length, 18); // 1.4.0 added data/names.js (V2-03)
+  assert.equal(CONTENT_MODULES.length, 19); // 1.4.0 added data/names.js (V2-03); 2.19.0 data/world_events.js (P7-08)
   for (const [name, table] of Object.entries(C)) {
     assert.ok(Object.keys(table).length > 0, `empty table: ${name}`);
   }
