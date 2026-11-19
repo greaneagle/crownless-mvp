@@ -67,6 +67,8 @@ declare global {
     /** Settlement ID while inside one, null on the open map. */
     location: ContentId | null;
     sites: Record<string, { clearedUntil: number }>;
+    /** P7-04: the Hide stance, kept only while true (in a forest, standing still). */
+    hidden?: boolean;
   }
 
   interface Character {
@@ -105,6 +107,10 @@ declare global {
     anchor?: string;
     ambush?: boolean;
     escortTo?: ContentId;
+    /** P7-04: where it last saw the company, and until when it searches there (null: riding there). */
+    lastSeen?: { x: number; y: number; until: number | null };
+    /** P7-04: where the company last saw it. */
+    seenAt?: { x: number; y: number; day: number };
     [extra: string]: unknown;
   }
 

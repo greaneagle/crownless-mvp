@@ -176,6 +176,7 @@
   function targetAt(px, py) {
     // Moving parties first: they can stand on top of places.
     for (const p of CL.campaign.parties || []) {
+      if (!CL.sight.playerSees(CL.campaign, p)) continue; // only parties the company can see (P7-04)
       const { x: sx, y: sy } = partyDrawPos(p);
       if (Math.hypot(px - sx, py - sy) <= HIT_RADIUS_PX * 0.8) return { type: 'party', id: p.id, x: p.x, y: p.y };
     }
@@ -196,6 +197,7 @@
   function travelTo(target) {
     const w = world();
     w.location = null;
+    delete w.hidden; // setting off breaks the Hide stance (P7-04)
     CL.game.waiting = false;
     CL.game.travel = target;
     if (mapDist(w.x, w.y, target.x, target.y) <= ARRIVE_EPSILON) arrive(target);
@@ -333,6 +335,14 @@
     CL.parties.attack(); // shared encounter flow for sites and bands
   }
 
+  /** P7-04: take or break the Hide stance (in a forest, standing still). */
+  function toggleHide() {
+    const c = CL.campaign;
+    const on = CL.sight.setHidden(c, !CL.sight.hidden(c));
+    CL.ui.message(on ? 'Your company hides among the trees: much harder to spot until you set off.' : CL.sight.canHide(c) ? 'You come out of hiding.' : 'Hide in a forest, standing still.');
+    return on;
+  }
+
   function toggleWait() {
     const g = CL.game;
     if (g.mode !== 'map') return;
@@ -394,6 +404,7 @@
       [s.x, s.y] = clampToMap(d.x, d.y);
     }
     s.location = d.location && CL.content.table('settlements')[d.location] ? d.location : null;
+    if (d.hidden === true && !s.location) s.hidden = true; // the Hide stance (P7-04)
     for (const id of Object.keys(s.sites)) {
       const c = d.sites?.[id]?.clearedUntil;
       if (num(c) && c >= 0) s.sites[id].clearedUntil = c;
@@ -440,6 +451,7 @@
     leaveSettlement,
     attackSite,
     toggleWait,
+    toggleHide,
     checkContact,
     nearestSettlement,
     onBattleResolved,

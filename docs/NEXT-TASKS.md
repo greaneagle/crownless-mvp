@@ -949,7 +949,21 @@ _Written 2026-11-18 at build 2.0.0; **reviewed and corrected the same day agains
 
 **Acceptance.** Targeted, capped, optional.
 
-### P7-04 · Pursuit and detection (L) — Specified (needs W-07; W-09 for routes)
+### P7-04 · Pursuit and detection (L) — ✅ Done in 2.14.0 (without "Avoid danger" routes, which wait for W-09)
+
+**Done (2.14.0, 2026-11-19).** The owner gave no answer on route planning, so the "Avoid danger" routes were left with W-09 and everything else was built. The numbers were set here (`js/sight.js`):
+- **Sight** in map units of gameplay distance: a party sees its `detection` (bands 9, patrols 7), the company 12. Night (20:00–05:00) ×0.6; a watcher on hills or mountains ×1.3; the watched in a forest ×0.6. Parties looking for the company also scale by its size (×0.7 alone, +0.03 a person, ×1.3 at most) and by **Hide** (×0.4). Hide is a map button (H) shown in a forest while standing still; setting off breaks it.
+- **Pursuit:** a band, or a Hostile kingdom's patrol, that loses sight of the company rides to where it last saw it, searches within 3 units for 3 hours, then gives up ("…have lost sight of you"). Story bands, ambushes and contract bands keep their own behaviour.
+- **The map** shows only the parties the company sees, plus a faded mark with a "?" where it last saw the rest. The mark lasts a day; a contract target's is kept until found. The giver marks where the target is when you take the contract. Story bands and the caravan you escort always show. A party you can't see can't be tapped, and edge arrows point to where you know a target is. The map darkens at night.
+- **Bots:**
+  - the campaign bot hunts a contract target by what it knows: it rides to the last-seen mark and waits and watches there (the first version stalled, riding to the spot it stood on);
+  - a broke lone rider (no soldiers, under 30 crowns) now takes an even fight, at a lair or on the road, instead of waiting for 55–60% odds. In the slow test, seed 7 of the eight 15-day starts lost its first two fights and, now that lone riders are harder to spot, never met another it would take on;
+  - the story bot needs nothing new (story bands always show).
+- **Save:** still schema v12. Optional new fields: `world.hidden` (only while true), and a party's `lastSeen` and `seenAt`. All are repaired on load.
+- **For other systems' tests:** `CL.sight.options.rules = false` gives sight as before (W-02's zoom-independence tests use it).
+- **Tests:** `tests/sight.test.js` (7: the sight factors; size and Hide; a band losing you in a forest, searching and giving up; a Hostile patrol searching; the map's marks and memory, unseen parties not tappable, contract marks; story bands and escorts always shown; saves and repair), `tests/browser/sight.spec.js` (Hide in a forest, none in the open, an unseen band not tappable, at both sizes).
+- **Not done:** "Avoid danger" routes (W-09).
+
 
 **Problem.** Parties see everything within a radius and chase in straight lines.
 

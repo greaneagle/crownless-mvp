@@ -106,6 +106,7 @@ test('a map wider than the view: "fit" below 1×, centred along the axis it does
 
 test('hit-testing reaches the same settlements, sites and parties at every zoom', () => {
   const { CL } = loadGame({ worldParties: true });
+  CL.sight.options.rules = false; // every party in view (sight, P7-04, is tested in tests/sight.test.js)
   const V = CL.mapView;
   const parties = CL.campaign.parties;
   CL.campaign.parties = []; // places first (a band standing on a town is hit before it, below)
@@ -145,6 +146,7 @@ test('hit-testing reaches the same settlements, sites and parties at every zoom'
  */
 function journey(zoom, pan) {
   const { CL } = loadGame({ worldParties: true, seed: 4242 });
+  CL.sight.options.rules = false; // sight as in 2.0: the band sees as far as its detection (P7-04 aside)
   CL.world.leaveSettlement();
   CL.game.mode = 'map';
   CL.campaign.roster = []; // a lone rider: the band comes for him

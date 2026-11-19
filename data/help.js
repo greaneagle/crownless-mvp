@@ -31,6 +31,7 @@
         'Tap a town, village, fort, camp or band to travel there. Time passes as you ride: your soldiers eat, wages come due, wounds heal, and the world moves.',
         'Roads are fastest. Hills, forests and marsh slow you, mountains most of all (a road through them is a pass), and a river is slow to wade except at a ford or a bridge; heavy cargo slows you too. Patrols and caravans keep the peace and the trade going; Road Reavers prey on both, and on you if you look weak.',
         'Wait lets time pass where you stand. The panel at the top left shows the day, your crowns, soldiers, food, morale and current quest.',
+        'You see only so far, and so do they: less at night, further from hills, hardly into a forest. You see the parties near you; where you last saw one, a faded mark with a ? stays for a day (a contract target’s stays until you find it). A small company is harder to spot than a big one, and in a forest you can Hide (H) until you set off. A band that loses sight of you rides to where it last saw you, searches there for a few hours, then gives up.',
         'Drag the map to look around and pinch (or + and −) to zoom; zoom all the way out to see the whole realm, with the March in its middle. Only a tap sets off, so dragging or pinching never sends you anywhere. While zoomed in, the view follows your company; Centre brings it back after you have looked away, and arrows at the edge point to you and to your contract or quest targets. Zoom changes only what you see: journeys take the same time and bands find you the same way at any zoom. The game remembers your zoom on this device.'
       ],
       controls: [
@@ -39,6 +40,7 @@
         ['Pinch, or + −', 'Mouse wheel, or + −', 'Zoom in and out'],
         ['Centre button', 'C', 'Back to your company'],
         ['Wait button', 'Space', 'Wait / stop travelling'],
+        ['Hide button (in a forest)', 'H', 'Hide until you set off'],
         ['⚙ button', '⚙ button', 'Settings']
       ]
     },

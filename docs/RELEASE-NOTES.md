@@ -1,5 +1,20 @@
 # Crownless — Release Notes
 
+## v2.14.0 — Pursuit and detection (P7-04) · 2026-11-19
+
+### New
+- **You see only so far, and so do they:**
+  - everyone sees less at night (the map darkens), further from hills, and hardly into a forest;
+  - the map shows the parties near you, and a faded "?" where you last saw one, for a day;
+  - a contract target's mark stays until you find it.
+- **Hide** (in a forest, H): your company is much harder to spot until you set off. A small company is harder to spot than a big one.
+- **Losing them:** a band (or a hostile patrol) that loses sight of you rides to where it last saw you, searches there for a few hours, then gives up.
+- Story bands and the caravan you escort are always on the map, so nothing a quest needs gets lost.
+
+### Under the hood
+- No save change beyond a few optional fields; older saves load as they are.
+- 624 fast and 8 slow Node tests, 131 browser tests (9 more apply to one device only and are skipped on the other).
+
 ## v2.13.0 — The blacksmith (P7-03) · 2026-11-19
 
 ### New

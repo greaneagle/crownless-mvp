@@ -81,6 +81,7 @@
       ui.changeMode('settlement'); // the classic list, for anyone who prefers menus
     };
     $('#waitBtn').onclick = () => CL.world.toggleWait();
+    $('#hideBtn').onclick = () => CL.world.toggleHide(); // P7-04
     $('#tradeBtn').onclick = () => ui.changeMode('trade');
     $('#contractsBtn').onclick = () => ui.changeMode('contracts');
     $('#accountsBtn').onclick = () => ui.changeMode('accounts');
@@ -200,6 +201,7 @@
         else if (!e.repeat) CL.mapView.step(MAP_KEYS[e.code]);
         return;
       }
+      if (g.mode === 'map' && e.code === 'KeyH' && !e.repeat) CL.world.toggleHide(); // P7-04
       if (g.mode === 'battle' && e.code === 'KeyZ' && !e.repeat && CL.camera.scrolls(g)) CL.camera.toggleZoom(g); // W-03
       if (g.mode === 'battle' && e.code === 'KeyR' && !e.repeat) CL.morale.rally(g); // V2-08b
       const o = KEY_ORDERS[e.code];

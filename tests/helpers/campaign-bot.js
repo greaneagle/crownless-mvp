@@ -127,7 +127,15 @@ function makeBot(CL, { log = () => {}, style = 'hands-off', roam = false } = {})
     const atMarket = CL.world.mapDist(camp.world.x, camp.world.y, market.mapX, market.mapY) < 0.5;
     if (U().foodDays(camp) < 1.5 && !atMarket) return CL.world.travelTo(town(market.id));
     if (k?.status === 'active') {
+      // P7-04: ride to where the target was last seen (it may have moved on); the map shows that.
       const p = CL.parties.find(camp, k.partyId);
+      const at = p && CL.sight.shown(camp, p);
+      if (p && at && !at.live && CL.world.mapDist(camp.world.x, camp.world.y, at.x, at.y) < 1) {
+        if (!g.waiting) CL.world.toggleWait(); // there, and it has moved on: wait and watch for it
+        return;
+      }
+      if (g.waiting) CL.world.toggleWait();
+      if (p && at) return CL.world.travelTo(at.live ? { type: 'party', id: p.id, x: p.x, y: p.y } : { type: 'point', id: null, x: at.x, y: at.y });
       if (p) return CL.world.travelTo({ type: 'party', id: p.id, x: p.x, y: p.y });
     }
     // Otherwise: clear a lair we can beat (the nearest first: W-05b's world is big), or go look for work.
@@ -139,7 +147,7 @@ function makeBot(CL, { log = () => {}, style = 'hands-off', roam = false } = {})
       g.partyId = null;
       const e = CL.parties.current();
       g.siteId = null;
-      if (e && odds(e) >= 0.6) return CL.world.travelTo({ type: 'site', id, x: st.mapX, y: st.mapY });
+      if (e && odds(e) >= lairNerve(camp)) return CL.world.travelTo({ type: 'site', id, x: st.mapX, y: st.mapY });
     }
     // Contract boards: every settlement offering contracts (W-04: read from the world, not named).
     const here = CL.world.nearestSettlement(camp.world.x, camp.world.y);
@@ -156,6 +164,14 @@ function makeBot(CL, { log = () => {}, style = 'hands-off', roam = false } = {})
     return CL.world.travelTo(town(next.id));
   }
 
+  /**
+   * The odds it fights at: 55%, or an even fight for a broke lone rider (no soldiers and nothing to
+   * hire them with), who has nothing else to do. Lairs it rides to need 60% (or this, if lower).
+   */
+  const broke = (camp) => !camp.roster.length && camp.gold < 30;
+  const nerve = (camp) => (broke(camp) ? 0.5 : 0.55);
+  const lairNerve = (camp) => (broke(camp) ? 0.5 : 0.6);
+
   function encounterTurn() {
     const camp = c();
     const e = CL.parties.current();
@@ -163,7 +179,8 @@ function makeBot(CL, { log = () => {}, style = 'hands-off', roam = false } = {})
     if (!e.hostile) return CL.ui.changeMode('map');
     const p = odds(e);
     const n = CL.parties.negotiation(camp, e);
-    if (p >= 0.55 || n?.kind === 'intimidate') {
+    // A lair it chose to ride to is fought (its own threshold already passed).
+    if (p >= nerve(camp) || n?.kind === 'intimidate' || (e.kind === 'site' && p >= lairNerve(camp))) {
       if (n?.kind === 'intimidate' && !e.party?.contractId) {
         CL.parties.negotiate();
         return;

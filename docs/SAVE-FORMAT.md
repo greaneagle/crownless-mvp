@@ -157,6 +157,7 @@ Each task that changes the save's shape adds the next schema version and its mig
 - ✅ v7 (1.14.0, V2-10): the company chronicle (`chronicle`) and the roll of honour (`honour`).
 - ✅ v9 (1.16.0, V2-12): the merchant follower (`followers.merchant`, with its cash in `accounts.budgets.merchant`).
 - ✅ v10 (2.9.0, W-07): relations between kingdoms (`relations`).
+- (2.14.0, P7-04, no schema step) optional fields: `world.hidden` (the Hide stance, only while true), and a party's `lastSeen: { x, y, until }` (where it last saw the company, and until when it searches there) and `seenAt: { x, y, day }` (where the company last saw it); all repaired or dropped on load.
 - ✅ v12 (2.13.0, P7-03): the blacksmith (`followers.blacksmith`: `{ name, culture, origin, hired, unpaid (0–1), log }`); forged gear is ordinary item ids (`<item>+1`, `+2`, made from `data/items.js` `forge`), in `equipment` and `inventory`; a soldier may carry `kit: true` (at most five; extras are dropped on load).
 - ✅ v11 (2.12.0, P7-01): the surgeon (`followers.surgeon`: `{ name, culture, origin, hired, unpaid (0–1), saved, log }`) and `medicine`; the quartermaster's `medicine` reserve rule (0–20).
 - ✅ v8 (1.15.0, V2-11): separate accounts (`accounts`: the company chest and follower budgets; `gold` is your purse), the `ledger`, and camp `followers` (the quartermaster).

@@ -25,6 +25,9 @@
   const WAVE_SIZE = 8;
   const AMBUSH_RANGE = 3.5; // map units: a contract ambush springs only on travellers passing close
   const SKIRMISH_LOSS = { loser: [1, 2], winnerChance: 0.5 }; // frontier clashes: men lost
+  // P7-04: a party that loses sight of the company rides to where it last saw it, searches around
+  // there for a while, then gives up.
+  const SEARCH = { hours: 3, radius: 3 };
   const NEAR_PLAYER = 25; // map units: parties within this of the player act every step (W-07)…
   const COARSE_HOURS = 1; // …the rest once their time adds up to this
   /** Switches for tests: `grid: false` makes every search a full scan (the grid must change nothing). */
@@ -139,7 +142,7 @@
   function wantsPlayer(c, p) {
     const t = tpl(p.template);
     if (!hostileTo(c, t) || !playerOnMap(c) || now(c) < p.ignoreUntil) return false;
-    if (dist(p, c.world) > t.detection) return false;
+    if (!CL.sight.partySees(c, p, now(c))) return false; // P7-04: night, ground, forest, size, Hide
     if (p.questTag) return !p.camp; // a story ambush springs whatever the odds; a camp waits to be found
     if (p.ambush) return dist(p, c.world) <= AMBUSH_RANGE; // lies still on the escort road and springs as you pass
     return A().troopsPower(p.troops) >= CHASE_RATIO * A().playerPower(c);
@@ -175,6 +178,41 @@
 
   const reached = (p) => p.tx === null || W().mapDist(p.x, p.y, p.tx, p.ty) <= ARRIVE;
 
+  /** P7-04: a party chasing the company notes where it saw it (story bands and ambushes don't hunt). */
+  function remember(c, p) {
+    if (p.questTag || p.ambush || p.anchor) return;
+    p.lastSeen = { x: c.world.x, y: c.world.y, until: null };
+  }
+
+  /**
+   * P7-04: a party that has lost sight of the company rides to where it last saw it, then searches
+   * around there for SEARCH.hours, then gives up. Returns true while it is busy with that.
+   */
+  function lostYou(c, p, t) {
+    const s = p.lastSeen;
+    if (!s) return false;
+    if (p.alerted) {
+      p.alerted = false;
+      if (playerOnMap(c)) CL.ui.message(`${t.name} have lost sight of you.`);
+    }
+    if (s.until == null) {
+      if (W().mapDist(p.x, p.y, s.x, s.y) > ARRIVE * 3) {
+        [p.tx, p.ty] = [s.x, s.y];
+        p.chasing = 'search';
+        return true;
+      }
+      s.until = now(c) + SEARCH.hours / 24;
+    }
+    if (now(c) > s.until) {
+      p.lastSeen = null;
+      CL.diag.log('info', 'Search given up', { id: p.id, template: p.template });
+      return false;
+    }
+    if (reached(p)) [p.tx, p.ty] = W().clampToMap(s.x + (A().next(c) * 2 - 1) * SEARCH.radius, s.y + (A().next(c) * 2 - 1) * SEARCH.radius, EDGE);
+    p.chasing = 'search';
+    return true;
+  }
+
   function chooseTarget(c, p) {
     const t = tpl(p.template);
     p.chasing = null;
@@ -189,12 +227,14 @@
       // A Hostile kingdom's patrols ride the player down.
       p.chasing = 'player';
       [p.tx, p.ty] = [c.world.x, c.world.y];
+      remember(c, p);
       if (!p.alerted) {
         p.alerted = true;
         CL.ui.message(`A ${t.name} is riding for you!`);
       }
       return;
     }
+    if (t.kind === 'patrol' && lostYou(c, p, t)) return; // P7-04: searching where they last saw you
     if (p.ambush && !wantsPlayer(c, p)) {
       p.tx = p.ty = null; // waiting in the ditch
       return;
@@ -203,12 +243,14 @@
       if (wantsPlayer(c, p)) {
         p.chasing = 'player';
         [p.tx, p.ty] = [c.world.x, c.world.y];
+        remember(c, p);
         if (!p.alerted) {
           p.alerted = true;
           CL.ui.message(`${t.name} have spotted you!`);
         }
         return;
       }
+      if (lostYou(c, p, t)) return; // P7-04: searching where they last saw you
       p.alerted = false;
       // Bands keep clear of patrols they can see (quest bands hold their ground).
       const threat = p.questTag || p.ambush ? null : nearest(c, p, 'patrol', t.detection);
@@ -458,6 +500,7 @@
           move(p, hours);
         }
         resolveContacts(c);
+        CL.sight.look(c, simDay); // what the company sees now (P7-04)
         for (const p of c.parties) {
           if (CL.reinforce?.locked(p)) continue;
           if (wantsPlayer(c, p) && sweptToPlayer(c, p) <= CONTACT) {
@@ -716,6 +759,16 @@
       if (q.questTag && p.camp === true) q.camp = true;
       if (p.ambush === true) q.ambush = true;
       if (t.kind === 'caravan' && CL.content.table('settlements')[p.escortTo]) q.escortTo = p.escortTo;
+      // P7-04: where it last saw the company (and until when it searches there), and where the
+      // company last saw it.
+      if (num(p.lastSeen?.x) && num(p.lastSeen?.y)) {
+        const [lx, ly] = W().clampToMap(p.lastSeen.x, p.lastSeen.y);
+        q.lastSeen = { x: lx, y: ly, until: num(p.lastSeen.until) ? p.lastSeen.until : null };
+      }
+      if (num(p.seenAt?.x) && num(p.seenAt?.y) && num(p.seenAt?.day)) {
+        const [sx, sy] = W().clampToMap(p.seenAt.x, p.seenAt.y);
+        q.seenAt = { x: sx, y: sy, day: p.seenAt.day };
+      }
       if (num(p.anchor?.x) && num(p.anchor?.y)) {
         const [ax, ay] = W().clampToMap(p.anchor.x, p.anchor.y);
         q.anchor = { x: ax, y: ay };
@@ -736,6 +789,7 @@
 
   CL.parties = {
     CONTACT,
+    SEARCH,
     NEAR_PLAYER,
     COARSE_HOURS,
     options,

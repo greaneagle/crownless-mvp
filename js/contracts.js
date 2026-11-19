@@ -115,6 +115,7 @@
   function markParty(c, templateId, troops, x, y, extra) {
     const p = CL.parties.spawn(c, templateId);
     Object.assign(p, { troops: { ...troops }, x, y, tx: null, ty: null, anchor: { x, y }, ...extra });
+    p.seenAt = { x, y, day: c.day }; // P7-04: the giver tells you where it is; the map keeps that mark
     return p;
   }
 

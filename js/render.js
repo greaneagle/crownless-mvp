@@ -922,11 +922,46 @@
     return made;
   }
 
+  /**
+   * P7-04: where the company last saw a party it can't see now: a faded banner and a question mark
+   * (a contract target's stays, however old, so it can always be found again).
+   */
+  function drawLastSeen(p, at) {
+    const [x, y] = CL.world.toScreen(at.x, at.y);
+    const t = CL.content.get('party_templates', p.template);
+    ctx.save();
+    ctx.globalAlpha = 0.45;
+    ctx.fillStyle = t.kind === 'bandit' ? '#7a1e16' : CL.content.get('factions', t.faction).color;
+    ctx.strokeStyle = '#1b1208';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(x, y - 2, 9, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.globalAlpha = 0.9;
+    ctx.fillStyle = '#fff3cf';
+    ctx.font = font(13);
+    ctx.textAlign = 'center';
+    ctx.fillText('?', x, y + 3);
+    if (p.contractId && !p.ambush) {
+      ctx.strokeStyle = '#ffd34d';
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.arc(x, y - 2, 16, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
   /** Arrows on the screen's edge toward what matters off it: contract and quest targets, and you. */
   function drawEdgeMarkers(w) {
     const V = CL.mapView;
     const marks = [];
-    for (const p of CL.campaign.parties || []) if ((p.contractId && !p.ambush) || p.questTag) marks.push([p.x, p.y, '#ffd34d']);
+    for (const p of CL.campaign.parties || []) {
+      if (!((p.contractId && !p.ambush) || p.questTag)) continue;
+      const at = CL.sight.shown(CL.campaign, p); // where you know it is (P7-04)
+      if (at) marks.push([at.x, at.y, '#ffd34d']);
+    }
     marks.push([w.x, w.y, '#fff3cf']);
     for (const [mx, my, color] of marks) {
       const e = V.edgeMarker(mx, my);
@@ -973,7 +1008,20 @@
     const seen = (x, y) => V.inView(x, y, 90);
     for (const st of Object.values(m.sites)) if (seen(st.mapX, st.mapY)) drawSite(st);
     for (const s of Object.values(CL.content.table('settlements'))) if (seen(s.mapX, s.mapY)) drawSettlement(s, s.id === w.location);
-    for (const p of CL.campaign.parties || []) if (seen(p.x, p.y)) drawParty(p);
+    // P7-04: the parties the company can see, and a faded mark where it last saw the others.
+    for (const p of CL.campaign.parties || []) {
+      const at = CL.sight.shown(CL.campaign, p);
+      if (!at || !seen(at.x, at.y)) continue;
+      if (at.live) drawParty(p);
+      else drawLastSeen(p, at);
+    }
+    if (CL.sight.isNight(CL.campaign.day)) {
+      // Night: the map darkens (sight is shorter, P7-04).
+      ctx.fillStyle = '#0b1530';
+      ctx.globalAlpha = 0.28;
+      ctx.fillRect(0, 0, W, H);
+      ctx.globalAlpha = 1;
+    }
 
     // Journey line.
     const [px, py] = V.toScreen(w.x, w.y);
@@ -1035,6 +1083,12 @@
       (CL.story.currentQuest(c) ? ` · ▸ ${CL.story.currentQuest(c).title}` : '');
     $('#topLeft').classList.toggle('warn', food < 1 || c.morale < CL.upkeep.MORALE.desertBelow);
     $('#waitBtn').textContent = CL.game.waiting ? 'Stop waiting' : 'Wait';
+    // P7-04: Hide, only in a forest and standing still.
+    const hideBtn = $('#hideBtn');
+    const canHide = CL.sight.canHide(c);
+    if (hideBtn.classList.contains('hidden') === canHide) hideBtn.classList.toggle('hidden', !canHide);
+    const hideText = CL.sight.hidden(c) ? 'Stop hiding' : 'Hide';
+    if (hideBtn.textContent !== hideText) hideBtn.textContent = hideText;
     // W-02: − stops at "fit" and + at 2.4×; Centre is lit while the view has wandered off the party.
     const V = CL.mapView;
     const z = V.state.zoom;
