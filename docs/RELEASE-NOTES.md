@@ -1,5 +1,18 @@
 # Crownless — Release Notes
 
+## v2.15.0 — The scout (P7-02) · 2026-11-19
+
+### New
+- **A scout** to hire in any town (Accounts, 45 crowns and 8 a week):
+  - your company sees half as far again;
+  - they warn you the moment a hostile party is seen: "about 8 Reavers to the north-east, riding this way". Their numbers are a scout's guesses: close, not exact;
+  - as you set off, they say how long the ride should take and which bands are known near the way;
+  - when you attack a band, you get more ground to set up on.
+
+### Under the hood
+- Saves are now schema v13 (the scout). Older saves update on load, and a copy is kept as it was.
+- 630 fast and 8 slow Node tests, 133 browser tests (9 more apply to one device only and are skipped on the other).
+
 ## v2.14.0 — Pursuit and detection (P7-04) · 2026-11-19
 
 ### New

@@ -78,7 +78,7 @@
   const partySees = (c, p, day = c.day) => CL.world.mapDist(p.x, p.y, c.world.x, c.world.y) <= partyRange(c, p, day);
 
   /** How far the company sees a party from where it stands. @param {Campaign} c */
-  const playerRange = (c, p, day = c.day) => PLAYER_SIGHT * factor(day, c.world, p);
+  const playerRange = (c, p, day = c.day) => PLAYER_SIGHT * (CL.scout?.sightFactor(c) ?? 1) * factor(day, c.world, p); // a scout sees further (P7-02)
 
   /** Does the company see this party? Story bands and an escorted caravan always show. @param {Campaign} c */
   function playerSees(c, p, day = c.day) {

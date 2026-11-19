@@ -201,6 +201,7 @@
     CL.game.waiting = false;
     CL.game.travel = target;
     if (mapDist(w.x, w.y, target.x, target.y) <= ARRIVE_EPSILON) arrive(target);
+    else CL.scout?.onSetOff(CL.campaign, target); // how long, and what is known on the way (P7-02)
   }
 
   function click(px, py) {

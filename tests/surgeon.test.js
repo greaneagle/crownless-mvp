@@ -176,7 +176,7 @@ test('saves: the surgeon and the medicine are kept; junk repaired; a v10 save mi
   delete v10.followers.surgeon;
   delete v10.followers.quartermaster.medicine;
   const r = CL.save.fromRaw(v10);
-  assert.equal(r.campaign.version, 12);
+  assert.equal(r.campaign.version, 13);
   assert.equal(r.campaign.medicine, 0);
   assert.equal(r.campaign.followers.surgeon, null);
   assert.equal(r.campaign.followers.quartermaster.medicine, CL.quartermaster.DEFAULTS.medicine);

@@ -141,6 +141,6 @@ test('saves: forged gear, fine kit and the blacksmith kept; junk dropped; a v11 
   v11.version = 11;
   delete v11.followers.blacksmith;
   const r = CL.save.fromRaw(v11);
-  assert.equal(r.campaign.version, 12);
+  assert.equal(r.campaign.version, 13);
   assert.equal(r.campaign.followers.blacksmith, null);
 });

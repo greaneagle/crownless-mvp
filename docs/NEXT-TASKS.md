@@ -902,7 +902,18 @@ _Written 2026-11-18 at build 2.0.0; **reviewed and corrected the same day agains
 
 **Acceptance.** Fewer deaths (measured), clearly reported, at a real upkeep.
 
-### P7-02 · Scout (S–M) — Specified (needs P7-04)
+### P7-02 · Scout (S–M) — ✅ Done in 2.15.0
+
+**Done (2.15.0, 2026-11-19).** Built on P7-04's sight rules, with the numbers set here (`js/scout.js`):
+- **The follower:** hired in a town (Accounts), 45 crowns and 8 a week with the wages; unpaid twice, they leave.
+- **Sight:** the company sees ×1.5 (18 map units by day on open ground).
+- **Warnings:** the first sight of a hostile party (a band, or the patrol of a kingdom that counts you an enemy; not story bands or the caravan you escort) is reported with a scout's numbers ("a few", "about 6", "about 15"), a compass direction, and "riding this way" when it is. The same party is reported again at most every half day. What the company can't see, the scout can't report. Over 4 bot campaigns of 20 days: about 1.6 warnings a game day.
+- **Route estimates** as you set off (not for rides under half an hour): the straight-line ride time from the map's own estimate, said as a scout would ("about 3.5 hours", "about 2 days"), and the hostile parties seen or last seen within 6 units of the way. There's no route planning (W-09), so the estimate is of the straight ride the company actually takes; a test checks it within 10% of the real time.
+- **Ground:** attacking a band gives a deployment zone ×1.25 each way. Not when ambushed.
+- **Save:** schema **v13** (`followers.scout`).
+- **Tests:** `tests/scout.test.js` (6: towns, wages, leaving unpaid; sight with and without; warnings by the sight rules, numbers, heading, once per half day, none without a scout or for friendly traffic; the ride estimate against the real ride and the dangers named; the deployment zone; saves and 12 → 13), `tests/browser/scout.spec.js` (hire, the estimate on setting off, a warning, at both sizes).
+- **Waiting on the owner:** whether the warnings are useful and not noisy.
+
 
 **Build.**
 - **The follower:** a Scout.

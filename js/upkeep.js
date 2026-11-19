@@ -133,6 +133,7 @@
         CL.merchant?.payday(c);
         CL.surgeon?.payday(c);
         CL.blacksmith?.payday(c);
+        CL.scout?.payday(c);
         c.nextWagesDay += WAGE_INTERVAL;
       }
       desertionCheck(c);

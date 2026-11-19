@@ -26,7 +26,7 @@
   'use strict';
   const CL = root.Crownless;
 
-  const VERSION = 12;
+  const VERSION = 13;
   const KEY = 'crownless_save';
   const BACKUP_KEY = 'crownless_save_backup';
   const LEGACY_KEY = 'crownless_v03_party';
@@ -106,7 +106,7 @@
       honour: CL.chronicle.blankHonour(), // the roll of honour: soldiers who fell or left
       accounts: CL.accounts.blank(), // the company chest and follower budgets; `gold` is your purse (js/accounts.js)
       ledger: [], // the newest money transfers, each with a source, a destination and a reason
-      followers: { quartermaster: null, merchant: null, surgeon: null, blacksmith: null }, // camp followers (js/quartermaster.js, js/merchant.js, js/surgeon.js, js/blacksmith.js)
+      followers: { quartermaster: null, merchant: null, surgeon: null, blacksmith: null, scout: null }, // camp followers (js/quartermaster.js, js/merchant.js, js/surgeon.js, js/blacksmith.js, js/scout.js)
       medicine: 0, // the surgeon's supply (P7-01)
     };
     CL.character.applyKit(c, background);
@@ -189,6 +189,7 @@
     10: [...V3_FIELDS, ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object'], ['accounts', 'object'], ['ledger', 'array'], ['followers', 'object'], ['relations', 'object']],
     11: [...V3_FIELDS, ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object'], ['accounts', 'object'], ['ledger', 'array'], ['followers', 'object'], ['relations', 'object'], ['medicine', 'number']],
     12: [...V3_FIELDS, ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object'], ['accounts', 'object'], ['ledger', 'array'], ['followers', 'object'], ['relations', 'object'], ['medicine', 'number']],
+    13: [...V3_FIELDS, ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object'], ['accounts', 'object'], ['ledger', 'array'], ['followers', 'object'], ['relations', 'object'], ['medicine', 'number']],
   };
 
   /** @param {unknown} v @param {string} kind */
@@ -262,6 +263,8 @@
     10: (d) => ({ ...d, version: 11, medicine: 0, followers: { ...(d.followers || {}), surgeon: null } }),
     // 11 → 12 (build 2.13.0, P7-03): room for a blacksmith (none yet). Nobody had fine kit or forged gear.
     11: (d) => ({ ...d, version: 12, followers: { ...(d.followers || {}), blacksmith: null } }),
+    // 12 → 13 (build 2.15.0, P7-02): room for a scout (none yet).
+    12: (d) => ({ ...d, version: 13, followers: { ...(d.followers || {}), scout: null } }),
   };
 
   /**
@@ -335,6 +338,7 @@
     CL.merchant.sanitize(s, d); // the merchant and their goods, prices and log
     CL.surgeon.sanitize(s, d); // the surgeon and the medicine (P7-01)
     CL.blacksmith.sanitize(s, d); // the blacksmith, and fine kit within its cap (P7-03)
+    CL.scout.sanitize(s, d); // the scout (P7-02)
     // Named random streams (after parties, which restores rngSeed) and the result and event counters.
     const seeds = CL.autoresolve.streamSeeds(s.rngSeed);
     for (const name of CL.autoresolve.STREAMS) {

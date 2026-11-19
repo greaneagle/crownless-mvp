@@ -501,6 +501,7 @@
         }
         resolveContacts(c);
         CL.sight.look(c, simDay); // what the company sees now (P7-04)
+        if (playerOnMap(c)) CL.scout?.warn(c, simDay); // and what the scout says about it (P7-02)
         for (const p of c.parties) {
           if (CL.reinforce?.locked(p)) continue;
           if (wantsPlayer(c, p) && sweptToPlayer(c, p) <= CONTACT) {

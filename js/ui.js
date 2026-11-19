@@ -269,7 +269,7 @@
       const k = c.contract;
       const pay = k?.status === 'done' && k.giver === c.world.location;
       opt(pay ? 'Notice board — collect pay!' : 'Read the notice board', () => changeMode('contracts'));
-      opt('Accounts and followers', () => changeMode('accounts'), false, 'Your money and your followers: quartermaster, merchant, surgeon, blacksmith');
+      opt('Accounts and followers', () => changeMode('accounts'), false, 'Your money and your followers: quartermaster, merchant, surgeon, blacksmith, scout');
       opt('Save & export', () => openSaves());
     }
     opt('Goodbye', () => CL.town.backToPlace());
@@ -689,13 +689,32 @@
         mk('div', { className: 'row' }, btn('Let them go', () => B.dismiss(c) && message('The blacksmith leaves the company'))),
       );
     }
+    // The scout (P7-02; js/scout.js).
+    const SC = CL.scout;
+    const sct = SC.get(c);
+    const scc = sct
+      ? mk(
+          'div',
+          { className: 'contractCard' },
+          mk('h3', { textContent: `Scout ${sct.name}` }),
+          mk('p', { textContent: `Your company sees half as far again. They warn you of hostile parties as soon as they are seen, with their numbers and heading, tell you how long a ride will take and what is known on the way, and give you more ground to set up on when you attack. Paid ${SC.WAGE} a week.` }),
+          sct.log.length ? mk('ul', { className: 'soldierNotes' }, ...sct.log.slice(-4).reverse().map((e) => mk('li', { textContent: `Day ${CL.party.dayNumber(e.day)}: ${e.text}` }))) : null,
+          mk('div', { className: 'row' }, btn('Let them go', () => SC.dismiss(c) && message('The scout leaves the company'))),
+        )
+      : mk(
+          'div',
+          { className: 'contractCard' },
+          mk('h3', { textContent: 'Scout' }),
+          mk('p', { textContent: `Sees further, warns you early of hostile parties ("about 8 Reavers to the north-east, riding this way"), and estimates each ride. ${SC.HIRE} crowns to hire in a town, ${SC.WAGE} a week.` }),
+          mk('div', { className: 'row' }, btn(CL.content.table('settlements')[c.world.location]?.type === 'town' ? `Hire a scout · ${SC.HIRE} crowns` : 'Hire one in a town', () => SC.hire(c) && message('A scout joins the company'), !SC.canHire(c))),
+        );
     const lines = A.recent(c, 12).map((e) => {
       const sign = e.to === A.WORLD ? '−' : e.from === A.WORLD ? '+' : '';
       const route = e.from === A.WORLD ? `into ${A.label(e.to)}` : e.to === A.WORLD ? `from ${A.label(e.from)}` : `${A.label(e.from)} → ${A.label(e.to)}`;
       return mk('li', { textContent: `Day ${CL.party.dayNumber(e.day)}: ${sign}${e.amount} ${route} · ${e.why}` });
     });
     const ledger = mk('div', { className: 'contractCard' }, mk('h3', { textContent: 'Ledger' }), lines.length ? mk('ul', { className: 'soldierNotes' }, ...lines) : mk('p', { textContent: 'Nothing yet.' }));
-    $('#accountsScreen').replaceChildren(money, qm, sc, bc, mc, ledger);
+    $('#accountsScreen').replaceChildren(money, qm, sc, bc, scc, mc, ledger);
   }
 
   // ---- Battle preparation (V2-07; js/prep.js) ----

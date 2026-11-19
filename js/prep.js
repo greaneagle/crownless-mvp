@@ -55,7 +55,9 @@
   function zone(map, ambush = false) {
     const a = anchorOf(map);
     const b = map.bounds || CL.units.BOUNDS;
-    const [back, front, half] = ambush ? [190, 110, 170] : [420, 260, 380];
+    // A scout who saw them first gives you more ground to set up on (P7-02; not when ambushed).
+    const wide = !ambush && CL.scout?.get(CL.campaign) ? CL.scout.ZONE : 1;
+    const [back, front, half] = (ambush ? [190, 110, 170] : [420, 260, 380]).map((n) => n * wide);
     return { x0: Math.max(b.minX, a.x - back), x1: Math.min(b.maxX, a.x + front), y0: Math.max(b.minY, a.y - half), y1: Math.min(b.maxY, a.y + half) };
   }
 
