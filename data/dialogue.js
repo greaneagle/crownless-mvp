@@ -579,6 +579,110 @@
           options: [{ text: 'Saw who?' }]
         }
       }
+    },
+
+    // ---- W-05c: people of the lands beyond the March, each with an errand that shows their land.
+    hrothgard_steward: {
+      id: 'hrothgard_steward',
+      speaker: 'Steward Ingrid',
+      place: 'hrothgard',
+      start: 'talk',
+      nodes: {
+        talk: {
+          cycle: true,
+          text: [
+            'You come up from the March? Then you have seen what two crowns do to a country. Here the clans keep the hills, and the hills keep the clans.',
+            'Our axes are heavy and our feet are slow, southerner. We do not need to be quick. We need to be standing when the others are not.',
+            'Timber and iron go down to the coast; wine comes back up. The road through the pass is the only road that matters.',
+            { if: { quest: 'sq_pass', is: 'done' }, text: 'The pass is open and the carts are moving. The clans have long memories, for friends as well.' }
+          ],
+          options: [
+            { text: 'Is there work for a sword?', if: [{ quest: 'sq_pass', is: 'unstarted' }, { not: { standing: 'hrothmark', is: 'hostile' } }], next: 'sq_pass_offer' },
+            { text: 'The pass is open.', if: { quest: 'sq_pass', stage: 'sq_pass_report' }, next: 'sq_pass_done' }
+          ]
+        },
+        sq_pass_offer: {
+          services: false,
+          text: ['Raiders have walled off the pass on the Greywall road, where it climbs between the peaks. No carts come up, none go down. Eighty crowns, and the clans will know your name, if you clear it.'],
+          options: [
+            { text: 'I’ll open the pass.', do: [{ start: 'sq_pass' }] },
+            { text: 'Not my mountains.' }
+          ]
+        },
+        sq_pass_done: {
+          services: false,
+          text: ['So I heard: the first carts came through this morning. Here is your silver. Drink with us before you go back down to your squabbling kings.'],
+          options: [{ text: 'Gladly.', do: [{ complete: 'sq_pass' }] }]
+        }
+      }
+    },
+    vessara_factor: {
+      id: 'vessara_factor',
+      speaker: 'Factor Salviati',
+      place: 'vessara',
+      start: 'talk',
+      nodes: {
+        talk: {
+          cycle: true,
+          text: [
+            'The League has no king, traveller. It has a ledger. Everything here is for sale, and everything has its price, written down.',
+            'Our crossbowmen are not brave. They do not need to be: a bolt does not care who is brave.',
+            'Wine and salt are cheap on this coast; timber and iron are not. A sensible company carries the one north and the other south.',
+            { if: { quest: 'sq_timber', is: 'done' }, text: 'The yards are hammering again, thanks to your timber. The League remembers a good supplier.' }
+          ],
+          options: [
+            { text: 'Anything worth carrying?', if: [{ quest: 'sq_timber', is: 'unstarted' }, { not: { standing: 'vessaro', is: 'hostile' } }], next: 'sq_timber_offer' },
+            { text: 'The timber is delivered.', if: { quest: 'sq_timber', stage: 'sq_timber_report' }, next: 'sq_timber_done' }
+          ]
+        },
+        sq_timber_offer: {
+          services: false,
+          text: ['The shipyards are starved of timber. Up north it lies in heaps: buy it in the highlands, sell it here at our market, and the League adds sixty crowns to whatever profit you make.'],
+          options: [
+            { text: 'I’ll fetch your timber.', do: [{ start: 'sq_timber' }] },
+            { text: 'Too far to haul beams.' }
+          ]
+        },
+        sq_timber_done: {
+          services: false,
+          text: ['Every beam paid for and logged. Sixty crowns, as agreed: the League always pays what it writes down.'],
+          options: [{ text: 'A pleasure.', do: [{ complete: 'sq_timber' }] }]
+        }
+      }
+    },
+    merrow_clerk: {
+      id: 'merrow_clerk',
+      speaker: 'Clerk of the Council',
+      place: 'merrow',
+      start: 'talk',
+      nodes: {
+        talk: {
+          cycle: true,
+          text: [
+            'Welcome to Merrow, where no crown is worth more than its weight. The Council asks only that you pay your harbour dues.',
+            'Swords are the city’s second trade, after cloth. You will find no better company for hire anywhere on the coast.',
+            'Valedorn, Aurelian, the clans, the League: all of them trade here, and none of them rule here. That is how we like it.',
+            { if: { quest: 'sq_lights', is: 'done' }, text: 'Ships are coming in whole again. The Council has entered your name on the good side of the ledger.' }
+          ],
+          options: [
+            { text: 'Does the Council need a captain?', if: [{ quest: 'sq_lights', is: 'unstarted' }, { not: { standing: 'merrow', is: 'hostile' } }], next: 'sq_lights_offer' },
+            { text: 'The false lights are out.', if: { quest: 'sq_lights', stage: 'sq_lights_report' }, next: 'sq_lights_done' }
+          ]
+        },
+        sq_lights_offer: {
+          services: false,
+          text: ['Wreckers on the west coast are hanging lanterns on the rocks, and ships bound here run aground on them. The Council will pay ninety crowns to put the lights out, but it wants its own steel there: hire at least one of our sell-swords first.'],
+          options: [
+            { text: 'I’ll hire your swords and go.', do: [{ start: 'sq_lights' }] },
+            { text: 'Find another captain.' }
+          ]
+        },
+        sq_lights_done: {
+          services: false,
+          text: ['The Council thanks you, in the form it prefers: coin. Ninety crowns. Do come back; Merrow always has work for those who finish it.'],
+          options: [{ text: 'I will.', do: [{ complete: 'sq_lights' }] }]
+        }
+      }
     }
   };
 })(typeof window !== 'undefined' ? window : globalThis);

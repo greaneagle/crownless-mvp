@@ -53,6 +53,12 @@
     wounded: () => CL.party.woundedSoldiers().length > 0,
     reserves: () => Boolean(CL.game.allyReserve?.length || CL.game.enemyReserve?.length),
     captured: () => CL.game.result && !CL.game.result.win && !CL.game.result.practice,
+    // W-05c: the party has left the story's home land, for a named region of the world that isn't
+    // `home` (data/world_map.js regions).
+    awayFromHome: (c) => {
+      const r = CL.world.regionAt(c.world.x, c.world.y);
+      return Boolean(r) && !CL.world.map().regions[r.id].home;
+    },
   };
 
   /** The text for this device: touch phones get the touch wording, keyboards the key wording. */

@@ -1,4 +1,5 @@
 // V2-Q errands: small optional quests that show the new systems, built with the quest interpreter.
+// W-05c adds three beyond the March, one for each new power (Hrothmark, the Vessaro League, Merrow).
 // Each is walked end to end here through the real systems (the story bot leaves them alone).
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -36,7 +37,7 @@ const stage = (CL, c, id) => CL.story.state(c).quests[id]?.stage;
 test('every errand is optional (side: true), offered by someone you know, and can be turned down', () => {
   const { CL } = loadGame();
   const errands = Object.values(CL.content.table('quests')).filter((q) => q.side);
-  assert.deepEqual(errands.map((q) => q.id).sort(), ['sq_border', 'sq_homecoming', 'sq_larders', 'sq_planned', 'sq_venture']);
+  assert.deepEqual(errands.map((q) => q.id).sort(), ['sq_border', 'sq_homecoming', 'sq_larders', 'sq_lights', 'sq_pass', 'sq_planned', 'sq_timber', 'sq_venture']);
   for (const q of errands) {
     const t = CL.content.table('dialogue')[q.giver];
     const offer = Object.entries(t.nodes).find(([id, n]) => id.startsWith('sq_') && (n.options || []).some((o) => (o.do || []).some((e) => e.start === q.id)));
@@ -145,4 +146,110 @@ test('A Planned Engagement (battle preparation): fight the drilled Reavers to a 
   }
   assert.equal(status(b.CL, b.c, 'sq_planned'), 'done');
   assert.ok(b.CL.story.state(b.c).quests.sq_planned.notes.some((n) => /not quite to Brun/.test(n)));
+});
+
+// ---- W-05c: errands beyond the March ----
+
+/** Win the fight against a quest band (by its tag), standing where it is. */
+function beat(CL, c, tag) {
+  const band = c.parties.find((p) => p.questTag === tag);
+  assert.ok(band, `${tag} on the map`);
+  Object.assign(c.world, { x: band.x, y: band.y, location: null });
+  CL.parties.open(band.id);
+  CL.parties.attack();
+  CL.debugTools.endBattleNow(true);
+  return band;
+}
+
+test('the new lands’ errands: each giver lives in a new capital, and only there', () => {
+  const { CL } = loadGame();
+  for (const [q, giver, place, region] of [
+    ['sq_pass', 'hrothgard_steward', 'hrothgard', 'north'],
+    ['sq_timber', 'vessara_factor', 'vessara', 'south'],
+    ['sq_lights', 'merrow_clerk', 'merrow', 'merrow_coast'],
+  ]) {
+    assert.equal(CL.content.get('quests', q).giver, giver);
+    const s = CL.content.get('settlements', place);
+    assert.equal(CL.world.regionAt(s.mapX, s.mapY).id, region, `${q} is a ${region} errand`);
+    assert.deepEqual(Array.from(CL.story.peopleAt(place), (t) => t.id), [giver]);
+  }
+});
+
+test('Wolves in the Pass (Hrothmark): break the raiders walling off the mountain pass', () => {
+  const { CL, c } = camp('hrothgard', ['axeman', 'axeman', 'clansman', 'fell_archer', 'fell_archer']);
+  say(CL, 'hrothgard_steward', /work for a sword/, /open the pass/);
+  const band = c.parties.find((p) => p.questTag === 'sq_pass_raiders');
+  assert.equal(CL.world.terrainAt(band.x, band.y), 'road', 'on the road');
+  const off = { x: band.x + 6, y: band.y };
+  assert.equal(CL.world.terrainAt(off.x, off.y), 'mountain', 'where it climbs through the mountains');
+  const rep = c.reputation.hrothmark;
+  beat(CL, c, 'sq_pass_raiders');
+  assert.equal(stage(CL, c, 'sq_pass'), 'sq_pass_report');
+  assert.equal(c.parties.some((p) => p.questTag === 'sq_pass_raiders'), false);
+  go(CL, c, 'hrothgard');
+  const gold = c.gold;
+  say(CL, 'hrothgard_steward', /pass is open/, /Gladly/);
+  assert.equal(status(CL, c, 'sq_pass'), 'done');
+  assert.ok(c.gold >= gold + 80);
+  assert.equal(c.reputation.hrothmark, rep + 10);
+});
+
+test('Timber for the Shipwrights (Vessaro League): buy timber in the north, sell it in Vessara', () => {
+  const { CL, c } = camp('vessara');
+  c.cargo = {};
+  say(CL, 'vessara_factor', /worth carrying/, /fetch your timber/);
+  assert.equal(stage(CL, c, 'sq_timber'), 'sq_timber_buy');
+  go(CL, c, 'hrothgard');
+  const buy = CL.trade.unitBuyPrice(c, 'hrothgard', 'timber');
+  assert.equal(CL.trade.buy(c, 'hrothgard', 'timber', 3).ok, true);
+  assert.equal(stage(CL, c, 'sq_timber'), 'sq_timber_sell');
+  go(CL, c, 'eastwatch');
+  assert.equal(CL.trade.sell(c, 'eastwatch', 'timber', 1).ok, true);
+  assert.equal(stage(CL, c, 'sq_timber'), 'sq_timber_sell', 'only Vessara’s yards will do');
+  go(CL, c, 'vessara');
+  assert.ok(CL.trade.unitSellPrice(c, 'vessara', 'timber') > buy, 'the trade itself pays: cheap in the north, dear on the coast');
+  assert.equal(CL.trade.sell(c, 'vessara', 'timber', 2).ok, true);
+  assert.equal(stage(CL, c, 'sq_timber'), 'sq_timber_report');
+  const rep = c.reputation.vessaro;
+  say(CL, 'vessara_factor', /timber is delivered/, /pleasure/);
+  assert.equal(status(CL, c, 'sq_timber'), 'done');
+  assert.equal(c.reputation.vessaro, rep + 10);
+});
+
+test('False Lights (the Free City of Merrow): hire the Council’s sell-swords, then put out the wreckers’ lights', () => {
+  const { CL, c } = camp('merrow');
+  say(CL, 'merrow_clerk', /need a captain/, /hire your swords/);
+  assert.equal(stage(CL, c, 'sq_lights'), 'sq_lights_hire');
+  assert.equal(c.parties.some((p) => p.questTag === 'sq_lights_wreckers'), false, 'no fight until the swords are hired');
+  assert.deepEqual(Array.from(CL.party.recruitsHere()), ['mercenary']);
+  assert.equal(CL.party.recruit('mercenary'), true);
+  assert.equal(stage(CL, c, 'sq_lights'), 'sq_lights_fight');
+  assert.ok(c.roster.some((s) => s.troop === 'mercenary'));
+  const band = beat(CL, c, 'sq_lights_wreckers');
+  const cove = CL.world.map().sites.wreckers_cove;
+  assert.ok(CL.world.mapDist(band.x, band.y, cove.mapX, cove.mapY) < 5, 'at Wreckers’ Cove');
+  assert.equal(stage(CL, c, 'sq_lights'), 'sq_lights_report');
+  go(CL, c, 'merrow');
+  const rep = c.reputation.merrow;
+  say(CL, 'merrow_clerk', /lights are out/, /I will/);
+  assert.equal(status(CL, c, 'sq_lights'), 'done');
+  assert.equal(c.reputation.merrow, rep + 10);
+});
+
+test('a Hostile power offers no errand; the story bot never takes these', () => {
+  const { CL, c } = camp('hrothgard');
+  c.reputation.hrothmark = -60;
+  assert.equal(CL.story.talk('hrothgard_steward').options.some((o) => /work for a sword/.test(o.text)), false);
+  // The story bot (tests/helpers/story-bot.js) skips any option leading to an sq_ node or starting a
+  // side quest; every way into these errands is one.
+  for (const giver of ['hrothgard_steward', 'vessara_factor', 'merrow_clerk']) {
+    for (const n of Object.values(CL.content.table('dialogue')[giver].nodes)) {
+      for (const o of n.options || []) {
+        const starts = (o.do || []).filter((e) => e.start).map((e) => e.start);
+        for (const q of starts) assert.equal(CL.content.get('quests', q).side, true, `${giver}: ${q} is an errand`);
+      }
+    }
+    const offers = CL.content.table('dialogue')[giver].nodes.talk.options.filter((o) => o.next);
+    assert.ok(offers.every((o) => o.next.startsWith('sq_')), giver);
+  }
 });

@@ -327,6 +327,73 @@
         }
       ],
       rewards: { gold: 60, renown: 10, xp: 50 }
+    },
+
+    // ---- W-05c: errands beyond the March, one for each new power, each showing its land's character.
+    // Their givers live in the new capitals (data/dialogue.js); like every errand, they can be ignored.
+
+    // Hrothmark: the clans hold the mountain pass, and the pass is where raiders wait.
+    sq_pass: {
+      id: 'sq_pass',
+      title: 'Wolves in the Pass',
+      giver: 'hrothgard_steward',
+      side: true,
+      summary: 'Raiders have closed the pass on the Hrothgard–Greywall road, and the clans want it open before the snows.',
+      stages: [
+        {
+          id: 'sq_pass_fight',
+          journal: 'Break the raiders holding the pass, on the road south of Hrothgard where it climbs through the mountains.',
+          band: { template: 'highland_raiders', tag: 'sq_pass_raiders', name: 'Pass Raiders', between: ['hrothgard', 'greywall_fort'], along: 0.35, troops: { reaver: 4, looter: 3 }, camp: true, text: 'The raiders have built a wall of stones across the road where it squeezes between the peaks. Behind it, axes and a fire.' },
+          on: [{ event: 'battle', match: { win: true, tag: 'sq_pass_raiders' }, do: [{ stage: 'sq_pass_report' }, { note: 'The pass is open. The raiders’ wall is already being pulled down.' }] }]
+        },
+        { id: 'sq_pass_report', journal: 'Tell Steward Ingrid in Hrothgard the pass is open.' }
+      ],
+      rewards: { gold: 80, renown: 8, xp: 40, rep: { hrothmark: 10 } }
+    },
+    // The Vessaro League: merchants first. Timber from the northern forests for the southern yards.
+    sq_timber: {
+      id: 'sq_timber',
+      title: 'Timber for the Shipwrights',
+      giver: 'vessara_factor',
+      side: true,
+      summary: 'The League’s shipyards are short of timber. The northern forests have plenty, and the League pays well for what it lacks.',
+      stages: [
+        {
+          id: 'sq_timber_buy',
+          journal: 'Buy timber where it is cheap: the northern highlands (Hrothgard and its villages).',
+          on: [{ event: 'trade', match: { good: 'timber', side: 'buy' }, do: [{ stage: 'sq_timber_sell' }, { note: 'Timber is loaded. Heavy, but the League pays by the beam.' }] }]
+        },
+        {
+          id: 'sq_timber_sell',
+          journal: 'Sell the timber at the market in Vessara, on the southern coast.',
+          on: [{ event: 'trade', match: { good: 'timber', side: 'sell', settlement: 'vessara' }, do: [{ stage: 'sq_timber_report' }, { note: 'The shipwrights took every beam.' }] }]
+        },
+        { id: 'sq_timber_report', journal: 'Tell Factor Salviati in Vessara the timber is delivered.' }
+      ],
+      rewards: { gold: 60, renown: 5, xp: 40, rep: { vessaro: 10 } }
+    },
+    // The Free City of Merrow: anything can be bought there, swords included.
+    sq_lights: {
+      id: 'sq_lights',
+      title: 'False Lights',
+      giver: 'merrow_clerk',
+      side: true,
+      summary: 'Wreckers are luring ships onto the rocks west of Merrow. The Council will pay, and will rent you the swords to do it.',
+      stages: [
+        {
+          id: 'sq_lights_hire',
+          journal: 'Hire sell-swords in Merrow (Recruit): the Council wants its own steel along.',
+          on: [{ event: 'recruit', match: { troop: 'mercenary', settlement: 'merrow' }, do: [{ stage: 'sq_lights_fight' }] }]
+        },
+        {
+          id: 'sq_lights_fight',
+          journal: 'Break the wreckers at Wreckers’ Cove, on the coast far to the west.',
+          band: { template: 'southern_wreckers', tag: 'sq_lights_wreckers', name: 'Wreckers', near: 'wreckers_cove', troops: { reaver: 3, looter: 4 }, camp: true, text: 'Lanterns on poles along the rocks, and a beach strewn with broken casks. The wreckers turn from their plunder.' },
+          on: [{ event: 'battle', match: { win: true, tag: 'sq_lights_wreckers' }, do: [{ stage: 'sq_lights_report' }, { note: 'The false lights are out.' }] }]
+        },
+        { id: 'sq_lights_report', journal: 'Report to the Clerk of the Council in Merrow.' }
+      ],
+      rewards: { gold: 90, renown: 10, xp: 50, rep: { merrow: 10 } }
     }
   };
 })(typeof window !== 'undefined' ? window : globalThis);

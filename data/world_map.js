@@ -21,11 +21,12 @@
       factions: ['valedorn', 'aurelian', 'hrothmark', 'vessaro', 'merrow'], // this world's kingdoms (data/factions.js)
       outlaws: 'neutral', // the faction of road bands and sell-swords: not a kingdom, never diplomatic
       // Named areas, for news and text: rectangles in map units (x, y, w, h); the first that holds a
-      // point names it.
+      // point names it. `home` marks the story's own land (W-05c: the Border March): leaving it shows
+      // the "Beyond the March" tip, and the story bot keeps to it.
       regions: {
         merrow_coast: { name: 'the Merrow coast', x: 160, y: 152, w: 40, h: 48 },
-        west_march: { name: 'the western march', x: 50, y: 50, w: 56, h: 100 },
-        east_march: { name: 'the eastern march', x: 106, y: 50, w: 44, h: 100 },
+        west_march: { name: 'the western march', x: 50, y: 50, w: 56, h: 100, home: true },
+        east_march: { name: 'the eastern march', x: 106, y: 50, w: 44, h: 100, home: true },
         north: { name: 'the northern highlands', x: 0, y: 0, w: 200, h: 50 },
         south: { name: 'the southern coast', x: 0, y: 150, w: 200, h: 50 },
         west: { name: 'the western shires', x: 0, y: 50, w: 50, h: 100 },

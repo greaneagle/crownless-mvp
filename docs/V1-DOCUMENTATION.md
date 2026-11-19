@@ -400,7 +400,7 @@ Everything that is content lives in data files and is checked by `CL.content` at
 | `troops.js` | Every troop's stats, wages, costs and upgrade paths (and the hero's body) |
 | `items.js` | Equipment, food and quest items |
 | `markets.js` | The six trade goods and food rations: base price, weight |
-| `quests.js`, `dialogue.js` | The story: quests with stages and dialogue trees |
+| `quests.js`, `dialogue.js` | The story: quests with stages and dialogue trees, and the optional errands (`side: true`): from 2.8.0 (W-05c) also three in the lands beyond the March, from people in Hrothgard, Vessara and Merrow |
 | `battle_maps.js` | Grass field, forest clearing, Greywall courtyard: obstacles and spawn zones. From 1.8.0 also Forest Wilds and Open Country, generated from a `generate` spec, each naming its one-screen `small` map | From 2.6.0 also the River Ford (W-05a): a generated crossing whose shallows (`slow` ground) halve everyone's speed
 | `encounters.js` | Scripted encounters (the looter band, the captain's trial) |
 | `world_map.js` | The Border March as a world package (from 2.5.0, W-04): `bounds` (100 × 100), `aspect` (gameplay distance), its kingdoms (`factions`) and `outlaws`, `start`, named `regions`, the opening `view`; terrain, roads, base speed, terrain factors. From 2.6.0 (W-05a) also the terrain kinds hills, mountain, marsh, river, ford and bridge with their speeds, a battle map per kind (`battleMaps`), and terrain features (`areas`, `waters` with fords and bridges, `coast`); all terrain is passable (D-W4). From 2.7.0 (W-05b) the world is the Sundered Realm (`sundered_realm`, 200 × 200) with the March whole at + 50, + 50 and real terrain around it; the March's own river and hills stay drawn only, so its travel is as before. Saves of the old Border March world are refused and kept untouched in `crownless_save_other_world` (D-W2). The game plays the campaign's `worldId`; a new game the first world listed. Nothing in `js/` names a kingdom or the world or assumes a 0–100 map (a test checks the source), and `tests/helpers/test-world.js` turns the March as it was (`tests/helpers/old-march.js`) into a three-kingdom 150 × 120 world that the tests and a bot play |
@@ -409,7 +409,7 @@ Everything that is content lives in data files and is checked by `CL.content` at
 | `contracts.js` | The three contract templates and their reward formulas |
 | `town_hubs.js` | The Stonebridge street layout and townsfolk |
 | `companions.js` | Mara |
-| `help.js` | How to Play topics and first-time tips |
+| `help.js` | How to Play topics and first-time tips. From 2.8.0 also The lands, and the Beyond the March tip (`when: 'awayFromHome'`: the party is in a region the world doesn't mark `home`) |
 | `news.js` | News line templates |
 | `names.js` | From 1.4.0: name cultures for soldiers (given names, trades, epithets, forms); factions point at one |
 

@@ -47,8 +47,8 @@ function oldMarch(content) {
       factions: KINGDOMS,
       outlaws: OUTLAWS,
       regions: {
-        west_march: { name: 'the western march', x: 0, y: 0, w: 56, h: 100 },
-        east_march: { name: 'the eastern march', x: 56, y: 0, w: 44, h: 100 },
+        west_march: { name: 'the western march', x: 0, y: 0, w: 56, h: 100, home: true },
+        east_march: { name: 'the eastern march', x: 56, y: 0, w: 44, h: 100, home: true },
       },
       areas: [],
       waters: [],
@@ -70,6 +70,9 @@ function oldMarch(content) {
     templates[id] = u;
   }
   C.party_templates = templates;
+  // People and errands of the lands beyond the March (W-05c) go with them.
+  C.dialogue = Object.fromEntries(Object.entries(C.dialogue).filter(([, t]) => !t.place || settlements[t.place]));
+  C.quests = Object.fromEntries(Object.entries(C.quests).filter(([, q]) => C.dialogue[q.giver]));
   return C;
 }
 

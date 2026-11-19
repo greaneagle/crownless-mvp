@@ -102,11 +102,13 @@ function makeStoryBot(CL, rnd, { winChance = 0.85, reloadChance = 0.04 } = {}) {
 
   // ---- Conversations ----
 
-  /** The March's settlements: those in its regions (`*_march`) of the world's data. */
+  /** The story's settlements: those in the world's `home` regions (all of them in a world without any). */
   function marchPlaces() {
-    return Object.values(CL.content.table('settlements'))
-      .filter((s) => /_march$/.test(CL.world.regionAt(s.mapX, s.mapY)?.id || ''))
-      .map((s) => s.id);
+    const regions = CL.world.map().regions || {};
+    const home = (s) => regions[CL.world.regionAt(s.mapX, s.mapY)?.id]?.home;
+    const all = Object.values(CL.content.table('settlements'));
+    const mine = all.filter(home);
+    return (mine.length ? mine : all).map((s) => s.id);
   }
 
   /** Everyone the player could talk to right now, and where. */
@@ -226,8 +228,8 @@ function makeStoryBot(CL, rnd, { winChance = 0.85, reloadChance = 0.04 } = {}) {
         stats.waits++;
         note(`waited ${days.toFixed(1)}d`);
       } else {
-        // The story is the Border March's: wander among its places (W-05b: the March is two regions
-        // in the middle of a bigger world; Gate D's checks stay there).
+        // The story is the Border March's: wander among its places (W-05b: the March is in the middle
+        // of a bigger world, its regions marked `home`; Gate D's checks stay there).
         const sid = pick(marchPlaces());
         note(`ride to ${sid}`);
         goTo(sid);

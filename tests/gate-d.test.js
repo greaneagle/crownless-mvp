@@ -17,7 +17,7 @@ test('Gate D scope: the region, troops, maps, quests, contracts, companion, repu
     return o;
   };
   // Gate D's region is the Border March: since W-05b it lies whole in the middle of a bigger world.
-  const march = t('settlements').filter((s) => /_march$/.test(CL.world.regionAt(s.mapX, s.mapY)?.id || ''));
+  const march = t('settlements').filter((s) => CL.world.map().regions[CL.world.regionAt(s.mapX, s.mapY)?.id]?.home);
   assert.deepEqual(by(march, 'type'), { town: 2, fort: 2, village: 6 });
   const marchTroops = t('troops').filter((x) => x.id !== 'hero' && ['valedorn', 'aurelian', 'neutral'].includes(x.faction));
   assert.equal(marchTroops.length, 16, '15 troop types, plus the Sellsword from 1.5.0 (V2-03b)');

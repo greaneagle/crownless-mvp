@@ -1,6 +1,6 @@
 # Crownless — Project Status & Roadmap
 
-_Last reviewed: 2026-11-19 · Build 2.7.0 · Spec: `Crownless_MVP_GDD_v1.md` (engine overridden: HTML5 Canvas + classic JS, no bundler, GitHub Pages)._
+_Last reviewed: 2026-11-19 · Build 2.8.0 · Spec: `Crownless_MVP_GDD_v1.md` (engine overridden: HTML5 Canvas + classic JS, no bundler, GitHub Pages)._
 
 This replaces the opencode-swarm plan (`.swarm/plan.md`, removed). The gate structure (A→E) is kept from the GDD; the task list is condensed and re-ordered around what the code actually needs.
 
@@ -129,6 +129,7 @@ From the owner's v2.0 design (`Crownless_v2_0_Feature_and_Systems_Design_Part_1.
   - ✅ (2.5.0) W-04 a data-driven world: the world package (`bounds`, `aspect`, `factions`, `outlaws`, `start`, `regions`, `view`) chosen by the campaign's `worldId`; kingdoms, banner letters and troop-tree order from data; every 0–100 bound in code replaced by the map's bounds; validation of everything on the map against them; a three-kingdom 150 × 120 test world that the tests and a 30-day bot play. The Border March plays exactly as before (identical bot saves)
   - ✅ (2.6.0) W-05a world geometry and terrain: hills 0.8, mountain 0.4 (a pass is a road), marsh 0.5, river 0.3, ford 0.8, bridge 1.0, and the sea along a coast, as world data, all passable (D-W4); a battle map per kind of ground from data; the generated River Ford battle map, whose shallows halve speed; drawing of all of it on the world map; Debug → Ford battle 30. The March has no new terrain yet (its travel times are unchanged, tested); the test world has every kind
   - ✅ (2.7.0) W-05b the bigger region: the Sundered Realm, 200 × 200, with the March whole in the middle (+50, +50; its travel times unchanged, tested); Valedorn and Aurelian extended west and east, Hrothmark in the north and the Vessaro League on the south coast (new cultures, six-troop trees each), the Free City of Merrow; 31 settlements, two lairs per region, timber and wine, 11 bands, 13 patrols and 5 caravans; region news; real terrain; the asset request list (docs/ASSETS.md). Old March saves are refused and kept safe (D-W2, owner 2026-11-19), so W-06 is dropped
+  - ✅ (2.8.0) W-05c errands beyond the March: Wolves in the Pass (Hrothmark), Timber for the Shipwrights (the Vessaro League), False Lights (Merrow), each from a new person in its capital; How to Play's new topic The lands, the map's zoom out to the whole realm, and a Beyond the March tip (regions marked `home` in the world's data)
   - **Phase 7, "The Living Company":** the deferred battle balance pass (B-01), surgeon, scout and blacksmith, pursuit and detection, officers and detached patrols, more companions, soldier traits, world events, a tournament, a first business, battle extras.
   - **Phase 8, "The Landed World":** lords on the map, holdings and claims, permissions, allegiance, fiefs and castellans, sieges, named nobles, losing and retaking land. Acceptance is "The Dispossessed Lord".
   - **Phase 9, "Kingdoms & Houses":** realms, diplomacy and treaties, founding a kingdom, rebellion and deposition, armies, houses and marriage, modding and a second world.

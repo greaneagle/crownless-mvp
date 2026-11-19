@@ -1,4 +1,4 @@
-# Crownless 2.7.0 — The Border March
+# Crownless 2.8.0 — The Border March
 
 A single-player, top-down party-battle prototype in plain HTML5 Canvas and classic JavaScript. There's no bundler, no runtime dependencies and no server (Playwright, for the browser tests, is the only development dependency). It's published to GitHub Pages straight from `main`.
 
@@ -63,6 +63,7 @@ A single-player, top-down party-battle prototype in plain HTML5 Canvas and class
 - **A data-driven world (2.5.0):** the world's size, kingdoms, start, regions and opening view are data (`data/world_map.js`); nothing in `js/` names a kingdom or the world or assumes a 0–100 map, and the tests play a three-kingdom 150 × 120 test world (`tests/helpers/test-world.js`). Nothing changes in play.
 - **Terrain (2.6.0):** hills, mountains with passes, marsh, rivers with fords and bridges, and coasts are world data with travel speeds and battlefields of their own, all passable; the River Ford battlefield slows everyone in its shallows (Debug → Ford battle 30). The March has none of the new terrain yet.
 - **The bigger world (2.7.0):** the Sundered Realm, about four times the March's area, with the March whole in the middle: Valedorn and Aurelian reach west and east, Hrothmark holds the northern highlands and the Vessaro League the southern coast (their own troops, names and goods), and the Free City of Merrow hires out sell-swords. 31 settlements, lairs in every region, caravans to Merrow, news that names the region. Campaigns saved before 2.7.0 can't continue in it: they are kept safe in the browser, untouched, and a new campaign begins.
+- **Errands beyond the March (2.8.0):** someone in each new capital (Hrothgard, Vessara, Merrow) has an optional errand that shows their land: a mountain pass to clear, timber to carry south, wreckers to stop. How to Play → The lands describes the realm, and a tip greets you the first time you leave the March.
 - **Developer tools** (the Logs and Debug buttons) show on a local dev server. On the published site they are hidden; open the page with `?dev` added to the address (for example `…/crownless-mvp/?dev`) to show them on that device, and `?dev=0` to hide them again. F3 opens the diagnostics panel either way.
 - The Debug panel's **Camera test 30 / 40** (1.7.0, PROTO-A) runs a practice battle in a forest three screens across with the camera following the hero, and reports fps, drawing time, the slowest frame and how long the armies took to meet.
 - The **Debug** button gives testing shortcuts: hero and troop XP, renown, contracts, crowns, trade goods and prices, spawning or clearing world parties, food and morale, soldiers, items, stats, god mode, time, teleport, win or lose a battle, and wiping the save. Every use is logged.

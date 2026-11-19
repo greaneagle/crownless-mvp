@@ -4,7 +4,8 @@
  * tips: first-time tips (Gate E tutorial). Each shows once per device, the first time its moment comes:
  *   on: the screen (map, town, settlement, encounter, battle, trade, contracts, character, journal,
  *       saves, result), and optionally when: a situation js/tips.js knows (lowFood, points, wounded,
- *       reserves, captured). text, or textTouch + textKeys when the controls differ.
+ *       reserves, captured, awayFromHome: the party is in a region of the world not marked `home`). text, or
+ *       textTouch + textKeys when the controls differ.
  *   help: the How to Play topic its "More help" button opens. pause: a battle waits until it's read.
  * Q1 "A Stranger's Wage" stays the playable tutorial (GDD §4); tips only explain the screens. */
 (function (root) {
@@ -30,7 +31,7 @@
         'Tap a town, village, fort, camp or band to travel there. Time passes as you ride: your soldiers eat, wages come due, wounds heal, and the world moves.',
         'Roads are fastest. Hills, forests and marsh slow you, mountains most of all (a road through them is a pass), and a river is slow to wade except at a ford or a bridge; heavy cargo slows you too. Patrols and caravans keep the peace and the trade going; Road Reavers prey on both, and on you if you look weak.',
         'Wait lets time pass where you stand. The panel at the top left shows the day, your crowns, soldiers, food, morale and current quest.',
-        'Drag the map to look around and pinch (or + and −) to zoom in; only a tap sets off, so dragging or pinching never sends you anywhere. While zoomed in, the view follows your company; Centre brings it back after you have looked away, and arrows at the edge point to you and to your contract or quest targets. Zoom changes only what you see: journeys take the same time and bands find you the same way at any zoom. The game remembers your zoom on this device.'
+        'Drag the map to look around and pinch (or + and −) to zoom; zoom all the way out to see the whole realm, with the March in its middle. Only a tap sets off, so dragging or pinching never sends you anywhere. While zoomed in, the view follows your company; Centre brings it back after you have looked away, and arrows at the edge point to you and to your contract or quest targets. Zoom changes only what you see: journeys take the same time and bands find you the same way at any zoom. The game remembers your zoom on this device.'
       ],
       controls: [
         ['Tap the map', 'Click the map', 'Travel there'],
@@ -41,9 +42,20 @@
         ['⚙ button', '⚙ button', 'Settings']
       ]
     },
+    lands: {
+      id: 'lands',
+      order: 3,
+      title: 'The lands',
+      body: [
+        'The Border March, where the story is told, lies in the middle of the realm. Valedorn holds its west and the shires beyond; Aurelian its east and the old imperial provinces beyond that.',
+        'North, over the mountains, are the highland clans of Hrothmark: heavy, slow infantry and axemen. The road from Greywall climbs to them through a pass. South, on the marshy coast, the merchant towns of the Vessaro League field crossbowmen and fast light horse. In the south-east the Free City of Merrow answers to no crown: it hires out sell-swords and has the best market in the land.',
+        'Every kingdom has its own troops to hire, and every town posts contracts. Each capital has someone with work for a stranger. Prices differ by land: timber is cheap in the north and wine on the coast, so a company that carries goods between them can do well.',
+        'Each land has Reaver lairs of its own, and the news says where trouble is: “the roads of the northern highlands are not safe”. The farthest capitals are a day and a half apart on the road.'
+      ]
+    },
     towns: {
       id: 'towns',
-      order: 3,
+      order: 4,
       title: 'Towns and villages',
       body: [
         'Every place opens on its menu: hire, buy food, rest, trade, take contracts and talk to people. Stonebridge also has streets: Walk the streets to stroll around, tap a person to walk over and talk (or use the joystick and TALK), Town menu to get back, and the road on the left to leave.',
@@ -57,7 +69,7 @@
     },
     battle: {
       id: 'battle',
-      order: 4,
+      order: 5,
       title: 'Battle',
       body: [
         'When a band catches you, or you ride at one, choose: Attack fights the battle yourself; Auto-resolve rolls it from your strength; you can also pay a toll, threaten weaker bands, or try to slip away. Each button shows the odds.',
@@ -85,7 +97,7 @@
     },
     party: {
       id: 'party',
-      order: 5,
+      order: 6,
       title: 'Your company',
       body: [
         'Everyone you hire takes a slot, eats a ration a day for every five people, and draws a weekly wage. Hungry or unpaid soldiers lose morale; at very low morale they desert.',
@@ -100,7 +112,7 @@
     },
     trade: {
       id: 'trade',
-      order: 6,
+      order: 7,
       title: 'Trade and contracts',
       body: [
         'Six goods are cheap where they are plentiful and dear where they are short. Caravans that arrive make a good cheaper; caravans the Reavers rob make it dearer. Market talk on the Trade screen says what moved prices. Cargo slows your march.',
@@ -109,7 +121,7 @@
     },
     story: {
       id: 'story',
-      order: 7,
+      order: 8,
       title: 'Story, reputation and news',
       body: [
         'Four quests lead to the fate of Greywall. The Journal lists them with the next step in gold, the company chronicle (your own story: who joined, who was promoted, notable battles, who fell, quests done) and the regional news.',
@@ -120,7 +132,7 @@
     },
     saving: {
       id: 'saving',
-      order: 8,
+      order: 9,
       title: 'Saving and settings',
       body: [
         'The game saves itself in this browser after battles and in settlements. Browsers can clear that storage, so use Save & export now and then: the file (or text) also moves your game to another device.',
@@ -130,7 +142,7 @@
     },
     credits: {
       id: 'credits',
-      order: 9,
+      order: 10,
       title: 'Credits',
       body: [
         'Crownless: The Border March. Design, story and code by the game’s developer.',
@@ -156,6 +168,7 @@
     saves: { id: 'saves', on: 'saves', help: 'saving', title: 'Keep a copy', text: 'The game saves itself in this browser, but browsers can clear it. Export a copy now and then — it also moves your game to another device.' },
     points: { id: 'points', on: 'map', when: 'points', help: 'party', title: 'Points to spend', text: 'You have skill or attribute points to spend. Open Party: Leadership lets you lead more soldiers, One-Handed hits harder.' },
     lowFood: { id: 'lowFood', on: 'map', when: 'lowFood', help: 'party', title: 'Food is running low', text: 'Buy food in any town or village. Hungry soldiers lose morale and may desert.' },
+    beyond: { id: 'beyond', on: 'map', when: 'awayFromHome', help: 'lands', title: 'Beyond the March', text: 'A new land, with its own kingdom, troops and prices. Its capital posts contracts and someone there has work for you. Zoom out to see the whole realm; Centre brings you back.' },
     wounded: { id: 'wounded', on: 'map', when: 'wounded', help: 'party', title: 'Wounded soldiers', text: 'The wounded sit out battles for about two days. Resting in a settlement passes the time safely.' }
   };
 })(typeof window !== 'undefined' ? window : globalThis);

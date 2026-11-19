@@ -1,5 +1,21 @@
 # Crownless — Release Notes
 
+## v2.8.0 — Errands beyond the March (W-05c) · 2026-11-19
+
+### New
+- **Three errands in the new lands,** each from someone in its capital who has a few words about their land:
+  - **Wolves in the Pass**, from Steward Ingrid in Hrothgard: raiders have walled off the mountain pass on the road to Greywall.
+  - **Timber for the Shipwrights**, from Factor Salviati in Vessara: bring timber from the cheap north to the League's yards.
+  - **False Lights**, from the Clerk of the Council in Merrow: hire the city's sell-swords and put out the wreckers' lanterns on the far west coast.
+- **How to Play → The lands** describes the realm: who holds which land, what their soldiers are like, where goods are cheap, and where to find work.
+- A tip, **Beyond the March**, the first time you ride out of the March.
+
+### Fixes
+- Merrow listed the Mercenary twice for hire.
+
+### Under the hood
+- 584 fast Node tests (17 for the errands, 7 for tips and help).
+
 ## v2.7.0 — The bigger world (W-05b) · 2026-11-19
 
 The Border March is now the heart of a world about four times its size.

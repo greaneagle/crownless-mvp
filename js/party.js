@@ -35,8 +35,9 @@
     const s = currentSettlement(camp);
     if (!offers(s, 'recruit') || !CL.realm.welcomes(camp, s.id)) return []; // Hostile owners won't let you recruit
     const own = CL.content.get('factions', CL.realm.owner(s.id, camp)).recruits || [];
-    // Towns also have sell-swords for hire: the neutral Mercenary (the 15th troop type).
-    return s.type === 'town' ? [...own, 'mercenary'] : own;
+    // Towns also have sell-swords for hire: the neutral Mercenary (the 15th troop type). Listed once,
+    // where the town's own recruits are sell-swords already (W-05b: the Free City of Merrow).
+    return s.type === 'town' ? [...new Set([...own, 'mercenary'])] : own;
   }
 
   const canRest = (camp = c()) => offers(currentSettlement(camp), 'rest');

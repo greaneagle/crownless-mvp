@@ -95,3 +95,35 @@ test('a stress battle shows no tips', () => {
   assert.equal(CL.tips.check(), null);
   assert.equal(CL.game.paused, false);
 });
+
+test('W-05c: leaving the March shows "Beyond the March" once, and How to Play describes the lands', () => {
+  const { CL } = setup();
+  const c = CL.campaign;
+  CL.game.mode = 'map';
+  CL.tips.check();
+  CL.tips.dismiss(); // the map tip
+  c.food = 100;
+  const at = (id) => {
+    const s = CL.content.get('settlements', id);
+    Object.assign(c.world, { x: s.mapX, y: s.mapY });
+  };
+  for (const id of ['stonebridge', 'eastwatch', 'saltmere']) {
+    at(id);
+    assert.equal(CL.tips.check(), null, `${id} is in the March`);
+  }
+  at('hrothgard');
+  const t = CL.tips.check();
+  assert.equal(t.id, 'beyond');
+  assert.equal(t.help, 'lands');
+  CL.tips.dismiss();
+  at('merrow');
+  assert.equal(CL.tips.check(), null, 'once only');
+  // How to Play: the lands, after the map, naming every power and the zoom out to the whole realm.
+  const topics = Object.values(CL.content.table('help_topics')).sort((a, b) => a.order - b.order).map((h) => h.id);
+  assert.equal(topics[topics.indexOf('map') + 1], 'lands');
+  const lands = CL.content.get('help_topics', 'lands').body.join(' ');
+  for (const k of CL.realm.kingdoms()) assert.ok(lands.includes(k.short), `${k.short} in the lands topic`);
+  assert.match(lands, /timber is cheap in the north/);
+  assert.match(CL.content.get('help_topics', 'map').body.join(' '), /zoom all the way out to see the whole realm/);
+  assert.equal(new Set(topics.map((id) => CL.content.get('help_topics', id).order)).size, topics.length, 'no two topics share a place');
+});

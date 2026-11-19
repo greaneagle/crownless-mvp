@@ -39,7 +39,8 @@
  *    From V2-Q: battle also has {fought, preset, reinforced}; hire {follower}; stores {rations} (the
  *    quartermaster bought food); venture {profit: true} (the merchant sold at a profit).
  *
- * A stage may also need a band on the map: band: { template, tag, troops, name?, text?, camp?, map?, near | between: [a, b] }
+ * A stage may also need a band on the map: band: { template, tag, troops, name?, text?, camp?, map?, near | between: [a, b], along? }
+ * (along: how far from a to b, 0–1, default halfway; W-05c: a band in a mountain pass)
  * (camp: true holds its ground and only fights if the player goes to it; otherwise it ambushes)
  * (settlement or site ids). It is spawned when the stage begins, re-spawned if lost while the stage
  * is active (so nothing soft-locks), and removed once no active stage needs it. Battles against it
@@ -257,7 +258,7 @@
     if (r.notes.length > MAX_NOTES) r.notes.shift();
   }
 
-  /** Where a stage band stands: beside a settlement or site, or halfway between two of them. */
+  /** Where a stage band stands: beside a settlement or site, or between two of them (halfway, or `along`). */
   function placeOf(id) {
     const s = CL.content.table('settlements')[id] || CL.world.map().sites[id];
     return s ? { x: s.mapX, y: s.mapY } : null;
@@ -266,7 +267,8 @@
   function bandSpot(spec) {
     if (spec.between) {
       const [a, b] = spec.between.map(placeOf);
-      return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+      const t = spec.along ?? 0.5;
+      return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
     }
     const p = placeOf(spec.near);
     const [x, y] = CL.world.clampToMap(p.x + 3, p.y + 2, 2); // beside the place, inside the map (W-04)
@@ -574,6 +576,7 @@
           if (b.map && !C.battle_maps?.[b.map]) err(`${w}.${st.id}: unknown battle map ${b.map}`);
           if (!/^[a-z0-9_]{1,40}$/.test(b.tag || '')) err(`${w}.${st.id}: band needs a tag`);
           if (b.between ? !(b.between.length === 2 && b.between.every(known)) : !known(b.near)) err(`${w}.${st.id}: band needs a known place`);
+          if (b.along != null && !(b.between && typeof b.along === 'number' && b.along >= 0 && b.along <= 1)) err(`${w}.${st.id}: along must be 0–1, between two places`);
           for (const [tid, n] of Object.entries(b.troops || {})) {
             if (!C.troops?.[tid] || !(Number.isInteger(n) && n > 0)) err(`${w}.${st.id}: bad band troop ${tid}`);
           }

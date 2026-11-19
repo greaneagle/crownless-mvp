@@ -555,7 +555,7 @@ _Written 2026-11-18 at build 2.0.0; **reviewed and corrected the same day agains
 - **Bots:** the campaign bot takes the nearest lair it can beat and walks to the nearest other contract board; the story bot wanders only the March (its regions), where Gate D's checks stay.
 - **Old saves** (any save of the Border March world, every build to 2.6.0) are refused on load and on import. The game begins a new campaign, says once "The world has grown: new kingdoms lie beyond the March…", and keeps the old save untouched in `crownless_save_other_world`. The save schema stays v9. The migrations stay in `js/save.js`, and their tests (every fixture set from 0.14 to 2.0) run on the March as it was (`tests/helpers/old-march.js`), on which the W-04 test world is now built.
 - **Art:** the asset request list is in `docs/ASSETS.md` ("Asset requests for the art team"). No image files were added, so the manifest is unchanged.
-- **Help:** How to Play mentions the lands beyond the March and the new kinds of ground, and says every town posts contracts. The full help for the bigger map stays with W-05c.
+- **Help:** How to Play mentions the lands beyond the March and the new kinds of ground, and says every town posts contracts. The full help for the bigger map came with W-05c (2.8.0).
 - **Tests:** `tests/realm-world.test.js` (the kingdoms, settlements and lairs; markets and boards; the troop trees; the farthest capitals reached in under four days; the world's parties stay on the map; region news; old saves refused and kept). Existing tests moved to the new coordinates or, for 2.0's projection and the saves, to the old March.
 - **Prototype G on the new map** (6 seeds × 30 days): no run stuck, every one resumed from its halfway save; hands-off median 132 crowns, 109 won / 62 lost; presets 1,190 crowns, 196 / 17; expert 1,235 crowns, 203 / 11. The gap between fighting and Simulate stays B-01's to close.
 - **Not done here:** the owner's phone session at W-02's zoom levels (acceptance).
@@ -615,7 +615,18 @@ _Written 2026-11-18 at build 2.0.0; **reviewed and corrected the same day agains
 
 ---
 
-### W-05c · New-region errands and help (S) — Specified
+### W-05c · New-region errands and help (S) — ✅ Done in 2.8.0
+
+**Done (2.8.0, 2026-11-19).** As specified, with these notes:
+- **Three errands** (`side: true`), one per new power, each offered by a new person in its capital who talks about the land (`data/dialogue.js`; no offer while that power is Hostile):
+  - **Wolves in the Pass** (Steward Ingrid, Hrothgard): break the raiders walling off the mountain pass on the Hrothgard–Greywall road; 80 crowns, Hrothmark +10. Quest bands take a new `along` (0–1) to stand part-way between two places, here in the pass.
+  - **Timber for the Shipwrights** (Factor Salviati, Vessara): buy timber anywhere, sell it in Vessara; 60 crowns on top of the trade's own profit, the League +10.
+  - **False Lights** (the Clerk of the Council, Merrow): hire a sell-sword in Merrow, then break the wreckers at Wreckers’ Cove; 90 crowns, Merrow +10.
+- **Help:** a new How to Play topic, **The lands** (after The map): the March in the middle, each power and its troops, a contract board in every town and someone with work in each capital, timber in the north and wine on the coast, regional news, the distances. The map topic says how to zoom out to the whole realm.
+- **Tip:** **Beyond the March** shows once, the first time the party stands in a region outside the story's home. The world's data marks the March's regions `home: true`; the tip's new situation `awayFromHome` reads that, so no region id is in the code. The story bot keeps to the `home` regions too.
+- **Fixed on the way:** Merrow listed the Mercenary twice for hire (its own recruit and every town's sell-sword); now once.
+- **Tests:** `tests/errands.test.js` walks each errand end to end (the band in the pass on the road between mountain slopes; timber sold elsewhere doesn't count; no wreckers until the sell-sword is hired), checks that a Hostile power offers nothing, and checks that the story bot's errand filter covers every way in. `tests/tips.test.js`: the tip appears only outside the March, and only once; the lands topic names every power.
+
 
 **Build.**
 - Two or three errands outside the March (quest interpreter, `side: true`), each showing a new region's character.
