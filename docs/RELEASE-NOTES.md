@@ -1,5 +1,24 @@
 # Crownless — Release Notes
 
+## v2.11.0 — Battle balance (B-01) · 2026-11-19
+
+Simulate is now only a little worse than fighting, and a close fight is a fight.
+
+### Changes
+- **Honest odds:** in a melee numbers count twice over, so the stronger side wins more often than its share of the strength (2 : 1 is now 80%, not 67%). The encounter screen, Simulate and fights between parties on the map all use the new odds.
+- **The enemy fights better:**
+  - its foot comes on in a loose line instead of one at a time, unless it already outnumbers you;
+  - it goes for your archers, your wounded, or you if you stray from your soldiers;
+  - it holds a little longer, and a band defending its lair holds longer still.
+- Fought close battles now come out a few points better than the stated odds, not every time.
+
+### Fixes
+- A battle could stall for good when two wounded enemies hung back where your archers had no clear shot and another wave was still to come. Now they slip away and the next wave comes on.
+
+### Under the hood
+- `scripts/parity.js` can try one change at a time (`tweak`).
+- 603 fast and 8 slow Node tests, 125 browser tests (9 more apply to one device only and are skipped on the other).
+
 ## v2.10.0 — The bigger world, tuned (W-08) · 2026-11-19
 
 ### Changes

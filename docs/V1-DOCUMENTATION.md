@@ -192,7 +192,7 @@ When a hostile party catches you, or you attack a camp, you choose:
 | Choice | What happens |
 |---|---|
 | **Attack** | Fight the battle yourself (from 1.10.0 through a Prepare screen: a setup, then Fight or Simulate) |
-| **Auto-resolve** | Power = Σ(count × tier power × health) × (1 + 0.03 × Tactics), with tier power T1 1, T2 1.7, T3 2.5. Your win chance = your power ÷ total, held between 10% and 90%; the odds are shown. The winner always takes some losses |
+| **Auto-resolve** | Power = Σ(count × tier power × health) × (1 + 0.03 × Tactics), with tier power T1 1, T2 1.7, T3 2.5. Your win chance = your power ÷ total, held between 10% and 90%; the odds are shown. From 2.11.0 (B-01) both powers are squared first (the square law: a stronger side wins more often than its share), so 2 : 1 is 80%. The winner always takes some losses |
 | **Negotiate** | Pay the Reavers' toll (base + per troop), or **intimidate** them if you are at least 2.5× stronger. Either way they leave you alone for a day |
 | **Retreat** | Chance = 0.5 + 0.1 × (your speed − their speed), held between 15% and 85% |
 

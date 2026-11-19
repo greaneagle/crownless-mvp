@@ -44,6 +44,22 @@
     melee: { chase: 38, followGoal: 62, followEngage: 75, followFight: 37, holdEngage: 85, holdFight: 37 },
   };
 
+  // B-01: how the enemy fights. Its foot keeps a loose line until close instead of streaming in one by
+  // one (a soldier this far ahead of the rest's middle, and not yet near its target, slows to wait),
+  // unless it already has the numbers (then it just swarms: the line made such fights hopeless); and
+  // it picks on the exposed: archers, the badly wounded, a hero standing alone.
+  const ENEMY = {
+    lineSlack: 55, // px a soldier may run ahead of the line before waiting for it
+    lineEngage: 150, // px from its target: from here on it closes at full speed
+    lineWait: 0.3, // its speed while waiting for the line
+    lineOutnumber: 1.25, // no line once the enemy's standing soldiers outnumber the company by more than this
+    preferRange: 90, // px: an exposed target this much further than the nearest is still chosen
+    prefer: { archer: 60, wounded: 45, heroAlone: 75 }, // how much further each is worth going
+    woundedAt: 0.5, // hp share below which a soldier counts as wounded
+    aloneRadius: 110, // px: a hero with no soldier of theirs this close is alone
+    use: { line: true, target: true }, // for measuring each on its own (scripts/parity.js)
+  };
+
   const game = () => CL.game;
   const opponentsOf = (u) => (u.team === 'enemy' ? [game().hero, ...game().allies] : game().enemies);
   const nearestAlive = (u, list) =>
@@ -70,6 +86,7 @@
     const enc = typeof encounter === 'string' ? CL.content.encounter(encounter) : encounter;
     g.encounter = enc.id;
     g.encounterDef = enc;
+    g.lairDefence = Boolean(g.siteId); // B-01: a band fighting for its own lair is steadier
     g.battleId = CL.campaign.battles + 1;
     if (!enc.practice) CL.encounter.beginIfClosed(); // a failed retreat keeps its encounter; a fresh battle starts one
     g.totalWaves = enc.waves.length;
@@ -395,7 +412,7 @@
     // Retarget at once when the current target falls, instead of swinging at a body.
     if (u.aiTimer <= 0 || (u.target && !u.target.alive)) {
       u.aiTimer = rand(0.17, 0.41);
-      u.target = nearestAlive(u, opponentsOf(u)) || null;
+      u.target = (u.team === 'enemy' && ENEMY.use.target ? enemyTarget(u) : nearestAlive(u, opponentsOf(u))) || null;
     }
     const target = u.target;
     if (u.routing) return; // running: js/morale.js moves them (V2-08b)
@@ -437,6 +454,7 @@
     if (d > goal + 5) {
       const s = u.speed;
       if (u.guard) u.speed *= GUARD_SPEED; // a raised shield slows you, as it does the hero
+      if (u.team === 'enemy' && ENEMY.use.line && aheadOfLine(u, target)) u.speed *= ENEMY.lineWait; // B-01: wait for the line
       move(u, dest.x - u.x, dest.y - u.y, dt);
       u.speed = s;
     } else if (dest === target) aim(u, target);
@@ -453,6 +471,52 @@
         if (!u.guard) startAttack(u); // no swinging behind a raised shield
       }
     }
+  }
+
+  /**
+   * B-01: who an enemy goes for. The nearest, unless someone exposed is not much further: an archer, a
+   * badly wounded soldier, or the hero with none of the company close by.
+   * @param {Unit} u
+   */
+  function enemyTarget(u) {
+    const g = game();
+    const foes = opponentsOf(u).filter((v) => v?.alive);
+    if (!foes.length) return null;
+    const h = g.hero;
+    const heroAlone = h?.alive && !g.allies.some((a) => a.alive && !a.routing && Math.hypot(a.x - h.x, a.y - h.y) < ENEMY.aloneRadius);
+    let best = null;
+    let score = Number.POSITIVE_INFINITY;
+    const nearest = Math.min(...foes.map((v) => dist(u, v)));
+    for (const v of foes) {
+      const d = dist(u, v);
+      if (d > nearest + ENEMY.preferRange) continue;
+      let pull = 0;
+      if (v.role === 'archer') pull = Math.max(pull, ENEMY.prefer.archer);
+      if (v.hp < v.maxhp * ENEMY.woundedAt) pull = Math.max(pull, ENEMY.prefer.wounded);
+      if (v === h && heroAlone) pull = Math.max(pull, ENEMY.prefer.heroAlone);
+      if (d - pull < score) [best, score] = [v, d - pull];
+    }
+    return best;
+  }
+
+  /**
+   * B-01: is this enemy foot soldier running ahead of its line (and not yet near its target)? The line
+   * is the middle of the enemy's standing foot; ahead means nearer the target by more than the slack.
+   * @param {Unit} u @param {Unit} target
+   */
+  function aheadOfLine(u, target) {
+    if (u.role !== 'infantry' || u.morale === 'fallback' || dist(u, target) < ENEMY.lineEngage) return false;
+    const line = game().enemyLine;
+    if (!line) return false;
+    return Math.hypot(line.x - target.x, line.y - target.y) - dist(u, target) > ENEMY.lineSlack;
+  }
+
+  /** Where the enemy's standing foot is, on average (each frame, for the loose line). @param {any} g */
+  function markLine(g) {
+    const foot = g.enemies.filter((e) => e.alive && !e.routing && e.role === 'infantry');
+    const mine = [g.hero, ...g.allies].filter((a) => a?.alive && !a.routing).length;
+    const swarm = g.enemies.filter((e) => e.alive && !e.routing).length > mine * ENEMY.lineOutnumber;
+    g.enemyLine = foot.length > 1 && !swarm ? { x: foot.reduce((n, e) => n + e.x, 0) / foot.length, y: foot.reduce((n, e) => n + e.y, 0) / foot.length } : null;
   }
 
   /** Record an attack press so a tap during late recovery is not lost. */
@@ -514,6 +578,7 @@
     g.t += dt;
     const h = g.hero;
     updateHero(h, dt);
+    markLine(g);
     for (const u of [...g.allies, ...g.enemies]) ai(u, dt);
     CL.units.separate([h, ...g.allies, ...g.enemies]); // bodies: crowd, but never stack on one spot
     updateArrows(h, dt);
@@ -558,11 +623,13 @@
    * @param {any} g
    */
   function stallGuard(g) {
-    if (g.t - (g.lastBlowAt ?? 0) < BATTLE.stall || g.enemyReserve?.length || g.wave < g.totalWaves) return;
+    if (g.t - (g.lastBlowAt ?? 0) < BATTLE.stall || g.enemyReserve?.length) return;
     const left = g.enemies.filter((e) => e.alive);
     if (!left.length || !(g.hero.alive || g.allies.some((a) => a.alive))) return;
     for (const e of left) CL.morale.leave(g, e);
-    CL.ui.message('Neither side will close. The enemy slips away');
+    // B-01: also with waves still to come (before, a stuck pair could hold the next wave back for ever).
+    g.lastBlowAt = g.t;
+    CL.ui.message(g.wave < g.totalWaves ? 'Neither side will close. Those ones slip away, and more come on' : 'Neither side will close. The enemy slips away');
     CL.diag.log('warn', 'Battle stalled: the enemy withdrew', { left: left.length, t: g.t });
   }
 
@@ -603,6 +670,7 @@
   }
 
   CL.combat = {
+    ENEMY,
     BATTLE,
     setActiveCap,
     reinforce,

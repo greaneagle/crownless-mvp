@@ -29,9 +29,10 @@ function spread(n) {
 }
 
 /** A seeded game with the scenario's company and the band open as an encounter. */
-function setup(scenario, seed) {
+function setup(scenario, seed, tweak = null) {
   const env = loadGame({ seed });
   const { CL } = env;
+  tweak?.(CL); // B-01: a change to try, before the battle (for measuring one thing at a time)
   CL.ui = headlessUi(CL);
   const c = CL.campaign;
   c.roster = [];
@@ -81,12 +82,12 @@ function simulate(CL) {
   return { win: Boolean(r?.win), fallen: fallen(CL, before), odds };
 }
 
-function run({ seeds = 40, preset = 'balanced' } = {}) {
-  return SCENARIOS.map((s) => {
+function run({ seeds = 40, preset = 'balanced', tweak = null, only = null } = {}) {
+  return SCENARIOS.filter((s) => !only || only.includes(s.id)).map((s) => {
     const rows = [];
     for (let i = 1; i <= seeds; i++) {
       const seed = spread(i);
-      rows.push({ fought: fight(setup(s, seed), preset), auto: simulate(setup(s, seed)) });
+      rows.push({ fought: fight(setup(s, seed, tweak), preset), auto: simulate(setup(s, seed, tweak)) });
     }
     const pct = (k) => (100 * rows.filter((r) => r[k].win).length) / seeds;
     const avg = (f) => rows.reduce((n, r) => n + f(r), 0) / seeds;

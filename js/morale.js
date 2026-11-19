@@ -12,6 +12,7 @@
  *   − 6 for each friend seen running nearby in the last 6 s (up to −24)
  *   + veterans: T2 +6, T3 +14 (the group's average)            + 10 when no enemy is close (regrouping)
  *   company only: + 12 with the hero close by, − 20 once the hero is down; supplies (camp morale) −10 to +4;
+ *   enemy only (B-01): + 6, and being outnumbered counts half for a band defending its lair;
  *   and a Rally: + 30, fading over 20 s
  *
  * Cohesion moves toward that figure (down quickly, up slowly). The state follows it, with a small gap
@@ -55,6 +56,8 @@
     heroRadius: 280,
     heroDown: 20,
     supply: { min: -10, max: 4 },
+    enemySteady: 6, // B-01: the enemy holds a little longer than the company
+    lairOutnumbered: 0.5, // B-01: a band defending its lair feels being outnumbered half as much
   };
   const RALLY = { radius: 300, cooldown: 30, bonus: 30, lasts: 20, floor: 50 };
   // V2-T2: an enemy group falling back that nobody comes near for this long gives up the field.
@@ -133,6 +136,10 @@
     parts.sideLoss = seen ? -TERMS.sideLoss * (gone / seen) : 0;
     const ratio = strength(g, team === 'ally' ? 'enemy' : 'ally') / Math.max(1, strength(g, team));
     parts.outnumbered = -Math.min(TERMS.outnumberedMax, TERMS.outnumbered * Math.max(0, ratio - 1));
+    if (team === 'enemy') {
+      parts.steady = TERMS.enemySteady;
+      if (g.lairDefence) parts.outnumbered *= TERMS.lairOutnumbered;
+    }
     const flanked = up.filter((u) => g.t - (u.flankedAt ?? -99) < TERMS.flankSeconds).length;
     parts.flank = -TERMS.flank * (flanked / up.length);
     const runs = (g.routEvents || []).filter((e) => e.team === team && g.t - e.t < TERMS.routSeconds && Math.hypot(e.x - cx, e.y - cy) < TERMS.routRadius).length;

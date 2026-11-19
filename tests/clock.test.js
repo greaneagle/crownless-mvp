@@ -39,9 +39,11 @@ test('a fought battle costs 4 hours, whether it lasts ten seconds or five minute
     CL.combat.startBattle('captains_trial');
     CL.game.godMode = true;
     const start = CL.campaign.day;
-    for (let t = 0; t < seconds && CL.game.mode === 'battle'; t += 0.05) CL.combat.update(0.05);
-    assert.equal(CL.campaign.day, start, 'no campaign time passes while fighting');
-    if (CL.game.mode === 'battle') CL.party.endBattle(true);
+    for (let t = 0; t < seconds && CL.game.mode === 'battle'; t += 0.05) {
+      CL.combat.update(0.05);
+      if (CL.game.mode === 'battle') assert.equal(CL.campaign.day, start, 'no campaign time passes while fighting');
+    }
+    if (CL.game.mode === 'battle') CL.party.endBattle(true); // still going: end it (it may have ended by itself)
     days.push(CL.campaign.day - start);
   }
   assert.ok(near(days[0], 4 * H) && near(days[1], 4 * H), String(days));

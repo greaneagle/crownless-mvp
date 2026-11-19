@@ -328,6 +328,7 @@
   }
 
   CL.units = {
+    FACE_VECTORS,
     BOUNDS,
     ARC,
     SWING,

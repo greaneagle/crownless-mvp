@@ -62,7 +62,7 @@ _Written 2026-11-18 at build 2.0.0 (commit 0415109); **reviewed and corrected th
 |---|---|---|
 | SC-34 phone run | Owner | Debug → **Big battle 40 + help** on the Zenfone; target 60 fps under about 2 ms per frame |
 | Feel check of the v2 battles | Owner | New Balanced, hero-down charge, morale, reinforcements, the Rally and Accounts screens |
-| SC-37 battle balance | Plan: B-01 | Fought company battles are far easier than Simulate's odds |
+| SC-37 battle balance | ✅ B-01 (2.11.0); the owner's feel check on the phone to come | Fought company battles were far easier than Simulate's odds; now a few points over them |
 | Push and (optionally) tag 2.0.0 | Owner | Nothing is pushed or tagged by the assistant |
 
 ### Limits that block a bigger game (verified in the code at c66d94c)
@@ -209,7 +209,7 @@ All three styles are viable over 60 days and every run resumed exactly. The gap 
 
 | ID | Task | Readiness | Size | Needs | Save |
 |---|---|---|---|---|---|
-| **B-01** | **Battle balance pass** (owner, deferred): make fought company battles harder (enemy cover and ranks, steadier enemy morale, smarter targeting) rather than inflating Simulate; target 5–15 points over the stated odds | Ready | M | H-01 (parity script) | — |
+| **B-01** | ✅ **Done in 2.11.0** (phone check to come). **Battle balance pass** (owner, deferred): make fought company battles harder (enemy cover and ranks, steadier enemy morale, smarter targeting) rather than inflating Simulate; target 5–15 points over the stated odds | Done | M | H-01 (parity script) | — |
 | **P7-01** | Surgeon (fewer deaths, faster healing, medicine) | Specified | S–M | V2-11 | yes |
 | **P7-02** | Scout (detection, pursuit warnings, route estimates) | Specified | S–M | P7-04 | yes |
 | **P7-03** | Blacksmith (capped, targeted upgrades; no durability) | Specified | S | V2-11 | yes |

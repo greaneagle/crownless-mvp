@@ -818,7 +818,21 @@ _Written 2026-11-18 at build 2.0.0; **reviewed and corrected the same day agains
 
 ## Phase 7 — The Living Company
 
-### B-01 · Battle balance pass (M) — Ready (needs H-01)
+### B-01 · Battle balance pass (M) — ✅ Done in 2.11.0 (phone session to come)
+
+**Done (2.11.0, 2026-11-19).** Measured with `scripts/parity.js` (80 seeds a scenario; it gains a `tweak` hook to try one change at a time). Before: fought battles won 100% of every close fight, 26–34 points over the stated odds, and 30–40 points over Simulate.
+- **The odds follow the square law** (`js/autoresolve.js`): both powers are squared before the share is taken (Lanchester's law for a melee), still held to 10–90%. Fought battles had always gone with the stronger side far more steeply than its share of the strength. No change to the enemy alone could put them 5–15 points over a proportional curve at every ratio: the measured outcome at 2.5 : 1 was 100% against a stated 71%. It's the same formula for the encounter screen, Simulate, off-screen fights and the bots, and the Simulate explanation says so.
+- **The enemy fights better** (`js/combat.js`, `CL.combat.ENEMY`):
+  - its foot keeps a loose line until close instead of streaming in one by one (a soldier 55 px ahead of the rest's middle and over 150 px from its target moves at 30%), unless it outnumbers the company by more than a quarter. Then it swarms, since with the line those fights became hopeless (−19 over the odds);
+  - it goes for the exposed: an archer, a badly wounded soldier, or a hero with no soldier within 110 px, when not much further than the nearest.
+- **Enemy morale** (`js/morale.js`): +6 steadier; a band defending its own lair minds being outnumbered half as much.
+- **Fixed:** the stall guard skipped battles with waves still to come, so two enemies falling back where archers had no clear shot could hold the next wave back for ever (one battle in 80 in the measurements). Now they slip away and the next wave comes on.
+- **Tried and dropped:** enemies going round the side of an engaged soldier. It made outnumbered fights collapse (to 12–40%) and others easier. Shielded Reaver content was not needed.
+- **After (80 seeds, fought over the stated odds / over Simulate):** lone hero +14 / +13, small +11 / +11, close +18 / +18, veterans +2 / +3, outnumbered 0 / −3; the three close fights average +7. Enemy shields already cover their own (V2-08a), now tested.
+- **Re-runs:** economy (12 × 60 days): the hands-off bot wins more of what it auto-resolves (60 wins and 12 losses a campaign, against 52 and 20) and ends richer (448 crowns at day 60, against 244); no hardship. Prototype G (6 × 30 days): hands-off 224 crowns, 19 soldiers, 163 won / 39 lost; presets 610, 20, 208 / 16; expert 705, 20, 197 / 16 (2.9.0: 132, 1,190 and 1,235). The bot hero falls more often in fought battles (hero down 120 and 101 times, against 55 and 54).
+- **Tests:** `tests/battle-balance.test.js` (the square law; enemy cover; who the enemy goes for; the loose line and the swarm; enemy morale and the lair; the stall guard between waves), `tests/slow/battle-parity.test.js` (every scenario over the odds by 25 points at most and ending; the close fights' average in range). `tests/clock.test.js` now checks the clock only while a battle is still on.
+- **Not done here:** the owner's phone session (can a close fight be turned by fighting well?).
+
 
 **Problem.** Fighting in person with a company wins almost every close battle (88–100% at 50–75% odds), so a strong fighter has nothing to turn. Owner, 2026-11-18: Simulate should be only slightly worse than fighting, and fighting yourself a bit more likely to win close battles.
 

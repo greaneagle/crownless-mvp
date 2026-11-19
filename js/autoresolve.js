@@ -4,7 +4,10 @@
  *   (from 1.19.0, V2-T2: your company's soldiers count × 1.5 for fighting in ranks behind shields,
  *   as they do in a fought battle since 1.11.0; enemy bands don't)
  *   TierPower = { T1: 1, T2: 1.7, T3: 2.5 }
- *   WinChance(A) = clamp(PowerA / (PowerA + PowerB), 0.1, 0.9)
+ *   WinChance(A) = clamp(PowerA² / (PowerA² + PowerB²), 0.1, 0.9)
+ *   (from 2.11.0, B-01: powers squared, as Lanchester's law has it for a melee: in a fought battle the
+ *   stronger side wins far more often than its share of the strength, and the odds now say so. Before,
+ *   a company at 2.5 : 1 was told 71% and won every fight in person.)
  *
  * The winner always takes losses (no guaranteed zero-casualty victories): each of its troops falls
  * with a chance that grows as the fight gets closer. Rolls come from the campaign's seeded RNG
@@ -23,6 +26,7 @@
   const SHIELD_FACTOR = 1.5;
   const TACTICS = 0.03;
   const WIN_CLAMP = [0.1, 0.9];
+  const ODDS_POWER = 2; // B-01: the square law
   // V2-T2: soldiers of the company count this much more (ranks, shields and cover: fought battles
   // since 1.11.0 are far kinder to a company than auto-resolve was, SC-37).
   const COMPANY_FACTOR = 1.5;
@@ -129,11 +133,14 @@
     const lines = [`Your side ${pp.toFixed(1)}: ${own.join(', ')}${tactics ? `, then +${Math.round(TACTICS * tactics * 100)}% for Tactics` : ''}. Soldiers count half as much again for fighting in ranks.`];
     if (wounded) lines.push(`${wounded} wounded soldier${wounded === 1 ? '' : 's'} sat it out.`);
     lines.push(`Their side ${pe.toFixed(1)}: ${foes.join(', ')}.`);
-    lines.push(`Odds ${Math.round(winChance(pp, pe) * 100)}%: your share of the total strength, kept between 10% and 90%.`);
+    lines.push(`Odds ${Math.round(winChance(pp, pe) * 100)}%: in a melee numbers count twice over, so the stronger side wins more often than its share of the strength (kept between 10% and 90%).`);
     return lines;
   }
 
-  const winChance = (pa, pb) => clamp(pa / (pa + pb), WIN_CLAMP[0], WIN_CLAMP[1]);
+  const winChance = (pa, pb) => {
+    const [a, b] = [pa ** ODDS_POWER, pb ** ODDS_POWER];
+    return clamp(a / Math.max(1e-9, a + b), WIN_CLAMP[0], WIN_CLAMP[1]);
+  };
 
   const lossChance = (spec, ownPower, otherPower) => clamp(spec.scale * (otherPower / ownPower), spec.min, spec.max);
 
@@ -192,6 +199,7 @@
     playerPower,
     explain,
     winChance,
+    ODDS_POWER,
     lossChance,
     rollFallen,
     expand,
