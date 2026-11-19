@@ -45,6 +45,10 @@
         if (game.returnMode === 'map') ui.changeMode('map');
         else CL.town.backToPlace();
       } else if (game.mode === 'trade' || game.mode === 'contracts' || game.mode === 'accounts') CL.town.backToPlace();
+      else if (game.mode === 'detachments') {
+        if (game.returnMode === 'map') ui.changeMode('map');
+        else CL.town.backToPlace();
+      }
       else if (game.mode === 'saves') {
         if (game.savesReturn === 'title') ui.changeMode('title');
         else CL.town.backToPlace();
@@ -85,6 +89,10 @@
     $('#tradeBtn').onclick = () => ui.changeMode('trade');
     $('#contractsBtn').onclick = () => ui.changeMode('contracts');
     $('#accountsBtn').onclick = () => ui.changeMode('accounts');
+    $('#detachBtn').onclick = () => {
+      game.returnMode = 'place';
+      ui.changeMode('detachments');
+    };
     bindSaves($);
     $('#gearBtn').onclick = ui.openSheet;
     for (const sel of ['#recruitA', '#recruitB', '#recruitC']) $(sel).onclick = (e) => party.recruit(e.currentTarget.dataset.troop);

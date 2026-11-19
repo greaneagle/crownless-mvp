@@ -50,6 +50,7 @@ Everything read back, from storage, a file or the pre-import slot, goes through 
    - **6 → 7 (1.14.0):** adds `chronicle: [{ day, kind: "begun" }]` (the chronicle begins on the day of the migration) and an empty roll of honour, `honour: { list: [], earlier: { fell: 0, deserted: 0, retired: 0 } }`. Nobody who left before was recorded. Nothing else changes.
    - **7 → 8 (1.15.0):** adds `accounts: { chest: 0, budgets: {} }`, `ledger: []` and `followers: { quartermaster: null }`. The old `gold` stays as it was: it is your purse. Nothing else changes.
    - **8 → 9 (1.16.0):** adds `followers.merchant: null`. Nothing else changes.
+   - **13 → 14 (2.16.0, P7-05):** adds `detachments: []`. Nothing else changes.
    - **12 → 13 (2.15.0, P7-02):** adds `followers.scout: null`. Nothing else changes.
    - **11 → 12 (2.13.0, P7-03):** adds `followers.blacksmith: null`. Forged gear (`arming_sword+1`) and a soldier's `kit` need no step: nobody had them. Nothing else changes.
    - **10 → 11 (2.12.0, P7-01):** adds `medicine: 0` and `followers.surgeon: null`; the quartermaster's new `medicine` rule is filled in on repair (4). Nothing else changes.
@@ -84,12 +85,13 @@ Saves written by real builds, loaded by every later build:
 
 Each is imported as a file and, for v2 to v9, also left in storage as the old build would have, then checked against what the old build recorded about it (soldier IDs, troops, XP, gold, day, quests), re-exported, and played on. Never regenerate them casually; they stand for real players' saves.
 
-## The campaign object (schema v13)
-Schema v13 is schema v2 (below) plus these fields (v3 added the first two, v4 the next three, v6 `troopKnowledge`, v7 `chronicle` and `honour`, v8 `accounts`, `ledger` and `followers`; v9 adds the merchant inside `followers`; v10 `relations`; v11 `medicine` and the surgeon inside `followers`; v12 the blacksmith inside `followers`; v13 the scout inside `followers`), and every `roster` entry is a named soldier (v5, next section).
+## The campaign object (schema v14)
+Schema v14 is schema v2 (below) plus these fields (v3 added the first two, v4 the next three, v6 `troopKnowledge`, v7 `chronicle` and `honour`, v8 `accounts`, `ledger` and `followers`; v9 adds the merchant inside `followers`; v10 `relations`; v11 `medicine` and the surgeon inside `followers`; v12 the blacksmith inside `followers`; v13 the scout inside `followers`; v14 `detachments`), and every `roster` entry is a named soldier (v5, next section).
 
 | Field | Type | Owner module | Notes |
 |---|---|---|---|
-| `version` | `13` | save | |
+| `version` | `14` | save | |
+| `detachments` | up to 12 `{ id, captain: { kind: 'soldier' \| 'companion' \| 'none', id }, captainName, soldiers, order, status, since, start, purse, food, unpaid, leg, recallAt, log, tally, report?, ended? }` | detachments | v14 (P7-05). Parts of the company sent off under a captain: `soldiers` are full soldier records (out of `roster`; IDs unique across both), `order` `{ objective: 'hunt' \| 'road', x, y, road, days, until, retreatBelow (0.5, 0.34 or 0), avoidStronger, autonomy: 'judgement' \| 'exact' }`, `status` `out`, `returning` or `back` (the last few kept as reports). Each active one has a world party with `detachment: id` (template `company_detachment`), re-made at the company if missing; their purses together are `accounts.budgets.detachments`. The companion leading one carries `detached: id` |
 | `medicine` | integer 0–99 | surgeon | v11 (P7-01). The company's medicine: one saves one soldier the surgeon tends after a battle. Bought at markets; captors take half |
 | `worldId` | string | save | The world (content package) the campaign belongs to: `"sundered_realm"` from 2.7.0 (`"border_march"` before). A save from another world is refused (and, on load, kept in `crownless_save_other_world`) |
 | `contentVersion` | string | save | The build that last wrote the save, for example `"1.2.0"`; `"unknown"` right after migrating a v2 save. Later content migrations can key off it |
@@ -158,6 +160,7 @@ Each task that changes the save's shape adds the next schema version and its mig
 - ✅ v7 (1.14.0, V2-10): the company chronicle (`chronicle`) and the roll of honour (`honour`).
 - ✅ v9 (1.16.0, V2-12): the merchant follower (`followers.merchant`, with its cash in `accounts.budgets.merchant`).
 - ✅ v10 (2.9.0, W-07): relations between kingdoms (`relations`).
+- ✅ v14 (2.16.0, P7-05): detachments (`detachments`).
 - ✅ v13 (2.15.0, P7-02): the scout (`followers.scout`: `{ name, culture, origin, hired, unpaid (0–1), log }`).
 - (2.14.0, P7-04, no schema step) optional fields: `world.hidden` (the Hide stance, only while true), and a party's `lastSeen: { x, y, until }` (where it last saw the company, and until when it searches there) and `seenAt: { x, y, day }` (where the company last saw it); all repaired or dropped on load.
 - ✅ v12 (2.13.0, P7-03): the blacksmith (`followers.blacksmith`: `{ name, culture, origin, hired, unpaid (0–1), log }`); forged gear is ordinary item ids (`<item>+1`, `+2`, made from `data/items.js` `forge`), in `equipment` and `inventory`; a soldier may carry `kit: true` (at most five; extras are dropped on load).

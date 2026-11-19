@@ -997,7 +997,31 @@ _Written 2026-11-18 at build 2.0.0; **reviewed and corrected the same day agains
 
 **Acceptance.** A band loses you in a forest; a patrol searches your last-seen spot; nothing a quest needs becomes unfindable.
 
-### P7-05 · Officers and detached patrols (L) — Specified (needs W-07)
+### P7-05 · Officers and detached patrols (L) — ✅ Done in 2.16.0
+
+**Done (2.16.0, 2026-11-19).** The screens and presets were designed here (`js/detachments.js`, the Detachments screen):
+- **Captains:** a tier 3 veteran with at least 10 battles, or the fit companion.
+- **Detachments:** chosen fit soldiers leave the company's roster for the detachment, with their records. Each soldier is in exactly one party; they still count toward the party cap (`CL.party.headcount`). A detachment is a world party (template `company_detachment`, kind `detachment`), drawn in gold with the captain's initial and always shown.
+- **The order package:**
+  - **objective:** hunt bands within 15 units of where you are, or patrol a road between the two nearest settlements;
+  - **days:** 1–14, default 5;
+  - **turn back:** below half (the default), below a third, or never;
+  - **avoid stronger parties:** on by default;
+  - **autonomy:** judgement (the default; only fights at 55% odds or better) or exact (takes on any band in its order);
+  - **food:** days + 1 of rations, from your stores;
+  - **pay:** the wages for the period plus a quarter, from the chest, then your purse.
+- **One decision** (the default layer): pick a captain, "Half the company", Send.
+- **Its life:** it moves by the world simulation's rules and fights bands it meets, auto-resolved like any off-screen fight. Each soldier who fought counts the battle once, the wounded heal on the usual clock, and the fallen go on the roll of honour. Spoils go to its purse, half the renown to you. Its log gets a line a day and every event, and events reach you as messages.
+- **Turning back:** its time is up, its food runs out, it falls below the set strength, it is beaten, its pay runs out, or a courier you send reaches it (6 units an hour). It rides back to the company and rejoins on meeting. You can also ride to it, or rejoin on the screen when it is beside you.
+- **Rejoining (SC-17):** soldiers return to the roster, the purse to the chest and the food to the stores, exactly once. A final report is kept with the last three back.
+- **Beaten (SC-18):** the captain comes back wounded (a soldier) or downed (the companion) with the survivors. If nobody is left, the detachment is gone with its purse and food.
+- **Pay and desertion** are its own: wages from its purse each payday; unpaid, one soldier (the least senior, never the captain) slips away and it turns back.
+- **The story:** a companion leading a patrol when Q3 sends her (`send: 'mara'`) is called back first, with a message, and the patrol heads home without her. Fights are instant, so a detachment is never in two battles, and a locked party (V2-09) is skipped.
+- **Save:** schema **v14** (`detachments`). Soldier IDs are unique across the company and its detachments on load. A missing map party is re-made, and the account is set from the purses.
+- **Tests:** `tests/detachments.test.js` (10: captains; sending and the one-party rule; a hunt recorded once; rejoining once; beaten; the reasons to turn back and the courier; pay and desertion; the companion and Q3; saves mid-order with repairs and 13 → 14; a week's hunt in a living world with every soldier and crown accounted for), `tests/browser/detachments.spec.js` (send and recall by real input at both sizes).
+- **Fixed on the way:** the Party sheet's Detachments button first sat in the tab row, and at larger text on phones it squeezed the tabs until their labels spilled out; it has its own row now.
+- **Not done:** escorting a caravan and garrisoning a village (the spec's later objectives); detachments joining your battles as reinforcements.
+
 
 **Problem.** Nothing can be delegated; soldiers can't act without the hero.
 

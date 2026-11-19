@@ -45,12 +45,17 @@
    * GDD §5 party cap: min(20, 8 + 2×Leadership + floor(Renown/40) + faction_bonus), the faction bonus
    * being +2 while Friendly with a kingdom. Wounded soldiers take slots too (GDD §7).
    */
+  /** Everyone who takes a slot: the company, the companion, and soldiers away on detachments (P7-05). */
+  function headcount(camp = c()) {
+    return camp.roster.length + CL.companion.slots(camp) + (CL.detachments?.away(camp) || 0);
+  }
+
   function partyCap(camp = c()) {
     return Math.min(20, 8 + 2 * CL.character.skill('leadership', camp) + Math.floor(camp.renown / 40) + CL.realm.capBonus(camp));
   }
 
   function canRecruit(camp, troopId) {
-    return camp.gold >= CL.content.troop(troopId).recruitCost && camp.roster.length + CL.companion.slots(camp) < partyCap(camp);
+    return camp.gold >= CL.content.troop(troopId).recruitCost && headcount(camp) < partyCap(camp);
   }
 
   // ---- Troop upgrades (GDD §7) ----
@@ -505,6 +510,7 @@
   }
 
   CL.party = {
+    headcount,
     UPGRADE_XP,
     XP,
     partyCap,

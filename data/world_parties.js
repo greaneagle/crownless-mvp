@@ -100,6 +100,23 @@
       text: 'A string of mules laden with salt and bolts of cloth, watched over by a handful of recruits.',
       hostileText: 'The recruits form a nervous line in front of the mules.'
     },
+    // P7-05: a detachment of your own company on the map (js/detachments.js). Never spawned by itself
+    // (count 0); its troops are its soldiers, and its orders are yours.
+    company_detachment: {
+      id: 'company_detachment',
+      name: 'Your patrol',
+      kind: 'detachment',
+      faction: 'neutral',
+      hostile: false,
+      count: 0,
+      respawnDays: 1,
+      speed: 3.8,
+      detection: 9,
+      troops: { levy: [1, 1] },
+      reward: { goldBase: 0, goldPerKill: 0, renown: 0 },
+      lootBySize: [[99, 'low']],
+      text: 'Your own soldiers, under the captain you sent.'
+    },
     // W-05b: the wider world's bands, patrols and caravans.
     highland_raiders: {
       id: 'highland_raiders',

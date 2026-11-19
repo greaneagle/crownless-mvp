@@ -25,7 +25,7 @@
   const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
 
   /** Hero + every soldier, wounded included (they still eat). */
-  const partySize = (c) => 1 + c.roster.length + CL.companion.slots(c); // hero, soldiers and companion all eat
+  const partySize = (c) => 1 + c.roster.length + CL.companion.slots(c) - (c.companion?.detached ? 1 : 0); // hero, soldiers and companion all eat (a detachment eats its own, P7-05)
   const dailyRations = (c) => Math.ceil(partySize(c) / PEOPLE_PER_RATION);
   const foodDays = (c) => c.food / dailyRations(c);
   /** GDD §7: wounded troops still count toward wages. */
@@ -134,10 +134,12 @@
         CL.surgeon?.payday(c);
         CL.blacksmith?.payday(c);
         CL.scout?.payday(c);
+        CL.detachments?.payday(c);
         c.nextWagesDay += WAGE_INTERVAL;
       }
       desertionCheck(c);
       CL.quartermaster?.daily(c); // buys in a market town, otherwise warns before shortages
+      CL.detachments?.daily(c); // detachments eat their own food (P7-05)
     }
   }
 

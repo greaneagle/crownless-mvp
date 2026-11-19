@@ -82,7 +82,7 @@
 
   /** Does the company see this party? Story bands and an escorted caravan always show. @param {Campaign} c */
   function playerSees(c, p, day = c.day) {
-    if (p.questTag || p.escortTo || !options.rules) return true;
+    if (p.questTag || p.escortTo || p.detachment != null || !options.rules) return true; // your own patrols always show (P7-05)
     return CL.world.mapDist(c.world.x, c.world.y, p.x, p.y) <= playerRange(c, p, day);
   }
 

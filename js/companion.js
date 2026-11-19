@@ -17,7 +17,7 @@
   const get = (c = camp()) => c?.companion || null;
   const has = (c = camp(), id = null) => Boolean(get(c) && (!id || get(c).id === id));
   /** Fit to fight and to lend her skills: present and not wounded. */
-  const fit = (c = camp()) => has(c) && get(c).woundedUntil === null && !get(c).away;
+  const fit = (c = camp()) => has(c) && get(c).woundedUntil === null && !get(c).away && !get(c).detached; // detached: leading a patrol (P7-05)
   /** Party slots she takes (GDD §5: "companion consumes one slot"). */
   const slots = (c = camp()) => (has(c) ? 1 : 0);
 
@@ -25,7 +25,7 @@
   function join(c, id) {
     const d = def(id);
     if (!d || has(c) || CL.story.state(c).flags[`${id}_gone`]) return false;
-    if (c.roster.length + 1 > CL.party.partyCap(c)) return false;
+    if (CL.party.headcount(c) + 1 > CL.party.partyCap(c)) return false;
     c.companion = { id, woundedUntil: null, equipment: { ...d.startGear } };
     CL.story.state(c).flags[`${id}_joined`] = true;
     CL.diag.log('info', 'Companion joined', { id });
@@ -130,7 +130,7 @@
 
   /** After a battle (fought or auto-resolved): down or captured means wounded. */
   function afterBattle(c, { win, down }) {
-    if (!has(c) || get(c).away) return;
+    if (!has(c) || get(c).away || get(c).detached) return;
     if (!win || down) wound(c, win ? 'down' : 'captured');
   }
 

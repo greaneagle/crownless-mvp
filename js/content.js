@@ -253,9 +253,9 @@
       for (const id of Object.keys(b.kit?.items || {})) if (!C.items?.[id]) err(`background ${b.id}: unknown kit item ${id}`);
     }
     for (const t of Object.values(C.party_templates || {})) {
-      if (!['bandit', 'patrol', 'caravan'].includes(t.kind)) err(`party_template ${t.id}: bad kind ${t.kind}`);
+      if (!['bandit', 'patrol', 'caravan', 'detachment'].includes(t.kind)) err(`party_template ${t.id}: bad kind ${t.kind}`);
       if (!C.factions?.[t.faction]) err(`party_template ${t.id}: unknown faction ${t.faction}`);
-      if (!(t.speed > 0) || !(t.count >= 1)) err(`party_template ${t.id}: needs speed and count`);
+      if (!(t.speed > 0) || !(t.count >= (t.kind === 'detachment' ? 0 : 1))) err(`party_template ${t.id}: needs speed and count`);
       for (const [id, range] of Object.entries(t.troops || {})) {
         if (!C.troops?.[id]) err(`party_template ${t.id}: unknown troop ${id}`);
         if (!Array.isArray(range) || !(range[0] >= 0 && range[1] >= range[0])) err(`party_template ${t.id}: bad range for ${id}`);

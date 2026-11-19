@@ -265,8 +265,9 @@
 .retireBtn{margin-top:10px;opacity:.85}
 
 /* V2-11: accounts */
-#accountsScreen{text-align:left;font-size:calc(clamp(12px,1.25vw,15px) * var(--ui-scale))}
-#accountsScreen .row{flex-wrap:wrap;gap:6px}
+#accountsScreen,#detachScreen{text-align:left;font-size:calc(clamp(12px,1.25vw,15px) * var(--ui-scale))}
+#accountsScreen .row,#detachScreen .row{flex-wrap:wrap;gap:6px}
+#detachScreen button.active{border-color:#ffd34d;background:linear-gradient(#7a6a3c,#4a3d1c)}
 .qmRule{align-items:center}
 .qmRule span{min-width:calc(220px * var(--ui-grow))}
 .qmRule button{min-width:calc(44px * var(--ui-grow))}

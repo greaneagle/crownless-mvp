@@ -26,7 +26,7 @@
   'use strict';
   const CL = root.Crownless;
 
-  const VERSION = 13;
+  const VERSION = 14;
   const KEY = 'crownless_save';
   const BACKUP_KEY = 'crownless_save_backup';
   const LEGACY_KEY = 'crownless_v03_party';
@@ -108,6 +108,7 @@
       ledger: [], // the newest money transfers, each with a source, a destination and a reason
       followers: { quartermaster: null, merchant: null, surgeon: null, blacksmith: null, scout: null }, // camp followers (js/quartermaster.js, js/merchant.js, js/surgeon.js, js/blacksmith.js, js/scout.js)
       medicine: 0, // the surgeon's supply (P7-01)
+      detachments: [], // parts of the company sent off under a captain (P7-05)
     };
     CL.character.applyKit(c, background);
     CL.upkeep.stowFood(c);
@@ -190,6 +191,7 @@
     11: [...V3_FIELDS, ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object'], ['accounts', 'object'], ['ledger', 'array'], ['followers', 'object'], ['relations', 'object'], ['medicine', 'number']],
     12: [...V3_FIELDS, ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object'], ['accounts', 'object'], ['ledger', 'array'], ['followers', 'object'], ['relations', 'object'], ['medicine', 'number']],
     13: [...V3_FIELDS, ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object'], ['accounts', 'object'], ['ledger', 'array'], ['followers', 'object'], ['relations', 'object'], ['medicine', 'number']],
+    14: [...V3_FIELDS, ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object'], ['accounts', 'object'], ['ledger', 'array'], ['followers', 'object'], ['relations', 'object'], ['medicine', 'number'], ['detachments', 'array']],
   };
 
   /** @param {unknown} v @param {string} kind */
@@ -265,6 +267,8 @@
     11: (d) => ({ ...d, version: 12, followers: { ...(d.followers || {}), blacksmith: null } }),
     // 12 → 13 (build 2.15.0, P7-02): room for a scout (none yet).
     12: (d) => ({ ...d, version: 13, followers: { ...(d.followers || {}), scout: null } }),
+    // 13 → 14 (build 2.16.0, P7-05): no detachments yet.
+    13: (d) => ({ ...d, version: 14, detachments: [] }),
   };
 
   /**
@@ -295,21 +299,12 @@
     if (knownWorld(d.worldId)) s.worldId = d.worldId; // its own world (W-04), when this build has it
     for (const k of /** @type {const} */ (['gold', 'renown', 'battles', 'victories', 'lastResolvedBattle'])) s[k] = count(d[k], s[k]);
     s.day = isCount(d.day) ? Math.min(MAX_VALUE, d.day) : 0;
+    const seen = new Set(); // soldier IDs: unique across the company and its detachments (P7-05)
     if (Array.isArray(d.roster)) {
       s.roster = [];
-      const seen = new Set();
       for (const e of d.roster.slice(0, MAX_ROSTER)) {
-        if (!e || !knownTroop(e.troop) || !Number.isInteger(e.id) || e.id < 1 || seen.has(e.id)) continue;
-        seen.add(e.id);
-        /** @type {Soldier} */
-        const soldier = /** @type {any} */ ({
-          id: e.id,
-          troop: e.troop,
-          xp: count(e.xp, 0),
-          woundedUntil: isCount(e.woundedUntil) ? e.woundedUntil : null,
-        });
-        CL.soldiers.sanitize(e, soldier, s); // name, culture, origin, joined, portrait, record, notes
-        s.roster.push(soldier);
+        const soldier = soldierOf(e, seen, s);
+        if (soldier) s.roster.push(soldier);
       }
     }
     const maxId = s.roster.reduce((m, e) => Math.max(m, e.id), 0);
@@ -339,6 +334,12 @@
     CL.surgeon.sanitize(s, d); // the surgeon and the medicine (P7-01)
     CL.blacksmith.sanitize(s, d); // the blacksmith, and fine kit within its cap (P7-03)
     CL.scout.sanitize(s, d); // the scout (P7-02)
+    // Detachments (P7-05): their soldiers (IDs unique across every party), then their map parties and
+    // purses, once the companion, the parties and the accounts are in place.
+    CL.detachments.sanitize(s, d, (e) => soldierOf(e, seen, s));
+    CL.detachments.relink(s);
+    const awayMax = s.detachments.reduce((m, x) => Math.max(m, ...x.soldiers.map((e) => e.id)), 0);
+    s.nextSoldierId = Math.max(s.nextSoldierId, awayMax + 1);
     // Named random streams (after parties, which restores rngSeed) and the result and event counters.
     const seeds = CL.autoresolve.streamSeeds(s.rngSeed);
     for (const name of CL.autoresolve.STREAMS) {
@@ -348,6 +349,25 @@
     s.nextResultId = Math.max(1, Number.isInteger(d.nextResultId) ? d.nextResultId : 1);
     s.nextEventId = Math.max(1, Number.isInteger(d.nextEventId) ? d.nextEventId : 1);
     return s; // contentVersion: this build, from starter()
+  }
+
+  /**
+   * One saved soldier, repaired, or null if unusable (unknown troop, bad or repeated ID).
+   * @param {any} e @param {Set<number>} seen IDs taken so far @param {Campaign} s the campaign being built
+   * @returns {Soldier | null}
+   */
+  function soldierOf(e, seen, s) {
+    if (!e || !knownTroop(e.troop) || !Number.isInteger(e.id) || e.id < 1 || seen.has(e.id)) return null;
+    seen.add(e.id);
+    /** @type {Soldier} */
+    const soldier = /** @type {any} */ ({
+      id: e.id,
+      troop: e.troop,
+      xp: count(e.xp, 0),
+      woundedUntil: isCount(e.woundedUntil) ? e.woundedUntil : null,
+    });
+    CL.soldiers.sanitize(e, soldier, s); // name, culture, origin, joined, portrait, record, notes
+    return soldier;
   }
 
   /**

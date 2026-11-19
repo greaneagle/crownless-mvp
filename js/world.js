@@ -308,6 +308,12 @@
       CL.quartermaster?.act(CL.campaign); // wages set aside and food bought from the chest (V2-11)
       CL.merchant?.visit(CL.campaign); // the merchant trades its budget here (V2-12)
       CL.town.enterPlace(); // the settlement menu; walkable places offer "Walk the streets" from it
+    } else if (t.type === 'party' && CL.parties.find(CL.campaign, t.id)?.detachment != null) {
+      // One of your own detachments (P7-05): meeting it brings it back into the company.
+      const d = CL.detachments.find(CL.campaign, CL.parties.find(CL.campaign, t.id).detachment);
+      CL.game.mode = 'map';
+      if (d) CL.detachments.merge(CL.campaign, d);
+      CL.save.write();
     } else if (t.type === 'party') {
       // Riding up to the caravan you escort just puts you at its side.
       if (CL.parties.find(CL.campaign, t.id)?.escortTo) CL.ui.message('You ride beside the caravan.');

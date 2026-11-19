@@ -121,7 +121,7 @@
     if ('owner' in cond) return CL.realm.owner(cond.owner, c) === cond.is;
     if ('at' in cond) return c.world.location === cond.at;
     if ('companion' in cond) return cond.is === 'fit' ? CL.companion.fit(c) && CL.companion.has(c, cond.companion) : CL.companion.has(c, cond.companion);
-    if ('room' in cond) return CL.party.partyCap(c) - c.roster.length - CL.companion.slots(c) >= cond.room;
+    if ('room' in cond) return CL.party.partyCap(c) - CL.party.headcount(c) >= cond.room;
     if ('veteran' in cond) return Boolean(veteranHere(c, cond.veteran));
     if ('follower' in cond) return Boolean(c.followers?.[cond.follower]);
     return false;
@@ -160,7 +160,7 @@
       if (left > 0) c.inventory[e.take] = left;
       else delete c.inventory[e.take];
     } else if ('recruit' in e) {
-      for (let i = 0; i < (e.n || 1) && c.roster.length + CL.companion.slots(c) < CL.party.partyCap(c); i++) {
+      for (let i = 0; i < (e.n || 1) && CL.party.headcount(c) < CL.party.partyCap(c); i++) {
         const s = CL.save.addSoldier(c, e.recruit);
         CL.events.emit(c, 'SoldierRecruited', { soldierId: s.id, troop: e.recruit, settlement: c.world?.location ?? null, via: 'story' });
       }
@@ -173,7 +173,10 @@
     else if ('note' in e) note(c, e.quest || ctx.quest, format(e.note, c));
     else if ('companion' in e) CL.companion.join(c, e.companion);
     else if ('part' in e) CL.companion.part(c, e.part, e.reason || 'parted');
-    else if ('send' in e) CL.companion.send(c, e.send);
+    else if ('send' in e) {
+      CL.detachments?.callBackCompanion(c); // away leading a patrol: called back first (P7-05)
+      CL.companion.send(c, e.send);
+    }
     else if ('recall' in e) CL.companion.recall(c, e.recall);
     else if ('ending' in e) showEnding(c, e.quest || ctx.quest, e.ending);
     else if ('honourVeteran' in e) {

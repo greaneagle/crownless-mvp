@@ -216,6 +216,7 @@
   function chooseTarget(c, p) {
     const t = tpl(p.template);
     p.chasing = null;
+    if (t.kind === 'detachment') return CL.detachments.chooseTarget(c, p, now(c)); // your own (P7-05)
     if (p.questTag && t.kind !== 'bandit') {
       // A story column (a kingdom's patrol) keeps to its post; the player comes to it.
       if (reached(p)) {
@@ -365,8 +366,13 @@
       if (!c.parties.includes(a) || a.questTag || a.ambush || tpl(a.template).kind !== 'bandit' || CL.reinforce?.locked(a)) continue;
       for (const b of grid ? CL.spatial.near(grid, a.x, a.y, r0) : all) {
         const kb = tpl(b.template).kind;
-        if (b === a || b.questTag || b.escortTo || !c.parties.includes(b) || (kb !== 'caravan' && kb !== 'patrol') || CL.reinforce?.locked(b)) continue;
+        if (b === a || b.questTag || b.escortTo || !c.parties.includes(b) || (kb !== 'caravan' && kb !== 'patrol' && kb !== 'detachment') || CL.reinforce?.locked(b)) continue;
         if (sweptDist(a, b) > CONTACT) continue;
+        if (kb === 'detachment') {
+          // One of your detachments meets a band (P7-05): its own fight, its soldiers' fates recorded once.
+          if (CL.detachments.fight(c, b, a, now(c)) === a || !c.parties.includes(a)) break;
+          continue;
+        }
         const r = A().resolveParties(c, a, b);
         const lt = tpl(r.loser.template);
         if (lt.kind === 'caravan') {
@@ -500,6 +506,7 @@
           move(p, hours);
         }
         resolveContacts(c);
+        CL.detachments.step(c); // returning detachments that reach the company rejoin it (P7-05)
         CL.sight.look(c, simDay); // what the company sees now (P7-04)
         if (playerOnMap(c)) CL.scout?.warn(c, simDay); // and what the scout says about it (P7-02)
         for (const p of c.parties) {
@@ -760,6 +767,10 @@
       if (q.questTag && p.camp === true) q.camp = true;
       if (p.ambush === true) q.ambush = true;
       if (t.kind === 'caravan' && CL.content.table('settlements')[p.escortTo]) q.escortTo = p.escortTo;
+      if (t.kind === 'detachment') {
+        if (!Number.isInteger(p.detachment)) continue; // a detachment party without its detachment
+        q.detachment = p.detachment;
+      }
       // P7-04: where it last saw the company (and until when it searches there), and where the
       // company last saw it.
       if (num(p.lastSeen?.x) && num(p.lastSeen?.y)) {

@@ -86,6 +86,13 @@
         button: 'Back',
       };
     }
+    if (mode === 'detachments') {
+      return {
+        title: 'DETACHMENTS',
+        text: 'Send part of the company out under a captain, with orders, food and pay. They report back, and rejoin you when you meet.',
+        button: 'Back',
+      };
+    }
     if (mode === 'accounts') {
       return {
         title: 'ACCOUNTS',
@@ -186,6 +193,7 @@
     $('#encounterOptions').classList.toggle('hidden', mode !== 'encounter');
     $('#contractsScreen').classList.toggle('hidden', mode !== 'contracts');
     $('#accountsScreen').classList.toggle('hidden', mode !== 'accounts');
+    $('#detachScreen').classList.toggle('hidden', mode !== 'detachments');
     $('#journalScreen').classList.toggle('hidden', mode !== 'journal');
     $('#savesScreen').classList.toggle('hidden', mode !== 'saves');
     $('#talkOptions').classList.toggle('hidden', mode !== 'talk');
@@ -206,6 +214,7 @@
     if (mode === 'encounter') renderEncounter();
     if (mode === 'contracts') renderContracts();
     if (mode === 'accounts') renderAccounts();
+    if (mode === 'detachments') renderDetachments();
     if (mode === 'saves') renderSaves();
     if (mode === 'talk') renderTalk();
     if (mode === 'journal') renderJournal();
@@ -252,7 +261,7 @@
         const t = CL.content.troop(id);
         opt(`Hire a ${t.name} · ${t.recruitCost} crowns`, () => P.recruit(id) && redo(), !P.canRecruit(c, id), `${t.tier} ${t.role} · wage ${t.wage}/week`);
       }
-      opt('Review my troops', () => openSheet(), false, `${c.roster.length + CL.companion.slots(c)}/${P.partyCap()} in the company`);
+      opt('Review my troops', () => openSheet(), false, `${CL.party.headcount(c)}/${P.partyCap()} in the company${CL.detachments.away(c) ? ` (${CL.detachments.away(c)} away)` : ''}`);
     } else if (n.action === 'tavern') {
       const price = U.rationPrice(c);
       for (const [days, label] of [
@@ -269,6 +278,10 @@
       const k = c.contract;
       const pay = k?.status === 'done' && k.giver === c.world.location;
       opt(pay ? 'Notice board — collect pay!' : 'Read the notice board', () => changeMode('contracts'));
+      opt('Detachments', () => {
+        CL.game.returnMode = 'place';
+        changeMode('detachments');
+      }, false, CL.detachments.active(c).length ? `${CL.detachments.active(c).length} out` : 'Send part of the company out under a captain');
       opt('Accounts and followers', () => changeMode('accounts'), false, 'Your money and your followers: quartermaster, merchant, surgeon, blacksmith, scout');
       opt('Save & export', () => openSaves());
     }
@@ -717,6 +730,112 @@
     $('#accountsScreen').replaceChildren(money, qm, sc, bc, scc, mc, ledger);
   }
 
+  // ---- Detachments (P7-05; js/detachments.js) ----
+
+  function renderDetachments() {
+    const c = CL.campaign;
+    const D = CL.detachments;
+    const g = CL.game;
+    const mk = (tag, props = {}, ...kids) => {
+      const n = Object.assign(document.createElement(tag), props);
+      n.append(...kids.filter(Boolean));
+      return n;
+    };
+    const btn = (text, onClick, disabled = false, extra = {}) =>
+      mk('button', {
+        type: 'button',
+        textContent: text,
+        disabled,
+        ...extra,
+        onclick: () => {
+          onClick();
+          CL.save.write();
+          renderDetachments();
+          refreshRoster();
+        },
+      });
+    const day = (d) => CL.party.dayNumber(d);
+    const out = D.active(c).map((d) => {
+      const o = d.order;
+      const what = o.objective === 'road' ? `the road between ${CL.content.get('settlements', o.road[0]).name} and ${CL.content.get('settlements', o.road[1]).name}` : 'hunting bands';
+      const fit = d.soldiers.filter((s) => s.woundedUntil === null).length;
+      return mk(
+        'div',
+        { className: 'contractCard' },
+        mk('h3', { textContent: `${d.captainName}’s patrol · ${d.status === 'out' ? 'out' : 'coming back'}` }),
+        mk('p', { textContent: `${what}, back by day ${day(o.until)}. ${d.soldiers.length} soldiers (${fit} fit), ${d.food} rations, ${d.purse} crowns. Won ${d.tally.won}, lost ${d.tally.lost}${d.tally.fallen.length ? `, ${d.tally.fallen.length} fell` : ''}.` }),
+        d.log.length ? mk('ul', { className: 'soldierNotes' }, ...d.log.slice(-5).reverse().map((e) => mk('li', { textContent: `Day ${day(e.day)}: ${e.text}` }))) : null,
+        mk(
+          'div',
+          { className: 'row' },
+          d.status === 'out' ? btn(d.recallAt != null ? 'Courier on the way' : 'Send a courier to call them back', () => D.recall(c, d), d.recallAt != null) : null,
+          D.canMeet(c, d) ? btn('Rejoin the company here', () => D.merge(c, d)) : null,
+        ),
+      );
+    });
+    const back = D.list(c)
+      .filter((d) => d.status === 'back' && d.report)
+      .slice(-3)
+      .reverse()
+      .map((d) => mk('p', { className: 'soldierNotes', textContent: `Day ${day(d.ended.day)}: ${d.report}` }));
+    // A new one: captain, soldiers, order (presets), and the expert's constraints.
+    const caps = D.captains(c);
+    g.detachDraft ??= { captain: null, soldiers: [], objective: 'hunt', days: D.DEFAULTS.days, retreatBelow: D.DEFAULTS.retreatBelow, avoidStronger: true, autonomy: 'judgement' };
+    const draft = g.detachDraft;
+    if (draft.captain && !caps.some((k) => k.kind === draft.captain.kind && k.id === draft.captain.id)) draft.captain = null;
+    draft.soldiers = draft.soldiers.filter((id) => c.roster.some((s) => s.id === id && s.woundedUntil === null));
+    let form;
+    if (!caps.length) {
+      form = mk('div', { className: 'contractCard' }, mk('h3', { textContent: 'Send a patrol' }), mk('p', { textContent: `A patrol needs a captain: a veteran of tier 3 with ${D.CAPTAIN.battles} battles behind them, or your companion. You have none fit to lead.` }));
+    } else {
+      const near = Object.values(CL.content.table('settlements'))
+        .map((s) => ({ s, d: CL.world.mapDist(c.world.x, c.world.y, s.mapX, s.mapY) }))
+        .sort((a, b) => a.d - b.d)
+        .slice(0, 2)
+        .map((x) => x.s);
+      const road = near.length === 2 ? [near[0].id, near[1].id] : null;
+      const pick = (k) => btn(k.name, () => (draft.captain = { kind: k.kind, id: k.id }), false, { className: draft.captain?.kind === k.kind && draft.captain?.id === k.id ? 'active' : '' });
+      const fitSoldiers = c.roster.filter((s) => s.woundedUntil === null && !(draft.captain?.kind === 'soldier' && s.id === draft.captain.id));
+      const toggle = (s) =>
+        btn(`${s.name} (${CL.content.troop(s.troop).name})`, () => (draft.soldiers = draft.soldiers.includes(s.id) ? draft.soldiers.filter((x) => x !== s.id) : [...draft.soldiers, s.id]), false, { className: draft.soldiers.includes(s.id) ? 'active' : '' });
+      const going = c.roster.filter((s) => draft.soldiers.includes(s.id) || (draft.captain?.kind === 'soldier' && s.id === draft.captain.id));
+      const need = D.needs(going, draft.days);
+      const retreatText = { 0.5: 'below half', 0.34: 'below a third', 0: 'never' }[draft.retreatBelow];
+      form = mk(
+        'div',
+        { className: 'contractCard' },
+        mk('h3', { textContent: 'Send a patrol' }),
+        mk('p', { textContent: 'Captain:' }),
+        mk('div', { className: 'row' }, ...caps.map(pick)),
+        mk('p', { textContent: `Soldiers going (${going.length}):` }),
+        mk('div', { className: 'row' }, btn('Half the company', () => (draft.soldiers = fitSoldiers.slice(0, Math.floor(fitSoldiers.length / 2)).map((s) => s.id))), btn('None', () => (draft.soldiers = []))),
+        mk('div', { className: 'row' }, ...fitSoldiers.slice(0, 16).map(toggle)),
+        mk('p', { textContent: 'Orders:' }),
+        mk(
+          'div',
+          { className: 'row' },
+          btn('Hunt bands around here', () => (draft.objective = 'hunt'), false, { className: draft.objective === 'hunt' ? 'active' : '' }),
+          road ? btn(`Patrol ${CL.content.get('settlements', road[0]).name}–${CL.content.get('settlements', road[1]).name}`, () => (draft.objective = 'road'), false, { className: draft.objective === 'road' ? 'active' : '' }) : null,
+        ),
+        mk('div', { className: 'row qmRule' }, mk('span', { textContent: `Back within ${draft.days} days` }), btn('−', () => draft.days--, draft.days <= D.LIMITS.days[0]), btn('+', () => draft.days++, draft.days >= D.LIMITS.days[1])),
+        mk('div', { className: 'row qmRule' }, mk('span', { textContent: `Turn back ${retreatText} strength` }), btn('Change', () => (draft.retreatBelow = D.RETREATS[(D.RETREATS.indexOf(draft.retreatBelow) + 1) % D.RETREATS.length]))),
+        mk('div', { className: 'row qmRule' }, mk('span', { textContent: draft.avoidStronger ? 'Keeps clear of stronger parties' : 'Does not avoid stronger parties' }), btn('Change', () => (draft.avoidStronger = !draft.avoidStronger))),
+        mk('div', { className: 'row qmRule' }, mk('span', { textContent: draft.autonomy === 'exact' ? 'Exact: takes on any band its order names' : 'Judgement: only fights it expects to win' }), btn('Change', () => (draft.autonomy = draft.autonomy === 'exact' ? 'judgement' : 'exact'))),
+        mk('p', { textContent: going.length ? `Takes ${Math.min(need.rations, Math.floor(c.food))} rations from your stores and ${need.wages} crowns for their pay.` : 'Choose a captain and soldiers.' }),
+        mk(
+          'div',
+          { className: 'row' },
+          btn('Send them', () => {
+            const r = D.send(c, { captain: draft.captain, soldierIds: draft.soldiers, order: { objective: draft.objective, road, days: draft.days, retreatBelow: draft.retreatBelow, avoidStronger: draft.avoidStronger, autonomy: draft.autonomy } });
+            if (r.ok) g.detachDraft = null;
+            else message(`Can't send them: ${r.reason}`);
+          }, !draft.captain),
+        ),
+      );
+    }
+    $('#detachScreen').replaceChildren(...out, form, back.length ? mk('div', { className: 'contractCard' }, mk('h3', { textContent: 'Back from patrol' }), ...back) : null);
+  }
+
   // ---- Battle preparation (V2-07; js/prep.js) ----
 
   const PRESET_NAMES = { balanced: 'Balanced', defensive: 'Defensive', aggressive: 'Aggressive', custom: 'Custom' };
@@ -1106,7 +1225,7 @@
         ),
       ),
       line([
-        `Party size ${c.roster.length + CL.companion.slots(c)}/${cap} (8 + 2×Leadership ${lead} + Renown ${c.renown}/40${CL.realm.capBonus(c) ? ` + ${CL.realm.capBonus(c)} Friendly` : ''}${cap === 20 ? ', max 20' : ''})`,
+        `Party size ${CL.party.headcount(c)}/${cap} (8 + 2×Leadership ${lead} + Renown ${c.renown}/40${CL.realm.capBonus(c) ? ` + ${CL.realm.capBonus(c)} Friendly` : ''}${cap === 20 ? ', max 20' : ''})`,
       ]),
       line(
         CL.realm.kingdoms().map((f) => {
@@ -1189,7 +1308,8 @@
           renderTroops();
         },
       });
-    const tabs = el('div', { className: 'viewTabs' }, tab('soldiers', 'Soldiers'), tab('types', 'By type'), tab('tree', 'Troop tree'), tab('honour', 'Roll of honour'));
+    const detach = el('button', { type: 'button', textContent: `Detachments${CL.detachments.active(c).length ? ` (${CL.detachments.active(c).length} out)` : ''}`, onclick: () => changeMode('detachments') }); // P7-05 (Back returns here)
+    const tabs = el('div', {}, el('div', { className: 'viewTabs' }, tab('soldiers', 'Soldiers'), tab('types', 'By type'), tab('tree', 'Troop tree'), tab('honour', 'Roll of honour')), el('div', { className: 'row' }, detach));
     if (view === 'honour') {
       $('#sheetTroops').replaceChildren(tabs, ...honourRoll());
       return;
@@ -1531,7 +1651,7 @@
     const p = CL.party;
     $('#rosterSummary').textContent =
       `Day ${p.dayNumber()} · ${c.gold} crowns · ${c.renown} renown · ` +
-      `${c.roster.length + CL.companion.slots(c)}/${p.partyCap()} in the company · ${c.victories} wins`;
+      `${CL.party.headcount(c)}/${p.partyCap()} in the company · ${c.victories} wins`;
 
     // One line per troop type: ready count, plus wounded and when they return.
     const groups = {};

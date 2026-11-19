@@ -25,7 +25,7 @@ function setup(seed) {
 /** Top the map up to n parties, round-robin over the templates, each placed at a seeded spot. */
 function topUp(CL, n) {
   const c = CL.campaign;
-  const ids = Object.keys(CL.content.table('party_templates'));
+  const ids = Object.values(CL.content.table('party_templates')).filter((t) => t.count > 0).map((t) => t.id); // not detachments
   let k = c.parties.length;
   while (c.parties.length < n) {
     const p = CL.parties.spawn(c, ids[k++ % ids.length]);

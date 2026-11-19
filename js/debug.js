@@ -209,7 +209,7 @@
     const snapshot = JSON.stringify(c);
     const was = { travel: g.travel, waiting: g.waiting };
     Object.assign(g, { travel: null, waiting: false });
-    const ids = Object.keys(CL.content.table('party_templates'));
+    const ids = Object.values(CL.content.table('party_templates')).filter((t) => t.count > 0).map((t) => t.id); // not your own detachments
     const b = CL.world.bounds();
     for (let k = 0; c.parties.length < n; k++) {
       const p = CL.parties.spawn(c, ids[k % ids.length]);

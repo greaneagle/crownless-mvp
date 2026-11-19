@@ -600,7 +600,7 @@
       ctx.stroke();
       ctx.restore();
     }
-    const color = t.kind === 'bandit' ? '#7a1e16' : CL.content.get('factions', t.faction).color;
+    const color = t.kind === 'bandit' ? '#7a1e16' : t.kind === 'detachment' ? '#c9a24a' : CL.content.get('factions', t.faction).color; // your patrols: gold (P7-05)
     const n = CL.parties.troopCount(p);
     const hostile = CL.parties.hostileTo(CL.campaign, t);
     ctx.save();
@@ -627,7 +627,7 @@
       // Shield for patrols, jagged pennant for bandits.
       ctx.fillStyle = color;
       ctx.beginPath();
-      if (t.kind === 'patrol') {
+      if (t.kind === 'patrol' || t.kind === 'detachment') {
         ctx.moveTo(x - 8, y - 10);
         ctx.lineTo(x + 8, y - 10);
         ctx.lineTo(x + 8, y - 1);
@@ -646,7 +646,7 @@
       ctx.fillStyle = '#fff';
       ctx.font = fixedFont(9); // the marker's emblem: part of the icon
       ctx.textAlign = 'center';
-      ctx.fillText(emblem(t.faction), x - 1, y - 1);
+      ctx.fillText(t.kind === 'detachment' ? (CL.detachments.find(CL.campaign, p.detachment)?.captainName || '?')[0] : emblem(t.faction), x - 1, y - 1);
       ctx.textAlign = 'left';
     }
     if (p.chasing === 'player') {
@@ -661,7 +661,8 @@
     if (!crowded && !CL.mapView.showMinorLabels()) countBadge(x, y, n, hostile);
     else if (!crowded) {
       const marked = (p.contractId && !p.ambush) || p.questTag || p.escortTo;
-      const name = p.escortTo ? 'Escort' : p.contractId && !p.ambush ? 'Contract target' : p.questTag ? (t.kind === 'bandit' ? 'Quest: Reavers' : 'Quest: Column') : t.kind === 'bandit' ? 'Reavers' : t.kind === 'patrol' ? 'Patrol' : 'Caravan';
+      const own = t.kind === 'detachment' ? CL.detachments.find(CL.campaign, p.detachment) : null;
+      const name = own ? `${own.captainName}${own.status === 'returning' ? ' (coming back)' : ''}` : p.escortTo ? 'Escort' : p.contractId && !p.ambush ? 'Contract target' : p.questTag ? (t.kind === 'bandit' ? 'Quest: Reavers' : 'Quest: Column') : t.kind === 'bandit' ? 'Reavers' : t.kind === 'patrol' ? 'Patrol' : 'Caravan';
       const prio = marked ? LABEL_PRIORITY.quest : hostile ? LABEL_PRIORITY.hostile : LABEL_PRIORITY.party;
       // If there is no room for its name, the party keeps its size as a badge on the icon.
       label(`${name} ${n}`, x, y + 20, marked ? '#ffd34d' : hostile ? '#ffb3a1' : '#e8f0ff', { prio, iy: y, fallback: () => countBadge(x, y, n, hostile) });

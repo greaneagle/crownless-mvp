@@ -1,5 +1,21 @@
 # Crownless — Release Notes
 
+## v2.16.0 — Detachments (P7-05) · 2026-11-19
+
+### New
+- **Send part of your company out under a captain** (Detachments, in a settlement's menu or from Party on the map). A captain is a veteran (tier 3, 10 battles) or your companion. Choose who goes and the order:
+  - hunt bands around where you are, or patrol a road between two places;
+  - for how many days;
+  - when to turn back, whether to keep clear of stronger parties, and whether to fight only good odds.
+- **Out on their own:** they take food from your stores and pay from the chest, fight what they meet, and send word.
+- **Coming back:** they turn back when their time is up, their food or pay runs out, they are too few, or they are beaten. You can send a courier to call them back.
+- **Rejoining:** meeting you, they rejoin the company with everything that happened to them. Beaten, the captain comes back wounded with the survivors.
+- Soldiers away still count toward your party size.
+
+### Under the hood
+- Saves are now schema v14 (detachments). Older saves update on load, and a copy is kept as it was.
+- 640 fast and 8 slow Node tests, 135 browser tests (9 more apply to one device only and are skipped on the other).
+
 ## v2.15.0 — The scout (P7-02) · 2026-11-19
 
 ### New

@@ -109,6 +109,8 @@ declare global {
     escortTo?: ContentId;
     /** P7-04: where it last saw the company, and until when it searches there (null: riding there). */
     lastSeen?: { x: number; y: number; until: number | null };
+    /** P7-05: one of your own detachments (its id in c.detachments). */
+    detachment?: number;
     /** P7-04: where the company last saw it. */
     seenAt?: { x: number; y: number; day: number };
     [extra: string]: unknown;
@@ -136,6 +138,8 @@ declare global {
     woundedUntil: number | null;
     equipment: Partial<Equipment>;
     away?: boolean;
+    /** P7-05: the detachment she leads, while she leads one. */
+    detached?: number;
   }
 
   interface NewsState {
@@ -208,6 +212,8 @@ declare global {
     ledger: LedgerEntry[];
     /** v8: camp followers. */
     followers: { quartermaster: Quartermaster | null; merchant?: Merchant | null; surgeon?: any; blacksmith?: any; scout?: any };
+    /** v14 (P7-05): detachments sent off under a captain (js/detachments.js), and the last few back. */
+    detachments: any[];
     /** v11 (P7-01): medicine in the company's stores (0–99). */
     medicine: number;
   }
@@ -494,6 +500,8 @@ declare global {
   }
 
   interface PartyAPI {
+    /** Everyone taking a slot in the party cap, detachments included (P7-05). */
+    headcount(camp?: Campaign): number;
     UPGRADE_XP: Record<string, number>;
     XP: Record<string, number>;
     partyCap(camp?: Campaign): number;
