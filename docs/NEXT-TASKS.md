@@ -1296,6 +1296,20 @@ _Re-specified 2026-11-20 at build 2.23.0 (commit 09176e8); NEXT-PLAN §5 has the
 - **The Realm screen** (new in P8-02, from the map like Company and Accounts) grows a tab per task: Holdings, Lords, Allegiance, Fief, Claims. At 812×375, each fits or scrolls, with touch targets of at least 44 CSS px.
 - **No chores (design §22.6):** each new system works hands-off, with a default and at most one weekly line in the week's log. Urgent events (your fort besieged, a summons, a ransom offer) interrupt, and nothing else does.
 - **Debug:** each task adds the cheats that reach its state (grant a village or a fort, start a siege, capture a lord, make a lord landless, and so on).
+- **Tests by tier** (owner, 2026-11-20; NEXT-PLAN §7, "The test tiers"): every task runs `npm test`, lint and its own browser specs on desktop and phone. The full browser suite runs when shared UI changes. Only the slow files the task's code reaches run with it. The whole slow suite (about 28 minutes, nearly all the 60-campaign story check) runs at the checkpoints after P8-01, P8-05, P8-06b and P8-T. The slow files each task is expected to need:
+
+  | Task | Slow files | Checkpoint |
+  |---|---|---|
+  | P8-01 lords on the map | `world-sim`, `campaign-bots`, `battle-parity`, `happenings-bots`, `test-world` | **Whole suite** |
+  | P8-04 allegiance | `campaign-bots` | |
+  | P8-05 fiefs and castellans | `campaign-bots`, `phase7-exit` | **Whole suite** |
+  | P8-06a sieges on the map | `world-sim`, `gate-d-campaigns` (sieges near the story forts) | |
+  | P8-06b the assault battle | `battle-parity`, `battle-extras` | **Whole suite** |
+  | P8-07 named nobles | `campaign-bots` | |
+  | P8-08 losing and retaking land | `campaign-bots`, `test-world` | |
+  | P8-T tuning and acceptance | all, with Prototypes D and F | **Whole suite** |
+
+  A task that turns out to reach more than its row runs those files too, and says so.
 - **Art:** lord banners, siege camps and wall pieces go to the asset request list (`docs/ASSETS.md`) and ship as placeholders.
 
 ### P8-02 · Holdings model (L) — ✅ Done in 2.24.0

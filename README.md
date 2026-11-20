@@ -164,7 +164,7 @@ npm test
 npm run test:slow
 ```
 
-CI runs both; `npm run test:all` runs both here. Every test game is isolated: each gets its own `Math`, seeded from its `seed` unless the test passes a `random`, so a seeded run gives the same result alone or after other games in the same process (`tests/isolation.test.js`).
+CI runs both; `npm run test:all` runs both here. The slow suite takes about half an hour, nearly all of it the 60-seed story check, so during Phase 8 it runs whole only at checkpoints; one file runs alone with `node --test tests/slow/<file>.test.js` (see "The test tiers" in `docs/NEXT-PLAN.md`). Every test game is isolated: each gets its own `Math`, seeded from its `seed` unless the test passes a `random`, so a seeded run gives the same result alone or after other games in the same process (`tests/isolation.test.js`).
 
 ```bash
 npm run lint

@@ -278,6 +278,7 @@ _Re-specified 2026-11-20 at build 2.23.0 (commit 09176e8), against the code and 
 - **A no-player world run** (`npm run landed`, added in P8-06a): 180 days of the world alone, reporting forts taken, sieges started, lifted and won, and each kingdom's forts.
 - **Phone:** P8-06b's assault map gets a Debug-panel test like Big battle 40.
 - **The bots:** a "landed" campaign style (P8-05) that swears, takes a fief and keeps the default steward; Prototype G runs it from P8-T.
+- **Test tiers (§7):** the whole slow suite runs at the checkpoints after P8-01, P8-05, P8-06b and P8-T; in between, each task runs only the slow files its code reaches. Prototypes D and F join the slow suite as files of their own, so they can run alone.
 
 ## 6. Phase 9 — "Kingdoms & Houses"
 
@@ -332,13 +333,35 @@ All of Phase 9 is **Provisional**.
 **Device settings** (text size, zoom levels) need no schema step. They live in `crownless_settings`, whose loader already fills missing keys with defaults.
 
 ### The per-task contract (from v2, `docs/V2-PLAN.md` §5, with additions)
-- **Green:** `npm test` and `npm run lint` pass. From W-00 on, the browser tests pass too.
+- **Green:** `npm test` and `npm run lint` pass. From W-00 on, the browser tests pass too. From P8-01 on, the longer suites run where a task needs them and at checkpoints (owner, 2026-11-20; "The test tiers" below).
 - **Tested:** new logic gets Node tests. New screens, controls or gestures get browser tests (W-00). New saved state gets a migration, fixtures and a save round-trip test.
 - **Played:** checked in a real browser at desktop and phone landscape size (812×375). Performance-sensitive tasks (W-03, W-05, W-07, P8-06, P9-05) add or extend a Debug-panel test for the owner's phone, as PROTO-A and SC-34 did.
 - **Explained:** How to Play and the first-time tips cover new player-facing systems. Debug tools cover new state, so testers can reach it.
 - **Art:** tasks that add places, troops or icons write an **asset request list** for the art team (`docs/ASSETS.md`) and ship with placeholders. Art never blocks a task.
 - **Versioned:** the version in its five places; ROADMAP, this plan, NEXT-TASKS (marked done), README and the v1 documentation updated; SAVE-FORMAT for schema steps.
 - **Owner-gated:** commits only when the owner asks; never push, tag, open pull requests or publish releases.
+
+### The test tiers (owner, 2026-11-20)
+The slow suite takes about 28 minutes, nearly all of it the 60-campaign story check (`tests/slow/gate-d-campaigns.test.js`, about 27 minutes; the other eleven take 1–2½ minutes each and run beside it). The full browser suite takes about 3 minutes. So, from P8-01 on:
+
+| Tier | What | When |
+|---|---|---|
+| **Every task** | `npm test` and `npm run lint`; the task's own browser specs, desktop and phone; `layout`, `text-size` and `settlement` specs when the task changes a screen, the HUD, `index.html` or `style.css` | Always |
+| **Full browser suite** | `npx playwright test` | When a task changes shared UI (the HUD, the settlement menu, the overlay, `style.css`, `index.html`), and at every checkpoint |
+| **The slow files the task touches** | `node --test tests/slow/<file>` for each one the task's code reaches (table below) | When the task changes what they exercise |
+| **The whole slow suite** | `npm run test:slow` | At the checkpoints: after **P8-01**, **P8-05**, **P8-06b** and **P8-T** (every two or three tasks), and before any build the owner plays on the phone |
+
+| Slow file | Exercises | Run it when a task changes |
+|---|---|---|
+| `gate-d-campaigns` (≈27 min) | Every quest and ending from a fresh start (60 seeds), and the sandbox after the ending | The story, quests, dialogue, the story forts or their villages, anything that can move Greywall or Ashgate, or travel inside the March |
+| `battle-parity`, `battle-extras` | Fought against simulated odds; formations, high ground, the wagon | Combat, units, auto-resolve, reinforcements, battle maps (P8-06b's assault) |
+| `campaign-bots` | No stalls over eight seeds; a short Prototype G | The campaign loop: money, wages, recruiting, contracts, encounters, the bots' styles |
+| `world-sim` | 80 parties over 90 days, save size, long rests | World parties, their counts and budgets (P8-01's lords), anything new in the save that grows with time |
+| `happenings-bots` | World events over 90 days | World events, or what they depend on (owners, parties) |
+| `phase7-exit` | Followers, detachments, the mill and events over 90 days | Followers, detachments, businesses, the accounts |
+| `test-world` | The three-kingdom test world plays and reloads | The world package, its data rules (seats, nobles), anything that might assume the Sundered Realm |
+
+Each task's report says which tiers ran, and which slow files were skipped and why. A checkpoint that fails is fixed before the next task starts.
 
 ## 8. Decisions for the owner
 
