@@ -1,4 +1,4 @@
-# Crownless 2.21.0 — The Border March
+# Crownless 2.22.0 — The Border March
 
 A single-player, top-down party-battle prototype in plain HTML5 Canvas and classic JavaScript. There's no bundler, no runtime dependencies and no server (Playwright, for the browser tests, is the only development dependency). It's published to GitHub Pages straight from `main`.
 
@@ -25,6 +25,7 @@ A single-player, top-down party-battle prototype in plain HTML5 Canvas and class
 - A frontal shield block that covers 120°. It can't cancel a swing you've already started, and enemy windups are drawn in red so you know when to block.
 - Allied infantry, archers and cavalry fight alongside you. Archers fire arrows; riders charge, hit 1.2× harder at full gallop, ride through and wheel round.
 - Pick a group with **1** (infantry), **2** (archers) or **3** (cavalry), then give an order: **F** Follow, **H** Hold or **C** Charge.
+- **Formations and ground (2.22.0):** in Orders, put the infantry in a **shield wall** (closed up, shields up, slower) or a **wedge** (quicker, a harder first blow, no cover). Archers on a hill's rise shoot further, and a ford breaks formations. In an escort ambush, keep the Reavers off the caravan's wagon.
 - **Q1 — A Stranger's Wage:** ask Elder Maren in Stonebridge for work. Fetch the grain wagon from Oakford (and survive the ambush), break the Reavers, or help Sergeant Brun raise three recruits. Every route ends with the charter fragment and the first hint of who should hold Greywall.
 - **Q2 — The Broken Seal:** Caravan Master Oswin in Eastwatch lost a sealed packet to Reavers on the river road. Fight them, cow them with a big enough company, or pay Wenna the Fence in Highmere for their secret. Then decide who sees the two rival Greywall charters: Captain Aldric of the Crown, Magistrate Vell of the Aurelians, or nobody.
 - **Mara:** after Q2, a former imperial scout waits by the inn in Stonebridge. Be honest with her and she rides with you for free, otherwise for 100 crowns. She fights beside you, wears the weapon and armour you give her, and finds faster roads (+1 Pathfinding).

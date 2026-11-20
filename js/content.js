@@ -188,7 +188,7 @@
     for (const m of Object.values(C.battle_maps || {})) {
       if (!m.generate) continue;
       const gen = m.generate;
-      if (!['forest', 'field', 'ford'].includes(gen.kind)) err(`battle_map ${m.id}: unknown generator ${gen.kind}`);
+      if (!['forest', 'field', 'ford', 'hills'].includes(gen.kind)) err(`battle_map ${m.id}: unknown generator ${gen.kind}`);
       if (!(Number.isInteger(gen.scale) && gen.scale >= 1 && gen.scale <= 4)) err(`battle_map ${m.id}: scale must be 1–4 screens`);
       if (!Number.isInteger(gen.seed)) err(`battle_map ${m.id}: needs a whole-number seed`);
       if (m.small != null && (!C.battle_maps[m.small] || C.battle_maps[m.small].generate)) err(`battle_map ${m.id}: small must be a one-screen map`);

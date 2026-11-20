@@ -844,7 +844,7 @@
   const PRESET_NAMES = { balanced: 'Balanced', defensive: 'Defensive', aggressive: 'Aggressive', custom: 'Custom' };
   const PRESET_ABOUT = {
     balanced: 'Infantry in front, archers behind, cavalry on a flank, and all of them go with you: the archers keep behind you, the cavalry rides out at anything close.',
-    defensive: 'A tight block. Everyone holds and fights what comes to them.',
+    defensive: 'A tight block. Everyone holds and fights what comes to them, the infantry in a shield wall.',
     aggressive: 'Infantry and cavalry forward and charging, archers following you.',
     custom: 'Drag the flags on the map to place each group, and choose each group’s starting order below.',
   };
@@ -2007,6 +2007,12 @@
     const current = CL.game.orders[group];
     for (const b of document.querySelectorAll('[data-group]')) b.classList.toggle('active', b.dataset.group === group);
     for (const b of document.querySelectorAll('[data-order]')) b.classList.toggle('active', b.dataset.order === current);
+    // P7-11: the infantry's formation (for the infantry only: no foot soldiers, no formation).
+    const foot = CL.game.allies?.some((a) => a.role === 'infantry' && a.alive && !a.companion && !a.outside);
+    for (const b of document.querySelectorAll('[data-formation]')) {
+      b.classList.toggle('active', b.dataset.formation === (CL.game.formation || 'loose'));
+      b.disabled = !foot;
+    }
   }
 
   function setPaused(paused, reason) {

@@ -80,6 +80,21 @@
       ctx.ellipse(p.x, p.y, p.rx, p.ry, 0, 0, Math.PI * 2);
       ctx.fill();
     }
+    for (const r of gr.rises || []) {
+      // A rise of the hills map (P7-11): lighter grass in rings, brightest on top.
+      if (!CL.camera.visible(g, r.x, r.y, Math.max(r.rx, r.ry))) continue;
+      for (const [k, color] of [[1, '#7f9c58'], [0.72, '#8daa62'], [0.42, '#9bb66c']]) {
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.ellipse(r.x, r.y - (1 - k) * 18, r.rx * k, r.ry * k, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.strokeStyle = '#4f6a3655';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.ellipse(r.x, r.y, r.rx, r.ry, 0, 0, Math.PI * 2);
+      ctx.stroke();
+    }
     for (const w of gr.waters || []) {
       // A ford's shallows (W-05a): water with lighter ripples, only the part in view.
       const [x0, x1] = [Math.max(w.x, v.x), Math.min(w.x + w.w, v.x + v.w)];
@@ -236,7 +251,37 @@
     ctx.fillRect(o.x - o.r, o.y - o.r - 20, o.r * 2, 4);
   }
 
+  /** The escort's wagon (P7-11): a covered cart on two wheels, charred once it burns, with its health while it stands. */
+  function drawWagon(o) {
+    const w = CL.game.wagon;
+    const burnt = !w?.alive;
+    ctx.fillStyle = '#00000033';
+    ctx.beginPath();
+    ctx.ellipse(o.x + o.w / 2, o.y + o.h, o.w * 0.6, 8, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = burnt ? '#2b2420' : '#7a5530';
+    ctx.fillRect(o.x, o.y + 4, o.w, o.h - 8);
+    ctx.fillStyle = burnt ? '#3b3530' : w?.flash > 0 ? '#ffd9c0' : '#e8dcc0';
+    ctx.beginPath();
+    ctx.moveTo(o.x + 3, o.y + 6);
+    ctx.quadraticCurveTo(o.x + o.w / 2, o.y - 22, o.x + o.w - 3, o.y + 6);
+    ctx.fill();
+    ctx.fillStyle = burnt ? '#1a1612' : '#3a2814';
+    for (const wx of [o.x + 9, o.x + o.w - 9]) {
+      ctx.beginPath();
+      ctx.arc(wx, o.y + o.h - 2, 7, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    if (w?.alive && w.hp < w.maxhp) {
+      ctx.fillStyle = '#00000088';
+      ctx.fillRect(o.x - 2, o.y - 32, o.w + 4, 6);
+      ctx.fillStyle = w.hp < w.maxhp * 0.35 ? '#e0533d' : '#e3b04b';
+      ctx.fillRect(o.x - 1, o.y - 31, ((o.w + 2) * w.hp) / w.maxhp, 4);
+    }
+  }
+
   function drawObstacle(o) {
+    if (o.look === 'wagon') return drawWagon(o);
     if (BUILDING[o.look]) return drawBuilding(o);
     if (o.look === 'stall') return drawStall(o);
     if (o.look === 'well') return drawWell(o);
@@ -412,6 +457,8 @@
     $('#summary').textContent = compactHud()
       ? `${allies} v ${enemies} · Wave ${g.wave}/${g.totalWaves}${reserves ? ` · Res ${reserves[0]}/${reserves[1]}` : ''}`
       : `Allies ${allies} · Enemies ${enemies} · Wave ${g.wave}/${g.totalWaves}${reserves ? ` · Reserves ${reserves[0]}/${reserves[1]}` : ''}`;
+    // P7-11: the escort's wagon, while there is one.
+    if (g.wagon) $('#summary').textContent += g.wagon.alive ? ` · Wagon ${Math.round((100 * g.wagon.hp) / g.wagon.maxhp)}%` : ' · Wagon lost';
     // W-03: the zoom button shows the current zoom.
     const z = `${Math.round(CL.camera.zoomOf(g) * 100) / 100}×`;
     if ($('#zoomBtn').textContent !== z) $('#zoomBtn').textContent = z;
@@ -1121,6 +1168,12 @@
       c.fillStyle = p.color;
       c.beginPath();
       c.ellipse(p.x * k, p.y * k, p.rx * k, p.ry * k, 0, 0, Math.PI * 2);
+      c.fill();
+    }
+    c.fillStyle = '#9bb66c'; // a rise of the hills map (P7-11)
+    for (const r of m.ground.rises || []) {
+      c.beginPath();
+      c.ellipse(r.x * k, r.y * k, r.rx * k, r.ry * k, 0, 0, Math.PI * 2);
       c.fill();
     }
     c.fillStyle = '#3f7393'; // a ford's water (W-05a)

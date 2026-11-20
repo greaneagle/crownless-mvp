@@ -52,6 +52,8 @@
     open_country: { id: 'open_country', name: 'Open Country', generate: { kind: 'field', scale: 3, seed: 11 }, small: 'grass_field' },
     // W-05a: a river crossing, fought in the shallows (they slow everyone wading through them).
     river_ford: { id: 'river_ford', name: 'River Ford', generate: { kind: 'ford', scale: 3, seed: 13 }, small: 'grass_field' },
+    // P7-11: hill country, with rises that give archers range.
+    hill_slopes: { id: 'hill_slopes', name: 'Hill Slopes', generate: { kind: 'hills', scale: 3, seed: 17 }, small: 'grass_field' },
     // P7-09: the tourney ground, one screen: a fenced list of beaten sand for a single bout.
     tourney_lists: {
       id: 'tourney_lists',

@@ -77,7 +77,7 @@
       const foeKind = foeParty ? CL.content.get('party_templates', foeParty.template).kind : (x.siteId ?? g.siteId) ? 'bandit' : null;
       CL.retinue.afterBattle(c, { win: o.win, down: x.companionsDown || [], foe: foeKind, attacked: Boolean(foeParty && foeParty.chasing !== 'player') });
       CL.world.onBattleResolved(o.win, x.siteId ?? g.siteId);
-      CL.parties.onBattleResolved(o.win, x.partyId ?? g.partyId, x.fallenEnemies || []);
+      CL.parties.onBattleResolved(o.win, x.partyId ?? g.partyId, x.fallenEnemies || [], { wagonLost: Boolean(x.wagonLost) });
       CL.reinforce?.apply(c, o.win, x.reinforcements || []); // parties that rode in (V2-09)
       const enc = o.encounter || (o.encounterId ? CL.content.table('encounters')[o.encounterId] : null);
       const encounterName = enc?.name ?? null;

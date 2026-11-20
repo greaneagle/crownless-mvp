@@ -9,6 +9,9 @@
  *   Defensive   a tight block, everyone holds
  *   Aggressive  infantry and cavalry forward and charging, archers following
  *   Custom      drag each group's flag inside the deployment zone and pick its starting order
+ * From 2.22.0 (P7-11) Defensive starts the infantry in a shield wall; the others start loose
+ * (js/formations.js; Orders changes it during the battle). Aggressive in a wedge was tried and
+ * dropped: outnumbered, the wedge's lack of shield cover cost too much (scripts/parity.js).
  * Fight starts the battle (two taps from the encounter: Attack, Fight). Simulate auto-resolves it and
  * explains the odds. "Skip this next time" (a device setting) makes Attack go straight in with the
  * remembered setup. Practice battles, tests and debug battles skip preparation entirely.
@@ -29,14 +32,17 @@
   const ORDERS = ['follow', 'hold', 'charge'];
   const SETUPS = {
     balanced: {
+      formation: 'loose',
       orders: { infantry: 'follow', archer: 'follow', cavalry: 'follow' },
       offsets: { infantry: { dx: 70, dy: 0 }, archer: { dx: -90, dy: 0 }, cavalry: { dx: -30, dy: -190 } },
     },
     defensive: {
+      formation: 'wall',
       orders: { infantry: 'hold', archer: 'hold', cavalry: 'hold' },
       offsets: { infantry: { dx: 40, dy: 0 }, archer: { dx: -60, dy: 0 }, cavalry: { dx: -150, dy: 0 } },
     },
     aggressive: {
+      formation: 'loose',
       orders: { infantry: 'charge', archer: 'follow', cavalry: 'charge' },
       offsets: { infantry: { dx: 170, dy: 0 }, archer: { dx: 30, dy: 0 }, cavalry: { dx: 130, dy: -210 } },
     },
@@ -94,14 +100,16 @@
       orders[grp] = c && ORDERS.includes(c.order) ? c.order : base.orders[grp];
       anchors[grp] = legal(z, a.x + off.dx, a.y + off.dy);
     }
+    // P7-11: archers who start on a rise (the hills map) keep it: they hold there, unless the setup is Custom.
+    if (p !== 'custom' && CL.formations.highAt(anchors.archer.x, anchors.archer.y)) orders.archer = 'hold';
     CL.game.battleMap = prevMap;
-    return { preset: p, ambush, orders, anchors };
+    return { preset: p, ambush, orders, anchors, formation: p === 'custom' ? 'loose' : base.formation };
   }
 
   /**
    * Put the deployed company in place for a plan: each group in a block around its anchor, ranks one
    * behind another away from the enemy, and the plan's starting orders. Called by combat.startBattle.
-   * @param {any} g @param {{ preset: string, ambush?: boolean, orders: Record<string, string>, anchors: Record<string, { x: number, y: number }> }} p
+   * @param {any} g @param {{ preset: string, ambush?: boolean, formation?: string, orders: Record<string, string>, anchors: Record<string, { x: number, y: number }> }} p
    */
   function place(g, p) {
     for (const grp of GROUPS) {
@@ -121,6 +129,7 @@
       });
       g.orders[grp] = p.orders[grp];
     }
+    CL.formations.set(g, p.formation || 'loose', true); // a shield wall closes up on Hold (P7-11)
     // The companion stands by the hero, whatever the setup.
     g.prepPlan = p.preset;
     CL.diag.log('info', 'Battle setup', { preset: p.preset, ambush: Boolean(p.ambush), orders: { ...p.orders } });

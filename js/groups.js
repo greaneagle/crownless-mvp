@@ -67,12 +67,16 @@
     if (!source) return null;
     for (const v of friends) {
       if (!v?.alive || v === target || !v.guard) continue;
+      // A shield wall covers further and on both sides; a wedge gives and gets no cover (P7-11).
+      const reach = CL.formations && CL.game ? CL.formations.cover(CL.game, v, target) : { reach: COVER_REACH, bothSides: false };
+      if (!reach) continue;
       const dx = target.x - v.x;
       const dy = target.y - v.y;
-      if (Math.hypot(dx, dy) > COVER_REACH) continue;
+      if (Math.hypot(dx, dy) > reach.reach) continue;
       const f = FACE[v.face] || FACE.right;
       const left = [f[1], -f[0]]; // the shield side: the blocker's left
-      if (dx * left[0] + dy * left[1] < SIDE_MIN) continue;
+      const side = dx * left[0] + dy * left[1];
+      if ((reach.bothSides ? Math.abs(side) : side) < SIDE_MIN) continue;
       if (CL.units.inArc(v, source, CL.units.ARC.block)) return v;
     }
     return null;
@@ -126,6 +130,8 @@
 
   /** Where this soldier stands in the company's loose ranks around the hero on Follow. @param {any} g @param {Unit} u */
   function followSlot(g, u) {
+    const formed = CL.formations?.slot(g, u); // a shield wall or a wedge (P7-11)
+    if (formed) return formed;
     const mates = g.allies.filter((a) => a.alive && a.role === u.role && !a.companion && !a.outside);
     const i = Math.max(0, mates.indexOf(u));
     const files = Math.min(FORM.perRank, mates.length);

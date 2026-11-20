@@ -8,6 +8,8 @@
  *   field   open grass with a few copses, rocks and bushes, and dirt patches
  *   ford    (W-05a) open banks either side of a river the armies meet in: its shallows (`slow`)
  *           slow everyone wading through them, and nothing grows in the water
+ *   hills   (P7-11) rolling grass with three rises (`high`): a knoll where the company forms up, a hill
+ *           between the armies and a knoll on the enemy's side. Archers on a rise shoot further
  *
  * `mapFor(id)` is how battles get their map: a generated map is built once and kept; and with the
  * device setting "Battlefield: Small" a large map is swapped for its one-screen counterpart
@@ -16,7 +18,7 @@
   'use strict';
   const CL = root.Crownless;
 
-  const KINDS = ['forest', 'field', 'ford'];
+  const KINDS = ['forest', 'field', 'ford', 'hills'];
   const FORD_SLOW = 0.5; // speed in the shallows (W-05a)
 
   /** Small seeded generator (mulberry32), local to the arena. @param {number} seed */
@@ -125,6 +127,31 @@
     };
   }
 
+  /**
+   * Hill country `scale` screens across (P7-11): grass with a few copses and rocks, and three rises in
+   * `high` (ellipses): one under the company's start (Balanced's archers stand on it), the middle hill
+   * the armies meet near, and one on the enemy's side. Nothing grows on a rise, so archers can stand
+   * there. @param {number} [scale] @param {number} [seed]
+   */
+  function hills(scale = 3, seed = 17) {
+    const rand = mulberry(seed);
+    const f = frame(scale, rand);
+    const ex = Math.round((f.enemies.x0 + f.enemies.x1) / 2);
+    const high = [
+      { x: f.hero.x - 60, y: f.hero.y, rx: 210, ry: 160 },
+      { x: Math.round(f.W * 0.5), y: Math.round(f.H * 0.34), rx: 260, ry: 150 },
+      { x: ex, y: Math.round(f.H * 0.7), rx: 200, ry: 130 },
+    ];
+    for (const r of high) f.open.push({ ...r, rx: r.rx + 30, ry: r.ry + 30 });
+    const copses = Array.from({ length: 2 * scale }, () => [200 + rand() * (f.W - 400), 160 + rand() * (f.H - 320)]);
+    for (const [cx, cy] of copses) f.place(3, 70, tree, () => [cx + (rand() - 0.5) * 240, cy + (rand() - 0.5) * 180]);
+    f.place(2 * scale * scale, 80, rock);
+    f.place(2 * scale * scale, 60, bush(rand));
+    const flowers = ['w0091', 'w0110', 'w0121', 'w0034'];
+    const decor = Array.from({ length: 2 * scale * scale }, () => [flowers[Math.floor(rand() * flowers.length)], Math.round(rand() * (f.W - 60)), Math.round(rand() * (f.H - 60)), 52, 56]);
+    return { ...finish(f, { id: `hills_${scale}x`, name: `Hills (${scale}×)`, ground: { base: '#71904e', tiles: ['w0000', 'w0001', 'w0002'], patches: [], rises: high }, decor }), high };
+  }
+
   function finish(f, parts) {
     return {
       ...parts,
@@ -137,7 +164,7 @@
     };
   }
 
-  const GENERATORS = { forest, field, ford };
+  const GENERATORS = { forest, field, ford, hills };
   const built = new Map();
 
   /** Build a generated map record from the data (once; later calls get the same object). @param {any} rec */
@@ -160,5 +187,5 @@
     return build(rec);
   }
 
-  CL.arena = { KINDS, FORD_SLOW, forest, field, ford, build, mapFor };
+  CL.arena = { KINDS, FORD_SLOW, forest, field, ford, hills, build, mapFor };
 })(typeof window !== 'undefined' ? window : globalThis);

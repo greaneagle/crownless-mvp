@@ -171,6 +171,17 @@
     CL.diag.log('info', 'Contract target defeated', { id: k.id });
   }
 
+  /**
+   * An escort's ambush took the wagon (P7-11): it burned in the fight, or the fight was lost. The
+   * caravan is lost and the contract fails, as abandoning it would.
+   */
+  function onCaravanLost(c, p) {
+    const k = c.contract;
+    if (k?.status !== 'active' || tpl(k.template).kind !== 'escort' || k.ambushId !== p.id) return;
+    CL.ui.message(`The caravan bound for ${settlement(k.to).name} is lost. Your contract from ${settlement(k.giver).name} has failed, and your name suffers for it.`);
+    fail(c, 'caravan lost');
+  }
+
   /** The marked band was destroyed by someone else (a patrol, off-screen): void, no penalty. */
   function onTargetLost(c, p) {
     const k = c.contract;
@@ -390,6 +401,7 @@
     accept,
     onTargetDefeated,
     onTargetLost,
+    onCaravanLost,
     onArrive,
     onCaravanArrived,
     tick,

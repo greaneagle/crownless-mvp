@@ -132,4 +132,4 @@ if (require.main === module) {
   }
 }
 
-module.exports = { run, SCENARIOS, spread };
+module.exports = { run, SCENARIOS, spread, setup, fight, simulate };

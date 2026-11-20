@@ -542,9 +542,11 @@
       const hostile = hostileTo(c, t);
       const spec = p.questTag ? CL.story.bandSpec(p.questTag, c) : null;
       const map = spec?.map || W().battleMapAt(c.world.x, c.world.y); // a story battle may name its field
-      const ambushText = p.ambush ? 'Reavers burst from cover and go for the caravan you are escorting. Stand and fight, or lose it.' : null;
+      const ambushText = p.ambush ? 'Reavers burst from cover and go for the caravan you are escorting. Keep them off the wagon: if it burns, or you lose, the caravan is lost.' : null;
       const text = spec?.text || ambushText || (hostile && t.hostileText ? t.hostileText : t.text);
-      return { kind: 'party', name: spec?.name || t.name, text, troops: p.troops, hostile, def: battleDef(t, p.troops, map), party: p, t };
+      const def = battleDef(t, p.troops, map);
+      if (p.ambush) def.objective = 'wagon'; // protect the escort's wagon (P7-11, js/objective.js)
+      return { kind: 'party', name: spec?.name || t.name, text, troops: p.troops, hostile, def, party: p, t };
     }
     if (g.siteId) {
       const st = W().map().sites[g.siteId];
@@ -698,7 +700,8 @@
     CL.reinforce.lock(g, [e.party?.id, ...joined.map((j) => j.id)]); // they wait while the hours pass (§9.5)
     let r;
     try {
-      r = /** @type {BattleResult | null} */ (CL.encounter.resolve(c, { kind: 'auto', outcome, fallenEnemies: enemyFallen, enemyTroops: Object.keys(e.troops), reinforcements: joined }));
+      // An escort ambush lost is the caravan lost too (P7-11): the wagon has nobody to stand by it.
+      r = /** @type {BattleResult | null} */ (CL.encounter.resolve(c, { kind: 'auto', outcome, fallenEnemies: enemyFallen, enemyTroops: Object.keys(e.troops), reinforcements: joined, wagonLost: e.def.objective === 'wagon' && !win }));
     } finally {
       g.lock = null;
     }
@@ -707,7 +710,7 @@
       win,
       auto: true, // drawn over the world map, not a battlefield
       ...r,
-      html: CL.party.resultHtml({ win, r, kills, killed, wounded, saved, medicineUsed, survivors: healthy.length - fallen.length, auto: { pp, pe, reasons }, names }),
+      html: CL.party.resultHtml({ win, r, kills, killed, wounded, saved, medicineUsed, survivors: healthy.length - fallen.length, auto: { pp, pe, reasons }, names, wagon: e.def.objective === 'wagon' ? (win ? 'saved' : 'lost') : null }),
     };
     CL.diag.log('info', 'Auto-resolved', { ...outcome, encounter: e.def.id, pp, pe });
     CL.ui.changeMode('result');
@@ -715,15 +718,17 @@
   }
 
   /** After a battle with a band: a win destroys it; a loss leaves it weakened but alive. */
-  function onBattleResolved(win, partyId, fallenEnemyTroops) {
+  function onBattleResolved(win, partyId, fallenEnemyTroops, { wagonLost = false } = {}) {
     const c = CL.campaign;
     const p = partyId != null ? find(c, partyId) : null;
+    // An escort ambush (P7-11): the wagon burned, or the fight was lost, and the caravan with it.
+    if (p?.ambush && (wagonLost || !win)) CL.contracts.onCaravanLost(c, p);
     // GDD §10: beating Road Reavers helps whoever holds the land.
     if (win && (CL.game.siteId || (p && tpl(p.template).kind === 'bandit'))) {
       CL.realm.onBanditsBeaten(c);
       CL.news.record(c, 'player_deed', { x: c.world.x, y: c.world.y });
     }
-    if (!p) return;
+    if (!p || !c.parties.includes(p)) return; // gone with the failed contract
     if (win && p.contractId) CL.contracts.onTargetDefeated(c, p);
     if (win && p.eventId) CL.happenings.onBandBeaten(c, p); // a village's bounty (P7-08)
     if (win) remove(c, p);

@@ -47,7 +47,7 @@
       // The battle map for a fight on each kind of ground (W-05a); anything else is `open`, or `fort`
       // within a few units of a fort. Hills and marsh borrow the open and forest maps until their art
       // exists.
-      battleMaps: { forest: 'forest_wilds', hills: 'open_country', mountain: 'open_country', marsh: 'forest_wilds', river: 'river_ford', ford: 'river_ford', open: 'open_country', fort: 'greywall_courtyard' },
+      battleMaps: { forest: 'forest_wilds', hills: 'hill_slopes', mountain: 'hill_slopes', marsh: 'forest_wilds', river: 'river_ford', ford: 'river_ford', open: 'open_country', fort: 'greywall_courtyard' },
       // Terrain features (W-05a): `areas` of hills, mountain or marsh ({ kind, poly }), `waters` that
       // cost travel ({ line, width, crossings: [{ kind: 'ford' | 'bridge', x, y, r }] }) and `coast`
       // (the sides of the map that meet the sea). The March's own river and hills (`river`, `hills`

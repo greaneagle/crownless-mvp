@@ -75,7 +75,7 @@ test('crossing the river: much quicker at the ford than wading anywhere else', (
 
 test('the battle map for each kind of ground: the ford map at a river or ford', () => {
   const { CL } = loadGame({ content: testWorld });
-  const want = { mountain: 'open_country', road: 'open_country', marsh: 'forest_wilds', hills: 'open_country', river: 'river_ford', ford: 'river_ford', bridge: 'open_country', forest: 'forest_wilds', grass: 'open_country' };
+  const want = { mountain: 'hill_slopes', road: 'open_country', marsh: 'forest_wilds', hills: 'hill_slopes', river: 'river_ford', ford: 'river_ford', bridge: 'open_country', forest: 'forest_wilds', grass: 'open_country' };
   for (const [kind, map] of Object.entries(want)) assert.equal(CL.world.battleMapAt(...AT[kind]), map, kind);
   const fort = CL.realm.forts()[0];
   assert.equal(CL.world.battleMapAt(fort.mapX + 2, fort.mapY), 'greywall_courtyard', 'grass near a fort: the fort approach');

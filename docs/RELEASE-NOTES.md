@@ -1,5 +1,24 @@
 # Crownless — Release Notes
 
+## v2.22.0 — Formations, high ground and the wagon (P7-11) · 2026-11-20
+
+### New
+- **Formations for your infantry,** in Orders: Loose (as before), Wall and Wedge. You never need them.
+- **The shield wall** closes the infantry up on Hold or Follow. They are slower, keep their shields up whenever a foe is near, strike over them, and each raised shield covers the soldiers on both sides. It is strong against archers: in our tests the company won 100% against crossbows in a wall and 73% without. The Defensive setup now starts in a wall.
+- **The wedge** points the infantry at the enemy on Follow or Charge. They are quicker, and the first blow on each new foe lands harder and shakes them, but nobody covers anyone.
+- **Hills.** Fights in the hills and mountains now take place on the new Hill Slopes. Archers standing on a rise shoot a quarter further, and yours start on the company's knoll and hold it.
+- **Fords break formations.** Soldiers wading the shallows fight loose.
+- **Protect the wagon.** When Reavers spring the ambush on a caravan you are escorting, its wagon stands behind your company and some of them burst from cover on your flank to burn it. If it burns, or you lose, the caravan and your contract are lost. The battle's top line shows how the wagon is doing, and the result says whether it came through.
+
+### Changed
+- An escort ambush now springs close by instead of marching in from the far side of the field.
+
+### Under the hood
+- Each effect is measured on its own, on and off on the same fights: `npm run extras`.
+- Debug tools: Hills battle 30, Wagon ambush 20.
+- No save change.
+- 703 fast and 10 slow Node tests, 153 browser tests (9 more apply to one device only and are skipped on the other).
+
 ## v2.21.0 — The mill (P7-10) · 2026-11-20
 
 ### New

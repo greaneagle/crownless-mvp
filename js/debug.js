@@ -255,9 +255,10 @@
   /**
    * W-05a: a practice battle of `total` units at the river ford (always the large map, whatever the
    * Battlefield setting): the armies meet in the shallows, which slow everyone. Reports like the camera
-   * test; nothing in the campaign changes.
+   * test; nothing in the campaign changes. P7-11: the same on the hill slopes (`map`), or an escort
+   * ambush with its wagon to protect (`objective: 'wagon'`).
    */
-  function fordTest(total) {
+  function fordTest(total, map = 'river_ford', objective = null) {
     const allies = Math.floor(total / 2) - 1;
     const mix = ['footman', 'hunter', 'footman', 'rider', 'levy', 'longbowman'];
     const emix = ['reaver', 'looter', 'spearman', 'skirmisher'];
@@ -266,15 +267,16 @@
     CL.game.siteId = null;
     CL.game.partyId = null;
     CL.combat.startBattle({
-      id: `ford_${total}`,
-      name: `Ford test (${total})`,
-      mapDef: CL.arena.build(CL.content.get('battle_maps', 'river_ford')),
+      id: `${map}_${total}`,
+      name: `${objective ? 'Wagon ambush' : CL.content.get('battle_maps', map).name} test (${total})`,
+      mapDef: CL.arena.build(CL.content.get('battle_maps', map)),
+      objective,
       waves: [wave],
       practice: Array.from({ length: allies }, (_, i) => mix[i % mix.length]),
       reward: { goldBase: 0, goldPerKill: 0, renown: 0 },
       loot: 'low',
     });
-    log('ford test', { total });
+    log('practice battle', { total, map, objective });
   }
 
   function wipeSave() {
@@ -543,6 +545,12 @@
         if (mode === 'battle' || mode === 'result') return CL.ui.message('Finish the battle first');
         toggle(false);
         fordTest(n);
+        return;
+      case 'hills': // P7-11
+      case 'wagon':
+        if (mode === 'battle' || mode === 'result') return CL.ui.message('Finish the battle first');
+        toggle(false);
+        fordTest(n, act === 'hills' ? 'hill_slopes' : 'open_country', act === 'wagon' ? 'wagon' : null);
         return;
       case 'win':
       case 'lose':

@@ -403,6 +403,7 @@
         companionDown: g.allies.some((a) => a.companion && a.companion === CL.campaign.companion?.id && !a.alive),
         companionsDown: g.allies.filter((a) => a.companion && a.companion !== CL.campaign.companion?.id && !a.alive).map((a) => a.companion), // the retinue (P7-06)
         fallenEnemies: g.enemies.filter((e) => !e.alive && !e.routed).map((e) => e.troop), // those who fled live on
+        wagonLost: CL.objective.lost(g) || Boolean(g.wagon && !win), // an escort ambush's wagon (P7-11)
         enemyTroops: [...new Set(g.enemies.map((e) => e.troop))], // the troops that took the field
       })
       );
@@ -424,6 +425,7 @@
       survivors: g.allies.filter((u) => (u.alive || u.routed) && !u.outside).length,
       waves: `${g.wave}/${g.totalWaves}`,
       names,
+      wagon: CL.objective.fate(g, win),
     });
     g.result = { win, html, ...r };
     CL.diag.log('info', 'Battle ended', { ...outcome, result: r, day: CL.campaign.day });
@@ -476,10 +478,10 @@
   /**
    * Result screen text for a fought or auto-resolved battle. Only numbers and data names are interpolated.
    * @param {{ win: boolean, r: BattleResult | null, kills: number, routed?: number, fled?: number, helped?: number, standouts?: string[], killed: number[], wounded: number[], saved?: number[], medicineUsed?: number,
-   *   survivors: number, waves?: string, auto?: { pp: number, pe: number, reasons?: string[] }, names?: Record<number, string> }} info
+   *   survivors: number, waves?: string, auto?: { pp: number, pe: number, reasons?: string[] }, names?: Record<number, string>, wagon?: 'saved' | 'lost' | null }} info
    *   names: soldier names by ID, taken before the battle (soldiers can be renamed, so they are escaped)
    */
-  function resultHtml({ win, r, kills, routed = 0, fled = 0, helped = 0, standouts = [], killed, wounded, saved = [], medicineUsed = 0, survivors, waves, auto, names }) {
+  function resultHtml({ win, r, kills, routed = 0, fled = 0, helped = 0, standouts = [], killed, wounded, saved = [], medicineUsed = 0, survivors, waves, auto, names, wagon = null }) {
     const recoverDay = dayNumber(CL.campaign.day + CL.surgeon.woundDays(CL.campaign));
     const lines = [
       `<strong>${win ? `+${r.gold} crowns · +${r.renown} renown` : `${-r.gold} crowns lost (20%)`}</strong>`,
@@ -499,6 +501,9 @@
     const doc = CL.surgeon.get(CL.campaign);
     if (doc && saved.length) lines.push(`Surgeon ${escapeHtml(doc.name)} saved ${who(saved) || `${saved.length}`}${medicineUsed ? ` (${medicineUsed} medicine used, ${CL.campaign.medicine} left)` : ' (no medicine left)'}`);
     lines.push(`Survivors: ${survivors}${waves ? ` · Battle waves reached: ${waves}` : ''}`);
+    // P7-11: the escort's wagon.
+    if (wagon === 'saved') lines.push('<strong>The wagon came through.</strong> The caravan rolls on');
+    else if (wagon === 'lost') lines.push('<strong>The wagon is lost,</strong> and your escort contract with it');
     if (r.xp) {
       const lv = r.xp.levels ? ` · <strong>Level up! Now level ${CL.campaign.character.level}</strong>` : '';
       const ready = r.xp.ready ? ` · ${r.xp.ready} soldier${r.xp.ready === 1 ? '' : 's'} ready to upgrade` : '';

@@ -116,6 +116,13 @@
     $('#mapBtn').onclick = () => CL.tactics.overview(game);
     for (const b of document.querySelectorAll('[data-group]')) b.onclick = () => combat.order(b.dataset.group, null);
     for (const b of document.querySelectorAll('[data-order]')) b.onclick = () => combat.order(null, b.dataset.order);
+    // P7-11: the infantry's formation.
+    for (const b of document.querySelectorAll('[data-formation]')) {
+      b.onclick = () => {
+        CL.formations.set(game, b.dataset.formation);
+        ui.showSelectedGroup(game.group);
+      };
+    }
     $('#rallyBtn').onclick = () => {
       CL.morale.rally(game);
       ui.showSelectedGroup(game.group);

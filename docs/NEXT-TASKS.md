@@ -1197,7 +1197,32 @@ _Written 2026-11-18 at build 2.0.0; **reviewed and corrected the same day agains
 
 **Acceptance.** Runs without daily clicks; reports costs and failures; survives changes of owner by the rules.
 
-### P7-11 · Battle extras (M) — Specified (needs B-01, W-05a)
+### P7-11 · Battle extras (M) — ✅ Done in 2.22.0
+
+**Done (2.22.0, 2026-11-20).** `js/formations.js` (`CL.formations`: the infantry's formations and the lie of the land), `js/objective.js` (`CL.objective`: the escort's wagon), a generated Hill Slopes battle map (`js/arena.js` `hills`, `data/battle_maps.js` `hill_slopes`; the world's hills and mountains now fight there), a formation row in Orders, and `scripts/extras.js` to measure each effect on its own. No save change: a formation and a wagon last one battle.
+- **Shield wall** (Orders → Wall; Defensive starts in one): on Hold and Follow the infantry close up (files 22 px apart, not 28), walk at 70%, keep their shields up whenever a foe is near in front or an archer in front has them in range, strike over them (the shield drops only for the blow), and a raised shield covers the soldier on either side out to 46 px (34 px and one side, loose). On Charge it breaks up.
+- **Wedge** (Orders → Wedge): on Follow and Charge a point ahead of the hero, 15% quicker, and the first blow on each new foe lands ×1.3 and shakes them as a flank blow does (morale); no shield cover given or taken. On Hold it falls back to loose.
+- **High ground:** the hill map has three rises (the company's knoll, a hill between the armies, a knoll on the enemy's side). An archer on one shoots 25% further, either side's. Archers whose setup starts them on a rise hold it (Balanced, Defensive and Aggressive; not Custom).
+- **A ford breaks formations:** a soldier wading the shallows is loose, whatever was chosen.
+- **The objective: protect the wagon** (escort ambushes; the spec's alternative, holding a point for a militia request, was not built). The caravan's wagon (70 HP, armour 2, an obstacle on that battle's own copy of the map) stands behind the company. It is an ambush: the band bursts from cover 420–640 px ahead, and every third Reaver is a wagon-raider who starts behind the company on its flank (420–560 px back, 330–460 px aside, so both groups strike together) and goes for the wagon unless someone stands within 60 px of it. Your soldiers count a raider by the wagon 150 px nearer and leave Follow or Hold for one from 420 px. If the wagon burns, or the fight is lost (fought or simulated), the caravan and the contract are lost (`contracts.onCaravanLost`, as abandoning it). The HUD shows the wagon; the result says whether it came through.
+- **Measured** (`npm run extras`, 40 seeds each, the effect on and off on the same encounters; the defensive ones with a steady hero who holds where the company formed up, because the parity bot's hero runs the fight off to the far side of the field):
+
+  | Effect | Win % on / off | Soldiers lost on / off |
+  |---|---|---|
+  | Shield wall (Defensive) against 8 Reavers and 3 mercenaries | 100 / 100 | 0.63 / 1.07 (and 57 s against 73 s) |
+  | Shield wall (Defensive) against 6 crossbows and 6 militia | 100 / 73 | 0.57 / 2.60 |
+  | Wedge (chosen in Orders) against 4 looters and 7 Reavers | 75 / 63 | 2.38 / 2.42 |
+  | Archers on the knoll against 6 crossbows and 5 militia | 60 / 40 | 4.55 / 5.22 |
+  | A ford breaking the wedge (River Ford) | 98 / 98 | 1.27 / 1.73 |
+  | Soldiers minding the wagon (8 Reavers, 4 looters) | 93 / 85; wagon saved 63% / 65% | 1.52 / 1.68 |
+
+  Breaking the wedge in the water *helps* the company: a wedge has no shield cover, and that costs more where everyone wades slowly. Minding the wagon wins more fights but does not save more wagons: with the parity bot the hero leads the company to the front and the soldiers do not leave a fight in hand. The wagon is still at stake: lost in about a third of the fights won.
+- **Setups:** Defensive's wall, by `scripts/parity.js` (40 seeds): veterans 88 → 95% won, 2.13 → 1.82 lost; outnumbered 53 → 63%, 2.83 → 2.63; the rest the same. Aggressive in a wedge was tried and dropped: outnumbered fell from 80% to 60%. Balanced is unchanged to the decimal.
+- **Escort ambushes are a different fight, and now too easy when fought (for P7-T):** the band no longer marches from the far side of the field, and a third of it goes for the wagon instead of the company. With the parity bot, the same company against 8 Reavers and 4 looters wins 93% as an ambush against 17.5% from afar (40 seeds; 3.55 soldiers lost from afar, 1.52 now). Simulate's odds for it are unchanged, so in escort ambushes fighting is now far better than B-01's 5–15 points over the odds. The wagon is the new risk, lost in about a third of the fights won.
+- **Fixed on the way:** wagon-raiders left out of the enemy's loose line (B-01); otherwise the line's middle moved behind the company and the rest crawled at 30% speed, waiting for it.
+- **Debug:** Hills battle 30, Wagon ambush 20 (practice battles).
+- **Tests:** `tests/extras.test.js` (where each formation holds; the setups; Orders; the wall's guard, strikes and cover; against archers; the wedge's point, speed, cover and first blow; the hill map, range and the setups' archers; the wagon on its own map copy, raiders and their targets, the soldiers' care, burning, and the contract won and lost, fought and simulated), `tests/slow/battle-extras.test.js` (each effect's measured difference, 20 seeds), `tests/browser/extras.spec.js` (the formation buttons, the wagon in the HUD).
+- **Not done here:** the hold-a-point objective; the owner's phone session for the feel of the wall and the wedge.
 
 **Build.**
 - **Formations:** shield wall (infantry on Hold close up, more shields, slower) and wedge.
@@ -1215,6 +1240,8 @@ _Written 2026-11-18 at build 2.0.0; **reviewed and corrected the same day agains
 ### P7-T · Phase 7 tuning and acceptance (S) — Specified
 
 **Build.** Prototype G across the bigger world with followers and officers; the design exit as a scripted 90-day scenario; economy and battle passes (parity script); a validation section.
+
+**Carried over from P7-11:** fought escort ambushes are now much easier than Simulate's odds (93% won against 17.5% for the same band met in the open; see P7-11). Bring them back toward B-01's target: a stronger ambush, fewer wagon-raiders, or raiders who hold back until the front has engaged. `npm run extras` and `npm run parity` measure it.
 
 **Acceptance.** The exit holds in the bot and in the owner's play.
 

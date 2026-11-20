@@ -61,11 +61,13 @@
   };
 
   const game = () => CL.game;
-  const opponentsOf = (u) => (u.team === 'enemy' ? [game().hero, ...game().allies] : game().enemies);
+  // The wagon of an escort ambush (P7-11, js/objective.js) is one more thing for the enemy to go for.
+  const opponentsOf = (u) => (u.team === 'enemy' ? (game().wagon?.alive ? [game().hero, ...game().allies, game().wagon] : [game().hero, ...game().allies]) : game().enemies);
   const nearestAlive = (u, list) =>
     list.filter((v) => v?.alive).sort((a, b) => dist(u, a) - dist(u, b))[0];
   // Start a swing just inside reach; archers loose at their troop range.
-  const fireRange = (u) => (u.ranged ? u.ranged.range : u.reach - 1);
+  // An archer on high ground shoots further (P7-11, js/formations.js).
+  const fireRange = (u) => (u.ranged ? CL.formations.rangeOf(u) : u.reach - 1);
 
   /** GDD §6: Damage = max(1, round(Raw × 100 / (100 + 4 × Armor))). */
   /** Battle sounds: the hero's own are loudest, everyone else's quieter (js/audio.js rate-limits them). */
@@ -117,6 +119,9 @@
     g.orders = { infantry: 'follow', archer: 'hold', cavalry: 'charge' };
     // A ready-made arena (the debug camera test, PROTO-A) or a battle map from the content.
     g.battleMap = enc.mapDef || CL.arena.mapFor(enc.map || 'open_country');
+    g.formation = 'loose'; // the infantry's formation (P7-11): the battle setup or Orders may change it
+    g.wagonLost = false;
+    CL.objective.begin(g, enc); // an escort ambush's wagon (P7-11), before the company forms up round it
     const anchor = g.battleMap.spawn.hero;
     g.hero = makeUnit(anchor.x, anchor.y, 'ally', 'hero');
     Object.assign(g.hero, CL.character.heroCombat(CL.campaign, g.duel ? g.duel.kit : CL.campaign?.equipment)); // HP, damage, armor, shield from the character (and the kit worn)
@@ -174,6 +179,7 @@
     }
     if (opts.plan && !alone) CL.prep.place(g, opts.plan); // the chosen setup (V2-07)
     spawnWave();
+    if (g.wagon) CL.ui.message('Keep the Reavers off the wagon: if it burns, the caravan is lost');
     if (g.duel) Object.assign(g.enemies[0], { hp: g.duel.opponent.hp, maxhp: g.duel.opponent.hp, damage: g.duel.opponent.damage, armor: g.duel.opponent.armor, duelist: g.duel.opponent.name });
     CL.reinforce.begin(g); // nearby parties that will join, and when (V2-09)
     Object.assign(g, { overview: false, cameraFocus: null, scanIn: 0 });
@@ -212,6 +218,7 @@
     e.art = art[g.enemies.length % art.length];
     const j = typeof spec === 'string' ? null : g.joining?.find((x) => x.id === spec.join);
     if (j) CL.reinforce.place(g, j, e);
+    CL.objective.onEnemy(g, e, Boolean(j)); // every second one goes for an escort's wagon (P7-11)
     g.enemies.push(e);
     return e;
   }
@@ -284,7 +291,7 @@
     }
     target.flash = 0.14;
     g.lastBlowAt = g.t; // the stall guard (V2-T2)
-    if (source) push(target, source.x, source.y, KNOCKBACK);
+    if (source && !target.wagon) push(target, source.x, source.y, KNOCKBACK); // a wagon doesn't budge
     g.effects.push({
       x: target.x,
       y: target.y - 23,
@@ -302,6 +309,10 @@
     target.downAt = g.t;
     target.swing = null;
     target.guard = false;
+    if (target.wagon) {
+      CL.objective.onDown(g); // the caravan is lost (P7-11)
+      return 'down';
+    }
     if (target.team === 'enemy') {
       if (source?.outside) g.helpKills = (g.helpKills || 0) + 1;
       else g.kills++;
@@ -325,7 +336,7 @@
       u.shot = SHOT_FLASH;
       sound('bow', u);
       const target = nearestAlive(u, opponentsOf(u));
-      if (target && dist(u, target) < r.range + ARROW.rangeSlack) {
+      if (target && dist(u, target) < fireRange(u) + ARROW.rangeSlack) {
         let [dx, dy] = normalize(target.x - u.x, target.y - u.y);
         if (Math.random() > r.accuracy) {
           const off = rand(MISS_ANGLE[0], MISS_ANGLE[1]) * (Math.random() < 0.5 ? -1 : 1);
@@ -345,11 +356,14 @@
 
   /** During the active window, hit every opponent in reach and arc — each at most once per swing. */
   function resolveSwing(u) {
+    const wedge = CL.formations.blow(game(), u); // a wedge's first blow lands harder (P7-11)
     for (const v of opponentsOf(u)) {
       if (!v?.alive || u.swing.hit.includes(v.id)) continue;
       if (dist(u, v) > u.reach || !inArc(u, v, ARC.attack)) continue;
       u.swing.hit.push(v.id);
-      hit(v, u.damage * (u.chargeBonus || 1) * (u.moraleMul || 1), u);
+      hit(v, u.damage * (u.chargeBonus || 1) * (u.moraleMul || 1) * wedge, u);
+      if (wedge > 1) v.flankedAt = game().t; // the wedge's blow shakes them as a flank blow does
+      u.wedgeArmed = false;
     }
   }
 
@@ -428,12 +442,16 @@
     // Retarget at once when the current target falls, instead of swinging at a body.
     if (u.aiTimer <= 0 || (u.target && !u.target.alive)) {
       u.aiTimer = rand(0.17, 0.41);
-      u.target = (u.team === 'enemy' && ENEMY.use.target ? enemyTarget(u) : nearestAlive(u, u.trait ? opponentsOf(u).filter((o) => CL.traits.pursues(u, o)) : opponentsOf(u))) || null; // a cautious soldier lets runners go (P7-07)
+      const foes = u.trait ? opponentsOf(u).filter((o) => CL.traits.pursues(u, o)) : opponentsOf(u); // a cautious soldier lets runners go (P7-07)
+      // Your soldiers mind the escort's wagon unasked (P7-11).
+      u.target = (u.team === 'enemy' && ENEMY.use.target ? enemyTarget(u) : (u.team === 'ally' && CL.objective.pick(game(), u, foes)) || nearestAlive(u, foes)) || null;
     }
     const target = u.target;
     if (u.routing) return; // running: js/morale.js moves them (V2-08b)
-    // Shield troops raise their shields against a swing coming at them (V2-08a).
-    u.guard = CL.groups.shouldGuard(u, opponentsOf(u));
+    if (u.team === 'ally') CL.formations.arm(game(), u); // a wedge ready for its first blow (P7-11)
+    // Shield troops raise their shields against a swing coming at them (V2-08a), and a shield wall
+    // against archers too (P7-11).
+    u.guard = CL.groups.shouldGuard(u, opponentsOf(u)) || (u.team === 'ally' && CL.formations.guard(game(), u, opponentsOf(u)));
     if (!target) return;
     const p = u.role === 'archer' ? AI.archer : AI.melee;
     let dest = target;
@@ -445,12 +463,12 @@
         // Loose ranks around the hero (V2-08a); break ranks to fight anything close.
         dest = u.companion ? game().hero : CL.groups.followSlot(game(), u);
         goal = u.companion ? p.followGoal : 6;
-        if (dist(u, target) < p.followEngage * CL.traits.engage(u)) {
+        if (dist(u, target) < CL.objective.reach(game(), target, p.followEngage * CL.traits.engage(u))) {
           dest = target;
           goal = p.followFight;
         }
       } else if (cmd === 'hold') {
-        if (dist(u, target) < p.holdEngage * CL.traits.engage(u)) {
+        if (dist(u, target) < CL.objective.reach(game(), target, p.holdEngage * CL.traits.engage(u))) {
           dest = target;
           goal = p.holdFight;
         } else {
@@ -470,6 +488,7 @@
     if (d > goal + 5) {
       const s = u.speed;
       if (u.guard) u.speed *= GUARD_SPEED; // a raised shield slows you, as it does the hero
+      if (u.team === 'ally') u.speed *= CL.formations.speed(game(), u); // a wall walks slower, a wedge quicker (P7-11)
       if (u.team === 'enemy' && ENEMY.use.line && aheadOfLine(u, target)) u.speed *= ENEMY.lineWait; // B-01: wait for the line
       move(u, dest.x - u.x, dest.y - u.y, dt);
       u.speed = s;
@@ -484,7 +503,7 @@
         }
       } else {
         u.losBlocked = 0;
-        if (!u.guard) startAttack(u); // no swinging behind a raised shield
+        if (!u.guard || CL.formations.strikesOver(game(), u)) startAttack(u); // no swinging behind a raised shield, except over a shield wall (P7-11)
       }
     }
   }
@@ -505,6 +524,12 @@
     const nearest = Math.min(...foes.map((v) => dist(u, v)));
     for (const v of foes) {
       const d = dist(u, v);
+      // The escort's wagon (P7-11) is worth going a long way round for.
+      if (v.wagon) {
+        const pull = CL.objective.enemyPull(u, v, Math.min(...foes.filter((f) => !f.wagon).map((f) => dist(u, f))));
+        if (d - pull < score) [best, score] = [v, d - pull];
+        continue;
+      }
       if (d > nearest + ENEMY.preferRange) continue;
       let pull = 0;
       if (v.role === 'archer') pull = Math.max(pull, ENEMY.prefer.archer);
@@ -521,7 +546,7 @@
    * @param {Unit} u @param {Unit} target
    */
   function aheadOfLine(u, target) {
-    if (u.role !== 'infantry' || u.morale === 'fallback' || dist(u, target) < ENEMY.lineEngage) return false;
+    if (u.role !== 'infantry' || u.raider || u.morale === 'fallback' || dist(u, target) < ENEMY.lineEngage) return false;
     const line = game().enemyLine;
     if (!line) return false;
     return Math.hypot(line.x - target.x, line.y - target.y) - dist(u, target) > ENEMY.lineSlack;
@@ -529,7 +554,7 @@
 
   /** Where the enemy's standing foot is, on average (each frame, for the loose line). @param {any} g */
   function markLine(g) {
-    const foot = g.enemies.filter((e) => e.alive && !e.routing && e.role === 'infantry');
+    const foot = g.enemies.filter((e) => e.alive && !e.routing && e.role === 'infantry' && !e.raider); // wagon-raiders keep no line (P7-11)
     const mine = [g.hero, ...g.allies].filter((a) => a?.alive && !a.routing).length;
     const swarm = g.enemies.filter((e) => e.alive && !e.routing).length > mine * ENEMY.lineOutnumber;
     g.enemyLine = foot.length > 1 && !swarm ? { x: foot.reduce((n, e) => n + e.x, 0) / foot.length, y: foot.reduce((n, e) => n + e.y, 0) / foot.length } : null;
@@ -575,7 +600,7 @@
         g.effects.push({ x: a.x, y: a.y, t: 0.15, color: '#d9c8a2', kind: 'thunk' });
         continue;
       }
-      const targets = a.team === 'ally' ? g.enemies : [h, ...g.allies];
+      const targets = a.team === 'ally' ? g.enemies : g.wagon?.alive ? [h, ...g.allies, g.wagon] : [h, ...g.allies];
       for (const v of targets) {
         if (v.alive && Math.hypot(a.x - v.x, a.y - (v.y - ARROW.aimHeight)) < ARROW.hitRadius) {
           hit(v, a.damage, a.source);
@@ -674,6 +699,7 @@
           a.holdX = a.x;
           a.holdY = a.y;
         }
+        if (g.group === 'infantry') CL.formations.closeUp(g); // a shield wall closes up (P7-11)
       }
       // A shaken group takes the order but can't carry it out yet (V2-08b; design §8.5).
       const name = { infantry: 'Infantry', archer: 'Archers', cavalry: 'Cavalry' }[g.group];
