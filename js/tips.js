@@ -59,6 +59,12 @@
       const r = CL.world.regionAt(c.world.x, c.world.y);
       return Boolean(r) && !CL.world.map().regions[r.id].home;
     },
+    // P8-04: at a kingdom's capital, where Service and fealty are offered.
+    atCapital: (c) => {
+      const sid = c.world?.location;
+      const f = sid ? CL.realm.owner(sid, c) : null;
+      return Boolean(f) && CL.realm.isRealm(f) && CL.realm.capitalOf(f) === sid;
+    },
   };
 
   /** The text for this device: touch phones get the touch wording, keyboards the key wording. */

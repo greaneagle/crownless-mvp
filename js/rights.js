@@ -24,8 +24,16 @@
   const factionName = (f) => CL.content.table('factions')[f]?.name || 'the lords here';
   const short = (f) => CL.content.table('factions')[f]?.short || factionName(f);
 
-  /** The realm a person is sworn to: a lord's own; the player's none until P8-04. */
-  const allegiance = (c, who) => (who === PLAYER ? null : R().person(who, c)?.realm || null);
+  /** The realm a person is sworn to: a lord's own; the player's as their vassal's oath says (P8-04). */
+  const allegiance = (c, who) => (who === PLAYER ? CL.allegiance?.sworn(c) || null : R().person(who, c)?.realm || null);
+  const A = () => CL.allegiance;
+  /** Days since the player's last change of allegiance (an oath taken, or left; a contract that ran its term doesn't count). */
+  function sinceOath(c) {
+    const a = A().state(c);
+    const left = [...a.history].reverse().find((h) => h.end !== 'term');
+    const last = Math.max(a.lastOath ?? -1e9, left?.to ?? -1e9);
+    return c.day - last;
+  }
 
   /**
    * Is `who` an enemy of kingdom `f` here? The player by standing (Hostile); a lord when their realm is
@@ -127,12 +135,42 @@
         if (R().relation(c, mine, h.controller) !== 'war') return no(`${short(mine)} is not at war with ${short(h.controller)}`);
         return yes();
       }
+      case 'serve': {
+        // P8-04: a mercenary contract with a realm (or its renewal): Neutral standing or better.
+        const f = R().isRealm(target) ? target : R().sovereignOf(target, c);
+        if (who !== PLAYER) return no('Lords take service from P8-07');
+        if (!R().isRealm(f)) return no('There is no crown here to serve');
+        const a = A().state(c);
+        if (a.kind === 'vassal') return no(`You are sworn to the ${factionName(a.realm)}: ask for release first`);
+        if (enemyOf(c, who, f)) return no(`The ${factionName(f)} count you Hostile: they will not hire you`);
+        if (!(a.kind === 'mercenary' && a.realm === f) && sinceOath(c) < A().RULES.oathGap) return no(`You changed your allegiance lately: from day ${CL.party.dayNumber(c.day + A().RULES.oathGap - sinceOath(c))}`);
+        return yes();
+      }
       case 'swear': {
         // P8-04: `target` is a place of the realm to swear to (its sovereign), or the realm itself.
         const f = R().isRealm(target) ? target : R().sovereignOf(target, c);
         if (!R().isRealm(f)) return no('There is no crown here to swear to');
         if (allegiance(c, who)) return no(`You are already sworn to the ${factionName(allegiance(c, who))}`);
         if (enemyOf(c, who, f)) return no(`The ${factionName(f)} count you Hostile: they will not take your oath`);
+        if (who === PLAYER) {
+          const V = A().RULES.vassal;
+          if (R().standing(c, f) !== 'friendly') return no(`The ${factionName(f)} must count you a friend`);
+          if (c.renown < V.renown) return no(`You need ${V.renown} renown (you have ${c.renown})`);
+          if (A().mercenaryDays(c, f) < V.serviceDays && !A().favour(c, f)) return no(`Serve them first: ${V.serviceDays} days as their mercenary (you have ${A().mercenaryDays(c, f)}), or win their favour in the story`);
+          if (sinceOath(c) < A().RULES.oathGap && A().state(c).kind !== 'mercenary') return no(`You changed your allegiance lately: from day ${CL.party.dayNumber(c.day + A().RULES.oathGap - sinceOath(c))}`);
+        }
+        return yes();
+      }
+      case 'askRelease': {
+        // P8-04: leave a contract, or ask the ruler to release you from your oath.
+        const a = A().state(c);
+        if (who !== PLAYER || a.kind === 'independent') return no('You serve no realm');
+        if (a.kind === 'vassal' && A().atWar(c, a.realm)) return no(`The ${factionName(a.realm)} are at war: ${R().titled(R().rulerOf(a.realm, c), c)} will not release you now`);
+        return yes();
+      }
+      case 'defect': {
+        const a = A().state(c);
+        if (who !== PLAYER || a.kind !== 'vassal') return no('You are sworn to no realm');
         return yes();
       }
       case 'leave':
@@ -163,7 +201,7 @@
   /** The reason as a plain string ('' when allowed): for the places that only need the words. */
   const why = (c, who, action, target) => may(c, who, action, target).why;
 
-  const ACTIONS = [...Object.keys(DOING), 'appoint', 'setPolicy', 'drawTreasury', 'grant', 'seize', 'besiege', 'swear', 'leave', 'askHelp', 'ransom', 'release'];
+  const ACTIONS = [...Object.keys(DOING), 'appoint', 'setPolicy', 'drawTreasury', 'grant', 'seize', 'besiege', 'serve', 'swear', 'askRelease', 'defect', 'leave', 'askHelp', 'ransom', 'release'];
 
   CL.rights = { PLAYER, ACTIONS, may, why, allegiance, enemyOf };
 })(typeof window !== 'undefined' ? window : globalThis);

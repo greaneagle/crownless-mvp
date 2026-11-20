@@ -480,6 +480,31 @@
         }
         break;
       }
+      case 'serveHere':
+      case 'swearHere': {
+        // P8-04: an allegiance whatever the requirements (test setup).
+        const f = CL.realm.sovereignOf($('#cheatHolding').value, c());
+        const a = CL.allegiance.state(c());
+        Object.assign(a, act === 'serveHere' ? { kind: 'mercenary', realm: f, since: c().day, until: c().day + 30, serviceDays: 0, summonsMissed: 0, window: null, nextPay: c().day + 7, served: Math.floor(c().day), lastOath: c().day } : { kind: 'vassal', realm: f, since: c().day, until: null, serviceDays: 0, summonsMissed: 0, window: { start: c().day, days: 0 }, nextPay: null, served: null, lastOath: c().day });
+        log('allegiance', { kind: a.kind, realm: f });
+        CL.ui.message(`You are now ${a.kind === 'vassal' ? 'a vassal' : 'a mercenary'} of the ${CL.content.get('factions', f).name}`);
+        break;
+      }
+      case 'grantMe': {
+        const sid = $('#cheatHolding').value;
+        const h = CL.realm.holding(sid, c());
+        if (!h || CL.allegiance.sworn(c()) !== h.sovereign) return CL.ui.message('Swear to its realm first');
+        if (CL.realm.transfer(c(), sid, { holder: CL.realm.PLAYER, reason: 'debug grant', willing: true })) log('granted to you', { holding: sid });
+        break;
+      }
+      case 'serviceDays': {
+        const a = CL.allegiance.state(c());
+        if (a.kind === 'independent') return CL.ui.message('You serve no realm');
+        a.serviceDays += n;
+        if (a.window) a.window.days += n;
+        log('service days', { days: n });
+        break;
+      }
       case 'ransomNow': {
         const x = CL.lords.prisoners(c()).find((p) => p.by === 'player');
         if (!x) return CL.ui.message('You hold no prisoner');

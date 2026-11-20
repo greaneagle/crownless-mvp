@@ -210,6 +210,8 @@ declare global {
     /** v19 (P8-02): every settlement of a kingdom (not the free city), by settlement id. */
     holdings: Record<ContentId, Holding>;
     /** v20 (P8-01): lords held captive, by the player or off-screen by a realm. */
+    /** v21 (P8-04): independent, a realm's mercenary, or its vassal. */
+    allegiance: { kind: 'independent' | 'mercenary' | 'vassal'; realm: ContentId | null; since: number; until: number | null; serviceDays: number; summonsMissed: number; history: any[]; window: { start: number; days: number } | null; lastOath: number | null; nextPay: number | null; served: number | null; hunt: { realm: ContentId; until: number } | null };
     prisoners: { lord: string; by: string; since: number; led: number; offerDay: number | null; offered: boolean; checked: number; release: number | null }[];
     /** v10 (W-07): each pair of kingdoms ("a|b", ids in order): peace, tension or war, and its counters. */
     relations: Record<string, { state: 'peace' | 'tension' | 'war'; since: number; heat: number; losses: number; lastClash: number | null; incidentUntil: number }>;
@@ -327,6 +329,8 @@ declare global {
   interface ChronicleEntry {
     day: number;
     kind: string;
+    /** allegiance (P8-04): what you were when it ended. */
+    as?: 'mercenary' | 'vassal';
     place?: string | null;
     names?: string[];
     n?: number;

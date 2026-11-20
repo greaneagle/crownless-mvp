@@ -26,7 +26,7 @@
   'use strict';
   const CL = root.Crownless;
 
-  const VERSION = 20;
+  const VERSION = 21;
   const KEY = 'crownless_save';
   const BACKUP_KEY = 'crownless_save_backup';
   const LEGACY_KEY = 'crownless_v03_party';
@@ -101,6 +101,7 @@
       nextPersonId: 1,
       holdings: {}, // settlement → { kind, sovereign, holder, controller, seat, administrator, claims } (P8-02)
       prisoners: [], // lords held captive: by you, or off-screen by a realm (P8-01)
+      allegiance: CL.allegiance.blank(), // independent, a realm's mercenary, or its vassal (P8-04)
       relations: CL.realm.defaultRelations(), // kingdom pair → peace, tension or war (W-07)
       story: CL.story.blank(), // quest progress, story flags, conversation visits (GDD §13)
       companion: null, // Mara, once she joins (GDD §10)
@@ -207,6 +208,7 @@
     18: [...V3_FIELDS, ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object'], ['accounts', 'object'], ['ledger', 'array'], ['followers', 'object'], ['relations', 'object'], ['medicine', 'number'], ['detachments', 'array'], ['retinue', 'array'], ['happenings', 'object'], ['tourney', 'object'], ['businesses', 'object']],
     19: [...V3_FIELDS.filter(([f]) => f !== 'owners'), ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object'], ['accounts', 'object'], ['ledger', 'array'], ['followers', 'object'], ['relations', 'object'], ['medicine', 'number'], ['detachments', 'array'], ['retinue', 'array'], ['happenings', 'object'], ['tourney', 'object'], ['businesses', 'object'], ['people', 'object'], ['rulers', 'object'], ['nextPersonId', 'number'], ['holdings', 'object']],
     20: [...V3_FIELDS.filter(([f]) => f !== 'owners'), ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object'], ['accounts', 'object'], ['ledger', 'array'], ['followers', 'object'], ['relations', 'object'], ['medicine', 'number'], ['detachments', 'array'], ['retinue', 'array'], ['happenings', 'object'], ['tourney', 'object'], ['businesses', 'object'], ['people', 'object'], ['rulers', 'object'], ['nextPersonId', 'number'], ['holdings', 'object'], ['prisoners', 'array']],
+    21: [...V3_FIELDS.filter(([f]) => f !== 'owners'), ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object'], ['accounts', 'object'], ['ledger', 'array'], ['followers', 'object'], ['relations', 'object'], ['medicine', 'number'], ['detachments', 'array'], ['retinue', 'array'], ['happenings', 'object'], ['tourney', 'object'], ['businesses', 'object'], ['people', 'object'], ['rulers', 'object'], ['nextPersonId', 'number'], ['holdings', 'object'], ['prisoners', 'array'], ['allegiance', 'object']],
   };
 
   /** @param {unknown} v @param {string} kind */
@@ -405,6 +407,8 @@
     18: migrateHoldings,
     // 19 → 20 (build 2.26.0, P8-01): no prisoners yet; the lords' parties form at their homes on load.
     19: (d) => ({ ...d, version: 20, prisoners: [] }),
+    // 20 → 21 (build 2.27.0, P8-04): everyone was independent.
+    20: (d) => ({ ...d, version: 21, allegiance: { kind: 'independent', realm: null, since: typeof d.day === 'number' ? d.day : 0, until: null, serviceDays: 0, summonsMissed: 0, history: [], window: null, lastOath: null, nextPay: null, served: null, hunt: null } }),
   };
 
   /**
@@ -462,6 +466,7 @@
     CL.news.sanitize(s, d); // recent events and news lines
     CL.parties.sanitize(s, d); // world parties and the RNG seed
     CL.lords.sanitize(s, d); // prisoners (P8-01), after the people and the lords' parties
+    CL.allegiance.sanitize(s, d); // your allegiance (P8-04)
     CL.contracts.sanitize(s, d); // after parties: an active hunt needs its band
     CL.happenings.sanitize(s, d); // world events (P7-08), after parties: an infestation needs its band
     CL.tourney.sanitize(s, d); // tournaments and your rival (P7-09)

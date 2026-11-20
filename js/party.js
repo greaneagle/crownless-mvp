@@ -254,6 +254,7 @@
     CL.tourney?.tick(camp); // tournaments announced and closed (P7-09)
     CL.business?.tick(camp); // your mill: who holds its village, and any seizure due (P7-10)
     CL.lords?.tick(camp); // prisoners escape or come home; free lords ride out again (P8-01)
+    CL.allegiance?.tick(camp); // pay, service, terms, expulsion, the hunt (P8-04)
     CL.news.tick(camp); // a regional news line every couple of days
     return healed;
   }

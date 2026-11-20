@@ -1674,7 +1674,46 @@ Phase 8 adds many rights: appoint, tax, summon, grant, besiege, swear, leave, ra
 
 **Acceptance.** Lords are visible, readable and meetable. Capture and ransom work both ways with no duplicates. The map stays within W-07's budget on the phone (Debug → Map stress 80 with lords).
 
-### P8-04 · Allegiance (M) — Specified
+### P8-04 · Allegiance (M) — ✅ Done in 2.27.0
+
+**Done (2.27.0, 2026-11-21).** Save schema v21. `js/allegiance.js` (`CL.allegiance`) holds the state, pay, service, leaving and the preview. The rights to `serve`, `swear`, `askRelease` and `defect` are `CL.rights`'s (P8-03); `rights.allegiance(c, 'player')` is now your vassal's realm.
+- **Service** (a card on a capital's notice board):
+  - needs Neutral standing or better;
+  - runs 30 days at a weekly pay of 20 + 3 a soldier + a tenth of your renown, from the realm's purse (the ledger's `world` → purse);
+  - every day under contract is a day of service to that realm;
+  - its patrols and lords take your side in a fight (`reinforce.sideOf`);
+  - attacking its own patrols, caravans or lords breaks it;
+  - it ends at its term, with a message to renew at the capital. Renew on the same card, or take service again after a served term with no wait.
+- **Fealty** (a card on the same board, to the ruler):
+  - needs Friendly standing, 150 renown, and 20 days of mercenary service to that realm or the story's favour (your Q4 side);
+  - pays nothing;
+  - a vassal owes 10 days of service in every 30. A day of service is a battle won against Reavers or an enemy at war with the realm, or a day spent at one of your holdings, at most one a day. A month short counts as a missed call, and three cast you out.
+- **Leaving** (the Realm screen's new **Allegiance** tab, from anywhere):
+  - **Ask for release:** free when you owe nothing and the realm is at peace; 15 standing if you owe service; refused while the realm is at war. Your fief returns to the crown with no claim.
+  - **Leave a contract early:** 10 standing.
+  - **Defect:** 40 standing; each fief lost with a `granted` claim kept (`realm.transfer` gains `claimKind`); the realm's lords hunt you for 10 days whatever your standing (`parties.wantsPlayer`), then stop.
+  - **Expulsion** (three months short, a breach, or standing turned Hostile): as defection, without the hunt.
+  - **Seven days between oaths.** A served term doesn't count.
+- **The preview** (`allegiance.preview(c, action, realm)` → `{ ok, why, lines, effects }`) is shown on every card before its button. `act` does exactly its `effects`; a test checks each action against them. It says what you lose ("You will lose Westholt Castle. You keep a claim to it."), the standing, the hunt, an ended contract ("Your contract with the Aurelian Remnant ends."), "Lords who think well of you may think less of you" (uncertain until P8-07), and always "Your soldiers, money, mill and followers stay yours" (naming what you have). A refusal shows its reason on the card, with the button disabled.
+- **Invariants:** a holding held by the player must be of the realm they're sworn to.
+- **Chronicle:** an `allegiance` entry for each contract or oath that ends, and how.
+- **Debug → Lords:** serve or swear to the chosen holding's realm whatever the requirements, grant it to me (sworn to its realm), service +10 days.
+- **Tests:**
+  - `tests/allegiance.test.js` (9): the design's §16.5 acceptance as a script (a contract, fealty, Westholt granted, released on terms, the soldiers kept); pay against the ledger; the term and renewal; sides and the breach; a vassal's service and expulsion; defection and the hunt ending; release's costs and refusal, the seven days, leaving early; switching; every action's preview against what it did with nothing personal lost; saves and the 2.26 fixtures.
+  - `tests/browser/allegiance.spec.js` (2, desktop and phone): the Service card's preview and button, the disabled Swear card with its reason, the Allegiance tab and leaving; a vassal's defection preview.
+  - **Edited:** `rights.test.js`'s swear case (it now has requirements), and the save version.
+- **Not as specified:**
+  - **No summonses yet** (P8-06a, P8-07). Missed calls come only from short months of service, and service at a summons isn't counted yet.
+  - **Land is granted only by debug** until P8-05.
+  - **"Its lands recruit you even at Neutral"** needed nothing: only a Hostile owner bars recruiting already.
+  - **Leaving a contract early** wasn't specified. It costs 10 standing.
+  - **AI lords' allegiance** waits for P8-07, as planned.
+- **Test tiers (NEXT-PLAN §7):**
+  - `npm test` (747) and lint ran;
+  - the full browser suite ran (169; 167 passed. The ford's wading-speed timing and the phone's tournament bout failed under its load; the ford passes 4 of 4 alone, and the bout is the known flake from 2.25.0);
+  - the slow `campaign-bots` file ran (2 of 2).
+  
+  The other slow files were skipped: this task doesn't reach the story, battles, world parties' counts, followers or the world package. The whole suite runs at the P8-05 checkpoint.
 
 **Problem.** The player is always an independent. The design's acceptance (§16.5) is: "accepts a mercenary contract, becomes a vassal, receives a castle, leaves the realm under negotiated terms, retains personal soldiers, and sees only the expected titles and obligations change."
 

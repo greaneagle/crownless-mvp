@@ -15,6 +15,7 @@
  *   tourney    a tournament you fought in (P7-09): champion, finalist or out, and to whom
  *   business   your mill bought, sold or seized, and by whom (P7-10)
  *   holding    a holding you were granted, lost or claimed changed hands (P8-02)
+ *   allegiance a contract or an oath ended, and how (P8-04)
  *
  * The roll of honour (c.honour, saved) remembers soldiers who left the company: who they were, where
  * they came from, how long they served and their record, and how they left (fell, deserted, retired).
@@ -32,7 +33,7 @@
   const HONOUR_MAX = 60;
   const NOTABLE_KILLS = 8;
   const NAMES_MAX = 6; // names kept on one entry
-  const KINDS = ['founded', 'begun', 'recruited', 'promoted', 'battle', 'deserted', 'retired', 'quest', 'happening', 'tourney', 'business', 'holding'];
+  const KINDS = ['founded', 'begun', 'recruited', 'promoted', 'battle', 'deserted', 'retired', 'quest', 'happening', 'tourney', 'business', 'holding', 'allegiance'];
   const HOW = ['fell', 'deserted', 'retired'];
 
   /** @returns {HonourRoll} */
@@ -190,6 +191,19 @@
         return CL.business.chronicleText(e);
       case 'holding':
         return CL.realm.chronicleText(e);
+      case 'allegiance': {
+        const f = CL.content.table('factions')[e.by]?.name || 'a realm';
+        const as = e.as === 'vassal' ? 'vassal' : 'mercenary';
+        return {
+          term: `Served out a contract as a mercenary of the ${f}.`,
+          early: `Left the ${f}'s service before the term.`,
+          release: `Released from an oath as a vassal of the ${f}.`,
+          switched: `Left the ${f}'s service for another crown.`,
+          defect: `Broke with the ${f} without leave.`,
+          expelled: `Cast out by the ${f}.`,
+          breach: `Broke a contract with the ${f} as their ${as}.`,
+        }[e.event] || `Left the ${f}.`;
+      }
       case 'happening': {
         const t = CL.content.table('world_events')[e.event]?.chronicle?.[e.result];
         return t ? CL.happenings.fill(t, { kind: e.event, place: e.place, dest: e.dest }, CL.campaign, { n: e.n }) : '';
@@ -272,6 +286,10 @@
         if (!settlements[e.place] || !['bought', 'sold', 'seized'].includes(e.event)) continue;
         Object.assign(out, { event: e.event, place: e.place });
         if (e.event === 'seized' && CL.content.table('factions')[e.by]) out.by = e.by;
+      }
+      if (e.kind === 'allegiance') {
+        if (!['term', 'early', 'release', 'switched', 'defect', 'expelled', 'breach'].includes(e.event) || !CL.content.table('factions')[e.by]) continue;
+        Object.assign(out, { event: e.event, as: e.as === 'vassal' ? 'vassal' : 'mercenary', by: e.by });
       }
       if (e.kind === 'holding') {
         if (!settlements[e.place] || !['gained', 'lost', 'changed'].includes(e.event)) continue;

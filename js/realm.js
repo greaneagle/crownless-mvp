@@ -257,7 +257,7 @@
    * @param {{ controller?: string, sovereign?: string, holder?: string, reason?: string, willing?: boolean, by?: string }} change
    * @returns {boolean} true when anything changed
    */
-  function transfer(c, sid, { controller, sovereign, holder, reason = '', willing = false, by } = {}) {
+  function transfer(c, sid, { controller, sovereign, holder, reason = '', willing = false, by, claimKind = 'old' } = {}) {
     const h = holding(sid, c);
     if (!h) return false;
     const toController = controller ?? h.controller;
@@ -271,7 +271,7 @@
     if (toHolder !== rulerOf(toSovereign, c) && toHolder !== h.holder && fiefsOf(toHolder, c).length >= FIEF_CAP) return false;
     if (toController === h.controller && toSovereign === h.sovereign && toHolder === h.holder) return false;
     const before = { controller: h.controller, sovereign: h.sovereign, holder: h.holder };
-    const changed = [move(c, h, sid, toController, toSovereign, toHolder, willing)];
+    const changed = [move(c, h, sid, toController, toSovereign, toHolder, willing, claimKind)];
     // A seat's villages go with its gates: to the new controller and sovereign, held by its ruler until granted.
     if (toController !== before.controller) {
       for (const v of villagesOf(sid, c)) {
@@ -294,9 +294,9 @@
     return true;
   }
   /** One holding's change, with the claim of a holder who lost it unwillingly. */
-  function move(c, h, sid, controller, sovereign, holder, willing) {
+  function move(c, h, sid, controller, sovereign, holder, willing, claimKind = 'old') {
     const from = h.holder;
-    if (from !== holder && !willing && (sovereign !== h.sovereign || from !== rulerOf(h.sovereign, c))) addClaimRaw(c, h, { by: from, realm: h.sovereign, kind: 'old' });
+    if (from !== holder && !willing && (sovereign !== h.sovereign || from !== rulerOf(h.sovereign, c))) addClaimRaw(c, h, { by: from, realm: h.sovereign, kind: claimKind });
     h.claims = h.claims.filter((x) => x.by !== holder); // a claim made good is a claim no more
     Object.assign(h, { controller, sovereign, holder });
     return { sid, from };
@@ -638,6 +638,7 @@
       const p = person(h.holder, c);
       if (!p) out.push(`${sid}: no holder`);
       else if (h.holder !== PLAYER && p.realm !== h.sovereign && rules(h.holder, c) !== h.sovereign) out.push(`${sid}: its holder is not sworn to ${h.sovereign}`);
+      else if (h.holder === PLAYER && CL.allegiance && CL.allegiance.sworn(c) !== h.sovereign) out.push(`${sid}: you hold it but are not sworn to ${h.sovereign}`); // P8-04
       if (!isRealm(h.sovereign)) out.push(`${sid}: no sovereign`);
       if (!isKingdom(h.controller)) out.push(`${sid}: no controller`);
       if (h.seat && h.controller !== c.holdings[h.seat]?.controller) out.push(`${sid}: not controlled with its seat`);

@@ -143,7 +143,8 @@
 
   function wantsPlayer(c, p) {
     const t = tpl(p.template);
-    if (!hostileTo(c, t) || !playerOnMap(c) || now(c) < p.ignoreUntil) return false;
+    const hunting = t.kind === 'lord' && CL.allegiance?.hunted(c, t.faction); // after a defection, its lords ride you down (P8-04)
+    if ((!hostileTo(c, t) && !hunting) || !playerOnMap(c) || now(c) < p.ignoreUntil) return false;
     if (!CL.sight.partySees(c, p, now(c))) return false; // P7-04: night, ground, forest, size, Hide
     if (p.questTag) return !p.camp; // a story ambush springs whatever the odds; a camp waits to be found
     if (p.ambush) return dist(p, c.world) <= AMBUSH_RANGE; // lies still on the escort road and springs as you pass
@@ -758,6 +759,7 @@
   function assaultPenalty(c, e) {
     if (e.kind !== 'party' || e.hostile || !e.t.faction || e.t.kind === 'bandit') return;
     CL.realm.adjust(c, e.t.faction, e.t.kind === 'lord' ? LORD_ATTACK : CL.realm.REP.attack, `attacked ${e.t.id}`);
+    CL.allegiance?.onAttack(c, e.t.faction); // attacking those you serve breaks the contract or oath (P8-04)
   }
 
   /** Fight the open encounter. `plan`: the setup chosen on the preparation screen (V2-07), if any. */

@@ -93,13 +93,14 @@ test('seize and besiege: forts only, story locks and capitals hold; a siege need
   assert.match(may(hamon, 'besiege', 'redfield').why, /fort or a town/);
 });
 
-test('allegiance (P8-04): everyone independent until then; swear, leave, ask for help, ransom', () => {
+test('allegiance: swear, serve, leave, ask for help, ransom', () => {
   const { CL, c, may } = world();
   const hamon = byKey(c, 'hamon_greymantle');
   assert.equal(CL.rights.allegiance(c, 'player'), null);
   assert.equal(CL.rights.allegiance(c, hamon), 'valedorn');
-  assert.equal(may('player', 'swear', 'stonebridge').ok, true);
-  assert.equal(may('player', 'swear', 'vessaro').ok, true, 'a realm by name');
+  // P8-04: a vassal's oath needs Friendly standing, renown and service first (tests/allegiance.test.js).
+  assert.match(may('player', 'swear', 'stonebridge').why, /must count you a friend/);
+  assert.equal(may('player', 'serve', 'vessaro').ok, true, 'a realm by name');
   assert.match(may('player', 'swear', 'merrow').why, /no crown/, 'the free city has none');
   assert.match(may(hamon, 'swear', 'eastwatch').why, /already sworn to the Valedorn Crown/);
   assert.match(may('player', 'leave').why, /sworn to no realm/);
@@ -108,6 +109,7 @@ test('allegiance (P8-04): everyone independent until then; swear, leave, ask for
   assert.equal(may('player', 'askHelp', hamon).ok, true);
   CL.realm.adjust(c, 'valedorn', -60);
   assert.match(may('player', 'swear', 'stonebridge').why, /Hostile/);
+  assert.match(may('player', 'serve', 'stonebridge').why, /will not hire you/);
   assert.match(may('player', 'askHelp', hamon).why, /will not help an enemy of the Valedorn Crown/);
   // Captives (P8-01).
   assert.match(may('player', 'ransom', hamon).why, /no one’s captive/);

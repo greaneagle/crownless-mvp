@@ -1,5 +1,18 @@
 # Crownless — Release Notes
 
+## v2.27.0 — Service and fealty (P8-04) · 2026-11-21
+
+### New
+- **Take service with a kingdom.** A capital's notice board now offers Service: 30 days as that kingdom's mercenary, paid every week by renown and the size of your company. Its patrols and lords take your side in a fight. Attacking its own soldiers breaks the contract. Renew it at the capital.
+- **Swear fealty.** Serve a kingdom 20 days (or have stood with it at Greywall), be counted a friend, and earn 150 renown, and you may kneel to its ruler as a vassal. There is no pay, but land may be granted later. You owe 10 days of service a month (fighting its enemies, or staying at a fief of yours), and you must never fight its people. Three months short and you are cast out.
+- **Leaving.** The Realm screen's new Allegiance tab shows where you stand. Ask for release: it's free when you owe nothing and the realm is at peace, costs 15 standing if you owe service, and is refused while the realm is at war. Or defect: you lose 40 standing, any fief (keeping a claim to it), and the realm's lords hunt you for 10 days. Leaving a contract early costs 10 standing. Seven days between oaths.
+- **Every change says first what it will do:** what you lose, what you keep, and what may follow. Your soldiers, money, mill and followers are never part of it.
+
+### Under the hood
+- Save version 21. Saves from 2.26.0 load, independent as before.
+- Debug → Lords: serve or swear to the chosen holding's realm whatever the requirements, have that holding granted to you, and +10 days of service.
+- **Tests:** 747 fast Node tests and the slow `campaign-bots` file (the whole slow suite runs at the next checkpoint, P8-05), 169 browser tests (21 skipped: the visual baselines, Linux only, and those for one device only).
+
 ## v2.26.0 — Lords on the map (P8-01) · 2026-11-20
 
 ### New

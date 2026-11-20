@@ -496,7 +496,44 @@
     } else if (!offers.length) {
       cards.push(contractCard('Nothing posted', ['The board is bare for now. New work goes up every few days.'], []));
     }
+    cards.push(...allegianceCards(c, sid, renderContracts)); // service and fealty at a capital (P8-04)
     $('#contractsScreen').replaceChildren(...cards);
+  }
+
+  /**
+   * P8-04: a change of allegiance as a card: what it is, the preview's lines (what changes and what
+   * stays), and the one button that does exactly that. A refusal shows its reason on the card.
+   */
+  function allegianceCard(c, action, realm, title, label, redo) {
+    const AL = CL.allegiance;
+    const p = AL.preview(c, action, realm);
+    const card = contractCard(title, p.ok ? p.lines : [p.why], [
+      [
+        label,
+        () => {
+          if (AL.act(c, action, realm)) CL.save.write();
+          redo();
+        },
+        !p.ok,
+      ],
+    ]);
+    card.classList.add('allegianceCard');
+    card.dataset.action = action;
+    return card;
+  }
+
+  /** At a kingdom's capital: Service (a mercenary contract, or its renewal), and Swear fealty to its ruler. */
+  function allegianceCards(c, sid, redo) {
+    const R = CL.realm;
+    const f = R.owner(sid, c);
+    if (!R.isRealm(f) || R.capitalOf(f) !== sid) return [];
+    const a = CL.allegiance.state(c);
+    const name = CL.content.get('factions', f).name;
+    const out = [];
+    if (a.kind === 'mercenary' && a.realm === f) out.push(allegianceCard(c, 'renew', f, `Renew your service with the ${name}`, 'Renew for 30 days', redo));
+    else if (!(a.kind === 'vassal' && a.realm === f)) out.push(allegianceCard(c, 'serve', f, `Service with the ${name}`, 'Take service', redo));
+    if (!(a.kind === 'vassal' && a.realm === f)) out.push(allegianceCard(c, 'swear', f, `Swear fealty to ${R.titled(R.rulerOf(f, c), c)}`, 'Swear fealty', redo));
+    return out;
   }
 
   // ---- Encounter choices (GDD §8): Attack, Auto-resolve, Negotiate, Retreat ----
@@ -2199,11 +2236,12 @@
     const R = CL.realm;
     const el = (tag, cls, text) => Object.assign(document.createElement(tag), { className: cls || '', textContent: text || '' });
     const S = (id) => CL.content.get('settlements', id);
-    const tab = CL.game.realmTab === 'lords' ? 'lords' : 'holdings';
+    const tab = ['lords', 'allegiance'].includes(CL.game.realmTab) ? CL.game.realmTab : 'holdings';
     const tabs = el('div', 'row realmTabs');
     for (const [id, label] of [
       ['holdings', 'Holdings'],
       ['lords', 'Lords'],
+      ['allegiance', 'Allegiance'],
     ]) {
       const b = el('button', id === tab ? 'on' : '', label);
       b.type = 'button';
@@ -2216,6 +2254,23 @@
       tabs.append(b);
     }
     const cards = [];
+    if (tab === 'allegiance') {
+      // P8-04: what you are, its term or service, what is owed, and leaving, each with its preview.
+      const s = CL.allegiance.summary(c);
+      const me = el('div', 'contractCard realmCard');
+      me.dataset.realm = 'you';
+      me.append(el('h3', '', s.title), ...s.lines.map((l) => el('p', '', l)));
+      const a = CL.allegiance.state(c);
+      const redo = () => renderRealm();
+      const leave = [];
+      if (a.kind === 'mercenary') leave.push(allegianceCard(c, 'release', a.realm, 'Leave their service', 'Leave now', redo));
+      if (a.kind === 'vassal') {
+        leave.push(allegianceCard(c, 'release', a.realm, 'Ask for release', 'Ask for release', redo));
+        leave.push(allegianceCard(c, 'defect', a.realm, 'Break your oath', 'Defect', redo));
+      }
+      $('#realmScreen').replaceChildren(tabs, me, ...leave);
+      return;
+    }
     for (const f of R.realms()) {
       const card = el('div', 'contractCard realmCard');
       card.dataset.realm = f.id;
