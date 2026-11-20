@@ -201,7 +201,12 @@
     CL.game.waiting = false;
     CL.game.travel = target;
     if (mapDist(w.x, w.y, target.x, target.y) <= ARRIVE_EPSILON) arrive(target);
-    else CL.scout?.onSetOff(CL.campaign, target); // how long, and what is known on the way (P7-02)
+    else {
+      const e = CL.scout?.onSetOff(CL.campaign, target); // how long, and what is known on the way (P7-02)
+      // A settlement's holder, and who has its gates (P8-02).
+      const line = target.type === 'settlement' ? CL.realm.tapLine(target.id, CL.campaign) : null;
+      if (line) CL.ui.message(e ? `${e.text} ${line}` : line);
+    }
   }
 
   function click(px, py) {

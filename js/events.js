@@ -15,6 +15,8 @@
  *   SoldierKilled      { soldierId, troop, resultId }
  *   SoldierDeserted    { soldierId, troop, morale }
  *   WagesPaid          { owed, paid, shares: { soldierId: crowns } }  (shares add up to paid)
+ *   HoldingChanged     { holding, from: { controller, sovereign, holder }, to: { … }, villages, reason }
+ *                      (P8-02: once per realm.transfer; `villages` went with the seat)
  *
  * Listeners are called as fn(event, campaign), synchronously, in the order they were added. A
  * listener that throws is logged and skipped, so it can never undo or block the change that emitted the event. Listeners are not
@@ -23,7 +25,7 @@
   'use strict';
   const CL = root.Crownless;
 
-  const TYPES = ['BattleResolved', 'EncounterResolved', 'SoldierRecruited', 'SoldierPromoted', 'SoldierWounded', 'SoldierKilled', 'SoldierDeserted', 'WagesPaid', 'ReinforcementsArrived', 'SoldierRetired'];
+  const TYPES = ['BattleResolved', 'EncounterResolved', 'SoldierRecruited', 'SoldierPromoted', 'SoldierWounded', 'SoldierKilled', 'SoldierDeserted', 'WagesPaid', 'ReinforcementsArrived', 'SoldierRetired', 'HoldingChanged'];
   const RECENT = 50;
 
   /** @type {Record<string, Array<(e: GameEvent, c: Campaign) => void>>} */

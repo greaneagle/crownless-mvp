@@ -1,6 +1,6 @@
 # Crownless — Project Status & Roadmap
 
-_Last reviewed: 2026-11-20 · Build 2.23.0 · Spec: `Crownless_MVP_GDD_v1.md` (engine overridden: HTML5 Canvas + classic JS, no bundler, GitHub Pages)._
+_Last reviewed: 2026-11-20 · Build 2.24.0 · Spec: `Crownless_MVP_GDD_v1.md` (engine overridden: HTML5 Canvas + classic JS, no bundler, GitHub Pages)._
 
 This replaces the opencode-swarm plan (`.swarm/plan.md`, removed). The gate structure (A→E) is kept from the GDD; the task list is condensed and re-ordered around what the code actually needs.
 
@@ -146,6 +146,7 @@ From the owner's v2.0 design (`Crownless_v2_0_Feature_and_Systems_Design_Part_1.
   - ✅ (2.22.0) P7-11 battle extras: the infantry's shield wall and wedge (Orders; Defensive starts in a wall), the Hill Slopes battle map where archers on a rise shoot 25% further, fords breaking formations, and protecting the wagon in escort ambushes (if it burns, or the fight is lost, so is the contract); each measured on its own (`scripts/extras.js`)
   - ✅ (2.21.0) P7-10 the first business, a mill: bought in a village or town, run every payday by its miller through the same market functions (flour, a new good), its own money and ledger, weekly reports with the causes of bad weeks, the owner's due, seizure by a Hostile owner after a warning, selling for less than you paid; save v18
   - **Phase 7, "The Living Company":** the deferred battle balance pass (B-01), surgeon, scout and blacksmith, pursuit and detection, officers and detached patrols, more companions, soldier traits, world events, a tournament, a first business, battle extras.
+  - ✅ (2.24.0) P8-02 holdings model: every town, fort and village of a kingdom is a holding with a sovereign, a holder (a lord or the ruler, never vacant), a controller, a seat (villages follow it) and claims; 26 people of the realms (rulers and lords with kin, men and women, a queen); `realm.transfer` the one change of hands, with one `HoldingChanged` event; story forts locked until Q4 ends; soldiers named from men's names; a read-only Realm screen (from the Journal); save v19 from 2.23.0's fixtures
   - **Phase 8, "The Landed World"** (re-specified 2026-11-20 at 2.23.0; NEXT-PLAN §5): in build order, holdings and claims (P8-02), permissions (P8-03), lords on the map (P8-01), allegiance (P8-04), fiefs and castellans (P8-05), sieges on the map (P8-06a) and the assault battle (P8-06b), named nobles (P8-07), losing and retaking land (P8-08), tuning (P8-T, 3.0.0). Every village, fort and town is held by a lord or the ruler; lords may hold nothing (campaigning kin and household knights), one place or several, and gain and lose land, quarrel, feud and change realm by the same rules as the player (no fixed classes; a lord can become a ruler in Phase 9). Acceptance is "The Dispossessed Lord" (Prototype D). The owner took D-P8a–D-P8c as their defaults (2026-11-20); nothing blocks its start.
   - **Phase 9, "Kingdoms & Houses":** realms, diplomacy and treaties, founding a kingdom, rebellion and deposition, armies, houses and marriage, modding and a second world.
 

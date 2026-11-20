@@ -5,6 +5,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { loadGame } = require('./helpers/load');
+const { preHoldings } = require('./helpers/pre-holdings');
 
 const plain = (v) => JSON.parse(JSON.stringify(v));
 
@@ -285,9 +286,10 @@ test('saves: kept; junk repaired; a v16 save migrates to v17', () => {
   assert.equal(s.rival, null);
   const v16 = plain(c);
   v16.version = 16;
+  preHoldings(v16);
   delete v16.tourney;
   const m = CL.save.fromRaw(v16).campaign;
-  assert.equal(m.version, 18); // on through v18 (businesses, P7-10)
+  assert.equal(m.version, CL.save.VERSION); // on through v18 (businesses, P7-10)
   assert.equal(m.tourney.bracket, null);
   for (const h of Object.values(m.tourney.hosts)) assert.ok(h.next >= c.day);
 });

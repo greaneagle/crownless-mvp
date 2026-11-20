@@ -3,6 +3,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { loadGame, memoryStorage } = require('./helpers/load');
+const { preHoldings } = require('./helpers/pre-holdings');
 
 const plain = (v) => JSON.parse(JSON.stringify(v));
 
@@ -139,8 +140,9 @@ test('saves: forged gear, fine kit and the blacksmith kept; junk dropped; a v11 
   assert.deepEqual(plain(junk.inventory), {});
   const v11 = plain(c);
   v11.version = 11;
+  preHoldings(v11);
   delete v11.followers.blacksmith;
   const r = CL.save.fromRaw(v11);
-  assert.equal(r.campaign.version, 18);
+  assert.equal(r.campaign.version, CL.save.VERSION);
   assert.equal(r.campaign.followers.blacksmith, null);
 });

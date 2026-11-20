@@ -75,6 +75,9 @@
     if (mode === 'journal') {
       return { title: 'JOURNAL', text: '', button: 'Back' };
     }
+    if (mode === 'realm') {
+      return { title: 'THE REALMS', text: '', button: 'Back' };
+    }
     if (mode === 'ending') {
       return { title: g.ending.title.toUpperCase(), text: g.ending.text, button: 'Return to the March' };
     }
@@ -198,10 +201,11 @@
     $('#accountsScreen').classList.toggle('hidden', mode !== 'accounts');
     $('#detachScreen').classList.toggle('hidden', mode !== 'detachments');
     $('#journalScreen').classList.toggle('hidden', mode !== 'journal');
+    $('#realmScreen').classList.toggle('hidden', mode !== 'realm');
     $('#savesScreen').classList.toggle('hidden', mode !== 'saves');
     $('#talkOptions').classList.toggle('hidden', mode !== 'talk');
     $('#titleExtras').classList.toggle('hidden', mode !== 'title');
-    $('#overlayText').classList.toggle('hidden', mode === 'saves' || mode === 'journal');
+    $('#overlayText').classList.toggle('hidden', mode === 'saves' || mode === 'journal' || mode === 'realm');
     const screen = screenFor(mode);
     if (mode === 'result') $('#result').innerHTML = g.result.html;
     $('#overlayTitle').textContent = screen.title;
@@ -221,6 +225,7 @@
     if (mode === 'saves') renderSaves();
     if (mode === 'talk') renderTalk();
     if (mode === 'journal') renderJournal();
+    if (mode === 'realm') renderRealm();
   }
 
   // ---- Talking to people in town (GDD §8: interaction opens dialogue menus) ----
@@ -2136,6 +2141,68 @@
     changeMode('journal');
   }
 
+  // ---- The Realm screen (P8-02): who holds what, and the lords; read-only for now ----
+
+  // It opens from the Journal (on the map and in every settlement): the phone's top row and the
+  // settlement menu have no room for another button. Back returns to the Journal.
+  function openRealm() {
+    if (!CL.campaign.character) return;
+    changeMode('realm');
+  }
+
+  function closeRealm() {
+    changeMode('journal');
+  }
+
+  function renderRealm() {
+    const c = CL.campaign;
+    const R = CL.realm;
+    const el = (tag, cls, text) => Object.assign(document.createElement(tag), { className: cls || '', textContent: text || '' });
+    const S = (id) => CL.content.get('settlements', id);
+    const tab = CL.game.realmTab === 'lords' ? 'lords' : 'holdings';
+    const tabs = el('div', 'row realmTabs');
+    for (const [id, label] of [
+      ['holdings', 'Holdings'],
+      ['lords', 'Lords'],
+    ]) {
+      const b = el('button', id === tab ? 'on' : '', label);
+      b.type = 'button';
+      b.dataset.tab = id;
+      b.setAttribute('aria-pressed', String(id === tab));
+      b.onclick = () => {
+        CL.game.realmTab = id;
+        renderRealm();
+      };
+      tabs.append(b);
+    }
+    const cards = [];
+    for (const f of R.realms()) {
+      const card = el('div', 'contractCard realmCard');
+      card.dataset.realm = f.id;
+      card.append(el('h3', '', `${f.name} · ${R.titled(R.rulerOf(f.id, c), c)}`));
+      if (tab === 'holdings') {
+        const list = el('ul', 'realmList');
+        const ids = Object.keys(c.holdings).filter((sid) => c.holdings[sid].sovereign === f.id);
+        const order = { town: 0, fort: 1, village: 2 };
+        ids.sort((a, b) => order[c.holdings[a].kind] - order[c.holdings[b].kind] || S(a).name.localeCompare(S(b).name));
+        for (const sid of ids) list.append(el('li', '', R.holdingLine(sid, c)));
+        card.append(list);
+      } else {
+        const list = el('ul', 'realmList');
+        for (const p of Object.values(c.people).filter((x) => x.realm === f.id)) {
+          const li = el('li', '', R.personLine(p.id, c));
+          li.dataset.person = p.id;
+          list.append(li);
+        }
+        card.append(list);
+      }
+      cards.push(card);
+    }
+    const free = R.kingdoms().filter((f) => f.freeCity);
+    const note = free.length ? el('p', 'realmNote', `${free.map((f) => f.name).join(', ')}: ${free.length > 1 ? 'free cities' : 'a free city'}, with no lords and no fiefs.`) : null;
+    $('#realmScreen').replaceChildren(tabs, ...cards, ...(note ? [note] : []));
+  }
+
   function closeJournal() {
     if (CL.game.journalReturn === 'map') changeMode('map');
     else CL.town.backToPlace();
@@ -2181,12 +2248,20 @@
       eventsCard.append(ul);
     }
     const extra = known.length ? [eventsCard] : [];
+    // The Realm screen (P8-02): who holds what, and the lords.
+    const realmRow = el('div', 'row journalRealm');
+    const realmBtn = el('button', '', 'The Realms: who holds what');
+    realmBtn.type = 'button';
+    realmBtn.id = 'journalRealmBtn';
+    realmBtn.onclick = openRealm;
+    realmRow.append(realmBtn);
     if (!rows.length) {
-      $('#journalScreen').replaceChildren(el('p', '', 'No quests yet. People in Stonebridge may have work for a stranger — try the Elder.'), ...extra, chronCard, newsCard);
+      $('#journalScreen').replaceChildren(realmRow, el('p', '', 'No quests yet. People in Stonebridge may have work for a stranger — try the Elder.'), ...extra, chronCard, newsCard);
       return;
     }
     const label = { active: 'In progress', done: 'Complete', failed: 'Failed' };
     $('#journalScreen').replaceChildren(
+      realmRow,
       ...rows.map((r) => {
         const card = el('div', `questCard ${r.status}`);
         card.append(el('h3', '', `${r.title}${r.side ? ' (errand)' : ''} — ${label[r.status]}`));
@@ -2382,6 +2457,8 @@
     talkTo,
     openJournal,
     closeJournal,
+    openRealm,
+    closeRealm,
     $,
     message,
     changeMode,

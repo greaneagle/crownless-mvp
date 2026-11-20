@@ -1,0 +1,1566 @@
+{
+ "format": "crownless-save",
+ "version": 18,
+ "game": "2.23.0",
+ "exportedAt": "2026-11-20T16:37:54.172Z",
+ "checksum": "4fd8d006",
+ "campaign": {
+  "version": 18,
+  "worldId": "sundered_realm",
+  "contentVersion": "2.23.0",
+  "gold": 3231,
+  "renown": 0,
+  "battles": 0,
+  "victories": 0,
+  "day": 4,
+  "nextSoldierId": 6,
+  "roster": [
+   {
+    "id": 1,
+    "troop": "axeman",
+    "xp": 0,
+    "woundedUntil": null,
+    "name": "Halvar",
+    "culture": "hrothmark",
+    "origin": "hrothgard",
+    "joined": 0,
+    "portrait": null,
+    "record": {
+     "battles": 0,
+     "victories": 0,
+     "kills": 0,
+     "assists": 0,
+     "wounds": 0,
+     "captures": 0,
+     "wagesPaid": 0
+    },
+    "notes": [
+     {
+      "day": 0,
+      "kind": "joined",
+      "place": "hrothgard"
+     }
+    ]
+   },
+   {
+    "id": 2,
+    "troop": "axeman",
+    "xp": 0,
+    "woundedUntil": null,
+    "name": "Brand",
+    "culture": "hrothmark",
+    "origin": "hrothgard",
+    "joined": 0,
+    "portrait": null,
+    "record": {
+     "battles": 0,
+     "victories": 0,
+     "kills": 0,
+     "assists": 0,
+     "wounds": 0,
+     "captures": 0,
+     "wagesPaid": 0
+    },
+    "notes": [
+     {
+      "day": 0,
+      "kind": "joined",
+      "place": "hrothgard"
+     }
+    ]
+   },
+   {
+    "id": 3,
+    "troop": "clansman",
+    "xp": 0,
+    "woundedUntil": null,
+    "name": "Runa of Hrothgard",
+    "culture": "hrothmark",
+    "origin": "hrothgard",
+    "joined": 0,
+    "portrait": null,
+    "record": {
+     "battles": 0,
+     "victories": 0,
+     "kills": 0,
+     "assists": 0,
+     "wounds": 0,
+     "captures": 0,
+     "wagesPaid": 0
+    },
+    "notes": [
+     {
+      "day": 0,
+      "kind": "joined",
+      "place": "hrothgard"
+     }
+    ]
+   },
+   {
+    "id": 4,
+    "troop": "fell_archer",
+    "xp": 0,
+    "woundedUntil": null,
+    "name": "Gunnar Smith",
+    "culture": "hrothmark",
+    "origin": "hrothgard",
+    "joined": 0,
+    "portrait": null,
+    "record": {
+     "battles": 0,
+     "victories": 0,
+     "kills": 0,
+     "assists": 0,
+     "wounds": 0,
+     "captures": 0,
+     "wagesPaid": 0
+    },
+    "notes": [
+     {
+      "day": 0,
+      "kind": "joined",
+      "place": "hrothgard"
+     }
+    ]
+   },
+   {
+    "id": 5,
+    "troop": "levy",
+    "xp": 0,
+    "woundedUntil": null,
+    "name": "Ragnar",
+    "culture": "hrothmark",
+    "origin": "hrothgard",
+    "joined": 0,
+    "portrait": null,
+    "record": {
+     "battles": 0,
+     "victories": 0,
+     "kills": 0,
+     "assists": 0,
+     "wounds": 0,
+     "captures": 0,
+     "wagesPaid": 0
+    },
+    "notes": [
+     {
+      "day": 0,
+      "kind": "joined",
+      "place": "hrothgard"
+     }
+    ]
+   }
+  ],
+  "inventory": {},
+  "lastResolvedBattle": 0,
+  "world": {
+   "x": 100,
+   "y": 22,
+   "location": "hrothgard",
+   "sites": {
+    "looter_camp": {
+     "clearedUntil": 0
+    },
+    "reaver_hideout": {
+     "clearedUntil": 0
+    },
+    "raider_steading": {
+     "clearedUntil": 0
+    },
+    "broken_tower": {
+     "clearedUntil": 0
+    },
+    "outlaw_glade": {
+     "clearedUntil": 0
+    },
+    "burnt_mill": {
+     "clearedUntil": 0
+    },
+    "deserter_camp": {
+     "clearedUntil": 0
+    },
+    "old_watchtower": {
+     "clearedUntil": 0
+    },
+    "wreckers_cove": {
+     "clearedUntil": 0
+    },
+    "marsh_hideout": {
+     "clearedUntil": 0
+    }
+   }
+  },
+  "character": {
+   "name": "Bot7",
+   "gender": "unspecified",
+   "cloak": "crimson",
+   "background": "farmhand",
+   "attributes": {
+    "str": 6,
+    "agi": 5,
+    "int": 5,
+    "cha": 5
+   },
+   "skills": {
+    "one_handed": 1,
+    "shield": 0,
+    "archery": 0,
+    "riding": 0,
+    "leadership": 0,
+    "tactics": 0,
+    "pathfinding": 0,
+    "trade": 0
+   },
+   "level": 1,
+   "xp": 0,
+   "skillPoints": 0,
+   "attributePoints": 0
+  },
+  "equipment": {
+   "weapon": "worn_sword",
+   "offhand": "oak_shield",
+   "head": null,
+   "body": "clothing",
+   "hands": null,
+   "feet": null,
+   "horse": null,
+   "ring": null
+  },
+  "food": 192,
+  "morale": 70,
+  "nextWagesDay": 7,
+  "starving": false,
+  "markets": {
+   "stonebridge": {
+    "grain": 0.8,
+    "salt": 1.1,
+    "wool": 0.9,
+    "iron": 1.1,
+    "cloth": 1.05,
+    "tools": 0.92,
+    "timber": 1.1,
+    "wine": 1.15,
+    "flour": 1.07
+   },
+   "eastwatch": {
+    "grain": 1.15,
+    "salt": 0.8200000000000001,
+    "wool": 1.1,
+    "iron": 1,
+    "cloth": 0.85,
+    "tools": 0.9,
+    "timber": 1.15,
+    "wine": 0.9700000000000001,
+    "flour": 1.18
+   },
+   "oakford": {
+    "grain": 0.8,
+    "salt": 1.3,
+    "wool": 0.9,
+    "iron": 1.3,
+    "cloth": 1.2,
+    "tools": 1.25,
+    "timber": 1,
+    "wine": 1.25,
+    "flour": 0.9
+   },
+   "highmere": {
+    "grain": 0.9400000000000001,
+    "salt": 1.25,
+    "wool": 0.8,
+    "iron": 0.85,
+    "cloth": 1.2,
+    "tools": 1.1,
+    "timber": 0.95,
+    "wine": 1.3,
+    "flour": 1.05
+   },
+   "brackenfield": {
+    "grain": 0.8200000000000001,
+    "salt": 1.3,
+    "wool": 0.92,
+    "iron": 1.2,
+    "cloth": 1.25,
+    "tools": 1.3,
+    "timber": 1,
+    "wine": 1.3,
+    "flour": 0.95
+   },
+   "dunmarsh": {
+    "grain": 1.25,
+    "salt": 0.8200000000000001,
+    "wool": 1.2,
+    "iron": 1.3,
+    "cloth": 0.9400000000000001,
+    "tools": 1.2,
+    "timber": 1.2,
+    "wine": 1.1,
+    "flour": 1.12
+   },
+   "redfield": {
+    "grain": 0.85,
+    "salt": 1,
+    "wool": 1.05,
+    "iron": 1.25,
+    "cloth": 1.0699999999999998,
+    "tools": 1.2,
+    "timber": 1.2,
+    "wine": 1,
+    "flour": 0.93
+   },
+   "saltmere": {
+    "grain": 1.2,
+    "salt": 0.8,
+    "wool": 1.2,
+    "iron": 1.3,
+    "cloth": 0.92,
+    "tools": 1.15,
+    "timber": 1.25,
+    "wine": 0.95,
+    "flour": 1.1
+   },
+   "ashby": {
+    "grain": 0.85,
+    "salt": 1.3,
+    "wool": 0.85,
+    "iron": 1.25,
+    "cloth": 1.2,
+    "tools": 1.2,
+    "timber": 0.95,
+    "wine": 1.35,
+    "flour": 0.93
+   },
+   "fernley": {
+    "grain": 0.8,
+    "salt": 1.25,
+    "wool": 0.95,
+    "iron": 1.3,
+    "cloth": 1.15,
+    "tools": 1.25,
+    "timber": 1,
+    "wine": 1.3,
+    "flour": 0.9
+   },
+   "calvinum": {
+    "grain": 1.15,
+    "salt": 1,
+    "wool": 0.9,
+    "iron": 0.8200000000000001,
+    "cloth": 1.1,
+    "tools": 1,
+    "timber": 0.9,
+    "wine": 1.25,
+    "flour": 1.07
+   },
+   "tessaro": {
+    "grain": 0.9,
+    "salt": 0.95,
+    "wool": 1.15,
+    "iron": 1.17,
+    "cloth": 0.95,
+    "tools": 1.15,
+    "timber": 1.2,
+    "wine": 0.8200000000000001,
+    "flour": 0.95
+   },
+   "hrothgard": {
+    "grain": 1.2,
+    "salt": 1.2,
+    "wool": 0.9,
+    "iron": 0.8,
+    "cloth": 1.2,
+    "tools": 0.95,
+    "timber": 0.8,
+    "wine": 1.35,
+    "flour": 1.2
+   },
+   "birkholm": {
+    "grain": 1.25,
+    "salt": 1.3,
+    "wool": 0.85,
+    "iron": 1,
+    "cloth": 1.25,
+    "tools": 1.1,
+    "timber": 0.8,
+    "wine": 1.4,
+    "flour": 1.12
+   },
+   "eldmoor": {
+    "grain": 1.3,
+    "salt": 1.25,
+    "wool": 0.8,
+    "iron": 0.9,
+    "cloth": 1.2,
+    "tools": 1.15,
+    "timber": 0.85,
+    "wine": 1.4,
+    "flour": 1.15
+   },
+   "thornvik": {
+    "grain": 1.2,
+    "salt": 1.1,
+    "wool": 0.9,
+    "iron": 0.8,
+    "cloth": 1.25,
+    "tools": 1,
+    "timber": 0.85,
+    "wine": 1.35,
+    "flour": 1.1
+   },
+   "kettleby": {
+    "grain": 1.15,
+    "salt": 1.2,
+    "wool": 0.95,
+    "iron": 0.95,
+    "cloth": 1.2,
+    "tools": 1.05,
+    "timber": 0.9,
+    "wine": 1.3,
+    "flour": 1.07
+   },
+   "vessara": {
+    "grain": 1,
+    "salt": 0.8,
+    "wool": 1.2,
+    "iron": 1.2,
+    "cloth": 0.8200000000000001,
+    "tools": 1.05,
+    "timber": 1.3,
+    "wine": 0.8,
+    "flour": 1.1
+   },
+   "lucco": {
+    "grain": 1.05,
+    "salt": 0.8,
+    "wool": 1.25,
+    "iron": 1.35,
+    "cloth": 1.05,
+    "tools": 1.25,
+    "timber": 1.35,
+    "wine": 0.85,
+    "flour": 1.02
+   },
+   "marenna": {
+    "grain": 0.95,
+    "salt": 0.85,
+    "wool": 1.2,
+    "iron": 1.3,
+    "cloth": 1,
+    "tools": 1.2,
+    "timber": 1.3,
+    "wine": 0.8,
+    "flour": 0.97
+   },
+   "pellio": {
+    "grain": 0.9,
+    "salt": 0.8200000000000001,
+    "wool": 1.15,
+    "iron": 1.3,
+    "cloth": 0.95,
+    "tools": 1.2,
+    "timber": 1.25,
+    "wine": 0.85,
+    "flour": 0.95
+   },
+   "sorra": {
+    "grain": 1,
+    "salt": 0.8,
+    "wool": 1.2,
+    "iron": 1.25,
+    "cloth": 1,
+    "tools": 1.15,
+    "timber": 1.3,
+    "wine": 0.9,
+    "flour": 1
+   },
+   "merrow": {
+    "grain": 1,
+    "salt": 0.8200000000000001,
+    "wool": 1,
+    "iron": 0.92,
+    "cloth": 0.9,
+    "tools": 0.8200000000000001,
+    "timber": 1,
+    "wine": 0.9,
+    "flour": 1.1
+   }
+  },
+  "cargo": {},
+  "rngSeed": 845473462,
+  "rng": {
+   "casualties": 690845457,
+   "loot": 836056504,
+   "upkeep": 2569417021,
+   "names": 1374266094
+  },
+  "nextResultId": 1,
+  "nextEventId": 1,
+  "parties": [
+   {
+    "id": 4,
+    "template": "valedorn_patrol",
+    "x": 90.9638673343926,
+    "y": 80.7069989959063,
+    "troops": {
+     "footman": 3,
+     "hunter": 2,
+     "levy": 2
+    },
+    "tx": 14,
+    "ty": 112,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "chasing": null
+   },
+   {
+    "id": 5,
+    "template": "valedorn_patrol",
+    "x": 72.71689486910296,
+    "y": 88.12609769058449,
+    "troops": {
+     "footman": 4,
+     "hunter": 3,
+     "levy": 2
+    },
+    "tx": 14,
+    "ty": 112,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "chasing": null
+   },
+   {
+    "id": 6,
+    "template": "valedorn_patrol",
+    "x": 70.50831560063295,
+    "y": 100.48212624415261,
+    "troops": {
+     "footman": 3,
+     "hunter": 2,
+     "levy": 3
+    },
+    "tx": 103.58458785712719,
+    "ty": 93.74031622707844,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "chasing": null
+   },
+   {
+    "id": 7,
+    "template": "aurelian_patrol",
+    "x": 123.41306782117368,
+    "y": 136.51738643576525,
+    "troops": {
+     "spearman": 3,
+     "skirmisher": 3,
+     "recruit": 2
+    },
+    "tx": 116,
+    "ty": 138,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "chasing": null
+   },
+   {
+    "id": 8,
+    "template": "aurelian_patrol",
+    "x": 122.13584657796164,
+    "y": 119.59246026611504,
+    "troops": {
+     "spearman": 4,
+     "skirmisher": 2,
+     "recruit": 2
+    },
+    "tx": 116,
+    "ty": 138,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "chasing": null
+   },
+   {
+    "id": 9,
+    "template": "aurelian_patrol",
+    "x": 128,
+    "y": 102,
+    "troops": {
+     "spearman": 1,
+     "skirmisher": 2,
+     "recruit": 3
+    },
+    "tx": 128,
+    "ty": 102,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "chasing": null
+   },
+   {
+    "id": 12,
+    "template": "highland_raiders",
+    "x": 165.14134877003877,
+    "y": 46.06594543143934,
+    "troops": {
+     "reaver": 4,
+     "looter": 2
+    },
+    "tx": 169.13154621515423,
+    "ty": 39.039210877381265,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lair": "broken_tower",
+    "chasing": null
+   },
+   {
+    "id": 13,
+    "template": "highland_raiders",
+    "x": 47.086831821395755,
+    "y": 46.47321611521384,
+    "troops": {
+     "reaver": 4,
+     "looter": 1
+    },
+    "tx": 42.32072767801583,
+    "ty": 43.19381199032068,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lair": "raider_steading",
+    "chasing": null
+   },
+   {
+    "id": 15,
+    "template": "western_outlaws",
+    "x": 7.744380677118897,
+    "y": 98.04112624470145,
+    "troops": {
+     "looter": 3,
+     "reaver": 2
+    },
+    "tx": 7.744380677118897,
+    "ty": 98.04112624470145,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lair": "outlaw_glade",
+    "chasing": null
+   },
+   {
+    "id": 17,
+    "template": "eastern_deserters",
+    "x": 193.37741343493684,
+    "y": 85.22827051012075,
+    "troops": {
+     "mercenary": 3,
+     "looter": 4
+    },
+    "tx": 193.34269931539893,
+    "ty": 85.3086459254846,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lair": "deserter_camp",
+    "chasing": null
+   },
+   {
+    "id": 18,
+    "template": "southern_wreckers",
+    "x": 42.77396559499644,
+    "y": 186.65988861094115,
+    "troops": {
+     "reaver": 2,
+     "looter": 2
+    },
+    "tx": 43.452450728975236,
+    "ty": 184.78862536884844,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lair": "wreckers_cove",
+    "chasing": null
+   },
+   {
+    "id": 19,
+    "template": "southern_wreckers",
+    "x": 29.881795479186422,
+    "y": 192.31363738329424,
+    "troops": {
+     "reaver": 3,
+     "looter": 2
+    },
+    "tx": 46.70918880775571,
+    "ty": 187.2702973689884,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lair": "wreckers_cove",
+    "chasing": null
+   },
+   {
+    "id": 20,
+    "template": "hrothmark_patrol",
+    "x": 117.18698657822738,
+    "y": 21.52193762060502,
+    "troops": {
+     "axeman": 4,
+     "fell_archer": 2,
+     "clansman": 2
+    },
+    "tx": 178,
+    "ty": 20,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "chasing": null,
+    "seenAt": {
+     "x": 110.70763116126231,
+     "y": 21.684093287813237,
+     "day": 3.9375
+    }
+   },
+   {
+    "id": 21,
+    "template": "hrothmark_patrol",
+    "x": 126.42378709504074,
+    "y": 24.201982257920058,
+    "troops": {
+     "axeman": 4,
+     "fell_archer": 3,
+     "clansman": 3
+    },
+    "tx": 28,
+    "ty": 16,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "chasing": null,
+    "seenAt": {
+     "x": 117.36148178137316,
+     "y": 23.446790148447754,
+     "day": 3.4375
+    }
+   },
+   {
+    "id": 22,
+    "template": "hrothmark_patrol",
+    "x": 47.41692464431914,
+    "y": 24.49490453188962,
+    "troops": {
+     "axeman": 4,
+     "fell_archer": 3,
+     "clansman": 3
+    },
+    "tx": 28,
+    "ty": 16,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "chasing": null,
+    "seenAt": {
+     "x": 83.87999999999977,
+     "y": 10,
+     "day": 3.5104166666666665
+    }
+   },
+   {
+    "id": 23,
+    "template": "vessaro_patrol",
+    "x": 77.48904804092123,
+    "y": 189.4811904599646,
+    "troops": {
+     "pikeman": 3,
+     "crossbowman": 3,
+     "militia": 3
+    },
+    "tx": 64,
+    "ty": 190,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "chasing": null
+   },
+   {
+    "id": 24,
+    "template": "vessaro_patrol",
+    "x": 117.46696552443817,
+    "y": 165.32378817682581,
+    "troops": {
+     "pikeman": 4,
+     "crossbowman": 3,
+     "militia": 2
+    },
+    "tx": 136,
+    "ty": 164,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "chasing": null
+   },
+   {
+    "id": 26,
+    "template": "merrow_watch",
+    "x": 180,
+    "y": 170,
+    "troops": {
+     "mercenary": 4
+    },
+    "tx": 180,
+    "ty": 170,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "chasing": null
+   },
+   {
+    "id": 27,
+    "template": "hrothmark_caravan",
+    "x": 128.76828387327896,
+    "y": 24.397356989439913,
+    "troops": {
+     "clansman": 1
+    },
+    "tx": 148,
+    "ty": 26,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "routeIndex": 0,
+    "good": "iron",
+    "chasing": null,
+    "seenAt": {
+     "x": 116.18215967871942,
+     "y": 23.34851330655995,
+     "day": 3.8229166666666665
+    }
+   },
+   {
+    "id": 28,
+    "template": "vessaro_caravan",
+    "x": 102.43161834047214,
+    "y": 172.39209541488196,
+    "troops": {
+     "militia": 2
+    },
+    "tx": 88,
+    "ty": 176,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "routeIndex": 4,
+    "good": "wine",
+    "chasing": null
+   },
+   {
+    "id": 29,
+    "template": "merrow_caravan",
+    "x": 136.26740116026332,
+    "y": 172.85212601128723,
+    "troops": {
+     "mercenary": 2
+    },
+    "tx": 180,
+    "ty": 170,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "routeIndex": 4,
+    "good": "wine",
+    "chasing": null
+   },
+   {
+    "id": 30,
+    "template": "valedorn_caravan",
+    "x": 105,
+    "y": 75,
+    "troops": {
+     "levy": 2
+    },
+    "tx": null,
+    "ty": 75,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "routeIndex": 2,
+    "good": "grain",
+    "chasing": null
+   },
+   {
+    "id": 31,
+    "template": "aurelian_caravan",
+    "x": 121.94769401631243,
+    "y": 97.46077051223432,
+    "troops": {
+     "recruit": 3
+    },
+    "tx": 128,
+    "ty": 102,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "routeIndex": 0,
+    "good": "cloth",
+    "chasing": null
+   },
+   {
+    "id": 32,
+    "template": "vessaro_patrol",
+    "x": 94.40210028809712,
+    "y": 184.87269545018032,
+    "troops": {
+     "pikeman": 3,
+     "crossbowman": 3,
+     "militia": 3
+    },
+    "tx": 20,
+    "ty": 186,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "chasing": null
+   },
+   {
+    "id": 33,
+    "template": "western_outlaws",
+    "x": 31.77585224307538,
+    "y": 144.6630601854099,
+    "troops": {
+     "looter": 5,
+     "reaver": 2
+    },
+    "tx": 30.952026248909533,
+    "ty": 144.92982317041606,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lair": "burnt_mill",
+    "chasing": null
+   },
+   {
+    "id": 34,
+    "template": "bandits",
+    "x": 87.36762434568318,
+    "y": 92.13773901378495,
+    "troops": {
+     "looter": 4,
+     "reaver": 2
+    },
+    "tx": 86.49187036138028,
+    "ty": 90.52013385761529,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lair": "looter_camp",
+    "chasing": null
+   }
+  ],
+  "partySpawns": {
+   "valedorn_caravan": 2.083333333333333,
+   "bandits": 5.458333333333334,
+   "aurelian_caravan": 2.65625,
+   "vessaro_patrol": 5.145833333333334,
+   "western_outlaws": 5.927083333333334,
+   "eastern_deserters": 4.208333333333334
+  },
+  "nextPartyId": 35,
+  "contract": null,
+  "contractOffers": {},
+  "nextContractId": 1,
+  "contractsDone": 0,
+  "reputation": {
+   "valedorn": 0,
+   "aurelian": 0,
+   "hrothmark": 0,
+   "vessaro": 0,
+   "merrow": 0
+  },
+  "owners": {
+   "greywall_fort": "valedorn",
+   "ashgate_fort": "aurelian",
+   "westholt_castle": "valedorn",
+   "castra_nova": "aurelian",
+   "ulfstead_hold": "hrothmark",
+   "skarnwall": "hrothmark",
+   "torre_salina": "vessaro",
+   "castel_verro": "vessaro"
+  },
+  "relations": {
+   "aurelian|valedorn": {
+    "state": "tension",
+    "since": 0,
+    "heat": 1,
+    "losses": 0,
+    "lastClash": 3.2708333333333335,
+    "incidentUntil": 0
+   },
+   "hrothmark|valedorn": {
+    "state": "peace",
+    "since": 0,
+    "heat": 0,
+    "losses": 0,
+    "lastClash": null,
+    "incidentUntil": 0
+   },
+   "valedorn|vessaro": {
+    "state": "peace",
+    "since": 0,
+    "heat": 0,
+    "losses": 0,
+    "lastClash": null,
+    "incidentUntil": 2.166666666666667
+   },
+   "merrow|valedorn": {
+    "state": "peace",
+    "since": 0,
+    "heat": 0,
+    "losses": 0,
+    "lastClash": null,
+    "incidentUntil": 0
+   },
+   "aurelian|hrothmark": {
+    "state": "peace",
+    "since": 0,
+    "heat": 0,
+    "losses": 0,
+    "lastClash": null,
+    "incidentUntil": 0
+   },
+   "aurelian|vessaro": {
+    "state": "peace",
+    "since": 0,
+    "heat": 0,
+    "losses": 0,
+    "lastClash": null,
+    "incidentUntil": 0
+   },
+   "aurelian|merrow": {
+    "state": "peace",
+    "since": 0,
+    "heat": 0,
+    "losses": 0,
+    "lastClash": null,
+    "incidentUntil": 0
+   },
+   "hrothmark|vessaro": {
+    "state": "peace",
+    "since": 0,
+    "heat": 0,
+    "losses": 0,
+    "lastClash": null,
+    "incidentUntil": 0
+   },
+   "hrothmark|merrow": {
+    "state": "peace",
+    "since": 0,
+    "heat": 0,
+    "losses": 0,
+    "lastClash": null,
+    "incidentUntil": 0
+   },
+   "merrow|vessaro": {
+    "state": "peace",
+    "since": 0,
+    "heat": 0,
+    "losses": 0,
+    "lastClash": null,
+    "incidentUntil": 0
+   }
+  },
+  "story": {
+   "flags": {
+    "sigrun_joined": true
+   },
+   "quests": {},
+   "visits": {}
+  },
+  "companion": null,
+  "news": {
+   "events": [
+    {
+     "day": 2.0208333333333335,
+     "kind": "caravan_arrived",
+     "dest": "dunmarsh",
+     "good": "cloth",
+     "faction": "aurelian"
+    },
+    {
+     "day": 2.0729166666666665,
+     "kind": "caravan_arrived",
+     "dest": "oakford",
+     "good": "grain",
+     "faction": "valedorn"
+    },
+    {
+     "day": 2.2083333333333335,
+     "kind": "reavers_broken",
+     "place": "tessaro",
+     "faction": "hrothmark"
+    },
+    {
+     "day": 2.4166666666666665,
+     "kind": "caravan_arrived",
+     "dest": "sorra",
+     "good": "salt",
+     "faction": "vessaro"
+    },
+    {
+     "day": 2.4583333333333335,
+     "kind": "reavers_broken",
+     "place": "eastwatch",
+     "faction": "merrow"
+    },
+    {
+     "day": 2.4791666666666665,
+     "kind": "caravan_arrived",
+     "dest": "eastwatch",
+     "good": "salt",
+     "faction": "aurelian"
+    },
+    {
+     "day": 2.5,
+     "kind": "caravan_arrived",
+     "dest": "eastwatch",
+     "good": "wine",
+     "faction": "merrow"
+    },
+    {
+     "day": 2.53125,
+     "kind": "caravan_arrived",
+     "dest": "highmere",
+     "good": "grain",
+     "faction": "valedorn"
+    },
+    {
+     "day": 2.7083333333333335,
+     "kind": "caravan_arrived",
+     "dest": "stonebridge",
+     "good": "tools",
+     "faction": "merrow"
+    },
+    {
+     "day": 2.7291666666666665,
+     "kind": "caravan_arrived",
+     "dest": "redfield",
+     "good": "cloth",
+     "faction": "aurelian"
+    },
+    {
+     "day": 2.7916666666666665,
+     "kind": "caravan_arrived",
+     "dest": "merrow",
+     "good": "salt",
+     "faction": "vessaro"
+    },
+    {
+     "day": 2.9479166666666665,
+     "kind": "caravan_arrived",
+     "dest": "brackenfield",
+     "good": "grain",
+     "faction": "valedorn"
+    },
+    {
+     "day": 3.0208333333333335,
+     "kind": "caravan_arrived",
+     "dest": "saltmere",
+     "good": "cloth",
+     "faction": "aurelian"
+    },
+    {
+     "day": 3.2708333333333335,
+     "kind": "frontier_clash",
+     "place": "stonebridge",
+     "winner": "valedorn",
+     "loser": "aurelian"
+    },
+    {
+     "day": 3.28125,
+     "kind": "caravan_arrived",
+     "dest": "stonebridge",
+     "good": "grain",
+     "faction": "valedorn"
+    },
+    {
+     "day": 3.3333333333333335,
+     "kind": "caravan_arrived",
+     "dest": "vessara",
+     "good": "cloth",
+     "faction": "merrow"
+    },
+    {
+     "day": 3.3958333333333335,
+     "kind": "caravan_arrived",
+     "dest": "dunmarsh",
+     "good": "salt",
+     "faction": "aurelian"
+    },
+    {
+     "day": 3.4583333333333335,
+     "kind": "caravan_arrived",
+     "dest": "castel_verro",
+     "good": "salt",
+     "faction": "vessaro"
+    },
+    {
+     "day": 3.53125,
+     "kind": "caravan_arrived",
+     "dest": "oakford",
+     "good": "wool",
+     "faction": "valedorn"
+    },
+    {
+     "day": 3.6354166666666665,
+     "kind": "caravan_arrived",
+     "dest": "hrothgard",
+     "good": "iron",
+     "faction": "hrothmark"
+    },
+    {
+     "day": 3.8541666666666665,
+     "kind": "caravan_arrived",
+     "dest": "eastwatch",
+     "good": "salt",
+     "faction": "aurelian"
+    },
+    {
+     "day": 3.9895833333333335,
+     "kind": "caravan_arrived",
+     "dest": "highmere",
+     "good": "grain",
+     "faction": "valedorn"
+    },
+    {
+     "day": 4,
+     "kind": "happening",
+     "place": "eastwatch",
+     "text": "The militia of Eastwatch is calling for veterans to drill them, fearing the border.",
+     "told": true
+    },
+    {
+     "day": 4,
+     "kind": "tourney",
+     "place": "stonebridge",
+     "text": "A tournament at Stonebridge: eight fighters on foot. Entries close on day 8.",
+     "told": true
+    }
+   ],
+   "lines": [
+    {
+     "day": 2,
+     "kind": "happening",
+     "text": "The militia of Eastwatch is calling for veterans to drill them, fearing the border."
+    },
+    {
+     "day": 4,
+     "kind": "tourney",
+     "text": "A tournament at Stonebridge: eight fighters on foot. Entries close on day 8."
+    }
+   ],
+   "next": 6,
+   "clashUntil": 7.270833333333334,
+   "turns": {
+    "happening": 1,
+    "tourney": 1
+   }
+  },
+  "troopKnowledge": {
+   "levy": "seen",
+   "hunter": "seen",
+   "mercenary": "seen"
+  },
+  "chronicle": [
+   {
+    "day": 0,
+    "kind": "founded"
+   },
+   {
+    "day": 0,
+    "kind": "business",
+    "event": "bought",
+    "place": "birkholm"
+   }
+  ],
+  "honour": {
+   "list": [],
+   "earlier": {
+    "fell": 0,
+    "deserted": 0,
+    "retired": 0
+   }
+  },
+  "accounts": {
+   "chest": 64,
+   "budgets": {
+    "mill": 150
+   }
+  },
+  "ledger": [
+   {
+    "day": 0,
+    "from": "purse",
+    "to": "world",
+    "amount": 300,
+    "why": "bought the mill at Birkholm"
+   },
+   {
+    "day": 0,
+    "from": "purse",
+    "to": "budget:mill",
+    "amount": 150,
+    "why": "put into the mill"
+   },
+   {
+    "day": 0,
+    "from": "purse",
+    "to": "world",
+    "amount": 40,
+    "why": "hiring a quartermaster"
+   },
+   {
+    "day": 0,
+    "from": "purse",
+    "to": "chest",
+    "amount": 30,
+    "why": "set aside for wages"
+   },
+   {
+    "day": 0,
+    "from": "purse",
+    "to": "world",
+    "amount": 60,
+    "why": "hiring a surgeon"
+   },
+   {
+    "day": 0,
+    "from": "purse",
+    "to": "world",
+    "amount": 45,
+    "why": "hiring a scout"
+   },
+   {
+    "day": 0,
+    "from": "purse",
+    "to": "world",
+    "amount": 50,
+    "why": "hiring a blacksmith"
+   },
+   {
+    "day": 4,
+    "from": "purse",
+    "to": "chest",
+    "amount": 34,
+    "why": "set aside for wages"
+   },
+   {
+    "day": 4,
+    "from": "purse",
+    "to": "chest",
+    "amount": 60,
+    "why": "drawn for medicine"
+   },
+   {
+    "day": 4,
+    "from": "chest",
+    "to": "world",
+    "amount": 60,
+    "why": "4 medicine"
+   }
+  ],
+  "followers": {
+   "quartermaster": {
+    "name": "Ragna Frostbeard",
+    "culture": "hrothmark",
+    "origin": "hrothgard",
+    "hired": 0,
+    "reserveDays": 5,
+    "budget": null,
+    "coverWages": true,
+    "medicine": 4,
+    "weekStart": 0,
+    "spent": 60,
+    "unpaid": 0,
+    "warnedDay": -1,
+    "log": [
+     {
+      "day": 0,
+      "text": "Hired at Hrothgard."
+     },
+     {
+      "day": 0,
+      "text": "Set 30 crowns aside in the chest for wages."
+     },
+     {
+      "day": 4,
+      "text": "Set 34 crowns aside in the chest for wages."
+     },
+     {
+      "day": 4,
+      "text": "Bought 4 medicine for 60 from the chest."
+     }
+    ]
+   },
+   "merchant": null,
+   "surgeon": {
+    "name": "Thrand the Tall",
+    "culture": "hrothmark",
+    "origin": "hrothgard",
+    "hired": 0,
+    "unpaid": 0,
+    "saved": 0,
+    "log": [
+     {
+      "day": 0,
+      "text": "Hired at Hrothgard."
+     }
+    ]
+   },
+   "blacksmith": {
+    "name": "Vigge the Tall",
+    "culture": "hrothmark",
+    "origin": "hrothgard",
+    "hired": 0,
+    "unpaid": 0,
+    "log": [
+     {
+      "day": 0,
+      "text": "Hired at Hrothgard."
+     }
+    ]
+   },
+   "scout": {
+    "name": "Astrid of Hrothgard",
+    "culture": "hrothmark",
+    "origin": "hrothgard",
+    "hired": 0,
+    "unpaid": 0,
+    "log": [
+     {
+      "day": 0,
+      "text": "Hired at Hrothgard."
+     }
+    ]
+   }
+  },
+  "medicine": 4,
+  "detachments": [],
+  "retinue": [
+   {
+    "id": "sigrun",
+    "woundedUntil": null,
+    "equipment": {
+     "weapon": "hand_axe",
+     "body": "leather_chest"
+    },
+    "loyalty": 60,
+    "unpaid": 0,
+    "warned": false,
+    "why": null
+   }
+  ],
+  "happenings": {
+   "open": [
+    {
+     "id": 1,
+     "kind": "militia_request",
+     "place": "eastwatch",
+     "start": 4,
+     "until": 9,
+     "seen": false,
+     "taken": false
+    }
+   ],
+   "past": [],
+   "cool": {
+    "militia_request|east_march": 22
+   },
+   "next": 5,
+   "nextId": 2
+  },
+  "tourney": {
+   "hosts": {
+    "stonebridge": {
+     "next": 18,
+     "wins": 0,
+     "entered": null
+    },
+    "eastwatch": {
+     "next": 7,
+     "wins": 0,
+     "entered": null
+    },
+    "hrothgard": {
+     "next": 10,
+     "wins": 0,
+     "entered": null
+    },
+    "vessara": {
+     "next": 13,
+     "wins": 0,
+     "entered": null
+    },
+    "merrow": {
+     "next": 16,
+     "wins": 0,
+     "entered": null
+    }
+   },
+   "open": [
+    {
+     "host": "stonebridge",
+     "start": 4,
+     "until": 7,
+     "fighters": [
+      {
+       "name": "Isolde Greyhand",
+       "culture": "valedorn",
+       "skill": 1.09
+      },
+      {
+       "name": "Walter Stonejaw",
+       "culture": "valedorn",
+       "skill": 1.04
+      },
+      {
+       "name": "Serlo Carter",
+       "culture": "valedorn",
+       "skill": 1.14
+      },
+      {
+       "name": "Rannulf of Stonebridge",
+       "culture": "valedorn",
+       "skill": 1.14
+      },
+      {
+       "name": "Odo of Stonebridge",
+       "culture": "valedorn",
+       "skill": 1.1
+      },
+      {
+       "name": "Joliet Tanner",
+       "culture": "valedorn",
+       "skill": 1.15
+      },
+      {
+       "name": "Gilbert Tallow",
+       "culture": "valedorn",
+       "skill": 0.88
+      }
+     ]
+    }
+   ],
+   "bracket": null,
+   "rival": null
+  },
+  "businesses": {
+   "owned": [
+    {
+     "kind": "mill",
+     "place": "birkholm",
+     "bought": 0,
+     "paid": 300,
+     "owner": "hrothmark",
+     "manager": "miller",
+     "rules": {
+      "maxInput": null,
+      "minOutput": null
+     },
+     "seizeOn": null,
+     "weeks": 0,
+     "profit": 0,
+     "log": [
+      {
+       "day": 0,
+       "text": "Bought for 300 crowns. The village miller runs it; put crowns in for grain and wages."
+      }
+     ],
+     "book": [
+      {
+       "day": 0,
+       "from": "purse",
+       "to": "budget:mill",
+       "amount": 150,
+       "why": "put into the mill"
+      }
+     ]
+    }
+   ],
+   "past": []
+  }
+ }
+}

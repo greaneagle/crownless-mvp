@@ -74,7 +74,7 @@
     if (!CL.accounts.spend(c, HIRE, 'hiring a quartermaster')) return null;
     const place = c.world.location;
     const culture = CL.soldiers.cultureFor('levy', place, c);
-    const name = CL.soldiers.makeName(culture, place, () => CL.autoresolve.roll(c, 'names'), new Set(c.roster.map((s) => s.name)));
+    const name = CL.soldiers.makeName(culture, place, () => CL.autoresolve.roll(c, 'names'), new Set(c.roster.map((s) => s.name)), 'any');
     c.followers ??= { quartermaster: null };
     /** @type {Quartermaster} */
     const q = { name, culture, origin: place, hired: c.day, ...DEFAULTS, weekStart: Math.floor(c.day), spent: 0, unpaid: 0, warnedDay: -1, log: [] };

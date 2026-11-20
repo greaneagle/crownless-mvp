@@ -4,6 +4,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { loadGame, memoryStorage } = require('./helpers/load');
+const { preHoldings } = require('./helpers/pre-holdings');
 
 const plain = (v) => JSON.parse(JSON.stringify(v));
 const GRASS = [125, 70];
@@ -95,7 +96,7 @@ test('a ride’s estimate is within 10% of the real time, and names what is know
   assert.match(e.text, /^Scout .+: about \d+(\.5)? hours to Eastwatch; the way looks clear, as far as I know\.$/);
   const day0 = c.day;
   CL.world.travelTo(target);
-  assert.equal(messages().at(-1), e.text, 'told as you set off');
+  assert.equal(messages().at(-1), `${e.text} ${CL.realm.tapLine('eastwatch', c)}`, 'told as you set off, with who holds it (P8-02)');
   for (let i = 0; i < 5000 && CL.game.travel; i++) CL.world.update(0.05);
   const actual = (c.day - day0) * 24;
   assert.ok(Math.abs(e.hours - actual) <= 0.1 * actual, `estimate ${e.hours.toFixed(2)} h, actual ${actual.toFixed(2)} h`);
@@ -133,8 +134,9 @@ test('saves: the scout is kept; a v12 save migrates to v13', () => {
   assert.equal(loadGame({ storage }).CL.campaign.followers.scout.name, c.followers.scout.name);
   const v12 = plain(c);
   v12.version = 12;
+  preHoldings(v12);
   delete v12.followers.scout;
   const r = CL.save.fromRaw(v12);
-  assert.equal(r.campaign.version, 18);
+  assert.equal(r.campaign.version, CL.save.VERSION);
   assert.equal(r.campaign.followers.scout, null);
 });

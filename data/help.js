@@ -2,7 +2,7 @@
  * help_topics: the How to Play screen (GDD §11 "initial mappings are documented in Help"), in order.
  *   Each topic has paragraphs and, optionally, controls: [[touch, keyboard/mouse, action], …].
  * tips: first-time tips (Gate E tutorial). Each shows once per device, the first time its moment comes:
- *   on: the screen (map, town, settlement, encounter, battle, trade, contracts, character, journal,
+ *   on: the screen (map, town, settlement, encounter, battle, trade, contracts, character, journal, realm,
  *       saves, result), and optionally when: a situation js/tips.js knows (lowFood, points, wounded,
  *       reserves, captured, awayFromHome: the party is in a region of the world not marked `home`). text, or
  *       textTouch + textKeys when the controls differ.
@@ -53,7 +53,8 @@
         'North, over the mountains, are the highland clans of Hrothmark: heavy, slow infantry and axemen. The road from Greywall climbs to them through a pass. South, on the marshy coast, the merchant towns of the Vessaro League field crossbowmen and fast light horse. In the south-east the Free City of Merrow answers to no crown: it hires out sell-swords and has the best market in the land.',
         'Every kingdom has its own troops to hire, and every town posts contracts. Each capital has someone with work for a stranger. Prices differ by land: timber is cheap in the north and wine on the coast, so a company that carries goods between them can do well.',
         'Each land has Reaver lairs of its own, and the news says where trouble is: “the roads of the northern highlands are not safe”. The farthest capitals are a day and a half apart on the road.',
-        'Kingdoms are at peace, in tension or at war with each other. At peace their patrols pass each other by, though a border incident can sour things; in tension or at war they fight wherever they meet, and enough fighting turns tension into war. Wars end when both sides are worn out, and long quiet cools tension back to peace. Valedorn and Aurelian stay in tension over Greywall until the story settles it. The news tells you when things change.'
+        'Kingdoms are at peace, in tension or at war with each other. At peace their patrols pass each other by, though a border incident can sour things; in tension or at war they fight wherever they meet, and enough fighting turns tension into war. Wars end when both sides are worn out, and long quiet cools tension back to peace. Valedorn and Aurelian stay in tension over Greywall until the story settles it. The news tells you when things change.',
+        'Every town, fort and village of a kingdom is a holding, held by one of its lords or by its ruler: a king, a queen or, in Aurelia, the First Magistrate. A lord may hold a fort and a village, a village alone, or nothing at all (their kin and household knights). Each village answers to its seat, the nearest fort or town of its kingdom, and when a fort changes hands its villages go with it, held by the new ruler until they grant them; whoever lost them keeps a claim. The Realms (from the Journal, on the map and in every settlement) shows who holds what, who has the gates, who claims it, and each lord with their kin and home. Tapping a place on the map tells you its holder. Greywall and Ashgate change hands only in the story until it ends.'
       ]
     },
     towns: {
@@ -179,6 +180,7 @@
     trade: { id: 'trade', on: 'trade', help: 'trade', title: 'The market', text: 'Goods are cheap where plentiful and dear where short: buy low here, sell somewhere else. Cargo slows you down.' },
     contracts: { id: 'contracts', on: 'contracts', help: 'trade', title: 'Contracts', text: 'One job at a time: hunt a band, escort a caravan or deliver. Each shows its reward and time limit; failing costs renown.' },
     character: { id: 'character', on: 'character', help: 'party', title: 'Party and gear', text: 'Equip what you find, spend skill and attribute points, and upgrade soldiers who have earned it.' },
+    realm: { id: 'realm', on: 'realm', help: 'lands', title: 'The Realms', text: 'Who holds every town, fort and village, and the lords of each kingdom. When a fort falls its villages go with it, and the old lord keeps a claim. Nothing here needs doing yet.' },
     journal: { id: 'journal', on: 'journal', help: 'story', title: 'The Journal', text: 'Your quests, with the next step in gold, your company’s chronicle, and the regional news.' },
     saves: { id: 'saves', on: 'saves', help: 'saving', title: 'Keep a copy', text: 'The game saves itself in this browser, but browsers can clear it. Export a copy now and then — it also moves your game to another device.' },
     points: { id: 'points', on: 'map', when: 'points', help: 'party', title: 'Points to spend', text: 'You have skill or attribute points to spend. Open Party: Leadership lets you lead more soldiers, One-Handed hits harder.' },

@@ -41,7 +41,10 @@ function testWorld(content) {
   C.factions[THIRD] = { ...sun, id: THIRD, name: 'Iron Reach Compact', short: 'Iron Reach', emblem: 'I', order: 3, color: '#6b6b2a', description: 'Hill clans of the far south-east (test world).' };
   C.factions.northmark = { ...C.factions.northmark, name: 'Northmark Crown', short: 'Northmark' };
   C.factions.sunhold = { ...sun, name: 'Sunhold League', short: 'Sunhold' };
-  for (const id of THIRD_LANDS) C.settlements[id].ownerFaction = THIRD;
+  for (const id of THIRD_LANDS) {
+    C.settlements[id].ownerFaction = THIRD;
+    delete C.settlements[id].seat; // the Iron Reach has no fort or town: its villages have no seat (P8-02)
+  }
   // Stretch the map.
   for (const s of Object.values(C.settlements)) [s.mapX, s.mapY] = scalePoint([s.mapX, s.mapY]);
   for (const t of Object.values(C.party_templates)) if (t.frontier) [t.frontier.x, t.frontier.y] = scalePoint([t.frontier.x, t.frontier.y]);
@@ -85,6 +88,8 @@ function testWorld(content) {
     const [x, y] = scalePoint([st.mapX, st.mapY]);
     m.sites[id] = { ...st, mapX: x, mapY: y };
   }
+  // The people (P8-02): nobody holds the Iron Reach's lands; its ruler is the game's plain one.
+  m.nobles = (march.nobles || []).map((n) => ({ ...n, holds: (n.holds || []).filter((id) => !THIRD_LANDS.includes(id)) }));
   C.world_map = { [WORLD]: m };
   return C;
 }

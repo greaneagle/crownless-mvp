@@ -41,6 +41,15 @@ The bigger world shipped with no new image files. Everything new is drawn with w
 
 When files arrive: add them to `assets/`, point the troop ids at their frames in `js/assets.js` (`troopArt`), and run `node scripts/asset-manifest.js`.
 
+### Phase 8 (from build 2.24.0)
+
+P8-02 shipped with no new image files: the Realm screen is text. These would replace stand-ins, and later Phase 8 tasks add theirs (banners on lords' parties, siege camps, wall pieces).
+
+| # | Asset | Where it shows | Stand-in today |
+|---|---|---|---|
+| 8 | **House arms** for the lords' houses (Ardane, Greymantle, Westmere, Fernby; Aquila, Vatro, Celer, Corvo; Ulfring, Hallsdottir, Skarn, Brandsson; Salviati, Morosco, Canale, Lanza): a small shield each, on the kingdom's colour | The Realm screen's Lords and Holdings rows; later the lords' map banners (P8-01) | None: the names alone |
+| 9 | **Holding marks** on the map: a pennant showing who holds the gates when they differ from the realm that claims it (an occupied fort) | World map | None yet: the settlement is drawn in its controller's colour, as before |
+
 ## Things to keep in mind (not legal advice)
 - **AI-generated images.** The sheets were generated with **ChatGPT**'s image tools (OpenAI). How copyright applies to AI-generated images depends on the country, and OpenAI's terms of use govern the outputs. Before selling, read the then-current terms on ownership and commercial use of outputs and keep a dated copy with the release records (`docs/V2-PLAN.md` R-01).
 - **The GDD's "no Pokémon" rule.** The sprites are a generic 16-bit fantasy style: hooded wanderers, helmeted soldiers, tabards and pennants. None of them are characters, tiles or logos from an existing game. The rule is about copying; a similar era look is fine.

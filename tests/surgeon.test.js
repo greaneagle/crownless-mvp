@@ -4,6 +4,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { loadGame, memoryStorage } = require('./helpers/load');
+const { preHoldings } = require('./helpers/pre-holdings');
 
 const plain = (v) => JSON.parse(JSON.stringify(v));
 
@@ -172,11 +173,12 @@ test('saves: the surgeon and the medicine are kept; junk repaired; a v10 save mi
   // v10: no surgeon field, no medicine.
   const v10 = plain(c);
   v10.version = 10;
+  preHoldings(v10);
   delete v10.medicine;
   delete v10.followers.surgeon;
   delete v10.followers.quartermaster.medicine;
   const r = CL.save.fromRaw(v10);
-  assert.equal(r.campaign.version, 18);
+  assert.equal(r.campaign.version, CL.save.VERSION);
   assert.equal(r.campaign.medicine, 0);
   assert.equal(r.campaign.followers.surgeon, null);
   assert.equal(r.campaign.followers.quartermaster.medicine, CL.quartermaster.DEFAULTS.medicine);

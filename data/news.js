@@ -58,6 +58,11 @@
       priority: 4,
       lines: ['Tempers cool between {faction} and {other}: the border is quiet again.']
     },
+    fief_granted: {
+      id: 'fief_granted',
+      priority: 3,
+      lines: ['{place} has passed to a new holder.'] // the line names them: js/realm.js transfer
+    },
     fort_taken: {
       id: 'fort_taken',
       priority: 6,

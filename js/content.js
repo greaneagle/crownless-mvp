@@ -144,6 +144,7 @@
       if (!C.factions?.[t.faction]) err(`troop ${t.id}: unknown faction ${t.faction}`);
       for (const u of [t.upgradeTo, t.altUpgradeTo]) if (u && !C.troops[u]) err(`troop ${t.id}: unknown upgrade ${u}`);
       for (const k of ['shield', 'brace']) if (t[k] != null && typeof t[k] !== 'boolean') err(`troop ${t.id}: ${k} must be true or false`);
+      if (t.gender != null && !['male', 'female'].includes(t.gender)) err(`troop ${t.id}: gender must be male or female (default male, D-P8g)`);
       if (t.shield && t.role === 'archer') err(`troop ${t.id}: archers carry no shield`);
       for (const s of ['hp', 'damage', 'armor', 'speed', 'reach']) {
         if (!(Number.isFinite(t[s]) && t[s] >= 0)) err(`troop ${t.id}: bad ${s}`);
@@ -161,6 +162,9 @@
     const LISTS = { given: 'given', trade: 'trades', epithet: 'epithets' };
     for (const k of Object.values(C.cultures || {})) {
       if (!Array.isArray(k.given) || !k.given.length || k.given.some((n) => typeof n !== 'string' || !n.trim())) err(`culture ${k.id}: needs a list of given names`);
+      // Men and women (D-P8g, P8-02): `given` are men's names (every soldier), `givenFemale` women's.
+      if (!Array.isArray(k.givenFemale) || !k.givenFemale.length || k.givenFemale.some((n) => typeof n !== 'string' || !n.trim())) err(`culture ${k.id}: needs a list of women's names (givenFemale)`);
+      else for (const n of k.givenFemale) if (k.given?.includes(n)) err(`culture ${k.id}: ${n} is in both name lists`);
       for (const list of ['trades', 'epithets']) {
         if (k[list] != null && (!Array.isArray(k[list]) || k[list].some((n) => typeof n !== 'string' || !n.trim()))) err(`culture ${k.id}: ${list} must be a list of names`);
       }
@@ -321,6 +325,7 @@
     CL.happenings?.validate(C, err); // world events (P7-08)
     CL.tourney?.validate(C, err); // tournaments (P7-09)
     CL.business?.validate(C, err); // businesses: the mill (P7-10)
+    CL.realm?.validate(C, err); // seats, story forts and the nobles of the realms (P8-02)
     CL.tips?.validate(C, err);
     for (const e of Object.values(C.encounters || {})) {
       if (!C.battle_maps?.[e.map]) err(`encounter ${e.id}: unknown map ${e.map}`);

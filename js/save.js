@@ -26,7 +26,7 @@
   'use strict';
   const CL = root.Crownless;
 
-  const VERSION = 18;
+  const VERSION = 19;
   const KEY = 'crownless_save';
   const BACKUP_KEY = 'crownless_save_backup';
   const LEGACY_KEY = 'crownless_v03_party';
@@ -96,7 +96,10 @@
       nextContractId: 1,
       contractsDone: 0,
       reputation: CL.realm.defaultReputation(), // kingdom → score [-100, 100] (GDD §10)
-      owners: CL.realm.defaultOwners(), // fort → owning kingdom (GDD §12 territory)
+      people: {}, // the people of the realms: rulers and lords (P8-02), filled in below
+      rulers: {}, // realm → the person holding its ruler's office (P8-02)
+      nextPersonId: 1,
+      holdings: {}, // settlement → { kind, sovereign, holder, controller, seat, administrator, claims } (P8-02)
       relations: CL.realm.defaultRelations(), // kingdom pair → peace, tension or war (W-07)
       story: CL.story.blank(), // quest progress, story flags, conversation visits (GDD §13)
       companion: null, // Mara, once she joins (GDD §10)
@@ -114,6 +117,7 @@
       tourney: CL.tourney.blank(0), // tournaments: each host's next, the open ones, your bracket and rival (P7-09)
       businesses: CL.business.blank(), // your mill, and those sold or seized (P7-10)
     };
+    CL.realm.sanitizeHoldings(c, null); // the world's people and holdings as its data begins them
     CL.character.applyKit(c, background);
     CL.upkeep.stowFood(c);
     CL.parties.ensure(c, true);
@@ -200,6 +204,7 @@
     16: [...V3_FIELDS, ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object'], ['accounts', 'object'], ['ledger', 'array'], ['followers', 'object'], ['relations', 'object'], ['medicine', 'number'], ['detachments', 'array'], ['retinue', 'array'], ['happenings', 'object']],
     17: [...V3_FIELDS, ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object'], ['accounts', 'object'], ['ledger', 'array'], ['followers', 'object'], ['relations', 'object'], ['medicine', 'number'], ['detachments', 'array'], ['retinue', 'array'], ['happenings', 'object'], ['tourney', 'object']],
     18: [...V3_FIELDS, ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object'], ['accounts', 'object'], ['ledger', 'array'], ['followers', 'object'], ['relations', 'object'], ['medicine', 'number'], ['detachments', 'array'], ['retinue', 'array'], ['happenings', 'object'], ['tourney', 'object'], ['businesses', 'object']],
+    19: [...V3_FIELDS.filter(([f]) => f !== 'owners'), ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object'], ['accounts', 'object'], ['ledger', 'array'], ['followers', 'object'], ['relations', 'object'], ['medicine', 'number'], ['detachments', 'array'], ['retinue', 'array'], ['happenings', 'object'], ['tourney', 'object'], ['businesses', 'object'], ['people', 'object'], ['rulers', 'object'], ['nextPersonId', 'number'], ['holdings', 'object']],
   };
 
   /** @param {unknown} v @param {string} kind */
@@ -233,6 +238,115 @@
   }
 
   // ---- Migrations: one pure step per schema version ----
+
+  // The Sundered Realm's people and holdings as build 2.24.0 began them (P8-02): constants, so the
+  // 18 → 19 migration stays pure (NEXT-PLAN §9) whatever later builds do to the world's data.
+  // People: [id, key, name, gender, realm, home, kin ('person:n:tie' …), traits]; holdings:
+  // [settlement, kind, sovereign, holder, seat].
+  const V19_SUNDERED = {
+    people: [
+      ['person:1', 'godric_ardane', 'Godric Ardane', 'male', 'valedorn', 'stonebridge', 'person:7:child', 'stern, pious, slow to forgive'],
+      ['person:2', 'hamon_greymantle', 'Hamon Greymantle', 'male', 'valedorn', 'greywall_fort', 'person:4:sibling person:6:child', 'proud, watchful, a hard border lord'],
+      ['person:3', 'avice_westmere', 'Avice Westmere', 'female', 'valedorn', 'westholt_castle', 'person:5:cousin', 'shrewd, patient, keeps her word'],
+      ['person:4', 'hawise_greymantle', 'Hawise Greymantle', 'female', 'valedorn', 'brackenfield', 'person:2:sibling', 'blunt, generous, quick to anger'],
+      ['person:5', 'serlo_fernby', 'Serlo Fernby', 'male', 'valedorn', 'fernley', 'person:3:cousin', 'cautious, thrifty'],
+      ['person:6', 'tancred_greymantle', 'Tancred Greymantle', 'male', 'valedorn', 'greywall_fort', 'person:2:parent', 'eager, reckless, hungry for land'],
+      ['person:7', 'alys_ardane', 'Alys Ardane', 'female', 'valedorn', 'stonebridge', 'person:1:parent', 'clever, restless, her father’s favourite'],
+      ['person:8', 'severin_aquila', 'Severin Aquila', 'male', 'aurelian', 'eastwatch', 'person:14:child', 'learned, cold, bound by the law'],
+      ['person:9', 'cassian_vatro', 'Cassian Vatro', 'male', 'aurelian', 'ashgate_fort', 'person:13:child', 'ambitious, a veteran of the frontier'],
+      ['person:10', 'domitia_celer', 'Domitia Celer', 'female', 'aurelian', 'castra_nova', 'person:12:sibling', 'proud, exacting, old imperial blood'],
+      ['person:11', 'marcia_corvo', 'Marcia Corvo', 'female', 'aurelian', 'saltmere', '', 'practical, a trader at heart'],
+      ['person:12', 'faustin_celer', 'Faustin Celer', 'male', 'aurelian', 'tessaro', 'person:10:sibling', 'easygoing, fond of wine'],
+      ['person:13', 'decimo_vatro', 'Decimo Vatro', 'male', 'aurelian', 'ashgate_fort', 'person:9:parent', 'dutiful, in his father’s shadow'],
+      ['person:14', 'junia_aquila', 'Junia Aquila', 'female', 'aurelian', 'eastwatch', 'person:8:parent', 'sharp-tongued, a rider of note'],
+      ['person:15', 'hakon_ulfring', 'Hakon Ulfring', 'male', 'hrothmark', 'hrothgard', 'person:19:spouse', 'bold, open-handed, loves a feast'],
+      ['person:16', 'astrid_hallsdottir', 'Astrid Hallsdottir', 'female', 'hrothmark', 'ulfstead_hold', 'person:18:cousin', 'fierce, honest, holds a grudge'],
+      ['person:17', 'torvald_skarn', 'Torvald Skarn', 'male', 'hrothmark', 'skarnwall', 'person:20:child', 'grim, careful, old and wary'],
+      ['person:18', 'kettil_brandsson', 'Kettil Brandsson', 'male', 'hrothmark', 'kettleby', 'person:16:cousin', 'loyal, plain-spoken'],
+      ['person:19', 'ingrid_ulfring', 'Ingrid Ulfring', 'female', 'hrothmark', 'hrothgard', 'person:15:spouse', 'wise, watchful, the hall’s true voice'],
+      ['person:20', 'ragna_skarn', 'Ragna Skarn', 'female', 'hrothmark', 'skarnwall', 'person:17:parent', 'restless, a shieldmaiden of the hills'],
+      ['person:21', 'lucrezia_salviati', 'Lucrezia Salviati', 'female', 'vessaro', 'vessara', 'person:25:child', 'cunning, rich, never in a hurry'],
+      ['person:22', 'ottavio_morosco', 'Ottavio Morosco', 'male', 'vessaro', 'torre_salina', 'person:24:sibling', 'vain, brave, deep in debt'],
+      ['person:23', 'ruggero_canale', 'Ruggero Canale', 'male', 'vessaro', 'castel_verro', '', 'careful, a builder of walls'],
+      ['person:24', 'chiara_morosco', 'Chiara Morosco', 'female', 'vessaro', 'marenna', 'person:22:sibling', 'quiet, clever, pays her brother’s debts'],
+      ['person:25', 'matteo_salviati', 'Matteo Salviati', 'male', 'vessaro', 'vessara', 'person:21:parent', 'charming, idle, a gambler'],
+      ['person:26', 'bastiano_lanza', 'Bastiano Lanza', 'male', 'vessaro', 'vessara', '', 'the Queen’s household knight; steady, sworn'],
+    ],
+    rulers: {'valedorn': 'person:1', 'aurelian': 'person:8', 'hrothmark': 'person:15', 'vessaro': 'person:21'},
+    holdings: [
+      ['stonebridge', 'town', 'valedorn', 'person:1', null],
+      ['greywall_fort', 'fort', 'valedorn', 'person:2', null],
+      ['oakford', 'village', 'valedorn', 'person:1', 'stonebridge'],
+      ['highmere', 'village', 'valedorn', 'person:2', 'greywall_fort'],
+      ['brackenfield', 'village', 'valedorn', 'person:4', 'greywall_fort'],
+      ['westholt_castle', 'fort', 'valedorn', 'person:3', null],
+      ['ashby', 'village', 'valedorn', 'person:3', 'westholt_castle'],
+      ['fernley', 'village', 'valedorn', 'person:5', 'westholt_castle'],
+      ['eastwatch', 'town', 'aurelian', 'person:8', null],
+      ['ashgate_fort', 'fort', 'aurelian', 'person:9', null],
+      ['dunmarsh', 'village', 'aurelian', 'person:9', 'ashgate_fort'],
+      ['redfield', 'village', 'aurelian', 'person:8', 'eastwatch'],
+      ['saltmere', 'village', 'aurelian', 'person:11', 'ashgate_fort'],
+      ['castra_nova', 'fort', 'aurelian', 'person:10', null],
+      ['calvinum', 'village', 'aurelian', 'person:10', 'castra_nova'],
+      ['tessaro', 'village', 'aurelian', 'person:12', 'castra_nova'],
+      ['hrothgard', 'town', 'hrothmark', 'person:15', null],
+      ['ulfstead_hold', 'fort', 'hrothmark', 'person:16', null],
+      ['skarnwall', 'fort', 'hrothmark', 'person:17', null],
+      ['birkholm', 'village', 'hrothmark', 'person:16', 'ulfstead_hold'],
+      ['eldmoor', 'village', 'hrothmark', 'person:15', 'hrothgard'],
+      ['thornvik', 'village', 'hrothmark', 'person:17', 'skarnwall'],
+      ['kettleby', 'village', 'hrothmark', 'person:18', 'skarnwall'],
+      ['vessara', 'town', 'vessaro', 'person:21', null],
+      ['torre_salina', 'fort', 'vessaro', 'person:22', null],
+      ['castel_verro', 'fort', 'vessaro', 'person:23', null],
+      ['lucco', 'village', 'vessaro', 'person:22', 'torre_salina'],
+      ['marenna', 'village', 'vessaro', 'person:24', 'torre_salina'],
+      ['pellio', 'village', 'vessaro', 'person:21', 'vessara'],
+      ['sorra', 'village', 'vessaro', 'person:23', 'castel_verro'],
+    ],
+  };
+
+  /**
+   * 18 → 19 (build 2.24.0, P8-02): the holdings model. `owners` (fort → kingdom) becomes `holdings`
+   * (every settlement of a kingdom), with the people of the realms and the rulers' offices. A fort
+   * whose owner had changed (Q4's Greywall) passes to the new kingdom as sovereign and controller,
+   * held by its ruler, with its villages; the original holders keep `old` claims. A save of another
+   * world (only the tests' worlds) keeps just its owner overrides; `sanitize` completes it from that
+   * world's data.
+   * @param {Record<string, any>} d @returns {Record<string, any>}
+   */
+  function migrateHoldings(d) {
+    const { owners, ...rest } = d;
+    const over = isObject(owners) ? owners : {};
+    if (d.worldId !== 'sundered_realm') {
+      /** @type {Record<string, any>} */
+      const partial = {};
+      for (const [sid, f] of Object.entries(over)) if (typeof f === 'string') partial[sid] = { controller: f, sovereign: f };
+      return { ...rest, version: 19, holdings: partial, rulers: {}, nextPersonId: 1 };
+    }
+    /** @type {Record<string, any>} */
+    const people = {};
+    for (const [id, key, name, gender, realm, home, kin, traits] of V19_SUNDERED.people) {
+      const ties = kin ? kin.split(' ').map((k) => k.split(':')) : [];
+      people[id] = { id, key, name, gender, realm, home, kin: ties.map(([a, n, tie]) => ({ person: `${a}:${n}`, tie })), traits, status: 'free', heldBy: null };
+    }
+    /** @type {Record<string, any>} */
+    const holdings = {};
+    for (const [sid, kind, sovereign, holder, seat] of V19_SUNDERED.holdings) holdings[sid] = { kind, sovereign, holder, controller: sovereign, seat, administrator: null, claims: [] };
+    const day = typeof d.day === 'number' && Number.isFinite(d.day) ? d.day : 0;
+    for (const [fort, f] of Object.entries(over)) {
+      const h = holdings[fort];
+      const ruler = /** @type {Record<string, string>} */ (V19_SUNDERED.rulers)[f];
+      if (h?.kind !== 'fort' || f === h.sovereign || !ruler) continue;
+      for (const sid of [fort, ...Object.keys(holdings).filter((v) => holdings[v].seat === fort)]) {
+        const x = holdings[sid];
+        x.claims = [{ by: x.holder, realm: x.sovereign, since: day, kind: 'old' }];
+        Object.assign(x, { sovereign: f, controller: f, holder: ruler });
+      }
+    }
+    return { ...rest, version: 19, people, rulers: { ...V19_SUNDERED.rulers }, holdings, nextPersonId: V19_SUNDERED.people.length + 1 };
+  }
 
   /** Steps from schema n to n + 1, applied in order. v1 → v2 is `migrateV1` (it rebuilds the roster). */
   /** @type {Record<number, (d: Record<string, any>) => Record<string, any>>} */
@@ -285,6 +399,8 @@
     16: (d) => CL.tourney.migrate(d),
     // 17 → 18 (build 2.21.0, P7-10): businesses, none owned yet.
     17: (d) => CL.business.migrate(d),
+    // 18 → 19 (build 2.24.0, P8-02): holdings, people and the rulers' offices replace `owners`.
+    18: migrateHoldings,
   };
 
   /**
@@ -336,7 +452,7 @@
     }
     CL.upkeep.sanitize(s, d); // food, morale, payday (and stows any food items)
     CL.trade.sanitize(s, d); // market scarcity and cargo
-    CL.realm.sanitize(s, d); // reputation and fort owners
+    CL.realm.sanitize(s, d); // reputation, people, rulers and holdings (P8-02), relations
     CL.story.sanitize(s, d); // quests and flags: unknown quests and stages are dropped
     CL.companion.sanitize(s, d); // companion and her gear
     CL.news.sanitize(s, d); // recent events and news lines
@@ -433,6 +549,11 @@
         const more = unknown.length > 3 ? ` and ${unknown.length - 3} more` : '';
         return { campaign: null, problems: [`it needs troops this version of the game does not have: ${who.join(', ')}${more}`], incompatible: true };
       }
+    }
+    // SC-33 (P8-02): holdings of a kingdom this build doesn't have are refused, saying which.
+    if (raw.version >= 19) {
+      const gone = CL.realm.unknownRealms(raw);
+      if (gone.length) return { campaign: null, problems: [`it needs kingdoms this version of the game does not have: ${gone.slice(0, 3).join(', ')}${gone.length > 3 ? ` and ${gone.length - 3} more` : ''}`], incompatible: true };
     }
     const campaign = raw.version === 1 ? migrateV1(raw) : sanitize(raw);
     if (!campaign) return { campaign: null, problems: ['it could not be read'] };
@@ -583,6 +704,8 @@
     WOUND_DAYS,
     AUTOSAVE_DAYS,
     MIGRATIONS,
+    migrateHoldings,
+    V19_SUNDERED,
     preMigrationKey,
     starter,
     addSoldier,

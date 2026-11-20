@@ -148,6 +148,12 @@
 #tradeArmoury li button{min-height:calc(40px * var(--ui-grow));white-space:nowrap}
 
 #journalScreen{text-align:left;max-height:52vh;overflow:auto;margin-top:8px}
+#realmScreen{text-align:left;max-height:52vh;overflow:auto;margin-top:8px}
+#realmScreen .realmTabs button{min-width:44px;min-height:44px}
+#realmScreen .realmTabs button.on{outline:2px solid #d8b45a}
+#realmScreen .realmList{margin:4px 0 0;padding-left:18px;font-size:.92em}
+#realmScreen .realmList li{margin:2px 0}
+#realmScreen .realmNote{opacity:.8}
 .questCard{border:1px solid #6b5a3a;border-radius:6px;padding:calc(8px * var(--ui-scale)) calc(10px * var(--ui-scale));margin:6px 0;background:#0f1a26}
 .questCard.done,.questCard.failed{opacity:.75}
 .questCard h3{margin:0 0 4px;font-size:calc(15px * var(--ui-scale))}

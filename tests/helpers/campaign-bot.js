@@ -23,6 +23,7 @@ function makeBot(CL, { log = () => {}, style = 'hands-off', roam = false } = {})
   const c = () => CL.campaign;
   const g = CL.game;
   const stats = {
+    invariants: [], // what broke the design's invariants, by day (P8-02)
     battles: 0,
     wins: 0,
     losses: 0,
@@ -334,6 +335,8 @@ function makeBot(CL, { log = () => {}, style = 'hands-off', roam = false } = {})
         tally();
       } else CL.ui.changeMode('map');
       if (c().day > lastDay) {
+        // The design's invariants (§25.3, P8-02), after every world day: anything wrong is kept.
+        if (Math.floor(c().day) > Math.floor(lastDay)) for (const p of CL.realm.invariants?.(c()) || []) if (stats.invariants.length < 20) stats.invariants.push(`day ${Math.floor(c().day)}: ${p}`);
         lastDay = c().day;
         idle = 0;
       } else if (++idle > 400) {

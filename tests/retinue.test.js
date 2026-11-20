@@ -5,6 +5,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { loadGame, memoryStorage } = require('./helpers/load');
+const { preHoldings } = require('./helpers/pre-holdings');
 
 const plain = (v) => JSON.parse(JSON.stringify(v));
 
@@ -199,8 +200,9 @@ test('saves: kept; junk repaired; the gone stay gone; a v14 save migrates on (v1
   assert.equal(r[0].why, null);
   const v14 = plain(c);
   v14.version = 14;
+  preHoldings(v14);
   delete v14.retinue;
   const m = CL.save.fromRaw(v14);
-  assert.equal(m.campaign.version, 18);
+  assert.equal(m.campaign.version, CL.save.VERSION);
   assert.deepEqual(plain(m.campaign.retinue), []);
 });

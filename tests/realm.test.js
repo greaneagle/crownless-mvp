@@ -138,15 +138,17 @@ test('Greywall can change hands: recruits, garrison, patrols and the owner list 
   assert.equal(R.owner(R.holdings(c, 'valedorn')[0].id, c), 'valedorn');
 });
 
-test('reputation and fort owners persist through save and reload, and bad values are rejected', () => {
+test('reputation and holdings persist through save and reload, and bad values are rejected', () => {
   const { CL } = loadGame();
   const c = CL.campaign;
   c.reputation = { valedorn: 33, aurelian: -60 };
   CL.realm.setOwner(c, 'greywall_fort', 'aurelian');
   const s = CL.save.sanitize(JSON.parse(JSON.stringify(c)));
   assert.deepEqual({ ...s.reputation }, { valedorn: 33, aurelian: -60, hrothmark: 0, vessaro: 0, merrow: 0 });
-  assert.equal(s.owners.greywall_fort, 'aurelian');
-  assert.equal(s.owners.ashgate_fort, 'aurelian');
+  assert.equal(s.owners, undefined, 'owners became holdings (P8-02)');
+  assert.deepEqual(JSON.parse(JSON.stringify(s.holdings)), JSON.parse(JSON.stringify(c.holdings)));
+  assert.equal(CL.realm.owner('greywall_fort', s), 'aurelian');
+  assert.equal(CL.realm.owner('ashgate_fort', s), 'aurelian');
 
   const junk = CL.save.sanitize({
     version: 2,
@@ -155,9 +157,20 @@ test('reputation and fort owners persist through save and reload, and bad values
     owners: { greywall_fort: 'neutral', ashgate_fort: 'dragons', stonebridge: 'aurelian' },
   });
   assert.deepEqual({ ...junk.reputation }, { valedorn: 0, aurelian: 100, hrothmark: 0, vessaro: 0, merrow: 0 });
-  // Bad owners fall back to each fort's own (W-05b: every fort in the world).
-  const own = Object.fromEntries(CL.realm.forts().map((f) => [f.id, f.ownerFaction]));
-  assert.deepEqual({ ...junk.owners }, { ...own, greywall_fort: 'valedorn', ashgate_fort: 'aurelian' });
+  // Bad owners fall back to each settlement's own, and only a fort ever moved (W-05b, P8-02).
+  for (const st of Object.values(CL.content.table('settlements'))) if (junk.holdings[st.id]) assert.equal(junk.holdings[st.id].controller, st.ownerFaction, st.id);
+  const v19 = JSON.parse(JSON.stringify(c));
+  v19.holdings.greywall_fort = { ...v19.holdings.greywall_fort, sovereign: 'dragons', holder: 'person:999', claims: [{ by: 'nobody', kind: 'old' }, 'x'] };
+  v19.holdings.highmere.controller = 'valedorn'; // a village's controller is always its seat's
+  const fixed = CL.save.sanitize(v19);
+  assert.equal(fixed.holdings.greywall_fort.sovereign, 'valedorn', 'an unknown sovereign falls back to the data’s');
+  assert.equal(fixed.holdings.greywall_fort.controller, 'aurelian', 'the gates are still Aurelia’s');
+  assert.equal(fixed.holdings.greywall_fort.holder, fixed.people['person:2'] && 'person:2', 'a nobody as holder: the world data’s holder holds it');
+  assert.equal(fixed.people['person:2'].key, 'hamon_greymantle');
+  assert.equal(CL.save.fromRaw(v19).incompatible, true, 'loading refuses a kingdom it doesn’t have (SC-33)');
+  assert.match(CL.save.fromRaw(v19).problems[0], /kingdoms this version of the game does not have: dragons \(at Greywall Fort\)/);
+  assert.equal(fixed.holdings.highmere.controller, 'aurelian');
+  assert.ok(fixed.holdings.greywall_fort.claims.every((k) => fixed.people[k.by]));
 
   const old = CL.save.sanitize({ version: 2, roster: [] });
   assert.deepEqual({ ...old.reputation }, { valedorn: 0, aurelian: 0, hrothmark: 0, vessaro: 0, merrow: 0 }, 'older saves start neutral');

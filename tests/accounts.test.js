@@ -4,6 +4,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { loadGame, memoryStorage } = require('./helpers/load');
+const { preHoldings } = require('./helpers/pre-holdings');
 
 /** In Stonebridge (a market), with crowns and a few soldiers. */
 function camp({ gold = 500, soldiers = ['levy', 'levy', 'hunter'], opts = {} } = {}) {
@@ -159,6 +160,7 @@ test('migration 7 → 8: an empty chest, an empty ledger, no followers; your gol
   const { CL, c } = camp({ gold: 123 });
   const v7 = JSON.parse(JSON.stringify(c));
   v7.version = 7;
+  preHoldings(v7);
   for (const k of ['accounts', 'ledger', 'followers']) delete v7[k];
   const v8 = CL.save.MIGRATIONS[7](v7);
   assert.equal(v8.version, 8);

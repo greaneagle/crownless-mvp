@@ -4,6 +4,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { loadGame, memoryStorage } = require('./helpers/load');
+const { preHoldings } = require('./helpers/pre-holdings');
 
 /** A company with money, standing in a market town. */
 function camp({ at = 'oakford', gold = 600, opts = {} } = {}) {
@@ -166,6 +167,7 @@ test('migration 8 → 9 makes room for a merchant; a damaged merchant is repaire
   const { CL, c } = camp();
   const v8 = JSON.parse(JSON.stringify(c));
   v8.version = 8;
+  preHoldings(v8);
   delete v8.followers.merchant;
   const v9 = CL.save.MIGRATIONS[8](v8);
   assert.equal(v9.version, 9);

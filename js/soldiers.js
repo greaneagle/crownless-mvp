@@ -45,7 +45,7 @@
   /**
    * The culture a recruit's name comes from: the troop's own, else the origin's, else the origin's
    * owner's (or, with no origin, the troop's faction's), else the first culture.
-   * @param {ContentId} troopId @param {string | null} origin @param {{ owners?: Record<string, string> }} [c]
+   * @param {ContentId} troopId @param {string | null} origin @param {any} [c] a campaign (its holdings), or a save being migrated
    */
   function cultureFor(troopId, origin, c = CL.campaign) {
     const K = cultures();
@@ -53,18 +53,23 @@
     if (t?.culture && K[t.culture]) return t.culture;
     const s = settlement(origin);
     if (s?.culture && K[s.culture]) return s.culture;
-    const faction = s ? c?.owners?.[s.id] || s.ownerFaction : t?.faction;
+    const faction = s ? (CL.realm?.owner(s.id, /** @type {any} */ (c)) ?? s.ownerFaction) : t?.faction;
     const f = CL.content.table('factions')[faction];
     if (f?.culture && K[f.culture]) return f.culture;
     return Object.keys(K)[0];
   }
 
   /**
-   * A full name from a culture, not already in `taken`.
+   * A full name from a culture, not already in `taken`. `gender` (D-P8g): 'male' (every soldier: the
+   * men's names), 'female', or 'any' (both lists in their old order: followers, the tournament rival
+   * and the 4 → 5 migration, so their names are as they were before the lists were split).
    * @param {string} cultureId @param {string | null} origin @param {() => number} rand @param {Set<string>} taken
+   * @param {'male' | 'female' | 'any'} [gender]
    */
-  function makeName(cultureId, origin, rand, taken) {
+  function makeName(cultureId, origin, rand, taken, gender = 'male') {
     const k = cultures()[cultureId];
+    const women = k.givenFemale || [];
+    const given = gender === 'female' && women.length ? women : gender === 'any' ? [...k.given, ...women] : k.given;
     const place = placeName(origin);
     const forms = k.forms.filter((f) => place || !f.pattern.includes('{origin}'));
     const total = forms.reduce((n, f) => n + f.weight, 0);
@@ -80,7 +85,7 @@
           return roll < acc;
         }) || forms[forms.length - 1];
       name = form.pattern.replace(/\{(\w+)\}/g, (_, part) => {
-        if (part === 'given') return pick(k.given);
+        if (part === 'given') return pick(given);
         if (part === 'trade') return pick(k.trades);
         if (part === 'epithet') return pick(k.epithets);
         return place;
@@ -105,7 +110,9 @@
   function fresh(c, troop, { origin = c.world?.location ?? null, veteran = false } = {}) {
     const o = settlement(origin) ? origin : null;
     const culture = cultureFor(troop, o, c);
-    const name = makeName(culture, o, () => CL.autoresolve.roll(c, 'names'), namesIn(c.roster));
+    // Regular soldiers are men (D-P8g); a troop of women soldiers would say `gender: 'female'`.
+    const gender = CL.content.table('troops')[troop]?.gender === 'female' ? 'female' : 'male';
+    const name = makeName(culture, o, () => CL.autoresolve.roll(c, 'names'), namesIn(c.roster), gender);
     return {
       name,
       culture,
@@ -331,7 +338,7 @@
       }
       const troop = CL.content.table('troops')[e.troop] ? e.troop : null;
       const culture = troop ? cultureFor(troop, null, { owners }) : Object.keys(cultures())[0];
-      const name = makeName(culture, null, () => CL.autoresolve.roll(/** @type {any} */ (names), 'names'), namesIn(roster));
+      const name = makeName(culture, null, () => CL.autoresolve.roll(/** @type {any} */ (names), 'names'), namesIn(roster), 'any');
       roster.push({ ...e, name, culture, origin: null, joined: null, portrait: null, record: blankRecord(), notes: [{ day: Number(d.day) || 0, kind: 'veteran' }] });
     }
     return { ...d, roster, rng: { ...(d.rng || {}), names: names.rng.names } };

@@ -16,6 +16,12 @@ const PATROLS = 2;
 const inMarch = (x, y) => x >= OFFSET && x <= OFFSET + SIZE && y >= OFFSET && y <= OFFSET + SIZE;
 const back = ([x, y]) => [x - OFFSET, y - OFFSET];
 
+function marchNobles(list, settlements) {
+  const kept = list.filter((n) => KINGDOMS.includes(n.realm) && settlements[n.home]);
+  const ids = new Set(kept.map((n) => n.id));
+  return kept.map((n) => ({ ...n, holds: (n.holds || []).filter((id) => settlements[id]), kin: (n.kin || []).filter((k) => ids.has(k.id)) }));
+}
+
 /** @param {Record<string, any>} content CROWNLESS_CONTENT, as the data files built it */
 function oldMarch(content) {
   const C = { ...content };
@@ -58,6 +64,9 @@ function oldMarch(content) {
       forests: world.forests.filter(inside).map((f) => f.map(back)),
       hills: world.hills.map(back),
       sites,
+      // The people of the realms (P8-02): only those of these kingdoms whose home lies in the March,
+      // holding what lies in it, with kin among themselves.
+      nobles: marchNobles(world.nobles || [], settlements),
     },
   };
   const templates = {};

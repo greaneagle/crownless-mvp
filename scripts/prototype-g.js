@@ -80,7 +80,7 @@ function run(seed, style, days) {
     eventsSeen: CL.happenings.state(c).past.length + CL.happenings.state(c).open.length,
     news: c.news?.lines?.length || 0,
     chronicle: Array.isArray(c.chronicle) ? c.chronicle.length : 0,
-    titled: Object.values(c.owners || {}).some((o) => o === 'player'),
+    titled: CL.realm.fiefsOf('player', c).length > 0,
     resumed,
     day: c.day,
   };

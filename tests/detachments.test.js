@@ -5,6 +5,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { loadGame, memoryStorage } = require('./helpers/load');
+const { preHoldings } = require('./helpers/pre-holdings');
 
 const plain = (v) => JSON.parse(JSON.stringify(v));
 
@@ -229,6 +230,7 @@ test('saves: mid-order, every soldier still in exactly one party, records and th
   // v13 → v14.
   const v13 = plain(c);
   v13.version = 13;
+  preHoldings(v13);
   delete v13.detachments;
   assert.deepEqual(plain(CL.save.fromRaw(v13).campaign.detachments), []);
 });

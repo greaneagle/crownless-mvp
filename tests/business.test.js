@@ -5,6 +5,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { loadGame } = require('./helpers/load');
+const { preHoldings } = require('./helpers/pre-holdings');
 
 const plain = (v) => JSON.parse(JSON.stringify(v));
 
@@ -211,11 +212,14 @@ test('no money loop: selling returns less than you paid; buying and selling agai
 });
 
 test('the owner’s law: a change of hands is told and the new owner takes the due (SC-15)', () => {
-  const { c, B, b, messages } = owned('oakford', 300);
-  c.owners.oakford = 'aurelian';
+  // Oakford's seat is the capital, which never changes hands in Phase 8; Brackenfield's is Greywall
+  // (P8-02: a village follows its seat).
+  const { CL, c, B, b, messages } = owned('brackenfield', 300);
+  CL.realm.setOwner(c, 'greywall_fort', 'aurelian', 'test');
+  assert.equal(CL.realm.owner('brackenfield', c), 'aurelian', 'the village went with its fort');
   B.tick(c);
   assert.equal(b.owner, 'aurelian');
-  assert.ok(messages().some((m) => /^Your mill: Oakford is now held by Aurel.*Their law: they take 10% of the mill's sales\.$/.test(m)), messages().at(-1));
+  assert.ok(messages().some((m) => /^Your mill: Brackenfield is now held by Aurel.*Their law: they take 10% of the mill's sales\.$/.test(m)), messages().at(-1));
   assert.equal(b.seizeOn, null, 'a Neutral owner does not seize');
   const w = B.payday(c);
   assert.ok(w.due > 0);
@@ -335,11 +339,11 @@ test('saves: the mill, its rules, log and ledger survive; junk is dropped; v17 s
   // Migration 17 → 18.
   const old = plain(c);
   old.version = 17;
+  preHoldings(old);
   delete old.businesses;
   const m = CL.save.migrate(old);
-  assert.equal(m.version, 18);
+  assert.equal(m.version, CL.save.VERSION);
   assert.deepEqual(plain(m.businesses), { owned: [], past: [] });
-  assert.equal(CL.save.VERSION, 18);
 });
 
 test('content: the mill’s rules are checked', () => {

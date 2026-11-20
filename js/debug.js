@@ -308,6 +308,7 @@
     ]);
     fillSelect('#cheatQuest', Object.values(CL.content.table('quests')).map((q) => [q.id, q.title]));
     fillSelect('#cheatPlace', Object.values(CL.content.table('settlements')).map((s) => [s.id, s.name]));
+    fillSelect('#cheatHolding', Object.keys(c().holdings || {}).map((sid) => [sid, CL.content.get('settlements', sid).name]));
     document.querySelector('#cheatGod').textContent = `God mode: ${CL.game.godMode ? 'on' : 'off'}`;
     document.querySelector('#cheatTree').textContent = `Reveal troop tree: ${CL.game.revealTree ? 'on' : 'off'}`;
     document.querySelector('#cheatCap').value = String(CL.combat.BATTLE.activeCap);
@@ -409,13 +410,39 @@
         CL.realm.adjust(c(), btn.dataset.f, n, 'debug');
         log('reputation', { faction: btn.dataset.f, score: CL.realm.score(c(), btn.dataset.f) });
         break;
-      case 'flipFort': {
-        const fort = btn.dataset.fort;
-        // The next of this world's kingdoms (W-04: any number of them).
-        const ks = CL.realm.kingdoms().map((k) => k.id);
+      case 'flipFort':
+      case 'holdingController': {
+        const fort = btn.dataset.fort || $('#cheatHolding').value;
+        // Only the story moves a story fort until Q4 ends, and a capital never moves (P8-02).
+        if (CL.realm.locked(c(), fort)) return CL.ui.message('Only the story moves this fort until Q4 ends');
+        if (CL.realm.isCapital(fort)) return CL.ui.message('A capital never changes hands');
+        if (CL.realm.holding(fort, c())?.seat) return CL.ui.message('A village follows its seat: move the seat');
+        // The next of this world's realms (W-04: any number of them).
+        const ks = CL.realm.realms().map((k) => k.id);
         const to = ks[(ks.indexOf(CL.realm.owner(fort, c())) + 1) % ks.length];
         CL.realm.setOwner(c(), fort, to, 'debug');
         log('fort owner', { fort, owner: to });
+        break;
+      }
+      case 'holdingHolder': {
+        const sid = $('#cheatHolding').value;
+        const h = CL.realm.holding(sid, c());
+        if (!h) return;
+        if (CL.realm.locked(c(), sid) || (h.seat && CL.realm.locked(c(), h.seat))) return CL.ui.message('Only the story moves this until Q4 ends');
+        const ids = Object.keys(c().people).filter((id) => c().people[id].realm === h.sovereign);
+        for (let i = 1; i <= ids.length; i++) {
+          const to = ids[(ids.indexOf(h.holder) + i) % ids.length];
+          if (CL.realm.transfer(c(), sid, { holder: to, reason: 'debug' })) {
+            log('holding holder', { holding: sid, holder: to });
+            break;
+          }
+        }
+        break;
+      }
+      case 'holdingClaim': {
+        const sid = $('#cheatHolding').value;
+        if (CL.realm.addClaim(c(), sid, { by: CL.realm.PLAYER, realm: null, kind: 'old' })) log('holding claim', { holding: sid, by: 'player' });
+        else CL.ui.message('You already claim it, or hold it');
         break;
       }
       case 'contractOffers':

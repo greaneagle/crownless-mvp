@@ -36,7 +36,7 @@ function summary(c, CL) {
     ending: CL.story.state(c).flags.ending ?? null,
     companion: c.companion?.id ?? null,
     contract: c.contract ? c.contract.template : null,
-    owners: { ...c.owners },
+    owners: Object.fromEntries(CL.realm.forts().map((s) => [s.id, CL.realm.owner(s.id, c)])), // who holds each fort's gates (c.owners until P8-02)
     reputation: { ...c.reputation },
     parties: c.parties.length,
     newsLines: c.news.lines.length,

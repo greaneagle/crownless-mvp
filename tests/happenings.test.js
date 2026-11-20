@@ -5,6 +5,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { loadGame, memoryStorage } = require('./helpers/load');
+const { preHoldings } = require('./helpers/pre-holdings');
 
 const plain = (v) => JSON.parse(JSON.stringify(v));
 
@@ -266,9 +267,10 @@ test('saves: kept; junk repaired; a band’s event needs its band; a v15 save mi
   // v15 → v16.
   const v15 = plain(c);
   v15.version = 15;
+  preHoldings(v15);
   delete v15.happenings;
   const m = CL.save.fromRaw(v15);
-  assert.equal(m.campaign.version, 18);
+  assert.equal(m.campaign.version, CL.save.VERSION);
   assert.deepEqual(plain(m.campaign.happenings.open), []);
   assert.ok(m.campaign.happenings.next > c.day);
 });

@@ -1,5 +1,22 @@
 # Crownless — Release Notes
 
+## v2.24.0 — Holdings and the lords of the realms (P8-02) · 2026-11-20
+
+### New
+- **Every town, fort and village of a kingdom is now a holding,** held by one of its lords or by its ruler. Each village answers to its seat, the nearest fort or town of its kingdom. When a fort changes hands its villages go with it, and the lords who lost them keep a claim.
+- **The people of the realms.** Each kingdom has a ruler and five or six lords and ladies, with their families. Some hold a fort and a village, some a village alone, and some nothing at all. Vessaro is ruled by a queen.
+- **The Realms screen** (open the Journal, then "The Realms: who holds what"): who holds each place, who holds its gates, and who claims it; and each lord with what they hold, their kin and their home. Nothing here needs doing yet.
+- **Tap a place on the map** and you are told who holds it.
+
+### Changed
+- **Soldiers have men's names.** Regular soldiers and levies are men. Followers, tournament fighters and nobles can be men or women. Soldiers already in your company keep their names.
+- When Greywall passes to Aurelia at the end of the story, Highmere and Brackenfield now go with it. An older save that ended that way is updated when it loads.
+
+### Under the hood
+- Save version 19. Saves from 2.23.0 load with the same world, and the story reads the same.
+- Debug → Holdings: move a fort's gates to the next realm, give a holding to the next lord, or lay a claim to it.
+- **Tests:** 719 fast and 12 slow Node tests, 157 browser tests (21 skipped: the visual baselines, Linux only, and those for one device only).
+
 ## v2.23.0 — Phase 7 acceptance (P7-T) · 2026-11-20
 
 ### Changed

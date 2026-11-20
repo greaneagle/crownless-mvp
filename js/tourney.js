@@ -78,7 +78,7 @@
     const rand = () => roll(c, day, salt + 50 + k++);
     const out = [];
     for (let i = 0; i < R.entrants - 1; i++) {
-      const name = CL.soldiers.makeName(culture, sid, rand, taken);
+      const name = CL.soldiers.makeName(culture, sid, rand, taken, 'any');
       taken.add(name);
       out.push({ name, culture, skill: Number((R.skill[0] + (R.skill[1] - R.skill[0]) * roll(c, day, salt + i)).toFixed(2)) });
     }

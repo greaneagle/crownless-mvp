@@ -14,6 +14,7 @@
  *   happening  a world event the company had a hand in (P7-08: took part, or was there and rode on)
  *   tourney    a tournament you fought in (P7-09): champion, finalist or out, and to whom
  *   business   your mill bought, sold or seized, and by whom (P7-10)
+ *   holding    a holding you were granted, lost or claimed changed hands (P8-02)
  *
  * The roll of honour (c.honour, saved) remembers soldiers who left the company: who they were, where
  * they came from, how long they served and their record, and how they left (fell, deserted, retired).
@@ -31,7 +32,7 @@
   const HONOUR_MAX = 60;
   const NOTABLE_KILLS = 8;
   const NAMES_MAX = 6; // names kept on one entry
-  const KINDS = ['founded', 'begun', 'recruited', 'promoted', 'battle', 'deserted', 'retired', 'quest', 'happening', 'tourney', 'business'];
+  const KINDS = ['founded', 'begun', 'recruited', 'promoted', 'battle', 'deserted', 'retired', 'quest', 'happening', 'tourney', 'business', 'holding'];
   const HOW = ['fell', 'deserted', 'retired'];
 
   /** @returns {HonourRoll} */
@@ -187,6 +188,8 @@
         return CL.tourney.chronicleText(e);
       case 'business':
         return CL.business.chronicleText(e);
+      case 'holding':
+        return CL.realm.chronicleText(e);
       case 'happening': {
         const t = CL.content.table('world_events')[e.event]?.chronicle?.[e.result];
         return t ? CL.happenings.fill(t, { kind: e.event, place: e.place, dest: e.dest }, CL.campaign, { n: e.n }) : '';
@@ -269,6 +272,11 @@
         if (!settlements[e.place] || !['bought', 'sold', 'seized'].includes(e.event)) continue;
         Object.assign(out, { event: e.event, place: e.place });
         if (e.event === 'seized' && CL.content.table('factions')[e.by]) out.by = e.by;
+      }
+      if (e.kind === 'holding') {
+        if (!settlements[e.place] || !['gained', 'lost', 'changed'].includes(e.event)) continue;
+        Object.assign(out, { event: e.event, place: e.place });
+        if (CL.content.table('factions')[e.by]) out.by = e.by;
       }
       if (e.kind === 'happening') {
         if (!CL.content.table('world_events')[e.event]?.chronicle?.[e.result] || !settlements[e.place]) continue;

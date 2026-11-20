@@ -4,6 +4,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { loadGame, memoryStorage } = require('./helpers/load');
+const { preHoldings } = require('./helpers/pre-holdings');
 
 /** Game values come from the test sandbox's realm; compare them as plain JSON. */
 const plain = (x) => JSON.parse(JSON.stringify(x));
@@ -290,6 +291,7 @@ test('migrating a v4 save names every soldier: the same save always gets the sam
   const { CL } = loadGame();
   const v4 = plain(CL.campaign);
   v4.version = 4;
+  preHoldings(v4);
   v4.roster = v4.roster.map(({ id, troop, xp, woundedUntil }) => ({ id, troop, xp, woundedUntil }));
   delete v4.rng.names;
   const frozen = JSON.stringify(v4);

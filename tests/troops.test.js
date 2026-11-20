@@ -3,6 +3,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { loadGame, memoryStorage } = require('./helpers/load');
+const { preHoldings } = require('./helpers/pre-holdings');
 
 /** Game values come from the test sandbox's realm; compare them as plain JSON. */
 const plain = (x) => JSON.parse(JSON.stringify(x));
@@ -171,6 +172,7 @@ test('migrating a v5 save: the company knows its troops and what they were train
   const { CL } = loadGame();
   const v5 = plain(CL.campaign);
   v5.version = 5;
+  preHoldings(v5);
   delete v5.troopKnowledge;
   v5.roster[0].troop = 'rider';
   v5.roster[1].troop = 'mercenary';

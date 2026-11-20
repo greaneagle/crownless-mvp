@@ -1298,7 +1298,31 @@ _Re-specified 2026-11-20 at build 2.23.0 (commit 09176e8); NEXT-PLAN §5 has the
 - **Debug:** each task adds the cheats that reach its state (grant a village or a fort, start a siege, capture a lord, make a lord landless, and so on).
 - **Art:** lord banners, siege camps and wall pieces go to the asset request list (`docs/ASSETS.md`) and ship as placeholders.
 
-### P8-02 · Holdings model (L) — Ready (D-P8b, D-P8c decided 2026-11-20)
+### P8-02 · Holdings model (L) — ✅ Done in 2.24.0
+
+**Done (2.24.0, 2026-11-20).** Save schema v19. `js/realm.js` holds the people, the holdings and `transfer`; the world package has `nobles` (26 people: a ruler and five or six lords per kingdom, Merrow none); villages have a `seat` and Greywall and Ashgate are `story: true` (`data/settlements.js`); each culture's names are split into `given` (men's) and `givenFemale` (`data/names.js`).
+- **People** (`c.people`, `person:1`…; `c.rulers`; `c.nextPersonId`): `{ id, key, name, gender, realm, home, kin, traits, status, heldBy }`, plus `'player'` as a person with no realm. Every realm has landless lords, lords of one place and lords of several, and men and women among them. Vessaro has a queen (Lucrezia Salviati). Valedorn's and Hrothmark's rulers are kings; Aurelia's is the First Magistrate (factions now say what their ruler is called: `ruler: { male, female }`). Rank is never stored: `realm.standingOf(id)` says great, lesser or landless from what they hold now. A kingdom with no ruler in the data (the W-04 test world's Iron Reach) gets a plain one.
+- **Holdings** (`c.holdings`, 30: every settlement of a kingdom; Merrow is marked `freeCity` and has none): `{ kind, sovereign, holder, controller, seat, administrator, claims }`, the holder never null. Readers: `holding`, `holderOf`, `sovereignOf`, `claimsOn`, `villagesOf`, `fiefsOf`, `standingOf`, `locked`, `isCapital`. `realm.owner` keeps its meaning (who controls it) and every caller works unchanged. `realm.holdings(c, f)` is now `controlled` (the old name kept as an alias).
+- **`realm.transfer(c, sid, { controller, sovereign, holder, reason, willing, by })`** is the one change of hands:
+  - A seat's villages go with its controller, held by the new ruler.
+  - A holder who loses a holding against their will keeps an `old` claim, once per claimant, and a claim made good is removed.
+  - A grant from the ruler, or a willing return to the crown, leaves no claim.
+  - It refuses a holder not sworn to the sovereign, a fourth fief for a lord, a village moved apart from its seat, and a capital's gates (P9-05).
+  - It writes the news: `fort_taken`, or the new `fief_granted`. The chronicle (`kind: 'holding'`) only when the player is a party to it.
+  - It emits one `HoldingChanged` event per call; nothing listens yet.
+  - `setOwner` is now a wrapper: the kingdom becomes sovereign and controller, and its ruler the holder.
+- **Story forts:** `realm.locked(c, sid)` until Q4's ending. The Debug panel checks it; `transfer` and `setOwner` don't, so Q4's effect (through `setOwner`) and the tests that move Greywall work as before.
+- **Soldiers are men:** `makeName(…, gender)`. Soldiers draw from `given`, or from `givenFemale` for a troop with `gender: 'female'` (none yet; the content checker allows only those two values). Followers and the tournament rival use both lists in the old order, so their names are as before. So does the 4 → 5 migration. Soldiers already in a save keep their names.
+- **The Realm screen** (read-only), with two tabs. **Holdings:** each realm's holdings with holder, seat, who holds the gates when it's another realm, claims, and "the story decides it" for a story fort. **Lords:** each person with what they hold or "landless", their kin (son, sister…), home and traits. **A tap on a settlement on the map** says who holds it and for whom, and who has its gates.
+- **Debug → Holdings:** next controller (forts; the story lock and capitals refuse), next holder, claim for you. Flip Greywall/Ashgate now refuse until Q4 ends.
+- **`realm.invariants(c)`** lists what breaks the design's invariants (§25.3) for holdings and people. The campaign bot checks it after every world day (`stats.invariants`).
+- **Save v19:** the 18 → 19 step (`save.migrateHoldings`) is pure and builds the Sundered Realm from constants (`V19_SUNDERED`). A changed fort (Q4's Greywall) passes to its new kingdom with its villages, and the old holders keep claims; another world keeps its owner overrides and `sanitize` completes it. `owners` is gone. A save whose holdings name a kingdom this build lacks is refused, naming it (SC-33).
+- **Fixtures:** `tests/fixtures/saves-2.23/`, made from a clean checkout of 9826a3e: fresh, the day-20 campaign, the story bot's play, Q4 ended for Aurelia through the real parley with a mill at Brackenfield, and a Phase 7 company. `scripts/make-legacy-save-fixtures.js` makes the new three when the old build has mills.
+- **Tests:** `tests/holdings.test.js` (15, including a 90-day bot run with forts changing hands and the invariants checked every day); `tests/browser/realm.spec.js` (2, desktop and phone). Edited: the realm owners test, the mill's change of hands (now Brackenfield under Greywall), the scout's set-off message, the world-names check (the migration's constants may name kingdoms), and the tests that make an older save from a current one (`tests/helpers/pre-holdings.js`).
+- **Not as specified:**
+  - **The Realm screen opens from the Journal** ("The Realms: who holds what", on the map and in every settlement), not from a button of its own. A map button pushed the phone's top row into the HUD panel at the larger text sizes, and a settlement-menu button pushed Rest off an 812×375 screen. For the same reason the settlement screen doesn't repeat its holder; the map tap and the Realm screen show it.
+  - No existing test failed on a soldier's seeded name, so none needed updating for the men's lists.
+  - `happenings.test.js`'s owners check needed no edit (it reads `realm.owner`).
 
 **Problem.**
 - **Land is one field.** A fort's kingdom is `c.owners[fort]`, and every other settlement's comes from content. Sovereignty, the legal holder, who occupies it and who runs it can't differ, so dispossession, occupation and claims can't be represented (design §17.1, §24.2).

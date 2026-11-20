@@ -95,10 +95,13 @@ test('js/ names no kingdom or world, and has no 0–100 bound literals', () => {
   const problems = [];
   for (const f of fs.readdirSync(dir).filter((x) => x.endsWith('.js'))) {
     const lines = fs.readFileSync(path.join(dir, f), 'utf8').split('\n');
+    let constants = false; // the 18 → 19 migration's constants (P8-02): the Sundered Realm as 2.24.0 began it
     lines.forEach((line, i) => {
+      if (f === 'save.js' && /const V19_SUNDERED = \{/.test(line)) constants = true;
+      if (constants && /^ {2}\};/.test(line)) constants = false;
       const code = line.replace(/\/\/.*$/, '').replace(/^\s*\*.*$/, ''); // comments may name them
       const at = `${f}:${i + 1}`;
-      if (/'(valedorn|aurelian)'/.test(code)) problems.push(`${at} names a kingdom`);
+      if (/'(valedorn|aurelian)'/.test(code) && !constants) problems.push(`${at} names a kingdom`);
       // The one exception: the 2 → 3 save migration records that every v2 save was a Border March one.
       if (/'border_march'/.test(code) && !(f === 'save.js' && /version: 3, worldId:/.test(code))) problems.push(`${at} names a world`);
       if (/'neutral'/.test(code) && f !== 'realm.js') problems.push(`${at} names the outlaw faction`);

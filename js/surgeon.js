@@ -52,7 +52,7 @@
     const place = c.world.location;
     const culture = CL.soldiers.cultureFor('levy', place, c);
     const taken = new Set([...c.roster.map((s) => s.name), c.followers?.quartermaster?.name, c.followers?.merchant?.name].filter(Boolean));
-    const name = CL.soldiers.makeName(culture, place, () => CL.autoresolve.roll(c, 'names'), taken);
+    const name = CL.soldiers.makeName(culture, place, () => CL.autoresolve.roll(c, 'names'), taken, 'any');
     c.followers ??= { quartermaster: null, merchant: null, surgeon: null };
     /** @type {any} */
     const s = { name, culture, origin: place, hired: c.day, unpaid: 0, saved: 0, log: [] };

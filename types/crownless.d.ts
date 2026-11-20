@@ -199,7 +199,16 @@ declare global {
     nextContractId: number;
     contractsDone: number;
     reputation: Record<ContentId, number>;
-    owners: Record<ContentId, ContentId>;
+    /** v3–v18: fort → owning kingdom; replaced by `holdings` in v19 (P8-02). Only an unmigrated save has it. */
+    owners?: Record<ContentId, ContentId>;
+    /** v19 (P8-02): the people of the realms, by id ("person:<n>"). */
+    people: Record<string, Person>;
+    /** v19 (P8-02): realm → the person holding its ruler's office (an office, not a kind of person). */
+    rulers: Record<ContentId, string>;
+    /** v19 (P8-02): the next person id. */
+    nextPersonId: number;
+    /** v19 (P8-02): every settlement of a kingdom (not the free city), by settlement id. */
+    holdings: Record<ContentId, Holding>;
     /** v10 (W-07): each pair of kingdoms ("a|b", ids in order): peace, tension or war, and its counters. */
     relations: Record<string, { state: 'peace' | 'tension' | 'war'; since: number; heat: number; losses: number; lastClash: number | null; incidentUntil: number }>;
     story: StoryState;
@@ -229,6 +238,34 @@ declare global {
     /** v18 (P7-10): your mill, and those sold or seized. */
     businesses: Businesses;
     happenings: { open: Happening[]; past: { id: number; kind: ContentId; place: string; day: number; result: string; dest?: string }[]; cool: Record<string, number>; next: number; nextId: number };
+  }
+
+  /** A person of the realms (P8-02): a ruler or a lord. Rank is never stored: it is what they hold. */
+  interface Person {
+    id: string;
+    /** Their id in the world data's `nobles`, when they come from it. */
+    key: string | null;
+    name: string;
+    gender: 'male' | 'female';
+    realm: ContentId;
+    home: ContentId | null;
+    kin: { person: string; tie: 'parent' | 'child' | 'sibling' | 'cousin' | 'spouse' }[];
+    traits: string;
+    status: 'free' | 'captive' | 'wounded';
+    heldBy: string | null;
+  }
+
+  /** A holding (P8-02, design §17.1): who claims it, who is granted it, who has its gates. */
+  interface Holding {
+    kind: 'village' | 'fort' | 'town';
+    sovereign: ContentId;
+    /** A person id, or 'player'; never null (D-P8f): the ruler when no lord holds it. */
+    holder: string;
+    controller: ContentId;
+    /** Villages: the fort or town they follow. */
+    seat: ContentId | null;
+    administrator: string | null;
+    claims: { by: string; realm: ContentId | null; since: number; kind: 'granted' | 'conquest' | 'old' }[];
   }
 
   interface Accounts {
@@ -533,6 +570,10 @@ declare global {
     WOUND_DAYS: number;
     AUTOSAVE_DAYS: number;
     MIGRATIONS: Record<number, (d: Record<string, any>) => Record<string, any>>;
+    /** 18 → 19 (P8-02): owners become holdings, with the people of the realms. */
+    migrateHoldings(d: Record<string, any>): Record<string, any>;
+    /** The Sundered Realm's people and holdings as 2.24.0 began them (the 18 → 19 migration's constants). */
+    V19_SUNDERED: { people: string[][]; rulers: Record<string, string>; holdings: (string | null)[][] };
     preMigrationKey(version: number): string;
     starter(background?: ContentId): Campaign;
     addSoldier(c: Campaign, troop: ContentId, woundedUntil?: number | null, opts?: { origin?: string | null; veteran?: boolean }): Soldier;

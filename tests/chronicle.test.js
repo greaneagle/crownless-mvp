@@ -4,6 +4,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { loadGame, memoryStorage } = require('./helpers/load');
+const { preHoldings } = require('./helpers/pre-holdings');
 
 const plain = (x) => JSON.parse(JSON.stringify(x));
 
@@ -146,6 +147,7 @@ test('saves: junk entries are dropped, a round trip is stable, and an older save
   assert.equal(JSON.stringify(CL.save.sanitize(plain(s))), JSON.stringify(s));
   const v6 = plain(c);
   v6.version = 6;
+  preHoldings(v6);
   delete v6.chronicle;
   delete v6.honour;
   v6.day = 12.5;

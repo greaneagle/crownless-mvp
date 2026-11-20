@@ -101,6 +101,45 @@
       ],
       hills: [[94, 72], [99, 68], [88, 78], [136, 80], [140, 88]],
       // Non-settlement points of interest that start a battle: two lairs in each region.
+      // The people of the realms (P8-02, decision D-P8c, owner 2026-11-20): per kingdom a ruler and
+      // about six lords. Rank is never stored: a "great", "lesser" or "landless" lord is only what
+      // they hold now. `holds`: the holdings they are granted at the start (at most three for a lord;
+      // the ruler's office is not capped, and holds every holding nobody else is given). `home`: their
+      // own seat, or for the landless their kin's seat or the capital. `kin` ties are returned on both
+      // sides (parent ↔ child, sibling, cousin, spouse). `traits`: a short line for P8-07. Men and women
+      // (D-P8g): noblewomen hold land and can rule. Merrow, a free city, has no lords. All invented.
+      nobles: [
+        // Valedorn: the King at Stonebridge; the Greymantles hold Greywall (and Hawise a village under it).
+        { id: 'godric_ardane', name: 'Godric Ardane', gender: 'male', realm: 'valedorn', ruler: true, home: 'stonebridge', holds: ['stonebridge', 'oakford'], kin: [{ id: 'alys_ardane', tie: 'child' }], traits: 'stern, pious, slow to forgive' },
+        { id: 'hamon_greymantle', name: 'Hamon Greymantle', gender: 'male', realm: 'valedorn', home: 'greywall_fort', holds: ['greywall_fort', 'highmere'], kin: [{ id: 'hawise_greymantle', tie: 'sibling' }, { id: 'tancred_greymantle', tie: 'child' }], traits: 'proud, watchful, a hard border lord' },
+        { id: 'avice_westmere', name: 'Avice Westmere', gender: 'female', realm: 'valedorn', home: 'westholt_castle', holds: ['westholt_castle', 'ashby'], kin: [{ id: 'serlo_fernby', tie: 'cousin' }], traits: 'shrewd, patient, keeps her word' },
+        { id: 'hawise_greymantle', name: 'Hawise Greymantle', gender: 'female', realm: 'valedorn', home: 'brackenfield', holds: ['brackenfield'], kin: [{ id: 'hamon_greymantle', tie: 'sibling' }], traits: 'blunt, generous, quick to anger' },
+        { id: 'serlo_fernby', name: 'Serlo Fernby', gender: 'male', realm: 'valedorn', home: 'fernley', holds: ['fernley'], kin: [{ id: 'avice_westmere', tie: 'cousin' }], traits: 'cautious, thrifty' },
+        { id: 'tancred_greymantle', name: 'Tancred Greymantle', gender: 'male', realm: 'valedorn', home: 'greywall_fort', holds: [], kin: [{ id: 'hamon_greymantle', tie: 'parent' }], traits: 'eager, reckless, hungry for land' },
+        { id: 'alys_ardane', name: 'Alys Ardane', gender: 'female', realm: 'valedorn', home: 'stonebridge', holds: [], kin: [{ id: 'godric_ardane', tie: 'parent' }], traits: 'clever, restless, her father’s favourite' },
+        // Aurelia: the First Magistrate at Eastwatch; Marcia Corvo holds a village under Cassian's Ashgate.
+        { id: 'severin_aquila', name: 'Severin Aquila', gender: 'male', realm: 'aurelian', ruler: true, home: 'eastwatch', holds: ['eastwatch', 'redfield'], kin: [{ id: 'junia_aquila', tie: 'child' }], traits: 'learned, cold, bound by the law' },
+        { id: 'cassian_vatro', name: 'Cassian Vatro', gender: 'male', realm: 'aurelian', home: 'ashgate_fort', holds: ['ashgate_fort', 'dunmarsh'], kin: [{ id: 'decimo_vatro', tie: 'child' }], traits: 'ambitious, a veteran of the frontier' },
+        { id: 'domitia_celer', name: 'Domitia Celer', gender: 'female', realm: 'aurelian', home: 'castra_nova', holds: ['castra_nova', 'calvinum'], kin: [{ id: 'faustin_celer', tie: 'sibling' }], traits: 'proud, exacting, old imperial blood' },
+        { id: 'marcia_corvo', name: 'Marcia Corvo', gender: 'female', realm: 'aurelian', home: 'saltmere', holds: ['saltmere'], kin: [], traits: 'practical, a trader at heart' },
+        { id: 'faustin_celer', name: 'Faustin Celer', gender: 'male', realm: 'aurelian', home: 'tessaro', holds: ['tessaro'], kin: [{ id: 'domitia_celer', tie: 'sibling' }], traits: 'easygoing, fond of wine' },
+        { id: 'decimo_vatro', name: 'Decimo Vatro', gender: 'male', realm: 'aurelian', home: 'ashgate_fort', holds: [], kin: [{ id: 'cassian_vatro', tie: 'parent' }], traits: 'dutiful, in his father’s shadow' },
+        { id: 'junia_aquila', name: 'Junia Aquila', gender: 'female', realm: 'aurelian', home: 'eastwatch', holds: [], kin: [{ id: 'severin_aquila', tie: 'parent' }], traits: 'sharp-tongued, a rider of note' },
+        // Hrothmark: the King at Hrothgard and his wife Ingrid; Kettil holds a village under Torvald's Skarnwall.
+        { id: 'hakon_ulfring', name: 'Hakon Ulfring', gender: 'male', realm: 'hrothmark', ruler: true, home: 'hrothgard', holds: ['hrothgard', 'eldmoor'], kin: [{ id: 'ingrid_ulfring', tie: 'spouse' }], traits: 'bold, open-handed, loves a feast' },
+        { id: 'astrid_hallsdottir', name: 'Astrid Hallsdottir', gender: 'female', realm: 'hrothmark', home: 'ulfstead_hold', holds: ['ulfstead_hold', 'birkholm'], kin: [{ id: 'kettil_brandsson', tie: 'cousin' }], traits: 'fierce, honest, holds a grudge' },
+        { id: 'torvald_skarn', name: 'Torvald Skarn', gender: 'male', realm: 'hrothmark', home: 'skarnwall', holds: ['skarnwall', 'thornvik'], kin: [{ id: 'ragna_skarn', tie: 'child' }], traits: 'grim, careful, old and wary' },
+        { id: 'kettil_brandsson', name: 'Kettil Brandsson', gender: 'male', realm: 'hrothmark', home: 'kettleby', holds: ['kettleby'], kin: [{ id: 'astrid_hallsdottir', tie: 'cousin' }], traits: 'loyal, plain-spoken' },
+        { id: 'ingrid_ulfring', name: 'Ingrid Ulfring', gender: 'female', realm: 'hrothmark', home: 'hrothgard', holds: [], kin: [{ id: 'hakon_ulfring', tie: 'spouse' }], traits: 'wise, watchful, the hall’s true voice' },
+        { id: 'ragna_skarn', name: 'Ragna Skarn', gender: 'female', realm: 'hrothmark', home: 'skarnwall', holds: [], kin: [{ id: 'torvald_skarn', tie: 'parent' }], traits: 'restless, a shieldmaiden of the hills' },
+        // Vessaro: Queen Lucrezia at Vessara; Chiara Morosco holds a village under her brother's Salina.
+        { id: 'lucrezia_salviati', name: 'Lucrezia Salviati', gender: 'female', realm: 'vessaro', ruler: true, home: 'vessara', holds: ['vessara', 'pellio'], kin: [{ id: 'matteo_salviati', tie: 'child' }], traits: 'cunning, rich, never in a hurry' },
+        { id: 'ottavio_morosco', name: 'Ottavio Morosco', gender: 'male', realm: 'vessaro', home: 'torre_salina', holds: ['torre_salina', 'lucco'], kin: [{ id: 'chiara_morosco', tie: 'sibling' }], traits: 'vain, brave, deep in debt' },
+        { id: 'ruggero_canale', name: 'Ruggero Canale', gender: 'male', realm: 'vessaro', home: 'castel_verro', holds: ['castel_verro', 'sorra'], kin: [], traits: 'careful, a builder of walls' },
+        { id: 'chiara_morosco', name: 'Chiara Morosco', gender: 'female', realm: 'vessaro', home: 'marenna', holds: ['marenna'], kin: [{ id: 'ottavio_morosco', tie: 'sibling' }], traits: 'quiet, clever, pays her brother’s debts' },
+        { id: 'matteo_salviati', name: 'Matteo Salviati', gender: 'male', realm: 'vessaro', home: 'vessara', holds: [], kin: [{ id: 'lucrezia_salviati', tie: 'parent' }], traits: 'charming, idle, a gambler' },
+        { id: 'bastiano_lanza', name: 'Bastiano Lanza', gender: 'male', realm: 'vessaro', home: 'vessara', holds: [], kin: [], traits: 'the Queen’s household knight; steady, sworn' }
+      ],
       sites: {
         looter_camp: {
           id: 'looter_camp',
