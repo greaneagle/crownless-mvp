@@ -6,7 +6,9 @@
 //   'hands-off'  auto-resolves every fight and never changes a setting (the default)
 //   'presets'    fights in person, choosing only a preset: Defensive when the odds are close, else Balanced
 //   'expert'     fights in person with Aggressive, Defensive or Balanced as the odds suggest, rallies its
-//                soldiers, and keeps a quartermaster and a merchant
+//                soldiers, and keeps a quartermaster and a merchant; from 2.23.0 (P7-T) also a surgeon, a
+//                scout and a blacksmith, sends a detachment out hunting when the company is big enough,
+//                buys a mill where one would pay, and takes part in the world's events
 // The in-person fights use a simple hero (walk at the nearest enemy, swing); a real player does better.
 //
 // roam (W-08): tour the realm, walking to every contract board in turn instead of the nearest other
@@ -40,6 +42,10 @@ function makeBot(CL, { log = () => {}, style = 'hands-off', roam = false } = {})
     rallies: 0,
     presets: {},
     screens: 0, // non-default screens visited (the Prepare screen's choice, Accounts)
+    hiredFollowers: [], // P7-T: who the expert took on
+    detachmentsSent: 0,
+    millsBought: 0,
+    eventsJoined: 0,
   };
   const U = () => CL.upkeep;
   const odds = (e) => CL.autoresolve.winChance(CL.autoresolve.playerPower(c()), CL.autoresolve.troopsPower(e.troops));
@@ -88,6 +94,7 @@ function makeBot(CL, { log = () => {}, style = 'hands-off', roam = false } = {})
         stats.upgraded += CL.party.upgrade(t, o.to, Math.floor((camp.gold - 60) / o.cost));
       }
     }
+    if (style === 'expert') followers(camp); // P7-T: the company's roles come before more recruits
     const recruits = CL.party.recruitsHere();
     const reserve = () => U().weeklyWages(camp) + 8 * U().dailyRations(camp) + 20;
     for (let i = 0; i < 20; i++) {
@@ -103,7 +110,6 @@ function makeBot(CL, { log = () => {}, style = 'hands-off', roam = false } = {})
         log(`day ${camp.day.toFixed(1)}: contract accepted at ${sid}`);
       }
     }
-    if (style === 'expert') followers(camp);
     const wounded = CL.party.woundedSoldiers().length;
     if (wounded && wounded * 2 >= camp.roster.length && CL.party.canRest() && camp.food >= U().dailyRations(camp)) {
       CL.party.rest();
@@ -213,15 +219,54 @@ function makeBot(CL, { log = () => {}, style = 'hands-off', roam = false } = {})
     tally();
   }
 
-  /** The expert keeps a quartermaster and a merchant (V2-11, V2-12), funded from what is spare. */
+  /**
+   * The expert keeps a quartermaster and a merchant (V2-11, V2-12), funded from what is spare; and from
+   * P7-T the Phase 7 roles: a surgeon, a scout and a blacksmith (each when there's money to keep them),
+   * a detachment out hunting, a mill where it would pay, and the world's events where it can help.
+   */
   function followers(camp) {
+    const took = (who) => {
+      stats.hiredFollowers.push(who);
+      stats.screens++;
+    };
     if (!CL.quartermaster.get(camp) && CL.quartermaster.canHire(camp) && camp.gold >= 160) {
       CL.quartermaster.hire(camp);
-      stats.screens++;
+      took('quartermaster');
+    }
+    const spare = () => camp.gold - U().weeklyWages(camp) - 40;
+    for (const [who, F] of [['surgeon', CL.surgeon], ['scout', CL.scout], ['blacksmith', CL.blacksmith]]) {
+      if (!F.get(camp) && F.canHire(camp) && camp.roster.length >= 6 && spare() >= F.HIRE + 2 * F.WAGE && F.hire(camp)) took(who);
     }
     if (!CL.merchant.get(camp) && CL.merchant.canHire(camp) && camp.gold >= 400) {
       CL.merchant.hire(camp);
       CL.merchant.fund(camp, 150);
+      took('merchant');
+    }
+    const sid = camp.world.location;
+    const B = CL.business;
+    if (!B.get(camp) && !B.blocked(camp, sid) && spare() >= B.priceAt(sid) + 150 && B.estimate(camp, sid).profit >= 15 && B.buy(camp, sid)) {
+      B.fund(camp, 150);
+      stats.millsBought++;
+      stats.screens++;
+    }
+    sendDetachment(camp);
+    for (const e of CL.happenings.state(camp).open.filter((x) => x.place === sid && !x.taken)) {
+      const o = CL.happenings.options(camp, e).find((x) => !x.reason);
+      if (o && CL.happenings.choose(camp, e.id, o.id).ok) stats.eventsJoined++;
+    }
+  }
+
+  /** With ten or more fit soldiers and a captain, send four out to hunt bands round here for four days. */
+  function sendDetachment(camp) {
+    const D = CL.detachments;
+    if (D.active(camp).length) return;
+    const fit = camp.roster.filter((x) => x.woundedUntil === null);
+    const cap = D.captains(camp).find((k) => k.kind === 'soldier');
+    if (fit.length < 10 || !cap) return;
+    const ids = fit.filter((x) => x.id !== cap.id).slice(0, 3).map((x) => x.id);
+    const r = D.send(camp, { captain: cap, soldierIds: ids, order: { objective: 'hunt', x: camp.world.x, y: camp.world.y, days: 4 } });
+    if (r.ok) {
+      stats.detachmentsSent++;
       stats.screens++;
     }
   }

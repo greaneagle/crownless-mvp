@@ -221,7 +221,7 @@ All three styles are viable over 60 days and every run resumed exactly. The gap 
 | **P7-09** | ✅ **Done in 2.20.0.** Tournament (foot-melee duels in a new one-on-one arena mode) | Done | **M–L** | — | v17 |
 | **P7-10** | ✅ **Done in 2.21.0.** First business: a mill | Done | M | V2-11, W-05b | v18 |
 | **P7-11** | ✅ **Done in 2.22.0.** Battle extras (formations, an objective, terrain) | Done | M | B-01, W-05a | — |
-| **P7-T** | Tuning and acceptance | Specified | S | all above | — |
+| **P7-T** | ✅ **Done in 2.23.0** (owner's play to come). Tuning and acceptance: [PHASE-7-VALIDATION](PHASE-7-VALIDATION.md) | Done | S | all above | — |
 
 ## 5. Phase 8 — "The Landed World"
 

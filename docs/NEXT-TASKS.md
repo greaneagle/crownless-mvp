@@ -1237,7 +1237,28 @@ _Written 2026-11-18 at build 2.0.0; **reviewed and corrected the same day agains
 
 **Acceptance.** Each makes a measurable difference; none is required.
 
-### P7-T · Phase 7 tuning and acceptance (S) — Specified
+### P7-T · Phase 7 tuning and acceptance (S) — ✅ Done in 2.23.0 (owner's play to come)
+
+**Done (2.23.0, 2026-11-20).** The evidence is in [`docs/PHASE-7-VALIDATION.md`](PHASE-7-VALIDATION.md).
+- **The exit as a scripted 90-day scenario:** `tests/slow/phase7-exit.test.js`. The expert bot plays 90 days with the world's events, saving at day 45 and playing on from the reloaded save. At day 90, in all three seeds measured:
+  - 19 soldiers;
+  - all five roles kept, and 9–10 detachments sent;
+  - a mill (−14, +190, +82 crowns) and a merchant up on its stake;
+  - 22–23 events seen and 3–4 joined;
+  - 3,600–4,200 crowns;
+  - no land held.
+- **Prototype G with followers and officers** (`npm run prototype-g`): the world's events now run in every style. The expert (`tests/helpers/campaign-bot.js`) also hires a surgeon, a scout and a blacksmith once it has six soldiers (before recruiting more). It sends four soldiers out hunting under a captain when it has ten fit, buys a mill where today's estimate leaves 15 crowns a week, and takes part in events where it can. Over 30 days: hands-off 168 crowns median, presets 614, expert 585 with all five roles. Everyone resumes from the save.
+- **Economy pass:** healthy, 534 crowns median at day 60 (448 at B-01), no hardship; no change.
+- **Battle passes:** parity unchanged since B-01 (+1 to +14 over the odds).
+  - **Escort ambushes brought back into range.** The wagon-raiders now lie still in cover until the band's front closes with the company (one within 95 px of you or a soldier) or one of them is hit. The wagon has 40 HP (was 70). Counting a fight as won only when the wagon comes through, the four ambushes measured are +4, +19, +6 and +26 over the odds: +13.9 on average, against +18.9 in 2.22.0. Tried and dropped:
+    - more raiders (+3.3 on average, −23 in one ambush);
+    - the band starting further off (−28.6).
+  - **Soldiers minding the wagon** still make no clear difference to whether it is saved. That is left for the owner's play.
+- **Tests:**
+  - the exit (above);
+  - the raiders lying in wait (`tests/extras.test.js`);
+  - `npm run prototype-g` added.
+- **Not done here:** the owner's play. The four checks are listed at the end of the validation document.
 
 **Build.** Prototype G across the bigger world with followers and officers; the design exit as a scripted 90-day scenario; economy and battle passes (parity script); a validation section.
 

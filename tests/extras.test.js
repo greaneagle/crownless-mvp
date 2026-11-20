@@ -340,3 +340,25 @@ test('the objective wins and loses: won with the wagon standing, the escort goes
     assert.equal(uiCalls.some((x) => x[0] === 'message' && /The caravan bound for Oakford is lost\. Your contract from Stonebridge has failed/.test(x[1])), !kept, `${how}: told`);
   }
 });
+
+test('the wagon-raiders lie in wait until the band’s front closes with the company, or one of them is found', () => {
+  const { CL } = loadGame();
+  const g = battle(CL, ['footman', 'footman'], [{ looter: 6 }], { extra: { objective: 'wagon' } });
+  const raider = g.enemies.find((e) => e.raider);
+  const front = g.enemies.find((e) => !e.raider);
+  assert.ok(raider && front);
+  assert.equal(CL.objective.sprung(g), false, 'at the start they wait');
+  const at = [raider.x, raider.y];
+  raider.aiTimer = 0;
+  for (let i = 0; i < 20; i++) CL.combat.ai(raider, 0.05);
+  assert.deepEqual([raider.x, raider.y], at, 'still in cover');
+  Object.assign(front, { x: g.hero.x + 60, y: g.hero.y });
+  assert.equal(CL.objective.sprung(g), true, 'the front has closed: they spring');
+  for (let i = 0; i < 20; i++) CL.combat.ai(raider, 0.05);
+  assert.notDeepEqual([raider.x, raider.y], at, 'and go');
+  // Found first: one of them is hit.
+  const g2 = battle(CL, ['footman'], [{ looter: 6 }], { extra: { objective: 'wagon' } });
+  const r2 = g2.enemies.find((e) => e.raider);
+  CL.combat.hit(r2, 5, g2.hero);
+  assert.equal(CL.objective.sprung(g2), true);
+});

@@ -2,7 +2,7 @@
 /* Crownless battle objective (P7-11): protect the wagon, in an escort contract's ambush.
  *
  * When the Reavers lying in wait on the escort road spring (js/contracts.js), the battle has the
- * caravan's wagon on the field, behind the company. It doesn't move or fight; it has 70 HP and a
+ * caravan's wagon on the field, behind the company. It doesn't move or fight; it has 40 HP and a
  * little armour (2), and it is solid (an obstacle: nobody walks through it, arrows fly over it).
  *   - The raiders go for it: every third one that takes the field is out for the wagon and nothing
  *     else (it counts as 1,000 px nearer than it is), unless someone stands in its way (within 60 px:
@@ -10,7 +10,9 @@
  *     nearer for them.
  *   - It is an ambush: the Reavers burst from cover close by (420–640 px ahead of the company, not
  *     from the far side of the field), and the wagon-raiders behind it, on its flank (420–560 px back
- *     and 330–460 px to one side: far enough that both groups strike at about the same time).
+ *     and 330–460 px to one side), where they lie still until the band's front has closed with the
+ *     company (one of it within 95 px of you or a soldier) or one of them is hit (P7-T: before, they
+ *     struck first and alone, and fought escort ambushes were won far above the odds).
  *   - Your soldiers mind it without being told (Balanced does the right thing): a raider near the
  *     wagon counts as nearer when they pick theirs, and they leave their place (on Follow or Hold) for
  *     a raider at the wagon from as far as 420 px.
@@ -22,20 +24,21 @@
   'use strict';
   const CL = root.Crownless;
 
-  const WAGON = { hp: 70, armor: 2, w: 46, h: 28, back: 130, pull: 160, raidPull: 1000, raidEvery: 3, blocked: 60, fromFlank: true, guardRadius: 180, guardPull: 150, guardReach: 420, spring: [420, 640], spread: 300, rear: [420, 560], flank: [330, 460] };
+  const WAGON = { hp: 40, armor: 2, w: 46, h: 28, back: 130, pull: 160, raidPull: 1000, raidEvery: 3, blocked: 60, lurk: 0, springAt: 95, fromFlank: true, guardRadius: 180, guardPull: 150, guardReach: 420, spring: [420, 640], spread: 300, rear: [420, 560], flank: [330, 460] };
   const USE = { guard: true };
 
   /** Put the wagon on the field if this battle has one (before the company forms up around it). @param {any} g @param {any} enc */
   function begin(g, enc) {
     g.wagon = null;
     g.raiders = 0;
+    g.raidersSprung = false;
     if (enc?.objective !== 'wagon') return;
     const a = g.battleMap.spawn.hero;
     const [x, y] = [a.x - WAGON.back, a.y];
     const body = { shape: 'rect', x: x - WAGON.w / 2, y: y - WAGON.h / 2, w: WAGON.w, h: WAGON.h, blocksArrows: false, look: 'wagon' };
     // This battle's own copy of the map: the shared one (built once, js/arena.js) is never changed.
     const b = g.battleMap.bounds || CL.units.BOUNDS;
-    const enemies = { x0: Math.min(b.maxX - 40, a.x + WAGON.spring[0]), x1: Math.min(b.maxX - 20, a.x + WAGON.spring[1]), y0: Math.max(b.minY + 20, a.y - WAGON.spread), y1: Math.min(b.maxY - 20, a.y + WAGON.spread) };
+    const enemies = !WAGON.spring ? g.battleMap.spawn.enemies : { x0: Math.min(b.maxX - 40, a.x + WAGON.spring[0]), x1: Math.min(b.maxX - 20, a.x + WAGON.spring[1]), y0: Math.max(b.minY + 20, a.y - WAGON.spread), y1: Math.min(b.maxY - 20, a.y + WAGON.spread) };
     const side = a.y + WAGON.flank[1] < b.maxY - 20 ? 1 : -1; // the flank with room
     const ys = [a.y + side * WAGON.flank[0], a.y + side * WAGON.flank[1]].sort((p, q) => p - q);
     const raiders = { x0: Math.max(b.minX + 20, a.x - WAGON.rear[1]), x1: Math.max(b.minX + 40, a.x - WAGON.rear[0]), y0: ys[0], y1: ys[1] };
@@ -82,6 +85,20 @@
     return best;
   }
 
+  /**
+   * P7-T: have the raiders' cue come? They lie in wait until the band's front has closed with the
+   * company (one of it within 95 px of the hero or a soldier), or someone finds them first (one is hit).
+   * @param {any} g
+   */
+  function sprung(g) {
+    if (g.raidersSprung) return true;
+    const mine = [g.hero, ...g.allies].filter((a) => a?.alive);
+    const close = g.enemies.some((e) => e.alive && !e.raider && mine.some((a) => Math.hypot(a.x - e.x, a.y - e.y) < WAGON.springAt));
+    const found = g.enemies.some((e) => e.raider && e.hp < e.maxhp);
+    if (close || found) g.raidersSprung = true;
+    return g.raidersSprung;
+  }
+
   /** How far a soldier on Follow or Hold goes for this foe: further for one at the wagon. @param {any} g @param {Unit} foe @param {number} base */
   function reach(g, foe, base) {
     const w = standing(g);
@@ -103,5 +120,5 @@
   /** For the result screen: 'saved', 'lost' or null (no wagon). @param {any} g @param {boolean} win */
   const fate = (g, win) => (g.wagon ? (win && g.wagon.alive ? 'saved' : 'lost') : null);
 
-  CL.objective = { WAGON, USE, begin, standing, enemyPull, onEnemy, pick, reach, onDown, lost, fate };
+  CL.objective = { WAGON, USE, begin, standing, enemyPull, onEnemy, sprung, pick, reach, onDown, lost, fate };
 })(typeof window !== 'undefined' ? window : globalThis);

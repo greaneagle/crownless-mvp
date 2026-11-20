@@ -1,7 +1,8 @@
 // Prototype G, "the hands-off campaign" (V2-13; design Part 2 §28): the same small campaign played by
 // (a) a player who never opens a setting and auto-resolves every fight, (b) one who fights in person and
 // only picks presets, and (c) an expert who chooses setups, rallies, and keeps a quartermaster and a
-// merchant. Each run also saves at the halfway mark, reloads from that save and plays on (resuming after
+// merchant (from 2.23.0, P7-T, also a surgeon, a scout and a blacksmith, a detachment out hunting, a
+// mill, and the world's events, which run in every style). Each run also saves at the halfway mark, reloads from that save and plays on (resuming after
 // time away). Reports outcomes, forced screens and warnings per style.
 //   node scripts/prototype-g.js [days=30] [seeds=6]
 const path = require('node:path');
@@ -27,7 +28,7 @@ function run(seed, style, days) {
   const storage = memoryStorage();
   const messages = [];
   const boot = (fresh) => {
-    const env = loadGame({ party: false, random: mulberry(seed * 7919), seed, storage });
+    const env = loadGame({ party: false, worldEvents: true, random: mulberry(seed * 7919), seed, storage });
     const { CL } = env;
     CL.ui = headlessUi(CL, messages);
     if (fresh) {
@@ -66,7 +67,20 @@ function run(seed, style, days) {
     screens: add('screens'),
     stuck: add('stuck'),
     warnings: messages.filter((m) => WARN.test(m)).length,
-    followers: [CL.quartermaster?.get(c) ? 'QM' : '', CL.merchant?.get(c) ? 'merchant' : ''].filter(Boolean).join('+') || '-',
+    followers: [CL.quartermaster?.get(c) ? 'QM' : '', CL.merchant?.get(c) ? 'merchant' : '', CL.surgeon.get(c) ? 'surgeon' : '', CL.scout.get(c) ? 'scout' : '', CL.blacksmith.get(c) ? 'smith' : ''].filter(Boolean).join('+') || '-',
+    roles: [CL.quartermaster?.get(c), CL.merchant?.get(c), CL.surgeon.get(c), CL.scout.get(c), CL.blacksmith.get(c)].filter(Boolean).length,
+    detachments: add('detachmentsSent'),
+    detachmentsBack: (c.detachments || []).filter((d) => d.status === 'back').length,
+    mill: CL.business.get(c) ? Math.round(CL.business.get(c).profit) : null,
+    millsBought: add('millsBought'),
+    events: add('eventsJoined'),
+    merchantWorth: Math.round(CL.merchant?.worth(c) || 0),
+    hired: [...(first.hiredFollowers || []), ...(second.hiredFollowers || [])],
+    millWeeks: CL.business.get(c)?.weeks || 0,
+    eventsSeen: CL.happenings.state(c).past.length + CL.happenings.state(c).open.length,
+    news: c.news?.lines?.length || 0,
+    chronicle: Array.isArray(c.chronicle) ? c.chronicle.length : 0,
+    titled: Object.values(c.owners || {}).some((o) => o === 'player'),
     resumed,
     day: c.day,
   };
@@ -92,6 +106,10 @@ function main() {
       'hero down': sum('heroDown'),
       rallies: sum('rallies'),
       'extra screens': sum('screens'),
+      roles: med('roles'),
+      detached: sum('detachments'),
+      mills: sum('millsBought'),
+      events: sum('events'),
       warnings: sum('warnings'),
       stuck: sum('stuck'),
       resumed: `${all.filter((r) => r.resumed && r.day >= days - 0.01).length}/${seeds}`,

@@ -1,5 +1,15 @@
 # Crownless — Release Notes
 
+## v2.23.0 — Phase 7 acceptance (P7-T) · 2026-11-20
+
+### Changed
+- **Escort ambushes are fairer.** The Reavers who go for the wagon now lie in wait until the rest of the band has closed with your company, instead of striking first and alone. The wagon burns sooner (40 HP, was 70). Fought ambushes were being won far more often than the odds said; now they are about as hard as any other close fight.
+
+### Under the hood
+- **Phase 7 is complete in code.** `docs/PHASE-7-VALIDATION.md` holds the evidence: the design's exit as a scripted 90-day campaign, Prototype G with followers and officers, and the economy and battle passes.
+- **The expert test player** now hires a surgeon, a scout and a blacksmith, sends detachments, buys a mill and joins the world's events. The world's events now run in Prototype G (`npm run prototype-g`).
+- **Tests:** 704 fast and 12 slow Node tests, 153 browser tests (9 more apply to one device only and are skipped on the other).
+
 ## v2.22.0 — Formations, high ground and the wagon (P7-11) · 2026-11-20
 
 ### New

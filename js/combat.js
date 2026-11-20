@@ -490,6 +490,7 @@
       if (u.guard) u.speed *= GUARD_SPEED; // a raised shield slows you, as it does the hero
       if (u.team === 'ally') u.speed *= CL.formations.speed(game(), u); // a wall walks slower, a wedge quicker (P7-11)
       if (u.team === 'enemy' && ENEMY.use.line && aheadOfLine(u, target)) u.speed *= ENEMY.lineWait; // B-01: wait for the line
+      if (u.raider && !CL.objective.sprung(game())) u.speed *= CL.objective.WAGON.lurk; // P7-T: lie in wait for the front to close
       move(u, dest.x - u.x, dest.y - u.y, dt);
       u.speed = s;
     } else if (dest === target) aim(u, target);
