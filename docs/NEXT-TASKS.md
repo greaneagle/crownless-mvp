@@ -1463,7 +1463,35 @@ _Re-specified 2026-11-20 at build 2.23.0 (commit 09176e8); NEXT-PLAN §5 has the
 - A village can be held by a different lord from its seat's.
 - Some lords hold nothing, some one place, some several.
 
-### P8-03 · Permissions (S) — Ready (after P8-02)
+### P8-03 · Permissions (S) — ✅ Done in 2.25.0
+
+**Done (2.25.0, 2026-11-20).** No save change. `js/rights.js` (`CL.rights`): `may(c, who, action, target) → { ok, why }`, `why(…)`, `allegiance(c, who)`, `enemyOf(c, who, f)` and `ACTIONS`.
+- **`who`** is `'player'` or a person (P8-02). **`target`** is a settlement for place actions, a person for `askHelp`, `ransom` and `release`, and a place or a realm for `swear`.
+- **Worked out only from the state:**
+  - **Standing:** the player is an enemy where its owner counts them Hostile.
+  - **Allegiance:** a lord is sworn to their own realm, the player to none (until P8-04). A lord is an enemy where their realm is at war with the owner.
+  - **Holdings:** the controller decides place actions; the holder, the administrator, or (when occupied) the occupier's ruler runs a holding; only the sovereign's ruler grants.
+  - **War and peace:** needed for a siege.
+  - **Story locks and capitals.**
+- **Actions:**
+  - **Place actions:** `recruit`, `contract`, `trade`, `rest`, `buyBusiness`, `enterFort`, `enterTourney`, `joinEvent` and `shelter` (where a beaten hero is let go). A Hostile owner refuses all of them but `trade` and `rest`, as before.
+  - **Running a holding:** `appoint`, `setPolicy`, `drawTreasury`.
+  - **Rulers:** `grant`, never a story fort or its villages before the ending, nor what an enemy occupies.
+  - **Taking a fort:** `seize`, the gates without a siege (the Debug panel; forts only, never a story fort or a capital). `besiege` needs a realm at war behind you, so an independent company can't.
+  - **Allegiance:** `swear`, `leave`, `askHelp`.
+  - **Captives:** `ransom`, `release` (whoever holds the captive).
+- **Every existing check calls it:**
+  - recruiting (`party.recruitsHere`), contract boards, buying the mill, joining world events, entering tournaments, and where a beaten hero is released;
+  - the Debug panel's controller and holder changes (`seize`, `grant`);
+  - `realm.welcomes`, kept for older callers, now asks `CL.rights`.
+- **The refusals keep the words each screen used** ("…will not sell to you", "…will not deal with an enemy"). The recruiting and contract ones are new: "The Valedorn Crown won't let you recruit here: they count you Hostile".
+- **The UI shows why:** a Hostile owner's recruit buttons now stay shown but disabled, with the reason as their title and in the note beneath (they were hidden). The contract board says the same.
+- **Debug → Holdings → Your rights there** logs every action's verdict at the chosen holding.
+- **Not rights, left where they are:** who fights whom (parties' and reinforcements' hostility) and the mill's owner's law (its seizure). The grep test names them.
+- **Tests:**
+  - `tests/rights.test.js` (7): the case table (each action for an independent company, a Hostile one, a holder, a controller, story-locked, at war) and the grep test (no `realm.welcomes`, `isHostile`, `locked` or `isCapital` check outside `rights.js` and `realm.js` but the named ones).
+  - `tests/browser/rights.spec.js` (desktop and phone): the disabled recruit button with its reason, and the board's.
+  - Every existing test passes unchanged.
 
 **Problem.** Rights are scattered:
 - `realm.welcomes` for recruiting and contracts;

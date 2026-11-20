@@ -32,7 +32,14 @@
   /** Troops for hire here: the owner faction's recruits, if the settlement offers recruiting. */
   function recruitsHere(camp = c()) {
     const s = currentSettlement(camp);
-    if (!offers(s, 'recruit') || !CL.realm.welcomes(camp, s.id)) return []; // Hostile owners won't let you recruit
+    if (!offers(s, 'recruit') || !CL.rights.may(camp, 'player', 'recruit', s.id).ok) return []; // Hostile owners won't let you recruit (P8-03)
+    return troopsOffered(camp);
+  }
+
+  /** The troops this settlement's owner offers, whether or not they will hire to you (the UI shows why not). */
+  function troopsOffered(camp = c()) {
+    const s = currentSettlement(camp);
+    if (!offers(s, 'recruit')) return [];
     const own = CL.content.get('factions', CL.realm.owner(s.id, camp)).recruits || [];
     // Towns also have sell-swords for hire: the neutral Mercenary (the 15th troop type). Listed once,
     // where the town's own recruits are sell-swords already (W-05b: the Free City of Merrow).
@@ -538,6 +545,7 @@
     rosterNames,
     currentSettlement,
     recruitsHere,
+    troopsOffered,
     canRest,
     canRecruit,
     recruit,

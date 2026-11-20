@@ -98,7 +98,8 @@
     const price = priceAt(sid);
     if (!price) return 'No mill for sale here';
     if (state(c).owned.filter((b) => b.kind === KIND).length >= rules().limit) return 'You already own a mill';
-    if (!CL.realm.welcomes(c, sid)) return `${factionName(CL.realm.owner(sid, c))} will not sell to you`;
+    const right = CL.rights.may(c, 'player', 'buyBusiness', sid); // P8-03
+    if (!right.ok) return right.why;
     if (c.gold < price) return `You need ${price} crowns (you have ${c.gold})`;
     return null;
   }

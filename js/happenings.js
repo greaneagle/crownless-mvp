@@ -251,7 +251,8 @@
   function blocked(c, e, choiceId) {
     const d = def(e.kind);
     if (c.world?.location !== e.place) return `You must be in ${settlement(e.place).name}`;
-    if (!CL.realm.welcomes(c, e.place)) return `The ${CL.content.table('factions')[owner(c, e.place)]?.name || 'lords here'} will not deal with an enemy`;
+    const right = CL.rights.may(c, 'player', 'joinEvent', e.place); // P8-03
+    if (!right.ok) return right.why;
     if (e.taken) return 'Already taken on';
     if (e.kind === 'food_shortage' && c.food < d.rations) return `You need ${d.rations} rations (you have ${Math.floor(c.food)})`;
     if (e.kind === 'refugees' && choiceId === 'feed' && c.food < d.rations) return `You need ${d.rations} rations (you have ${Math.floor(c.food)})`;

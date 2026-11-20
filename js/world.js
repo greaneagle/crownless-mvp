@@ -386,7 +386,7 @@
       CL.clock.pass(CL.campaign, 'capture'); // held captive, then released (data/world_map.js time.capture)
       const c = CL.campaign;
       const s =
-        nearestSettlement(w.x, w.y, (x) => CL.realm.isKingdom(CL.realm.owner(x.id, c)) && CL.realm.welcomes(c, x.id)) ||
+        nearestSettlement(w.x, w.y, (x) => CL.realm.isKingdom(CL.realm.owner(x.id, c)) && CL.rights.may(c, 'player', 'shelter', x.id).ok) ||
         nearestSettlement(w.x, w.y, (x) => CL.realm.isKingdom(CL.realm.owner(x.id, c))) ||
         start();
       w.x = s.mapX;

@@ -1,5 +1,15 @@
 # Crownless — Release Notes
 
+## v2.25.0 — Who may do what (P8-03) · 2026-11-20
+
+### Changed
+- **When a kingdom that counts you Hostile won't hire to you, its recruits are still shown,** greyed out, with the reason on them and beneath ("The Valedorn Crown won't let you recruit here: they count you Hostile"). The contract board says the same. Before, the recruit buttons just disappeared.
+
+### Under the hood
+- Every right is now decided in one place (`CL.rights`), from your standing, who holds and controls a place, allegiance, war and peace, and the story. Each one has a reason in words. The later Phase 8 tasks (allegiance, fiefs, sieges, ransoms) add their actions to it. Nothing you could or couldn't do has changed.
+- Debug → Holdings → Your rights there lists what you may do at a place, and why not, in the log.
+- **Tests:** 726 fast and 12 slow Node tests, 159 browser tests (21 skipped: the visual baselines, Linux only, and those for one device only).
+
 ## v2.24.0 — Holdings and the lords of the realms (P8-02) · 2026-11-20
 
 ### New

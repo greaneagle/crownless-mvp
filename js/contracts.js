@@ -86,7 +86,7 @@
 
   /** Every offer on a settlement's board (one per template), refreshed when stale. */
   function offersAt(c, sid) {
-    if (!offersContracts(sid) || !CL.realm.welcomes(c, sid)) return []; // no work for enemies
+    if (!offersContracts(sid) || !CL.rights.may(c, 'player', 'contract', sid).ok) return []; // no work for enemies (P8-03)
     if (!c.contractOffers[sid]) c.contractOffers[sid] = {};
     const board = c.contractOffers[sid];
     for (const t of templates()) {

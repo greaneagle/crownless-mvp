@@ -413,10 +413,9 @@
       case 'flipFort':
       case 'holdingController': {
         const fort = btn.dataset.fort || $('#cheatHolding').value;
-        // Only the story moves a story fort until Q4 ends, and a capital never moves (P8-02).
-        if (CL.realm.locked(c(), fort)) return CL.ui.message('Only the story moves this fort until Q4 ends');
-        if (CL.realm.isCapital(fort)) return CL.ui.message('A capital never changes hands');
-        if (CL.realm.holding(fort, c())?.seat) return CL.ui.message('A village follows its seat: move the seat');
+        // Only the story moves a story fort until Q4 ends, and a capital never moves (P8-02, P8-03).
+        const right = CL.rights.may(c(), 'player', 'seize', fort);
+        if (!right.ok) return CL.ui.message(right.why);
         // The next of this world's realms (W-04: any number of them).
         const ks = CL.realm.realms().map((k) => k.id);
         const to = ks[(ks.indexOf(CL.realm.owner(fort, c())) + 1) % ks.length];
@@ -428,7 +427,9 @@
         const sid = $('#cheatHolding').value;
         const h = CL.realm.holding(sid, c());
         if (!h) return;
-        if (CL.realm.locked(c(), sid) || (h.seat && CL.realm.locked(c(), h.seat))) return CL.ui.message('Only the story moves this until Q4 ends');
+        // The crown grants (P8-03): its ruler must be able to.
+        const right = CL.rights.may(c(), CL.realm.rulerOf(h.sovereign, c()), 'grant', sid);
+        if (!right.ok) return CL.ui.message(right.why);
         const ids = Object.keys(c().people).filter((id) => c().people[id].realm === h.sovereign);
         for (let i = 1; i <= ids.length; i++) {
           const to = ids[(ids.indexOf(h.holder) + i) % ids.length];
@@ -437,6 +438,18 @@
             break;
           }
         }
+        break;
+      }
+      case 'rights': {
+        // P8-03: every right at the chosen holding, with its reason, in the log.
+        const sid = $('#cheatHolding').value;
+        const out = {};
+        for (const a of CL.rights.ACTIONS) {
+          const r = CL.rights.may(c(), CL.rights.PLAYER, a, sid);
+          out[a] = r.ok ? 'yes' : r.why;
+        }
+        log('rights', { place: sid, ...out });
+        CL.ui.message(`Your rights at ${CL.content.get('settlements', sid).name} are in Logs · F3`);
         break;
       }
       case 'holdingClaim': {

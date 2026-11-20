@@ -145,7 +145,8 @@
     const h = t.hosts[sid];
     const R = rules();
     if (h?.entered != null && c.day < h.entered + R.cooldown) return `You fought here lately: again from day ${CL.party.dayNumber(h.entered + R.cooldown)}`;
-    if (!CL.realm.welcomes(c, sid)) return 'Enemies of the town are not welcome in its lists';
+    const right = CL.rights.may(c, 'player', 'enterTourney', sid); // P8-03
+    if (!right.ok) return right.why;
     if (!c.character) return 'Create your hero first';
     if (c.gold < fee(c)) return `The fee is ${fee(c)} crowns`;
     return '';

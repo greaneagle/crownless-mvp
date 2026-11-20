@@ -327,8 +327,8 @@
     return Object.values(CL.content.table('settlements')).filter((s) => owner(s.id, c) === f);
   }
 
-  /** Will this settlement deal with the player? Hostile owners bar recruiting and contracts. */
-  const welcomes = (c, sid) => !isHostile(c, owner(sid, c));
+  /** Will this settlement deal with the player? Kept for older callers; the right is CL.rights's (P8-03). */
+  const welcomes = (c, sid) => CL.rights.may(c, 'player', 'contract', sid).ok;
 
   /**
    * GDD §10 "helping a faction": a won fight against Road Reavers helps whoever holds the nearest

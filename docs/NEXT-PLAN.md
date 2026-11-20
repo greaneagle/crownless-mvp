@@ -260,7 +260,7 @@ _Re-specified 2026-11-20 at build 2.23.0 (commit 09176e8), against the code and 
 | ID | Task | Readiness | Size | Needs | Save |
 |---|---|---|---|---|---|
 | **P8-02** | ✅ **Done in 2.24.0.** **Holdings model:** every settlement a holding with a sovereign, legal holder (a lord or the ruler), controller, administrator, claims and seat, replacing `c.owners`; rulers and lords (landed, landless, holding several) as people with kin; the story's owner conditions kept; a read-only Realm screen | Done | **L** | W-04, W-07 | v19 |
-| **P8-03** | **Permissions:** `CL.rights.may(c, who, action, place)` with readable reasons, replacing the scattered checks | Ready (after P8-02) | S | P8-02 | — |
+| **P8-03** | ✅ **Done in 2.25.0.** **Permissions:** `CL.rights.may(c, who, action, place)` with readable reasons, replacing the scattered checks | Done | S | P8-02 | — |
 | **P8-01** | **Lords on the map:** a `lord` party per lord, landed or landless, with intentions shown on tap; handled by encounters, auto-resolve, reinforcements, contracts, news and the battle lock; lords captured and ransomed both ways | Specified | M–L | P8-02, W-07 | v20 |
 | **P8-04** | **Allegiance:** independent, mercenary contract, sworn vassal; release, defection, expulsion; a consequence preview; obligations | Specified | M | P8-01, P8-03 | v21 |
 | **P8-05** | **Fiefs and castellans:** grants; a castellan or the default steward; policies (garrison, tax, reserves, repairs); the holding's own budget and weekly report; garrisons tracked | Specified | M | P8-04, P7-05, P7-10 | v22 |

@@ -634,6 +634,8 @@ declare global {
     rosterNames(camp: Campaign): Record<number, string>;
     currentSettlement(camp?: Campaign): any;
     recruitsHere(camp?: Campaign): ContentId[];
+    /** The troops the owner offers, whether or not they hire to you (P8-03: the UI shows why not). */
+    troopsOffered(camp?: Campaign): ContentId[];
     canRest(camp?: Campaign): boolean;
     canRecruit(camp: Campaign, troopId: ContentId): boolean;
     recruit(troopId: ContentId): boolean;

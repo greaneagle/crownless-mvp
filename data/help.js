@@ -63,7 +63,7 @@
       title: 'Towns and villages',
       body: [
         'Every place opens on its menu: hire, buy food, rest, trade, take contracts and talk to people. Stonebridge also has streets: Walk the streets to stroll around, tap a person to walk over and talk (or use the joystick and TALK), Town menu to get back, and the road on the left to leave.',
-        'Every other place is a menu: hire soldiers, buy food, rest, trade, take contracts and talk to whoever is there. Forts show their garrison. A kingdom that is Hostile to you will not hire out soldiers or work.'
+        'Every other place is a menu: hire soldiers, buy food, rest, trade, take contracts and talk to whoever is there. Forts show their garrison. A kingdom that is Hostile to you will not hire out soldiers, give you work, sell you a business, let you into its tournaments or world events, or take you in after a defeat; its markets and beds stay open. Whatever is refused is still shown, greyed out, with the reason on it and beneath.'
       ],
       controls: [
         ['Tap a person', 'Click a person', 'Walk over and talk'],

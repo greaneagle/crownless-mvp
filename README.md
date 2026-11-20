@@ -1,4 +1,4 @@
-# Crownless 2.24.0 — The Border March
+# Crownless 2.25.0 — The Border March
 
 A single-player, top-down party-battle prototype in plain HTML5 Canvas and classic JavaScript. There's no bundler, no runtime dependencies and no server (Playwright, for the browser tests, is the only development dependency). It's published to GitHub Pages straight from `main`.
 
@@ -7,7 +7,7 @@ A single-player, top-down party-battle prototype in plain HTML5 Canvas and class
 - **Current behavior (regression reference):** [`docs/BASELINE.md`](docs/BASELINE.md)
 - **Status and plan:** [`docs/ROADMAP.md`](docs/ROADMAP.md); the v2 plan is [`docs/V2-PLAN.md`](docs/V2-PLAN.md), from the owner's v2.0 design documents
 - **Release notes:** [`docs/RELEASE-NOTES.md`](docs/RELEASE-NOTES.md); v2.0 acceptance: [`docs/V2-VALIDATION.md`](docs/V2-VALIDATION.md); Phase 7 acceptance: [`docs/PHASE-7-VALIDATION.md`](docs/PHASE-7-VALIDATION.md)
-- **What comes next:** [`docs/NEXT-PLAN.md`](docs/NEXT-PLAN.md): browser regression tests, zoom and a bigger world, then Phases 7–9 (Phase 8 under way: P8-02, holdings and the people of the realms, done in 2.24.0); every task specified, with its readiness, in [`docs/NEXT-TASKS.md`](docs/NEXT-TASKS.md)
+- **What comes next:** [`docs/NEXT-PLAN.md`](docs/NEXT-PLAN.md): browser regression tests, zoom and a bigger world, then Phases 7–9 (Phase 8 under way: holdings and the people of the realms in 2.24.0, permissions in 2.25.0); every task specified, with its readiness, in [`docs/NEXT-TASKS.md`](docs/NEXT-TASKS.md)
 
 ## What is playable
 

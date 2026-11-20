@@ -450,11 +450,9 @@
         ),
       );
     }
-    if (!offers.length && !CL.realm.welcomes(c, sid)) {
-      const f = CL.content.get('factions', CL.realm.owner(sid, c));
-      cards.push(
-        contractCard('No work for enemies', [`The ${f.name} count you Hostile and post nothing for you. Win back their favour by fighting Road Reavers on their land.`], []),
-      );
+    const work = CL.rights.may(c, 'player', 'contract', sid); // P8-03
+    if (!offers.length && !work.ok) {
+      cards.push(contractCard('No work for enemies', [`${work.why}. Win back their favour by fighting Road Reavers on their land.`], []));
     } else if (!offers.length) {
       cards.push(contractCard('Nothing posted', ['The board is bare for now. New work goes up every few days.'], []));
     }
@@ -1735,8 +1733,10 @@
       b.disabled = c.gold < rations * price;
     });
 
-    // Recruit buttons: one per troop the settlement's owner offers (hidden when none).
-    const offers = p.recruitsHere();
+    // Recruit buttons: one per troop the settlement's owner offers (hidden when none). A refusal
+    // (P8-03) leaves them shown but disabled, with the reason on them and in the note below.
+    const offers = p.troopsOffered();
+    const hire = CL.rights.may(c, 'player', 'recruit', c.world.location);
     ['#recruitA', '#recruitB', '#recruitC'].forEach((sel, i) => {
       const b = $(sel);
       const id = offers[i];
@@ -1745,7 +1745,8 @@
       const t = CL.content.troop(id);
       b.dataset.troop = id;
       b.textContent = `Hire ${t.name} · ${t.recruitCost} crowns`;
-      b.disabled = !p.canRecruit(c, id);
+      b.disabled = !hire.ok || !p.canRecruit(c, id);
+      b.title = hire.ok ? '' : hire.why;
     });
     $('#restBtn').classList.toggle('hidden', !p.canRest());
     $('#tradeBtn').classList.toggle('hidden', !CL.trade.hasMarket(c.world.location));
@@ -1769,9 +1770,8 @@
     $('#happeningsHere').replaceChildren(...happeningCards(c, c.world.location));
     $('#tourneyHere').replaceChildren(...tourneyCard(c, c.world.location));
     $('#businessHere').replaceChildren(...millCard(c, c.world.location));
-    const barred = !CL.realm.welcomes(c, c.world.location);
-    $('#serviceNote').textContent = barred
-      ? `The ${CL.content.get('factions', CL.realm.owner(c.world.location, c)).name} will not hire out soldiers or work to an enemy.`
+    $('#serviceNote').textContent = !hire.ok
+      ? `${hire.why}.`
       : offers.length
         ? ''
         : 'No one here is looking to take up arms.';
