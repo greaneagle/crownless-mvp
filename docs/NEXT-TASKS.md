@@ -1,6 +1,6 @@
 # Crownless — Task specifications after 2.0
 
-_Written 2026-11-18 at build 2.0.0; **reviewed and corrected the same day against commit c66d94c** (NEXT-PLAN §11). The detailed companion to [`NEXT-PLAN.md`](NEXT-PLAN.md): one specification per task, in the design's ticket format (design Part 2 §26.8), shortened to what a developer needs. NEXT-PLAN gives the order, readiness, schema steps and the owner's decisions; this file gives what each task is._
+_Written 2026-11-18 at build 2.0.0; **reviewed and corrected the same day against commit c66d94c** (NEXT-PLAN §11); **Phase 8 re-specified 2026-11-20 at build 2.23.0** (NEXT-PLAN §5, §11 items 21–28). The detailed companion to [`NEXT-PLAN.md`](NEXT-PLAN.md): one specification per task, in the design's ticket format (design Part 2 §26.8), shortened to what a developer needs. NEXT-PLAN gives the order, readiness, schema steps and the owner's decisions; this file gives what each task is._
 
 **How to read a task:**
 - **Readiness:**
@@ -1268,100 +1268,748 @@ _Written 2026-11-18 at build 2.0.0; **reviewed and corrected the same day agains
 
 ---
 
-## Phase 8 — The Landed World (Provisional: re-specified at the phase's start)
+## Phase 8 — The Landed World
 
-### P8-01 · Lords on the map (M–L)
+_Re-specified 2026-11-20 at build 2.23.0 (commit 09176e8); NEXT-PLAN §5 has the build order, readiness and corrections, and §8 the decisions (D-P8a–D-P8e). The tasks are listed in build order. "Now" is verified at 09176e8._
+
+**What runs through every Phase 8 task:**
+- **The design's invariants (§25.3), checked after every world day in the bots:**
+  - each holding has exactly one controller and at most one legal holder;
+  - each kingdom has exactly one ruler (the office), and nobody holds two rulers' offices;
+  - a holder is sworn to the holding's sovereign, or is its ruler;
+  - nothing (troops, money, holdings, prisoners) is duplicated or lost across a change of hands;
+  - a claim alone never pays revenue or controls a garrison.
+- **Reversibility (design §4.4):** every new state has its loss path, tested: grant → loss, oath → release or breach, capture → ransom or escape, appointment → dismissal.
+- **The person goes on:** after any loss, the hero still travels, fights, trades and recruits where welcome (SC-20–SC-22).
+- **No fixed classes; one set of rules for everyone** (owner, 2026-11-20):
+  - **Rank is never stored.** It is what a person holds and which office they have now. A "landless", "lesser" or "great" lord is only a description of their holdings today.
+  - **Every lord and the player go by the same rules:** they gain fiefs by grant or by taking a seat, and lose them by siege, revocation or leaving a realm. You can take a lesser lord's village (by taking its seat) and leave them landless, and an AI realm can do the same to anyone, you included.
+  - **The ruler is an office, not a kind of person:** `c.rulers[realm] = person`. In Phase 8 it never moves. In Phase 9 it can: a lord, AI or the player, can become a ruler (P9-03, P9-04, P9-06), and a deposed ruler rides on as a lord, landless or not.
+- **The Realm screen** (new in P8-02, from the map like Company and Accounts) grows a tab per task: Holdings, Lords, Allegiance, Fief, Claims. At 812×375, each fits or scrolls, with touch targets of at least 44 CSS px.
+- **No chores (design §22.6):** each new system works hands-off, with a default and at most one weekly line in the week's log. Urgent events (your fort besieged, a summons, a ransom offer) interrupt, and nothing else does.
+- **Debug:** each task adds the cheats that reach its state (grant a village or a fort, start a siege, capture a lord, make a lord landless, and so on).
+- **Art:** lord banners, siege camps and wall pieces go to the asset request list (`docs/ASSETS.md`) and ship as placeholders.
+
+### P8-02 · Holdings model (L) — Ready (D-P8b, D-P8c decided 2026-11-20)
+
+**Problem.**
+- **Land is one field.** A fort's kingdom is `c.owners[fort]`, and every other settlement's comes from content. Sovereignty, the legal holder, who occupies it and who runs it can't differ, so dispossession, occupation and claims can't be represented (design §17.1, §24.2).
+- **The realms have nobody.** There are no lords to hold land, and nobody to hold land without being the kingdom.
+
+**Now.**
+- `js/realm.js`:
+  - `defaultOwners`, `owner(sid)` (the campaign's owner for forts, else content `ownerFaction`);
+  - `setOwner` (forts only; news `fort_taken`);
+  - `garrison` (content troops; the holder's standard garrison when taken);
+  - `holdings(c, f)`, `welcomes`;
+  - `sanitize`.
+- **Callers of `owner`:**
+  - recruiting (`js/party.js`);
+  - soldiers' culture (`js/soldiers.js`, which reads `owners` in its own sanitize);
+  - the story's `owner` condition and effect (`js/story.js`; Q4 sets Greywall);
+  - dialogue (`data/dialogue.js` Greywall lines);
+  - news;
+  - the mill's owner's law (`js/business.js`);
+  - debug (`js/debug.js` fort switch);
+  - `scripts/prototype-g.js` (`titled`).
+- **The world:** 31 settlements (5 towns, 8 forts, 18 villages); each kingdom has one capital town, two forts and four or five villages; Merrow is a free city.
+- **No people outside the company.**
 
 **Build.**
-- Named lords (persons with ids, culture names, a home holding) lead kingdoms' parties: patrol, hunt, escort, gather for war.
-- Intentions are shown on tap.
-- Lords can be met, fought, captured and ransomed.
-- **Integration:** a new party kind (`lord`) handled everywhere parties are:
-  - encounters (`parties.current`);
+- **People** (`c.people`, ids `person:<n>`, plus `'player'`; D-P8c):
+  - **The world package gains `nobles`:** per kingdom a ruler and about six lords:
+    - two great lords (a fort, usually with a village);
+    - one or two lesser lords (a village);
+    - two landless lords (nothing; a landed lord's kin or the ruler's household knight).
+  - **Each noble has:**
+    - a culture name from `data/names.js`;
+    - a **home** (their own seat, or for the landless, their kin's seat or the capital);
+    - their **kin** ties;
+    - a short trait line for P8-07.
+  - **A person record:** `{ id, name, realm, home, kin: [{ person, tie: 'parent' | 'child' | 'sibling' | 'cousin' | 'spouse' }], status: 'free' | 'captive' | 'wounded', heldBy }`. Kin ties are symmetric and checked by the content validator.
+  - **The rulers' office:** `c.rulers` = `{ realm: person }`, one per kingdom (not Merrow). Nobody is a ruler by their record, only by holding the office, so Phase 9 can pass it on.
+  - **Whether a lord is "great", "lesser" or "landless"** is never stored: it is what they hold now (`realm.fiefsOf(person)`), so it changes as land is granted and lost.
+  - **Merrow** has no persons.
+- **Holdings** (`c.holdings`, one per settlement of a kingdom, keyed by settlement id; D-P8b):
+  - `kind`: `village`, `fort` or `town`, from the settlement;
+  - `sovereign`: the realm that claims it;
+  - `holder`: the person legally granted it (a lord or the ruler), set in the world data at the start;
+  - `controller`: who holds it now (the gates and garrison of a fort or town; for a village, its seat's controller);
+  - `seat` (villages only): the fort or town of the same kingdom it is tied to, from the world data;
+  - `administrator`: null until P8-05;
+  - `claims: [{ by, realm, since, kind: 'granted' | 'conquest' | 'old' }]`.
+- **One person may hold several holdings, or none.** A village's holder need not be its seat's holder: a lesser lord's village can sit under a great lord's fort. At most three fiefs per person (D-P8d), checked by the content validator and by grants.
+- **`realm.owner(sid)` keeps its meaning (who controls it now):**
+  - for a fort or town, its controller;
+  - for a village, its seat's controller;
+  - for Merrow and any settlement outside the holdings, the content owner.
+  
+  Every existing caller keeps working unchanged. New readers:
+  - `realm.holding(sid)`, `holderOf`, `sovereignOf`, `claimsOn`;
+  - `villagesOf(seat)`;
+  - `fiefsOf(person)`.
+- **One transition function,** `realm.transfer(c, sid, { controller, sovereign, holder, reason })`:
+  - It records the old holder's claim (`old`) when the holder changes against their will.
+  - **When a seat's controller changes,** it carries the seat's villages with it: each passes to the new controller and sovereign, held by its ruler until granted, and each old holder keeps a claim.
+  - It writes the news and the chronicle.
+  - It emits a domain event (`holding_changed`) that the mill's law, contracts and the scout already listen for or will.
+  - `setOwner` becomes a thin wrapper: a kingdom taking a fort becomes sovereign and controller, and its ruler the holder (the crown holds it until it's granted).
+- **Story forts:** Greywall and Ashgate are marked `story: true` in the world data. Until Q4 ends, only the story moves them (and their villages): no grant, siege or debug grant. The Q4 effect goes through `transfer`. The old lord keeps an `old` claim, so a Greywall that passes to Aurelia leaves its Valedorn lord a landless grievance for later.
+- **Villages follow their seat:**
+  - recruiting, contracts, markets' owner and the mill's law read `owner`;
+  - so taking a fort changes its villages too;
+  - the P7-10 change-of-hands path becomes real.
+- **The Realm screen** (read-only here), with two tabs:
+  - **Holdings:** each kingdom's towns, forts and villages, each with its holder, controller, seat and any claims;
+  - **Lords:** each person, with what they hold (or "landless"), their kin, and where their home is.
+  
+  Tapping a settlement on the map shows its holder and controller.
+- **Debug:** set a holding's controller, set its holder, add a claim.
+
+**Layers.** Default: nothing to do. The player sees who holds what on the Realm screen and on a settlement's tap card.
+
+**Save.** v19:
+- **The migration** builds `c.holdings` for every settlement of a kingdom:
+  - the holder is the world data's starting holder;
+  - for the forts in v18's `c.owners` whose owner differs from content (Q4's Greywall), the new owner is sovereign and controller and its ruler the holder. The fort's villages go with it, and the original holders keep `old` claims.
+- **It builds `c.people`** from the world package at the time of the migration, written into the migration as constants. Migrations stay pure (NEXT-PLAN §9).
+- **`c.owners`** is dropped after the migration.
+- **Fixtures:** `tests/fixtures/saves-2.23/` from the 2.23.0 build before any change (a fresh game, day 20 campaign, the story played through Q4 with Greywall passed to Aurelia, a Phase 7 company with a mill).
+- **Docs:** SAVE-FORMAT updated.
+
+**Edges.**
+- A holding whose kingdom no longer exists in the data: refused with a precise error, as SC-33.
+- **Content validation errors:**
+  - a village with no seat, or a seat of another kingdom;
+  - a person holding more than three fiefs;
+  - a kin tie that isn't returned.
+- **Soldiers' culture:** a soldier from a village that has changed hands keeps the culture of where they were raised (the soldier's record), not the new owner's.
+- **A capital** never changes controller in Phase 8 (P9-05), even by debug.
+
+**Out.**
+- Titles as separate objects (in Phase 8 a title is "holder of a holding");
+- private owners other than businesses (they already have their own record);
+- raiding villages (backlog).
+
+**Tests.**
+- **The migration:**
+  - every fixture;
+  - story `owner` conditions and the Greywall dialogue read the same before and after;
+  - the Q4 fixture gives Aurelia's ruler as holder of Greywall and its villages, with Valedorn claims.
+- **`transfer`:**
+  - every combination (conquest, grant, return to crown), without duplicates;
+  - a seat's villages carried with it;
+  - claims recorded once;
+  - the event once.
+- **People and holdings:**
+  - every kind of lord exists at the start (landless, one holding, several);
+  - `fiefsOf` changes as holdings move;
+  - kin is symmetric.
+- **Villages follow their seat:** recruiting, contracts and the mill's law.
+- **Story forts:** locked until the ending.
+- **The invariants** over a 90-day bot run.
+- **Browser:** the Holdings and Lords tabs and a settlement's tap card, desktop and phone.
+
+**Acceptance.**
+- Saves from 2.23.0 load with the same world, and the story plays the same.
+- A fort can be held by one person, controlled by another realm, and claimed by a third.
+- A village can be held by a different lord from its seat's.
+- Some lords hold nothing, some one place, some several.
+
+### P8-03 · Permissions (S) — Ready (after P8-02)
+
+**Problem.** Rights are scattered:
+- `realm.welcomes` for recruiting and contracts;
+- the mill's "not from a Hostile owner";
+- debug-only fort changes.
+
+Phase 8 adds many rights: appoint, tax, summon, grant, besiege, swear, leave, ransom. Design §4.3 asks for "rights computed from offices, treaties, ownership… never `if (player.isKing)`".
+
+**Build.**
+- **`CL.rights.may(c, who, action, place?) → { ok, why }`,** where `why` is a short readable reason ("Valedorn won't let you recruit here: they count you Hostile").
+- **Derived only from state:**
+  - standing;
+  - holdings (holder, controller, sovereign);
+  - allegiance (P8-04 fills it in; until then everyone is independent);
+  - war and peace (W-07);
+  - story locks.
+- **Actions** (more as later tasks need them):
+  - `recruit`, `contract`, `trade`, `rest`, `buyBusiness`;
+  - `enterFort` (a controlled fort's services);
+  - `appoint`, `setPolicy`, `drawTreasury` (P8-05);
+  - `besiege` (P8-06a);
+  - `swear`, `leave`, `askHelp` (P8-04, P8-07);
+  - `ransom`, `release` (P8-01);
+  - `grant` (rulers only).
+- **Every existing check calls it:** recruiting, contracts, the mill. The UI shows `why` where a button is disabled, instead of hiding it.
+
+**Save.** None.
+
+**Tests.** A case table: each action × independent, Hostile, holder, controller, story-locked, at war. Every existing behaviour unchanged (the existing realm, party, contract and business tests pass untouched). Browser: a disabled button shows its reason.
+
+**Acceptance.** No right in the code is checked outside `CL.rights`; a grep test keeps it so.
+
+### P8-01 · Lords on the map (M–L) — Specified
+
+**Problem.** P8-02's lords exist only on paper. The design wants named lords travelling with their retinues, met, fought, captured and ransomed (§16, §20.6).
+
+**Now.**
+- **Party kinds** in `js/parties.js` (`bandit`, `patrol`, `caravan`, `detachment`): each branch of `chooseTarget`, `nearest`, `rival` and the contact checks switches on `kind`.
+- **Reinforcements:** `reinforce.sideOf` decides sides for reinforcements.
+- **The battle lock:** `reinforce.lock` / `locked` (V2-09) keeps a party in one battle.
+- **Encounters** go through `parties.current`; the hero's capture is in `js/world.js`.
+- **The grid and the step budgets** come from W-07.
+
+**Build.**
+- **A `lord` party kind:**
+  - one party per free lord, landed or landless (about 24), formed at the lord's home: their own seat, or for a landless lord their kin's seat or the capital;
+  - its size follows what the lord holds: about 10–14 troops for a landless lord, 14–18 for a village, 18–24 for a fort, more with several fiefs (tuned in P8-T);
+  - tier mix by the lord's standing;
+  - the lord in person, as a hero-like unit in battle: the portrait name and a stronger unit of the realm's top troop.
+- **Intentions** (stepped by the world simulation with the grid and budgets):
+  - patrol their lands (landed lords: around their holdings);
+  - **campaign** (landless lords, and landed lords with nothing to guard): roam the realm's borders, hunt bandits further afield, shadow enemy parties at war, ride with a kinsman;
+  - hunt bandits near them;
+  - return home to rest and refill;
+  - from P8-06a, gather for war and besiege;
+  - from P8-07, answer summons.
+  
+  The tap card shows who the lord is and what they're doing in two lines: "Lord Aldric of Westholt, holder of Westholt Castle and Ashby" or "Ser Maren, Lord Aldric's daughter, landless", then "riding home to refill the ranks".
+- **Everywhere a party is handled:**
+  - encounters (talk; attack, with the reputation cost of attacking a patrol, more for a lord);
   - auto-resolve;
-  - reinforcements (`reinforce.sideOf` today only knows bandit, patrol and caravan);
-  - contracts (as targets or not);
-  - news;
-  - the V2-09 lock.
-- Patrols remain for small fry.
+  - reinforcements (a lord is on their realm's side, as patrols);
+  - frontier clashes between lords of kingdoms at odds (W-07);
+  - news (`lord_beaten`, `lord_captured`, `lord_ransomed`);
+  - the battle lock.
+  
+  Lords are never contract targets in Phase 8.
+- **Capture and ransom, both ways:**
+  - **A lord whose party loses a fought or simulated battle to the player** is taken prisoner (`c.prisoners`).
+  - **The lord's realm offers a ransom** after 2–4 days, through a message with Accept, Hold and Release:
+    - the ransom is 100 crowns plus 25 per troop the lord led;
+    - releasing for nothing earns renown and the lord's goodwill (stored for P8-07);
+    - each day a held lord has a 3% chance to escape, 8% while the company is under 6 soldiers.
+  - **If the player is beaten while holding prisoners,** they go free.
+  - **A lord beaten off-screen** is held by the winner's realm and ransomed after 5–15 days (abstract).
+  - **A beaten player** is still captured and released as now. When the captor is a lord, the hero is ransomed instead of robbed: gold, at least the kept minimum (`DEFEAT_GOLD_KEPT`), and released at the lord's home.
+  - **Kin pay:** a lord's ransom is offered by their kin if they have land, else by their realm; a kinsman remembers who held them (P8-07).
+- **Patrols stay** for small fry. Lords replace no existing party.
 
-**Save.** Yes.
+**Layers.** Default: lords are met like patrols. One decision: accept or decline a ransom. Expert: read intentions to choose fights.
 
-**Tests.** Intentions consistent; capture and ransom once; no lord in two battles; reinforcement sides for lords.
+**Save.** v20: the lords' parties (in `c.parties`, kind `lord`, `lordId`), `c.prisoners`, the off-screen captives' release days.
 
-### P8-02 · Holdings model (L)
+**Edges.**
+- A lord can't be in two battles (the lock), or be both prisoner and on the map.
+- A ransom can't be paid twice, nor after the lord has escaped.
+- A captured lord's holding is held by their castellan or the crown until they're back (P8-05).
+- About 24 lord parties, within W-07's budgets: the step budget is checked with Map stress 80 plus every lord.
+- A landless lord's home is lost (their kin's seat is taken): they make the capital their home.
 
-**Build.**
-- **Per holding:** sovereign realm, legal holder (a person), occupier, administrator, private owners (design §17.1, §24.2), replacing `c.owners`.
-- **Touches:**
-  - `realm.js` (owner, garrison, holdings, welcomes);
-  - the story's `owner` conditions and effects (Q4 sets Greywall's owner);
-  - recruiting;
-  - news;
-  - contracts;
-  - debug.
-- **A save migration:** the sovereign is the old owner; the holder is a lord of that kingdom.
+**Out.** Lords' deaths (D-P8c); lords as contract targets; ransoming common soldiers.
 
-**Save.** Yes.
+**Tests.**
+- Intentions consistent with state (no "riding home" while at home; landless lords campaign, never "patrol their lands").
+- Party sizes follow fiefs held, and change when a lord gains or loses land.
+- Capture once, ransom once, escape ends a ransom.
+- No lord in two battles, or prisoner and on the map.
+- `sideOf` for lords.
+- Off-screen captivity returns the lord.
+- A 90-day run with lords: invariants, and no growth in the step budget's misses.
+- Browser: the tap card, a ransom message's three buttons.
 
-**Tests.** Every transition without duplicates; story conditions unchanged in meaning; fixtures from the build before.
+**Acceptance.** Lords are visible, readable and meetable. Capture and ransom work both ways with no duplicates. The map stays within W-07's budget on the phone (Debug → Map stress 80 with lords).
 
-### P8-03 · Permissions (S)
+### P8-04 · Allegiance (M) — Specified
 
-**Build.** `may(person, action, place)` from oaths, offices and ownership (design §4.3), used by every right-based action.
-
-**Tests.** A case table.
-
-### P8-04 · Allegiance (M)
-
-**Build.**
-- Independent, mercenary contract, sworn vassal, rebel, sovereign, deposed (design §16).
-- A consequence preview before confirming (design §22.5).
-- Obligations: muster, service days.
-
-**Edges.** Personal property and the warband are never lost by switching.
-
-### P8-05 · Fiefs and castellans (M)
-
-**Build.**
-- **Getting a holding:** granted or conquered.
-- **Administration:** a castellan or steward with policies (garrison, tax stance, reserves, repairs) and a default steward.
-- **Money:** revenue and costs through the holding's own budget account; weekly report.
-
-**Edges.** Unpaid garrisons desert; high taxes cause unrest, with warnings first.
-
-### P8-06 · Sieges (L)
+**Problem.** The player is always an independent. The design's acceptance (§16.5) is: "accepts a mercenary contract, becomes a vassal, receives a castle, leaves the realm under negotiated terms, retains personal soldiers, and sees only the expected titles and obligations change."
 
 **Build.**
-- **Phases:** encirclement, preparation (ladders, ram, food), one assault map (walls, gate, ladders), resolution (capture, surrender, lifted) (design §20.4–20.6).
-- **Relief armies** come by the reinforcement rules.
-- **Afterwards:** capture and ransom.
-- A Debug-panel siege test for the phone.
+- **`c.allegiance`** = `{ kind: 'independent' | 'mercenary' | 'vassal', realm, since, until (mercenary), serviceDays, summonsMissed, history }`. One at a time (design §25.3: no contradictory offices).
+- **A mercenary contract:**
+  - from a realm's capital (a new "Service" offer where the town has contracts);
+  - needs Neutral standing or better;
+  - 30 days at a weekly pay by renown and company size, from the realm's purse;
+  - you fight its enemies when met (attacking its own patrols, caravans or lords breaks it);
+  - its patrols and lords count you on their side (reinforcements);
+  - its lands recruit you even at Neutral.
+  
+  It ends at its term (renewable) or on a breach.
+- **Swearing as a vassal:**
+  - from the ruler at the capital;
+  - needs Friendly standing, renown at least 150 (tuned in P8-T), and 20 days of mercenary service to that realm or a quest's favour (Q4's side);
+  - no pay;
+  - you may be granted land (P8-05; D-P8d);
+  - your obligations:
+    - answer summons (P8-06a, P8-07);
+    - don't fight the realm's people;
+    - keep 10 service days in every 30.
+  
+  Service days count days spent fighting the realm's enemies, garrisoning your fief, or at a summons.
+- **Leaving:**
+  - **Asking for release** (at the capital, or by message from anywhere): granted when obligations are met and the realm isn't at war, else granted with a reputation cost or refused at war. The fief returns to the crown with no claim (D-P8e).
+  - **Defecting** (leaving without release, or swearing to another realm): −40 standing with the old realm. Its lords hunt you for 10 days (P7-04 pursuit). You lose your fief but keep a `granted` claim (D-P8e).
+  - **Expulsion** (three summonses missed, a breach, or standing falling to Hostile): as defection, without the pursuit.
+- **The consequence preview** (design §22.5): before every swear, leave or defect, a panel lists what changes and what stays, in plain lines:
+  - "You will lose Westholt Castle. You keep a claim to it."
+  - "Your soldiers, money, mill and followers stay yours."
+  - "Valedorn's lords will hunt you for 10 days."
+  - "Lord Aldric may think less of you" (from P8-07).
+  
+  Uncertain consequences are said as uncertain.
+- **The Realm screen, Allegiance tab:**
+  - your allegiance;
+  - its term or service days;
+  - obligations met or owed;
+  - Leave or Ask for release, with the preview.
 
-**Edges.** Anti-snowball (design §20.7); the phone budget on the assault map.
+**Layers.** Default: stay independent, nothing changes. One decision: take service or swear (with the preview). Expert: time a defection.
 
-### P8-07 · Named nobles (M)
+**Save.** v21: `c.allegiance`.
+
+**Edges.**
+- A mercenary of a realm that goes to war with another you hold property in: the mill's law applies, nothing more.
+- Swearing while a mercenary of another realm ends that contract (previewed).
+- A contract's term ending mid-battle ends after the battle commits.
+- Personal property and the warband are never lost by any switch.
+- Leaving can't be spammed: 7 days between oaths.
+
+**AI lords use these same rules** from P8-07: they take service, ask for release and defect, with the same consequences for their fiefs and claims.
+
+**Out.** Rebel, claimant, sovereign and deposed (Phase 9). Treaties between realms (P9-02).
+
+**Tests.**
+- The design's §16.5 acceptance as a scripted test (the castle from P8-05's debug grant until that task ships).
+- Every transition's preview matches what happens.
+- Nothing personal lost (soldiers, gold, items, businesses, followers).
+- Pursuit after defection ends.
+- Pay reconciles to the ledger.
+- Browser: the preview at both sizes.
+
+**Acceptance.** The §16.5 acceptance passes, and every change of allegiance shows its consequences before it happens.
+
+### P8-05 · Fiefs and castellans (M) — Specified
+
+**Problem.** A holding does nothing for or against its holder: no revenue, garrison costs or policies (design §17.2). The AI lords' land means nothing either.
 
 **Build.**
-- A handful per kingdom with four factors: relationship, interest, obligation, fear.
-- Obey, negotiate or refuse, with readable reasons (Prototype F).
-- Their own petitions.
+- **What each kind of holding gives and costs:**
 
-### P8-08 · Losing and retaking land (M)
+  | Kind | Gives | Costs | Run by |
+  |---|---|---|---|
+  | **Village** | Tax from its prosperity; recruits from its people; its market | A small militia (defends against raiders, never besieged) | A reeve (the default, free) or a castellan |
+  | **Fort** | A little tax; a garrison that guards its villages | Garrison wages, repairs | A castellan or the default steward |
+  | **Town** (the capitals, the rulers') | The realm's largest tax | Its watch | The ruler's own officers (not playable in Phase 8) |
+
+- **Grants** (D-P8d): a holding falls vacant when it is taken from an enemy (with its villages), when its lord is held unransomed for 30 days, or when its holder leaves the realm (defection, expulsion, P8-04). The ruler grants it within a few days. The candidates are weighed in this order:
+  1. who did most in its taking;
+  2. landless lords (kin of the realm's lords first);
+  3. lords with fewer fiefs;
+  4. service days and renown.
+  
+  The player is a candidate as a sworn vassal, and **AI lords compete** for the same grant. A player's first grant is most likely a village; a fort needs more renown and service. A ruler may also grant one of the crown's own villages after long service. Nobody holds more than three fiefs.
+- **The grant arrives as a message** with Accept (with the preview: obligations, costs) or Decline. Declining sends it to the next candidate.
+- **An independent who takes a fort** (P8-06a) chooses to hand it to a kingdom for a reward and standing, or to swear and hold it.
+- **The news tells grants:** "Ser Maren, landless until now, is granted Highmere." The Lords tab shows who gained and lost land.
+- **Administration:**
+  - a castellan from the company (a captain as P7-05: a veteran or the companion, who leaves the company while serving);
+  - or the default steward for a fort (hired, 6 crowns a week) or reeve for a village (free);
+  - dismissing brings a castellan back to the company the next time you're at the holding.
+  
+  With several fiefs, each has its own administrator and book; the week's log gets one line for all of them.
+- **Policies** (all with a balanced default):
+  - **garrison target** (light 12, normal 22, strong 32 troops);
+  - **tax stance** (light, normal, heavy):
+    - the lands pay their prosperity × a rate;
+    - heavy pays about 40% more and raises unrest;
+    - light lowers unrest and raises prosperity slowly;
+  - **food reserve** (days, for P8-06a);
+  - **repairs** (walls lose condition in a siege and are mended over days at a cost).
+- **Garrisons are tracked:**
+  - `c.holdings[sid].garrison` as troop counts, for every fort (the AI's too), refilled from its villages up to the target at the holding's cost;
+  - villages keep a militia count instead (no target to set);
+  - wages from the holding's own budget account (`budget:holding:<id>`, P7-10's pattern), with a book of its own;
+  - the liege's due (10% of revenue) paid to the crown;
+  - the AI's holdings run by the same rules, so an AI lord's land matters to the party they field (P8-01).
+- **Weekly:**
+  - the holding's report, with revenue, wages, due, repairs and its money, one line in the week's log;
+  - you may put money in or draw it out at the fort (`rights.may(..., 'drawTreasury')`).
+- **Unrest and desertion,** warnings first:
+  - unpaid garrison troops desert one a day after two warnings;
+  - unrest over 60 warns, and over 80 the lands pay nothing and recruit nothing until it falls.
+- **The Realm screen, Fief tab:** each of your holdings, with its administrator, garrison or militia, policies, treasury and the last report.
+- **A "landed" campaign-bot style** (`tests/helpers/campaign-bot.js`): it serves, swears, accepts a grant and keeps the default steward and policies.
+
+**Layers.** Default: the steward and balanced policies, with one weekly line. One decision: accept the grant. Expert: the policies and a chosen castellan (SC-42: a measurable difference under the same rules).
+
+**Save.** v22: garrisons, policies, prosperity and unrest per holding; the holding's book; castellans' assignment.
+
+**Edges.**
+- A castellan captured, or the holding lost, while policies are set: the policies are cancelled safely, and the castellan comes back or is a prisoner (SC-44).
+- A holding's treasury goes negative: never; wages are paid only from what is there.
+- The liege's due is never taken twice in a week.
+- Granting a story-locked fort or its villages: refused.
+- A lord granted a fourth fief: refused (the next candidate gets it).
+
+**Out.** Building new things; more than three fiefs per person (the cap is tuned in P8-T).
+
+**Tests.**
+- **Ledger:** exact over 90 days, the holding's book against its weekly reports.
+- **Policies:** each makes the measured difference (SC-42).
+- **Desertion:** after the warnings.
+- **SC-19:** swear and obtain a holding (a village, then a fort), as a scripted scenario.
+- **Grants:** the candidates' order; a landless AI lord wins a vacant village when the player has done nothing for it; the player wins when they took it; nobody passes three fiefs; a declined grant goes to the next candidate.
+- **Several fiefs:** each has its own book, and one week's line covers them all.
+- **SC-44.**
+- **The landed bot:** keeps its fief 60 days hands-off with no forced screens.
+- **Browser:** the grant message, the Fief tab, at both sizes.
+
+**Acceptance.** A fief runs hands-off with one weekly line. Its costs and failures are reported. Every expert policy makes a measured difference.
+
+### P8-06a · Sieges on the map (M–L) — Ready (D-P8a decided 2026-11-20)
+
+**Problem.** No fort is ever taken in play, so Prototype D's "lost while the player is elsewhere" can't happen (design §17.3, §20.4–20.7).
 
 **Build.**
-- Losing a holding while away; claims that persist.
-- The landless captain carries on (SC-20–23).
-- Retaking by siege or petition.
-- **Prototype D** as a scripted scenario and a debug start.
+- **A siege** (`c.sieges`, at most one per fort):
+  - its besiegers (lord parties and/or the player);
+  - the defenders (the garrison, and any party inside);
+  - the day it began;
+  - ladders and ram progress;
+  - the fort's food days.
+  
+  It is stepped once per world hour.
+- **Who besieges:**
+  - **AI realms at war (W-07):** a realm picks the nearest enemy fort, not story-locked, and two or more of its free lords gather there (the `gather` intention, with rally and arrival times). A siege begins when the gathered power is at least 1.5× the garrison's.
+  - **The player:**
+    - while at war with its controller (as a mercenary or vassal of a realm at war with it);
+    - or as an independent, at the reputation cost of attacking that realm;
+    - from the fort's tap card: Besiege, with a preview of the odds and the time.
+  - At most one siege per realm at a time.
+- **Phases** (D-P8a):
+  - **Encirclement:**
+    - the fort's services close to anyone not friendly to the besiegers;
+    - its villages' trade and recruiting stop;
+    - the defenders eat their food days.
+  - **Preparation:** ladders after 1 day, a ram after 3. Each day, the besiegers' commander (the player, or the AI) chooses to assault (the AI when its odds with what's prepared pass a threshold), wait, or lift the siege.
+  - **Assault:** fought (P8-06b) or simulated, the defenders behind walls (×1.5 power in auto-resolve, less with a ram, more on walls in good repair).
+  - **Starvation:** at 0 food days, or when the odds are hopeless, the garrison surrenders: it walks out, and the castellan goes free.
+  - **Relief:** the defending realm's free lords ride to break the siege (P8-01 intentions). A relief army fights the besiegers by the reinforcement rules (V2-09), and the player may join either side by riding in.
+- **Resolution** (`realm.transfer`):
+  - control passes;
+  - the garrison is killed, taken or scattered (by the outcome);
+  - the castellan is captured, or escapes (one chance in three);
+  - its villages follow (P8-02's `transfer`), and each is re-granted by the conqueror's ruler (P8-05) to a landless lord, the player or another lord, while their old holders keep claims;
+  - **a lord left with nothing** becomes landless: their party campaigns on from their kin's seat or the capital;
+  - businesses there meet the new owner's law (P7-10);
+  - the old holder keeps a claim;
+  - the walls lose condition;
+  - a fort taken starts with half a garrison and 30 days of unrest.
+  
+  The chronicle and the news record it.
+- **Warnings and choices for the player** (design §17.3):
+  - when your fort is besieged: an urgent message (the scout warns a day earlier if the gathering is seen);
+  - you may ride back, ask a lord for relief (from P8-07), or leave it to the castellan;
+  - the castellan's policy decides when to surrender (the default: never while food lasts and the odds aren't hopeless).
+- **Anti-snowball** (design §20.7; no rubber-banding):
+  - sieges only at war, and wars end by exhaustion (W-07's `exhaustion`, now counting siege losses);
+  - one siege per realm;
+  - lords go home to refill after a siege;
+  - a taken fort is weak and restless for 30 days;
+  - a realm with one fort left gets no free troops (it's simply harder to besiege, with its lords nearer home).
+- **`npm run landed`** (new script): 180 days of the world alone on several seeds. It reports wars, sieges begun, lifted, surrendered and stormed; forts per realm over time; grants, and how many lords are landless, hold one place or several; and the invariants.
 
-**Acceptance.** Prototype D passes.
+**Layers.** Default: AI sieges happen around you; your fief's castellan defends. One decision: ride back or not. Expert: besiege, time the assault, starve instead.
 
-### P8-T · Phase 8 tuning and acceptance (S–M)
+**Save.** v23: `c.sieges`; walls' condition and food days per holding.
 
-**Build.** Revenue and war pace, anti-snowball, 90-day bots, Prototype G with a landed player, a validation section.
+**Edges** (design §27.2–27.4):
+- a holding besieged twice in quick succession during fast travel;
+- a siege whose war ends (it's lifted at once);
+- a siege at the same hour as payday and the mill's week (the law runs first, as P7-10);
+- a lord summoned to a siege who is captured on the way;
+- a besieger party in the battle lock;
+- the story forts (never, until Q4 ends).
 
-**Version.** 3.0.0 (proposed, D-V1).
+**Out.** The battle on the walls (P8-06b); towns besieged (P9-05); siege engines and towers.
+
+**Tests.**
+- Each phase and outcome, deterministic under a seed.
+- Surrender, storm, lift and relief.
+- Transfers once each.
+- Claims recorded.
+- Businesses' law on a real change of hands (SC-16).
+- **SC-20:** your fort falls while you're elsewhere, with the correct loss of revenue, control and garrison; you continue.
+- `npm run landed` invariants as a slow test: no realm loses every fort in 180 days without a player, and forts do change hands.
+- Browser: the siege on the map, the urgent message, the Besiege preview.
+
+**Acceptance.** Forts change hands in play by understandable rules. You're warned in time to act. The world doesn't snowball over 180 days on its own.
+
+### P8-06b · The assault battle (M–L) — Ready (D-P8a decided 2026-11-20)
+
+**Problem.** A fought assault needs walls. The only walled map is the fixed Greywall Courtyard used by Q4.
+
+**Build.**
+- **A generated assault map** (`js/arena.js`, like P7-11's `hills`; data in `data/battle_maps.js`):
+  - **a wall line across the field:**
+    - a gate in the middle;
+    - one to three ladder points, from the preparation (more after longer preparation);
+    - the wall as an obstacle;
+    - defenders on its walkway count as on a rise (P7-11: archers' range +25%);
+  - **the courtyard behind,** with a keep line to fall back to.
+- **The ram:** if prepared, it is carried to the gate by attackers (an objective like P7-11's wagon, in reverse) and opens it after a set time at the gate.
+- **Attack and defence:**
+  - the player attacks their own siege's fort;
+  - the player defends when inside a besieged fort (their own, or a friendly one they ride into), or when relieving one.
+  
+  The same map serves both sides, flipped.
+- **Battle preparation:** presets that make sense on walls (Balanced: infantry at the ladders, archers behind; Defensive for defenders: archers on the walkway, infantry at the gate). Custom placement within each side's area.
+- **Winning:**
+  - attackers win by routing the defenders or holding the courtyard for a set time;
+  - defenders win by routing the attackers or holding until the attackers' morale breaks;
+  - the result feeds P8-06a's resolution.
+- **Simulate uses the same wall bonus** as P8-06a's auto-resolve. `scripts/parity.js` gains siege scenarios (attack and defence) aimed at B-01's 5–15 points over the odds.
+- **Debug:**
+  - Siege assault 30 (practice, attack and defence);
+  - the phone test, reporting fps and the slowest frame (like Big battle 40).
+
+**Layers.** Default: Balanced on the walls, or Simulate. Expert: Custom placement at the ladders, timing the ram.
+
+**Save.** None (a battle's state lasts one battle).
+
+**Edges.**
+- Units can't stand inside the wall, or be pushed through it.
+- Ladders are the only way up besides the gate.
+- A unit ordered to the far side of the wall goes to the nearest ladder or the gate, or the order fails visibly (§27.3).
+- Reinforcements arriving at an assault enter on their own side of the wall.
+- The battle size cap holds.
+
+**Out.** Second walls, towers, engines, burning gates; sieges of towns.
+
+**Tests.**
+- The map generator (wall, gate, ladders, courtyard) and pathing through the gaps.
+- The ram as an objective.
+- Each preset's placement.
+- Win and loss both ways.
+- Parity for siege scenarios in range.
+- Browser: an assault started from the siege, at both sizes.
+- The phone test's numbers recorded for the owner.
+
+**Acceptance.** A fought assault is playable and readable on the phone, within the frame budget. Fighting it is a few points better than Simulate, as B-01 aims.
+
+### P8-07 · Named nobles: needs, opinions and rivalries (M–L) — Specified
+
+**Problem.**
+- **Lords obey nothing and want nothing.** Prototype F asks for two vassals given the same high-risk order: one obeys, one negotiates or refuses, for reasons the player can read (design §18.4, §28 "relationship, interest, obligation and fear").
+- **The lords don't deal with each other** (owner, 2026-11-20). They should have needs, friends, rivals and feuds of their own, act on them, and change realm when it suits them, by the same rules as the player.
+
+**Build.**
+- **Needs** (computed from state each day, never stored; a lord's top need shows on their tap card):
+
+  | Need | When | What the lord does about it |
+  |---|---|---|
+  | **Land** | Landless, or lost a fief | Joins sieges that could win one; seeks grants; resents a grant that passes them over |
+  | **Coin** | Fiefs pay less than the party costs, or a ransom to raise | Hunts for spoils; asks kin or the ruler; takes the player's paid requests |
+  | **Men** | Party well under strength | Goes home to refill; avoids fights |
+  | **Safety** | A holding threatened or besieged | Stays near home; asks for relief; refuses to ride far |
+  | **Standing** | Renown low against their peers; passed over; a defeat | Seeks battle and tournaments (P7-09); takes risks |
+
+  Needs drive the lords' intentions on the map (P8-01) and colour every answer below.
+- **Opinions, with the same four factors for everyone.** Each lord has a view of the player, of their ruler and of every other lord they've dealt with (kept sparse: only pairs with a history).
+
+  | Factor | What it is | Changes by |
+  |---|---|---|
+  | **Relationship** | −100…100 | Deeds: fighting beside them, relieving their siege, ransoming or freeing them or their kin (P8-01), taking their fief, beating them, winning a grant they wanted, insults, defections. **Kin remember:** half of a deed carries to close kin |
+  | **Interest** | Computed per request | How it touches their needs and holdings: distance from home, threat to their lands, gain |
+  | **Obligation** | Stated | Sworn to the same ruler, kin, or a debt (a waived ransom, help given) |
+  | **Fear** | Computed | The asker's power against theirs, and the asker's renown |
+
+  A few stable motives per lord, from P8-02's trait line ("guards his lands", "hungry for glory", "loyal to the Crown", "owes the Aurelians nothing"). Motives change slowly, never daily at random.
+- **Between lords: friends, rivals and feuds,** derived from their history, never scripted:
+  - **friends:** fought together, relieved one another, ransomed each other's kin;
+  - **rivals:** wanted the same grant, and one got it;
+  - **feuds:** one took the other's fief, or holds their kin captive. A feud carries a claim (P8-02), so the loser has a reason to fight for it back.
+  
+  What they do about it:
+  - ask each other for help (relief, a siege, men), answered by the same model as the player's requests;
+  - won't ride together, and may refuse a summons that puts them beside a feud;
+  - back or oppose each other when the ruler grants land;
+  - ransom each other's kin;
+  - press their feud's claim when their realm is at war with the holder's.
+- **Grants weigh opinions** (adds to P8-05's order): the ruler's opinion of each candidate counts, and lords back their friends and oppose their rivals. Friends at court matter, the player's included.
+- **Requests and answers (the player and the lords alike):**
+  - **The player asks a lord** (from the Lords tab or the lord's tap card):
+    - to join a siege;
+    - to relieve your fort;
+    - to ride with you for a few days;
+    - to back your claim or your bid for a grant.
+  - **The lord answers obey, negotiate, delay or refuse:**
+    - negotiate names a price in crowns or a favour (a petition);
+    - delay names a day.
+    
+    Each answer comes with its reasons in plain words, from the factors and needs: "He's sworn to the same Crown (+). Ashgate is three days from his lands, and Redfield is threatened (−). You freed him at Redfield (+). He doesn't fear you."
+- **The ruler's summons** to AI lords and the player use the same model:
+  - AI lords may refuse, which shows in the news;
+  - for the player, a summons is an obligation (P8-04).
+- **Lords change sides by the player's rules** (P8-04, D-P8e):
+  - a lord whose opinion of their ruler stays low (unmet needs, passed over, feuds the ruler ignores) asks for release, or defects to a realm whose ruler they think better of;
+  - their fiefs go back to their old crown, and they keep claims, which their new liege may back (a reason for war);
+  - their kin decide for themselves;
+  - a ruler may revoke a fief from a lord who keeps failing obligations (P8-08's revocation, the same for AI lords) and grant it to someone else.
+  
+  The news tells it: "Ser Maren leaves the Valedorn Crown for Hrothmark."
+- **The lords' own petitions** to the player, as small requests with a reward and a deadline, at most one open at a time, chosen by their top need:
+  - clear bandits from my lands;
+  - escort my caravan;
+  - lend me coin;
+  - ransom my kin;
+  - back my claim;
+  - support me for the grant of Highmere.
+- **The Lords tab:** each lord, with:
+  - their realm and what they hold (or "landless");
+  - their kin, their friends and rivals;
+  - their top need;
+  - where they are;
+  - their relationship with you, and a line of why.
+
+**Layers.** Default: no requests needed; lords act by themselves, and their quarrels reach you as news. One decision: answer a petition. Expert: read needs and factors to choose whom to ask and when, and to court friends before a grant.
+
+**Save.** v24:
+- opinions (player, ruler and lord-to-lord, sparse);
+- debts and open petitions;
+- the history behind friendships, rivalries and feuds.
+
+Needs are computed, not saved.
+
+**Edges.**
+- No hidden omniscience: a lord's reasons use only what they could know (SC-24).
+- **No churn:**
+  - requests have a cooldown per lord, and a refusal hardens for 7 days;
+  - a lord changes realm at most once in 60 days, and only after a warning sign in the news ("grumbles at court");
+  - `npm run landed` reports defections per realm.
+- A lord who agrees and is captured on the way: told, and the request lapses.
+- Negotiated payment is paid once.
+- A lord defecting while at a siege or a summons leaves after that ends (design §27.2: "a summoned vassal switches allegiance while travelling").
+- Kin on opposite sides of a war: allowed, and both remember it.
+
+**Out.**
+- Lords rebelling, claiming a throne or becoming rulers (P9-04);
+- marriages and houses (P9-06);
+- the player as a ruler giving orders (P9-03).
+
+**Tests.**
+- **Needs:** each need from its state, and the intentions and answers it changes.
+- **Holdings shape answers:** the same request to a landless lord and to a landed one whose lands are threatened gives different answers, with reasons that say why.
+- **Kin:** a deed to one lord moves their kin's opinion by half.
+- **Between lords:**
+  - a grant makes a rival;
+  - a taken fief makes a feud and a claim;
+  - feuding lords don't ride together;
+  - friends back each other's grants.
+- **Changing sides:**
+  - an unhappy lord warns, then leaves by P8-04's rules;
+  - fiefs go back to the crown, and claims are kept;
+  - no lord changes twice in 60 days;
+  - the §25.3 invariants hold throughout.
+- **Revocation:** an AI lord who keeps failing obligations loses a fief, which is granted to another.
+- **Prototype F as a slow test:** two lords given the same high-risk request; one obeys, one negotiates or refuses; the reasons name the factors that decided it.
+- **Determinism:** each factor's effect.
+- **SC-24.**
+- **No spamming** (cooldowns).
+- **Petitions:** reward once.
+- **Browser:** the Lords tab, a request and its answer, at both sizes.
+
+**Acceptance.**
+- Prototype F passes, and every lord's decision can be read and answered politically.
+- Over 180 days of `npm run landed`:
+  - lords gain and lose land;
+  - rivalries and feuds form from what happened;
+  - a few lords change realm;
+  - no realm empties of lords.
+
+### P8-08 · Losing and retaking land (M) — Specified
+
+**Problem.** The pieces of loss exist after P8-02–P8-07, but the design's canonical test, Prototype D ("The Dispossessed Lord"), needs every loss path, the landless life and the way back to work together (§17.3–17.6, SC-20–SC-23).
+
+**Build.**
+- **Every loss path, in one place:**
+  - a siege (P8-06a);
+  - a liege's revocation, after repeated failed obligations or a Hostile standing, with a warning first;
+  - leaving the realm (P8-04);
+  - a grant you decline to keep (handing it back).
+  
+  Each ends in a defined state of holder, controller, claim and castellan (D-P8e).
+- **The landless view:**
+  - when you hold nothing, the Fief tab becomes **Claims**, a short list: each claim, how it came about, its realm, and what could press it;
+  - no empty chores screen (SC-21);
+  - policies of a lost holding are kept with the claim, to restore if you get it back;
+  - they are cancelled safely if they can't apply (SC-44).
+- **Pressing a claim:**
+  - **retake by siege:** as a vassal or mercenary of a realm at war with the occupier, or as an independent at the cost;
+  - **petition** your liege to press it in their war (P8-07's request to the ruler);
+  - **petition** the occupying realm for the fort's return for a price or service.
+  
+  After retaking, the fort goes to your current liege, with you as holder if your claim is backed. That is Prototype D's "change allegiance and retake it". Its villages come back with it, and are granted again by your liege (you first, for those you held).
+- **Prototype D as a scripted scenario** (design §28.1), `tests/slow/prototype-d.test.js`:
+  1. give the player a fort and one of its villages, a warband and a mill;
+  2. have an enemy realm take the fort while the player is elsewhere;
+  3. remove the remaining office (expulsion);
+  4. play on as a landless captain for 15 days;
+  5. swear to the enemy's enemy;
+  6. retake the same fort without any quest-specific reset.
+  
+  Every step's state is checked against the invariants.
+- **A Debug start, "Prototype D: the dispossessed lord":** a sworn vassal with a fief, a warband of 12 and a mill, and an enemy gathering. The owner can play the loss and the return on the phone.
+
+**Layers.** Default: losses are told, the claim is kept, and the hero carries on. One decision: how to press the claim. Expert: petitions and timing.
+
+**Save.** Optional fields: policies kept with a claim; the revocation's warnings.
+
+**Edges** (design §27.2):
+- a title revoked while you're inside the fort;
+- you lose the fort but keep a village tied to another seat: you're still landed, and the Fief tab shows just the village;
+- a holding captured twice in quick succession;
+- a claim on a fort your new liege then holds (it becomes a grant);
+- a claim against your own liege (refused while sworn);
+- retaking with the old castellan prisoner of the occupier (freed with the fort).
+
+**Out.** Claims inherited by relatives (houses, P9-06); courts and legal rulings.
+
+**Tests.**
+- **Prototype D** as the slow test above.
+- **SC-20 to SC-23** as scripted scenarios.
+- **The same for AI lords:** you take a seat and its lesser lord becomes landless, campaigns, and holds a claim against you; an AI realm takes a seat from another, with the same result.
+- **Each loss path:** its defined state.
+- **The landless view** has no chores.
+- **A claim** never pays.
+- **Browser:** the Claims view and the Debug start, at both sizes.
+
+**Acceptance.** Prototype D passes in the bot, and the owner can play it from the Debug start.
+
+### P8-T · Phase 8 tuning and acceptance (S–M) — Specified
+
+**Build.**
+- **Tuning:**
+  - **revenue and costs of a fief:** a fief should pay for itself with the default steward and normal tax, without making trade or contracts pointless;
+  - **war pace:** forts change hands, but not every week;
+  - **siege odds:** fought and simulated, by the parity script;
+  - **the thresholds:** renown to swear, service days, ransom sizes;
+  - **the lords' politics:** how often lords change realm, quarrel and feud (lively, without churn);
+  - **lords and land:** party sizes by fiefs held, the cap of three fiefs, and the pace of grants, so landless lords do win land over time and some landed lords lose it.
+- **Anti-snowball:** `npm run landed` over 180 days and several seeds, no player. The target: every realm keeps at least one fort, forts change hands several times, and the realms' lords stay a mix of landless, single-holding and several-holding (no lord gathers a realm's land).
+- **The bots:**
+  - Prototype G gains the landed style (P8-05), alongside hands-off, presets and expert;
+  - forced screens are counted (design §28: "mandatory clicks per 10 minutes for a captain, landowner…");
+  - 90-day runs keep the §25.3 invariants.
+- **The exit:**
+  - Prototype D (P8-08) and Prototype F (P8-07) as slow tests;
+  - the exit as a 120-day scripted campaign: acquire, lose, go landless, change allegiance, retake, in one save with a reload in the middle.
+- **A validation document,** `docs/PHASE-8-VALIDATION.md`, like Phase 7's, with the checks waiting on the owner's phone play.
+
+**Version.** 3.0.0 (D-V1).
+
+**Acceptance.** The exit holds in the bot and in the owner's play.
 
 ---
 
@@ -1385,12 +2033,14 @@ _Written 2026-11-18 at build 2.0.0; **reviewed and corrected the same day agains
 **Build.**
 - Declaring a realm from held land; recognition and enforcement separate from the claim.
 - Vassals by grant; delegated authority (SC-41).
+- **For everyone:** an AI lord with enough land and discontent can declare a realm too, by the same rules (P8's "no fixed classes"). The ruler's office (`c.rulers`, P8-02) is what changes hands.
 
 ### P9-04 · Rebellion and deposition (L)
 
 **Build.**
 - Ambitions, claimants, escalating uncertain warnings, civil war.
 - The deposed keep person and warband (SC-26, SC-27).
+- **AI lords as claimants:** a discontented lord (P8-07's needs and opinions), backed by friends and kin, can rebel, depose the ruler and take the office. The deposed ruler rides on as a lord, keeping what they hold personally. The player can be on either side, or be the claimant.
 
 ### P9-05 · Armies and campaigns (L)
 
@@ -1403,6 +2053,7 @@ _Written 2026-11-18 at build 2.0.0; **reviewed and corrected the same day agains
 
 **Build.**
 - The founding house; marriages as alliances; rival houses.
+- **Succession:** when a ruler or lord dies (deaths arrive here), the office and fiefs pass to an heir among their kin, or are contested by claims. P8-02's kin ties are the starting families.
 - Generational play optional and later (Part 2 §19).
 
 ### P9-07 · Modding: a declarative content format (M–L)

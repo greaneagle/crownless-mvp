@@ -1,6 +1,6 @@
 # Crownless — Plan after 2.0: zoom and a bigger world, then Phases 7–9
 
-_Written 2026-11-18 at build 2.0.0 (commit 0415109); **reviewed and corrected the same day against commit c66d94c** (see §11, "Review log"). This is the working plan for everything after v2.0. It replaces the outlines in `docs/V2-PLAN.md` §6–§8; V2-PLAN stays the record of how v2.0 was built. Each task's specification is in [`NEXT-TASKS.md`](NEXT-TASKS.md). Sources: the owner's direction (2026-11-18), the v2 design documents (`Crownless_v2_0_Feature_and_Systems_Design_Part_1.md` and `_Part_2.md`, chiefly §11–§24, §26–§28) and the code._
+_Written 2026-11-18 at build 2.0.0 (commit 0415109); **reviewed and corrected the same day against commit c66d94c** (see §11, "Review log"); **Phase 8 re-specified 2026-11-20 at build 2.23.0** (§5; review log items 21–28). This is the working plan for everything after v2.0. It replaces the outlines in `docs/V2-PLAN.md` §6–§8; V2-PLAN stays the record of how v2.0 was built. Each task's specification is in [`NEXT-TASKS.md`](NEXT-TASKS.md). Sources: the owner's direction (2026-11-18), the v2 design documents (`Crownless_v2_0_Feature_and_Systems_Design_Part_1.md` and `_Part_2.md`, chiefly §11–§24, §26–§28) and the code._
 
 ## 0. The owner's direction (2026-11-18)
 
@@ -225,21 +225,58 @@ All three styles are viable over 60 days and every run resumed exactly. The gap 
 
 ## 5. Phase 8 — "The Landed World"
 
-**Exit (design §26.4, Prototype D):** acquire a holding, lose it, return to a landless captain's life, change allegiance and retake it, all in one save.
+**Exit (design §26.4, Prototype D):** acquire a holding, lose it, return to a landless captain's life, change allegiance and retake it, all in one save and without losing personal campaign continuity.
 
-All of Phase 8 is **Provisional**: specified as far as possible now, and re-specified at the phase's start.
+_Re-specified 2026-11-20 at build 2.23.0 (commit 09176e8), against the code and the design (Part 1 §4, §16, §17; Part 2 §18.4, §20, §22.5, §24.2, §25.3, §27.1–27.2, §28.1). The full specifications are in [`NEXT-TASKS.md`](NEXT-TASKS.md#phase-8--the-landed-world)._
 
-| ID | Task | Size | Needs |
-|---|---|---|---|
-| **P8-01** | Lords on the map (a new party kind handled by encounters, auto-resolve, reinforcements, contracts and news) | M–L | W-07 |
-| **P8-02** | Holdings model (replacing `c.owners`; the story's owner conditions kept) | **L** (was M) | W-04, W-06 |
-| **P8-03** | Permissions | S | P8-02 |
-| **P8-04** | Allegiance | M | P8-02 |
-| **P8-05** | Fiefs and castellans | M | P8-02, V2-11 |
-| **P8-06** | Sieges | L | P8-01, V2-09 |
-| **P8-07** | Named nobles (Prototype F) | M | P8-01, P8-04 |
-| **P8-08** | Losing and retaking land (Prototype D) | M | P8-02–P8-06 |
-| **P8-T** | Tuning and acceptance | S–M | all above |
+### What Phase 8 starts from (verified at 09176e8)
+- **Land never changes hands in play.** `c.owners` holds the eight forts' kingdoms; the other 23 settlements take their owner from content. Only the story (Q4 sets Greywall) and the Debug panel call `realm.setOwner`. W-07's wars bring clashes and exhaustion, never a siege, so Prototype D's "lost while away" can't happen until P8-06a.
+- **Nobody in the world is a person.** Kingdoms have no rulers or lords; parties are templates (`bandit`, `patrol`, `caravan`, `detachment`). The only people are the company: soldiers, companions, followers and the hero.
+- **Politics is one number per kingdom:** reputation in −100…100 shown as Friendly, Neutral or Hostile. `realm.welcomes` (no recruiting or contracts where Hostile) and the mill's owner's law are the only rights checks.
+- **Garrisons are fixed content.** `realm.garrison` reads a fort's troops from data; nothing tracks losses, wages or food.
+- **Captivity runs one way.** A beaten player is held, robbed and released (`time.capture`); the company never holds anyone.
+- **What Phase 7 gives Phase 8:**
+  - captains and the companion leading parties (P7-05), the pattern for castellans;
+  - the mill with its own budget account and owner's law (P7-10), which becomes real when villages change hands;
+  - the rise and archers' range (P7-11), reused on the walls;
+  - the Greywall Courtyard battle map (Q4), the one walled map;
+  - pursuit (`wantsPlayer`, P7-04), reused for lords who hunt a defector;
+  - the expert bot and Prototype G (P7-T).
+- **Save schema v18.** No fixtures exist after 2.7.0's; v19 (holdings) is the largest step since v2.
+
+### Corrections in this re-specification
+1. **P8-02 no longer needs W-06** (dropped by D-W2). Holdings migrate from v18's `c.owners`, with fixtures from 2.23.0.
+2. **Holdings come first.** The order follows the design's dependency map ("explicit ownership / claims → loss / retake → fiefs → politics"): P8-02 holdings, P8-03 permissions, then P8-01 lords. P8-02 brings the rulers and lords as **people** (data, no parties); P8-01 puts the lords on the map.
+3. **P8-06 is split** into **P8-06a, sieges on the map** (encirclement, preparation, starvation, surrender, relief, the AI's own sieges at war) and **P8-06b, the assault battle**. Without 06a no fort is ever lost while the player is away.
+4. **Rebel, sovereign and deposed move to Phase 9** (P9-03, P9-04). P8-04 builds independent, mercenary and sworn vassal, with release, defection and expulsion.
+5. **P8-07's nobles are P8-01's lords,** given needs, motives and opinions of each other. Phase 8's player is never a ruler, so Prototype F's "order" is a request: the player asks two lords for help, and the ruler's summons go through the same model.
+6. **Lords don't die in Phase 8** (captured, ransomed, wounded). Succession and heirs belong to houses (P9-06).
+7. **Story safety:** Greywall and Ashgate are story forts. They can't be besieged by the AI or granted until Q4 ends (as D-W5 keeps the March pair in tension), so the story's `owner` conditions keep their meaning.
+8. **Readiness labels added,** with three blocking decisions (D-P8a–D-P8c) and two with defaults (D-P8d, D-P8e).
+9. **Every settlement is a holding, and lords vary** (owner, 2026-11-20). Villages, forts and towns each have their own holder: a lord or the ruler. A lord may hold one place, several, or none: some lords only campaign, often a landed lord's kin. Villages are each a fief of their own, tied to a **seat** (a fort or a town) whose controller they follow in war. The first grant a player is likely to get is a village.
+
+### The tasks, in build order
+| ID | Task | Readiness | Size | Needs | Save |
+|---|---|---|---|---|---|
+| **P8-02** | **Holdings model:** every settlement a holding with a sovereign, legal holder (a lord or the ruler), controller, administrator, claims and seat, replacing `c.owners`; rulers and lords (landed, landless, holding several) as people with kin; the story's owner conditions kept; a read-only Realm screen | Ready (D-P8b, D-P8c decided) | **L** | W-04, W-07 | v19 |
+| **P8-03** | **Permissions:** `CL.rights.may(c, who, action, place)` with readable reasons, replacing the scattered checks | Ready (after P8-02) | S | P8-02 | — |
+| **P8-01** | **Lords on the map:** a `lord` party per lord, landed or landless, with intentions shown on tap; handled by encounters, auto-resolve, reinforcements, contracts, news and the battle lock; lords captured and ransomed both ways | Specified | M–L | P8-02, W-07 | v20 |
+| **P8-04** | **Allegiance:** independent, mercenary contract, sworn vassal; release, defection, expulsion; a consequence preview; obligations | Specified | M | P8-01, P8-03 | v21 |
+| **P8-05** | **Fiefs and castellans:** grants; a castellan or the default steward; policies (garrison, tax, reserves, repairs); the holding's own budget and weekly report; garrisons tracked | Specified | M | P8-04, P7-05, P7-10 | v22 |
+| **P8-06a** | **Sieges on the map:** encirclement, preparation, starvation, surrender, relief and resolution; the AI's lords besiege at war; warnings; anti-snowball | Ready (D-P8a decided) | M–L | P8-01, P8-05, V2-09 | v23 |
+| **P8-06b** | **The assault battle:** a generated walled map (wall, gate, ladders, courtyard), attack and defence, Simulate's wall bonus, a Debug-panel phone test | Ready (D-P8a decided) | M–L | P8-06a, P7-11 | — |
+| **P8-07** | **Named nobles: needs, opinions and rivalries (Prototype F):** lords' needs (land, coin, men, safety, standing); relationship, interest, obligation and fear toward the player, their ruler and each other; friends, rivals and feuds; obey, negotiate, delay or refuse with reasons; the ruler's summons; grants weighed by opinion; AI lords changing realm by the player's rules; the lords' own petitions | Specified | **M–L** | P8-01, P8-04, P8-06a | v24 |
+| **P8-08** | **Losing and retaking land (Prototype D):** every loss path, the landless view, claims that persist, retaking by siege or petition; Prototype D as a scripted scenario and a Debug start | Specified | M | P8-02–P8-07 | optional fields |
+| **P8-T** | **Tuning and acceptance:** revenue and war pace, anti-snowball runs, a landed bot in Prototype G, Prototype D and F as slow tests, a validation document | Specified | S–M | all above | — |
+
+**Version:** each task a minor version (2.24.0 on); **P8-T ships 3.0.0** (D-V1).
+
+### Phase 8's testing additions (on top of the per-task contract, §7)
+- **A scripted scenario per design acceptance:** SC-19 to SC-24 and SC-44 each become a Node test on the real campaign; Prototype D (P8-08) and Prototype F (P8-07) become slow tests.
+- **Invariants checked after every world day in the bots** (design §25.3): one controller and at most one legal holder per holding; no person holding a holding of a realm they aren't sworn to; no duplicate troops, money or holdings across a change of hands; a claim never pays revenue.
+- **A no-player world run** (`npm run landed`, added in P8-06a): 180 days of the world alone, reporting forts taken, sieges started, lifted and won, and each kingdom's forts.
+- **Phone:** P8-06b's assault map gets a Debug-panel test like Big battle 40.
+- **The bots:** a "landed" campaign style (P8-05) that swears, takes a fief and keeps the default steward; Prototype G runs it from P8-T.
 
 ## 6. Phase 9 — "Kingdoms & Houses"
 
@@ -249,10 +286,10 @@ All of Phase 9 is **Provisional**.
 |---|---|---|---|
 | **P9-01** | Realms as organisations | M | P8-02, V2-11 |
 | **P9-02** | Diplomacy and treaties (grows from W-07's war and peace) | M | W-07, P9-01 |
-| **P9-03** | Founding or taking a kingdom | M | P8-04, P9-01 |
-| **P9-04** | Rebellion and deposition | L | P8-07, P9-03 |
-| **P9-05** | Armies and campaigns | L | P8-06, W-07 |
-| **P9-06** | Houses, marriage and claims | M | P8-07 |
+| **P9-03** | Founding or taking a kingdom (with rebel, sovereign and independent holdings, moved from P8-04), by the player or an AI lord | M | P8-04, P9-01 |
+| **P9-04** | Rebellion and deposition (AI lords as claimants who can take the ruler's office) | L | P8-07, P9-03 |
+| **P9-05** | Armies and campaigns (and towns changing hands, moved from Phase 8) | L | P8-06a, P8-06b, W-07 |
+| **P9-06** | Houses, marriage and claims (with lords' deaths and heirs, moved from Phase 8) | M | P8-07 |
 | **P9-07** | Modding: a declarative content format (namespaced ids moved here from W-04) | M–L | W-04 |
 | **P9-08** | Creator tools and a second world | L | P9-07 |
 | **P9-T** | Tuning and acceptance (SC-29, SC-41, the full matrix) | M | all above |
@@ -269,7 +306,8 @@ All of Phase 9 is **Provisional**.
    **Why together:** a build with the bigger map but no migration would load 2.0 saves with unshifted coordinates; with `main` deployed to Pages, that would hit real players.
 6. **W-07,** then **W-08.** **W-09** if the owner chooses impassable terrain (D-W4), or before P7-04's "Avoid danger" routes.
 7. **B-01** early in Phase 7, then Phase 7 roughly in table order (P7-04 before P7-02; P7-05 before P7-06).
-8. **Phase 8, then Phase 9,** each re-specified at its start.
+8. **Phase 8** in the build order of §5 (re-specified 2026-11-20): P8-02, P8-03, P8-01, P8-04, P8-05, P8-06a, P8-06b, P8-07, P8-08, P8-T. W-09 is not needed: sieges and lords move on passable terrain.
+9. **Phase 9,** re-specified at its start.
 
 ### Versions (owner decision D-V1)
 - Proposed: each finished task bumps the minor version (2.1.0, 2.2.0, …); fixes bump the patch.
@@ -282,7 +320,13 @@ All of Phase 9 is **Provisional**.
 | — | W-05b | No schema step: the world id changed (`sundered_realm`), so saves of the old March are refused and kept (D-W2). v10 is free for the next change |
 | v10 | W-07 (2.9.0) | Relations between kingdoms (war, peace) |
 | v12+ | Phase 7 tasks with "Save: yes", in the order they ship | One step per task, never two tasks in one step |
-| later | Phases 8–9 | Holdings (P8-02) is the biggest: owners → holdings |
+| v19 | P8-02 | Holdings and people: `c.owners` → `c.holdings`, rulers and lords in `c.people`. Fixtures from 2.23.0 first (`tests/fixtures/saves-2.23/`) |
+| v20 | P8-01 | Lords' parties, prisoners (`c.prisoners`) |
+| v21 | P8-04 | Allegiance (`c.allegiance`) |
+| v22 | P8-05 | Fief administration: garrisons, policies, prosperity, the holding's book |
+| v23 | P8-06a | Sieges (`c.sieges`) |
+| v24 | P8-07 | Nobles' opinions (of the player, the ruler and each other), debts, petitions and history |
+| later | Phase 9 | Re-specified at its start |
 
 **Device settings** (text size, zoom levels) need no schema step. They live in `crownless_settings`, whose loader already fills missing keys with defaults.
 
@@ -314,8 +358,36 @@ Decisions marked **blocking** must be made before the named task starts. The oth
 | D-P7a | First follower in Phase 7 | Surgeon | P7 order |
 | D-P7b | First business | A mill, then an inn | P7-10 |
 | D-P7c | Tournament format | Foot-melee duels in a capital | P7-09 |
-| D-P8a | How deep sieges go at first | One assault map, a simple preparation and starvation track | P8-06 |
+| **D-P8a** | How deep sieges go at first | One generated assault map (a wall with a gate and ladder points, a courtyard to fall back to); preparation as ladders (1 day) and a ram (3 days); a starvation track of the fort's food days; surrender when food runs out or the odds are hopeless. No towers, engines or second walls **Owner, 2026-11-20: the default.** | P8-06a, P8-06b |
+| **D-P8b** | Which settlements are holdings? | **Every settlement of a kingdom** (villages, forts and towns), each with its own holder, a lord or the ruler; villages tied to a seat (details below the table) **Owner, 2026-11-20: the default.** | P8-02 |
+| **D-P8c** | Who are the people of the realms? | **One ruler and about six lords per kingdom:** great lords with a fort, lesser lords with a village, and landless lords who only campaign, with kin ties; about 24 lord parties; lords never die in Phase 8 (details below the table) **Owner, 2026-11-20: the default.** | P8-02, P8-01 |
+| D-P8d | How does a player first get a holding? | **Granted by the liege** to a sworn vassal when a holding falls vacant (taken from an enemy with its villages, or its lord held unransomed for 30 days), or from the crown's own villages after long service. The liege weighs the vassals who did most in its taking, the landless lords, service days and renown, so **AI lords compete** for grants. A player's first grant is most likely a **village**; a fort comes with more renown and service. A lord may hold up to three fiefs (tuned in P8-T). An independent who takes a fort must hand it to a kingdom (a reward, or swear and hold it); holding land as an independent is sovereignty (P9-03) | P8-05 |
+| D-P8e | What survives a loss or a change of allegiance? | **Always kept:** the person, the warband, money, followers, companions and businesses (under the local law). **A claim persists** after a fort is taken, until renounced; it gives no income or control (§25.3). **Released** from an oath: the fief goes back to the crown, no claim. **Defected or expelled:** the fief is lost but the claim travels with you, and a new liege may back it | P8-04, P8-08 |
 | D-A1 | When art, commercial, packaging and demo come back | After the art team delivers; an art-integration task then | — |
+
+### D-P8b and D-P8c in full (owner, 2026-11-20: the defaults, accepted)
+
+**D-P8b, holdings.** Every settlement of a kingdom is a holding, with its holder set in the world data at the start:
+- **Villages** are fiefs of their own: revenue, a militia, no walls. Each is tied to a **seat**, a fort or town of the same kingdom, and follows the seat's controller in war. When the seat falls, its villages pass to the conqueror, who grants them anew, and their holders keep claims.
+- **Forts** have walls and a garrison, and can be besieged (P8-06a).
+- **Towns:** in this world, the four capitals and Merrow. Each capital is its ruler's own holding and isn't besieged in Phase 8 (P9-05). The model lets a town be held by a lord, for later worlds or a ruler's grant.
+- **Merrow,** the free city, has no fiefs.
+
+**D-P8c, people.** Per kingdom, one ruler and about six lords, each lord with a party on the map:
+
+| Who | Holds | Per kingdom |
+|---|---|---|
+| **The ruler** | The capital and a village; stays at the capital (not on the map in Phase 8) | 1 |
+| **Great lords** | A fort, usually with a village | 2 |
+| **Lesser lords** | A village | 1–2 |
+| **Landless lords** | Nothing; they campaign. A landed lord's son, daughter, brother or cousin, or a household knight of the ruler | 2 |
+
+- That is about 4 rulers and 24 lords, with culture names.
+- **Kin ties** (`kin`) link lords to each other and to rulers. They feed opinions (P8-07: what you do to one, their kin remember) and grants (a landless lord is first in line for a vacant fief).
+- **No fixed classes** (owner, 2026-11-20). Rank is never stored: it is what a person holds and which office they have now, and the same rules apply to every lord and the player. The ruler is an **office** (`c.rulers`), not a kind of person: it doesn't move in Phase 8, but in Phase 9 a lord can become a ruler, and a ruler can be deposed and ride on as a lord.
+- **Holdings move between lords in play:** a landless lord granted a village becomes a lesser lord; a lord who loses their only fief becomes landless and campaigns on. Nobody holds more than three fiefs (tuned in P8-T).
+- Merrow is ruled by a council (no person).
+- Lords are captured, ransomed and wounded but **never die in Phase 8**; heirs come with houses (P9-06).
 
 ## 9. Risks
 
@@ -331,6 +403,9 @@ Decisions marked **blocking** must be made before the named task starts. The oth
 | Screenshot tests are flaky | Baselines only from CI's Linux Chromium (D-T2); behaviour tests separate from pixel tests; a documented update procedure |
 | Scope creep (the design is huge) | Each phase has a stated exit; ideas failing the design's prioritisation rule (Part 2 §26.7) go to the backlog |
 | Management fatigue as holdings and nobles arrive | Defaults that work hands-off; Prototype G repeated each phase; "forced screens" counted |
+| One kingdom swallows the others once sieges exist | Design §20.7: one siege per realm at a time; sieges only at war, and wars end by exhaustion (W-07, now counting siege losses); a taken fort starts with half a garrison and 30 days of unrest; lords go home to refill after a siege; no free armies. `npm run landed` runs 180 days of the world alone (P8-06a, P8-T) |
+| The holdings migration breaks the story or old saves | Fixtures from 2.23.0 before any change (P8-02); a test that every story `owner` condition reads the same before and after migration; story forts locked until Q4 ends |
+| Land brings chores | A default steward and balanced policies (P8-05); one weekly holding report folded into the week's log; a landless player sees a short claims view, never an empty chores screen (SC-21); forced screens counted in Prototype G (P8-T) |
 | Balance drifts as features stack | A tuning task closes every phase, with the bots, the parity script and the owner's phone |
 
 ## 10. Backlog (not scheduled)
@@ -379,3 +454,17 @@ Decisions marked **blocking** must be made before the named task starts. The oth
 18. **W-07:** a save size budget and a phone save-write measurement.
 19. **P7-09 re-sized to M–L.** No duel mode exists in the code; the tournament needs a one-on-one arena mode on the battle engine.
 20. **P7-01:** the surgeon changes the death threshold but keeps one casualty roll per soldier, so the seeded `casualties` stream and the existing tests stay aligned.
+
+**2026-11-20, re-specification of Phase 8 at build 2.23.0 (commit 09176e8; owner: "do the improved plan and task instructions for phase 8").** IDs kept, with P8-06 split into P8-06a and P8-06b as W-05 was.
+
+21. **P8-02's dependency on W-06 removed** (dropped by D-W2); it migrates from v18 with fixtures from 2.23.0.
+22. **Build order changed:** holdings (P8-02) and permissions (P8-03) before lords (P8-01). P8-02 brings rulers and lords as people; P8-01 their parties.
+23. **P8-06 split:** sieges on the map (P8-06a) and the assault battle (P8-06b). Nothing in the code takes a fort today, so 06a is what makes "lost while away" possible.
+24. **Scope moved to Phase 9:** rebel, sovereign and deposed allegiance (P9-03, P9-04); holding land as an independent (P9-03); towns changing hands (P9-05); lords' deaths and heirs (P9-06).
+25. **P8-07 reframed:** its nobles are P8-01's lords; Prototype F's order is a request from the player and the ruler's summons.
+26. **Story forts locked** (Greywall, Ashgate) until Q4 ends, so the story's owner conditions keep their meaning.
+27. **Decisions:** D-P8a made concrete; D-P8b (which places are holdings), D-P8c (the realms' people) added as blocking; D-P8d (first holding) and D-P8e (what survives a loss) with defaults.
+28. **Testing:** the design's SC-19–SC-24 and SC-44 as scripted tests, the §25.3 invariants checked daily in the bots, a no-player world run (`npm run landed`), a landed bot style, and Prototypes D and F as slow tests.
+29. **Owner, 2026-11-20: lords as in a feudal sandbox.** Every settlement is a holding (villages, forts and towns) held by a lord or the ruler. Lords may hold nothing (campaigning kin and household knights), one place or several, with kin ties. Villages are fiefs tied to a seat. D-P8b, D-P8c and D-P8d rewritten; P8-02, P8-01, P8-05, P8-06a, P8-07 and P8-08 follow. About 24 lord parties instead of 8, inside W-07's budgets (checked with Map stress 80 in P8-01).
+30. **Owner, 2026-11-20: no fixed classes.** Rank is what a person holds and their office now, never stored; the same rules for every lord and the player. The ruler becomes an office (`c.rulers`, P8-02) so Phase 9 can move it: AI lords and the player may become rulers (P9-03, P9-04, succession in P9-06), and a deposed ruler rides on as a lord. P8-07 grows to needs (land, coin, men, safety, standing), lord-to-lord opinions, friends, rivals and feuds, grants weighed by opinion, and AI lords changing realm and losing fiefs by the player's rules (size M → M–L).
+31. **Owner, 2026-11-20: D-P8a, D-P8b and D-P8c taken as their defaults.** P8-02, P8-06a and P8-06b are Ready; nothing blocks the start of Phase 8. D-P8d and D-P8e keep their working defaults.
