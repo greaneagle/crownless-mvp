@@ -1285,6 +1285,14 @@ _Re-specified 2026-11-20 at build 2.23.0 (commit 09176e8); NEXT-PLAN §5 has the
   - **Rank is never stored.** It is what a person holds and which office they have now. A "landless", "lesser" or "great" lord is only a description of their holdings today.
   - **Every lord and the player go by the same rules:** they gain fiefs by grant or by taking a seat, and lose them by siege, revocation or leaving a realm. You can take a lesser lord's village (by taking its seat) and leave them landless, and an AI realm can do the same to anyone, you included.
   - **The ruler is an office, not a kind of person:** `c.rulers[realm] = person`. In Phase 8 it never moves. In Phase 9 it can: a lord, AI or the player, can become a ruler (P9-03, P9-04, P9-06), and a deposed ruler rides on as a lord, landless or not.
+- **No holding is ever vacant** (D-P8f, owner 2026-11-20). Every holding has a holder at all times, a lord or the ruler. **Taking a fief** (by siege, P8-06a, or a seat's villages with it), the conqueror, AI lord or player, if not the ruler, chooses one:
+  - **ask the liege for it:** the liege decides (P8-05's grant order, weighed by opinion in P8-07);
+  - **suggest someone** they're on good terms with: if granted, that lord's relationship with the conqueror grows;
+  - **hand it to the ruler outright:** relationship and influence with the ruler grow; the ruler holds it and grants it later;
+  - **keep it** without asking: the ruler may accept it, or expel them from the realm (P8-04) and send lords to retake it (P8-06a).
+  
+  When the ruler took it, or it was taken in the ruler's name, the ruler decides who gets it (the player too, once a player can be a ruler in Phase 9). AI lords choose by their needs and opinions (P8-07); a hands-off player gets a default (ask the liege) with one prompt. Until P8-05 ships, a conquest leaves the ruler as holder.
+- **Men and women** (D-P8g, owner 2026-11-20). People have a `gender`. Noblewomen hold fiefs, lead their own parties and can be rulers (queens); followers can be women. **Regular soldiers, levies and every troop line, are men**; women soldiers come later as troop types of their own. Text about people uses their gender (lord or lady, son or daughter).
 - **The Realm screen** (new in P8-02, from the map like Company and Accounts) grows a tab per task: Holdings, Lords, Allegiance, Fief, Claims. At 812×375, each fits or scrolls, with touch targets of at least 44 CSS px.
 - **No chores (design §22.6):** each new system works hands-off, with a default and at most one weekly line in the week's log. Urgent events (your fort besieged, a summons, a ransom offer) interrupt, and nothing else does.
 - **Debug:** each task adds the cheats that reach its state (grant a village or a fort, start a siege, capture a lord, make a lord landless, and so on).
@@ -1306,12 +1314,18 @@ _Re-specified 2026-11-20 at build 2.23.0 (commit 09176e8); NEXT-PLAN §5 has the
 - **Callers of `owner`:**
   - recruiting (`js/party.js`);
   - soldiers' culture (`js/soldiers.js`, which reads `owners` in its own sanitize);
-  - the story's `owner` condition and effect (`js/story.js`; Q4 sets Greywall);
-  - dialogue (`data/dialogue.js` Greywall lines);
+  - the story's `owner` condition and effect (`js/story.js`; its validator allows the effect on forts only);
+  - dialogue (`data/dialogue.js`: the Greywall lines, and Q4's owner effect in the `greywall_parley` choices; `data/quests.js` has none);
   - news;
-  - the mill's owner's law (`js/business.js`);
+  - the mill's owner's law (`js/business.js`, polled on its tick, not an event);
+  - contracts (`js/contracts.js`: offers, the giver's owner, escort news);
+  - world events (`js/happenings.js`) and tournaments (`js/tourney.js`), which also call `welcomes`;
+  - patrols (`js/parties.js`: musters and targets, through `realm.holdings(c, f)`);
+  - the map's settlement colours (`js/render.js`), the settlement card and garrison and the "won't hire" lines (`js/ui.js`), the respawn after a defeat (`js/world.js`);
   - debug (`js/debug.js` fort switch);
-  - `scripts/prototype-g.js` (`titled`).
+  - `scripts/prototype-g.js` (`titled`) and `scripts/make-save-fixtures.js`;
+  - `js/save.js` (`owners` in the starter and in the fields every v3+ save must have) and `types/crownless.d.ts`.
+- **Names:** each culture in `data/names.js` has one `given` list of men's and women's names mixed; soldiers, followers and the tournament rival all draw from it.
 - **The world:** 31 settlements (5 towns, 8 forts, 18 villages); each kingdom has one capital town, two forts and four or five villages; Merrow is a free city.
 - **No people outside the company.**
 
@@ -1326,19 +1340,20 @@ _Re-specified 2026-11-20 at build 2.23.0 (commit 09176e8); NEXT-PLAN §5 has the
     - a **home** (their own seat, or for the landless, their kin's seat or the capital);
     - their **kin** ties;
     - a short trait line for P8-07.
-  - **A person record:** `{ id, name, realm, home, kin: [{ person, tie: 'parent' | 'child' | 'sibling' | 'cousin' | 'spouse' }], status: 'free' | 'captive' | 'wounded', heldBy }`. Kin ties are symmetric and checked by the content validator.
+  - **A person record:** `{ id, name, gender: 'male' | 'female', realm, home, kin: [{ person, tie: 'parent' | 'child' | 'sibling' | 'cousin' | 'spouse' }], traits, status: 'free' | 'captive' | 'wounded', heldBy }`. Kin ties are symmetric and checked by the content validator; the words come from the tie and the gender (son or daughter, brother or sister, lord or lady). `c.nextPersonId` keeps ids unique for people made later.
+  - **Men and women** (D-P8g): each kingdom's nobles include women, landed and landless, and at least one realm has a queen.
   - **The rulers' office:** `c.rulers` = `{ realm: person }`, one per kingdom (not Merrow). Nobody is a ruler by their record, only by holding the office, so Phase 9 can pass it on.
   - **Whether a lord is "great", "lesser" or "landless"** is never stored: it is what they hold now (`realm.fiefsOf(person)`), so it changes as land is granted and lost.
   - **Merrow** has no persons.
 - **Holdings** (`c.holdings`, one per settlement of a kingdom, keyed by settlement id; D-P8b):
   - `kind`: `village`, `fort` or `town`, from the settlement;
   - `sovereign`: the realm that claims it;
-  - `holder`: the person legally granted it (a lord or the ruler), set in the world data at the start;
+  - `holder`: the person legally granted it (a lord or the ruler), set in the world data at the start; **never null** (D-P8f): when no lord holds it, the ruler of its sovereign does;
   - `controller`: who holds it now (the gates and garrison of a fort or town; for a village, its seat's controller);
   - `seat` (villages only): the fort or town of the same kingdom it is tied to, from the world data;
   - `administrator`: null until P8-05;
   - `claims: [{ by, realm, since, kind: 'granted' | 'conquest' | 'old' }]`.
-- **One person may hold several holdings, or none.** A village's holder need not be its seat's holder: a lesser lord's village can sit under a great lord's fort. At most three fiefs per person (D-P8d), checked by the content validator and by grants.
+- **One person may hold several holdings, or none.** A village's holder need not be its seat's holder: a lesser lord's village can sit under a great lord's fort. At most three fiefs per lord (D-P8d), checked by the content validator and by grants. The ruler's office isn't capped: what the crown holds until it grants it is held by the ruler.
 - **`realm.owner(sid)` keeps its meaning (who controls it now):**
   - for a fort or town, its controller;
   - for a village, its seat's controller;
@@ -1350,10 +1365,12 @@ _Re-specified 2026-11-20 at build 2.23.0 (commit 09176e8); NEXT-PLAN §5 has the
   - `fiefsOf(person)`.
 - **One transition function,** `realm.transfer(c, sid, { controller, sovereign, holder, reason })`:
   - It records the old holder's claim (`old`) when the holder changes against their will.
+  - **It always names a holder** (D-P8f): the conqueror, or the ruler when none is given. P8-05 adds the conqueror's choice (ask, suggest, hand over, keep); until then the ruler holds what is taken.
   - **When a seat's controller changes,** it carries the seat's villages with it: each passes to the new controller and sovereign, held by its ruler until granted, and each old holder keeps a claim.
-  - It writes the news and the chronicle.
-  - It emits a domain event (`holding_changed`) that the mill's law, contracts and the scout already listen for or will.
+  - It writes the news, and the chronicle only when the player is a party to it (holder, claimant or taker).
+  - It emits one domain event per call, `HoldingChanged` (the events are PascalCase, `js/events.js`), listing the holding and the villages carried with it. Nothing listens yet: the mill's law keeps polling `owner` on its tick; contracts and the scout may listen later.
   - `setOwner` becomes a thin wrapper: a kingdom taking a fort becomes sovereign and controller, and its ruler the holder (the crown holds it until it's granted).
+  - **The story lock** is checked by grants, sieges and the Debug panel (`realm.locked(c, sid)`), not by `transfer` or `setOwner`, so the story and the existing tests that move Greywall keep working.
 - **Story forts:** Greywall and Ashgate are marked `story: true` in the world data. Until Q4 ends, only the story moves them (and their villages): no grant, siege or debug grant. The Q4 effect goes through `transfer`. The old lord keeps an `old` claim, so a Greywall that passes to Aurelia leaves its Valedorn lord a landless grievance for later.
 - **Villages follow their seat:**
   - recruiting, contracts, markets' owner and the mill's law read `owner`;
@@ -1364,6 +1381,8 @@ _Re-specified 2026-11-20 at build 2.23.0 (commit 09176e8); NEXT-PLAN §5 has the
   - **Lords:** each person, with what they hold (or "landless"), their kin, and where their home is.
   
   Tapping a settlement on the map shows its holder and controller.
+- **Soldiers are men** (D-P8g): each culture's names split into `given` (men's) and `givenFemale` (women's), checked by the content validator. Soldiers draw only men's names; nobles, followers and the tournament rival may be either, and troops gain an optional `gender` (default `male`) so women's troop types can come later. Soldiers already in a save keep their names (a soldier's record is history); the pure 4 → 5 roster migration keeps drawing from both lists, so old saves migrate to the same names.
+- **Seats** (owner, 2026-11-20): each village's seat is the nearest fort or town of its kingdom; Greywall's are Highmere and Brackenfield, so they follow it in Q4. A village may have no seat only when its kingdom holds no fort or town (the W-04 test world's Iron Reach).
 - **Debug:** set a holding's controller, set its holder, add a claim.
 
 **Layers.** Default: nothing to do. The player sees who holds what on the Realm screen and on a settlement's tap card.
@@ -1372,9 +1391,9 @@ _Re-specified 2026-11-20 at build 2.23.0 (commit 09176e8); NEXT-PLAN §5 has the
 - **The migration** builds `c.holdings` for every settlement of a kingdom:
   - the holder is the world data's starting holder;
   - for the forts in v18's `c.owners` whose owner differs from content (Q4's Greywall), the new owner is sovereign and controller and its ruler the holder. The fort's villages go with it, and the original holders keep `old` claims.
-- **It builds `c.people`** from the world package at the time of the migration, written into the migration as constants. Migrations stay pure (NEXT-PLAN §9).
-- **`c.owners`** is dropped after the migration.
-- **Fixtures:** `tests/fixtures/saves-2.23/` from the 2.23.0 build before any change (a fresh game, day 20 campaign, the story played through Q4 with Greywall passed to Aurelia, a Phase 7 company with a mill).
+- **It builds `c.people`** from the world package at the time of the migration, written into the migration as constants. Migrations stay pure (NEXT-PLAN §9). The constants are for `sundered_realm`; a save of another world (only the tests' worlds) keeps just its owner overrides, and `sanitize` completes it from that world's data.
+- **`c.owners`** is dropped after the migration, and from the fields a v19 save must have.
+- **Fixtures:** `tests/fixtures/saves-2.23/` from the 2.23.0 build before any change, made from a clean checkout of 9826a3e with `scripts/make-legacy-save-fixtures.js` extended for the set: a fresh game, the day-20 campaign, the story played through Q4 with Greywall passed to Aurelia (through the real dialogue, with a mill at Brackenfield so its villages follow and the mill's law is told), and a Phase 7 company with followers, a retinue and a mill.
 - **Docs:** SAVE-FORMAT updated.
 
 **Edges.**
@@ -1404,7 +1423,11 @@ _Re-specified 2026-11-20 at build 2.23.0 (commit 09176e8); NEXT-PLAN §5 has the
 - **People and holdings:**
   - every kind of lord exists at the start (landless, one holding, several);
   - `fiefsOf` changes as holdings move;
-  - kin is symmetric.
+  - kin is symmetric;
+  - no holding is ever without a holder, through every `transfer`;
+  - men and women among the nobles, and at least one queen.
+- **Names:** every new soldier (hired, story, migrated from v18) has a man's name, over many seeds; followers and nobles may have either; the 4 → 5 migration's names are unchanged. Tests that pin a soldier's seeded name are updated where the men's list changes it.
+- **Tests edited, not just added:** `realm.test.js`'s owners sanitize test, `business.test.js`'s change of hands (Oakford's seat is a capital, so it moves to a Greywall village), `happenings.test.js`'s owners check (moved to `c.holdings`).
 - **Villages follow their seat:** recruiting, contracts and the mill's law.
 - **Story forts:** locked until the ending.
 - **The invariants** over a 90-day bot run.
@@ -1602,7 +1625,8 @@ Phase 8 adds many rights: appoint, tax, summon, grant, besiege, swear, leave, ra
   | **Fort** | A little tax; a garrison that guards its villages | Garrison wages, repairs | A castellan or the default steward |
   | **Town** (the capitals, the rulers') | The realm's largest tax | Its watch | The ruler's own officers (not playable in Phase 8) |
 
-- **Grants** (D-P8d): a holding falls vacant when it is taken from an enemy (with its villages), when its lord is held unransomed for 30 days, or when its holder leaves the realm (defection, expulsion, P8-04). The ruler grants it within a few days. The candidates are weighed in this order:
+- **The conqueror's choice** (D-P8f; "What runs through every Phase 8 task"): whoever takes a fief, if not the ruler, asks the liege for it, suggests someone, hands it to the ruler, or keeps it. Keeping it unasked lets the ruler accept, or expel the taker (P8-04) and send lords to retake it (P8-06a). The player gets one prompt with "ask the liege" as the default; AI lords choose by their needs and opinions (P8-07, which until it ships picks "ask"). A suggestion that is granted raises the conqueror's relationship with the lord named; handing it over raises relationship and influence with the ruler (influence is new state, P8-07's to spend).
+- **Grants** (D-P8d): a holding is never vacant. The crown has one to give when the conqueror asks for it, suggests someone or hands it over; when its lord is held unransomed for 30 days; or when its holder leaves the realm (defection, expulsion, P8-04). The ruler holds it meanwhile, and grants it within a few days. The candidates are weighed in this order (a conqueror who asked, or the lord they suggested, counts as "did most in its taking"):
   1. who did most in its taking;
   2. landless lords (kin of the realm's lords first);
   3. lords with fewer fiefs;
@@ -1659,7 +1683,7 @@ Phase 8 adds many rights: appoint, tax, summon, grant, besiege, swear, leave, ra
 - **Policies:** each makes the measured difference (SC-42).
 - **Desertion:** after the warnings.
 - **SC-19:** swear and obtain a holding (a village, then a fort), as a scripted scenario.
-- **Grants:** the candidates' order; a landless AI lord wins a vacant village when the player has done nothing for it; the player wins when they took it; nobody passes three fiefs; a declined grant goes to the next candidate.
+- **Grants:** the candidates' order; a landless AI lord wins a crown-held village when the player has done nothing for it; each of the conqueror's four choices (ask, suggest, hand over, keep), with its relationship, influence and expulsion outcomes, for the player and an AI lord alike; the player wins when they took it; nobody passes three fiefs; a declined grant goes to the next candidate.
 - **Several fiefs:** each has its own book, and one week's line covers them all.
 - **SC-44.**
 - **The landed bot:** keeps its fief 60 days hands-off with no forced screens.
@@ -1700,7 +1724,9 @@ Phase 8 adds many rights: appoint, tax, summon, grant, besiege, swear, leave, ra
   - control passes;
   - the garrison is killed, taken or scattered (by the outcome);
   - the castellan is captured, or escapes (one chance in three);
-  - its villages follow (P8-02's `transfer`), and each is re-granted by the conqueror's ruler (P8-05) to a landless lord, the player or another lord, while their old holders keep claims;
+  - the conqueror makes the choice of D-P8f (P8-05): ask, suggest, hand over or keep; a ruler who took it in person decides;
+  - its villages follow (P8-02's `transfer`), held by the conqueror's ruler until granted (P8-05) to a landless lord, the player or another lord, while their old holders keep claims;
+  - a conqueror who kept a fief unasked and is expelled becomes a target: the realm's lords besiege it like an enemy's;
   - **a lord left with nothing** becomes landless: their party campaigns on from their kin's seat or the capital;
   - businesses there meet the new owner's law (P7-10);
   - the old holder keeps a claim;
