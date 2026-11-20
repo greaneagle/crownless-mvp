@@ -26,7 +26,7 @@
   'use strict';
   const CL = root.Crownless;
 
-  const VERSION = 17;
+  const VERSION = 18;
   const KEY = 'crownless_save';
   const BACKUP_KEY = 'crownless_save_backup';
   const LEGACY_KEY = 'crownless_v03_party';
@@ -112,6 +112,7 @@
       retinue: [], // companions of the wider world (P7-06)
       happenings: CL.happenings.blank(0), // world events: open, past, cooldowns (P7-08)
       tourney: CL.tourney.blank(0), // tournaments: each host's next, the open ones, your bracket and rival (P7-09)
+      businesses: CL.business.blank(), // your mill, and those sold or seized (P7-10)
     };
     CL.character.applyKit(c, background);
     CL.upkeep.stowFood(c);
@@ -198,6 +199,7 @@
     15: [...V3_FIELDS, ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object'], ['accounts', 'object'], ['ledger', 'array'], ['followers', 'object'], ['relations', 'object'], ['medicine', 'number'], ['detachments', 'array'], ['retinue', 'array']],
     16: [...V3_FIELDS, ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object'], ['accounts', 'object'], ['ledger', 'array'], ['followers', 'object'], ['relations', 'object'], ['medicine', 'number'], ['detachments', 'array'], ['retinue', 'array'], ['happenings', 'object']],
     17: [...V3_FIELDS, ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object'], ['accounts', 'object'], ['ledger', 'array'], ['followers', 'object'], ['relations', 'object'], ['medicine', 'number'], ['detachments', 'array'], ['retinue', 'array'], ['happenings', 'object'], ['tourney', 'object']],
+    18: [...V3_FIELDS, ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object'], ['accounts', 'object'], ['ledger', 'array'], ['followers', 'object'], ['relations', 'object'], ['medicine', 'number'], ['detachments', 'array'], ['retinue', 'array'], ['happenings', 'object'], ['tourney', 'object'], ['businesses', 'object']],
   };
 
   /** @param {unknown} v @param {string} kind */
@@ -281,6 +283,8 @@
     15: (d) => CL.happenings.migrate(d),
     // 16 → 17 (build 2.20.0, P7-09): tournaments, none fought yet.
     16: (d) => CL.tourney.migrate(d),
+    // 17 → 18 (build 2.21.0, P7-10): businesses, none owned yet.
+    17: (d) => CL.business.migrate(d),
   };
 
   /**
@@ -345,6 +349,7 @@
     CL.accounts.sanitize(s, d); // the company chest, budgets and the ledger
     CL.quartermaster.sanitize(s, d); // camp followers
     CL.merchant.sanitize(s, d); // the merchant and their goods, prices and log
+    CL.business.sanitize(s, d); // your mill, its money's ledger and log (P7-10), after accounts
     CL.surgeon.sanitize(s, d); // the surgeon and the medicine (P7-01)
     CL.blacksmith.sanitize(s, d); // the blacksmith, and fine kit within its cap (P7-03)
     CL.scout.sanitize(s, d); // the scout (P7-02)

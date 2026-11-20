@@ -245,6 +245,7 @@
     CL.story.tick(camp); // quest stage deadlines
     CL.happenings?.tick(camp); // world events start, hold and end (P7-08), before the news tells them
     CL.tourney?.tick(camp); // tournaments announced and closed (P7-09)
+    CL.business?.tick(camp); // your mill: who holds its village, and any seizure due (P7-10)
     CL.news.tick(camp); // a regional news line every couple of days
     return healed;
   }

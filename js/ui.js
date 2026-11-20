@@ -730,7 +730,7 @@
       return mk('li', { textContent: `Day ${CL.party.dayNumber(e.day)}: ${sign}${e.amount} ${route} · ${e.why}` });
     });
     const ledger = mk('div', { className: 'contractCard' }, mk('h3', { textContent: 'Ledger' }), lines.length ? mk('ul', { className: 'soldierNotes' }, ...lines) : mk('p', { textContent: 'Nothing yet.' }));
-    $('#accountsScreen').replaceChildren(money, qm, sc, bc, scc, mc, ledger);
+    $('#accountsScreen').replaceChildren(money, ...millCard(c, null), qm, sc, bc, scc, mc, ledger);
   }
 
   // ---- Detachments (P7-05; js/detachments.js) ----
@@ -1763,6 +1763,7 @@
     );
     $('#happeningsHere').replaceChildren(...happeningCards(c, c.world.location));
     $('#tourneyHere').replaceChildren(...tourneyCard(c, c.world.location));
+    $('#businessHere').replaceChildren(...millCard(c, c.world.location));
     const barred = !CL.realm.welcomes(c, c.world.location);
     $('#serviceNote').textContent = barred
       ? `The ${CL.content.get('factions', CL.realm.owner(c.world.location, c)).name} will not hire out soldiers or work to an enemy.`
@@ -1845,6 +1846,108 @@
       });
     }
     card.append(row);
+    return [card];
+  }
+
+  /**
+   * The mill (P7-10): for sale here, with what it would make at today's prices and the one decision
+   * (buy); or yours, with its money, who runs it, its weekly reports, a seizure warning, money in and
+   * out and the manager (at the mill only), the expert price rules, and Sell (from anywhere: the
+   * Accounts screen shows it too). Selling asks for a second tap.
+   * @param {Campaign} c @param {string | null} sid the settlement you are in, or null on the Accounts screen
+   */
+  function millCard(c, sid) {
+    const B = CL.business;
+    const R = B.rules();
+    const mine = B.get(c);
+    const v = sid ? B.view(c, sid) : mine ? { kind: 'owned', b: mine } : null;
+    if (!v) return [];
+    const el = (tag, cls, text) => Object.assign(document.createElement(tag), { className: cls || '', textContent: text || '' });
+    const redraw = () => {
+      CL.save.write();
+      refreshRoster();
+      if (c === CL.campaign && CL.game.mode === 'accounts') renderAccounts();
+    };
+    const card = el('div', 'happening mill');
+    card.dataset.mill = v.kind;
+    const row = el('div', 'row');
+    const button = (text, id, fn, reason = '') => {
+      const b = el('button', '', text);
+      b.type = 'button';
+      b.id = id;
+      b.disabled = Boolean(reason);
+      if (reason) b.title = reason;
+      b.onclick = () => {
+        if (fn(b) !== false) redraw();
+      };
+      row.append(b);
+      if (reason) row.append(el('span', 'why', reason));
+      return b;
+    };
+    const signed = (n) => (n >= 0 ? `+${n}` : `−${-n}`);
+    const guess = (where, id) => {
+      const e = B.estimate(c, where, id);
+      return e.n ? `about ${e.n} sacks a week, for ${signed(e.profit)} crowns after the wage and the lord's due` : `nothing: ${e.why}`;
+    };
+    if (v.kind === 'forSale') {
+      card.append(el('b', '', `A mill for sale · ${v.price} crowns`));
+      card.append(el('p', '', `A miller grinds grain into flour and sells it here every week, paying for grain and wages from the mill's own money; the owner of ${CL.soldiers.placeName(sid)} takes ${Math.round(R.due * 100)}% of the sales. You decide only to buy or to sell.`));
+      card.append(el('p', 'estimate', `At today's prices the village miller would grind ${guess(sid, 'miller')}.`));
+      button(`Buy the mill · ${v.price}`, 'millBuy', () => {
+        const b = B.buy(c, sid);
+        message(b ? `You own the mill at ${CL.soldiers.placeName(sid)}. Put crowns in for grain and wages.` : B.blocked(c, sid) || 'Cannot buy it');
+      }, v.why || '');
+      card.append(row);
+      return [card];
+    }
+    const b = v.b;
+    const m = B.manager(b);
+    const here = B.atMill(c);
+    const money = B.cash(c);
+    card.append(el('b', '', `Your mill at ${CL.soldiers.placeName(b.place)} · its money ${money} crowns`));
+    card.append(el('p', '', `Run by ${m.name} (${m.wage} a week). ${b.weeks ? `${b.weeks} week${b.weeks === 1 ? '' : 's'} run, ${signed(b.profit)} crowns in all. ` : ''}Each payday it runs a week on its own.`));
+    if (b.seizeOn !== null) card.append(el('p', 'warn', `${CL.content.table('factions')[b.owner]?.name || 'The owner'} will seize it on day ${CL.party.dayNumber(b.seizeOn)} unless you sell it or mend relations first.`));
+    if (here) card.append(el('p', 'estimate', `At today's prices: ${guess(b.place, b.manager)}.`));
+    if (b.log.length) {
+      const ul = el('ul', 'soldierNotes millLog');
+      for (const e of b.log.slice(-4).reverse()) ul.append(el('li', e.bad ? 'bad' : '', `Day ${CL.party.dayNumber(e.day)}: ${e.text}`));
+      card.append(ul);
+    }
+    const away = here ? '' : 'At the mill only';
+    button('Put in 50', 'millFund', () => B.fund(c, Math.min(50, c.gold)), away || (c.gold <= 0 ? 'Your purse is empty' : ''));
+    button('Put in 200', 'millFund200', () => B.fund(c, Math.min(200, c.gold)), away || (c.gold <= 0 ? 'Your purse is empty' : ''));
+    button('Take all out', 'millTake', () => B.fund(c, -money), away || (money <= 0 ? 'Nothing in it' : ''));
+    const other = b.manager === 'master' ? 'miller' : 'master';
+    const om = R.managers[other];
+    button(other === 'master' ? `Hire ${om.name} · ${om.hire}` : `Back to ${om.name}`, 'millManager', () => B.setManager(c, other), away || (om.hire > c.gold ? `You need ${om.hire} crowns` : ''));
+    const sale = B.saleValue(b);
+    button(`Sell · ${sale} crowns`, 'millSell', (btn) => {
+      if (!btn.dataset.confirm) {
+        btn.dataset.confirm = '1';
+        btn.textContent = `Sell for ${sale} and its ${money} crowns? It can't be undone. Tap again`;
+        return false;
+      }
+      const r = B.sell(c);
+      if (r) message(`Sold the mill for ${r.price} crowns${r.cash ? `, and took its ${r.cash} crowns` : ''}`);
+    });
+    card.append(row);
+    // The expert layer: price rules.
+    const rules = el('details', 'millRules');
+    rules.append(el('summary', '', 'Price rules (expert)'));
+    const pick = (key, label, words) => {
+      const lab = el('label', '', `${label} `);
+      const sel = Object.assign(document.createElement('select'), { id: key === 'maxInput' ? 'millMaxGrain' : 'millMinFlour' });
+      for (const x of R.rules[key]) sel.append(Object.assign(document.createElement('option'), { value: x === null ? '' : String(x), textContent: x === null ? 'no limit' : words(x), selected: b.rules[key] === x }));
+      sel.onchange = () => {
+        B.setRule(c, key, sel.value === '' ? null : Number(sel.value));
+        redraw();
+      };
+      lab.append(sel);
+      return lab;
+    };
+    rules.append(pick('maxInput', 'Pay for grain at most', (x) => `${x} a sack`), pick('minOutput', 'Sell flour for at least', (x) => `${x} a sack`));
+    rules.append(el('p', '', 'Without rules the miller grinds while each sack leaves a crown after the lord’s due.'));
+    card.append(rules);
     return [card];
   }
 

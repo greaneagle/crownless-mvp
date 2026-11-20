@@ -13,6 +13,7 @@
  *   quest      a story quest (Q1–Q4) completed or failed
  *   happening  a world event the company had a hand in (P7-08: took part, or was there and rode on)
  *   tourney    a tournament you fought in (P7-09): champion, finalist or out, and to whom
+ *   business   your mill bought, sold or seized, and by whom (P7-10)
  *
  * The roll of honour (c.honour, saved) remembers soldiers who left the company: who they were, where
  * they came from, how long they served and their record, and how they left (fell, deserted, retired).
@@ -30,7 +31,7 @@
   const HONOUR_MAX = 60;
   const NOTABLE_KILLS = 8;
   const NAMES_MAX = 6; // names kept on one entry
-  const KINDS = ['founded', 'begun', 'recruited', 'promoted', 'battle', 'deserted', 'retired', 'quest', 'happening', 'tourney'];
+  const KINDS = ['founded', 'begun', 'recruited', 'promoted', 'battle', 'deserted', 'retired', 'quest', 'happening', 'tourney', 'business'];
   const HOW = ['fell', 'deserted', 'retired'];
 
   /** @returns {HonourRoll} */
@@ -184,6 +185,8 @@
       }
       case 'tourney':
         return CL.tourney.chronicleText(e);
+      case 'business':
+        return CL.business.chronicleText(e);
       case 'happening': {
         const t = CL.content.table('world_events')[e.event]?.chronicle?.[e.result];
         return t ? CL.happenings.fill(t, { kind: e.event, place: e.place, dest: e.dest }, CL.campaign, { n: e.n }) : '';
@@ -261,6 +264,11 @@
       if (e.kind === 'tourney') {
         if (!settlements[e.place] || !['champion', 'final', 'out'].includes(e.result)) continue;
         Object.assign(out, { place: e.place, result: e.result, foe: str(e.foe) || 'a fighter', round: Math.min(2, count(e.round)) });
+      }
+      if (e.kind === 'business') {
+        if (!settlements[e.place] || !['bought', 'sold', 'seized'].includes(e.event)) continue;
+        Object.assign(out, { event: e.event, place: e.place });
+        if (e.event === 'seized' && CL.content.table('factions')[e.by]) out.by = e.by;
       }
       if (e.kind === 'happening') {
         if (!CL.content.table('world_events')[e.event]?.chronicle?.[e.result] || !settlements[e.place]) continue;

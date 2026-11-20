@@ -6,7 +6,8 @@
  *   purse      your own crowns (c.gold, as before): loot, rewards, hiring, training, the market
  *   chest      the company chest (c.accounts.chest): money set aside for the company. Wages are paid
  *              from it first, then from your purse; the quartermaster buys from it
- *   budget:X   a follower's own budget (c.accounts.budgets[X]); none yet (the merchant, V2-12)
+ *   budget:X   a follower's own budget (c.accounts.budgets[X]): the merchant's (V2-12); a business's
+ *              money (`budget:mill`, P7-10), which keeps its own ledger and stays at the mill
  * and the world outside ('world') is where income comes from and spending goes.
  *
  * Every change of money goes through `transfer` (or its shorthands `earn`, `spend`, `pay`, `seize`):
@@ -51,9 +52,16 @@
     if (balance(c, from) < amount) return false;
     if (from !== WORLD) set(c, from, balance(c, from) - amount);
     if (to !== WORLD) set(c, to, balance(c, to) + amount);
-    if (!Array.isArray(c.ledger)) c.ledger = [];
-    c.ledger.push({ day: c.day, from, to, amount, why: String(why).slice(0, 60) });
-    if (c.ledger.length > LEDGER_MAX) c.ledger.splice(0, c.ledger.length - LEDGER_MAX);
+    const line = { day: c.day, from, to, amount, why: String(why).slice(0, 60) };
+    // A business's money keeps its own ledger (P7-10), so a mill's weekly trade never pushes your own
+    // lines out; money between it and your purse or chest is in both.
+    const book = CL.business?.bookFor(c, from, to);
+    if (book) book.push({ ...line });
+    if (!book || [from, to].some((a) => a === 'purse' || a === 'chest')) {
+      if (!Array.isArray(c.ledger)) c.ledger = [];
+      c.ledger.push(line);
+      if (c.ledger.length > LEDGER_MAX) c.ledger.splice(0, c.ledger.length - LEDGER_MAX);
+    }
     return true;
   }
 
@@ -76,10 +84,11 @@
     return paid;
   }
 
-  /** Captors take a share of every account (only `keep` of each is kept). Returns the total taken. @param {Campaign} c */
+  /** Captors take a share of every account you carry (only `keep` of each is kept); a business's money
+   * stays at the business (P7-10). Returns the total taken. @param {Campaign} c */
   function seize(c, keep, why) {
     let taken = 0;
-    const accts = ['purse', 'chest', ...Object.keys(c.accounts?.budgets || {}).map((k) => `budget:${k}`)];
+    const accts = ['purse', 'chest', ...Object.keys(c.accounts?.budgets || {}).map((k) => `budget:${k}`)].filter((a) => !CL.business?.isAccount(a));
     for (const acct of accts) {
       const n = balance(c, acct) - Math.floor(balance(c, acct) * keep);
       if (n > 0 && transfer(c, acct, WORLD, n, why)) taken += n;
@@ -94,7 +103,7 @@
   const recent = (c, n = 12) => (c.ledger || []).slice(-n).reverse();
 
   /** An account's name for people. */
-  const label = (acct) => (acct === 'purse' ? 'your purse' : acct === 'chest' ? 'the company chest' : acct === WORLD ? 'outside' : `${acct.slice(7)}'s budget`);
+  const label = (acct) => CL.business?.label(acct) || (acct === 'purse' ? 'your purse' : acct === 'chest' ? 'the company chest' : acct === WORLD ? 'outside' : `${acct.slice(7)}'s budget`);
 
   // ---- Saves ----
 
@@ -112,5 +121,5 @@
     }
   }
 
-  CL.accounts = { LEDGER_MAX, WORLD, blank, balance, transfer, earn, spend, pay, seize, total, recent, label, sanitize };
+  CL.accounts = { LEDGER_MAX, WORLD, known, blank, balance, transfer, earn, spend, pay, seize, total, recent, label, sanitize };
 })(typeof window !== 'undefined' ? window : globalThis);

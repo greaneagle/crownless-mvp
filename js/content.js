@@ -28,6 +28,7 @@
     'tips',
     'world_events',
     'tournaments',
+    'businesses',
   ];
 
   const raw = () => root.CROWNLESS_CONTENT || {};
@@ -319,6 +320,7 @@
     CL.news?.validate(C, err);
     CL.happenings?.validate(C, err); // world events (P7-08)
     CL.tourney?.validate(C, err); // tournaments (P7-09)
+    CL.business?.validate(C, err); // businesses: the mill (P7-10)
     CL.tips?.validate(C, err);
     for (const e of Object.values(C.encounters || {})) {
       if (!C.battle_maps?.[e.map]) err(`encounter ${e.id}: unknown map ${e.map}`);

@@ -3,7 +3,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { loadGame } = require('./helpers/load');
 
-const GOODS = ['grain', 'salt', 'wool', 'iron', 'cloth', 'tools', 'timber', 'wine']; // W-05b: timber and wine
+const GOODS = ['grain', 'salt', 'wool', 'iron', 'cloth', 'tools', 'timber', 'wine', 'flour']; // W-05b: timber and wine; P7-10: flour
 
 test('eight trade goods; every trading settlement has a market, forts do not', () => {
   const { CL } = loadGame();
@@ -73,6 +73,14 @@ test('each unit moves the price; scarcity stays within 0.8–1.4; days restock t
   assert.ok(Math.abs(c.markets.oakford.grain - 0.8135) < 1e-3, 'closes 10% of the gap per day');
   T.drift(c, 60);
   assert.ok(Math.abs(c.markets.oakford.grain - 0.8) < 0.001);
+  // P7-10: restocking doesn't depend on how finely time passes (on the map, a few minutes a frame).
+  c.markets.oakford.grain = 0.9;
+  c.markets.highmere.grain = 0.9;
+  T.drift(c, 1);
+  const once = c.markets.oakford.grain;
+  c.markets.oakford.grain = 0.9;
+  for (let i = 0; i < 24 * 60; i++) T.drift(c, 1 / (24 * 60));
+  assert.ok(Math.abs(c.markets.oakford.grain - once) < 1e-4, `${c.markets.oakford.grain} vs ${once}`);
   c.roster.push(...Array.from({ length: 60 }, (_, i) => ({ id: 100 + i, troop: 'levy', xp: 0, woundedUntil: null })));
   T.buy(c, 'saltmere', 'tools', 100);
   assert.equal(c.markets.saltmere.tools, 1.4, 'clamped at the top');

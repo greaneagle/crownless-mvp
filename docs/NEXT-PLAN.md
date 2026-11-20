@@ -219,7 +219,7 @@ All three styles are viable over 60 days and every run resumed exactly. The gap 
 | **P7-07** | ✅ **Done in 2.18.0.** Soldier traits | Done | S | — | optional field |
 | **P7-08** | ✅ **Done in 2.19.0.** Dynamic world events | Done | M | W-07 | v16 |
 | **P7-09** | ✅ **Done in 2.20.0.** Tournament (foot-melee duels in a new one-on-one arena mode) | Done | **M–L** | — | v17 |
-| **P7-10** | First business: a mill | Specified | M | V2-11, W-05b | yes |
+| **P7-10** | ✅ **Done in 2.21.0.** First business: a mill | Done | M | V2-11, W-05b | v18 |
 | **P7-11** | Battle extras (formations, an objective, terrain) | Specified | M | B-01, W-05a | — |
 | **P7-T** | Tuning and acceptance | Specified | S | all above | — |
 

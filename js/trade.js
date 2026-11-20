@@ -86,14 +86,15 @@
 
   /**
    * Buy goods at a market: the same prices and scarcity for everyone. By default with your purse into
-   * your cargo; the merchant (V2-12) passes its own budget account and stock.
-   * @param {{ account?: string, hold?: Record<string, number>, by?: string }} [opts]
+   * your cargo; the merchant (V2-12) passes its own budget account and stock. A mill (P7-10) passes
+   * `carry: false`: what it buys stays at the mill, never in the company's wagons.
+   * @param {{ account?: string, hold?: Record<string, number>, by?: string, carry?: boolean }} [opts]
    */
-  function buy(c, sid, good, qty = 1, { account = 'purse', hold = c.cargo, by = null } = {}) {
+  function buy(c, sid, good, qty = 1, { account = 'purse', hold = c.cargo, by = null, carry = true } = {}) {
     if (!hasMarket(sid) || !(qty > 0)) return { ok: false, reason: 'No market here' };
     const q = quote(c, sid, good, qty, 'buy');
     if (CL.accounts.balance(c, account) < q.total) return { ok: false, reason: 'Not enough crowns' };
-    if (cargoWeight(c) + qty * CL.content.get('markets', good).weight > capacity(c)) {
+    if (carry && cargoWeight(c) + qty * CL.content.get('markets', good).weight > capacity(c)) {
       return { ok: false, reason: 'Your party cannot carry that much' };
     }
     if (!CL.accounts.spend(c, q.total, `${by ? `${by}: ` : 'market: '}bought ${qty} ${good}`, account)) return { ok: false, reason: 'Not enough crowns' };
@@ -166,14 +167,18 @@
 
   // ---- Time ----
 
-  /** Restock: every market drifts back toward its baseline as days pass. */
+  /**
+   * Restock: every market drifts back toward its baseline as days pass. Kept to a millionth, not the
+   * thousandth a trade rounds to (P7-10): on the map time passes a few minutes a frame, and rounding
+   * each tiny step to a thousandth threw the restocking away, so markets hardly recovered on the road.
+   */
   function drift(c, days) {
     if (days <= 0) return;
     const k = 1 - (1 - DRIFT_PER_DAY) ** days;
     for (const [sid, table] of Object.entries(c.markets)) {
       const base = baseline(sid);
       if (!base) continue;
-      for (const g of Object.keys(table)) table[g] = round2(table[g] + (base[g] - table[g]) * k);
+      for (const g of Object.keys(table)) if (g in base) table[g] = Math.round((table[g] + (base[g] - table[g]) * k) * 1e6) / 1e6;
     }
   }
 

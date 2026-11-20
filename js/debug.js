@@ -474,6 +474,25 @@
       case 'days':
         passDays(n);
         break;
+      case 'millWeek': {
+        // P7-10: your mill runs a week now, as on a payday (the law first).
+        if (!CL.business.get(c())) return CL.ui.message('You own no mill');
+        const w = CL.business.payday(c());
+        log('mill week', { profit: w?.profit ?? null });
+        CL.ui.refresh();
+        break;
+      }
+      case 'millHostile': {
+        // P7-10: the owner of your mill's settlement turns Hostile to you (a warning, then seizure).
+        const b = CL.business.get(c());
+        if (!b) return CL.ui.message('You own no mill');
+        const f = CL.realm.owner(b.place, c());
+        CL.realm.adjust(c(), f, -100 - CL.realm.score(c(), f), 'debug');
+        CL.business.tick(c());
+        log('mill owner hostile', { place: b.place, owner: f });
+        CL.ui.refresh();
+        break;
+      }
       case 'tourney': {
         // P7-09: a tournament opens here now (a host town), as if its day had come.
         const sid = c().world.location;

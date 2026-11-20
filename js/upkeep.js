@@ -136,6 +136,7 @@
         CL.scout?.payday(c);
         CL.detachments?.payday(c);
         CL.retinue?.payday(c); // companions' wages, and how they feel about them (P7-06)
+        CL.business?.payday(c, d); // your mill runs a week: the law first, then wage, grinding, due (P7-10)
         c.nextWagesDay += WAGE_INTERVAL;
       }
       desertionCheck(c);

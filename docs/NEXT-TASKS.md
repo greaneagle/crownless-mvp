@@ -1162,7 +1162,20 @@ _Written 2026-11-18 at build 2.0.0; **reviewed and corrected the same day agains
 
 **Acceptance.** A playable bracket on touch; the anti-farm rules hold.
 
-### P7-10 · First business: a mill (M) — Specified (needs V2-11, W-05b)
+### P7-10 · First business: a mill (M) — ✅ Done in 2.21.0
+
+**Done (2.21.0, 2026-11-20).** `js/business.js` (`CL.business`), rules in `data/businesses.js`, a new trade good `flour` (base 18) in `data/markets.js` with a baseline in every market (½ grain's + ½, +0.1 in towns):
+- **Buying:** in a village (300) or town (600) with a market, from the town screen, not from a Hostile owner, one mill at a time. The card shows what the village miller would make at today's prices (`estimate`).
+- **Running it:** each payday (from `js/upkeep.js`, with that day), with no clicks: the law first, then the manager's wage from the mill's own money (`budget:mill`; too little and it stands idle), an 8% chance of a breakdown (20 crowns, no grinding), then grinding through `CL.trade.buy` / `sell` in that market (the same prices and scarcity; `carry: false`, so nothing in the wagons). It grinds a sack only while its flour, after the owner's 10% due, beats its grain by the margin (1 crown), within the price rules, its money and the week (village miller 20 sacks, yield 1, 6 a week; master miller 30, yield 1.2, 12 a week, 60 to hire). The report gives the numbers and, when it stopped short or had a bad week, why.
+- **Ledger:** every transfer touching the mill's money goes to the mill's own book (120 lines); money between it and your purse is in both. Captors never take it (it stays at the mill). Over 90 days its money equals its book exactly and the sum of the weekly reports.
+- **Measured (13 weeks, 300 put in):** Oakford +236 (master +326), Highmere +90, Stonebridge +394 (master +778), dear-grain Eldmoor and Dunmarsh lose the wage each week and say why.
+- **The owner's law:** every owner takes the due. A change of hands is told. A Hostile owner (now or later) warns and seizes the mill and its money after 7 days unless you sell or mend relations; told in a message, the mill's log, the chronicle and the list of past businesses. The law is checked first on payday, so a mill seized that day neither pays nor grinds (§27.4). Selling works from anywhere: 60% of the price paid (never more) plus its money.
+- **Expert:** price rules (most for grain 8–14, least for flour 11–17, or none).
+- **Fix on the way:** `CL.trade.drift` rounded each step to a thousandth, so on the map (a few minutes a frame) markets hardly restocked; it keeps a millionth now, and a day in 1,440 steps restocks like one.
+- **Save v18:** `businesses` = `{ owned: [mill], past }`; chronicle kind `business`. Tests: `tests/business.test.js` (17), `tests/browser/business.spec.js`. Debug: Mill: run a week; Mill: owner Hostile.
+- **Not done:** the inn (later); settlements other than forts never change hands yet, so the change-of-hands case is tested by setting the owner directly.
+
+**Spec (kept for the record).**
 
 **Build.**
 - **Buying:** a mill in a village or town.

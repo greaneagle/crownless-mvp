@@ -201,6 +201,6 @@ test('saves: kept; junk repaired; the gone stay gone; a v14 save migrates on (v1
   v14.version = 14;
   delete v14.retinue;
   const m = CL.save.fromRaw(v14);
-  assert.equal(m.campaign.version, 17);
+  assert.equal(m.campaign.version, 18);
   assert.deepEqual(plain(m.campaign.retinue), []);
 });

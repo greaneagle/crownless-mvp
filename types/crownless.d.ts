@@ -226,6 +226,8 @@ declare global {
     /** v16 (P7-08): world events: those open, the last few ended, cooldowns per kind and region. */
     /** v17 (P7-09): tournaments: each host's schedule and wins, those open, your bracket, your rival. */
     tourney: { hosts: Record<string, { next: number; wins: number; entered: number | null }>; open: any[]; bracket: any; rival: { name: string; culture: string; skill: number; from: string; beatYou: number; beaten: number } | null };
+    /** v18 (P7-10): your mill, and those sold or seized. */
+    businesses: Businesses;
     happenings: { open: Happening[]; past: { id: number; kind: ContentId; place: string; day: number; result: string; dest?: string }[]; cool: Record<string, number>; next: number; nextId: number };
   }
 
@@ -306,6 +308,45 @@ declare global {
     /** P7-09 'tourney': the round you went out in (0–2). */
     round?: number;
     dest?: string;
+    /** P7-10 'business' (event bought / sold / seized): who seized it. */
+    by?: string;
+  }
+
+  /** P7-10: a week at the mill (js/business.js). */
+  interface MillWeek {
+    day: number;
+    ground: number;
+    made: number;
+    sales: number;
+    grain: number;
+    wage: number;
+    repairs: number;
+    due: number;
+    profit: number;
+    cause: string | null;
+    /** Why it stopped short of the week in a good week. */
+    stop: string | null;
+  }
+
+  /** P7-10: your mill. Its money is the account `budget:mill`; `book` is its own ledger. */
+  interface Mill {
+    kind: 'mill';
+    place: string;
+    bought: number;
+    paid: number;
+    owner: string;
+    manager: string;
+    rules: { maxInput: number | null; minOutput: number | null };
+    seizeOn: number | null;
+    weeks: number;
+    profit: number;
+    log: { day: number; text: string; bad?: boolean }[];
+    book: LedgerEntry[];
+  }
+
+  interface Businesses {
+    owned: Mill[];
+    past: { kind: string; place: string; day: number; end: string; by?: string }[];
   }
 
   /** P7-08: an open world event (js/happenings.js). */

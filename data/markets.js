@@ -1,6 +1,6 @@
 /* Crownless content: markets. Plain classic script; no modules, no fetch.
  * GDD §9: six trade goods with base prices and cargo weight; W-05b adds timber (the northern forests)
- * and wine (the southern coast). `tradeGood: false` marks entries
+ * and wine (the southern coast); P7-10 adds flour (milled from grain). `tradeGood: false` marks entries
  * priced here but not traded on the market screen (food rations are bought from the supplies menu).
  * Icons are placeholder glyphs until the art pass. */
 (function (root) {
@@ -15,6 +15,8 @@
     tools: {id:'tools',name:'Tools',basePrice:40,weight:3,tradeGood:true,icon:'🔨'},
     timber: {id:'timber',name:'Timber',basePrice:22,weight:3,tradeGood:true,icon:'🪵'},
     wine: {id:'wine',name:'Wine',basePrice:36,weight:2,tradeGood:true,icon:'🍷'},
+    // P7-10: what a mill makes of grain; dearer in the towns that bake for many.
+    flour: {id:'flour',name:'Flour',basePrice:18,weight:1,tradeGood:true,icon:'🥖'},
     food_ration: {id:'food_ration',name:'Food Ration',basePrice:8,weight:1,tradeGood:false,icon:'🍞'},
     // P7-01: the surgeon's supply, bought at any market like food (js/surgeon.js); one saves one life.
     medicine: {id:'medicine',name:'Medicine',basePrice:15,weight:0,tradeGood:false,icon:'⚕️'}

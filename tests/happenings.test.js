@@ -268,7 +268,7 @@ test('saves: kept; junk repaired; a band’s event needs its band; a v15 save mi
   v15.version = 15;
   delete v15.happenings;
   const m = CL.save.fromRaw(v15);
-  assert.equal(m.campaign.version, 17);
+  assert.equal(m.campaign.version, 18);
   assert.deepEqual(plain(m.campaign.happenings.open), []);
   assert.ok(m.campaign.happenings.next > c.day);
 });

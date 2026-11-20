@@ -166,6 +166,15 @@
 .happening .row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:flex-start}
 .happening .why{color:#d08a7a;font-size:calc(12px * var(--ui-scale))}
 .happeningsCard i{color:#c9ae7a}
+/* P7-10: the mill card (town screen and Accounts) */
+.happening.mill{border-color:#6f7a45;background:#141709}
+.happening.mill .estimate{color:#c9d39a}
+.happening.mill .warn{color:#f08a6a;font-weight:bold}
+.happening.mill .millLog{margin:4px 0;padding-left:18px}
+.happening.mill .millLog li.bad{color:#d8a37a}
+.happening.mill .millRules{margin-top:6px}
+.happening.mill .millRules label{display:block;margin:4px 0}
+.happening.mill .millRules select{font-size:inherit;max-width:100%}
 
 .cheatNote{font-size:calc(12px * var(--ui-scale));color:#d9c8a2;margin:4px 0}
 

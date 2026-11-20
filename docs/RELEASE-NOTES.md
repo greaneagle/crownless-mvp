@@ -1,5 +1,26 @@
 # Crownless — Release Notes
 
+## v2.21.0 — The mill (P7-10) · 2026-11-20
+
+### New
+- **Your first business: a mill.** Buy one in a village (300 crowns) or a town (600) with a market, from the town screen. Before you buy, its card says what the village miller would make there at today's prices.
+- **It runs itself.** Every payday the miller buys grain and sells flour in that market, at the same prices as you, paying for grain and the wage from the mill's own money. You put crowns in or take them out at the mill.
+- **No magic money.** The miller grinds a sack only while its flour still pays for its grain. A busy week makes grain dearer and flour cheaper there, so where grain is dear a mill may earn nothing.
+- **Weekly reports.** Every week's numbers are on the mill's card and in Accounts, and a bad week says why: grain too dear, no money for the wage, a cracked millstone, your price limits.
+- **The owner's law.** The settlement's owner takes a tenth of the sales. If the place changes hands you are told. If its owner turns Hostile to you, you are warned, and seven days later they seize the mill and its money unless you sell it first or mend relations.
+- **Selling.** You can sell the mill from anywhere, for 60% of what you paid, plus its money.
+- **For experts:** hire a master miller (more flour from each sack), and set price rules for the most to pay for grain and the least to take for flour.
+- **Flour** is a new trade good in every market.
+
+### Fixed
+- Markets now restock while you travel. Restocking used to be rounded away in the map's small time steps, so prices recovered mostly when you rested.
+
+### Under the hood
+- A business keeps its own ledger, so a week's trading never pushes your own lines out of the Accounts ledger. Captors never take a mill's money.
+- Save schema v18 (businesses); older saves migrate.
+- Debug tools: Mill: run a week; Mill: owner Hostile.
+- 692 fast and 9 slow Node tests, 149 browser tests (9 more apply to one device only and are skipped on the other).
+
 ## v2.20.0 — Tournaments (P7-09) · 2026-11-19
 
 ### New
