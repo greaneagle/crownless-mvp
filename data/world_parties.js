@@ -6,6 +6,78 @@
   root.CROWNLESS_CONTENT = root.CROWNLESS_CONTENT || {};
   var C = root.CROWNLESS_CONTENT;
   C.party_templates = {
+    // P8-01: the lords of Valedorn ride with their household (js/lords.js): one party a lord, sized by
+    // what they hold, of the realm's own troops; the lord fights in person as a guard.
+    lord_valedorn: {
+      id: 'lord_valedorn',
+      name: 'Valedorn Lord',
+      kind: 'lord',
+      faction: 'valedorn',
+      hostile: false,
+      count: 0, // not kept at a count: every free lord has one (js/lords.js)
+      respawnDays: 0,
+      speed: 3.7,
+      detection: 8,
+      leader: 'guard',
+      reward: { goldBase: 40, goldPerKill: 5, renown: 12 },
+      lootBySize: [[99, 'high']],
+      text: '"Hold there. You ride on {lord}’s land: keep to the roads and keep the peace."',
+      hostileText: '"There is the one the Crown has outlawed. Ride them down!"'
+    },
+    // P8-01: the lords of Aurelian ride with their household (js/lords.js): one party a lord, sized by
+    // what they hold, of the realm's own troops; the lord fights in person as a legionary.
+    lord_aurelian: {
+      id: 'lord_aurelian',
+      name: 'Aurelian Lord',
+      kind: 'lord',
+      faction: 'aurelian',
+      hostile: false,
+      count: 0, // not kept at a count: every free lord has one (js/lords.js)
+      respawnDays: 0,
+      speed: 3.7,
+      detection: 8,
+      leader: 'legionary',
+      reward: { goldBase: 40, goldPerKill: 5, renown: 12 },
+      lootBySize: [[99, 'high']],
+      text: '"By the Magistracy’s law, state your business on these roads. {lord} keeps the peace here."',
+      hostileText: '"The law has a warrant for you. Take them alive if you can."'
+    },
+    // P8-01: the lords of Hrothmark ride with their household (js/lords.js): one party a lord, sized by
+    // what they hold, of the realm's own troops; the lord fights in person as a huscarl.
+    lord_hrothmark: {
+      id: 'lord_hrothmark',
+      name: 'Hrothmark Lord',
+      kind: 'lord',
+      faction: 'hrothmark',
+      hostile: false,
+      count: 0, // not kept at a count: every free lord has one (js/lords.js)
+      respawnDays: 0,
+      speed: 3.7,
+      detection: 8,
+      leader: 'huscarl',
+      reward: { goldBase: 40, goldPerKill: 5, renown: 12 },
+      lootBySize: [[99, 'high']],
+      text: '"A long way from home, southerner. {lord}’s hall keeps open doors to those who keep the peace."',
+      hostileText: '"The King’s enemies do not walk the north. Shields up!"'
+    },
+    // P8-01: the lords of Vessaro ride with their household (js/lords.js): one party a lord, sized by
+    // what they hold, of the realm's own troops; the lord fights in person as a pavisier.
+    lord_vessaro: {
+      id: 'lord_vessaro',
+      name: 'Vessaro Lord',
+      kind: 'lord',
+      faction: 'vessaro',
+      hostile: false,
+      count: 0, // not kept at a count: every free lord has one (js/lords.js)
+      respawnDays: 0,
+      speed: 3.7,
+      detection: 8,
+      leader: 'pavisier',
+      reward: { goldBase: 40, goldPerKill: 5, renown: 12 },
+      lootBySize: [[99, 'high']],
+      text: '"The League’s roads are for trade. {lord} wishes you a profitable journey, and a quiet one."',
+      hostileText: '"There is a price on your head, and we mean to collect it."'
+    },
     bandits: {
       id: 'bandits',
       name: 'Road Reavers',

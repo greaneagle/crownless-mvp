@@ -321,7 +321,11 @@ test('2.23.0 saves (fixtures from 9826a3e) load with the same world, and the sto
       for (const k of CL.realm.kingdoms()) assert.equal(CL.story.test({ owner: fort, is: k.id }, c), o === k.id);
     }
     assert.deepEqual(plain(CL.realm.invariants(c)), [], f.file);
-    assert.equal(JSON.stringify(c.people), JSON.stringify(CL.realm.startingPeople().people), 'the people as 2.24.0 begins them');
+    // The people as 2.24.0 begins them; a lord whose home another realm holds now (Q4's Greywall) has made
+    // the capital, or a seat of their own, their home (P8-01).
+    const homeless = (p) => ({ ...p, home: null });
+    assert.equal(JSON.stringify(Object.values(c.people).map(homeless)), JSON.stringify(Object.values(CL.realm.startingPeople().people).map(homeless)), 'the people as 2.24.0 begins them');
+    for (const p of Object.values(c.people)) assert.equal(CL.realm.owner(p.home, c), p.realm, `${p.id}'s home is their realm's`);
     assert.deepEqual(plain(c.followers ? Object.keys(c.followers).filter((k) => c.followers[k]).sort() : []), f.expect.followers);
     assert.deepEqual(plain(c.retinue.map((m) => m.id)), f.expect.retinue);
     assert.deepEqual(plain(c.businesses.owned.map((b) => ({ place: b.place, owner: b.owner, seizeOn: b.seizeOn }))), f.expect.mills);

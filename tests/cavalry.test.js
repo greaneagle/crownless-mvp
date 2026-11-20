@@ -149,7 +149,7 @@ test('every troop type can appear in play (the 15 from the GDD, the Sellsword fr
   }
   // Enemies: encounter waves and bandit bands.
   for (const e of Object.values(CL.content.table('encounters'))) for (const w of e.waves) for (const id of Object.keys(w)) reach.add(id);
-  for (const t of Object.values(CL.content.table('party_templates'))) for (const id of Object.keys(t.troops)) reach.add(id);
+  for (const t of Object.values(CL.content.table('party_templates'))) for (const id of Object.keys(t.troops || {})) reach.add(id);
   const all = Object.keys(CL.content.table('troops')).filter((id) => id !== 'hero');
   assert.equal(all.length, 28); // 15 from the GDD; the Sellsword (V2-03b) is trained from Mercenaries; 6 each for Hrothmark and Vessaro (W-05b)
   assert.deepEqual(all.filter((id) => !reach.has(id)), []);

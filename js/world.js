@@ -203,8 +203,10 @@
     if (mapDist(w.x, w.y, target.x, target.y) <= ARRIVE_EPSILON) arrive(target);
     else {
       const e = CL.scout?.onSetOff(CL.campaign, target); // how long, and what is known on the way (P7-02)
-      // A settlement's holder, and who has its gates (P8-02).
-      const line = target.type === 'settlement' ? CL.realm.tapLine(target.id, CL.campaign) : null;
+      // A settlement's holder, and who has its gates (P8-02); a lord, and what they're doing (P8-01).
+      const lp = target.type === 'party' ? CL.parties.find(CL.campaign, target.id) : null;
+      const lord = lp?.lordId ? CL.lords.describe(CL.campaign, lp) : null;
+      const line = target.type === 'settlement' ? CL.realm.tapLine(target.id, CL.campaign) : lord ? `${lord.who}: ${lord.doing}.` : null;
       if (line) CL.ui.message(e ? `${e.text} ${line}` : line);
     }
   }
@@ -385,7 +387,10 @@
     if (!win) {
       CL.clock.pass(CL.campaign, 'capture'); // held captive, then released (data/world_map.js time.capture)
       const c = CL.campaign;
+      // P8-01: a lord's captive is ransomed and let go at that lord's home.
+      const lord = CL.lords?.captorOf(c);
       const s =
+        (lord && settlement(CL.lords.homeOf(c, lord))) ||
         nearestSettlement(w.x, w.y, (x) => CL.realm.isKingdom(CL.realm.owner(x.id, c)) && CL.rights.may(c, 'player', 'shelter', x.id).ok) ||
         nearestSettlement(w.x, w.y, (x) => CL.realm.isKingdom(CL.realm.owner(x.id, c))) ||
         start();
@@ -393,6 +398,7 @@
       w.y = s.mapY;
       w.location = null;
       CL.game.releasedAt = s.id;
+      CL.game.ransomedBy = lord;
     }
   }
 
@@ -402,8 +408,10 @@
     g.siteId = null;
     g.partyId = null;
     CL.ui.changeMode('map');
+    CL.ui.openRansom?.(); // a ransom offer waiting (P8-01)
     if (g.releasedAt) {
-      CL.ui.message(`Your captors release you outside ${settlement(g.releasedAt).name}.`);
+      CL.ui.message(g.ransomedBy ? `${CL.realm.titled(g.ransomedBy, CL.campaign)} takes your ransom and lets you go outside ${settlement(g.releasedAt).name}.` : `Your captors release you outside ${settlement(g.releasedAt).name}.`);
+      g.ransomedBy = null;
       g.releasedAt = null;
     }
   }

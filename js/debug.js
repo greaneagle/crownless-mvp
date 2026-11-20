@@ -211,12 +211,14 @@
     Object.assign(g, { travel: null, waiting: false });
     const ids = Object.values(CL.content.table('party_templates')).filter((t) => t.count > 0).map((t) => t.id); // not your own detachments
     const b = CL.world.bounds();
-    for (let k = 0; c.parties.length < n; k++) {
+    // P8-01: `n` regular parties, and every lord riding on top of them.
+    for (let k = 0; c.parties.filter((p) => !p.lordId).length < n; k++) {
       const p = CL.parties.spawn(c, ids[k % ids.length]);
       [p.x, p.y] = CL.world.clampToMap(CL.autoresolve.next(c) * b.w, CL.autoresolve.next(c) * b.h, 2);
     }
+    const lords = c.parties.filter((p) => p.lordId).length;
     g.mapStress = { parties: n, days: 0 };
-    CL.ui.message(`Map stress test: ${n} parties, a day a second, 8 seconds…`);
+    CL.ui.message(`Map stress test: ${n} parties and ${lords} lords, a day a second, 8 seconds…`);
     log('map stress test started', { parties: n });
     CL.mapView.startTest((r) => {
       const t0 = performance.now();
@@ -224,7 +226,7 @@
       CL.storage.set(STRESS_PROBE_KEY, text);
       const saveMs = Number((performance.now() - t0).toFixed(1));
       CL.storage.remove(STRESS_PROBE_KEY);
-      const result = { ...r, parties: n, days: Number(g.mapStress.days.toFixed(1)), saveMs, saveKb: Math.round(text.length / 1024) };
+      const result = { ...r, parties: n, lords, days: Number(g.mapStress.days.toFixed(1)), saveMs, saveKb: Math.round(text.length / 1024) };
       g.mapStress = null;
       g.contactParty = null;
       const back = JSON.parse(snapshot);
@@ -234,7 +236,7 @@
       g.mapStressResult = result;
       log('map stress test', result);
       const run = (x) => `${x.zoom}×: ${x.fps} fps, sim ${x.simMs} ms, drawing ${x.drawMs} ms, slowest ${x.worstFrameMs} ms`;
-      CL.ui.message(`Map stress ${n}: ${r.runs.map(run).join(' · ')} · ${result.days} days · save ${saveMs} ms (${result.saveKb} KB)`);
+      CL.ui.message(`Map stress ${n} + ${lords} lords: ${r.runs.map(run).join(' · ')} · ${result.days} days · save ${saveMs} ms (${result.saveKb} KB)`);
       g.messageUntil = performance.now() + 15000;
     });
   }
@@ -451,6 +453,43 @@
         log('rights', { place: sid, ...out });
         CL.ui.message(`Your rights at ${CL.content.get('settlements', sid).name} are in Logs · F3`);
         break;
+      }
+      case 'lordNear':
+      case 'lordCapture':
+      case 'lordAway': {
+        // P8-01: the nearest lord's party.
+        const w = c().world;
+        const lords = c().parties.filter((p) => p.lordId);
+        const near = lords.sort((a, b) => CL.world.mapDist(w.x, w.y, a.x, a.y) - CL.world.mapDist(w.x, w.y, b.x, b.y))[0];
+        if (!near) return CL.ui.message('No lord is riding');
+        const name = CL.realm.titled(near.lordId, c());
+        if (act === 'lordNear') {
+          Object.assign(near, { x: w.x + 2, y: w.y, tx: null, ty: null });
+          log('lord near', { lord: near.lordId });
+          CL.ui.message(`${name} rides up beside you`);
+        } else if (act === 'lordCapture') {
+          CL.lords.beaten(c(), near, 'player');
+          log('lord captured', { lord: near.lordId });
+          CL.ui.message(`${name} is your prisoner`);
+        } else {
+          const realm = c().people[near.lordId].realm;
+          const rival = CL.realm.realms().map((f) => f.id).find((f) => f !== realm);
+          CL.lords.beaten(c(), near, rival);
+          log('lord held off-screen', { lord: near.lordId, by: rival });
+          CL.ui.message(`${name} is held by the ${CL.content.get('factions', rival).name}`);
+        }
+        break;
+      }
+      case 'ransomNow': {
+        const x = CL.lords.prisoners(c()).find((p) => p.by === 'player');
+        if (!x) return CL.ui.message('You hold no prisoner');
+        x.offerDay = c().day;
+        log('ransom offer now', { lord: x.lord });
+        CL.save.write();
+        toggle(false);
+        if (CL.game.mode !== 'battle' && CL.game.mode !== 'result') CL.ui.changeMode('map');
+        CL.ui.openRansom();
+        return;
       }
       case 'holdingClaim': {
         const sid = $('#cheatHolding').value;

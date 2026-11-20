@@ -1,0 +1,308 @@
+// P8-01 · Lords on the map: a party a lord, sized by what they hold; intentions; encounters, sides,
+// capture and ransom both ways, off-screen captivity; save v20 and 2.25.0's saves.
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const { loadGame } = require('./helpers/load');
+const { newCampaign } = require('../scripts/simulate-campaign');
+const { makeBot } = require('./helpers/campaign-bot');
+
+const plain = (v) => JSON.parse(JSON.stringify(v));
+const byKey = (c, key) => Object.keys(c.people).find((id) => c.people[id].key === key);
+const count = (troops) => Object.values(troops).reduce((a, b) => a + b, 0);
+const FIX = path.join(__dirname, 'fixtures', 'saves-2.25');
+
+/** A world with the lords riding (and the other parties too, unless `only`). */
+function world({ only = true, ...opts } = {}) {
+  const env = loadGame({ party: true, ...opts });
+  const { CL } = env;
+  const c = CL.campaign;
+  c.partySpawns = {};
+  if (only) for (const t of Object.values(CL.content.table('party_templates'))) if (t.kind !== 'lord') c.partySpawns[t.id] = 1e9;
+  CL.lords.ensure(c, c.day, true);
+  return { ...env, c, L: CL.lords };
+}
+
+test('every free lord rides with their household, formed at home; rulers keep to their halls', () => {
+  const { CL, c, L } = world();
+  const lords = c.parties.filter((p) => p.lordId);
+  assert.equal(lords.length, 22, 'about 24: every lord but the four rulers');
+  for (const id of Object.values(c.rulers)) assert.equal(L.partyOf(c, id), null);
+  for (const p of lords) {
+    const home = CL.content.table('settlements')[c.people[p.lordId].home];
+    assert.deepEqual([p.x, p.y], [home.mapX, home.mapY], `${p.lordId} at home`);
+    assert.equal(CL.content.get('party_templates', p.template).faction, c.people[p.lordId].realm);
+  }
+  assert.deepEqual(plain(CL.realm.invariants(c)), []);
+  // Idempotent: nobody rides twice.
+  L.ensure(c, c.day, true);
+  assert.equal(c.parties.filter((p) => p.lordId).length, 22);
+});
+
+test('party sizes follow what a lord holds, and change as land is granted and lost', () => {
+  const { CL, c, L } = world();
+  const size = (key) => L.sizeFor(c, byKey(c, key));
+  assert.equal(size('tancred_greymantle'), 12, 'landless');
+  assert.equal(size('hawise_greymantle'), 16, 'a village');
+  assert.equal(size('hamon_greymantle'), 24, 'a fort and a village');
+  for (const key of ['tancred_greymantle', 'hawise_greymantle', 'hamon_greymantle']) assert.equal(count(L.partyOf(c, byKey(c, key)).troops), size(key), key);
+  // More veterans with a higher standing.
+  const share = (key) => {
+    const t = L.partyOf(c, byKey(c, key)).troops;
+    const T3 = Object.entries(t).filter(([id]) => CL.content.troop(id).tier === 'T3').reduce((n, [, k]) => n + k, 0);
+    return T3 / count(t);
+  };
+  assert.ok(share('hamon_greymantle') > share('tancred_greymantle'));
+  // A grant: Tancred is given Oakford and leads more; Hamon loses Greywall and leads fewer.
+  const tancred = byKey(c, 'tancred_greymantle');
+  CL.realm.transfer(c, 'oakford', { holder: tancred, reason: 'test' });
+  assert.equal(L.sizeFor(c, tancred), 16);
+  CL.realm.setOwner(c, 'greywall_fort', 'aurelian', 'test');
+  assert.equal(size('hamon_greymantle'), 12, 'landless now');
+  // Back home, the household refills to what they hold now.
+  const p = L.partyOf(c, tancred);
+  L.refill(c, p);
+  assert.equal(count(p.troops), 16);
+});
+
+test('intentions follow the state: landless lords campaign, nobody rides home from home, the thin go home', () => {
+  const { CL, c, L } = world();
+  const seen = new Set();
+  for (let day = 0; day < 20; day++) {
+    CL.party.advanceDays(1);
+    for (const p of c.parties.filter((q) => q.lordId)) {
+      seen.add(p.intent);
+      const home = CL.content.table('settlements')[c.people[p.lordId].home];
+      const atHome = CL.world.mapDist(p.x, p.y, home.mapX, home.mapY) <= 0.9;
+      if (!CL.realm.fiefsOf(p.lordId, c).length) assert.notEqual(p.intent, 'patrol', `${p.lordId}: landless lords never ride the bounds of their lands`);
+      assert.ok(!(p.intent === 'home' && atHome && p.tx === null), `${p.lordId}: "riding home" while at home`);
+      assert.ok(Object.hasOwn(L.WORDS, p.intent) || p.intent === 'ride', p.intent);
+    }
+    assert.deepEqual(plain(CL.realm.invariants(c)), [], `day ${day}`);
+  }
+  assert.ok(seen.has('patrol') && (seen.has('campaign') || seen.has('ride')), [...seen].join());
+  // A thinned household turns for home and refills there.
+  const p = c.parties.find((q) => q.lordId && q.intent !== 'chase');
+  p.troops = { [Object.keys(p.troops)[0]]: 2 };
+  p.tx = null;
+  CL.party.advanceDays(0.05);
+  assert.equal(p.intent, 'home');
+  assert.equal(L.doingLine(c, p), 'riding home to refill the ranks');
+  for (let i = 0; i < 40 && p.intent === 'home'; i++) CL.party.advanceDays(0.25);
+  assert.equal(p.intent, 'rest');
+  assert.equal(count(p.troops), L.sizeFor(c, p.lordId), 'refilled');
+});
+
+test('the tap card: who the lord is and what they are doing, in two lines', () => {
+  const { c, L } = world();
+  const hamon = L.partyOf(c, byKey(c, 'hamon_greymantle'));
+  const tancred = L.partyOf(c, byKey(c, 'tancred_greymantle'));
+  const bastiano = L.partyOf(c, byKey(c, 'bastiano_lanza'));
+  assert.deepEqual(plain(L.describe(c, hamon)), { who: 'Lord Hamon Greymantle, holder of Greywall Fort and Highmere', doing: 'resting at Greywall Fort' });
+  assert.equal(L.whoLine(c, tancred.lordId), 'Lord Tancred Greymantle, Lord Hamon Greymantle’s son, landless');
+  assert.equal(L.whoLine(c, bastiano.lordId), 'Lord Bastiano Lanza, sworn to Queen Lucrezia Salviati, landless');
+  hamon.intent = 'home';
+  assert.equal(L.doingLine(c, hamon), 'riding home to refill the ranks');
+});
+
+test('meeting a lord: their words, a −25 reputation cost to attack, sides like a patrol', () => {
+  const { CL, c, L } = world();
+  const p = L.partyOf(c, byKey(c, 'hamon_greymantle'));
+  CL.parties.open(p.id);
+  const e = CL.parties.current(c);
+  assert.equal(e.name, 'Lord Hamon Greymantle');
+  assert.match(e.text, /^Lord Hamon Greymantle, holder of Greywall Fort and Highmere, resting at Greywall Fort\. "Hold there\. You ride on Lord Hamon Greymantle’s land/);
+  assert.deepEqual(plain(e.def.leader), { troop: 'guard', name: 'Lord Hamon Greymantle', hp: 2, damage: 1.35 });
+  const rep = c.reputation.valedorn;
+  CL.parties.attack();
+  assert.equal(c.reputation.valedorn, rep - 25);
+  const lead = CL.game.enemies.find((u) => u.named);
+  assert.equal(lead.named, 'Lord Hamon Greymantle');
+  assert.equal(lead.troop, 'guard');
+  assert.equal(lead.maxhp, Math.round(CL.content.troop('guard').hp * 2));
+  CL.debugTools.endBattleNow(true);
+  CL.world.returnToMap();
+  // Sides: a lord stands with their realm, as a patrol does.
+  const R = CL.reinforce;
+  const tancred = L.partyOf(c, byKey(c, 'tancred_greymantle'));
+  assert.equal(R.sideOf(c, tancred, { kind: 'lord', faction: 'valedorn' }), 'enemy', 'against their own realm');
+  assert.equal(R.sideOf(c, tancred, { kind: 'bandit', faction: 'neutral' }), null, 'only a friend gets help');
+  CL.realm.adjust(c, 'valedorn', 100);
+  assert.equal(R.sideOf(c, tancred, { kind: 'bandit', faction: 'neutral' }), 'ally');
+  assert.equal(R.sideOf(c, tancred, { kind: 'lord', faction: 'aurelian' }), 'ally');
+});
+
+test('capture once, ransom once: kin with land pay 100 and 25 a soldier; Hold waits; Release earns renown', () => {
+  const { CL, c, L, uiCalls } = world();
+  const hamon = byKey(c, 'hamon_greymantle');
+  const p = L.partyOf(c, hamon);
+  const led = count(p.troops);
+  CL.parties.open(p.id);
+  CL.parties.attack();
+  CL.debugTools.endBattleNow(true);
+  CL.world.returnToMap();
+  assert.equal(c.people[hamon].status, 'captive');
+  assert.equal(c.people[hamon].heldBy, 'player');
+  assert.equal(L.partyOf(c, hamon), null, 'not on the map');
+  assert.equal(L.prisoners(c).length, 1);
+  assert.ok(c.news.events.some((e) => e.kind === 'lord_captured'));
+  assert.ok(c.news.events.some((e) => e.kind === 'lord_beaten'));
+  assert.equal(CL.parties.find(c, p.id), null);
+  L.ensure(c, c.day, true);
+  assert.equal(L.partyOf(c, hamon), null, 'a captive forms no party');
+  // The offer comes after 2–4 days.
+  const x = L.prisonerOf(c, hamon);
+  assert.ok(x.offerDay >= x.since + 2 && x.offerDay <= x.since + 4);
+  assert.equal(L.answer(c, hamon, 'accept'), null, 'no offer yet');
+  c.day = x.offerDay;
+  assert.equal(L.offerDue(c), x);
+  assert.equal(L.ransomOf(x), 100 + 25 * x.led);
+  assert.ok(x.led >= led, 'the soldiers they led');
+  assert.match(L.offerText(c, x), /^Lady Hawise Greymantle offers \d+ crowns for her brother, Lord Hamon Greymantle, your prisoner since day \d+\.$/, 'kin with land pay');
+  // Hold: another offer in 2–4 days.
+  const held = L.answer(c, hamon, 'hold');
+  assert.ok(held.nextOffer >= c.day + 2 && held.nextOffer <= c.day + 4);
+  assert.equal(L.offerDue(c), null);
+  c.day = held.nextOffer;
+  const gold = c.gold;
+  assert.deepEqual(plain(L.answer(c, hamon, 'accept')), { choice: 'accept', gold: L.ransomOf(x), text: `Lord Hamon Greymantle is ransomed for ${L.ransomOf(x)} crowns.` });
+  assert.equal(c.gold, gold + L.ransomOf(x));
+  assert.equal(L.answer(c, hamon, 'accept'), null, 'never twice');
+  assert.equal(c.people[hamon].status, 'free');
+  assert.deepEqual(plain(c.people[hamon].deeds.map((d) => d.kind)), ['held', 'ransomed']);
+  assert.equal(c.people[byKey(c, 'hawise_greymantle')].deeds.at(-1).kind, 'held_kin', 'a kinsman remembers who held them');
+  assert.ok(c.news.events.some((e) => e.kind === 'lord_ransomed'));
+  L.ensure(c, c.day, true);
+  const back = L.partyOf(c, hamon);
+  assert.equal(count(back.troops), Math.round(L.sizeFor(c, hamon) * L.REGROUP), 'home again with a share of the ranks');
+  assert.equal(back.intent, 'home');
+  // Release for nothing: renown and goodwill; their realm's ruler pays for one with no landed kin.
+  const bastiano = byKey(c, 'bastiano_lanza');
+  L.beaten(c, L.partyOf(c, bastiano), 'player');
+  const y = L.prisonerOf(c, bastiano);
+  c.day = y.offerDay;
+  assert.match(L.offerText(c, y), /^Queen Lucrezia Salviati offers .* for her sworn lord, Lord Bastiano Lanza/);
+  const renown = c.renown;
+  L.answer(c, bastiano, 'release');
+  assert.equal(c.renown, renown + L.RANSOM.freedRenown);
+  assert.equal(c.people[bastiano].deeds.at(-1).kind, 'freed');
+  assert.ok(uiCalls.some((u) => u[0] === 'message' && /without a ransom/.test(u[1])));
+  assert.deepEqual(plain(CL.realm.invariants(c)), []);
+});
+
+test('escape ends a ransom: 3% a day, 8% with under six soldiers', () => {
+  const { CL, c, L } = world({ random: () => 0.05 });
+  const hamon = byKey(c, 'hamon_greymantle');
+  L.beaten(c, L.partyOf(c, hamon), 'player');
+  c.roster = c.roster.slice(0, 5); // under six: 8%
+  let days = 0;
+  while (L.prisonerOf(c, hamon) && days++ < 400) CL.party.advanceDays(1);
+  assert.equal(L.prisonerOf(c, hamon), null, 'escaped in the end');
+  assert.equal(c.people[hamon].status, 'free');
+  c.day += 5;
+  assert.equal(L.answer(c, hamon, 'accept'), null, 'no ransom once they are gone');
+  assert.ok(c.news.events.some((e) => e.kind === 'lord_ransomed' && /escaped/.test(e.text)));
+  // The chances themselves.
+  assert.equal(L.RANSOM.escape, 0.03);
+  assert.equal(L.RANSOM.escapeWeak, 0.08);
+});
+
+test('off-screen: a lord beaten by a rival realm is held 5–15 days, then rides again; Reavers only send them home', () => {
+  const { CL, c, L } = world();
+  const tancred = byKey(c, 'tancred_greymantle');
+  L.beaten(c, L.partyOf(c, tancred), 'aurelian');
+  const x = L.prisonerOf(c, tancred);
+  assert.equal(c.people[tancred].heldBy, 'aurelian');
+  assert.ok(x.release >= c.day + 5 && x.release <= c.day + 15);
+  assert.equal(x.offerDay, null, 'no offer to you');
+  CL.party.advanceDays(16);
+  assert.equal(L.prisonerOf(c, tancred), null);
+  assert.ok(L.partyOf(c, tancred), 'riding again');
+  const hawise = byKey(c, 'hawise_greymantle');
+  assert.equal(L.beaten(c, L.partyOf(c, hawise), null), null);
+  assert.equal(c.people[hawise].status, 'free');
+  L.ensure(c, c.day, true);
+  assert.ok(L.partyOf(c, hawise), 'home again at once, thinner');
+});
+
+test('beaten by a lord: ransomed, not robbed, and let go at their home; your prisoners get free', () => {
+  const { CL, c, L } = world();
+  const avice = byKey(c, 'avice_westmere');
+  const tancred = byKey(c, 'tancred_greymantle');
+  L.beaten(c, L.partyOf(c, tancred), 'player');
+  c.inventory = { bandage: 3 };
+  c.gold = 500;
+  const p = L.partyOf(c, avice);
+  CL.parties.open(p.id);
+  CL.parties.attack();
+  CL.debugTools.endBattleNow(false);
+  assert.equal(CL.game.result.ransomedBy, avice);
+  assert.equal(c.gold, 400, 'you keep at least 80%');
+  assert.deepEqual(plain(c.inventory), { bandage: 3 }, 'nothing taken from your pack');
+  assert.deepEqual(plain(CL.game.result.freedPrisoners), [tancred]);
+  assert.equal(c.people[tancred].status, 'free');
+  CL.world.returnToMap();
+  const home = CL.content.table('settlements')[c.people[avice].home];
+  assert.deepEqual([c.world.x, c.world.y], [home.mapX, home.mapY], 'let go at Westholt');
+  assert.ok(L.partyOf(c, avice), 'the lord keeps the field');
+  assert.deepEqual(plain(CL.realm.invariants(c)), []);
+});
+
+test('saves: prisoners and lords’ parties round-trip; a captive on the map, or held twice, is repaired', () => {
+  const { CL, c, L } = world();
+  const hamon = byKey(c, 'hamon_greymantle');
+  L.beaten(c, L.partyOf(c, hamon), 'player');
+  L.beaten(c, L.partyOf(c, byKey(c, 'decimo_vatro')), 'valedorn');
+  const back = CL.save.fromRaw(plain(c)).campaign;
+  assert.deepEqual(plain(back.prisoners), plain(c.prisoners));
+  assert.deepEqual(plain(back.parties.filter((p) => p.lordId)), plain(c.parties.filter((p) => p.lordId)));
+  const d = plain(c);
+  d.prisoners.push({ ...d.prisoners[0] }, { lord: 'person:999', by: 'player' }, { lord: byKey(c, 'tancred_greymantle'), by: 'valedorn' });
+  d.parties.push({ ...d.parties.find((p) => p.lordId), id: 999 });
+  d.parties.push({ id: 1000, template: 'lord_valedorn', lordId: hamon, x: 10, y: 10, troops: { levy: 3 } });
+  const fixed = CL.save.fromRaw(d).campaign;
+  assert.equal(fixed.prisoners.length, 2, 'held twice, nobody, and by their own realm: dropped');
+  assert.equal(fixed.parties.filter((p) => p.lordId === hamon).length, 0, 'a captive never rides');
+  assert.deepEqual(plain(CL.realm.invariants(fixed)), []);
+  // v19 → v20: no prisoners.
+  const v19 = plain(c);
+  v19.version = 19;
+  delete v19.prisoners;
+  assert.deepEqual(plain(CL.save.migrate(v19).prisoners), []);
+});
+
+test('2.25.0 saves (fixtures from 00d28aa) load: the lords ride out from their homes; the world is as it was', () => {
+  const index = JSON.parse(fs.readFileSync(path.join(FIX, 'index.json'), 'utf8'));
+  assert.deepEqual(index.map((f) => f.expect.build), index.map(() => '2.25.0'));
+  for (const f of index) {
+    const text = fs.readFileSync(path.join(FIX, f.file), 'utf8');
+    const { CL } = loadGame({ party: false });
+    const r = CL.portable.importText(text);
+    assert.equal(r.ok, true, `${f.file}: ${r.reason}`);
+    const c = CL.campaign;
+    assert.equal(c.version, CL.save.VERSION);
+    for (const k of ['gold', 'renown', 'battles', 'victories']) assert.equal(c[k], f.expect[k], `${f.file} ${k}`);
+    assert.deepEqual(plain(c.roster.map((s) => s.id)), f.expect.soldierIds);
+    assert.equal(c.world.location, f.expect.location);
+    const old = JSON.parse(text).campaign;
+    assert.deepEqual(plain(c.parties.filter((p) => !p.lordId).map((p) => p.id)), old.parties.map((p) => p.id), 'every party as it was');
+    assert.equal(c.parties.filter((p) => p.lordId).length, 22, 'and the lords');
+    assert.deepEqual(plain(c.prisoners), []);
+    assert.deepEqual(plain(CL.realm.invariants(c)), [], f.file);
+    const again = loadGame({ party: false }).CL;
+    assert.equal(again.portable.importText(CL.portable.serialize(c)).ok, true);
+    assert.equal(JSON.stringify(again.campaign), JSON.stringify(c), `${f.file}: stable`);
+  }
+});
+
+test('90 days of a bot company with the lords: the invariants hold every day', () => {
+  const { CL } = newCampaign(13);
+  const bot = makeBot(CL);
+  for (let day = 1; day <= 90; day++) {
+    bot.play(1);
+    assert.deepEqual(plain(CL.realm.invariants(CL.campaign)), [], `day ${day}`);
+  }
+  assert.deepEqual(plain(bot.stats.invariants), []);
+  assert.ok(CL.campaign.parties.filter((p) => p.lordId).length >= 18, 'most lords still riding');
+});

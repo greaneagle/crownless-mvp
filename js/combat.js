@@ -179,6 +179,9 @@
     }
     if (opts.plan && !alone) CL.prep.place(g, opts.plan); // the chosen setup (V2-07)
     spawnWave();
+    // P8-01: a lord fights in person, at the head of the first wave: their realm's best foot soldier, stronger, with their name.
+    const lead = enc.leader && !g.duel ? g.enemies.find((u) => u.troop === enc.leader.troop) || g.enemies[0] : null;
+    if (lead) Object.assign(lead, { hp: Math.round(lead.hp * enc.leader.hp), maxhp: Math.round(lead.maxhp * enc.leader.hp), damage: lead.damage * enc.leader.damage, named: enc.leader.name });
     if (g.wagon) CL.ui.message('Keep the Reavers off the wagon: if it burns, the caravan is lost');
     if (g.duel) Object.assign(g.enemies[0], { hp: g.duel.opponent.hp, maxhp: g.duel.opponent.hp, damage: g.duel.opponent.damage, armor: g.duel.opponent.armor, duelist: g.duel.opponent.name });
     CL.reinforce.begin(g); // nearby parties that will join, and when (V2-09)

@@ -30,6 +30,7 @@ test('a new world has its bands, patrols by holdings and caravans (W-05b)', () =
   assert.deepEqual([want('bandit'), want('patrol'), want('caravan')], [11, 13, 5]);
   for (const p of CL.campaign.parties) {
     const t = CL.content.get('party_templates', p.template);
+    if (t.kind === 'lord') continue; // sized by what the lord holds (P8-01, tests/lords.test.js)
     for (const [id, n] of Object.entries(p.troops)) {
       const [lo, hi] = t.troops[id];
       assert.ok(n >= Math.max(1, lo) && n <= hi, `${t.id} ${id}=${n}`);
@@ -291,16 +292,22 @@ test('saved parties are validated; older saves get a populated world', () => {
     ],
   });
   assert.equal(s.rngSeed, 42);
+  // The lords ride out from their homes on load (P8-01), after the saved parties, with the next ids.
+  const regular = s.parties.filter((p) => !p.lordId);
+  const lords = s.parties.filter((p) => p.lordId);
   assert.deepEqual(
-    Array.from(s.parties, (p) => p.id),
+    Array.from(regular, (p) => p.id),
     [3, 6],
   );
-  assert.deepEqual({ ...s.parties[0].troops }, { looter: 4 });
-  assert.equal(s.parties[0].lair, 'looter_camp');
-  assert.deepEqual([s.parties[1].x, s.parties[1].y, s.parties[1].routeIndex, s.parties[1].good], [200, 0, 3, 'salt']);
-  assert.equal(s.nextPartyId, 7);
+  assert.deepEqual({ ...regular[0].troops }, { looter: 4 });
+  assert.equal(regular[0].lair, 'looter_camp');
+  assert.deepEqual([regular[1].x, regular[1].y, regular[1].routeIndex, regular[1].good], [200, 0, 3, 'salt']);
+  assert.equal(lords.length, 22);
+  assert.equal(lords[0].id, 7);
+  assert.equal(s.nextPartyId, 7 + lords.length);
   const old = CL.save.sanitize({ version: 2, roster: [] });
-  assert.equal(old.parties.length, 29); // W-05b: 11 bands, 13 patrols, 5 caravans
+  assert.equal(old.parties.filter((p) => !p.lordId).length, 29); // W-05b: 11 bands, 13 patrols, 5 caravans
+  assert.equal(old.parties.filter((p) => p.lordId).length, 22); // P8-01: every lord but the rulers
 });
 
 test('waiting on the map passes time', () => {

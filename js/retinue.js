@@ -126,7 +126,7 @@
       nudge(c, m, win ? WIN : LOSS, win ? 'win' : 'loss');
     }
     if (win && foe === 'bandit') onEvent(c, 'bandits_beaten');
-    if (attacked && (foe === 'patrol' || foe === 'caravan')) onEvent(c, 'kingdom_attacked');
+    if (attacked && (foe === 'patrol' || foe === 'caravan' || foe === 'lord')) onEvent(c, 'kingdom_attacked');
   }
 
   /** Payday (js/upkeep.js): their wages, from the chest then your purse; paid or not, it shows. */

@@ -78,6 +78,10 @@
     if (mode === 'realm') {
       return { title: 'THE REALMS', text: '', button: 'Back' };
     }
+    if (mode === 'ransom') {
+      const x = CL.lords.offerDue(CL.campaign);
+      return { title: 'A RANSOM OFFER', text: x ? CL.lords.offerText(CL.campaign, x) : 'The messenger has gone.', button: null };
+    }
     if (mode === 'ending') {
       return { title: g.ending.title.toUpperCase(), text: g.ending.text, button: 'Return to the March' };
     }
@@ -204,6 +208,7 @@
     $('#realmScreen').classList.toggle('hidden', mode !== 'realm');
     $('#savesScreen').classList.toggle('hidden', mode !== 'saves');
     $('#talkOptions').classList.toggle('hidden', mode !== 'talk');
+    $('#ransomOptions').classList.toggle('hidden', mode !== 'ransom');
     $('#titleExtras').classList.toggle('hidden', mode !== 'title');
     $('#overlayText').classList.toggle('hidden', mode === 'saves' || mode === 'journal' || mode === 'realm');
     const screen = screenFor(mode);
@@ -226,6 +231,41 @@
     if (mode === 'talk') renderTalk();
     if (mode === 'journal') renderJournal();
     if (mode === 'realm') renderRealm();
+    if (mode === 'ransom') renderRansom();
+  }
+
+  // ---- A ransom offer (P8-01): Accept, Hold or Release; it interrupts the map ----
+
+  function openRansom() {
+    if (CL.game.mode !== 'map' || !CL.lords.offerDue(CL.campaign)) return;
+    changeMode('ransom');
+  }
+
+  function renderRansom() {
+    const c = CL.campaign;
+    const x = CL.lords.offerDue(c);
+    const box = $('#ransomOptions');
+    if (!x) {
+      box.replaceChildren();
+      return changeMode('map');
+    }
+    const choice = (id, label, note) => {
+      const b = Object.assign(document.createElement('button'), { type: 'button', id: `ransom_${id}` });
+      b.append(Object.assign(document.createElement('b'), { textContent: label }), Object.assign(document.createElement('small'), { textContent: note }));
+      b.onclick = () => {
+        const r = CL.lords.answer(c, x.lord, id);
+        CL.save.write();
+        changeMode('map');
+        if (r?.text) message(r.text); // after the map is back, so it stays on screen
+        if (CL.lords.offerDue(c)) openRansom(); // another waiting
+      };
+      return b;
+    };
+    box.replaceChildren(
+      choice('accept', `Accept · ${CL.lords.ransomOf(x)} crowns`, 'They go home, and you are paid'),
+      choice('hold', 'Hold', 'Keep them for now: another offer in a few days, and they may escape'),
+      choice('release', 'Release', `Let them go for nothing: renown, and their goodwill`),
+    );
   }
 
   // ---- Talking to people in town (GDD §8: interaction opens dialogue menus) ----
@@ -2459,6 +2499,7 @@
     closeJournal,
     openRealm,
     closeRealm,
+    openRansom,
     $,
     message,
     changeMode,

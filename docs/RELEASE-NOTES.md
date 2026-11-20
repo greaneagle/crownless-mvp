@@ -1,5 +1,20 @@
 # Crownless — Release Notes
 
+## v2.26.0 — Lords on the map (P8-01) · 2026-11-20
+
+### New
+- **The lords ride.** Twenty-two lords and ladies of the four kingdoms travel the map with their households: a gold-edged banner with their name. The more land a lord holds, the more soldiers ride with them, and the more of them are veterans.
+- **Tap a lord** to see who they are and what they are doing: riding the bounds of their lands, on campaign along the borders, riding with a kinsman, hunting Reavers, riding against a rival realm's soldiers, or going home to refill their ranks.
+- **Meet them like patrols.** Attacking a lord who isn't after you costs more of their kingdom's goodwill (25, against 15 for a patrol). In battle the lord fights in person, stronger than their soldiers, with their name over their head. Lords help their own kingdom's side in a fight, as patrols do.
+- **Prisoners and ransoms.** Beat a lord and they are your prisoner. In two to four days their family, or their crown, offers a ransom: 100 crowns and 25 for every soldier they led. Accept it, Hold them for a later offer (they may escape), or Release them for nothing, for renown and their goodwill. If you are beaten while holding prisoners, they get free.
+- **Beaten by a lord,** you are ransomed rather than robbed: they take some of your money but nothing from your pack, and let you go at their home.
+- Lords beaten by another kingdom are held for a while and come home. The news tells of lords beaten, captured and ransomed.
+
+### Under the hood
+- Save version 20. Saves from 2.25.0 load, and the lords ride out from their homes.
+- Debug → Lords: a lord near you, capture one, a ransom offer now, a lord held off-screen. Debug → Map stress 80 now runs 80 parties with every lord on top.
+- **Tests:** 738 fast and 12 slow Node tests, 165 browser tests (21 skipped: the visual baselines, Linux only, and those for one device only).
+
 ## v2.25.0 — Who may do what (P8-03) · 2026-11-20
 
 ### Changed

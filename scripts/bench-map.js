@@ -26,8 +26,10 @@ function setup(seed) {
 function topUp(CL, n) {
   const c = CL.campaign;
   const ids = Object.values(CL.content.table('party_templates')).filter((t) => t.count > 0).map((t) => t.id); // not detachments
-  let k = c.parties.length;
-  while (c.parties.length < n) {
+  // `n` regular parties; the lords (P8-01) ride on top of them, as in Debug → Map stress.
+  const regular = () => c.parties.filter((p) => !p.lordId).length;
+  let k = regular();
+  while (regular() < n) {
     const p = CL.parties.spawn(c, ids[k++ % ids.length]);
     const b = CL.world.bounds(); // W-07: anywhere on the world's own map
     [p.x, p.y] = CL.world.clampToMap(CL.autoresolve.next(c) * b.w, CL.autoresolve.next(c) * b.h, 4);

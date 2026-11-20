@@ -492,6 +492,10 @@
         status: STATUS.includes(e.status) ? e.status : 'free',
         heldBy: typeof e.heldBy === 'string' ? e.heldBy.slice(0, 40) : null,
       };
+      // P8-01: what the player did to them or their kin (kept for P8-07), and a lord riding out again thin.
+      const deeds = (Array.isArray(e.deeds) ? e.deeds : []).filter((x) => x && ['freed', 'ransomed', 'held', 'held_kin'].includes(x.kind) && typeof x.day === 'number' && Number.isFinite(x.day) && typeof x.by === 'string');
+      if (deeds.length) s.people[id].deeds = deeds.slice(-12).map((x) => ({ by: x.by.slice(0, 40), kind: x.kind, day: x.day }));
+      if (e.regroup === true) s.people[id].regroup = true;
     }
     if (saved) for (const [id, p] of Object.entries(start.people)) if (!s.people[id] && !saved[id]) s.people[id] = { ...p, kin: [] };
     // Kin: only to people who exist, of a known tie, once.
@@ -604,6 +608,13 @@
     const kin = p.kin.map((k) => `${person(k.person, c)?.name || 'someone'} (${tieWord(k.tie, person(k.person, c))})`);
     if (kin.length) parts.push(`kin: ${kin.join(', ')}`);
     if (p.home) parts.push(`home ${place(p.home)?.placeName || placeNameOf(p.home)}`);
+    // P8-01: where they are now.
+    if (p.status === 'captive') parts.push(p.heldBy === PLAYER ? 'your prisoner' : `a prisoner of the ${CL.content.table('factions')[p.heldBy]?.name || 'enemy'}`);
+    else if (rules(id, c)) parts.push('keeps to their hall');
+    else {
+      const q = CL.lords?.partyOf(c, id);
+      if (q) parts.push(CL.lords.doingLine(c, q));
+    }
     if (p.traits) parts.push(p.traits);
     return parts.join(' · ');
   }
@@ -644,6 +655,7 @@
       if (!rules(id, c) && fiefsOf(id, c).length > FIEF_CAP) out.push(`${id}: more than ${FIEF_CAP} fiefs`);
       for (const k of p.kin) if (!c.people[k.person]?.kin.some((x) => x.person === id && x.tie === RETURN_TIE[k.tie])) out.push(`${id}: kin tie to ${k.person} not returned`);
     }
+    out.push(...(CL.lords?.invariants(c) || [])); // the lords on the map and their captivity (P8-01)
     return out;
   }
 

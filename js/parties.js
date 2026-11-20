@@ -88,7 +88,7 @@
   function remove(c, p) {
     const i = c.parties.indexOf(p);
     if (i >= 0) c.parties.splice(i, 1);
-    if (p.contractId || p.questTag || p.eventId) return; // contract, quest and event bands are extra; they don't hold up regular respawns
+    if (p.contractId || p.questTag || p.eventId || p.lordId) return; // contract, quest and event bands are extra, and a lord rides again when free (P8-01): none holds up respawns
     const t = tpl(p.template);
     c.partySpawns[t.id] = Math.max(c.partySpawns[t.id] || 0, now(c) + t.respawnDays);
   }
@@ -98,13 +98,14 @@
     const cap = W().map().simulation?.partiesPerRegion;
     const region = cap ? W().regionAt(p.x, p.y)?.id : null;
     if (!region) return false;
-    const here = c.parties.filter((o) => !o.contractId && !o.questTag && !o.eventId && W().regionAt(o.x, o.y)?.id === region).length;
+    const here = c.parties.filter((o) => !o.contractId && !o.questTag && !o.eventId && !o.lordId && W().regionAt(o.x, o.y)?.id === region).length; // lords ride beside the regular parties (P8-01)
     return here > cap;
   }
 
   /** Keep each template at its target count once its respawn timer has passed. */
   function ensure(c, ignoreTimers = false) {
     for (const t of Object.values(CL.content.table('party_templates'))) {
+      if (t.kind === 'lord') continue; // one a lord, not a count (js/lords.js)
       let active = c.parties.filter((p) => p.template === t.id && !p.contractId && !p.questTag && !p.eventId).length;
       while (active < t.count && (ignoreTimers || now(c) >= (c.partySpawns[t.id] || 0))) {
         const p = spawn(c, t.id);
@@ -119,6 +120,7 @@
         }
       }
     }
+    CL.lords?.ensure(c, now(c), ignoreTimers); // every free lord rides with their household (P8-01)
     CL.story?.ensureBands(c); // bands the story needs right now (re-spawned if lost)
   }
 
@@ -153,23 +155,25 @@
     return stepGrid && options.grid ? CL.spatial.near(stepGrid, x, y, range) : c.parties;
   }
 
+  /** The nearest party of a kind (or of any of a list of kinds) within range. */
   function nearest(c, p, kind, range) {
+    const kinds = Array.isArray(kind) ? kind : [kind];
     let best = null;
     for (const o of around(c, p.x, p.y, range)) {
       // Quest bands are the story's: patrols leave them be and they leave caravans alone.
-      if (o === p || o.questTag || o.ambush || o.escortTo || tpl(o.template).kind !== kind) continue;
+      if (o === p || o.questTag || o.ambush || o.escortTo || !kinds.includes(tpl(o.template).kind)) continue;
       const d = dist(p, o);
       if (d <= range && (!best || d < best.d)) best = { o, d };
     }
     return best?.o || null;
   }
 
-  /** A rival kingdom's regular patrol in sight, of a kingdom at war or in tension with its own (W-07). */
+  /** A rival kingdom's regular patrol or lord in sight, of a kingdom at war or in tension with its own (W-07, P8-01). */
   function rival(c, p, t) {
     let best = null;
     for (const o of around(c, p.x, p.y, t.detection)) {
       const ot = tpl(o.template);
-      if (o.questTag || ot.kind !== 'patrol' || ot.faction === t.faction || !CL.realm.atOdds(c, t.faction, ot.faction)) continue;
+      if (o.questTag || (ot.kind !== 'patrol' && ot.kind !== 'lord') || ot.faction === t.faction || !CL.realm.atOdds(c, t.faction, ot.faction)) continue;
       const d = dist(p, o);
       if (d <= t.detection && (!best || d < best.d)) best = { o, d };
     }
@@ -224,6 +228,7 @@
       }
       return;
     }
+    if (t.kind === 'lord') return chooseLordTarget(c, p, t);
     if (t.kind === 'patrol' && wantsPlayer(c, p)) {
       // A Hostile kingdom's patrols ride the player down.
       p.chasing = 'player';
@@ -254,7 +259,7 @@
       if (lostYou(c, p, t)) return; // P7-04: searching where they last saw you
       p.alerted = false;
       // Bands keep clear of patrols they can see (quest bands hold their ground).
-      const threat = p.questTag || p.ambush ? null : nearest(c, p, 'patrol', t.detection);
+      const threat = p.questTag || p.ambush ? null : nearest(c, p, ['patrol', 'lord'], t.detection);
       if (threat && A().troopsPower(threat.troops) > A().troopsPower(p.troops)) {
         p.chasing = 'fleeing';
         [p.tx, p.ty] = W().clampToMap(p.x * 2 - threat.x, p.y * 2 - threat.y, EDGE);
@@ -303,6 +308,90 @@
       [p.tx, p.ty] = [s.mapX, s.mapY];
       if (reached(p)) caravanArrives(c, p);
     }
+  }
+
+  /**
+   * A lord's intention (P8-01): ride down a company their realm counts Hostile; search where they lost
+   * it; go home to refill when the ranks are thin, and rest there; hunt Reavers in sight; ride against
+   * soldiers of a realm at odds with theirs; else ride the bounds of their lands (landed), or campaign
+   * along the realm's borders or with a kinsman (landless, or with nothing of their own to guard).
+   */
+  function chooseLordTarget(c, p, t) {
+    const L = CL.lords;
+    const person = c.people?.[p.lordId];
+    if (!person) return;
+    if (wantsPlayer(c, p)) {
+      p.chasing = 'player';
+      p.intent = 'chase';
+      [p.tx, p.ty] = [c.world.x, c.world.y];
+      remember(c, p);
+      if (!p.alerted) {
+        p.alerted = true;
+        CL.ui.message(`${CL.realm.titled(p.lordId, c)} is riding for you!`);
+      }
+      return;
+    }
+    if (lostYou(c, p, t)) {
+      p.intent = 'search';
+      return;
+    }
+    p.alerted = false;
+    const home = settlement(L.homeOf(c, p.lordId));
+    const atHome = W().mapDist(p.x, p.y, home.mapX, home.mapY) <= ARRIVE * 3;
+    if (L.thin(c, p) || p.intent === 'home') {
+      if (!atHome) {
+        p.intent = 'home';
+        [p.tx, p.ty] = [home.mapX, home.mapY];
+        return;
+      }
+      L.refill(c, p);
+      p.intent = 'rest';
+      p.restUntil = now(c) + 0.5;
+      p.tx = p.ty = null;
+      return;
+    }
+    if (p.intent === 'rest' && atHome && now(c) < (p.restUntil || 0)) {
+      p.tx = p.ty = null;
+      return;
+    }
+    const quarry = nearest(c, p, 'bandit', t.detection) || (CL.news.clashReady(c, now(c)) ? rival(c, p, t) : null);
+    if (quarry) {
+      p.chasing = quarry.id;
+      p.intent = tpl(quarry.template).kind === 'bandit' ? 'hunt' : 'clash';
+      [p.tx, p.ty] = [quarry.x, quarry.y];
+      return;
+    }
+    if (!reached(p) && (p.intent === 'patrol' || p.intent === 'campaign' || p.intent === 'ride')) {
+      if (p.intent === 'ride') {
+        const kin = L.partyOf(c, p.kin);
+        if (kin) [p.tx, p.ty] = [kin.x, kin.y];
+      }
+      return;
+    }
+    // Something new to do.
+    const own = CL.realm.fiefsOf(p.lordId, c).filter((sid) => CL.realm.owner(sid, c) === person.realm);
+    if (own.length) {
+      p.intent = 'patrol';
+      const s = settlement(pick(c, own));
+      [p.tx, p.ty] = W().clampToMap(s.mapX + (A().next(c) * 2 - 1) * 3, s.mapY + (A().next(c) * 2 - 1) * 3, EDGE);
+      return;
+    }
+    const kin = person.kin.map((k) => L.partyOf(c, k.person)).find((q) => q && q.intent !== 'home' && q.intent !== 'rest');
+    if (kin && A().next(c) < 0.4) {
+      p.intent = 'ride';
+      p.kin = kin.lordId;
+      [p.tx, p.ty] = [kin.x, kin.y];
+      return;
+    }
+    p.intent = 'campaign';
+    p.kin = null;
+    const lands = CL.realm.controlled(c, person.realm);
+    // The realm's borders: its places nearest another realm's.
+    const others = Object.values(CL.content.table('settlements')).filter((s) => CL.realm.isRealm(CL.realm.owner(s.id, c)) && CL.realm.owner(s.id, c) !== person.realm);
+    const edge = (s) => Math.min(...others.map((o) => W().mapDist(s.mapX, s.mapY, o.mapX, o.mapY)));
+    const border = others.length ? [...lands].sort((a, b) => edge(a) - edge(b)).slice(0, 3) : lands;
+    const s = pick(c, border.length ? border : [home]);
+    [p.tx, p.ty] = W().clampToMap(s.mapX + (A().next(c) * 2 - 1) * 5, s.mapY + (A().next(c) * 2 - 1) * 5, EDGE);
   }
 
   /** GDD §9: caravan deliveries lower scarcity of the good they carry at the destination. */
@@ -366,7 +455,7 @@
       if (!c.parties.includes(a) || a.questTag || a.ambush || tpl(a.template).kind !== 'bandit' || CL.reinforce?.locked(a)) continue;
       for (const b of grid ? CL.spatial.near(grid, a.x, a.y, r0) : all) {
         const kb = tpl(b.template).kind;
-        if (b === a || b.questTag || b.escortTo || !c.parties.includes(b) || (kb !== 'caravan' && kb !== 'patrol' && kb !== 'detachment') || CL.reinforce?.locked(b)) continue;
+        if (b === a || b.questTag || b.escortTo || !c.parties.includes(b) || (kb !== 'caravan' && kb !== 'patrol' && kb !== 'detachment' && kb !== 'lord') || CL.reinforce?.locked(b)) continue;
         if (sweptDist(a, b) > CONTACT) continue;
         if (kb === 'detachment') {
           // One of your detachments meets a band (P7-05): its own fight, its soldiers' fates recorded once.
@@ -384,6 +473,12 @@
           CL.news.record(c, 'caravan_lost', { x: r.loser.x, y: r.loser.y, dest: sid, good: r.loser.good, faction: lt.faction }, now(c));
         } else if (lt.kind === 'patrol') {
           CL.news.record(c, 'patrol_beaten', { x: r.loser.x, y: r.loser.y, faction: lt.faction }, now(c));
+        } else if (lt.kind === 'lord') {
+          // Reavers broke a lord's household (P8-01): the lord gets away and rides out again from home.
+          CL.lords.beaten(c, r.loser, null, now(c));
+          if (!troopCount(r.winner)) remove(c, r.winner);
+          if (r.loser === a || r.winner === a) break;
+          continue;
         } else {
           CL.news.record(c, 'reavers_broken', { x: r.loser.x, y: r.loser.y, faction: tpl(r.winner.template).faction }, now(c));
         }
@@ -391,7 +486,10 @@
         if (r.loser.contractId) CL.contracts.onTargetLost(c, r.loser);
         remove(c, r.loser);
         // A pyrrhic win: if the winner lost its last troops too, it is gone as well.
-        if (!troopCount(r.winner)) {
+        if (!troopCount(r.winner) && r.winner.lordId) {
+          CL.lords.beaten(c, r.winner, null, now(c)); // a lord left with nobody rides home (P8-01)
+          if (r.winner === a) break;
+        } else if (!troopCount(r.winner)) {
           if (r.winner.contractId) CL.contracts.onTargetLost(c, r.winner);
           remove(c, r.winner);
           if (r.winner === a) break;
@@ -420,7 +518,8 @@
    * Story columns keep out.
    */
   function frontierClash(c) {
-    const patrols = c.parties.filter((p) => !p.questTag && tpl(p.template).kind === 'patrol' && !CL.reinforce?.locked(p));
+    // Patrols and lords (P8-01) alike.
+    const patrols = c.parties.filter((p) => !p.questTag && (tpl(p.template).kind === 'patrol' || tpl(p.template).kind === 'lord') && !CL.reinforce?.locked(p));
     const grid = options.grid ? CL.spatial.build(patrols) : null;
     const r0 = reach();
     borderIncidents(c, patrols, grid, r0);
@@ -442,9 +541,13 @@
         CL.news.clashed(c, now(c));
         CL.realm.clashed(c, fw, fl, won.length + lost.length, { x: loser.x, y: loser.y }, now(c));
         CL.diag.log('info', 'Frontier clash', { winner: winner.template, loser: loser.template, losses: [won.length, lost.length] });
-        for (const p of [winner, loser]) if (!troopCount(p)) remove(c, p);
-        const home = settlement(tpl(loser.template).home);
-        if (c.parties.includes(loser)) [loser.tx, loser.ty] = [home.mapX, home.mapY];
+        // A lord's household broken in the skirmish: the lord is the other realm's prisoner (P8-01).
+        for (const p of [winner, loser]) if (!troopCount(p)) p.lordId ? CL.lords.beaten(c, p, p === loser ? fw : fl, now(c)) : remove(c, p);
+        if (c.parties.includes(loser)) {
+          if (loser.lordId) loser.intent = 'home';
+          const home = settlement(loser.lordId ? CL.lords.homeOf(c, loser.lordId) : tpl(loser.template).home);
+          [loser.tx, loser.ty] = [home.mapX, home.mapY];
+        }
         return;
       }
     }
@@ -543,10 +646,16 @@
       const spec = p.questTag ? CL.story.bandSpec(p.questTag, c) : null;
       const map = spec?.map || W().battleMapAt(c.world.x, c.world.y); // a story battle may name its field
       const ambushText = p.ambush ? 'Reavers burst from cover and go for the caravan you are escorting. Keep them off the wagon: if it burns, or you lose, the caravan is lost.' : null;
-      const text = spec?.text || ambushText || (hostile && t.hostileText ? t.hostileText : t.text);
+      const lord = p.lordId && c.people?.[p.lordId] ? CL.lords.describe(c, p) : null; // P8-01: who, and what they're doing
+      const words = (hostile && t.hostileText ? t.hostileText : t.text).replace('{lord}', lord ? CL.realm.titled(p.lordId, c) : t.name);
+      const text = spec?.text || ambushText || (lord ? `${lord.who}, ${lord.doing}. ${words}` : words);
       const def = battleDef(t, p.troops, map);
       if (p.ambush) def.objective = 'wagon'; // protect the escort's wagon (P7-11, js/objective.js)
-      return { kind: 'party', name: spec?.name || t.name, text, troops: p.troops, hostile, def, party: p, t };
+      if (lord) {
+        def.name = CL.realm.titled(p.lordId, c);
+        def.leader = CL.lords.leaderFor(c, p); // the lord fights in person
+      }
+      return { kind: 'party', name: spec?.name || (lord ? CL.realm.titled(p.lordId, c) : t.name), text, troops: p.troops, hostile, def, party: p, t, lord };
     }
     if (g.siteId) {
       const st = W().map().sites[g.siteId];
@@ -644,10 +753,11 @@
     return ok;
   }
 
-  /** Attacking a kingdom's patrol or caravan that wasn't after you: GDD §10 −15 reputation. */
+  /** Attacking a kingdom's patrol or caravan that wasn't after you: GDD §10 −15 reputation; a lord, −25 (P8-01). */
+  const LORD_ATTACK = -25;
   function assaultPenalty(c, e) {
     if (e.kind !== 'party' || e.hostile || !e.t.faction || e.t.kind === 'bandit') return;
-    CL.realm.adjust(c, e.t.faction, CL.realm.REP.attack, `attacked ${e.t.id}`);
+    CL.realm.adjust(c, e.t.faction, e.t.kind === 'lord' ? LORD_ATTACK : CL.realm.REP.attack, `attacked ${e.t.id}`);
   }
 
   /** Fight the open encounter. `plan`: the setup chosen on the preparation screen (V2-07), if any. */
@@ -729,6 +839,21 @@
       CL.news.record(c, 'player_deed', { x: c.world.x, y: c.world.y });
     }
     if (!p || !c.parties.includes(p)) return; // gone with the failed contract
+    if (p.lordId) {
+      // P8-01: a lord beaten by the player is their prisoner; a lord who wins keeps the field, thinner.
+      const name = CL.realm.titled(p.lordId, c);
+      if (win) {
+        p.fallen = (fallenEnemyTroops || []).length;
+        CL.news.record(c, 'lord_beaten', { x: c.world.x, y: c.world.y, text: `${name}’s household was broken in the field by ${c.character?.name || 'a free company'}.` });
+        CL.lords.beaten(c, p, 'player');
+        CL.ui.message(`${name} yields and is your prisoner. Their kin will send word of a ransom.`);
+        return;
+      }
+      A().removeTroops(p.troops, fallenEnemyTroops);
+      if (!troopCount(p)) CL.lords.beaten(c, p, null); // both sides broken: the lord gets away home
+      else p.ignoreUntil = c.day + IGNORE_AFTER.capture;
+      return;
+    }
     if (win && p.contractId) CL.contracts.onTargetDefeated(c, p);
     if (win && p.eventId) CL.happenings.onBandBeaten(c, p); // a village's bounty (P7-08)
     if (win) remove(c, p);
@@ -781,6 +906,16 @@
         if (!Number.isInteger(p.detachment)) continue; // a detachment party without its detachment
         q.detachment = p.detachment;
       }
+      if (t.kind === 'lord') {
+        // P8-01: a free lord of this template's realm, riding once, never a ruler.
+        const who = s.people?.[p.lordId];
+        if (!who || who.realm !== t.faction || who.status !== 'free' || CL.realm.rules(p.lordId, s) || s.parties.some((o) => o.lordId === p.lordId)) continue;
+        q.lordId = p.lordId;
+        q.intent = Object.hasOwn(CL.lords.WORDS, p.intent) || p.intent === 'ride' ? p.intent : 'campaign';
+        if (q.intent === 'ride' && s.people[p.kin]) q.kin = p.kin;
+        else if (q.intent === 'ride') q.intent = 'campaign';
+        if (num(p.restUntil)) q.restUntil = p.restUntil;
+      }
       // P7-04: where it last saw the company (and until when it searches there), and where the
       // company last saw it.
       if (num(p.lastSeen?.x) && num(p.lastSeen?.y)) {
@@ -807,6 +942,7 @@
       if (CL.content.table('party_templates')[tid] && num(day)) s.partySpawns[tid] = day;
     }
     if (!Array.isArray(d?.parties)) ensure(s, true); // older saves: populate the world
+    else CL.lords?.ensure(s, s.day); // the lords ride (P8-01: a v19 save had none on the map)
   }
 
   CL.parties = {

@@ -58,6 +58,22 @@
       priority: 4,
       lines: ['Tempers cool between {faction} and {other}: the border is quiet again.']
     },
+    // P8-01: the lords on the map. Each line is written by its teller (js/lords.js), naming the lord.
+    lord_beaten: {
+      id: 'lord_beaten',
+      priority: 5,
+      lines: ['A lord’s household has been broken on the road near {place}.']
+    },
+    lord_captured: {
+      id: 'lord_captured',
+      priority: 6,
+      lines: ['A lord has been taken prisoner near {place}.']
+    },
+    lord_ransomed: {
+      id: 'lord_ransomed',
+      priority: 4,
+      lines: ['A lord held captive is home again at {place}.']
+    },
     fief_granted: {
       id: 'fief_granted',
       priority: 3,

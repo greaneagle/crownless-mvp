@@ -38,7 +38,7 @@ function summary(c, CL) {
     contract: c.contract ? c.contract.template : null,
     owners: Object.fromEntries(CL.realm.forts().map((s) => [s.id, CL.realm.owner(s.id, c)])), // who holds each fort's gates (c.owners until P8-02)
     reputation: { ...c.reputation },
-    parties: c.parties.length,
+    parties: c.parties.filter((p) => !p.lordId).length, // the regular parties: lords ride beside them from 2.26.0 (P8-01)
     newsLines: c.news.lines.length,
   };
 }

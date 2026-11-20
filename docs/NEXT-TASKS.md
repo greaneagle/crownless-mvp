@@ -1538,7 +1538,71 @@ Phase 8 adds many rights: appoint, tax, summon, grant, besiege, swear, leave, ra
 
 **Acceptance.** No right in the code is checked outside `CL.rights`; a grep test keeps it so.
 
-### P8-01 · Lords on the map (M–L) — Specified
+### P8-01 · Lords on the map (M–L) — ✅ Done in 2.26.0
+
+**Done (2.26.0, 2026-11-20).** Save schema v20. `js/lords.js` (`CL.lords`) holds the lords' parties, intentions in words, captives and ransoms. A `lord` party kind (`data/world_parties.js`: one template a realm, `lord_<realm>`, with its `leader` troop) is handled in `js/parties.js`, `js/reinforce.js`, `js/combat.js`, `js/render.js` and the capture path (`js/party.js`, `js/world.js`).
+- **A party a lord:** 22 at the start, every lord but the four rulers, who keep to their halls. Each forms at the lord's home; a lord whose home another realm holds makes a seat of their own, or the capital, their home.
+  - **Size** follows what they hold now: landless 12, a village 16, a fort or town 21, and 3 more for each further fief (Hamon with Greywall and Highmere: 24). They grow and shrink as land is granted and lost, and refill at home.
+  - **Troops** are the realm's own by tier. The share of veterans rises with standing: T3 is 10% for the landless, 15% for the lesser and 25% for the great.
+  - **The lord fights in person:** the realm's best foot soldier (Guard, Legionary, Huscarl or Pavisier) at twice the HP and 1.35× damage, with their name over their head.
+  - **On the map:** the realm's shield with a gold edge, labelled with the lord's name.
+  - **Outside the budget:** lords don't count against W-07's per-region spawn budget. Map stress 80 now means 80 regular parties plus every lord.
+- **Intentions** (`intent` on the party):
+  - `chase`: a company their realm counts Hostile.
+  - `search`: where they lost sight of it.
+  - `home`: when the ranks are below half; at home they refill and `rest` for half a day.
+  - `hunt`: Reavers in sight.
+  - `clash`: soldiers of a realm at odds with theirs, on the same frontier-clash timer as patrols.
+  - `patrol`: the bounds of their lands, for landed lords whose lands their realm still holds.
+  - Otherwise `ride` with a kinsman's party (a 40% chance when one is out) or `campaign` along the realm's borders (its three places nearest another realm).
+  
+  The tap card (a map tap on the party) reads, for example, "Lord Hamon Greymantle, holder of Greywall Fort and Highmere: riding the bounds of their lands". A landless lord is "Lord Tancred Greymantle, Lord Hamon Greymantle's son, landless", or "…, sworn to Queen Lucrezia Salviati, landless".
+- **Everywhere a party is handled:**
+  - **The encounter** shows who they are, what they're doing and the realm's words. Attacking a lord who isn't after you costs 25 reputation with their realm (a patrol costs 15).
+  - **Auto-resolve and the battle lock** work as for any party.
+  - **Reinforcements:** a lord stands with their realm, as patrols do.
+  - **Reavers** flee lords as they flee patrols. Patrols and lords hunt each other's realms' soldiers in frontier clashes, and skirmish there.
+  - **News:** `lord_beaten`, `lord_captured` and `lord_ransomed`, each line naming the lord.
+  - Lords are never contract targets.
+- **Capture and ransom, both ways:**
+  - **A lord beaten by the player**, fought or simulated, is the player's prisoner, and their party is gone.
+  - **Their kin with land, else their realm's ruler, offer a ransom** after 2–4 days: 100 crowns plus 25 for each soldier they led. The offer interrupts the map as its own screen (A RANSOM OFFER) with Accept, Hold and Release.
+    - **Hold:** another offer in 2–4 days.
+    - **Release:** +5 renown, and a `freed` deed kept for P8-07.
+  - **Escape:** a held lord has a 3% chance a day, or 8% while the company is under six soldiers.
+  - **Beaten while holding prisoners:** they all go free.
+  - **Off-screen:** a lord beaten by a realm's soldiers (a frontier clash that leaves them with nobody) is that realm's prisoner and comes home in 5–15 days. A lord beaten by Reavers gets away and rides out again from home. A freed lord rides out with 40% of their ranks and goes home to refill.
+  - **Beaten by a lord:** the hero is ransomed, not robbed. You keep at least 80% of the money, lose nothing from your pack and keep your medicine, and are let go at the lord's home.
+  - **Deeds** (`freed`, `ransomed`, `held`, and `held_kin` for the kinsman who paid) are kept on the person for P8-07.
+- **Realm screen → Lords** now says where each lord is: what they're doing, "your prisoner", "a prisoner of the …", or "keeps to their hall" for a ruler.
+- **Debug → Lords:** lord near me, capture a lord, ransom offer now, lord held off-screen.
+- **`realm.invariants`** now also checks the lords: one party each, never a captive on the map or a ruler riding, and every prisoner record matching its person.
+- **Save v20:** `prisoners`; the lords' parties are in `parties` (kind `lord`, `lordId`, `intent`). A v19 save gets the lords on load, at their homes. Fixtures: `tests/fixtures/saves-2.25/` from a clean checkout of 00d28aa (fresh, day-20 campaign, the story bot's play, Q4 for Aurelia with a mill, a Phase 7 company).
+- **Tests:**
+  - `tests/lords.test.js` (12): the parties at the start, sizes following fiefs, intentions over 20 days, the tap card, the encounter and the lord in battle, sides, capture and ransom once (Hold, Accept, Release, kin or crown paying), escape ending a ransom, off-screen captivity, being beaten by a lord, saves, the 2.25 fixtures, and a 90-day bot run with the invariants every day.
+  - `tests/browser/lords.spec.js` (3, desktop and phone): the tap card, and the ransom screen's three buttons.
+  - **Edited for the lords:**
+    - the parties counts (`parties.test.js`: the lords ride beside the 29 regular parties);
+    - the per-region budget (`world-sim.test.js`: regular parties only);
+    - the troop reach (`cavalry.test.js`: a lord's template lists no fixed troops);
+    - the 2.23 fixtures' people (a dispossessed lord's home moves);
+    - the save version, and the v1.0 fixtures' summary (regular parties only);
+    - the kinds still moving after the ending (`slow/gate-d-campaigns.test.js`: lords too);
+    - `scripts/bench-map.js` (`n` regular parties, the lords on top);
+    - the mill's browser spec, whose pattern missed a bad week's report ("Wage 6…", capitalised; the lords changed which week came up).
+- **Checkpoint (the whole slow suite, NEXT-PLAN §7):**
+  - **Run together,** 9 of 12 passed. The three failures:
+    - the after-the-ending kinds, a test to update for lords;
+    - two timing limits broken under the suite's own load (a 7.7 s day against a 1.7 s median, and the 90-day world-events run over 60 s).
+  - **Run alone,** all three pass: the world-events run in 46.5 s (it took 44.6 s at 2.25.0, so less margin to its 60 s limit), and world-sim's day times steady.
+  - **The lords' cost** (`node scripts/bench-map.js --season 80 30`): 966 ms per game day with 80 regular parties and 22 lords, against 734 ms with 80 and no lords at 2.25.0. That is 32% more time for 27% more parties; the worst day is within 5% of the median, and the save is 48.6 KB.
+  - **Map stress 80 in the browser:** it ran, reporting "80 + 22 lords", but the Browser pane was hidden, so its fps and frame times are a throttled background page's and say nothing about the phone. **Still to check on the owner's phone.**
+  - **The tournament browser spec on the phone** loses its bout now and then. It does so at 2.25.0 too (2 runs in 8 there, 1 in 8 here); it isn't this task's.
+- **Not as specified:**
+  - **No "Talk" choice** with a lord yet: the encounter shows who they are and their words, and attacking is the choice. There is nothing to ask a lord until allegiance and opinions (P8-04, P8-07).
+  - **A captured lord's holdings stay theirs** while they're away, with nobody running them in their stead, until P8-05 brings castellans.
+  - **Rulers don't ride.**
+  - **Intentions are simpler than the list:** "shadow enemy parties at war" is `clash` on the frontier-clash timer, and "hunt bandits further afield" is the border campaign.
 
 **Problem.** P8-02's lords exist only on paper. The design wants named lords travelling with their retinues, met, fought, captured and ransomed (§16, §20.6).
 

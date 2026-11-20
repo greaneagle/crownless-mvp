@@ -97,7 +97,7 @@ test('after the ending the sandbox continues: news, work, patrols, travel and sa
       for (const p of c.parties) kinds.add(CL.content.get('party_templates', p.template).kind);
     }
     assert.ok(c.news.lines.length > Math.min(lines, 5), `seed ${seed}: news keeps coming`);
-    assert.deepEqual([...kinds].sort(), ['bandit', 'caravan', 'patrol'], 'patrols, caravans and Reavers keep moving');
+    assert.deepEqual([...kinds].sort(), ['bandit', 'caravan', 'lord', 'patrol'], 'patrols, caravans, Reavers and lords (P8-01) keep moving');
     // Work is still posted where the player is welcome.
     const board = ['stonebridge', 'eastwatch'].find((sid) => CL.realm.welcomes(c, sid));
     if (board) assert.equal(CL.contracts.offersAt(c, board).length, 3, `seed ${seed}: ${board} posts work`);

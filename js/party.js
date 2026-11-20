@@ -253,6 +253,7 @@
     CL.happenings?.tick(camp); // world events start, hold and end (P7-08), before the news tells them
     CL.tourney?.tick(camp); // tournaments announced and closed (P7-09)
     CL.business?.tick(camp); // your mill: who holds its village, and any seizure due (P7-10)
+    CL.lords?.tick(camp); // prisoners escape or come home; free lords ride out again (P8-01)
     CL.news.tick(camp); // a regional news line every couple of days
     return healed;
   }
@@ -353,10 +354,17 @@
       for (const [id, n] of Object.entries(result.loot)) camp.inventory[id] = (camp.inventory[id] || 0) + n;
       CL.upkeep.stowFood(camp); // looted food goes into the ration stock
     } else {
-      // Captors take a share of every account, the company chest included (V2-11).
-      result.gold = -CL.accounts.seize(camp, DEFEAT_GOLD_KEPT, 'taken by captors');
-      result.lostItem = loseItemOnCapture(camp);
-      result.medicineTaken = CL.surgeon.onCapture(camp); // captors take half the medicine (P7-01)
+      const lord = CL.lords?.captorOf(camp); // P8-01: beaten by a lord, the hero is ransomed, not robbed
+      result.freedPrisoners = CL.lords?.loseAll(camp) || []; // your prisoners get free in the confusion
+      if (lord) {
+        result.gold = -CL.accounts.seize(camp, DEFEAT_GOLD_KEPT, `ransom paid to ${CL.realm.titled(lord, camp)}`);
+        result.ransomedBy = lord;
+      } else {
+        // Captors take a share of every account, the company chest included (V2-11).
+        result.gold = -CL.accounts.seize(camp, DEFEAT_GOLD_KEPT, 'taken by captors');
+        result.lostItem = loseItemOnCapture(camp);
+        result.medicineTaken = CL.surgeon.onCapture(camp); // captors take half the medicine (P7-01)
+      }
     }
     const g = CL.game;
     const band = g.partyId != null ? CL.parties?.find(camp, g.partyId) : null;

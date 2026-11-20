@@ -26,7 +26,7 @@
   'use strict';
   const CL = root.Crownless;
 
-  const VERSION = 19;
+  const VERSION = 20;
   const KEY = 'crownless_save';
   const BACKUP_KEY = 'crownless_save_backup';
   const LEGACY_KEY = 'crownless_v03_party';
@@ -100,6 +100,7 @@
       rulers: {}, // realm → the person holding its ruler's office (P8-02)
       nextPersonId: 1,
       holdings: {}, // settlement → { kind, sovereign, holder, controller, seat, administrator, claims } (P8-02)
+      prisoners: [], // lords held captive: by you, or off-screen by a realm (P8-01)
       relations: CL.realm.defaultRelations(), // kingdom pair → peace, tension or war (W-07)
       story: CL.story.blank(), // quest progress, story flags, conversation visits (GDD §13)
       companion: null, // Mara, once she joins (GDD §10)
@@ -205,6 +206,7 @@
     17: [...V3_FIELDS, ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object'], ['accounts', 'object'], ['ledger', 'array'], ['followers', 'object'], ['relations', 'object'], ['medicine', 'number'], ['detachments', 'array'], ['retinue', 'array'], ['happenings', 'object'], ['tourney', 'object']],
     18: [...V3_FIELDS, ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object'], ['accounts', 'object'], ['ledger', 'array'], ['followers', 'object'], ['relations', 'object'], ['medicine', 'number'], ['detachments', 'array'], ['retinue', 'array'], ['happenings', 'object'], ['tourney', 'object'], ['businesses', 'object']],
     19: [...V3_FIELDS.filter(([f]) => f !== 'owners'), ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object'], ['accounts', 'object'], ['ledger', 'array'], ['followers', 'object'], ['relations', 'object'], ['medicine', 'number'], ['detachments', 'array'], ['retinue', 'array'], ['happenings', 'object'], ['tourney', 'object'], ['businesses', 'object'], ['people', 'object'], ['rulers', 'object'], ['nextPersonId', 'number'], ['holdings', 'object']],
+    20: [...V3_FIELDS.filter(([f]) => f !== 'owners'), ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object'], ['accounts', 'object'], ['ledger', 'array'], ['followers', 'object'], ['relations', 'object'], ['medicine', 'number'], ['detachments', 'array'], ['retinue', 'array'], ['happenings', 'object'], ['tourney', 'object'], ['businesses', 'object'], ['people', 'object'], ['rulers', 'object'], ['nextPersonId', 'number'], ['holdings', 'object'], ['prisoners', 'array']],
   };
 
   /** @param {unknown} v @param {string} kind */
@@ -401,6 +403,8 @@
     17: (d) => CL.business.migrate(d),
     // 18 → 19 (build 2.24.0, P8-02): holdings, people and the rulers' offices replace `owners`.
     18: migrateHoldings,
+    // 19 → 20 (build 2.26.0, P8-01): no prisoners yet; the lords' parties form at their homes on load.
+    19: (d) => ({ ...d, version: 20, prisoners: [] }),
   };
 
   /**
@@ -457,6 +461,7 @@
     CL.companion.sanitize(s, d); // companion and her gear
     CL.news.sanitize(s, d); // recent events and news lines
     CL.parties.sanitize(s, d); // world parties and the RNG seed
+    CL.lords.sanitize(s, d); // prisoners (P8-01), after the people and the lords' parties
     CL.contracts.sanitize(s, d); // after parties: an active hunt needs its band
     CL.happenings.sanitize(s, d); // world events (P7-08), after parties: an infestation needs its band
     CL.tourney.sanitize(s, d); // tournaments and your rival (P7-09)

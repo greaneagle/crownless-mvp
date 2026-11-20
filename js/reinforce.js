@@ -68,12 +68,12 @@
     if (p.questTag || p.ambush || p.escortTo || p.contractId) return null;
     const t = tpl(p.template);
     if (t.kind === 'bandit') return foe.kind === 'bandit' ? 'enemy' : null;
-    if (t.kind !== 'patrol') return null; // caravans keep clear
+    if (t.kind !== 'patrol' && t.kind !== 'lord') return null; // caravans keep clear; a lord is on their realm's side, as patrols (P8-01)
     if (hostileTo(c, t)) return 'enemy';
     if (foe.faction === t.faction) return 'enemy';
     // Only a kingdom that counts you a friend sends its patrol to your aid (design §9.1).
     if (CL.realm.standing(c, t.faction) !== 'friendly') return null;
-    return foe.kind === 'bandit' || foe.kind === 'patrol' ? 'ally' : null;
+    return foe.kind === 'bandit' || foe.kind === 'patrol' || foe.kind === 'lord' ? 'ally' : null;
   }
 
   /** A compass word for a direction on the map (y grows southward). */

@@ -209,6 +209,8 @@ declare global {
     nextPersonId: number;
     /** v19 (P8-02): every settlement of a kingdom (not the free city), by settlement id. */
     holdings: Record<ContentId, Holding>;
+    /** v20 (P8-01): lords held captive, by the player or off-screen by a realm. */
+    prisoners: { lord: string; by: string; since: number; led: number; offerDay: number | null; offered: boolean; checked: number; release: number | null }[];
     /** v10 (W-07): each pair of kingdoms ("a|b", ids in order): peace, tension or war, and its counters. */
     relations: Record<string, { state: 'peace' | 'tension' | 'war'; since: number; heat: number; losses: number; lastClash: number | null; incidentUntil: number }>;
     story: StoryState;

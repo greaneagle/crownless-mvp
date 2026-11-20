@@ -154,6 +154,9 @@
 #realmScreen .realmList{margin:4px 0 0;padding-left:18px;font-size:.92em}
 #realmScreen .realmList li{margin:2px 0}
 #realmScreen .realmNote{opacity:.8}
+#ransomOptions{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+#ransomOptions button{display:flex;flex-direction:column;align-items:center;min-height:44px}
+#ransomOptions small{font-weight:normal;opacity:.85}
 .questCard{border:1px solid #6b5a3a;border-radius:6px;padding:calc(8px * var(--ui-scale)) calc(10px * var(--ui-scale));margin:6px 0;background:#0f1a26}
 .questCard.done,.questCard.failed{opacity:.75}
 .questCard h3{margin:0 0 4px;font-size:calc(15px * var(--ui-scale))}

@@ -37,7 +37,7 @@ test('Mill: buy it at Oakford, fund it, a week runs on its own, and sell it from
   });
   // The day the payday falls on depends on how long the map ran first, so the week may be a good one or
   // a bad one (a cracked millstone, say): any week's report will do, with the wage paid.
-  await expect(card.locator('.millLog li').first()).toContainText(/^Day \d+: .*wage 6.*\. Week [+−]\d+ crowns\./);
+  await expect(card.locator('.millLog li').first()).toContainText(/^Day \d+: .*[Ww]age 6.*\. Week [+−]\d+ crowns\./); // a bad week's report starts with its wage
   // The Accounts screen shows the same mill, and selling asks twice.
   await press(page, '#accountsBtn');
   await waitMode(page, 'accounts');

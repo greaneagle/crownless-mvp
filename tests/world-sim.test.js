@@ -103,7 +103,8 @@ test('the per-region budget: no more regular parties spawn into a region that is
   c.partySpawns = {};
   const before = c.parties.length;
   CL.parties.ensure(c);
-  const inMarch = c.parties.filter((p) => CL.world.regionAt(p.x, p.y)?.id === CL.world.regionAt(lair.mapX, lair.mapY).id);
+  // Regular parties: the lords (P8-01) ride beside them, one a lord, outside the budget.
+  const inMarch = c.parties.filter((p) => !p.lordId && CL.world.regionAt(p.x, p.y)?.id === CL.world.regionAt(lair.mapX, lair.mapY).id);
   assert.ok(inMarch.length <= cap, `${inMarch.length} in the region, cap ${cap}`);
   assert.ok(c.parties.length > before, 'other regions still fill');
 });
