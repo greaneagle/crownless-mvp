@@ -1,5 +1,29 @@
 # Crownless — Release Notes
 
+## v2.31.0 — Named nobles (P8-07) · 2026-11-21
+
+### New
+- **The lords want things, and remember.** Each has needs (land, coin, men, safety for their lands, a name to make), motives from their character (guards their lands, hungry for glory, loyal to the crown, owes it nothing, minds the coin), and opinions of you, their ruler and each other, built from what was done to them, and half of what was done to their kin. Tap a lord on the map to see what they want most.
+- **The Lords tab** (the Realms screen) shows every lord: what they hold, their kin, friends and rivals, what they want most, where they are, and what they think of you and why.
+- **Ask a lord** (Ask… on the Lords tab) to join your siege, relieve your fort, ride with you for three days, or back your claim at court. They agree, name a price (or a favour), say when they can come, or refuse, and tell you why: the crown you share, what you did for them, how far it is from their lands and what threatens them, whether they fear you. A refusal holds for a week; ask again once you've given them a reason.
+- **Lords quarrel among themselves.** Those who fought a siege together become friends and back each other at court; those passed over for a grant become rivals; a lord whose fort was taken has a feud with the taker, and their realm goes for it first at war. Feuding lords won't ride together.
+- **Lords change sides by your rules.** One who thinks too little of their ruler grumbles at court (the news tells it), and a week later leaves for another crown: released at peace, or defecting at war with a claim kept to the land they lose. A lord who keeps refusing their ruler's summons loses a fief to someone else.
+- **The ruler's summons.** Every lord called to a siege answers by the same reasons, and some refuse. As a sworn vassal you are summoned too: be at the siege before it ends, or it is a call missed.
+- **Petitions.** A lord who thinks well enough of you may ask a favour: clear the bandits about their lands, a loan, a kinsman's ransom, your word for their claim or a grant. Answer it at the top of the Lords tab.
+
+### Changed
+- The crown's grants weigh opinions: its goodwill to each candidate, and their friends and rivals at court (and your backing and influence for you).
+- A lord who takes a fort decides what to do with it by their character.
+- Your siege's card shows the lords who answered you, in camp or on the road.
+- Defecting tells you how many of that realm's lords who think well of you will think less of you.
+
+### Under the hood
+- Save version 24. Saves from 2.30.0 load; the deeds they kept (lords you freed, ransomed or held) become those lords' opinions of you.
+- `npm run landed` also reports land gained and lost, who grumbled and who left each realm, summonses refused, revocations, friendships, rivalries and feuds, and the riding lords per realm.
+- Debug → Nobles: Lord likes me, Lord grumbles, Lord leaves realm, Petition now, Nobles: a week.
+- No new art: the Lords tab is text.
+- **Tests:** 797 fast Node tests; the slow files nobles reach (the campaign bots, the landed run with its new checks, the world simulation, the world-event bots and the new Prototype F); 183 browser tests (9 skipped: the visual baselines, Linux only, and those for one device only).
+
 ## v2.30.0 — Storming the walls (P8-06b) · 2026-11-21
 
 ### New

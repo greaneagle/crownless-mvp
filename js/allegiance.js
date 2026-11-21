@@ -142,7 +142,11 @@
       for (const sid of effects.lose) lines.push(`You will lose ${placeName(sid)}. You keep a claim to it.`);
       lines.push(`${short(realm)}'s lords will hunt you for ${RULES.huntDays} days.`);
     }
-    if (action !== 'serve' && action !== 'renew' && action !== 'swear' && lines.length) lines.push(`Lords who think well of you may think less of you.`); // P8-07 says how much
+    // P8-07: what the realm's lords will think of it.
+    if (action === 'defect') {
+      const friends = (CL.nobles ? Object.keys(c.people) : []).filter((pid) => c.people[pid].realm === realm && !R().rules(pid, c) && CL.nobles.opinion(c, pid, R().PLAYER) >= 10);
+      lines.push(friends.length ? `${friends.length} of the ${short(realm)} lords who think well of you will think less of you (−${-CL.nobles.DEEDS.defected}).` : `The ${short(realm)} lords will remember it.`);
+    } else if (action === 'release' && effects.rep) lines.push(`${R().titled(R().rulerOf(realm, c), c)} will think a little less of you.`);
     lines.push(keeps(c));
     return { ok: true, why: '', lines, effects };
   }
@@ -189,12 +193,14 @@
       CL.ui.message(`You kneel before ${R().titled(R().rulerOf(realm, c), c)} and rise a vassal of the ${factionName(realm)}.`);
     } else if (action === 'release') {
       if (e.rep) R().adjust(c, realm, e.rep, 'released owing service');
+      if (e.rep && a.kind === 'vassal') CL.nobles?.note(c, R().rulerOf(realm, c), R().PLAYER, 'refused', { kin: false });
       giveUp(c, e.lose, null);
       const early = a.kind === 'mercenary' && e.rep;
       close(c, early ? 'early' : a.kind === 'mercenary' ? 'term' : 'release');
       CL.ui.message(`You are free of the ${factionName(realm)}.`);
     } else if (action === 'defect') {
       R().adjust(c, realm, e.rep, 'defected');
+      for (const pid of Object.keys(c.people)) if (c.people[pid].realm === realm) CL.nobles?.note(c, pid, R().PLAYER, 'defected', { kin: false }); // the realm's lords and ruler remember (P8-07)
       giveUp(c, e.lose, 'granted');
       close(c, 'defect');
       a.hunt = { realm, until: c.day + RULES.huntDays };
@@ -300,6 +306,9 @@
       lines.push(`A vassal of the ${factionName(a.realm)} since day ${CL.party.dayNumber(a.since)}, sworn to ${R().titled(R().rulerOf(a.realm, c), c)}.`);
       const left = Math.ceil(a.window.start + RULES.window.days - c.day);
       lines.push(owed(c) ? `Service owed: ${owed(c)} more days in the next ${left} (fight their enemies, or stay at your fief).` : `Service: met for this month (${a.window.days} days; ${left} days left in it).`);
+      // P8-07: a summons to a siege: answered by being there.
+      const m = CL.nobles?.state(c).summons;
+      if (m && m.realm === a.realm) lines.push(m.answered ? `You have answered the summons to ${placeName(m.sid)}.` : `Summoned: ${R().titled(R().rulerOf(a.realm, c), c)} calls you to the siege of ${placeName(m.sid)}. Ride there before it ends, or it is a call missed.`);
       if (a.summonsMissed) lines.push(`Calls missed: ${a.summonsMissed} of ${RULES.missedToExpel} before you are cast out.`);
       const land = fiefs(c, a.realm);
       lines.push(land.length ? `You hold ${land.map(placeName).join(', ')}.` : 'You hold no land yet.');

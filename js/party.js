@@ -257,6 +257,7 @@
     CL.lords?.tick(camp); // prisoners escape or come home; free lords ride out again (P8-01)
     CL.allegiance?.tick(camp); // pay, service, terms, expulsion, the hunt (P8-04)
     CL.fiefs?.tick(camp); // deserters, castellans home, grants due (P8-05)
+    CL.nobles?.tick(camp); // promises, loans, your summons, petitions, and each week the lords' grumbling (P8-07)
     CL.news.tick(camp); // a regional news line every couple of days
     return healed;
   }

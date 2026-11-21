@@ -144,7 +144,7 @@ test('lifted when the war ends; relieved when the defenders’ lords ride in and
   const s2 = r.S.plan(r.c, 'valedorn');
   hours(r.CL, 24);
   const fort = r.CL.content.get('settlements', s2.sid);
-  const helper = r.c.parties.find((p) => p.lordId && r.c.people[p.lordId].realm === 'aurelian');
+  const helper = r.c.parties.find((p) => p.lordId && r.c.people[p.lordId].realm === 'aurelian' && !p.siegeId); // not at a siege of Aurelia's own
   Object.assign(helper, { x: fort.mapX + 8, y: fort.mapY, troops: { legionary: 40 } });
   r.S.callRelief(r.c, s2);
   assert.ok(s2.relief.includes(helper.lordId));
@@ -259,9 +259,10 @@ test('saves: sieges round-trip; junk is repaired; v22 migrates; 2.28.0’s saves
   for (const pid of s.lords) assert.equal(back.parties.find((q) => q.lordId === pid).siegeId, s.id);
   assert.equal(back.holdings[s.sid].food, c.holdings[s.sid].food);
   const d = plain(c);
+  const real = d.sieges.length; // Valedorn's, and Aurelia's own if its lords have gathered by now
   d.sieges.push({ ...d.sieges[0] }, { sid: 'oakford', phase: 'encircled', by: 'ai', realm: 'valedorn' }, { sid: 'westholt_castle', phase: 'storming', by: 'ai', realm: 'hrothmark' });
   const fixed = CL.save.fromRaw(d).campaign;
-  assert.equal(fixed.sieges.length, 1, 'a second at the fort, a village, an unknown phase: dropped');
+  assert.equal(fixed.sieges.length, real, 'a second at the fort, a village, an unknown phase: dropped');
   const v22 = plain(c);
   v22.version = 22;
   delete v22.sieges;

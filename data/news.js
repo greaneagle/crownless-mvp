@@ -79,6 +79,12 @@
     siege_lifted: { id: 'siege_lifted', priority: 5, lines: ['The siege of {place} is lifted.'] },
     siege_relieved: { id: 'siege_relieved', priority: 6, lines: ['A relief army has reached {place}.'] },
     fort_fell: { id: 'fort_fell', priority: 8, lines: ['{place} has fallen.'] },
+    // P8-07: the lords' politics (each line names them: js/nobles.js).
+    summons: { id: 'summons', priority: 5, lines: ['The lords are summoned to {place}.'] },
+    summons_refused: { id: 'summons_refused', priority: 5, lines: ['A lord refuses the summons to {place}.'] },
+    lord_grumbles: { id: 'lord_grumbles', priority: 5, lines: ['A lord grumbles at court in {place}.'] },
+    lord_left: { id: 'lord_left', priority: 7, lines: ['A lord has changed sides.'] },
+    fief_revoked: { id: 'fief_revoked', priority: 6, lines: ['{place} is taken back by the crown.'] },
     fief_granted: {
       id: 'fief_granted',
       priority: 3,

@@ -66,7 +66,6 @@ test('the design’s §16.5: a mercenary contract, a vassal, a castle, released 
   assert.deepEqual(plain(release.lines), [
     'King Godric Ardane releases you from your oath, with their thanks.',
     'Westholt Castle returns to the crown. You keep no claim to it.',
-    'Lords who think well of you may think less of you.',
     'Your soldiers and money stay yours.',
   ]);
   const rep = c.reputation.valedorn;
@@ -157,7 +156,7 @@ test('defecting: −40 standing, the fief lost with a claim, and their lords hun
     'You break with the Valedorn Crown without leave: you lose 40 standing with them.',
     'You will lose Westholt Castle. You keep a claim to it.',
     "Valedorn's lords will hunt you for 10 days.",
-    'Lords who think well of you may think less of you.',
+    'The Valedorn lords will remember it.', // P8-07: none thinks well of you yet
     'Your soldiers and money stay yours.',
   ]);
   const rep = c.reputation.valedorn;

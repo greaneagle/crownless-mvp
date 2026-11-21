@@ -212,6 +212,21 @@ declare global {
     /** v20 (P8-01): lords held captive, by the player or off-screen by a realm. */
     /** v23 (P8-06a): forts besieged, and by whom. */
     sieges: any[];
+    /** v24 (P8-07): the lords' opinions (sparse: `opinions[from][to] = { rel, log }`), debts, your requests and their promises, petitions, changes of realm and your summons. */
+    nobles: {
+      opinions: Record<string, Record<string, { rel: number; log: (string | number)[][] }>>;
+      debts: { from: string; to: string; kind: 'loan' | 'freed' | 'help'; day: number; amount?: number; due?: number }[];
+      petitions: any[];
+      asks: Record<string, any>;
+      pledges: any[];
+      moved: Record<string, number>;
+      warned: Record<string, number>;
+      summons: { realm: ContentId; sid: ContentId; siegeId: number; day: number; answered: boolean } | null;
+      nextPetition: number;
+      petitionAfter: number;
+      week: number;
+      lastPetitionCheck?: number;
+    };
     nextSiegeId?: number;
     siegePlanned?: number | null;
     /** v22 (P8-05): the crown's grants waiting to be made. */

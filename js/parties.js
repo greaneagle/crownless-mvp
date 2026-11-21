@@ -331,6 +331,12 @@
       p.siegeId = null;
       p.intent = 'home';
     }
+    // P8-07: a lord who agreed to ride with you keeps beside you for their days.
+    if (CL.nobles?.ridesWith(c, p.lordId)) {
+      p.intent = 'escort';
+      [p.tx, p.ty] = W().clampToMap(c.world.x + 2, c.world.y + 2, EDGE);
+      return;
+    }
     if (wantsPlayer(c, p)) {
       p.chasing = 'player';
       p.intent = 'chase';
@@ -365,7 +371,10 @@
       p.tx = p.ty = null;
       return;
     }
-    const quarry = nearest(c, p, 'bandit', t.detection) || (CL.news.clashReady(c, now(c)) ? rival(c, p, t) : null);
+    // P8-07: their needs lean it: short of men they avoid fights; fearing for their lands they leave
+    // other realms' soldiers be; after glory or spoils they look further for a fight.
+    const lean = CL.nobles?.leaning(c, p.lordId) || { avoid: false, stay: false, seek: 1 };
+    const quarry = lean.avoid ? null : nearest(c, p, 'bandit', t.detection * lean.seek) || (!lean.stay && CL.news.clashReady(c, now(c)) ? rival(c, p, t) : null);
     if (quarry) {
       p.chasing = quarry.id;
       p.intent = tpl(quarry.template).kind === 'bandit' ? 'hunt' : 'clash';

@@ -154,6 +154,15 @@
 #realmScreen .realmList{margin:4px 0 0;padding-left:18px;font-size:.92em}
 #realmScreen .realmList li{margin:2px 0}
 #realmScreen .realmNote{opacity:.8}
+#realmScreen .lordRow{margin:6px 0}
+#realmScreen .lordRow b,#realmScreen .lordRow .lordLine{display:block}
+#realmScreen .lordRow .lordLine{opacity:.88}
+#realmScreen .lordAskBtn{min-height:44px;margin-top:2px}
+#realmScreen .lordAskCard .row button{min-height:44px}
+#realmScreen .lordAnswer{border-top:1px solid #5c4a28;margin-top:6px;padding-top:4px}
+#realmScreen .lordAnswer[data-answer="obey"] b{color:#9fd18b}
+#realmScreen .lordAnswer[data-answer="refuse"] b{color:#e08a7a}
+#realmScreen .lordWhyNot,#realmScreen .petitionNote{opacity:.8;font-style:italic}
 #ransomOptions{display:flex;flex-direction:column;gap:8px;margin-top:8px}
 #ransomOptions button{display:flex;flex-direction:column;align-items:center;min-height:44px}
 #ransomOptions small{font-weight:normal;opacity:.85}

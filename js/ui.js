@@ -683,6 +683,13 @@
       const odds = S.odds(c, s);
       card.append(el('h3', '', `Your siege of ${CL.content.get('settlements', sid).name} · day ${days + 1}`));
       card.append(el('p', '', `Food for ${Math.ceil(h.food)} days · garrison ${CL.fiefs.count(h.garrison)} · ${days >= S.RULES.ram ? 'a ram and ladders ready' : days >= S.RULES.ladders ? `ladders ready; a ram in ${S.RULES.ram - days} days` : 'ladders by tomorrow'}.`));
+      // P8-07: the lords who answered your request: in camp, or on the road.
+      const camp = s.lords.map((pid) => {
+        const q = CL.lords.partyOf(c, pid);
+        const f = CL.content.get('settlements', s.sid);
+        return q ? `${CL.realm.titled(pid, c)} ${CL.world.mapDist(q.x, q.y, f.mapX, f.mapY) <= S.RULES.camp * 2 ? 'is in camp' : 'is on the road'}` : null;
+      }).filter(Boolean);
+      if (camp.length) card.append(el('p', 'siegeLords', `${camp.join('; ')}.`));
       card.append(el('p', '', odds ? `Storm it now: about ${Math.round(odds * 100)}%.` : 'No assault until the ladders are ready.'));
       const row = el('div', 'row');
       row.append(
@@ -2500,10 +2507,25 @@
         for (const sid of ids) list.append(el('li', '', R.holdingLine(sid, c)));
         card.append(list);
       } else {
-        const list = el('ul', 'realmList');
+        // P8-07: each lord with what they hold, their kin, friends and rivals, their top need, where they
+        // are, and what they think of you; Ask… opens the request card at the top.
+        const list = el('ul', 'realmList lordList');
         for (const p of Object.values(c.people).filter((x) => x.realm === f.id)) {
-          const li = el('li', '', R.personLine(p.id, c));
+          const li = el('li', 'lordRow');
           li.dataset.person = p.id;
+          const [first, ...rest] = CL.nobles.lordLines(c, p.id);
+          li.append(el('b', '', first), ...rest.map((l) => el('span', 'lordLine', l)));
+          if (!R.rules(p.id, c)) {
+            const b = el('button', 'lordAskBtn', 'Ask…');
+            b.type = 'button';
+            b.onclick = () => {
+              CL.game.realmLord = p.id;
+              CL.game.lordAnswer = null;
+              renderRealm();
+              $('#realmScreen').scrollTop = 0;
+            };
+            li.append(b);
+          }
           list.append(li);
         }
         card.append(list);
@@ -2512,7 +2534,108 @@
     }
     const free = R.kingdoms().filter((f) => f.freeCity);
     const note = free.length ? el('p', 'realmNote', `${free.map((f) => f.name).join(', ')}: ${free.length > 1 ? 'free cities' : 'a free city'}, with no lords and no fiefs.`) : null;
-    $('#realmScreen').replaceChildren(tabs, ...cards, ...(note ? [note] : []));
+    const top = tab === 'lords' ? lordsTop(c) : [];
+    $('#realmScreen').replaceChildren(tabs, ...top, ...cards, ...(note ? [note] : []));
+  }
+
+  /**
+   * P8-07: the top of the Lords tab: the open petition (Accept or Decline), and the lord you chose to
+   * ask (four requests, each with why not; the answer with its reasons, and Pay for a price).
+   */
+  function lordsTop(c) {
+    const N = CL.nobles;
+    const R = CL.realm;
+    const el = (tag, cls, text) => Object.assign(document.createElement(tag), { className: cls || '', textContent: text || '' });
+    const out = [];
+    const redo = () => renderRealm();
+    const btn = (label, fn, disabled = false, title = '') => {
+      const b = el('button', '', label);
+      Object.assign(b, { type: 'button', disabled, title });
+      b.onclick = fn;
+      return b;
+    };
+    const x = N.petition(c);
+    if (x) {
+      const card = el('div', 'contractCard petitionCard');
+      card.dataset.petition = x.kind;
+      card.append(el('h3', '', `A petition from ${R.titled(x.lord, c)}`), el('p', '', `${N.petitionText(c, x)}.`.replace(/^./, (m) => m.toUpperCase())));
+      card.append(el('p', '', x.accepted ? `You have promised it: by day ${CL.party.dayNumber(x.until)}.` : `Answer by day ${CL.party.dayNumber(x.until)}.`));
+      if (CL.game.petitionNote) card.append(el('p', 'petitionNote', CL.game.petitionNote));
+      if (!x.accepted) {
+        const row = el('div', 'row');
+        const go = (choice) => () => {
+          const r = N.answerPetition(c, choice);
+          CL.game.petitionNote = r.ok ? null : r.text;
+          if (r.ok) CL.ui.message(r.text);
+          CL.save.write();
+          redo();
+        };
+        const accept = btn('Accept', go('accept'));
+        accept.id = 'petitionAccept';
+        const decline = btn('Decline', go('decline'));
+        decline.id = 'petitionDecline';
+        row.append(accept, decline);
+        card.append(row);
+      }
+      out.push(card);
+    }
+    const pid = CL.game.realmLord;
+    if (!pid || !c.people[pid] || R.rules(pid, c)) return out;
+    const card = el('div', 'contractCard lordAskCard');
+    card.dataset.person = pid;
+    card.append(el('h3', '', `Ask ${R.titled(pid, c)}`), ...N.lordLines(c, pid).slice(1).map((l) => el('p', '', l)));
+    const can = N.askable(c, pid);
+    const labels = { siege: 'Join my siege', relief: 'Relieve my fort', ride: 'Ride with me', back: 'Back my claim' };
+    const row = el('div', 'row');
+    for (const kind of ['siege', 'relief', 'ride', 'back']) {
+      const b = btn(
+        labels[kind],
+        () => {
+          CL.game.lordAnswer = { pid, ...N.ask(c, pid, kind) };
+          CL.save.write();
+          redo();
+          ($('#realmScreen .lordAnswer') || $('#realmScreen .lordAskCard .lordWhyNot'))?.scrollIntoView({ block: 'nearest' }); // the answer, in sight on a phone
+        },
+        !can[kind].ok,
+        can[kind].why,
+      );
+      b.dataset.ask = kind;
+      row.append(b);
+    }
+    card.append(row);
+    const why = Object.values(can).find((k) => !k.ok && k.why)?.why;
+    if (why && !Object.values(can).some((k) => k.ok)) card.append(el('p', 'lordWhyNot', `${why}.`));
+    // A price named earlier and not yet paid stays open until the lord's answer runs out.
+    const open = N.state(c).asks[pid];
+    const r = CL.game.lordAnswer?.pid === pid ? CL.game.lordAnswer : open?.price && !open.paid && c.day < open.until ? { pid, answer: 'negotiate', price: open.price, words: `${R.titled(pid, c)} will, for ${open.price} crowns (until day ${CL.party.dayNumber(open.until)}).`, line: '' } : null;
+    if (r && r.pid === pid && r.answer) {
+      const ans = el('div', 'lordAnswer');
+      ans.dataset.answer = r.answer;
+      ans.append(el('b', '', r.words), ...(r.line ? [el('p', '', r.line)] : []));
+      const a = N.state(c).asks[pid];
+      if (r.answer === 'negotiate' && r.price && a && !a.paid) {
+        const pay = btn(`Pay ${r.price} crowns`, () => {
+          const done = N.pay(c, pid);
+          if (done?.ok) CL.ui.message(done.text);
+          else if (done) CL.ui.message(done.why);
+          CL.game.lordAnswer = null;
+          CL.save.write();
+          redo();
+        });
+        pay.id = 'lordPay';
+        ans.append(pay);
+      } else if (r.answer === 'negotiate' && r.favour) ans.append(el('p', '', 'Their petition is open above.'));
+      card.append(ans);
+    } else if (r && r.pid === pid && r.why) card.append(el('p', 'lordWhyNot', `${r.why}.`));
+    const close = btn('Close', () => {
+      CL.game.realmLord = null;
+      CL.game.lordAnswer = null;
+      redo();
+    });
+    close.id = 'lordAskClose';
+    card.append(close);
+    out.push(card);
+    return out;
   }
 
   function closeJournal() {

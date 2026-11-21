@@ -65,6 +65,8 @@
       const f = sid ? CL.realm.owner(sid, c) : null;
       return Boolean(f) && CL.realm.isRealm(f) && CL.realm.capitalOf(f) === sid;
     },
+    // P8-07: a lord's petition is waiting for your answer.
+    petition: (c) => Boolean(CL.nobles?.petition(c)),
   };
 
   /** The text for this device: touch phones get the touch wording, keyboards the key wording. */

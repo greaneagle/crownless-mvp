@@ -94,12 +94,12 @@ test('intentions follow the state: landless lords campaign, nobody rides home fr
   assert.equal(count(p.troops), L.sizeFor(c, p.lordId), 'refilled');
 });
 
-test('the tap card: who the lord is and what they are doing, in two lines', () => {
+test('the tap card: who the lord is, what they are doing, and their top need', () => {
   const { c, L } = world();
   const hamon = L.partyOf(c, byKey(c, 'hamon_greymantle'));
   const tancred = L.partyOf(c, byKey(c, 'tancred_greymantle'));
   const bastiano = L.partyOf(c, byKey(c, 'bastiano_lanza'));
-  assert.deepEqual(plain(L.describe(c, hamon)), { who: 'Lord Hamon Greymantle, holder of Greywall Fort and Highmere', doing: 'resting at Greywall Fort' });
+  assert.deepEqual(plain(L.describe(c, hamon)), { who: 'Lord Hamon Greymantle, holder of Greywall Fort and Highmere', doing: 'resting at Greywall Fort', need: 'content' }); // P8-07: and their top need
   assert.equal(L.whoLine(c, tancred.lordId), 'Lord Tancred Greymantle, Lord Hamon Greymantle’s son, landless');
   assert.equal(L.whoLine(c, bastiano.lordId), 'Lord Bastiano Lanza, sworn to Queen Lucrezia Salviati, landless');
   hamon.intent = 'home';

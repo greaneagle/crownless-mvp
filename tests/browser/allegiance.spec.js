@@ -63,7 +63,7 @@ test('Allegiance: a vassal’s defection preview names the fief lost, the claim 
   await press(page, '#realmScreen [data-tab="allegiance"]');
   await expect(page.locator('#realmScreen .realmCard[data-realm="you"]')).toContainText('You hold Westholt Castle.');
   const defect = page.locator('#realmScreen .allegianceCard[data-action="defect"]');
-  for (const line of ['You will lose Westholt Castle. You keep a claim to it.', "Valedorn's lords will hunt you for 10 days.", 'Lords who think well of you may think less of you.', 'Your soldiers and money stay yours.']) await expect(defect).toContainText(line);
+  for (const line of ['You will lose Westholt Castle. You keep a claim to it.', "Valedorn's lords will hunt you for 10 days.", 'The Valedorn lords will remember it.', 'Your soldiers and money stay yours.']) await expect(defect).toContainText(line);
   await fits(page, defect);
   const ask = page.locator('#realmScreen .allegianceCard[data-action="release"]');
   await expect(ask).toContainText('Westholt Castle returns to the crown. You keep no claim to it.');

@@ -534,6 +534,54 @@
         CL.ui.message(s ? `The ${CL.content.get('factions', f).name} gather against ${CL.content.get('settlements', s.sid).name}` : 'No siege could be planned');
         break;
       }
+      case 'nobleFriend':
+      case 'nobleGrumble':
+      case 'nobleLeave': {
+        // P8-07: the nearest riding lord thinks well of you; or ill of their ruler (grumbling now); or leaves.
+        const w = c().world;
+        const near = c()
+          .parties.filter((p) => p.lordId)
+          .sort((a, b) => CL.world.mapDist(w.x, w.y, a.x, a.y) - CL.world.mapDist(w.x, w.y, b.x, b.y))[0];
+        if (!near) return CL.ui.message('No lord is riding');
+        const pid = near.lordId;
+        const N = CL.nobles;
+        const ruler = CL.realm.rulerOf(c().people[pid].realm, c());
+        if (act === 'nobleFriend') {
+          N.note(c(), pid, 'player', 'helped', { kin: false });
+          N.note(c(), pid, 'player', 'helped', { kin: false });
+          N.note(c(), pid, 'player', 'helped', { kin: false });
+          log('noble friend', { lord: pid, opinion: N.opinion(c(), pid, 'player') });
+          CL.ui.message(`${CL.realm.titled(pid, c())} thinks well of you now (${N.opinion(c(), pid, 'player')})`);
+        } else if (act === 'nobleGrumble') {
+          for (let i = 0; i < 3; i++) N.note(c(), pid, ruler, 'revoked', { kin: false });
+          delete c().nobles.warned[pid];
+          delete c().nobles.moved[pid];
+          N.weekly(c(), pid);
+          log('noble grumbles', { lord: pid, opinion: N.opinion(c(), pid, ruler) });
+          CL.ui.message(`${CL.realm.titled(pid, c())} grumbles at court: they leave in a week unless it mends`);
+        } else {
+          const to = N.destination(c(), pid) || CL.realm.realms().map((k) => k.id).find((f) => f !== c().people[pid].realm && CL.lords.templateFor(f));
+          N.changeRealm(c(), pid, to);
+          CL.lords.ensure(c(), c().day, true);
+          log('noble leaves', { lord: pid, to });
+          CL.ui.message(`${CL.realm.titled(pid, c())} leaves for ${CL.content.get('factions', to).name}`);
+        }
+        break;
+      }
+      case 'noblePetition': {
+        // P8-07: a petition now, from the first lord with something to ask (closing any open one).
+        const N = CL.nobles;
+        c().nobles.petitions = [];
+        const who = Object.keys(c().people).find((pid) => !CL.realm.rules(pid, c()) && c().people[pid].status === 'free' && N.petitionFor(c(), pid));
+        const x = who ? N.openPetition(c(), who) : null;
+        log('noble petition', { lord: who || null, kind: x?.kind || null });
+        if (!x) CL.ui.message('No lord has anything to ask');
+        break;
+      }
+      case 'nobleWeek':
+        for (const pid of Object.keys(c().people)) CL.nobles.weekly(c(), pid);
+        log('nobles: a week', { warned: Object.keys(c().nobles.warned).length });
+        break;
       case 'siegeDay':
         CL.party.advanceDays(1);
         log('sieges: a day', { sieges: c().sieges.map((s) => [s.sid, s.phase]) });

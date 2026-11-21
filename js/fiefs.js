@@ -268,7 +268,9 @@
     for (const x of CL.lords?.prisoners(c) || []) {
       if (c.day - x.since < RULES.heldDays || x.forfeit) continue;
       x.forfeit = true; // a lord held unransomed 30 days: their land goes to the crown, which will grant it
-      for (const sid of R().fiefsOf(x.lord, c)) R().transfer(c, sid, { holder: R().rulerOf(R().sovereignOf(sid, c), c), reason: 'held unransomed' });
+      const had = R().fiefsOf(x.lord, c);
+      for (const sid of had) R().transfer(c, sid, { holder: R().rulerOf(R().sovereignOf(sid, c), c), reason: 'held unransomed' });
+      if (had.length) CL.nobles?.note(c, x.lord, R().rulerOf(c.people[x.lord].realm, c), 'abandoned'); // left in a cell (P8-07)
     }
     decideGrants(c);
   }
@@ -397,12 +399,14 @@
     const fiefCount = (id) => R().fiefsOf(id, c).length;
     const kinOfLord = (id) => id !== PLAYER && c.people[id].kin.some((k) => R().fiefsOf(k.person, c).length || R().rules(k.person, c));
     const merit = (id) => (id === PLAYER ? (a?.serviceDays || 0) + c.renown / 10 : 0);
+    // P8-07: the court weighs opinions: the ruler's of each candidate, friends backing, rivals opposing.
+    const court = (id) => Math.round(CL.nobles?.court(c, g, id) || 0);
     return people
       .filter((id) => fiefCount(id) < R().FIEF_CAP && !g.declined.includes(id))
       .sort((x, y) => {
         const helped = (id) => (id === g.helper ? 0 : 1);
         const landless = (id) => (fiefCount(id) ? 2 : kinOfLord(id) ? 0 : 1);
-        return helped(x) - helped(y) || landless(x) - landless(y) || fiefCount(x) - fiefCount(y) || merit(y) - merit(x) || x.localeCompare(y);
+        return helped(x) - helped(y) || landless(x) - landless(y) || fiefCount(x) - fiefCount(y) || court(y) - court(x) || merit(y) - merit(x) || x.localeCompare(y);
       });
   }
 
@@ -431,6 +435,7 @@
   /** The crown grants it: the holding passes, the news tells it, a suggestion is remembered. */
   function give(c, g, who) {
     const before = R().fiefsOf(who, c).length;
+    const rivals = candidates(c, g).slice(0, 3); // who else stood for it (P8-07: rivals)
     const h = R().holding(g.sid, c);
     const ruler = R().rulerOf(h.sovereign, c);
     if (!R().transfer(c, g.sid, { holder: who, willing: true, reason: 'grant', quiet: true })) return false;
@@ -438,6 +443,7 @@
     const name = who === PLAYER ? c.character?.name || 'You' : R().titled(who, c);
     CL.news?.record(c, 'fief_granted', { place: g.sid, text: `${name}${before ? '' : ', landless until now,'} is granted ${placeName(g.sid)} by ${R().titled(ruler, c)}.` });
     if (g.suggestedBy && who === g.helper) CL.lords?.deed(c, who, 'suggested', g.suggestedBy); // the lord named remembers it (P8-07)
+    CL.nobles?.onGrant(c, g.sid, who, rivals);
     return true;
   }
 

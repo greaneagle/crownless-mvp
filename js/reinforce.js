@@ -71,6 +71,7 @@
     if (t.kind !== 'patrol' && t.kind !== 'lord') return null; // caravans keep clear; a lord is on their realm's side, as patrols (P8-01)
     if (hostileTo(c, t)) return 'enemy';
     if (foe.faction === t.faction) return 'enemy';
+    if (p.lordId && CL.nobles?.ridesWith(c, p.lordId)) return 'ally'; // riding with you (P8-07): against anyone but their own
     // Only a kingdom that counts you a friend, or that you serve (P8-04), sends its own to your aid (design §9.1).
     if (CL.realm.standing(c, t.faction) !== 'friendly' && CL.allegiance?.serves(c) !== t.faction) return null;
     return foe.kind === 'bandit' || foe.kind === 'patrol' || foe.kind === 'lord' ? 'ally' : null;

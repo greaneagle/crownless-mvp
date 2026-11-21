@@ -663,6 +663,7 @@
       for (const k of p.kin) if (!c.people[k.person]?.kin.some((x) => x.person === id && x.tie === RETURN_TIE[k.tie])) out.push(`${id}: kin tie to ${k.person} not returned`);
     }
     out.push(...(CL.lords?.invariants(c) || [])); // the lords on the map and their captivity (P8-01)
+    out.push(...(CL.nobles?.invariants(c) || [])); // promises, petitions and opinions (P8-07)
     return out;
   }
 

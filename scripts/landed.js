@@ -3,6 +3,9 @@
 // ending, on several seeds,
 // and reports wars, sieges begun, lifted, surrendered and stormed; forts per realm over time; grants;
 // how many lords are landless, hold one place or several; and the invariants (design §25.3).
+// P8-07: the lords' changes of realm (per realm, and the grumbling first), refused summonses,
+// revocations, the friendships, rivalries and feuds that formed, land gained and lost, and the
+// riding lords each realm has at the end (none may empty).
 const { loadGame } = require('../tests/helpers/load');
 
 function run(seed, days = 180) {
@@ -19,18 +22,32 @@ function run(seed, days = 180) {
     for (const f of CL.realm.realms()) out[f.id] = Object.values(c.holdings).filter((h) => h.kind === 'fort' && h.controller === f.id).length;
     return out;
   };
-  const tally = { wars: 0, begun: 0, lifted: 0, surrendered: 0, stormed: 0, relieved: 0, abandoned: 0, grants: 0, fell: 0, problems: [] };
+  const tally = { wars: 0, begun: 0, lifted: 0, surrendered: 0, stormed: 0, relieved: 0, abandoned: 0, grants: 0, fell: 0, problems: [], left: {}, joined: {}, grumbled: 0, refused: 0, revoked: 0, gained: 0, lost: 0 };
   // Counted as they happen (the diagnostic log keeps only the latest lines).
   const log = CL.diag.log;
   CL.diag.log = (level, msg, data) => {
     if (msg === 'Siege planned') tally.begun++;
     if (msg === 'Siege ended' && tally[data?.how] != null) tally[data.how]++;
+    if (msg === 'Lord changes realm') {
+      tally.left[data.from] = (tally.left[data.from] || 0) + 1;
+      tally.joined[data.to] = (tally.joined[data.to] || 0) + 1;
+    }
     return log.call(CL.diag, level, msg, data);
   };
   CL.events.on('HoldingChanged', (e) => {
     if (e.reason === 'grant') tally.grants++;
+    if (e.reason === 'revoked') tally.revoked++;
     if (e.from.controller !== e.to.controller) tally.fell++;
+    const lord = (id) => Boolean(c.people[id]) && !CL.realm.rules(id, c);
+    if (e.from.holder !== e.to.holder && lord(e.to.holder)) tally.gained++;
+    if (e.from.holder !== e.to.holder && lord(e.from.holder)) tally.lost++;
   });
+  const record = CL.news.record;
+  CL.news.record = (cc, kind, ...rest) => {
+    if (kind === 'lord_grumbles') tally.grumbled++;
+    if (kind === 'summons_refused') tally.refused++;
+    return record.call(CL.news, cc, kind, ...rest);
+  };
   const seen = new Set();
   const timeline = [];
   for (let d = 1; d <= days; d++) {
@@ -49,7 +66,14 @@ function run(seed, days = 180) {
   const lords = Object.keys(c.people).filter((id) => !CL.realm.rules(id, c));
   const land = (id) => CL.realm.fiefsOf(id, c).length;
   const lordsBy = { landless: lords.filter((id) => !land(id)).length, one: lords.filter((id) => land(id) === 1).length, several: lords.filter((id) => land(id) > 1).length };
-  return { seed, days, ...tally, forts: forts(), timeline, lords: lordsBy };
+  // Friendships, rivalries and feuds between lords, read from what happened.
+  const ties = { friend: 0, rival: 0, feud: 0 };
+  for (let i = 0; i < lords.length; i++) for (let j = i + 1; j < lords.length; j++) {
+    const t = CL.nobles.tie(c, lords[i], lords[j]);
+    if (t) ties[t]++;
+  }
+  const riders = Object.fromEntries(CL.realm.realms().map((f) => [f.id, CL.lords.riders(c).filter((id) => c.people[id].realm === f.id).length]));
+  return { seed, days, ...tally, forts: forts(), timeline, lords: lordsBy, ties, riders };
 }
 
 module.exports = { run };
@@ -65,5 +89,7 @@ if (require.main === module) {
     console.log(`seed ${r.seed}, ${r.days} days: ${r.wars} wars; sieges planned ${r.begun}; forts taken ${r.fell} (stormed ${r.stormed}, surrendered ${r.surrendered}, lifted ${r.lifted}, relieved ${r.relieved}, abandoned ${r.abandoned}); ${r.grants} grants`);
     console.log(`  forts at the end: ${Object.entries(r.forts).map(([f, n]) => `${f} ${n}`).join(', ')}; by month: ${r.timeline.map((t) => Object.values(t.forts).join('/')).join(' ')}`);
     console.log(`  lords: ${r.lords.landless} landless, ${r.lords.one} with one place, ${r.lords.several} with several; invariants: ${r.problems.length ? r.problems.join('; ') : 'all held'}`);
+    const per = (o) => Object.entries(o).map(([f, n]) => `${f} ${n}`).join(', ') || 'none';
+    console.log(`  nobles: land gained ${r.gained}, lost ${r.lost}; ${r.grumbled} grumbled; left: ${per(r.left)}; joined: ${per(r.joined)}; summonses refused ${r.refused}; revoked ${r.revoked}; friends ${r.ties.friend}, rivals ${r.ties.rival}, feuds ${r.ties.feud}; riding lords: ${per(r.riders)}`);
   }
 }

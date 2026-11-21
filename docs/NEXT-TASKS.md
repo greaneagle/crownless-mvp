@@ -1305,7 +1305,7 @@ _Re-specified 2026-11-20 at build 2.23.0 (commit 09176e8); NEXT-PLAN §5 has the
   | P8-05 fiefs and castellans | `campaign-bots`, `phase7-exit` | **Whole suite** |
   | P8-06a sieges on the map | `world-sim`, `gate-d-campaigns` (sieges near the story forts) | |
   | P8-06b the assault battle | `battle-parity`, `battle-extras` | **Whole suite** |
-  | P8-07 named nobles | `campaign-bots` | |
+  | P8-07 named nobles | `campaign-bots`; ran also `landed`, `world-sim`, `happenings-bots` (sieges, grants and the lords' riding changed) and the new `prototype-f` | |
   | P8-08 losing and retaking land | `campaign-bots`, `test-world` | |
   | P8-T tuning and acceptance | all, with Prototypes D and F | **Whole suite** |
 
@@ -2145,7 +2145,43 @@ Phase 8 adds many rights: appoint, tax, summon, grant, besiege, swear, leave, ra
 
 **Acceptance.** A fought assault is playable and readable on the phone, within the frame budget. Fighting it is a few points better than Simulate, as B-01 aims.
 
-### P8-07 · Named nobles: needs, opinions and rivalries (M–L) — Specified
+### P8-07 · Named nobles: needs, opinions and rivalries (M–L) — ✅ Done in 2.31.0
+
+**Done (2.31.0, 2026-11-21).** Save v24 (`nobles`). `js/nobles.js` (`CL.nobles`); the Lords tab in `js/ui.js`.
+- **Needs** (`needs`, computed, never saved), each with a score and its words:
+  - land: landless, or a claim to a lost fief;
+  - coin: a kinsman to ransom, a fief purse short of the men it owes, or the coin motive;
+  - men: under 55% of the household;
+  - safety: a holding besieged or gathered against (or the realm at war);
+  - standing: beaten, passed over or out-granted in the last 30 days (or the glory motive).
+
+  The top one (`needLine`) shows on the tap card and the Lords tab. They lean the lords' riding (`leaning`): short of men they pick no fights; fearing for their lands they leave other realms' soldiers be; after glory or spoils they look 40% further for Reavers.
+- **Motives** from the trait line (`motives`): guards their lands, hungry for glory, loyal to the crown, owes the crown nothing, minds the coin, hungry for land. Stable; they weigh the factors.
+- **Opinions** (`opinions[from][to] = { rel, log }`, sparse): deeds move `rel` (`DEEDS`), half to the doer's close kin (parents, children, siblings, spouses), a point a week back toward nothing. A lord's view of their ruler starts from their motives (loyal +15, owes nothing −10), of their kin at +10. The P8-01 deeds feed it (`lords.deed`), and so do the player beating a lord, defecting, and leaving an oath owing service.
+- **Ties** (`tie`), read from the log, never scripted: a feud (took their fief, or you hold their kin), a rival (got the grant they wanted), a friend (a friendly deed and goodwill of 8 or more).
+- **Requests** (`consider`): four factors, each a line with its sign:
+  - obligation: sworn to the same crown, kin, their ruler's summons, a debt (a waived ransom, help given);
+  - relationship (×0.6), with the deed behind it;
+  - interest: how far from their lands, their lands threatened, their ranks thin, at another siege, a claim on the place, the crown's war, the walls against the host as anyone can see them, a feud beside them (never), a rival (cold);
+  - fear: the asker's men and renown (yours), the crown's.
+
+  The answer: obey at 30, a price or favour at 10, delay (a day) when the reason is thin ranks, another siege or their lands threatened, else refuse. A price for a siege or relief is in crowns; for the rest, a favour (their petition) unless they want coin. Only what the lord could know goes in: your purse never does (SC-24, tested).
+- **Your requests** (Lords tab, Ask…): Join my siege, Relieve my fort, Ride with me (three days: they keep beside you and take your side in a fight against anyone but their own realm), Back my claim (your bid at court for 60 days). Each with why not. A 3-day cooldown per lord, 7 after a refusal; a price paid once (it stays open on the card until the cooldown ends); a promise lapses, and you are told, if they are taken on the way. Their debt to you is paid by doing it.
+- **The ruler's summons** (`summon`): every lord a realm gathers for a siege answers by the model; who refuses stays home, the news tells one, and the ruler remembers it (once a week a lord). A besieged fort's call for relief goes the same way (`answersRelief`), except a realm's last fort, which every lord rides to save. **Your summons**, as a vassal: a message and a line on the Allegiance tab; being at the siege answers it (a day of service each day); its end without you is a call missed (P8-04).
+- **Between lords:** fighting a siege through together makes friends; a fort taken makes the old holder's feud with its taker (their claim was P8-06a's), and resentment of the crown that didn't hold it; a grant makes rivals of the top candidates who wanted land and were passed over. Feuding lords won't answer a summons beside each other. **Grants weigh opinions** (P8-05's order, after the fewest fiefs): the ruler's goodwill /10, ±1 for each friend or rival at court, and your backing and influence for you (or for the lord you back). A realm at war goes first for a fort one of its lords claims.
+- **The conqueror's choice for AI lords** (`conquerorChoice`): keep it (owes nothing, thinks ill of the crown), suggest a landless kinsman, hand it to the crown (loyal, with land enough), or ask.
+- **Changing realm** (`weekly`, each lord's week): thinking less than −30 of their ruler, a lord grumbles at court (the news), and a week later leaves for the realm whose ruler they think best of (at least 15 better): released at peace (fiefs back to the crown, no claim), defecting at war (fiefs lost, a `granted` claim kept). Once in 60 days; never from a siege (after it ends); never leaving a realm with three riding lords or fewer; one a realm a month. Their kin at home think less of them; the old ruler remembers. They ride out again from their new capital.
+- **Revocation:** a lord who refused two summonses in 60 days loses a fief (a village first; never a story fort's), which the crown grants to another; they resent it.
+- **Petitions** to you (one open at a time, about one chance in eight a day once 5 days have passed since the last), from a lord who thinks well of you (+10 or more), by their top need: clear the bandits about their fief (80 crowns, 10 days), lend 100 crowns (130 back in 14 days, a week's grace at a time), pay a kinsman's ransom to the realm holding them, back their claim, support them for a grant. Accept or decline at the top of the Lords tab; either way they remember. The reward is paid once.
+- **The Lords tab:** each lord's realm and holdings (or landless), kin (and their realm if another), friends, rivals and feuds, top need, where they are, motives, and what they think of you and why.
+- **`npm run landed`** also reports land gained and lost, grumbling, who left and joined each realm, summonses refused, revocations, friends, rivals and feuds, and riding lords per realm. 180 days, three seeds: 1–3 lords change realm a run, 10–13 rivalries and 4–5 feuds, every realm keeps 4–7 riding lords.
+- **Not built:**
+  - the "escort my caravan" petition (five of the six kinds);
+  - AI lords ransoming each other's kin (a realm's prisoners still come home "ransomed by their own");
+  - lords asking each other for men;
+  - a land-hungry lord seeking out sieges beyond the summons, and a men-short one avoiding a summons (the realm doesn't summon thin lords).
+- **Debug → Nobles:** Lord likes me, Lord grumbles (now; they leave in a week), Lord leaves realm, Petition now, Nobles: a week.
+- **Tests:** `tests/nobles.test.js` (20), `tests/slow/prototype-f.test.js` (Prototype F), `tests/browser/nobles.spec.js` (the Lords tab, a request and its answer, a petition, at both sizes), and the landed slow test's P8-07 acceptance.
 
 **Problem.**
 - **Lords obey nothing and want nothing.** Prototype F asks for two vassals given the same high-risk order: one obeys, one negotiates or refuses, for reasons the player can read (design §18.4, §28 "relationship, interest, obligation and fear").

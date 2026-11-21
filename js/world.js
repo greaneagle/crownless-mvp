@@ -206,7 +206,9 @@
       // A settlement's holder, and who has its gates (P8-02); a lord, and what they're doing (P8-01).
       const lp = target.type === 'party' ? CL.parties.find(CL.campaign, target.id) : null;
       const lord = lp?.lordId ? CL.lords.describe(CL.campaign, lp) : null;
-      const line = target.type === 'settlement' ? CL.realm.tapLine(target.id, CL.campaign) : lord ? `${lord.who}: ${lord.doing}.` : null;
+      // P8-07: and the lord's top need ("Lord Hamon …: riding the bounds of their lands. He is short of men.").
+      const need = lord?.need && lord.need !== 'content' ? ` ${CL.realm.person(lp.lordId, CL.campaign)?.gender === 'female' ? 'She' : 'He'} ${lord.need}.` : '';
+      const line = target.type === 'settlement' ? CL.realm.tapLine(target.id, CL.campaign) : lord ? `${lord.who}: ${lord.doing}.${need}` : null;
       if (line) CL.ui.message(e ? `${e.text} ${line}` : line);
     }
   }

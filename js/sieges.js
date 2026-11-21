@@ -157,30 +157,37 @@
     const forts = Object.keys(c.holdings).filter((sid) => c.holdings[sid].kind === 'fort' && enemies.includes(c.holdings[sid].controller) && !at(c, sid) && CL.rights.may(c, someLord(c, f) || ruler, 'besiege', sid).ok);
     if (!forts.length) return null;
     const d = (sid) => CL.world.mapDist(home.mapX, home.mapY, place(sid).mapX, place(sid).mapY);
-    const sid = forts.sort((a, b) => d(a) - d(b))[0];
+    // P8-07: a feud's claim is pressed in war: a fort one of the realm's lords claims comes first.
+    const claimed = (sid) => (R().claimsOn(sid, c).some((k) => c.people[k.by]?.realm === f && c.people[k.by].status === 'free') ? 0 : 1);
+    const sid = forts.sort((a, b) => claimed(a) - claimed(b) || d(a) - d(b))[0];
     const fort = place(sid);
-    const lords = CL.lords
+    const nearby = CL.lords
       .riders(c)
       .filter((pid) => c.people[pid].realm === f && c.people[pid].status === 'free' && !of(c, pid))
       .map((pid) => CL.lords.partyOf(c, pid))
       .filter((q) => q && !CL.lords.thin(c, q) && CL.world.mapDist(q.x, q.y, fort.mapX, fort.mapY) <= RULES.reach * 2)
-      .sort((a, b) => CL.world.mapDist(a.x, a.y, fort.mapX, fort.mapY) - CL.world.mapDist(b.x, b.y, fort.mapX, fort.mapY))
-      .slice(0, 4);
+      .sort((a, b) => CL.world.mapDist(a.x, a.y, fort.mapX, fort.mapY) - CL.world.mapDist(b.x, b.y, fort.mapX, fort.mapY));
+    // The ruler's summons (P8-07): each lord answers by their needs and opinions; who refuses stays home.
+    const answer = CL.nobles ? CL.nobles.summon(c, f, sid, nearby.map((q) => q.lordId)) : { come: nearby.map((q) => q.lordId).slice(0, 4), refused: [] };
+    const lords = answer.come.map((pid) => CL.lords.partyOf(c, pid));
     if (lords.length < RULES.minLords) return null;
+    CL.nobles?.refusals(c, f, sid, answer.refused);
     c.nextSiegeId = (c.nextSiegeId || 0) + 1;
     const s = { id: c.nextSiegeId, sid, realm: f, by: 'ai', lords: lords.map((q) => q.lordId), relief: [], phase: 'gathering', began: null, gatherBy: c.day + RULES.gatherDays, lastDay: Math.floor(c.day), steppedTo: c.day, log: [] };
     list(c).push(s);
     for (const q of lords) Object.assign(q, { intent: 'gather', siegeId: s.id });
     log(s, c.day, `The ${factionName(f)} gather their lords against ${placeName(sid)}.`);
+    CL.nobles?.summonPlayer(c, f, s); // a vassal of the realm is summoned too
     CL.diag.log('info', 'Siege planned', { realm: f, fort: sid, lords: s.lords });
     return s;
   }
   const someLord = (c, f) => Object.keys(c.people || {}).find((id) => c.people[id].realm === f && !R().rules(id, c));
 
   /** End a siege: its lords go home to refill (lifted, taken or surrendered). */
-  function end(c, s, how) {
+  function end(c, s, how, ctx = {}) {
     const i = list(c).indexOf(s);
     if (i >= 0) list(c).splice(i, 1);
+    CL.nobles?.onSiegeEnd(c, s, how, ctx); // who fought beside whom, who relieved whom (P8-07)
     for (const pid of [...s.lords, ...s.relief]) {
       const q = CL.lords.partyOf(c, pid);
       if (q) Object.assign(q, { intent: 'home', siegeId: null, tx: null, ty: null });
@@ -214,7 +221,7 @@
     h.unrest = Math.max(h.unrest, RULES.takenUnrest);
     h.weakUntil = c.day + RULES.takenWeakDays;
     h.food = Math.min(h.food ?? 0, 3);
-    end(c, s, how);
+    end(c, s, how, { was: was.holder, wasRealm: R().person(was.holder, c)?.realm || null, commander });
     const words = `${placeName(s.sid)} has ${how === 'stormed' ? 'been stormed' : 'surrendered'}${taker ? `: the ${factionName(taker)} hold it now` : ''}.`;
     CL.news?.record(c, 'fort_fell', { place: s.sid, faction: taker, text: words });
     if (s.by === PLAYER || was.holder === PLAYER) CL.chronicle?.add(c, { day: c.day, kind: 'holding', place: s.sid, event: was.holder === PLAYER ? 'lost' : s.by === PLAYER ? 'changed' : 'changed', by: taker || was.controller });
@@ -224,7 +231,7 @@
       if (s.by === PLAYER) {
         if (CL.game.mode === 'map' || CL.game.mode === 'settlement') CL.ui.openConquest?.(s.sid);
         else CL.fiefs.conquered(c, s.sid, PLAYER, 'ask');
-      } else CL.fiefs.conquered(c, s.sid, commander, 'ask');
+      } else CL.fiefs.conquered(c, s.sid, commander, ...(CL.nobles?.conquerorChoice(c, commander, s.sid) || ['ask'])); // the lord's own choice (P8-07)
     }
     return how;
   }
@@ -329,6 +336,7 @@
       if (c.people[pid].realm !== f || c.people[pid].status !== 'free' || of(c, pid)) continue;
       const q = CL.lords.partyOf(c, pid);
       if (!q || CL.lords.thin(c, q) || (!last && CL.world.mapDist(q.x, q.y, fort.mapX, fort.mapY) > RULES.reach)) continue;
+      if (!last && CL.nobles && !CL.nobles.answersRelief(c, pid, s.sid)) continue; // the call for relief, answered by the model (P8-07)
       s.relief.push(pid);
       Object.assign(q, { intent: 'relief', siegeId: s.id });
       log(s, c.day, `${R().titled(pid, c)} rides to relieve ${placeName(s.sid)}.`);

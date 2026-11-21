@@ -48,6 +48,7 @@
     gather: 'gathering for a siege',
     besiege: 'besieging',
     relief: 'riding to relieve a besieged fort',
+    escort: 'riding with you',
   };
 
   const R = () => CL.realm;
@@ -179,8 +180,8 @@
     return WORDS[p.intent] || WORDS.campaign;
   }
 
-  /** The tap card's two lines. */
-  const describe = (c, p) => ({ who: whoLine(c, p.lordId), doing: doingLine(c, p) });
+  /** The tap card's lines: who, what they're doing, and their top need (P8-07). */
+  const describe = (c, p) => ({ who: whoLine(c, p.lordId), doing: doingLine(c, p), need: CL.nobles?.needLine(c, p.lordId) || '' });
 
   // ---- Deeds (kept for P8-07) ----
 
@@ -188,6 +189,7 @@
     const p = c.people[pid];
     if (!p) return;
     p.deeds = [...(p.deeds || []), { by, kind, day: c.day }].slice(-DEEDS_MAX);
+    CL.nobles?.note(c, pid, by, kind); // and what they think of it (P8-07)
   }
 
   // ---- Captives ----
@@ -210,6 +212,7 @@
     if (!person || person.status === 'captive') return null;
     const at = { x: p.x, y: p.y, faction: person.realm, text: '' };
     if (by === 'player' || R().isRealm(by)) {
+      if (by === 'player') CL.nobles?.note(c, pid, 'player', 'beat'); // beaten in the field (P8-07)
       Object.assign(person, { status: 'captive', heldBy: by });
       /** @type {any} */
       const x = { lord: pid, by, since: day, led: Math.max(1, led), offerDay: null, offered: false, checked: Math.floor(day), release: null };
