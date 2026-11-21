@@ -37,7 +37,7 @@
   const CL = root.Crownless;
 
   const RULES = {
-    tax: { village: 30, fort: 60, town: 120 },
+    tax: { village: 30, fort: 80, town: 120 }, // P8-T: a fort pays for itself on the defaults (about +10 a week)
     stance: { light: 0.7, normal: 1, heavy: 1.4 },
     garrisonTarget: { light: 12, normal: 22, strong: 32 },
     garrisonWage: 1 / 3, // of each soldier's weekly wage
@@ -49,12 +49,12 @@
     repairs: { cost: 10, mend: 15 },
     drift: { light: { prosperity: 1, unrest: -3 }, normal: { prosperity: 0, unrest: -1 }, heavy: { prosperity: -1, unrest: 5 } },
     unrest: { start: 20, warn: 60, stop: 80, unpaid: 10, rest: 20 },
-    prosperity: { village: 50, fort: 40, town: 60 },
+    prosperity: { village: 50, fort: 50, town: 60 }, // P8-T: forts from 40
     warnings: 2,
     grantDays: [2, 4],
     heldDays: 30, // a lord held unransomed this long loses their land to the crown
     fort: { renown: 300, serviceDays: 30 }, // for the player to be granted a fort
-    longService: 60, // a landless vassal's service days before the crown gives one of its own villages
+    longService: 30, // a landless vassal's service days before the crown gives one of its own villages (P8-T: from 60, so it comes within a season)
     startWeeks: 4, // a holding's treasury at the start: this many weeks of its tax
     reportsMax: 6,
     bookMax: 60,
@@ -390,7 +390,13 @@
 
   /** Queue a grant of a holding the crown has to give; `helper`: who did most in its taking. */
   function offer(c, sid, helper = null, day = c.day) {
-    if (grants(c).some((g) => g.sid === sid) || !CL.rights.may(c, R().rulerOf(R().sovereignOf(sid, c), c), 'grant', sid).ok) return null;
+    // P8-T: a grant already waiting with no one named: whoever did most in its taking is named now.
+    const waiting = grants(c).find((g) => g.sid === sid);
+    if (waiting && helper && !waiting.helper && waiting.offeredTo !== PLAYER) {
+      waiting.helper = helper;
+      return waiting;
+    }
+    if (waiting || !CL.rights.may(c, R().rulerOf(R().sovereignOf(sid, c), c), 'grant', sid).ok) return null;
     const g = { sid, helper, day: day + RULES.grantDays[0] + (CL.autoresolve.next(c) * (RULES.grantDays[1] - RULES.grantDays[0])), declined: [], offeredTo: null };
     grants(c).push(g);
     if (grants(c).length > RULES.grantsMax) grants(c).shift();

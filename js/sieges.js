@@ -41,6 +41,7 @@
     ladders: 1, // days
     ram: 3,
     assaultOdds: 0.6,
+    lastAssaultOdds: 0.75, // P8-T: against a realm's last fort, after the ram
     hopeless: 0.9,
     walls: { base: 1.2, perWall: 0.4, ram: -0.3 },
     assaultLoss: { win: 0.3, lose: 0.4 },
@@ -434,15 +435,17 @@
     const today = Math.floor(c.day);
     if (s.lastDay === today) return;
     s.lastDay = today;
-    // The day's choice.
+    // The day's choice. P8-T: a realm's last fort holds out longer: no surrender for hopeless odds
+    // (only hunger), and its besiegers wait for the ram and better odds, so the relief can come.
     const o = A().winChance(attack(c, s), defence(c, s).power);
-    if (h.food <= 0 || (c.day - s.began >= RULES.ladders && o >= RULES.hopeless)) {
+    const lastFort = Object.values(c.holdings).filter((x) => x.kind === 'fort' && x.controller === defender).length <= 1;
+    if (h.food <= 0 || (!lastFort && c.day - s.began >= RULES.ladders && o >= RULES.hopeless)) {
       log(s, c.day, `${placeName(s.sid)} surrenders.`);
       return take(c, s, 'surrendered');
     }
     if (s.by === PLAYER) return;
     if (attack(c, s) < defence(c, s).raw || c.day - s.began > RULES.maxDays) return end(c, s, 'lifted');
-    if (c.day - s.began >= RULES.ladders && o >= RULES.assaultOdds) {
+    if (c.day - s.began >= (lastFort ? RULES.ram : RULES.ladders) && o >= (lastFort ? RULES.lastAssaultOdds : RULES.assaultOdds)) {
       // P8-06b: you are in the fort: the assault is fought, and you defend the walls.
       if (c.world.location === s.sid && ['settlement', 'map', 'town'].includes(CL.game.mode) && CL.assault) return defend(c, s);
       return assault(c, s);

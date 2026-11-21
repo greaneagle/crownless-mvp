@@ -23,11 +23,12 @@ test('new campaigns do not stall: eight seeds all make progress in 15 days', () 
 });
 
 // v2.0 acceptance (V2-13).
-test('Prototype G (short): hands-off, presets-only and expert players all get through the same campaign, and resume after a reload', () => {
+test('Prototype G (short): hands-off, presets-only, expert and landed players all get through the same campaign, and resume after a reload', () => {
   const { run } = require('../../scripts/prototype-g');
-  for (const style of ['hands-off', 'presets', 'expert']) {
+  for (const style of ['hands-off', 'presets', 'expert', 'landed']) {
     const r = run(2, style, 8);
     assert.equal(r.stuck, 0, `${style}: never stuck`);
+    assert.equal(r.invariants, 0, `${style}: the invariants held (P8-T)`);
     assert.ok(r.resumed, `${style}: the reload picked up where it left off`);
     assert.ok(r.day >= 8 - 0.01, `${style}: reached day 8`);
     assert.ok(r.money >= 0 && r.soldiers >= 0);

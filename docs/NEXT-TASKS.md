@@ -2396,7 +2396,21 @@ Needs are computed, not saved.
 
 **Acceptance.** Prototype D passes in the bot, and the owner can play it from the Debug start.
 
-### P8-T · Phase 8 tuning and acceptance (S–M) — Specified
+### P8-T · Phase 8 tuning and acceptance (S–M) — ✅ Done in 3.0.0
+
+**Done (3.0.0, 2026-11-21).** No save change. The measurements and the owner's checks are in `docs/PHASE-8-VALIDATION.md`.
+- **Tuned:**
+  - **a fort pays for itself:** fort tax base 60 → 80 and a fort's prosperity from 40 → 50, so on the defaults (steward, normal tax, 22 in garrison) it nets about +10 a week (−19 before); a village +22, unchanged. A contract still brings about 360 a week, so land is a modest income, not a reason to stop working. The AI's forts live by the same rules, so their treasuries no longer drain.
+  - **a sworn vassal's first land:** the crown's own village after 30 days of service (from 60). The landed bot swears around day 30–50 and is granted its first village around day 70–80.
+  - **a realm's last fort holds out longer:** its besiegers wait for the ram (3 days) and 75% odds before they storm it, and it surrenders only to hunger, never to hopeless odds, so its relief has time to arrive (P8-06a's rules let one realm lose every fort in one seed of six).
+  - **a conquest asked for a grant already waiting** names its taker first (a test of the exit found the weekly grants could queue it before the conqueror's choice was made).
+  - Siege odds (parity, 40 seeds): attack 9 and defence 15 points over the odds, unchanged since P8-06b, inside B-01's 5–15. Thresholds (150 renown and 20 days to swear; ransoms of 100 crowns and 25 a soldier) left as they are: the bots reach the oath by day 30–50, and a lord's ransom of 400–700 crowns is a week or two of a company's income at that stage.
+- **Anti-snowball** (`npm run landed 180 6`): every realm keeps a fort in all six seeds; 3–9 forts change hands a run; lords stay a mix of landless (6–10), single-holding (3–10) and several-holding (6–9), no lord holding more than 40% of a realm's holdings (two of Vessaro's five); 0–4 of the 8 landless lords win land and 2–3 landed lords lose it all; 1–3 lords change realm a run.
+- **The bots:** Prototype G has the landed style (serves, swears, takes the grants it is offered, leaves the steward and the defaults) and counts forced screens (a ransom, a grant, a conquest, your fort besieged) per 10 days; every style keeps the invariants over 90 days. The bot answers a grant or ransom waiting even where a headless page never opens the prompt, and leaves a besieged fort to its steward.
+- **The exit** (`tests/slow/phase8-exit.test.js`, about 45 s): 120 days in one save with a reload at day 60: service and fealty (the landed bot, days 0–25), Ulfstead Hold stormed for Valedorn and granted on the conqueror's request, lost to Hrothmark's siege while away, landless, defection, service and fealty to Aurelia, Ulfstead retaken and the claim backed. The invariants hold every day; nothing doubled.
+- **Reproducible runs:** Prototype G and the exit seed a new game's dice streams and respawn its parties from the fixed seed (a new game seeds them from the clock, which made runs differ).
+- **Checks:** 806 fast tests; the whole slow suite (17 tests, about 42 minutes); 187 browser tests at both sizes.
+- **Version 3.0.0** (D-V1).
 
 **Build.**
 - **Tuning:**

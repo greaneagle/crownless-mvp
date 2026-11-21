@@ -2,9 +2,10 @@
 // (a) a player who never opens a setting and auto-resolves every fight, (b) one who fights in person and
 // only picks presets, and (c) an expert who chooses setups, rallies, and keeps a quartermaster and a
 // merchant (from 2.23.0, P7-T, also a surgeon, a scout and a blacksmith, a detachment out hunting, a
-// mill, and the world's events, which run in every style). Each run also saves at the halfway mark, reloads from that save and plays on (resuming after
+// mill, and the world's events, which run in every style), and (d, from 3.0.0, P8-T) a landed player who
+// serves a crown, swears fealty and takes the land it is granted, leaving the steward and the defaults. Each run also saves at the halfway mark, reloads from that save and plays on (resuming after
 // time away). Reports outcomes, forced screens and warnings per style.
-//   node scripts/prototype-g.js [days=30] [seeds=6]
+//   node scripts/prototype-g.js [days=30] [seeds=6] [style…]
 const path = require('node:path');
 const ROOT = process.env.CL_ROOT || path.join(__dirname, '..');
 const { loadGame, memoryStorage } = require(path.join(ROOT, 'tests/helpers/load'));
@@ -36,6 +37,7 @@ function run(seed, style, days) {
       CL.character.begin({ name: `G${seed}`, background: 'farmhand' });
       const c = CL.campaign;
       c.rngSeed = seed;
+      c.rng = CL.autoresolve.streamSeeds(seed); // P8-T: the dice streams too (a new game seeds them from the clock)
       c.parties = [];
       c.partySpawns = {};
       c.nextPartyId = 1;
@@ -65,6 +67,7 @@ function run(seed, style, days) {
     heroDown: add('heroDown'),
     rallies: add('rallies'),
     screens: add('screens'),
+    decisions: add('decisions'), // P8-T: the forced screens (a ransom, a grant, a conquest, your fort besieged)
     stuck: add('stuck'),
     warnings: messages.filter((m) => WARN.test(m)).length,
     followers: [CL.quartermaster?.get(c) ? 'QM' : '', CL.merchant?.get(c) ? 'merchant' : '', CL.surgeon.get(c) ? 'surgeon' : '', CL.scout.get(c) ? 'scout' : '', CL.blacksmith.get(c) ? 'smith' : ''].filter(Boolean).join('+') || '-',
@@ -81,6 +84,12 @@ function run(seed, style, days) {
     news: c.news?.lines?.length || 0,
     chronicle: Array.isArray(c.chronicle) ? c.chronicle.length : 0,
     titled: CL.realm.fiefsOf('player', c).length > 0,
+    fiefs: CL.realm.fiefsOf('player', c).length,
+    // P8-T: when the oath came, and the first land (the chronicle's first holding gained).
+    swornDay: CL.allegiance.state(c).kind === 'vassal' ? Math.floor(CL.allegiance.state(c).since) : null,
+    landedDay: (Array.isArray(c.chronicle) ? c.chronicle : []).find((e) => e.kind === 'holding' && e.event === 'gained')?.day ?? null,
+    allegiance: CL.allegiance.state(c).kind,
+    invariants: [...(first.invariants || []), ...(second.invariants || [])].length,
     resumed,
     day: c.day,
   };
@@ -90,7 +99,8 @@ function main() {
   const days = Number(process.argv[2] || 30);
   const seeds = Number(process.argv[3] || 6);
   const rows = [];
-  for (const style of ['hands-off', 'presets', 'expert']) {
+  const only = process.argv.slice(4); // optional: the styles to run (default all four)
+  for (const style of only.length ? only : ['hands-off', 'presets', 'expert', 'landed']) {
     const all = [];
     for (let seed = 1; seed <= seeds; seed++) all.push(run(seed, style, days));
     const sum = (k) => all.reduce((n, r) => n + r[k], 0);
@@ -113,6 +123,13 @@ function main() {
       warnings: sum('warnings'),
       stuck: sum('stuck'),
       resumed: `${all.filter((r) => r.resumed && r.day >= days - 0.01).length}/${seeds}`,
+      // P8-T: what the landed style comes to, and the forced screens (design §28: mandatory clicks).
+      sworn: all.filter((r) => r.allegiance === 'vassal').length,
+      landed: all.filter((r) => r.fiefs > 0).length,
+      'sworn on day': all.map((r) => r.swornDay ?? '-').join('/'),
+      'land on day': all.map((r) => (r.landedDay == null ? '-' : Math.floor(r.landedDay))).join('/'),
+      'forced /10 days': (sum('decisions') / (seeds * days / 10)).toFixed(2),
+      invariants: sum('invariants'),
     });
   }
   console.log(`Prototype G: ${seeds} campaigns × ${days} days, each style on the same seeds`);

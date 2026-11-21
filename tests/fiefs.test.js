@@ -148,6 +148,7 @@ test('desertion: unpaid, two warnings, then the garrison deserts a man a day unt
   CL.accounts.transfer(c, acct, 'world', CL.accounts.balance(c, acct), 'emptied');
   c.holdings.westholt_castle.policies.repairs = false;
   const h = c.holdings.westholt_castle;
+  h.prosperity = 10; // a poor fort: its tax can't meet the wages (P8-T: a prosperous one pays for itself)
   const men = F.count(h.garrison);
   for (let w = 1; w <= 2; w++) {
     CL.accounts.transfer(c, acct, 'world', CL.accounts.balance(c, acct), 'emptied');

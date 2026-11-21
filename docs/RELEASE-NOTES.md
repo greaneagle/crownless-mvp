@@ -1,5 +1,22 @@
 # Crownless — Release Notes
 
+## v3.0.0 — The Landed World (P8-T) · 2026-11-21
+
+Phase 8 is complete: holdings and the people of the realms, permissions, lords on the map, allegiance, fiefs, sieges and the assault battle, named nobles, and losing and retaking land. This release tunes it and checks the phase's exit; the evidence is in `docs/PHASE-8-VALIDATION.md`.
+
+### Changed
+- **A fort pays for itself** on the defaults: about +10 crowns a week (it lost 19 before). A village still makes about +22. The lords' forts live by the same rules.
+- **A sworn vassal's first land comes sooner:** the crown gives one of its own villages after 30 days of service (from 60).
+- **A kingdom's last fort holds out for its relief:** its besiegers wait for the ram and better odds before they storm it, and it surrenders only when the food runs out. Over 180 days on six seeds, every kingdom keeps a fort.
+- When you ask the crown for a fort you took, you come first for its grant even if the crown had already put it up.
+
+### Under the hood
+- No save change.
+- **The Phase 8 exit** runs as a slow test: 120 days in one save, reloaded halfway: serve and swear, win a fort, lose it while away, go landless, change crowns and retake it.
+- **Prototype G** has a fourth style, the landed player, and counts the decisions that interrupt the map (about one in 120 days for a landed player).
+- **`npm run landed`** also reports how many landless lords won land, how many landed lords lost it all, and the most of a kingdom's land one lord holds.
+- **Tests:** 806 fast and 17 slow Node tests (the whole slow suite, the checkpoint), 187 browser tests (9 skipped: the visual baselines, Linux only, and those for one device only).
+
 ## v2.32.0 — Losing and retaking land (P8-08) · 2026-11-21
 
 ### New

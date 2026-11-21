@@ -332,6 +332,10 @@ function makeBot(CL, { log = () => {}, style = 'hands-off', roam = false } = {})
     let idle = 0;
     for (let step = 0; step < maxSteps && c().day < end; step++) {
       stats.minGold = Math.min(stats.minGold, c().gold);
+      // P8-T: a headless page never opens the prompts, so a decision waiting is answered as the screen
+      // would ask it (and counted as a forced screen).
+      if (g.mode === 'map' && CL.fiefs?.grantDue(c())) g.mode = 'grant';
+      else if (g.mode === 'map' && CL.lords?.offerDue(c())) g.mode = 'ransom';
       const m = g.mode;
       // The decisions that interrupt the map (P8-01, P8-05): a bot takes the default.
       if (m === 'ransom') {
@@ -346,6 +350,10 @@ function makeBot(CL, { log = () => {}, style = 'hands-off', roam = false } = {})
       } else if (m === 'conquest') {
         if (g.conquest) CL.fiefs.conquered(c(), g.conquest, 'player', 'ask');
         g.conquest = null;
+        CL.ui.changeMode('map');
+        stats.decisions = (stats.decisions || 0) + 1;
+      } else if (m === 'siegeAlarm') {
+        // P8-06a: your fort besieged: the default, leave it to the steward.
         CL.ui.changeMode('map');
         stats.decisions = (stats.decisions || 0) + 1;
       } else if (m === 'result') CL.world.returnToMap();

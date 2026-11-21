@@ -50,6 +50,8 @@ function run(seed, days = 180) {
   };
   const seen = new Set();
   const timeline = [];
+  // P8-T: who held land at the start, to see who won it and who lost it all.
+  const startLand = Object.fromEntries(Object.keys(c.people).filter((id) => !CL.realm.rules(id, c)).map((id) => [id, CL.realm.fiefsOf(id, c).length]));
   for (let d = 1; d <= days; d++) {
     Object.assign(c, { food: 1e4, gold: 1e4 });
     CL.party.advanceDays(1);
@@ -72,8 +74,18 @@ function run(seed, days = 180) {
     const t = CL.nobles.tie(c, lords[i], lords[j]);
     if (t) ties[t]++;
   }
+  // P8-T: landless lords who won land, landed lords who lost it all, and the most of a realm's land
+  // one lord holds (no lord gathers a realm's land).
+  const won = Object.keys(startLand).filter((id) => !startLand[id] && land(id) > 0).length;
+  const wereLandless = Object.values(startLand).filter((n) => !n).length;
+  const lostAll = Object.keys(startLand).filter((id) => startLand[id] && !land(id)).length;
+  let most = 0;
+  for (const f of CL.realm.realms()) {
+    const all = Object.values(c.holdings).filter((h) => h.sovereign === f.id).length;
+    for (const id of lords) if (c.people[id].realm === f.id && all) most = Math.max(most, land(id) / all);
+  }
   const riders = Object.fromEntries(CL.realm.realms().map((f) => [f.id, CL.lords.riders(c).filter((id) => c.people[id].realm === f.id).length]));
-  return { seed, days, ...tally, forts: forts(), timeline, lords: lordsBy, ties, riders };
+  return { seed, days, ...tally, forts: forts(), timeline, lords: lordsBy, ties, riders, won, wereLandless, lostAll, most: Math.round(most * 100) };
 }
 
 module.exports = { run };
@@ -90,6 +102,7 @@ if (require.main === module) {
     console.log(`  forts at the end: ${Object.entries(r.forts).map(([f, n]) => `${f} ${n}`).join(', ')}; by month: ${r.timeline.map((t) => Object.values(t.forts).join('/')).join(' ')}`);
     console.log(`  lords: ${r.lords.landless} landless, ${r.lords.one} with one place, ${r.lords.several} with several; invariants: ${r.problems.length ? r.problems.join('; ') : 'all held'}`);
     const per = (o) => Object.entries(o).map(([f, n]) => `${f} ${n}`).join(', ') || 'none';
+    console.log(`  land: ${r.won} of ${r.wereLandless} landless lords won land; ${r.lostAll} landed lords lost it all; the most of a realm's holdings one lord holds: ${r.most}%`);
     console.log(`  nobles: land gained ${r.gained}, lost ${r.lost}; ${r.grumbled} grumbled; left: ${per(r.left)}; joined: ${per(r.joined)}; summonses refused ${r.refused}; revoked ${r.revoked}; friends ${r.ties.friend}, rivals ${r.ties.rival}, feuds ${r.ties.feud}; riding lords: ${per(r.riders)}`);
   }
 }

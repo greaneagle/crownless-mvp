@@ -1,4 +1,4 @@
-# Crownless 2.32.0 — The Border March
+# Crownless 3.0.0 — The Border March
 
 A single-player, top-down party-battle prototype in plain HTML5 Canvas and classic JavaScript. There's no bundler, no runtime dependencies and no server (Playwright, for the browser tests, is the only development dependency). It's published to GitHub Pages straight from `main`.
 
@@ -6,8 +6,8 @@ A single-player, top-down party-battle prototype in plain HTML5 Canvas and class
 - **Full v1 documentation** (rules and numbers, architecture, how to add content, what v2 brings and where its details are): [`docs/V1-DOCUMENTATION.md`](docs/V1-DOCUMENTATION.md)
 - **Current behavior (regression reference):** [`docs/BASELINE.md`](docs/BASELINE.md)
 - **Status and plan:** [`docs/ROADMAP.md`](docs/ROADMAP.md); the v2 plan is [`docs/V2-PLAN.md`](docs/V2-PLAN.md), from the owner's v2.0 design documents
-- **Release notes:** [`docs/RELEASE-NOTES.md`](docs/RELEASE-NOTES.md); v2.0 acceptance: [`docs/V2-VALIDATION.md`](docs/V2-VALIDATION.md); Phase 7 acceptance: [`docs/PHASE-7-VALIDATION.md`](docs/PHASE-7-VALIDATION.md)
-- **What comes next:** [`docs/NEXT-PLAN.md`](docs/NEXT-PLAN.md): browser regression tests, zoom and a bigger world, then Phases 7–9 (Phase 8 under way: holdings and the people of the realms in 2.24.0, permissions in 2.25.0, lords on the map in 2.26.0, allegiance in 2.27.0, fiefs in 2.28.0, sieges in 2.29.0, the assault battle in 2.30.0, named nobles in 2.31.0, losing and retaking land in 2.32.0); every task specified, with its readiness, in [`docs/NEXT-TASKS.md`](docs/NEXT-TASKS.md)
+- **Release notes:** [`docs/RELEASE-NOTES.md`](docs/RELEASE-NOTES.md); v2.0 acceptance: [`docs/V2-VALIDATION.md`](docs/V2-VALIDATION.md); Phase 7 acceptance: [`docs/PHASE-7-VALIDATION.md`](docs/PHASE-7-VALIDATION.md); Phase 8 acceptance: [`docs/PHASE-8-VALIDATION.md`](docs/PHASE-8-VALIDATION.md)
+- **What comes next:** [`docs/NEXT-PLAN.md`](docs/NEXT-PLAN.md): browser regression tests, zoom and a bigger world, then Phases 7–9 (Phase 8, the landed world, complete in 3.0.0: holdings and the people of the realms in 2.24.0, permissions in 2.25.0, lords on the map in 2.26.0, allegiance in 2.27.0, fiefs in 2.28.0, sieges in 2.29.0, the assault battle in 2.30.0, named nobles in 2.31.0, losing and retaking land in 2.32.0, tuning and acceptance in 3.0.0); every task specified, with its readiness, in [`docs/NEXT-TASKS.md`](docs/NEXT-TASKS.md)
 
 ## What is playable
 
@@ -26,6 +26,7 @@ A single-player, top-down party-battle prototype in plain HTML5 Canvas and class
 - Allied infantry, archers and cavalry fight alongside you. Archers fire arrows; riders charge, hit 1.2× harder at full gallop, ride through and wheel round.
 - Pick a group with **1** (infantry), **2** (archers) or **3** (cavalry), then give an order: **F** Follow, **H** Hold or **C** Charge.
 - **Formations and ground (2.22.0):** in Orders, put the infantry in a **shield wall** (closed up, shields up, slower) or a **wedge** (quicker, a harder first blow, no cover). Archers on a hill's rise shoot further, and a ford breaks formations. In an escort ambush, keep the Reavers off the caravan's wagon.
+- **The landed world (Phase 8, 2.24.0–3.0.0):** every town, fort and village is a holding of a kingdom, held by one of 22 named lords or its ruler. The lords ride the map with their households; beat one and ransom them. Serve a kingdom as its mercenary or swear fealty as its vassal, and its crown may grant you land: a fief that runs itself with a steward, its money in its own book. Kingdoms at war besiege each other's forts; besiege one yourself and storm its walls in a fought assault. The lords have needs, motives and long memories: ask them for help and they agree, name a price, put it off or refuse, and say why; they quarrel, feud and change sides. Lose your land and you keep a claim, your company and your money: press the claim by siege, through your liege, or by buying it back. The Realms screen (from the Journal) shows who holds what, the lords, your allegiance and your fiefs or claims.
 - **Q1 — A Stranger's Wage:** ask Elder Maren in Stonebridge for work. Fetch the grain wagon from Oakford (and survive the ambush), break the Reavers, or help Sergeant Brun raise three recruits. Every route ends with the charter fragment and the first hint of who should hold Greywall.
 - **Q2 — The Broken Seal:** Caravan Master Oswin in Eastwatch lost a sealed packet to Reavers on the river road. Fight them, cow them with a big enough company, or pay Wenna the Fence in Highmere for their secret. Then decide who sees the two rival Greywall charters: Captain Aldric of the Crown, Magistrate Vell of the Aurelians, or nobody.
 - **Mara:** after Q2, a former imperial scout waits by the inn in Stonebridge. Be honest with her and she rides with you for free, otherwise for 100 crowns. She fights beside you, wears the weapon and armour you give her, and finds faster roads (+1 Pathfinding).
