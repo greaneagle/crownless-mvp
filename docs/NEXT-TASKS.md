@@ -1915,7 +1915,67 @@ Phase 8 adds many rights: appoint, tax, summon, grant, besiege, swear, leave, ra
 
 **Acceptance.** A fief runs hands-off with one weekly line. Its costs and failures are reported. Every expert policy makes a measured difference.
 
-### P8-06a · Sieges on the map (M–L) — Ready (D-P8a decided 2026-11-20)
+### P8-06a · Sieges on the map (M–L) — ✅ Done in 2.29.0
+
+**Done (2.29.0, 2026-11-21).** Save schema v23. `js/sieges.js` (`CL.sieges`) runs every siege; `scripts/landed.js` (`npm run landed`) plays the world alone.
+- **AI sieges:**
+  - **Planning:** once a day each realm at war, with no siege of its own and no fort it took still weak, picks the fort of a realm at war with it that is nearest its capital, if it may besiege it (CL.rights: never a story fort before Q4 ends, never a capital). Up to four of its free lords within reach who aren't thin gather there; two at least.
+  - **Gathering:** the party intention `gather`, riding to a camp around the fort. It begins when they are there with 1.5× the garrison's power (2× against a realm's last fort), and is abandoned after 5 days.
+- **Encircled:**
+  - the fort and its villages refuse every place action but shelter to anyone but the besiegers (CL.rights);
+  - the defenders eat a day of food a day (a fort's `food`: its food policy, refilled 2 a day in peace);
+  - ladders after a day, a ram after three.
+- **Each day's choice:**
+  - **Surrender** at no food, or when the odds are hopeless (90%).
+  - **AI besiegers:** assault at 60% with ladders; lift when weaker than the garrison or after 20 days.
+  - **Assault** (simulated): the defenders count ×(1.2 + 0.4 × walls), less 0.3 with a ram. Won, it falls; lost, the besiegers lose 40% and lift. Siege losses count toward the war's exhaustion (`realm.clashed`).
+- **Relief:** at the encirclement, the defending realm's free lords within reach ride to it (`relief`; for a realm's last fort, every free lord). When they arrive, the two sides fight by power; the losing lords are beaten (captured by the other realm), and beaten besiegers lift.
+- **Lifted** when the war ends, or (yours) when you ride off or leave your realm's service.
+- **A fort taken:**
+  - `realm.transfer`, once, with its villages; the old holder keeps a claim;
+  - half its taker's garrison, the walls down 40 (20 when it surrendered), unrest at least 60, weak for 30 days, 3 days of food;
+  - the news and, when you were in it, the chronicle;
+  - the conqueror's choice (AI lords ask; you get the prompt, or "ask" when it fell while you were away);
+  - the lords go home to refill;
+  - businesses meet the new owner's law (P7-10's poll).
+- **Your siege:** a card on a fort's settlement screen.
+  - **Before:** the Besiege preview (the garrison, the walls' worth, the storm odds, the days to starve it, the −25 standing for an independent).
+  - **After:** your siege's day, food, ladders and ram, the odds, and **Assault** (simulated: your soldiers fall and are wounded through the surgeon's triage; won, +15 renown), **Wait a day**, **Lift the siege**.
+- **Your fort besieged:** an urgent screen (UNDER SIEGE: Ride back sets off for it; Leave it to the steward or castellan). A scout who sees the lords gathering against it warns you first.
+- **The map:** a besieged fort is ringed in dashed red with "under siege".
+- **Anti-snowball:**
+  - one siege a realm;
+  - lords home to refill after;
+  - a taken fort weak for 30 days;
+  - **new, the spec's rules made firm:** a realm doesn't start another siege while a fort it took is weak; a realm's last fort needs 2× to besiege and is relieved by all its lords; a war that ends leaves a 30-day truce (`truceUntil` on the relation) before the next.
+  
+  No free troops for anyone.
+- **`npm run landed [days] [seeds]`:** the world alone after the story's ending (D-W5 holds the March pair in tension until then), with the company parked in Merrow. 180 days on seeds 1–3:
+  - 3 wars on each seed;
+  - 9, 14 and 9 sieges planned;
+  - 6, 5 and 5 forts taken (stormed 3/2/3, surrendered 3/3/2), and some lifted, relieved or abandoned;
+  - 18, 12 and 15 grants;
+  - every realm keeping a fort every month;
+  - the invariants held every day.
+- **Debug → Lords:** siege it (AI): the chosen fort's enemies go to war and gather. Sieges: a day.
+- **Tests:**
+  - `tests/sieges.test.js` (10): planning and the story lock; encirclement, shut villages, food, ladders and ram; starved out (one transfer, villages, claims, half a garrison, unrest, the conqueror asking, lords home); stormed and thrown back; lifted at the war's end and relieved; SC-20 (your fort falls while you're away: warned, its money and control lost, a claim kept, you go on); SC-16 (a mill under a fallen fort meets the new law); your own siege (preview, shut villages, starved out, the conqueror's choice, riding off lifts it); an independent's cost; saves and the 2.28 fixtures.
+  - `tests/slow/landed.test.js`: 180 days alone on three seeds.
+  - `tests/browser/sieges.spec.js` (2, desktop and phone): the Besiege preview and your siege's buttons; the urgent screen.
+  - **Edited:** `rights.test.js` (an independent may now besiege).
+- **Not as specified:**
+  - **The assault is simulated only;** the fought battle on the walls is P8-06b.
+  - **Relief is fought by power, off-screen;** you can't ride in to join it by the reinforcement rules.
+  - **A castellan always comes back to the company,** never captured; the garrison is halved, not "killed, taken or scattered" by the outcome.
+  - **No surrender policy for your castellan:** they surrender at no food or hopeless odds.
+  - **A conqueror who kept a fief unasked and was cast out** is not made a siege target.
+  - **The siege ring on the map** isn't checked by the browser tests, only by eye.
+- **Test tiers (NEXT-PLAN §7):**
+  - `npm test` (771), lint, and the full browser suite: 177 passed, none failed.
+  - **The slow files this task reaches:** `world-sim`, `gate-d-campaigns` (the 60-campaign story check passes), the new `landed`, `campaign-bots` and `happenings-bots`; 7 of 8 passed together.
+    - The failure: `world-sim`'s spike check (a 4.3 s day against a 1.1 s median) under the files' own load. Alone it passes. `node scripts/bench-map.js --season 80 90` gives 990 ms median and 1,067 ms worst: no spikes.
+    - **The save of that world is now 80 KB** (48.6 KB at 2.26.0), inside its 100 KB budget but growing; P8-T should look at it.
+  - **Skipped:** `battle-parity`, `battle-extras`, `phase7-exit` and `test-world`, which this task doesn't reach.
 
 **Problem.** No fort is ever taken in play, so Prototype D's "lost while the player is elsewhere" can't happen (design §17.3, §20.4–20.7).
 

@@ -135,6 +135,7 @@
       militia: h.kind === 'village' ? RULES.militia.size : null,
       policies: policies(),
       walls: h.kind === 'fort' ? FULL : null,
+      food: h.kind === 'fort' ? 14 : null, // days of food in the stores (P8-06a): the food policy's
       treasury: RULES.startWeeks * RULES.tax[h.kind], // a few weeks of its tax in hand
       unpaid: 0,
       deserting: false,

@@ -321,6 +321,16 @@
     const L = CL.lords;
     const person = c.people?.[p.lordId];
     if (!person) return;
+    // P8-06a: a lord in a siege rides to the camp (gathering, besieging) or to the fort (relief).
+    if (p.siegeId) {
+      const post = CL.sieges?.postFor(c, p);
+      if (post) {
+        [p.tx, p.ty] = W().clampToMap(post[0], post[1], EDGE);
+        return;
+      }
+      p.siegeId = null;
+      p.intent = 'home';
+    }
     if (wantsPlayer(c, p)) {
       p.chasing = 'player';
       p.intent = 'chase';

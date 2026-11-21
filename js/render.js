@@ -567,6 +567,22 @@
     const holder = CL.realm.owner(s.id);
     const color = CL.content.get('factions', holder).color;
     ctx.save();
+    // P8-06a: a fort under siege: a red ring of the besiegers' camp around it, and the words.
+    const siege = CL.sieges?.at(CL.campaign, s.id);
+    if (siege?.phase === 'encircled') {
+      ctx.strokeStyle = '#d0402f';
+      ctx.lineWidth = 3;
+      ctx.setLineDash([5, 4]);
+      ctx.beginPath();
+      ctx.arc(x, y - 2, 24, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.font = font(10);
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#ffb3a1';
+      ctx.fillText('under siege', x, y + 34); // below the fort: its name is above it
+      ctx.textAlign = 'left';
+    }
     ctx.fillStyle = '#00000044';
     ctx.beginPath();
     ctx.ellipse(x, y + 9, 15, 5, 0, 0, Math.PI * 2);

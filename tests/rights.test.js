@@ -83,7 +83,7 @@ test('seize and besiege: forts only, story locks and capitals hold; a siege need
   assert.match(may('player', 'seize', 'greywall_fort').why, /story/);
   assert.match(may('player', 'seize', 'stonebridge').why, /capital/);
   assert.match(may('player', 'seize', 'highmere').why, /follows its seat/);
-  assert.match(may('player', 'besiege', 'castra_nova').why, /No realm stands behind you/, 'independent');
+  assert.equal(may('player', 'besiege', 'castra_nova').ok, true, 'an independent may, at the cost of attacking that realm (P8-06a)');
   assert.match(may(hamon, 'besiege', 'castra_nova').why, /not at war/);
   CL.realm.setRelation(c, 'valedorn', 'aurelian', 'war', 'test');
   assert.equal(may(hamon, 'besiege', 'castra_nova').ok, true, 'at war');

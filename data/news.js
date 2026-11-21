@@ -74,6 +74,11 @@
       priority: 4,
       lines: ['A lord held captive is home again at {place}.']
     },
+    // P8-06a: sieges. Each line is written by its teller (js/sieges.js), naming the fort.
+    siege_begun: { id: 'siege_begun', priority: 7, lines: ['{place} is under siege.'] },
+    siege_lifted: { id: 'siege_lifted', priority: 5, lines: ['The siege of {place} is lifted.'] },
+    siege_relieved: { id: 'siege_relieved', priority: 6, lines: ['A relief army has reached {place}.'] },
+    fort_fell: { id: 'fort_fell', priority: 8, lines: ['{place} has fallen.'] },
     fief_granted: {
       id: 'fief_granted',
       priority: 3,

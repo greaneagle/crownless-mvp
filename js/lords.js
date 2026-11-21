@@ -45,6 +45,9 @@
     rest: 'resting at home',
     chase: 'riding for you!',
     search: 'searching for you where they lost you',
+    gather: 'gathering for a siege',
+    besiege: 'besieging',
+    relief: 'riding to relieve a besieged fort',
   };
 
   const R = () => CL.realm;
@@ -325,6 +328,11 @@
     ensure(c);
     if (offerDue(c) && CL.game.mode === 'map') CL.ui.openRansom?.();
     else if (CL.fiefs?.grantDue(c) && CL.game.mode === 'map') CL.ui.openGrant?.();
+    else if (CL.game.mode === 'map') for (const s of CL.sieges?.list(c) || []) if (s.alarmed && !s.alarmSeen && CL.realm.holderOf(s.sid, c) === 'player') {
+      s.alarmSeen = true; // shown once, on the map
+      CL.ui.openSiegeAlarm?.(s.sid);
+      break;
+    }
   }
 
   /** Captured by a lord: the hero is ransomed and let go at that lord's home. Returns the lord's id, or null. */

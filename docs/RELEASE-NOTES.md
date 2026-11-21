@@ -1,5 +1,22 @@
 # Crownless — Release Notes
 
+## v2.29.0 — Sieges (P8-06a) · 2026-11-21
+
+### New
+- **Kingdoms at war besiege each other's forts.** Their lords gather, then encircle the fort: it and its villages shut their gates and markets. They make ladders in a day and a ram in three, and storm the fort when the odds are good. A fort out of food, or facing hopeless odds, surrenders. The defending kingdom's lords ride to relieve it. A fort under siege is ringed in red on the map, and the news tells of every siege begun, lifted, relieved and won.
+- **Your fort besieged** brings an urgent message: ride back, or leave it to its steward or castellan. A scout who sees the lords gathering warns you a day earlier. If it falls, its money and control are lost, but you keep a claim, your company and your oath.
+- **Besiege a fort yourself,** from its own screen, when your kingdom is at war with it, or as an independent at the cost of attacking that kingdom (−25). Its card shows the garrison, what its walls are worth, the odds of storming it, and how long starving it out would take. Then each day: assault, wait, or lift. If you ride away, the siege ends. Take it and you make the conqueror's choice.
+- **A fort taken is weak:** half a garrison, broken walls and unrest for a month.
+
+### Changed
+- **Wars leave a truce:** after a war ends, the same two kingdoms can't go to war again for 30 days.
+
+### Under the hood
+- Save version 23. Saves from 2.28.0 load with no sieges, each fort with its food.
+- **`npm run landed`** plays 180 days of the world alone, after the story's ending, and reports wars, sieges, forts per kingdom, grants and the lords' land. It's also a slow test: forts change hands, and no kingdom loses them all.
+- Debug → Lords: siege the chosen fort (its enemies go to war and gather), and a day for every siege.
+- **Tests:** 771 fast Node tests and the slow files sieges reach (the 60-campaign story check, the world simulation, the new landed run, the campaign and world-event bots), 177 browser tests (21 skipped: the visual baselines, Linux only, and those for one device only).
+
 ## v2.28.0 — Fiefs and castellans (P8-05) · 2026-11-21
 
 ### New

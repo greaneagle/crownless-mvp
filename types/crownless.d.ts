@@ -210,6 +210,10 @@ declare global {
     /** v19 (P8-02): every settlement of a kingdom (not the free city), by settlement id. */
     holdings: Record<ContentId, Holding>;
     /** v20 (P8-01): lords held captive, by the player or off-screen by a realm. */
+    /** v23 (P8-06a): forts besieged, and by whom. */
+    sieges: any[];
+    nextSiegeId?: number;
+    siegePlanned?: number | null;
     /** v22 (P8-05): the crown's grants waiting to be made. */
     grants: { sid: ContentId; helper: string | null; day: number; declined: string[]; offeredTo: string | null; suggestedBy?: string }[];
     /** v22 (P8-05): realm → your influence with its ruler (for P8-07). */
@@ -291,6 +295,10 @@ declare global {
     castellan?: { kind: 'soldier'; id: number; name: string; soldier: any } | null;
     castellanLeaving?: boolean;
     crownLand?: boolean;
+    /** v23 (P8-06a): days of food in the stores (forts), when it was last counted, weak and restless until. */
+    food?: number | null;
+    fedTo?: number;
+    weakUntil?: number;
     claims: { by: string; realm: ContentId | null; since: number; kind: 'granted' | 'conquest' | 'old' }[];
   }
 

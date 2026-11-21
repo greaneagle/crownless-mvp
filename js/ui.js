@@ -82,6 +82,11 @@
       const g = CL.fiefs.grantDue(CL.campaign);
       return { title: 'A GRANT OF LAND', text: g ? CL.fiefs.grantLines(CL.campaign, g).join(' ') : 'The messenger has gone.', button: null };
     }
+    if (mode === 'siegeAlarm') {
+      const sid = CL.game.siegeAlarm;
+      const s = sid ? CL.sieges.at(CL.campaign, sid) : null;
+      return { title: 'UNDER SIEGE', text: sid ? `${CL.content.get('settlements', sid).name} is besieged${s ? ` by the ${CL.content.get('factions', s.realm).name}` : ''}. It has food for ${Math.ceil(CL.realm.holding(sid, CL.campaign).food)} days.` : '', button: null };
+    }
     if (mode === 'conquest') {
       const sid = CL.game.conquest;
       return { title: 'THE CONQUEROR’S CHOICE', text: sid ? `${CL.content.get('settlements', sid).name} is taken for the ${CL.content.get('factions', CL.realm.sovereignOf(sid, CL.campaign)).name}. What becomes of it is yours to ask.` : '', button: null };
@@ -216,7 +221,7 @@
     $('#realmScreen').classList.toggle('hidden', mode !== 'realm');
     $('#savesScreen').classList.toggle('hidden', mode !== 'saves');
     $('#talkOptions').classList.toggle('hidden', mode !== 'talk');
-    $('#ransomOptions').classList.toggle('hidden', !['ransom', 'grant', 'conquest'].includes(mode)); // the decisions that interrupt the map
+    $('#ransomOptions').classList.toggle('hidden', !['ransom', 'grant', 'conquest', 'siegeAlarm'].includes(mode)); // the decisions that interrupt the map
     $('#titleExtras').classList.toggle('hidden', mode !== 'title');
     $('#overlayText').classList.toggle('hidden', mode === 'saves' || mode === 'journal' || mode === 'realm');
     const screen = screenFor(mode);
@@ -242,6 +247,7 @@
     if (mode === 'ransom') renderRansom();
     if (mode === 'grant') renderGrant();
     if (mode === 'conquest') renderConquest();
+    if (mode === 'siegeAlarm') renderSiegeAlarm();
   }
 
   /** A decision's button: a bold label and a short note. */
@@ -644,6 +650,86 @@
       card.append(money);
       return card;
     });
+  }
+
+  /**
+   * P8-06a: at a fort, the siege card. Not besieged: Besiege, with the preview (odds, time, cost), or
+   * why not. Your siege: food, ladders and ram, the odds, and the day's choice (Assault, Wait a day, Lift).
+   * Someone else's: what is going on.
+   */
+  function siegeCard(c, sid) {
+    const S = CL.sieges;
+    const h = CL.realm.holding(sid, c);
+    if (h?.kind !== 'fort' || h.holder === 'player') return [];
+    const el = (tag, cls, text) => Object.assign(document.createElement(tag), { className: cls || '', textContent: text || '' });
+    const s = S.at(c, sid);
+    const card = el('div', 'contractCard siegeCard');
+    const redo = () => {
+      CL.save.write();
+      refreshRoster();
+    };
+    const btn = (id, label, fn, disabled = false) => {
+      const b = el('button', '', label);
+      Object.assign(b, { type: 'button', id, disabled });
+      b.onclick = () => {
+        fn();
+        redo();
+      };
+      return b;
+    };
+    if (s?.by === 'player') {
+      card.dataset.siege = 'yours';
+      const days = Math.floor(c.day - s.began);
+      const odds = S.odds(c, s);
+      card.append(el('h3', '', `Your siege of ${CL.content.get('settlements', sid).name} · day ${days + 1}`));
+      card.append(el('p', '', `Food for ${Math.ceil(h.food)} days · garrison ${CL.fiefs.count(h.garrison)} · ${days >= S.RULES.ram ? 'a ram and ladders ready' : days >= S.RULES.ladders ? `ladders ready; a ram in ${S.RULES.ram - days} days` : 'ladders by tomorrow'}.`));
+      card.append(el('p', '', odds ? `Storm it now: about ${Math.round(odds * 100)}%.` : 'No assault until the ladders are ready.'));
+      const row = el('div', 'row');
+      row.append(
+        btn('siegeAssault', 'Assault', () => S.playerAssault(c), !odds),
+        btn('siegeWait', 'Wait a day', () => CL.party.advanceDays(1)),
+        btn('siegeLift', 'Lift the siege', () => S.lift(c)),
+      );
+      card.append(row);
+      return [card];
+    }
+    if (s) {
+      card.dataset.siege = 'theirs';
+      card.append(el('h3', '', `${CL.content.get('settlements', sid).name} is ${s.phase === 'gathering' ? 'about to be besieged' : 'under siege'}`));
+      card.append(el('p', '', `By the ${CL.content.get('factions', s.realm).name}: ${s.lords.map((id) => CL.realm.titled(id, c)).join(', ')}.`));
+      return [card];
+    }
+    const p = S.preview(c, sid);
+    card.dataset.siege = 'none';
+    card.append(el('h3', '', `Besiege ${CL.content.get('settlements', sid).name}`));
+    for (const l of p.ok ? p.lines : [p.why]) card.append(el('p', '', l));
+    const row = el('div', 'row');
+    row.append(btn('siegeBegin', 'Besiege', () => S.begin(c, sid), !p.ok));
+    card.append(row);
+    return [card];
+  }
+
+  /** P8-06a: your fort is besieged: ride back, or leave it to its castellan. */
+  function openSiegeAlarm(sid) {
+    CL.game.siegeAlarm = sid;
+    changeMode('siegeAlarm');
+  }
+  function renderSiegeAlarm() {
+    const c = CL.campaign;
+    const sid = CL.game.siegeAlarm;
+    if (!sid) return changeMode('map');
+    const s = CL.content.get('settlements', sid);
+    $('#ransomOptions').replaceChildren(
+      decision('alarm_ride', 'Ride back', `Set off for ${s.name} now`, () => {
+        CL.game.siegeAlarm = null;
+        changeMode('map');
+        CL.world.travelTo({ type: 'settlement', id: sid, x: s.mapX, y: s.mapY });
+      }),
+      decision('alarm_leave', `Leave it to ${CL.fiefs.adminName(c, sid)}`, 'They hold while the food lasts and the odds are not hopeless', () => {
+        CL.game.siegeAlarm = null;
+        changeMode('map');
+      }),
+    );
   }
 
   /** At a kingdom's capital: Service (a mercenary contract, or its renewal), and Swear fealty to its ruler. */
@@ -1971,6 +2057,7 @@
     $('#happeningsHere').replaceChildren(...happeningCards(c, c.world.location));
     $('#tourneyHere').replaceChildren(...tourneyCard(c, c.world.location));
     $('#businessHere').replaceChildren(...millCard(c, c.world.location));
+    $('#siegeHere').replaceChildren(...siegeCard(c, c.world.location)); // P8-06a
     $('#serviceNote').textContent = !hire.ok
       ? `${hire.why}.`
       : offers.length
@@ -2686,6 +2773,7 @@
     openRansom,
     openGrant,
     openConquest,
+    openSiegeAlarm,
     $,
     message,
     changeMode,

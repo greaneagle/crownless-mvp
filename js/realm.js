@@ -53,6 +53,7 @@
     minWar: 12, // a war lasts at least this many days…
     exhaustion: 12, // …and ends once this many soldiers have fallen in its clashes
     maxWar: 45, // or after this long, whatever the losses
+    truce: 30, // P8-06a: days after a war ends before the next can begin
   };
   function defaultReputation() {
     const r = {};
@@ -391,6 +392,8 @@
     if (r.state === state) return false;
     const from = r.state;
     Object.assign(r, { state, since: day, heat: 0, losses: 0 });
+    // P8-06a: a war that ends leaves a truce: no new war between them for a while (anti-snowball, §20.7).
+    if (from === 'war') r.truceUntil = day + RELATIONS.truce;
     CL.diag.log('info', 'Relations', { a, b, from, to: state, reason });
     const kind = from === 'war' && state === 'tension' ? 'truce' : NEWS[state];
     CL.news?.record(c, kind, { ...(at || {}), faction: a, other: b }, day);
@@ -414,7 +417,7 @@
     r.heat++;
     r.lastClash = day;
     if (r.state === 'war') r.losses += lost;
-    else if (r.heat >= RELATIONS.warHeat && !storyHeld(c, a, b)) setRelation(c, a, b, 'war', 'border clashes', at, day);
+    else if (r.heat >= RELATIONS.warHeat && !storyHeld(c, a, b) && day >= (r.truceUntil || 0)) setRelation(c, a, b, 'war', 'border clashes', at, day);
   }
 
   /** Time passing (CL.party.advanceDays): tension cools, wars wear themselves out. */
@@ -459,6 +462,7 @@
         losses: Math.max(0, Math.floor(num(old.losses, 0))),
         lastClash: old.lastClash == null ? null : num(old.lastClash, null),
         incidentUntil: num(old.incidentUntil, 0),
+        ...(num(old.truceUntil, 0) > s.day ? { truceUntil: old.truceUntil } : {}),
       });
     }
   }

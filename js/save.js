@@ -26,7 +26,7 @@
   'use strict';
   const CL = root.Crownless;
 
-  const VERSION = 22;
+  const VERSION = 23;
   const KEY = 'crownless_save';
   const BACKUP_KEY = 'crownless_save_backup';
   const LEGACY_KEY = 'crownless_v03_party';
@@ -104,6 +104,7 @@
       allegiance: CL.allegiance.blank(), // independent, a realm's mercenary, or its vassal (P8-04)
       grants: [], // the crown's grants waiting to be made (P8-05)
       influence: {}, // realm → your influence with its ruler (P8-05, for P8-07)
+      sieges: [], // forts besieged, and by whom (P8-06a)
       relations: CL.realm.defaultRelations(), // kingdom pair → peace, tension or war (W-07)
       story: CL.story.blank(), // quest progress, story flags, conversation visits (GDD §13)
       companion: null, // Mara, once she joins (GDD §10)
@@ -213,6 +214,7 @@
     20: [...V3_FIELDS.filter(([f]) => f !== 'owners'), ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object'], ['accounts', 'object'], ['ledger', 'array'], ['followers', 'object'], ['relations', 'object'], ['medicine', 'number'], ['detachments', 'array'], ['retinue', 'array'], ['happenings', 'object'], ['tourney', 'object'], ['businesses', 'object'], ['people', 'object'], ['rulers', 'object'], ['nextPersonId', 'number'], ['holdings', 'object'], ['prisoners', 'array']],
     21: [...V3_FIELDS.filter(([f]) => f !== 'owners'), ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object'], ['accounts', 'object'], ['ledger', 'array'], ['followers', 'object'], ['relations', 'object'], ['medicine', 'number'], ['detachments', 'array'], ['retinue', 'array'], ['happenings', 'object'], ['tourney', 'object'], ['businesses', 'object'], ['people', 'object'], ['rulers', 'object'], ['nextPersonId', 'number'], ['holdings', 'object'], ['prisoners', 'array'], ['allegiance', 'object']],
     22: [...V3_FIELDS.filter(([f]) => f !== 'owners'), ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object'], ['accounts', 'object'], ['ledger', 'array'], ['followers', 'object'], ['relations', 'object'], ['medicine', 'number'], ['detachments', 'array'], ['retinue', 'array'], ['happenings', 'object'], ['tourney', 'object'], ['businesses', 'object'], ['people', 'object'], ['rulers', 'object'], ['nextPersonId', 'number'], ['holdings', 'object'], ['prisoners', 'array'], ['allegiance', 'object'], ['grants', 'array'], ['influence', 'object']],
+    23: [...V3_FIELDS.filter(([f]) => f !== 'owners'), ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object'], ['accounts', 'object'], ['ledger', 'array'], ['followers', 'object'], ['relations', 'object'], ['medicine', 'number'], ['detachments', 'array'], ['retinue', 'array'], ['happenings', 'object'], ['tourney', 'object'], ['businesses', 'object'], ['people', 'object'], ['rulers', 'object'], ['nextPersonId', 'number'], ['holdings', 'object'], ['prisoners', 'array'], ['allegiance', 'object'], ['grants', 'array'], ['influence', 'object'], ['sieges', 'array']],
   };
 
   /** @param {unknown} v @param {string} kind */
@@ -415,6 +417,8 @@
     // 21 → 22 (build 2.28.0, P8-05): no grants pending, no influence; each holding's running state
     // (prosperity, garrison, policies) is filled in from the world data on load.
     21: (d) => ({ ...d, version: 22, grants: [], influence: {} }),
+    // 22 → 23 (build 2.29.0, P8-06a): no sieges yet; each fort's food is its food policy, filled on load.
+    22: (d) => ({ ...d, version: 23, sieges: [] }),
     20: (d) => ({ ...d, version: 21, allegiance: { kind: 'independent', realm: null, since: typeof d.day === 'number' ? d.day : 0, until: null, serviceDays: 0, summonsMissed: 0, history: [], window: null, lastOath: null, nextPay: null, served: null, hunt: null } }),
   };
 
@@ -484,6 +488,7 @@
     CL.merchant.sanitize(s, d); // the merchant and their goods, prices and log
     CL.business.sanitize(s, d); // your mill, its money's ledger and log (P7-10), after accounts
     CL.fiefs.sanitize(s, d); // the holdings' running state, grants and influence (P8-05), after accounts
+    CL.sieges.sanitize(s, d); // sieges, and each fort's food (P8-06a), after holdings and parties
     CL.surgeon.sanitize(s, d); // the surgeon and the medicine (P7-01)
     CL.blacksmith.sanitize(s, d); // the blacksmith, and fine kit within its cap (P7-03)
     CL.scout.sanitize(s, d); // the scout (P7-02)

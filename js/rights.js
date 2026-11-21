@@ -96,6 +96,11 @@
       if (!s) return no('Not here');
       const f = R().owner(target, c);
       if (BARRED_TO_ENEMIES.has(action) && enemyOf(c, who, f)) return no(barred(c, who, f, DOING[action], action));
+      // P8-06a: a fort under siege, and its villages, shut to everyone but the besiegers.
+      const siege = CL.sieges?.shut(c, target);
+      if (siege && action !== 'shelter' && !(who === PLAYER && siege.by === PLAYER) && !(who !== PLAYER && siege.realm === allegiance(c, who))) {
+        return no(`${CL.content.table('settlements')[siege.sid]?.name || 'The fort'} is under siege: its gates and markets are shut`);
+      }
       return yes();
     }
     switch (action) {
@@ -129,10 +134,18 @@
         if (!s || !h || s.type === 'village') return no('Only a fort or a town can be besieged');
         if (R().locked(c, target)) return no('Only the story decides this fort until it ends');
         if (R().isCapital(target)) return no('A capital never falls in this age');
-        const mine = allegiance(c, who);
+        if (CL.sieges?.at(c, target)) return no(`${s.name} is already besieged`);
+        // P8-06a: the player serves a realm at war with it, or (independent) at the cost of attacking it.
+        const mine = who === PLAYER ? CL.allegiance?.serves(c) || null : allegiance(c, who);
+        if (who === PLAYER && !mine) {
+          if (!R().isRealm(h.controller)) return no('There is no realm to besiege here');
+          if (CL.sieges?.list(c).some((x) => x.by === PLAYER)) return no('You are besieging another fort');
+          return yes();
+        }
         if (!mine) return no('No realm stands behind you: swear to one first');
         if (mine === h.controller) return no(`${s.name} is already your realm's`);
         if (R().relation(c, mine, h.controller) !== 'war') return no(`${short(mine)} is not at war with ${short(h.controller)}`);
+        if (CL.sieges?.list(c).some((x) => x.realm === mine)) return no(`${short(mine)} is besieging another fort already`);
         return yes();
       }
       case 'serve': {

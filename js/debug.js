@@ -520,6 +520,24 @@
         CL.ui.openConquest(sid);
         return;
       }
+      case 'siegeAI': {
+        // P8-06a: a realm at war with the chosen fort's gathers against it, wherever its lords are.
+        const sid = $('#cheatHolding').value;
+        const h = CL.realm.holding(sid, c());
+        if (h?.kind !== 'fort') return CL.ui.message('Choose a fort');
+        const f = CL.realm.realms().map((k) => k.id).find((x) => x !== h.controller);
+        CL.realm.setRelation(c(), f, h.controller, 'war', 'debug');
+        const fort = CL.content.get('settlements', sid);
+        for (const q of c().parties.filter((p) => p.lordId && c().people[p.lordId].realm === f).slice(0, 3)) Object.assign(q, { x: fort.mapX + 3, y: fort.mapY + 3 });
+        const s = CL.sieges.plan(c(), f);
+        log('siege planned', { fort: s?.sid, by: f });
+        CL.ui.message(s ? `The ${CL.content.get('factions', f).name} gather against ${CL.content.get('settlements', s.sid).name}` : 'No siege could be planned');
+        break;
+      }
+      case 'siegeDay':
+        CL.party.advanceDays(1);
+        log('sieges: a day', { sieges: c().sieges.map((s) => [s.sid, s.phase]) });
+        break;
       case 'grantsNow':
         for (const g of c().grants) g.day = c().day;
         CL.fiefs.weeklyGrants(c());

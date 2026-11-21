@@ -237,6 +237,7 @@
     CL.upkeep.tick(camp, from, camp.day); // eat, morale, desertion, weekly wages
     CL.trade.drift(camp, days); // markets restock toward their baseline
     CL.parties.tick(camp, days * 24); // patrols, caravans and bands move; may catch the player
+    CL.sieges?.step(camp); // sieges: food, preparation, the day's choice, relief (P8-06a)
     CL.realm.tickRelations(camp); // tension cools, wars wear out (W-07)
     CL.contracts.tick(camp); // deadlines
     const healed = [];
