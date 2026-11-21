@@ -686,7 +686,8 @@
       card.append(el('p', '', odds ? `Storm it now: about ${Math.round(odds * 100)}%.` : 'No assault until the ladders are ready.'));
       const row = el('div', 'row');
       row.append(
-        btn('siegeAssault', 'Assault', () => S.playerAssault(c), !odds),
+        btn('siegeStorm', 'Storm the walls', () => S.storm(c), !odds),
+        btn('siegeAssault', 'Simulate', () => S.playerAssault(c), !odds),
         btn('siegeWait', 'Wait a day', () => CL.party.advanceDays(1)),
         btn('siegeLift', 'Lift the siege', () => S.lift(c)),
       );

@@ -384,6 +384,7 @@
     if (win && siteId && w.sites[siteId]) {
       w.sites[siteId].clearedUntil = CL.campaign.day + site(siteId).respawnDays;
     }
+    if (!win && CL.game.encounterDef?.siege?.side === 'attack') return; // P8-06b: thrown back from the walls, not captured
     if (!win) {
       CL.clock.pass(CL.campaign, 'capture'); // held captive, then released (data/world_map.js time.capture)
       const c = CL.campaign;

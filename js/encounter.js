@@ -80,6 +80,8 @@
       CL.world.onBattleResolved(o.win, x.siteId ?? g.siteId);
       CL.parties.onBattleResolved(o.win, x.partyId ?? g.partyId, x.fallenEnemies || [], { wagonLost: Boolean(x.wagonLost) });
       CL.reinforce?.apply(c, o.win, x.reinforcements || []); // parties that rode in (V2-09)
+      const siegeBattle = (o.encounter || g.encounterDef)?.siege;
+      if (siegeBattle?.sid) CL.assault?.resolve(c, siegeBattle, o.win, [...(x.fallenEnemies || [])]); // the walls' result feeds the siege (P8-06b)
       const enc = o.encounter || (o.encounterId ? CL.content.table('encounters')[o.encounterId] : null);
       const encounterName = enc?.name ?? null;
       CL.events.emit(c, 'BattleResolved', {

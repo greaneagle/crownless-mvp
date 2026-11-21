@@ -1,5 +1,19 @@
 # Crownless — Release Notes
 
+## v2.30.0 — Storming the walls (P8-06b) · 2026-11-21
+
+### New
+- **Fight your assault on the walls.** Your siege's card now offers Storm the walls (fought) beside Simulate. The battle is on the fort's wall: the only ways up are the ladders (one for each day of preparation, three at most) and the gate. Keep soldiers at the gate once you have a ram (after three days) and it gives way. The defenders hold the wall and shoot from the walkway. Rout them, or hold the courtyard, and the fort is yours.
+- **Thrown back, not captured.** A lost assault costs you soldiers, but nothing is seized and nobody takes you.
+- **Defend the walls.** If you are inside a fort when its besiegers storm it, you fight on its walls, with part of its garrison beside you. Hold, and the siege is lifted.
+- On the walls your infantry go for the ladders and your archers stay behind them. Defending, your archers take the walkway and your infantry the gate.
+
+### Under the hood
+- No save change.
+- Fought assaults come out a few points better than Simulate's odds, as other fights do: 9 points over when attacking and 15 when defending (`node scripts/parity.js --siege`, 40 seeds).
+- Debug → Battle size & stress test: Siege assault 30 and Siege defence 30, practice fights on the walls that report the frame rate.
+- **Tests:** 777 fast and 14 slow Node tests, 179 browser tests (21 skipped: the visual baselines, Linux only, and those for one device only).
+
 ## v2.29.0 — Sieges (P8-06a) · 2026-11-21
 
 ### New

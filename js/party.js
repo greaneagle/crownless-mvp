@@ -358,8 +358,10 @@
       CL.upkeep.stowFood(camp); // looted food goes into the ration stock
     } else {
       const lord = CL.lords?.captorOf(camp); // P8-01: beaten by a lord, the hero is ransomed, not robbed
-      result.freedPrisoners = CL.lords?.loseAll(camp) || []; // your prisoners get free in the confusion
-      if (lord) {
+      const thrownBack = enc.siege?.side === 'attack'; // P8-06b: a lost assault throws you back; nobody takes you
+      result.freedPrisoners = thrownBack ? [] : CL.lords?.loseAll(camp) || []; // your prisoners get free in the confusion
+      if (thrownBack) result.thrownBack = true;
+      else if (lord) {
         result.gold = -CL.accounts.seize(camp, DEFEAT_GOLD_KEPT, `ransom paid to ${CL.realm.titled(lord, camp)}`);
         result.ransomedBy = lord;
       } else {

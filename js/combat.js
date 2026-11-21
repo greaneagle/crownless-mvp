@@ -122,6 +122,7 @@
     g.formation = 'loose'; // the infantry's formation (P7-11): the battle setup or Orders may change it
     g.wagonLost = false;
     CL.objective.begin(g, enc); // an escort ambush's wagon (P7-11), before the company forms up round it
+    CL.assault?.begin(g, enc); // a siege's assault (P8-06b): the gate, the ram, the courtyard
     const anchor = g.battleMap.spawn.hero;
     g.hero = makeUnit(anchor.x, anchor.y, 'ally', 'hero');
     Object.assign(g.hero, CL.character.heroCombat(CL.campaign, g.duel ? g.duel.kit : CL.campaign?.equipment)); // HP, damage, armor, shield from the character (and the kit worn)
@@ -178,11 +179,24 @@
       a.holdY = a.y;
     }
     if (opts.plan && !alone) CL.prep.place(g, opts.plan); // the chosen setup (V2-07)
+    if (g.siege?.side === 'defend' && enc.garrison) {
+      // P8-06b: defending a fort, its garrison fights beside you, for itself (as helpers do, V2-09).
+      const w = g.battleMap.wall;
+      // Half of it: the rest hold the other walls.
+      const garrison = CL.autoresolve.expand(enc.garrison);
+      garrison.slice(0, Math.min(Math.ceil(garrison.length * CL.assault.RULES.garrisonShare), Math.max(0, BATTLE.activeCap - g.allies.length - 1))).forEach((troopId, i) => {
+        const u = makeUnit(w.centre - w.outside * (50 + (i % 3) * 30), w.gaps[0].y + ((i * 47) % (g.battleMap.height - 200)), 'ally', troopId);
+        u.outside = true;
+        CL.units.resolveObstacles(u);
+        g.allies.push(u);
+      });
+    }
     spawnWave();
     // P8-01: a lord fights in person, at the head of the first wave: their realm's best foot soldier, stronger, with their name.
     const lead = enc.leader && !g.duel ? g.enemies.find((u) => u.troop === enc.leader.troop) || g.enemies[0] : null;
     if (lead) Object.assign(lead, { hp: Math.round(lead.hp * enc.leader.hp), maxhp: Math.round(lead.maxhp * enc.leader.hp), damage: lead.damage * enc.leader.damage, named: enc.leader.name });
     if (g.wagon) CL.ui.message('Keep the Reavers off the wagon: if it burns, the caravan is lost');
+    CL.assault?.announce(g); // the walls (P8-06b)
     if (g.duel) Object.assign(g.enemies[0], { hp: g.duel.opponent.hp, maxhp: g.duel.opponent.hp, damage: g.duel.opponent.damage, armor: g.duel.opponent.armor, duelist: g.duel.opponent.name });
     CL.reinforce.begin(g); // nearby parties that will join, and when (V2-09)
     Object.assign(g, { overview: false, cameraFocus: null, scanIn: 0 });
@@ -424,7 +438,8 @@
       if (u.overrun <= 0) u.momentum *= 0.4;
       return;
     }
-    const [dx, dy] = normalize(target.x - u.x, target.y - u.y);
+    const way = CL.arena.wayThrough(g.battleMap, u.x, u.y, target.x, target.y) || target; // P8-06b: through a gap in the wall
+    const [dx, dy] = normalize(way.x - u.x, way.y - u.y);
     u.runDir = [dx, dy];
     const was = u.momentum;
     u.momentum = Math.min(1, u.momentum + dt / CAVALRY.rampSeconds);
@@ -494,7 +509,11 @@
       if (u.team === 'ally') u.speed *= CL.formations.speed(game(), u); // a wall walks slower, a wedge quicker (P7-11)
       if (u.team === 'enemy' && ENEMY.use.line && aheadOfLine(u, target)) u.speed *= ENEMY.lineWait; // B-01: wait for the line
       if (u.raider && !CL.objective.sprung(game())) u.speed *= CL.objective.WAGON.lurk; // P7-T: lie in wait for the front to close
-      move(u, dest.x - u.x, dest.y - u.y, dt);
+      // P8-06b: on the walls, the way across is through a ladder or the gate; some attackers carry the ram.
+      const post = CL.assault?.ramPost(game(), u) || (dest === target ? CL.assault?.holdWall(game(), u, target) : null);
+      const to = post && dest === target && dist(u, target) > fireRange(u) + 40 ? post : dest;
+      const via = CL.arena.wayThrough(game().battleMap, u.x, u.y, to.x, to.y) || to;
+      move(u, via.x - u.x, via.y - u.y, dt);
       u.speed = s;
     } else if (dest === target) aim(u, target);
     if (dist(u, target) < fireRange(u)) {
@@ -639,6 +658,9 @@
     heroDownOrders(g);
     stallGuard(g);
 
+    // P8-06b: the attackers holding the courtyard decide an assault.
+    const held = CL.assault?.update(g, dt);
+    if (held) return CL.party.endBattle(g.siege.side === 'attack');
     // GDD §15 edge case: the battle only ends when no one is left waiting to step in.
     if (g.enemies.every((e) => !e.alive) && !g.enemyReserve?.length) {
       if (g.wave < g.totalWaves) {

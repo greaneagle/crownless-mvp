@@ -708,6 +708,15 @@
         toggle(false);
         fordTest(n);
         return;
+      case 'assault': // P8-06b
+      case 'assaultDefend':
+        if (mode === 'battle' || mode === 'result') return CL.ui.message('Finish the battle first');
+        toggle(false);
+        CL.game.siteId = null;
+        CL.game.partyId = null;
+        CL.combat.startBattle(CL.assault.practice(n, act === 'assault' ? 'attack' : 'defend'));
+        log('practice assault', { total: n, side: act === 'assault' ? 'attack' : 'defend' });
+        return;
       case 'hills': // P7-11
       case 'wagon':
         if (mode === 'battle' || mode === 'result') return CL.ui.message('Finish the battle first');

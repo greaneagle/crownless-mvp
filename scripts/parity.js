@@ -109,7 +109,99 @@ function run({ seeds = 40, preset = 'balanced', tweak = null, only = null } = {}
   });
 }
 
-if (require.main === module) {
+// ---- Sieges (P8-06b): the same assault fought on the walls and simulated with the walls' bonus ----
+
+const SIEGE_COMPANY = ['footman', 'footman', 'footman', 'footman', 'guard', 'guard', 'levy', 'levy', 'hunter', 'hunter', 'longbowman', 'longbowman', 'footman', 'footman', 'hunter', 'hunter'];
+
+/** A seeded game: you, a vassal of Valedorn at war with Aurelia, three days into a siege of Castra Nova ('attack'), or holding it for Aurelia against Valedorn's lords ('defend'). */
+function siegeSetup(side, seed) {
+  const { CL } = loadGame({ seed });
+  CL.ui = headlessUi(CL);
+  const c = CL.campaign;
+  c.roster = [];
+  for (const t of SIEGE_COMPANY) CL.save.addSoldier(c, t);
+  CL.realm.setRelation(c, 'valedorn', 'aurelian', 'war', 'parity');
+  const f = CL.content.get('settlements', 'castra_nova');
+  if (side === 'attack') {
+    Object.assign(c.allegiance, { kind: 'vassal', realm: 'valedorn', since: 0, window: { start: 0, days: 10 } });
+    Object.assign(c.world, { x: f.mapX, y: f.mapY, location: 'castra_nova' });
+    const s = CL.sieges.begin(c, 'castra_nova');
+    Object.assign(s, { began: c.day - 3.5, lastDay: Math.floor(c.day) });
+    return { CL, s };
+  }
+  Object.assign(c.allegiance, { kind: 'vassal', realm: 'aurelian', since: 0, window: { start: 0, days: 10 } });
+  CL.realm.transfer(c, 'castra_nova', { holder: 'player', willing: true });
+  Object.assign(c.world, { x: f.mapX, y: f.mapY, location: 'castra_nova' });
+  for (const t of Object.values(CL.content.table('party_templates'))) c.partySpawns[t.id] = t.kind === 'lord' ? 0 : 1e9;
+  CL.lords.ensure(c, c.day, true);
+  const lords = c.parties.filter((p) => p.lordId && c.people[p.lordId].realm === 'valedorn').slice(0, 3);
+  for (const q of lords) Object.assign(q, { x: f.mapX + 2, y: f.mapY + 2, troops: { footman: 8, guard: 3, hunter: 4, longbowman: 2 } });
+  const s = { id: 99, sid: 'castra_nova', realm: 'valedorn', by: 'ai', lords: lords.map((q) => q.lordId), relief: [], phase: 'encircled', began: c.day - 3.5, gatherBy: null, lastDay: Math.floor(c.day), steppedTo: c.day, log: [] };
+  c.sieges.push(s);
+  return { CL, s };
+}
+
+/** Fight it on the walls with the campaign bot's hero (through the gaps in the wall). */
+function siegeFight(CL, side, s) {
+  const g = CL.game;
+  const c = CL.campaign;
+  const before = c.roster.length;
+  if (side === 'attack') CL.sieges.storm(c);
+  else CL.sieges.defend(c, s);
+  let t = 0;
+  for (; t < 40000 && g.mode === 'battle'; t++) {
+    const h = g.hero;
+    const foe = g.enemies.filter((x) => x.alive && !x.routing).sort((a, b) => Math.hypot(a.x - h.x, a.y - h.y) - Math.hypot(b.x - h.x, b.y - h.y))[0];
+    if (foe && h.alive) {
+      const way = CL.arena.wayThrough(g.battleMap, h.x, h.y, foe.x, foe.y) || foe;
+      const [dx, dy] = [way.x - h.x, way.y - h.y];
+      const L = Math.hypot(dx, dy) || 1;
+      const close = Math.hypot(foe.x - h.x, foe.y - h.y);
+      g.joystick = close > 45 || way !== foe ? { x: dx / L, y: dy / L } : { x: 0, y: 0 };
+      g.attackHeld = close < 70;
+    }
+    CL.combat.update(0.02);
+  }
+  return { win: Boolean(g.result?.win), fallen: fallen(CL, before), seconds: t * 0.02, ended: g.mode !== 'battle' };
+}
+
+/** Simulate it: your assault through Simulate, or theirs on your fort off the field (the walls' bonus both ways). */
+function siegeSimulate(CL, side, s) {
+  const c = CL.campaign;
+  const A = CL.autoresolve;
+  const before = c.roster.length;
+  if (side === 'attack') {
+    const odds = CL.sieges.odds(c, s);
+    const r = CL.sieges.playerAssault(c);
+    return { win: Boolean(r?.win), fallen: fallen(CL, before), odds };
+  }
+  // Defending: the company counts beside the garrison behind the walls.
+  const d = CL.sieges.defence(c, s);
+  const odds = 1 - A.winChance(CL.sieges.attack(c, s), d.power + A.playerPower(c) * d.wall);
+  return { win: A.next(c) < odds, fallen: 0, odds };
+}
+
+function runSiege({ seeds = 30 } = {}) {
+  return ['attack', 'defend'].map((side) => {
+    const rows = [];
+    for (let i = 1; i <= seeds; i++) {
+      const seed = spread(1000 + i);
+      const a = siegeSetup(side, seed);
+      const b = siegeSetup(side, seed);
+      rows.push({ fought: siegeFight(a.CL, side, a.s), auto: siegeSimulate(b.CL, side, b.s) });
+    }
+    const pct = (k) => (100 * rows.filter((r) => r[k].win).length) / seeds;
+    const odds = (100 * rows.reduce((n, r) => n + r.auto.odds, 0)) / seeds;
+    return { scenario: `siege-${side}`, odds, autoWin: pct('auto'), foughtWin: pct('fought'), overOdds: pct('fought') - odds, gap: pct('fought') - pct('auto'), foughtSeconds: rows.reduce((n, r) => n + r.fought.seconds, 0) / seeds, unfinished: rows.filter((r) => !r.fought.ended).length };
+  });
+}
+
+if (require.main === module && process.argv.includes('--siege')) {
+  const seeds = Number(process.argv.slice(2).find((a) => /^\d+$/.test(a)) ?? 30);
+  console.log(`Sieges, fought on the walls versus simulated, ${seeds} seeds each`);
+  for (const r of runSiege({ seeds })) console.log(`${r.scenario.padEnd(14)} odds ${r.odds.toFixed(0)}%  simulated ${r.autoWin.toFixed(0)}%  fought ${r.foughtWin.toFixed(0)}%  over-odds ${r.overOdds.toFixed(0)}  fought ${r.foughtSeconds.toFixed(0)} s${r.unfinished ? `  (${r.unfinished} never ended)` : ''}`);
+  console.log('B-01 aims for fought battles 5–15 points over the stated odds.');
+} else if (require.main === module) {
   const args = process.argv.slice(2);
   const opt = (name) => {
     const i = args.indexOf(name);
@@ -132,4 +224,4 @@ if (require.main === module) {
   }
 }
 
-module.exports = { run, SCENARIOS, spread, setup, fight, simulate };
+module.exports = { run, runSiege, SCENARIOS, spread, setup, fight, simulate };

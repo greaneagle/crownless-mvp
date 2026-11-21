@@ -2056,7 +2056,44 @@ Phase 8 adds many rights: appoint, tax, summon, grant, besiege, swear, leave, ra
 
 **Acceptance.** Forts change hands in play by understandable rules. You're warned in time to act. The world doesn't snowball over 180 days on its own.
 
-### P8-06b · The assault battle (M–L) — Ready (D-P8a decided 2026-11-20)
+### P8-06b · The assault battle (M–L) — ✅ Done in 2.30.0
+
+**Done (2.30.0, 2026-11-21).** No save change. `js/arena.js` `assault(opts)` builds the walls; `js/assault.js` (`CL.assault`) runs the battle on them.
+- **The map** (2 screens across, built for each battle and never shared):
+  - the wall across the field (26 px, solid; arrows fly over it);
+  - a gate in the middle (shut: an obstacle of this battle's map until broken);
+  - one to three ladder points, from the preparation (a day each, three at most);
+  - the walkway behind it (high ground, P7-11's +25% archer range);
+  - the paved courtyard, with a keep line of four blocks at its far end.
+  
+  Defending, it is mirrored, the courtyard on your side.
+- **The way through** (`arena.wayThrough`): a soldier whose way is across the wall goes to the nearest open gap on their side, then through it; with none open, they wait at the wall. It is in the AI's movement for foot and horse. The hero is yours to walk; the wall stops them anywhere but a gap. Nobody stands inside the wall (tested).
+- **The ram** (from three days): any attacker within 70 px of the gate for 25 seconds breaks it. On a defence, every third attacker carries it to the gate.
+- **The defenders hold the wall:** one whose foe is outside stands at the inner head of the nearest ladder or the gate instead of sallying out.
+- **Winning:** routing the other side, as any battle. Also the attackers holding the courtyard (three or more of them in it, at least 1.5× the defenders still there, for 12 seconds).
+- **Setups on the walls** (`prep.plan` asks `assault.anchors`):
+  - **Balanced, attacking:** infantry at the first ladder on Charge, archers behind on Hold, cavalry back at the gate.
+  - **Defensive, defending:** archers on the walkway, infantry at the gate, all on Hold.
+- **From the siege:**
+  - **Storm the walls** on your siege's card, beside **Simulate** (P8-06a's, with the same walls' bonus). Won, the fort is taken (P8-06a). Lost, you are **thrown back**: soldiers lost, but no gold seized, no item taken, no capture; the defenders' losses come off the garrison and the siege is lifted.
+  - **Defending:** when the besiegers storm a fort you are in, the battle is fought, with 52% of the garrison beside you as helpers (the rest hold the other walls); won, the siege is lifted and the attackers' losses come off their lords; lost, the fort falls, with you captured as in any lost battle.
+- **Parity** (`node scripts/parity.js --siege [seeds]`): your siege of Castra Nova three days in, and your defence of it. 40 seeds:
+  - attacking: odds 46%, Simulate 38%, fought 55% (9 over);
+  - defending: odds 60%, Simulate 53%, fought 75% (15 over).
+  
+  The garrison's share and the courtyard hold were tuned for this: with the whole garrison, defending was 30 over.
+- **Debug → Battle size & stress test:** Siege assault 30 and Siege defence 30 (practice, two ladders and a ram), reporting fps and the slowest frame on the result screen.
+- **Tests:**
+  - `tests/assault.test.js` (6): the map and its mirror, the way through (a soldier crosses by the ladder and is never inside the wall), the ram, the setups, storming won and thrown back, defending held, Simulate's walls and practice changing nothing.
+  - `slow/battle-parity.test.js`: the siege scenarios within −5 to +25 of the odds over 40 seeds.
+  - `tests/browser/assault.spec.js` (desktop and phone): Storm the walls from the siege, the battle on the wall, the fort taken.
+- **Not as specified:**
+  - **No preparation screen before an assault:** it starts with the walls' own setup (Balanced at the ladders, or Defensive on the walkway). Custom placement isn't offered; the screen is the encounter's.
+  - **You can't ride in to fight a relief,** as in P8-06a.
+  - **Reinforcements** don't join assaults.
+  - **The phone test's numbers** are for the owner's phone: the pane here runs throttled when hidden.
+  - **Ladders show as gaps in the wall** until there's art (ASSETS 14).
+- **Checkpoint (NEXT-PLAN §7):** `npm test` (777), lint, the full browser suite (179 passed, none failed) and the whole slow suite (14 of 14, run together, including the siege parity) all green.
 
 **Problem.** A fought assault needs walls. The only walled map is the fixed Greywall Courtyard used by Q4.
 

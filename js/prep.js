@@ -102,6 +102,17 @@
     }
     // P7-11: archers who start on a rise (the hills map) keep it: they hold there, unless the setup is Custom.
     if (p !== 'custom' && CL.formations.highAt(anchors.archer.x, anchors.archer.y)) orders.archer = 'hold';
+    // P8-06b: on a fort's walls, setups that make sense there (js/assault.js).
+    const walls = CL.assault?.anchors(p, map);
+    if (walls) {
+      for (const grp of GROUPS) {
+        const at = walls[grp];
+        if (at) anchors[grp] = legal({ x0: map.bounds.minX, x1: map.bounds.maxX, y0: map.bounds.minY, y1: map.bounds.maxY }, at.x, at.y);
+      }
+      const attacking = map.spawn.hero.x * map.wall.outside > map.wall.centre * map.wall.outside;
+      if (attacking) Object.assign(orders, { infantry: 'charge', archer: 'hold', cavalry: 'follow' });
+      else Object.assign(orders, { infantry: 'hold', archer: 'hold', cavalry: 'hold' });
+    }
     CL.game.battleMap = prevMap;
     return { preset: p, ambush, orders, anchors, formation: p === 'custom' ? 'loose' : base.formation };
   }

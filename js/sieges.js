@@ -282,6 +282,35 @@
     return { win, killed, wounded, text };
   }
 
+  /** How far the preparation has come: ladders (one a day, three at most) and the ram (after three days). */
+  function prepared(c, s) {
+    const days = s.began != null ? c.day - s.began : 0;
+    return { ladders: Math.max(1, Math.min(3, Math.floor(days))), ram: days >= RULES.ram };
+  }
+
+  /** P8-06b: your assault, fought on the walls (the setup that makes sense there: infantry at the ladders). */
+  function storm(c) {
+    const s = list(c).find((x) => x.by === PLAYER);
+    if (!s || odds(c, s) === 0 || !CL.assault) return null;
+    const enc = CL.assault.encounter(c, s.sid, 'attack', prepared(c, s));
+    CL.combat.startBattle(enc, { plan: CL.prep.plan('balanced', enc.mapDef) });
+    return enc;
+  }
+
+  /** P8-06b: the besiegers storm the fort you are in: you defend its walls, the garrison beside you. */
+  function defend(c, s) {
+    const troops = {};
+    for (const pid of s.lords) {
+      const q = CL.lords.partyOf(c, pid);
+      if (q) for (const [id, n] of Object.entries(q.troops)) troops[id] = (troops[id] || 0) + n;
+    }
+    const enc = CL.assault.encounter(c, s.sid, 'defend', { ...prepared(c, s), enemyTroops: troops });
+    enc.garrison = { ...(R().holding(s.sid, c).garrison || {}) };
+    CL.ui.message(`The ${factionName(s.realm)} storm the walls of ${placeName(s.sid)}!`);
+    CL.combat.startBattle(enc, { plan: CL.prep.plan('defensive', enc.mapDef) });
+    return enc;
+  }
+
   /** The player lifts their own siege. */
   function lift(c) {
     const s = list(c).find((x) => x.by === PLAYER);
@@ -398,7 +427,11 @@
     }
     if (s.by === PLAYER) return;
     if (attack(c, s) < defence(c, s).raw || c.day - s.began > RULES.maxDays) return end(c, s, 'lifted');
-    if (c.day - s.began >= RULES.ladders && o >= RULES.assaultOdds) return assault(c, s);
+    if (c.day - s.began >= RULES.ladders && o >= RULES.assaultOdds) {
+      // P8-06b: you are in the fort: the assault is fought, and you defend the walls.
+      if (c.world.location === s.sid && ['settlement', 'map', 'town'].includes(CL.game.mode) && CL.assault) return defend(c, s);
+      return assault(c, s);
+    }
   }
 
   /** Your fort is besieged: an urgent message (Ride back, or leave it to the castellan). */
@@ -480,5 +513,5 @@
     s.siegePlanned = Number.isInteger(d?.siegePlanned) ? d.siegePlanned : null;
   }
 
-  CL.sieges = { RULES, list, at, shut, of, defence, attack, odds, foodDays, preview, begin, plan, end, take, assault, playerAssault, lift, callRelief, relieve, step, postFor, sanitize };
+  CL.sieges = { RULES, list, at, shut, of, defence, attack, odds, foodDays, preview, begin, plan, end, take, assault, playerAssault, prepared, storm, defend, lift, callRelief, relieve, step, postFor, sanitize };
 })(typeof window !== 'undefined' ? window : globalThis);

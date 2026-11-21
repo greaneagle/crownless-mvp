@@ -10,6 +10,11 @@
  *           slow everyone wading through them, and nothing grows in the water
  *   hills   (P7-11) rolling grass with three rises (`high`): a knoll where the company forms up, a hill
  *           between the armies and a knoll on the enemy's side. Archers on a rise shoot further
+ *   assault (P8-06b) a fort's wall across the field: a gate in the middle (shut until a ram breaks it),
+ *           one to three ladder points (the only other ways up), a walkway behind the wall that counts
+ *           as high ground, and the courtyard beyond with a keep line to fall back to. Built for each
+ *           battle (`assault(opts)`, not kept): its ladders and gate depend on the siege, and when you
+ *           defend it is mirrored, the courtyard on your side
  *
  * `mapFor(id)` is how battles get their map: a generated map is built once and kept; and with the
  * device setting "Battlefield: Small" a large map is swapped for its one-screen counterpart
@@ -164,6 +169,92 @@
     };
   }
 
+  // ---- The assault (P8-06b) ----
+
+  const WALL = { at: 0.56, thick: 26, gate: 96, ladder: 48, walkway: 70, keep: 0.86 };
+  const LADDER_YS = [0.24, 0.76, 0.1];
+
+  /**
+   * A fort's wall `scale` screens across. `ladders` 1–3 ladder points; `gateOpen` (a broken gate);
+   * `defend`: mirrored, so the hero starts in the courtyard and the attackers come from the far side.
+   * @param {{ ladders?: number, gateOpen?: boolean, defend?: boolean, scale?: number, seed?: number }} [opts]
+   */
+  function assault({ ladders = 1, gateOpen = false, defend = false, scale = 2, seed = 23 } = {}) {
+    const rand = mulberry(seed);
+    const W = CL.W * scale;
+    const H = CL.H * scale;
+    // The attackers' side is the west (left); defending, the map is mirrored (x → W − x).
+    const mx = (x) => (defend ? W - x : x);
+    const wx = Math.round(W * WALL.at);
+    const wallX = defend ? W - wx - WALL.thick : wx; // the wall's west edge
+    const centre = wallX + WALL.thick / 2;
+    const n = Math.max(1, Math.min(3, Math.round(ladders)));
+    const gaps = [{ kind: 'gate', y: Math.round(H / 2), h: WALL.gate }, ...LADDER_YS.slice(0, n).map((f) => ({ kind: 'ladder', y: Math.round(H * f), h: WALL.ladder }))].sort((a, b) => a.y - b.y);
+    const obstacles = [];
+    let top = 0;
+    for (const g of gaps) {
+      const y0 = g.y - g.h / 2;
+      if (y0 > top) obstacles.push({ shape: 'rect', x: wallX, y: top, w: WALL.thick, h: y0 - top, blocksArrows: false, look: 'wall' });
+      top = g.y + g.h / 2;
+    }
+    obstacles.push({ shape: 'rect', x: wallX, y: top, w: WALL.thick, h: H - top, blocksArrows: false, look: 'wall' });
+    const gate = gaps.find((g) => g.kind === 'gate');
+    if (!gateOpen) obstacles.push({ shape: 'rect', x: wallX, y: gate.y - gate.h / 2, w: WALL.thick, h: gate.h, blocksArrows: false, look: 'crate', gate: true });
+    // The walkway behind the wall: high ground for its archers (P7-11's rises).
+    const inner = defend ? wallX - WALL.walkway / 2 : wallX + WALL.thick + WALL.walkway / 2;
+    const high = [{ x: Math.round(inner), y: Math.round(H / 2), rx: WALL.walkway / 2, ry: Math.round(H / 2) }];
+    // The keep line: a few blocks across the courtyard's far end to fall back to.
+    const keepX = Math.round(mx(W * WALL.keep));
+    for (const fy of [0.2, 0.42, 0.58, 0.8]) obstacles.push({ shape: 'rect', x: keepX - 20, y: Math.round(H * fy) - 22, w: 40, h: 44, blocksArrows: true, look: 'crate' });
+    // A few rocks outside.
+    for (let i = 0; i < 6; i++) {
+      const x = Math.round(mx(W * (0.12 + rand() * 0.3)));
+      const y = Math.round(H * (0.12 + rand() * 0.76));
+      if (Math.abs(y - H / 2) > 120) obstacles.push(rock(x, y));
+    }
+    const hero = defend ? { x: Math.round(mx(W * 0.78)), y: Math.round(H / 2) } : { x: Math.round(W * 0.2), y: Math.round(H / 2) };
+    // Attacking, the defenders stand behind the wall; defending, the attackers come from the far side.
+    const enemies = defend
+      ? { x0: Math.round(W - W * 0.24), x1: Math.round(W - W * 0.1), y0: Math.round(H * 0.25), y1: Math.round(H * 0.75) }
+      : { x0: wallX + WALL.thick + 18, x1: wallX + WALL.thick + 260, y0: Math.round(H * 0.18), y1: Math.round(H * 0.82) };
+    if (defend) [hero.x] = [Math.round(wallX - 260)];
+    const courtyard = defend ? { x0: 0, x1: wallX } : { x0: wallX + WALL.thick, x1: W };
+    const stone = { x: courtyard.x0, y: 0, w: courtyard.x1 - courtyard.x0, h: H, color: '#8d8a80' };
+    return {
+      id: `assault_${n}${gateOpen ? '_open' : ''}${defend ? '_defend' : ''}`,
+      name: 'The walls',
+      tileset: '16x16',
+      ground: { base: '#71904e', tiles: ['w0000', 'w0001', 'w0002'], patches: [], stone, rises: high },
+      decor: [],
+      width: W,
+      height: H,
+      bounds: { minX: 47, maxX: W - 52, minY: 65, maxY: H - 50 },
+      obstacles,
+      spawn: { hero, enemies },
+      high,
+      wall: { x: wallX, w: WALL.thick, centre, gaps, outside: defend ? 1 : -1, courtyard },
+      gateOpen,
+    };
+  }
+
+  /**
+   * The way through a wall (P8-06b): a unit whose destination is on the other side of the wall heads
+   * for the nearest open gap (a ladder, or the gate once broken) on its own side, then through it. Null
+   * when no wall stands between. Units never go through the wall itself (it is solid).
+   */
+  function wayThrough(map, x0, y0, x1, y1) {
+    const w = map?.wall;
+    if (!w) return null;
+    const s0 = Math.sign(x0 - w.centre);
+    const s1 = Math.sign(x1 - w.centre);
+    if (!s0 || !s1 || s0 === s1) return null;
+    const open = w.gaps.filter((g) => g.kind !== 'gate' || map.gateOpen);
+    if (!open.length) return { x: w.centre + s0 * 40, y: y0 };
+    const gap = open.reduce((a, b) => (Math.abs(y0 - b.y) + Math.abs(y1 - b.y) < Math.abs(y0 - a.y) + Math.abs(y1 - a.y) ? b : a));
+    if (Math.abs(x0 - w.centre) < 46 && Math.abs(y0 - gap.y) < gap.h / 2 - 6) return { x: w.centre - s0 * 60, y: gap.y };
+    return { x: w.centre + s0 * 40, y: gap.y };
+  }
+
   const GENERATORS = { forest, field, ford, hills };
   const built = new Map();
 
@@ -187,5 +278,5 @@
     return build(rec);
   }
 
-  CL.arena = { KINDS, FORD_SLOW, forest, field, ford, hills, build, mapFor };
+  CL.arena = { KINDS, FORD_SLOW, WALL, forest, field, ford, hills, assault, wayThrough, build, mapFor };
 })(typeof window !== 'undefined' ? window : globalThis);

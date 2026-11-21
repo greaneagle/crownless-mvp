@@ -18,3 +18,12 @@ test('fought battles: over the stated odds, but not far; Simulate only a little 
   const avg = close.reduce((n, r) => n + r.foughtWin - r.odds, 0) / close.length;
   assert.ok(avg >= 2 && avg <= 18, `close fights: ${avg.toFixed(1)} points over the odds on average (target 5–15)`);
 });
+
+// P8-06b: the assault on a fort's walls, fought and simulated with the walls' bonus, attack and defence.
+test('sieges: an assault fought on the walls comes out over the odds, but not far, both ways', () => {
+  const { runSiege } = require('../../scripts/parity');
+  for (const r of runSiege({ seeds: 40 })) {
+    assert.equal(r.unfinished, 0, `${r.scenario}: every fight ends`);
+    assert.ok(r.overOdds >= -5 && r.overOdds <= 25, `${r.scenario}: fought ${r.foughtWin}% against the odds ${r.odds.toFixed(0)}%`);
+  }
+});
