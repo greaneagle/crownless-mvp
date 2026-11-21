@@ -578,6 +578,17 @@
         if (!x) CL.ui.message('No lord has anything to ask');
         break;
       }
+      case 'prototypeD': {
+        // P8-08: Prototype D's start: a vassal with a fief, a warband of 12 and a mill; an enemy gathering.
+        const r = CL.claims.prototypeD(c());
+        log('prototype D', r || { failed: true });
+        if (!r) return CL.ui.message('Prototype D could not be set up in this world');
+        CL.save.write();
+        toggle(false);
+        CL.ui.changeMode('map');
+        CL.ui.message(`Prototype D: you hold Westholt Castle and Ashby for Valedorn${r.mill ? `, with a mill at ${CL.content.get('settlements', r.mill).name}` : ''}. Hrothmark is at war with Valedorn${r.siege ? ', and its lords gather against Westholt' : ''}.`);
+        return;
+      }
       case 'nobleWeek':
         for (const pid of Object.keys(c().people)) CL.nobles.weekly(c(), pid);
         log('nobles: a week', { warned: Object.keys(c().nobles.warned).length });

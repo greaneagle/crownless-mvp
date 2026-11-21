@@ -136,12 +136,15 @@ test('a vassal’s obligations: 10 days of service in every 30; three short mont
   assert.equal(AL.state(c).window.days, 2);
   Object.assign(c.world, { location: null });
   days(CL, 29);
-  assert.equal(AL.state(c).summonsMissed, 1, 'a month short');
-  days(CL, 60);
+  assert.equal(AL.state(c).summonsMissed, 1, 'a month short: a warning (P8-08)');
+  assert.equal(R.holderOf('fernley', c), 'player');
+  days(CL, 30);
+  assert.equal(AL.state(c).summonsMissed, 2);
+  assert.notEqual(R.holderOf('fernley', c), 'player', 'the second: the liege takes Fernley back (P8-08)');
+  assert.equal(R.claimsOn('fernley', c).some((k) => k.by === 'player'), false, 'the liege’s right: no claim');
+  days(CL, 30);
   assert.equal(AL.state(c).kind, 'independent', 'cast out after three');
   assert.equal(AL.state(c).history.at(-1).end, 'expelled');
-  assert.equal(R.holderOf('fernley', c), c.rulers.valedorn);
-  assert.equal(R.claimsOn('fernley', c).find((k) => k.by === 'player')?.kind, 'granted', 'you keep a granted claim');
   assert.equal(AL.state(c).hunt, null, 'no hunt after an expulsion');
 });
 

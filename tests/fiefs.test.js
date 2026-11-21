@@ -53,6 +53,7 @@ test('a fief of yours: its own book, exact against its weekly reports over 90 da
   // 13 weeks, each one's account change checked against its book and its report.
   for (let w = 0; w < 13; w++) {
     const before = { westholt_castle: acct('westholt_castle'), fernley: acct('fernley') };
+    c.allegiance.window.days = 10; // service kept (P8-08 would revoke a fief for missed calls)
     weeks(CL, 1);
     for (const sid of ['westholt_castle', 'fernley']) {
       const h = c.holdings[sid];

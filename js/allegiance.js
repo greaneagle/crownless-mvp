@@ -35,6 +35,8 @@
     huntDays: 10,
     oathGap: 7, // days between oaths
     missedToExpel: 3,
+    revokeAt: 2, // P8-08: the second call missed takes a fief back (after a warning at the first)
+    standingWarn: 10, // P8-08: a warning this close above Hostile while you hold their land
     historyMax: 12,
   };
   const KINDS = ['independent', 'mercenary', 'vassal'];
@@ -158,6 +160,7 @@
     a.history = [...a.history, { kind: a.kind, realm: a.realm, from: a.since, to: c.day, end, serviceDays: a.serviceDays }].slice(-RULES.historyMax);
     CL.chronicle?.add(c, { day: c.day, kind: 'allegiance', event: end, as: a.kind, by: a.realm });
     Object.assign(a, { kind: 'independent', realm: null, since: c.day, until: null, serviceDays: 0, summonsMissed: 0, window: null, nextPay: null, served: null });
+    delete a.warnings;
   }
 
   /** Give up the realm's holdings you hold: back to the crown, with or without a claim. */
@@ -239,6 +242,46 @@
     if (enemy) serve(c);
   }
 
+  /**
+   * A call missed (a short month, or a summons not answered, P8-07): the first is a warning while you
+   * hold land of the realm; the second takes a fief back (a village first; no claim: it is the
+   * liege's right); the third casts you out (P8-04). Returns what came of it.
+   */
+  function missed(c) {
+    const a = state(c);
+    if (a.kind !== 'vassal') return null;
+    a.summonsMissed++;
+    const land = fiefs(c, a.realm).filter((sid) => !R().locked(c, sid));
+    const ruler = R().rulerOf(a.realm, c);
+    if (a.summonsMissed === RULES.revokeAt - 1 && land.length) {
+      a.warnings = { ...(a.warnings || {}), summons: Math.floor(c.day) };
+      CL.ui.message(`${R().titled(ruler, c)} warns you: miss another call and the crown takes back ${placeName(land.find((x) => R().holding(x, c).kind === 'village') || land[0])}.`);
+      return 'warned';
+    }
+    if (a.summonsMissed === RULES.revokeAt && land.length) {
+      const sid = land.find((x) => R().holding(x, c).kind === 'village') || land[0];
+      R().transfer(c, sid, { holder: ruler, willing: true, reason: 'revoked' });
+      CL.news?.record(c, 'fief_revoked', { place: sid, faction: a.realm, text: `${R().titled(ruler, c)} takes ${placeName(sid)} back from ${c.character?.name || 'a vassal'}, who would not answer the call.` });
+      CL.ui.message(`${R().titled(ruler, c)} takes ${placeName(sid)} back: you did not answer the call. You keep no claim to it.`);
+      return 'revoked';
+    }
+    return 'missed';
+  }
+
+  /** Your standing with your liege falling toward Hostile while you hold their land: one warning first. */
+  function standingWarning(c) {
+    const a = state(c);
+    if (a.kind !== 'vassal' || !fiefs(c, a.realm).length) return;
+    const low = (c.reputation?.[a.realm] ?? 0) < R().REP.hostileBelow + RULES.standingWarn;
+    if (!low) {
+      if (a.warnings?.standing != null) delete a.warnings.standing;
+      return;
+    }
+    if (a.warnings?.standing != null) return;
+    a.warnings = { ...(a.warnings || {}), standing: Math.floor(c.day) };
+    CL.ui.message(`The ${factionName(a.realm)} think less and less of you: fall further and they cast you out, and your land with you.`);
+  }
+
   /** Mark today as a day of service (fighting, at your fief, at a summons). */
   function serve(c) {
     const a = state(c);
@@ -277,13 +320,14 @@
       if (at && R().holderOf(at, c) === R().PLAYER) serve(c);
       if (a.window && c.day >= a.window.start + RULES.window.days) {
         if (a.window.days < RULES.window.service) {
-          a.summonsMissed++;
           CL.ui.message(`You have given the ${factionName(a.realm)} too little service this month (${a.window.days} of ${RULES.window.service} days).`);
+          missed(c);
         }
         a.window = { start: a.window.start + RULES.window.days, days: 0 };
       }
       if (a.summonsMissed >= RULES.missedToExpel) expel(c, 'you have not answered their call');
       else if (R().isHostile(c, a.realm)) expel(c, 'they count you an enemy');
+      else standingWarning(c);
     }
     if (a.kind === 'mercenary' && R().isHostile(c, a.realm)) expel(c, 'they count you an enemy');
   }
@@ -339,6 +383,12 @@
       serviceDays: Math.max(0, Math.floor(num(x.serviceDays) ? x.serviceDays : 0)),
       summonsMissed: Math.max(0, Math.min(RULES.missedToExpel, Math.floor(num(x.summonsMissed) ? x.summonsMissed : 0))),
     });
+    // P8-08 (optional): the revocation's warnings given.
+    if (a.kind === 'vassal' && x.warnings && typeof x.warnings === 'object') {
+      const w = {};
+      for (const k of ['summons', 'standing']) if (num(x.warnings[k])) w[k] = Math.floor(x.warnings[k]);
+      if (Object.keys(w).length) a.warnings = w;
+    }
     if (a.kind === 'mercenary') {
       a.until = num(x.until) ? x.until : s.day + RULES.term;
       a.nextPay = num(x.nextPay) ? x.nextPay : s.day + 7;
@@ -349,5 +399,5 @@
     }
   }
 
-  CL.allegiance = { RULES, KINDS, blank, state, serves, sworn, weeklyPay, mercenaryDays, favour, capital, owed, atWar, preview, act, expel, onAttack, afterBattle, serve, hunted, tick, offerWhy, summary, sanitize };
+  CL.allegiance = { RULES, KINDS, blank, state, serves, sworn, weeklyPay, mercenaryDays, favour, capital, owed, atWar, preview, act, expel, onAttack, afterBattle, missed, standingWarning, serve, hunted, tick, offerWhy, summary, sanitize };
 })(typeof window !== 'undefined' ? window : globalThis);

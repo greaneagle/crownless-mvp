@@ -163,6 +163,9 @@
 #realmScreen .lordAnswer[data-answer="obey"] b{color:#9fd18b}
 #realmScreen .lordAnswer[data-answer="refuse"] b{color:#e08a7a}
 #realmScreen .lordWhyNot,#realmScreen .petitionNote{opacity:.8;font-style:italic}
+#realmScreen .claimWhy,#realmScreen .handBackNote{opacity:.8;font-style:italic;margin:4px 0}
+#realmScreen .claimsHead{margin:12px 0 0;color:#ecd6a4}
+#realmScreen .claimCard .row button,#realmScreen .handBackRow button{min-height:44px}
 #ransomOptions{display:flex;flex-direction:column;gap:8px;margin-top:8px}
 #ransomOptions button{display:flex;flex-direction:column;align-items:center;min-height:44px}
 #ransomOptions small{font-weight:normal;opacity:.85}

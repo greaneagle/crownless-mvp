@@ -677,7 +677,7 @@
     if (s && CL.allegiance?.sworn(c) === m.realm) return;
     state(c).summons = null;
     if (!m.answered && CL.allegiance?.sworn(c) === m.realm) {
-      CL.allegiance.state(c).summonsMissed++;
+      CL.allegiance.missed(c); // a warning, a fief revoked, or cast out (P8-08)
       note(c, R().rulerOf(m.realm, c), PLAYER, 'refused_summons', { kin: false });
       CL.ui.message(`You did not answer the summons to ${fort?.name || 'the siege'}. ${R().titled(R().rulerOf(m.realm, c), c)} marks it.`);
     }
@@ -786,7 +786,7 @@
     const fiefs = R().fiefsOf(pid, c).filter((sid) => !R().locked(c, sid) && !R().locked(c, c.holdings[sid].seat));
     if (refusals >= RULES.revokeAfter && fiefs.length) {
       const sid = fiefs.find((x) => c.holdings[x].kind === 'village') || fiefs[0];
-      if (R().transfer(c, sid, { holder: ruler, reason: 'revoked', quiet: true })) {
+      if (R().transfer(c, sid, { holder: ruler, willing: true, reason: 'revoked', quiet: true })) { // the liege's right: no claim (as yours, P8-08)
         note(c, pid, ruler, 'revoked');
         // The refusals are answered: they don't count again.
         const e = entry(c, ruler, pid);

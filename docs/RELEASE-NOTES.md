@@ -1,5 +1,21 @@
 # Crownless — Release Notes
 
+## v2.32.0 — Losing and retaking land (P8-08) · 2026-11-21
+
+### New
+- **Losing land is clear.** A fort taken in a siege, a fief your liege takes back, land lost by leaving a crown, or a fief you hand back yourself: each tells you who holds it now and whether you keep a claim. Your company, money, mill and followers are always yours.
+- **Your castellan** walks out of a surrender, but is taken prisoner if the fort is stormed, and freed when you win it back.
+- **Your liege can take a fief back.** Miss a call while holding their land and you are warned; miss a second and they take a fief back (a village first). The third still casts you out. If your standing with them falls toward Hostile, you are warned first.
+- **Hand a fief back** from the Fief tab (Give it back, then a word of what it means).
+- **Claims.** Holding nothing, the Fief tab becomes Claims: each place you have a claim to, how you lost it, who holds it now, and what could press it. No chores. A claim pays nothing, but your policies there are kept with it.
+- **Press a claim:** retake it by siege (if your liege backs the claim it is yours again at once, with the villages you held); ask your liege to press it in their war (their next siege goes for it); or, at peace, buy it back from the crown that holds it. A claim on your own crown's land becomes a grant offered to you.
+- **Debug → Nobles: Prototype D start:** you hold Westholt Castle and Ashby for Valedorn, with a warband of 12 and a mill, and Hrothmark's lords gather against Westholt. Play the loss and the return.
+
+### Under the hood
+- No save version change: a few optional fields (a claim's kept policies, a liege pressing it, a castellan held with a fort, the warnings given).
+- **Prototype D**, the dispossessed lord, runs as a slow test: lose the fort while away, lose the office, live 15 days landless, serve and swear to another crown, and retake the same fort, with no land or soldiers doubled.
+- **Tests:** 806 fast Node tests; the slow files losing land reaches (the campaign bots, the test world, the landed run, and Prototypes D and F); 187 browser tests (9 skipped: the visual baselines, Linux only, and those for one device only).
+
 ## v2.31.0 — Named nobles (P8-07) · 2026-11-21
 
 ### New

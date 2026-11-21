@@ -145,8 +145,8 @@
     return s;
   }
 
-  /** A realm at war plans a siege: the nearest enemy fort it may besiege, and its free lords near it. */
-  function plan(c, f) {
+  /** A realm at war plans a siege: the nearest enemy fort it may besiege (or `prefer`, if it may), and its free lords near it. */
+  function plan(c, f, prefer = null) {
     if (list(c).some((s) => s.realm === f)) return null;
     // A realm holds what it took before it reaches for more: no new siege while a fort it took is weak (§20.7).
     if (Object.values(c.holdings).some((x) => x.controller === f && x.weakUntil > c.day)) return null;
@@ -158,7 +158,7 @@
     if (!forts.length) return null;
     const d = (sid) => CL.world.mapDist(home.mapX, home.mapY, place(sid).mapX, place(sid).mapY);
     // P8-07: a feud's claim is pressed in war: a fort one of the realm's lords claims comes first.
-    const claimed = (sid) => (R().claimsOn(sid, c).some((k) => c.people[k.by]?.realm === f && c.people[k.by].status === 'free') ? 0 : 1);
+    const claimed = (sid) => (sid === prefer || CL.claims?.pressedFor(c, sid, f) || R().claimsOn(sid, c).some((k) => c.people[k.by]?.realm === f && c.people[k.by].status === 'free') ? 0 : 1); // P8-08: and your claim, pressed by your liege
     const sid = forts.sort((a, b) => claimed(a) - claimed(b) || d(a) - d(b))[0];
     const fort = place(sid);
     const nearby = CL.lords
@@ -209,6 +209,12 @@
     const commander = s.by === PLAYER ? PLAYER : s.lords.find((pid) => CL.lords.partyOf(c, pid)) || s.lords[0];
     const was = { holder: h.holder, controller: h.controller };
     const castellan = h.castellan;
+    // P8-08: a castellan of yours walks out of a surrender, but is taken with a fort stormed (freed when it is retaken).
+    if (castellan && was.holder === PLAYER && how === 'stormed') {
+      h.heldCastellan = castellan;
+      h.castellan = null;
+      h.castellanLeaving = false;
+    }
     if (taker) R().transfer(c, s.sid, { controller: taker, sovereign: taker, by: commander, reason: how === 'stormed' ? 'stormed' : 'surrendered' });
     // Weak and restless for a month; the walls broken.
     h.walls = Math.max(0, (h.walls ?? 100) - (how === 'stormed' ? RULES.wallsLost : RULES.wallsLost / 2));
@@ -225,9 +231,10 @@
     const words = `${placeName(s.sid)} has ${how === 'stormed' ? 'been stormed' : 'surrendered'}${taker ? `: the ${factionName(taker)} hold it now` : ''}.`;
     CL.news?.record(c, 'fort_fell', { place: s.sid, faction: taker, text: words });
     if (s.by === PLAYER || was.holder === PLAYER) CL.chronicle?.add(c, { day: c.day, kind: 'holding', place: s.sid, event: was.holder === PLAYER ? 'lost' : s.by === PLAYER ? 'changed' : 'changed', by: taker || was.controller });
-    if (castellan && was.holder === PLAYER) CL.ui.message(how === 'surrendered' ? `${castellan.name} walks out with the garrison and rejoins you.` : `${castellan.name} gets out as ${placeName(s.sid)} falls, and rejoins you.`);
-    // The conqueror's choice (D-P8f, P8-05): AI lords ask; you choose.
+    if (castellan && was.holder === PLAYER) CL.ui.message(how === 'surrendered' ? `${castellan.name} walks out with the garrison and rejoins you.` : `${castellan.name} is taken prisoner as ${placeName(s.sid)} falls. Retake it to free them.`);
+    // The conqueror's choice (D-P8f, P8-05): AI lords ask; you choose. P8-08: a claim your liege backs is yours again at once.
     if (taker) {
+      if (s.by === PLAYER && CL.claims?.onRetake(c, s.sid)) return how;
       if (s.by === PLAYER) {
         if (CL.game.mode === 'map' || CL.game.mode === 'settlement') CL.ui.openConquest?.(s.sid);
         else CL.fiefs.conquered(c, s.sid, PLAYER, 'ask');

@@ -298,6 +298,8 @@
   function move(c, h, sid, controller, sovereign, holder, willing, claimKind = 'old') {
     const from = h.holder;
     if (from !== holder && !willing && (sovereign !== h.sovereign || from !== rulerOf(h.sovereign, c))) addClaimRaw(c, h, { by: from, realm: h.sovereign, kind: claimKind });
+    const good = h.claims.find((x) => x.by === holder);
+    if (good?.policies) h.restorePolicies = good.policies; // P8-08: the policies kept with it come back (js/fiefs.js)
     h.claims = h.claims.filter((x) => x.by !== holder); // a claim made good is a claim no more
     Object.assign(h, { controller, sovereign, holder });
     return { sid, from };
@@ -551,7 +553,14 @@
         for (const k of Array.isArray(e.claims) ? e.claims : []) {
           if (!k || !(k.by === PLAYER || s.people[k.by]) || k.by === h.holder || h.claims.some((x) => x.by === k.by)) continue;
           if (!['granted', 'conquest', 'old'].includes(k.kind)) continue;
-          h.claims.push({ by: k.by, realm: isKingdom(k.realm) ? k.realm : null, since: num(k.since, 0), kind: k.kind });
+          const claim = { by: k.by, realm: isKingdom(k.realm) ? k.realm : null, since: num(k.since, 0), kind: k.kind };
+          // P8-08 (optional): your policies kept with it, your liege pressing it, when you last asked, a grant offered once.
+          if (k.by === PLAYER) {
+            if (k.policies && typeof k.policies === 'object') claim.policies = CL.fiefs ? CL.fiefs.keptPolicies(k.policies) : k.policies;
+            for (const f of ['pressed', 'asked']) if (typeof k[f] === 'number' && Number.isFinite(k[f])) claim[f] = Math.floor(k[f]);
+            if (k.offered === true) claim.offered = true;
+          }
+          h.claims.push(claim);
         }
       }
       if (!legal(h.holder, h.sovereign)) h.holder = s.rulers[h.sovereign];

@@ -324,6 +324,17 @@
     return n > 0 ? A().transfer(c, 'purse', account(sid), n, `put into ${placeName(sid)}`) : A().transfer(c, account(sid), 'purse', -n, `drawn from ${placeName(sid)}`);
   }
 
+  /** Policies kept with a claim, made safe: anything that no longer applies falls back to the default (SC-44). */
+  function keptPolicies(p) {
+    const d = policies();
+    return {
+      garrison: GARRISONS.includes(p?.garrison) ? p.garrison : d.garrison,
+      tax: STANCES.includes(p?.tax) ? p.tax : d.tax,
+      food: Number.isInteger(p?.food) && p.food >= 0 && p.food <= 60 ? p.food : d.food,
+      repairs: typeof p?.repairs === 'boolean' ? p.repairs : d.repairs,
+    };
+  }
+
   // ---- A holding changing hands: money, castellans, policies (SC-44) ----
 
   CL.events?.on('HoldingChanged', (e, c) => {
@@ -345,10 +356,22 @@
       }
       if (!nowMine) {
         if (h.castellan) returnCastellan(c, sid); // they come back to the company
+        // P8-08: lost against your will, your policies are kept with your claim, to restore if you get it back.
+        const k = h.claims.find((x) => x.by === PLAYER);
+        if (k && k.since === c.day && !k.policies && h.policies) k.policies = { ...h.policies };
         h.policies = policies(); // policies cancelled safely: the new holder's are the defaults
         if (c.accounts?.budgets) delete c.accounts.budgets[`fief_${sid}`];
       }
       if (nowMine && was !== PLAYER) h.policies = policies();
+      if (nowMine && h.restorePolicies) h.policies = keptPolicies(h.restorePolicies); // your claim made good (P8-08)
+      delete h.restorePolicies;
+      // P8-08: your castellan, taken with the fort, is freed when it is yours or your realm's again.
+      if (h.heldCastellan && sid === e.holding && (nowMine || (CL.allegiance && h.controller === CL.allegiance.serves(c)))) {
+        const k = h.heldCastellan;
+        h.heldCastellan = null;
+        if (k.soldier && !c.roster.some((x) => x.id === k.soldier.id)) c.roster.push(k.soldier);
+        CL.ui.message(`${k.name} is freed with ${placeName(sid)} and rejoins the company.`);
+      }
     }
   });
 
@@ -404,7 +427,8 @@
     return people
       .filter((id) => fiefCount(id) < R().FIEF_CAP && !g.declined.includes(id))
       .sort((x, y) => {
-        const helped = (id) => (id === g.helper ? 0 : 1);
+        // P8-08: after who did most in its taking, you, if you held it and claim it (you first, for what you held).
+        const helped = (id) => (id === g.helper ? 0 : id === PLAYER && R().claimsOn(g.sid, c).some((k) => k.by === id) ? 1 : 2);
         const landless = (id) => (fiefCount(id) ? 2 : kinOfLord(id) ? 0 : 1);
         return helped(x) - helped(y) || landless(x) - landless(y) || fiefCount(x) - fiefCount(y) || court(y) - court(x) || merit(y) - merit(x) || x.localeCompare(y);
       });
@@ -553,6 +577,12 @@
         if (e.castellanLeaving === true) h.castellanLeaving = true;
         s.nextSoldierId = Math.max(s.nextSoldierId, k.soldier.id + 1);
       }
+      // P8-08: your castellan held with a fort that was stormed.
+      const kc = e.heldCastellan;
+      if (h.holder !== PLAYER && kc?.kind === 'soldier' && kc.soldier && Number.isInteger(kc.soldier.id) && CL.content.table('troops')[kc.soldier.troop] && !s.roster.some((x) => x.id === kc.soldier.id)) {
+        h.heldCastellan = { kind: 'soldier', id: kc.soldier.id, name: String(kc.name || kc.soldier.name || 'Castellan').slice(0, 40), soldier: kc.soldier };
+        s.nextSoldierId = Math.max(s.nextSoldierId, kc.soldier.id + 1);
+      }
       if (h.holder !== PLAYER) delete s.accounts.budgets[`fief_${sid}`];
     }
     s.grants = [];
@@ -565,5 +595,5 @@
     for (const [f, n] of Object.entries(d?.influence || {})) if (R().isRealm(f) && num(n)) s.influence[f] = clamp(Math.round(n), 0, FULL);
   }
 
-  CL.fiefs = { RULES, STANCES, GARRISONS, CHOICES, account, accountOf, cash, bookFor, label, policies, ensure, adminName, week, payday, tick, appoint, dismiss, returnCastellan, setPolicy, fund, givable, offer, weeklyGrants, candidates, decideGrants, give, grantDue, grantLines, answer, conquered, sanitize, count };
+  CL.fiefs = { RULES, STANCES, GARRISONS, CHOICES, keptPolicies, account, accountOf, cash, bookFor, label, policies, ensure, adminName, week, payday, tick, appoint, dismiss, returnCastellan, setPolicy, fund, givable, offer, weeklyGrants, candidates, decideGrants, give, grantDue, grantLines, answer, conquered, sanitize, count };
 })(typeof window !== 'undefined' ? window : globalThis);

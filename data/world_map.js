@@ -26,6 +26,9 @@
       relations: [{ between: ['valedorn', 'aurelian'], state: 'tension', story: true }],
       // The world simulation's budget (W-07): no more than this many regular parties spawn in one region.
       simulation: { partiesPerRegion: 16 },
+      // P8-08: Prototype D's start (design §28.1, Debug → Prototype D start): the player holds `fort` and
+      // its `village` for `realm` at `home`; `enemy` goes to war with it and gathers against the fort.
+      prototypeD: { realm: 'valedorn', fort: 'westholt_castle', village: 'ashby', enemy: 'hrothmark', home: 'stonebridge' },
       // Named areas, for news and text: rectangles in map units (x, y, w, h); the first that holds a
       // point names it. `home` marks the story's own land (W-05c: the Border March): leaving it shows
       // the "Beyond the March" tip, and the story bot keeps to it.

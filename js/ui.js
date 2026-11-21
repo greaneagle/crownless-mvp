@@ -610,7 +610,8 @@
     const R = CL.realm;
     const el = (tag, cls, text) => Object.assign(document.createElement(tag), { className: cls || '', textContent: text || '' });
     const mine = R.fiefsOf('player', c);
-    if (!mine.length) return [el('p', 'realmNote', 'You hold no land. A sworn vassal may be granted a holding by their liege: a village first, a fort with more renown and service.')];
+    // P8-08: landless, the tab is your claims: no empty chores (SC-21).
+    if (!mine.length) return claimCards(c, true);
     const redo = () => renderRealm();
     const btn = (label, fn, disabled = false, title = '') => {
       const b = el('button', '', label);
@@ -648,9 +649,73 @@
         money.append(btn(vet ? `Make ${vet.name} castellan` : 'No veteran to be castellan', () => F.appoint(c, sid, vet.id), !vet || !here, here ? '' : 'At the holding'));
       }
       card.append(money);
+      // P8-08: give it back to the crown yourself, after a word of what that means.
+      const back = el('div', 'row handBackRow');
+      if (CL.game.handBack === sid) {
+        back.append(el('p', 'handBackNote', `${s.name} returns to ${R.titled(R.rulerOf(h.sovereign, c), c)}, and you keep no claim to it.`));
+        const yes = btn('Yes, give it back', () => {
+          const r = CL.claims.handBack(c, sid);
+          CL.game.handBack = null;
+          message(r.text);
+        });
+        yes.id = 'handBackYes';
+        const no = btn('Keep it', () => {
+          CL.game.handBack = null;
+        });
+        back.append(yes, no);
+      } else {
+        const give = btn('Give it back', () => {
+          CL.game.handBack = sid;
+        });
+        give.classList.add('handBackBtn');
+        back.append(give);
+      }
+      card.append(back);
       return card;
-    });
+    }).concat(claimCards(c, false));
   }
+
+  /**
+   * P8-08: your claims, each with how it came about, who holds it now, and what could press it (ask your
+   * liege, buy it back; a siege from the fort's own card). Landless, this is the whole tab.
+   */
+  function claimCards(c, landless) {
+    const C = CL.claims;
+    const el = (tag, cls, text) => Object.assign(document.createElement(tag), { className: cls || '', textContent: text || '' });
+    const list = C.mine(c);
+    const out = [];
+    if (landless) out.push(el('p', 'realmNote', list.length ? 'You hold no land. Your company, money, mill and followers are yours; these are the places you have a claim to. A claim pays nothing until it is made good.' : 'You hold no land. A sworn vassal may be granted a holding by their liege: a village first, a fort with more renown and service.'));
+    else if (list.length) out.push(el('h3', 'claimsHead', 'Your claims'));
+    for (const { sid } of list) {
+      const k = C.card(c, sid);
+      const card = el('div', 'contractCard claimCard');
+      card.dataset.claim = sid;
+      card.append(el('h3', '', k.title), ...k.lines.map((l) => el('p', '', l)));
+      const row = el('div', 'row');
+      const act = (id, label, can, fn) => {
+        const b = el('button', '', label);
+        Object.assign(b, { type: 'button', disabled: !can.ok, title: can.why || '' });
+        b.dataset.act = id;
+        b.onclick = () => {
+          const r = fn();
+          message(r.text);
+          CL.save.write();
+          renderRealm();
+        };
+        return b;
+      };
+      if (R_kind(c, sid) !== 'village') {
+        row.append(act('liege', 'Ask your liege to press it', k.liege, () => C.askLiege(c, sid)));
+        row.append(act('buy', `Buy it back (${k.buy.price} crowns)`, k.buy, () => C.buyBack(c, sid)));
+      }
+      if (row.children.length) card.append(row);
+      const why = [k.liege, k.buy].find((x) => !x.ok && x.why)?.why;
+      if (why && R_kind(c, sid) !== 'village') card.append(el('p', 'claimWhy', `${why}.`));
+      out.push(card);
+    }
+    return out;
+  }
+  const R_kind = (c, sid) => CL.realm.holding(sid, c)?.kind;
 
   /**
    * P8-06a: at a fort, the siege card. Not besieged: Besiege, with the preview (odds, time, cost), or
@@ -2461,7 +2526,7 @@
       ['holdings', 'Holdings'],
       ['lords', 'Lords'],
       ['allegiance', 'Allegiance'],
-      ['fief', 'Fief'],
+      ['fief', CL.realm.fiefsOf('player', c).length || !CL.claims?.mine(c).length ? 'Fief' : 'Claims'], // P8-08: landless with claims
     ]) {
       const b = el('button', id === tab ? 'on' : '', label);
       b.type = 'button';

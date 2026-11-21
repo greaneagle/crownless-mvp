@@ -1306,7 +1306,7 @@ _Re-specified 2026-11-20 at build 2.23.0 (commit 09176e8); NEXT-PLAN §5 has the
   | P8-06a sieges on the map | `world-sim`, `gate-d-campaigns` (sieges near the story forts) | |
   | P8-06b the assault battle | `battle-parity`, `battle-extras` | **Whole suite** |
   | P8-07 named nobles | `campaign-bots`; ran also `landed`, `world-sim`, `happenings-bots` (sieges, grants and the lords' riding changed) and the new `prototype-f` | |
-  | P8-08 losing and retaking land | `campaign-bots`, `test-world` | |
+  | P8-08 losing and retaking land | `campaign-bots`, `test-world`; ran also `landed` (siege targets, revocation) and both prototypes | |
   | P8-T tuning and acceptance | all, with Prototypes D and F | **Whole suite** |
 
   A task that turns out to reach more than its row runs those files too, and says so.
@@ -2311,7 +2311,33 @@ Needs are computed, not saved.
   - a few lords change realm;
   - no realm empties of lords.
 
-### P8-08 · Losing and retaking land (M) — Specified
+### P8-08 · Losing and retaking land (M) — ✅ Done in 2.32.0
+
+**Done (2.32.0, 2026-11-21).** No schema step (optional fields: see SAVE-FORMAT). `js/claims.js` (`CL.claims`); the Claims view and handing back on the Realm screen's Fief tab.
+- **Every loss path, and its state** (holder, controller, claim, castellan):
+
+  | Path | Holder and gates | Your claim | A castellan |
+  |---|---|---|---|
+  | A siege, surrendered | the taker's ruler, the taker's gates; villages with the seat | `old`, on the fort and its villages | walks out to you |
+  | A siege, stormed | the same | the same | taken with the fort (`heldCastellan`); freed when it is yours or your realm's again |
+  | Your liege's revocation | the ruler; the gates unchanged | none (the liege's right) | comes back to you |
+  | Released from your oath | the ruler | none | comes back |
+  | Defected or expelled | the ruler | `granted` | comes back |
+  | Handed back (Fief tab: Give it back, then a word of what it means) | the ruler | none | comes back |
+
+  **The revocation** (`allegiance.missed`): the first call missed (a short month or a summons) while you hold the realm's land is a warning naming the fief; the second takes it back (a village first); the third casts you out (P8-04). Your standing falling within 10 of Hostile while you hold their land: one warning before the expulsion. AI lords' revoked fiefs leave no claim either.
+- **The landless view:** holding nothing, the Fief tab is **Claims**: your company, money, mill and followers named as yours, then each claim with how it came about, who holds it now, "a claim gives no income and no control", and what could press it. Landed with claims too, they follow your fiefs. No chores (SC-21). Your policies are kept with the claim and restored if you get it back, falling back to the defaults where they no longer apply (SC-44).
+- **Pressing a claim:**
+  - **retake it by siege** (P8-06a's rights): if your liege backs the claim (you are their sworn vassal, with room for a fief, and the ruler thinks no worse than −10 of you), it is yours again at once, with the villages you claimed, and no conqueror's choice; otherwise it is a conquest like any other;
+  - **ask your liege to press it** in their war (once a week): if the ruler thinks no ill of you (with your influence), the realm's next siege goes for it for 30 days;
+  - **buy it back** at peace from the realm that holds it (800 crowns for a fort; a village goes with its seat), held of your liege with you as holder, and the villages you claimed.
+
+  A claim on land your own crown holds becomes a grant offered to you (once: declined, it goes elsewhere), and you come right after whoever did most in its taking among a grant's candidates. A claim on land a lord of your own crown holds is refused while you are sworn.
+- **Prototype D** (`tests/slow/prototype-d.test.js`, 18 s): Westholt Castle and Ashby for Valedorn with a warband and a mill; Hrothmark's real siege takes it while you are at Stonebridge; cast out; 15 days landless, recruiting; service with Aurelia, then the oath; your siege retakes Westholt and Aurelia backs your claim: Westholt and Ashby are yours again. The invariants hold at every step; no soldier or holding is doubled.
+- **Debug → Nobles: Prototype D start** (the world's data names its places, `prototypeD`): you hold Westholt Castle and Ashby for Valedorn with a warband of 12 and a mill at Ashby, at Stonebridge; Hrothmark goes to war and its lords gather against Westholt.
+- **Not built:** petitioning the occupier for the fort's return for service (only for a price); claims inherited by kin (P9-06).
+- **Changed tests:** P8-04's obligations test now sees the second short month revoke Fernley before the third casts you out; P8-05's book test keeps its service met.
+- **Tests:** `tests/claims.test.js` (10: each loss path, SC-20 to SC-23, pressing, the grant, the edges, AI lords, saves), `tests/slow/prototype-d.test.js`, `tests/browser/claims.spec.js` (the Debug start, the Claims tab, buying back, handing back, at both sizes).
 
 **Problem.** The pieces of loss exist after P8-02–P8-07, but the design's canonical test, Prototype D ("The Dispossessed Lord"), needs every loss path, the landless life and the way back to work together (§17.3–17.6, SC-20–SC-23).
 
