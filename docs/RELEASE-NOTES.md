@@ -1,5 +1,20 @@
 # Crownless — Release Notes
 
+## v2.28.0 — Fiefs and castellans (P8-05) · 2026-11-21
+
+### New
+- **Every town, fort and village now pays and costs.** Each week its lands pay tax by their prosperity, its garrison or militia is paid, a tenth goes to the crown, and the garrison is topped up from the realm's recruits. The kingdoms' lords live by the same rules, so a lord with rich land fields a fuller household.
+- **The crown grants land.** What it takes in war, what it takes from a lord held too long, and what a vassal leaves behind, it grants within a few days. First choice goes to whoever did most to take it, then landless lords, then those with fewest fiefs, then service and renown. As a sworn vassal you compete with the lords: your first grant is most likely a village, and a fort wants more renown and service. A grant comes as a message: Accept or Decline.
+- **The conqueror's choice.** Take a fort for your realm and choose: ask the crown for it (the default), name a lord for it (they'll remember), hand it to the crown (influence with the ruler), or keep it unasked (the ruler may let it stand, or cast you out).
+- **Your fiefs run themselves.** The Realm screen's new Fief tab shows each one: who runs it, its garrison or militia, prosperity and unrest, its treasury and last week. One line a week sums them all. Put crowns in or draw them out at the holding.
+- **For those who want more:** set the garrison (light, normal, strong), the tax (light, normal, heavy) and repairs, and make a veteran castellan in place of the steward. Heavy tax pays about 40% more but stirs unrest; over 80 the lands pay nothing. Unpaid soldiers desert after two warnings.
+
+### Under the hood
+- Save version 22. Saves from 2.27.0 load, every holding starting balanced.
+- Debug → Lords: take the chosen fort for your realm (with the conqueror's choice), the crown's grants now, the fiefs' week now, empty your fiefs' treasuries.
+- The test bots answer ransom offers, grants and the conqueror's choice; a new "landed" bot style serves, swears and keeps a fief.
+- **Tests:** 761 fast and 12 slow Node tests (one slow test's time limit broken only when run beside the others), 173 browser tests (21 skipped: the visual baselines, Linux only, and those for one device only).
+
 ## v2.27.0 — Service and fealty (P8-04) · 2026-11-21
 
 ### New

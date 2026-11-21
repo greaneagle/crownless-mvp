@@ -257,7 +257,7 @@
    * @param {{ controller?: string, sovereign?: string, holder?: string, reason?: string, willing?: boolean, by?: string }} change
    * @returns {boolean} true when anything changed
    */
-  function transfer(c, sid, { controller, sovereign, holder, reason = '', willing = false, by, claimKind = 'old' } = {}) {
+  function transfer(c, sid, { controller, sovereign, holder, reason = '', willing = false, by, claimKind = 'old', quiet = false } = {}) {
     const h = holding(sid, c);
     if (!h) return false;
     const toController = controller ?? h.controller;
@@ -285,7 +285,7 @@
     if (toController !== before.controller) {
       CL.ui.message(`${s.name} now flies the banner of the ${CL.content.get('factions', toController).name}.`);
       CL.news?.record(c, 'fort_taken', { fort: sid, owner: toController, place: sid });
-    } else if (toHolder !== before.holder) {
+    } else if (toHolder !== before.holder && !quiet) {
       CL.news?.record(c, 'fief_granted', { place: sid, text: `${s.name} has passed to ${titled(toHolder, c)}.` });
     }
     const involved = [before.holder, toHolder, by, ...changed.map((x) => x.from)].includes(PLAYER) || h.claims.some((k) => k.by === PLAYER);
@@ -318,6 +318,8 @@
   function garrison(sid, c = CL.campaign) {
     const s = settlement(sid);
     if (!s.garrison) return null;
+    const tracked = c?.holdings?.[sid]?.garrison; // P8-05: the garrison as it stands
+    if (tracked) return tracked;
     const f = owner(sid, c);
     return f === s.ownerFaction ? s.garrison : CL.content.get('factions', f).garrison || s.garrison;
   }
@@ -493,7 +495,7 @@
         heldBy: typeof e.heldBy === 'string' ? e.heldBy.slice(0, 40) : null,
       };
       // P8-01: what the player did to them or their kin (kept for P8-07), and a lord riding out again thin.
-      const deeds = (Array.isArray(e.deeds) ? e.deeds : []).filter((x) => x && ['freed', 'ransomed', 'held', 'held_kin'].includes(x.kind) && typeof x.day === 'number' && Number.isFinite(x.day) && typeof x.by === 'string');
+      const deeds = (Array.isArray(e.deeds) ? e.deeds : []).filter((x) => x && ['freed', 'ransomed', 'held', 'held_kin', 'suggested', 'handed'].includes(x.kind) && typeof x.day === 'number' && Number.isFinite(x.day) && typeof x.by === 'string');
       if (deeds.length) s.people[id].deeds = deeds.slice(-12).map((x) => ({ by: x.by.slice(0, 40), kind: x.kind, day: x.day }));
       if (e.regroup === true) s.people[id].regroup = true;
     }

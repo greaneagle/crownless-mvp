@@ -409,6 +409,7 @@
     g.partyId = null;
     CL.ui.changeMode('map');
     CL.ui.openRansom?.(); // a ransom offer waiting (P8-01)
+    CL.ui.openGrant?.(); // a grant of land waiting (P8-05)
     if (g.releasedAt) {
       CL.ui.message(g.ransomedBy ? `${CL.realm.titled(g.ransomedBy, CL.campaign)} takes your ransom and lets you go outside ${settlement(g.releasedAt).name}.` : `Your captors release you outside ${settlement(g.releasedAt).name}.`);
       g.ransomedBy = null;

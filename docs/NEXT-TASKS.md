@@ -1781,7 +1781,62 @@ Phase 8 adds many rights: appoint, tax, summon, grant, besiege, swear, leave, ra
 
 **Acceptance.** The §16.5 acceptance passes, and every change of allegiance shows its consequences before it happens.
 
-### P8-05 · Fiefs and castellans (M) — Specified
+### P8-05 · Fiefs and castellans (M) — ✅ Done in 2.28.0
+
+**Done (2.28.0, 2026-11-21).** Save schema v22. `js/fiefs.js` (`CL.fiefs`) holds the week, the money, administration, grants and the conqueror's choice.
+- **Every holding's week** (on the payday, the AI's and the crown's too):
+  - **Tax:** base (village 30, fort 60, town 120) × prosperity / 50 × the stance (light 0.7, normal 1, heavy 1.4); nothing over 80 unrest.
+  - **The crown's tenth:** once a week (`dueWeek`), never from the crown's own land.
+  - **Wages:** a fort's garrison at a third of each soldier's wage; a village's militia at 5.
+  - **The steward:** 6 a week, for a fort of yours with no castellan.
+  - **Repairs:** 10 a week, 15 points of walls, while on.
+  - **Refill:** a fort's garrison toward its target (light 12, normal 22, strong 32) in the realm's garrison mix, three a week at half their hire cost (over target, the extra are paid off); a village's militia by one.
+  - **Drift:** prosperity +1 / 0 / −1 and unrest −3 / −1 (to 20) / +5 by stance.
+  - **Unpaid:** unpaid men raise unrest by 10. After two warnings a fort's garrison deserts one a day until paid.
+  - **Never below nothing.** A holding starts with four weeks of tax in hand. Over 60 unrest warns.
+  
+  A taken fort gets its taker's standard garrison, as before. `realm.garrison` returns the garrison as it stands.
+- **Money:**
+  - **A fief of yours** keeps its money in `budget:fief_<id>` with its own book, as the mill does (`accounts.transfer` hands the line to `fiefs.bookFor`). The holding's treasury moves into the account when it is granted to you, and back when lost. Captors never take it.
+  - **Everyone else's** money is the holding's `treasury`. An AI lord refills their household from their fiefs' treasuries (3 crowns a man) and rides short when they can't pay; the landless are kept by kin and crown.
+  - **One line a week** for all your fiefs ("Your fiefs this week: Westholt Castle +12 (180 in hand) · Fernley +20 (140 in hand).").
+  - **Put in or draw out** 50 at the holding (`drawTreasury`).
+- **Administration:**
+  - your fort's steward and your village's reeve by default;
+  - a castellan from the company's veterans, a captain as P7-05, appointed in person at the holding. They leave the roster and are kept in the save. Dismissed, they rejoin the next time you're there.
+  - **SC-44:** a holding lost while a castellan serves and policies are set: the castellan rejoins the company at once, the policies reset to the defaults, and the money stays with the holding.
+- **Policies** (balanced defaults): garrison, tax, food reserve (kept for P8-06a), repairs. They change in place on the Fief tab.
+- **Grants:**
+  - **What the crown has to give:** a holding held by its ruler that isn't the crown's own land (`crownLand`: what the ruler held at the start), not a town, its gates its own, not story-locked. That covers land taken in war, Q4's Greywall in old saves, a lord's land forfeit after 30 days held unransomed (they keep a claim), and a vassal's left behind.
+  - **Timing:** it is offered weekly and decided 2–4 days later.
+  - **Candidates, in order:** who did most in its taking; landless lords (kin of the realm's lords first, then the player); fewer fiefs; service days and renown. Nobody with three.
+  - **You** are a candidate as a sworn vassal; a fort needs 300 renown and 30 days of service unless you took it. After 60 days of service with no land, the crown may give you one of its own villages.
+  - **Yours comes as a message** (A GRANT OF LAND, with the tax, costs and obligations) with Accept or Decline; declined, the next candidate has it. AI lords accept.
+  - **The news:** "Lady Alys Ardane, landless until now, is granted Tessaro by King Godric Ardane."
+- **The conqueror's choice** (D-P8f; `fiefs.conquered(c, sid, taker, choice, suggest)`):
+  - **ask:** a grant with the taker first;
+  - **suggest:** the lord named first; granted, they remember it as a `suggested` deed;
+  - **hand:** +5 `c.influence` with the ruler and a `handed` deed;
+  - **keep:** the ruler lets it stand for a friend with room and no missed calls, else casts the player out (P8-04: the fort lost, a `granted` claim kept).
+  
+  Yours is a prompt (THE CONQUEROR'S CHOICE) with "Ask the liege" first. AI lords ask until P8-07.
+- **The Realm screen's Fief tab:** each holding of yours, with who runs it, its garrison or militia (and walls), prosperity, unrest, treasury, last week, the policies, money and the castellan.
+- **Debug → Lords:** take it for my realm (the chosen fort, then the choice), the crown's grants now, fiefs: run a week, fiefs: empty treasuries.
+- **Bots:** every campaign bot answers ransoms, grants and the conqueror's choice with the defaults. A `landed` style serves at capitals, swears when it may, renews, and leaves the steward and policies alone.
+- **Tests:**
+  - `tests/fiefs.test.js` (14): each holding's state; a fief's book and account against its report every week for 13 weeks, with one line a week for two fiefs; the due once a week; SC-42 (tax, garrison and repairs each measured); unrest over 80; desertion after two warnings; castellans and SC-44; the grant order with a landless kinsman winning; the cap, the story lock and a declined grant; SC-19 (a village, then a fort); the four choices for you and a lord; grants within days and a lord's land forfeit; the landed bot 60 days with no forced screen; saves and the 2.27 fixtures.
+  - `tests/browser/fiefs.spec.js` (2, desktop and phone): the grant message, the Fief tab and a policy, the conqueror's four answers.
+- **Not as specified:**
+  - **A castellan is a veteran only,** not the companion (the companion's detachment flags assume a detachment).
+  - **No capture branch for SC-44's castellan:** they always come back to the company.
+  - **"An independent who takes a fort" hands it to a kingdom or swears:** not built. Independents can't take forts until P8-06a.
+  - **A kept fort's ruler doesn't send lords to retake it** until P8-06a's sieges.
+  - **"Unrest over 80 recruits nothing"** stops the garrison's and militia's refill, not your own hiring there.
+  - **The Lords tab shows who holds what now;** who gained and lost land is told in the news.
+  - **A town's watch costs nothing.**
+- **Checkpoint (NEXT-PLAN §7):**
+  - `npm test` (761), lint, and the full browser suite: 173 passed, none failed.
+  - **The whole slow suite:** 11 of 12. The 90-day world-events run broke its 60 s "in good time" limit under the suite's own load, as at P8-01's checkpoint. Alone it takes 46.6 s (46.5 s at 2.26.0), so the fiefs' weeks add no measurable time. The limit failed at every checkpoint run in parallel, so it is now 120 s (owner, 2026-11-21): a guard against a loop, not a benchmark.
 
 **Problem.** A holding does nothing for or against its holder: no revenue, garrison costs or policies (design §17.2). The AI lords' land means nothing either.
 

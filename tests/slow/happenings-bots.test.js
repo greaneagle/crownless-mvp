@@ -37,7 +37,9 @@ test('90 days of a bot company: events come and go, each once, within their limi
     }
   }
   const past = H.state(c).past;
-  assert.ok(Date.now() - t0 < 60000, 'in good time');
+  // A guard against a loop, not a benchmark: 120 s, since the slow suite runs its files side by side and
+  // this run alone takes about 47 s (owner, 2026-11-21: 60 s broke at every checkpoint under that load).
+  assert.ok(Date.now() - t0 < 120000, 'in good time');
   assert.ok(started.size >= 6, `events started: ${started.size}`);
   assert.ok(most <= H.MAX_OPEN);
   const kinds = new Set([...started.values()].map((e) => e.kind));

@@ -55,7 +55,7 @@
     const line = { day: c.day, from, to, amount, why: String(why).slice(0, 60) };
     // A business's money keeps its own ledger (P7-10), so a mill's weekly trade never pushes your own
     // lines out; money between it and your purse or chest is in both.
-    const book = CL.business?.bookFor(c, from, to);
+    const book = CL.business?.bookFor(c, from, to) || CL.fiefs?.bookFor(c, from, to); // a fief's too (P8-05)
     if (book) book.push({ ...line });
     if (!book || [from, to].some((a) => a === 'purse' || a === 'chest')) {
       if (!Array.isArray(c.ledger)) c.ledger = [];
@@ -88,7 +88,7 @@
    * stays at the business (P7-10). Returns the total taken. @param {Campaign} c */
   function seize(c, keep, why) {
     let taken = 0;
-    const accts = ['purse', 'chest', ...Object.keys(c.accounts?.budgets || {}).map((k) => `budget:${k}`)].filter((a) => !CL.business?.isAccount(a));
+    const accts = ['purse', 'chest', ...Object.keys(c.accounts?.budgets || {}).map((k) => `budget:${k}`)].filter((a) => !CL.business?.isAccount(a) && !CL.fiefs?.accountOf(a)); // a mill's money and a fief's treasury aren't on you
     for (const acct of accts) {
       const n = balance(c, acct) - Math.floor(balance(c, acct) * keep);
       if (n > 0 && transfer(c, acct, WORLD, n, why)) taken += n;
@@ -103,7 +103,7 @@
   const recent = (c, n = 12) => (c.ledger || []).slice(-n).reverse();
 
   /** An account's name for people. */
-  const label = (acct) => CL.business?.label(acct) || (acct === 'purse' ? 'your purse' : acct === 'chest' ? 'the company chest' : acct === WORLD ? 'outside' : `${acct.slice(7)}'s budget`);
+  const label = (acct) => CL.business?.label(acct) || CL.fiefs?.label(acct) || (acct === 'purse' ? 'your purse' : acct === 'chest' ? 'the company chest' : acct === WORLD ? 'outside' : `${acct.slice(7)}'s budget`);
 
   // ---- Saves ----
 

@@ -78,6 +78,14 @@
     if (mode === 'realm') {
       return { title: 'THE REALMS', text: '', button: 'Back' };
     }
+    if (mode === 'grant') {
+      const g = CL.fiefs.grantDue(CL.campaign);
+      return { title: 'A GRANT OF LAND', text: g ? CL.fiefs.grantLines(CL.campaign, g).join(' ') : 'The messenger has gone.', button: null };
+    }
+    if (mode === 'conquest') {
+      const sid = CL.game.conquest;
+      return { title: 'THE CONQUEROR’S CHOICE', text: sid ? `${CL.content.get('settlements', sid).name} is taken for the ${CL.content.get('factions', CL.realm.sovereignOf(sid, CL.campaign)).name}. What becomes of it is yours to ask.` : '', button: null };
+    }
     if (mode === 'ransom') {
       const x = CL.lords.offerDue(CL.campaign);
       return { title: 'A RANSOM OFFER', text: x ? CL.lords.offerText(CL.campaign, x) : 'The messenger has gone.', button: null };
@@ -208,7 +216,7 @@
     $('#realmScreen').classList.toggle('hidden', mode !== 'realm');
     $('#savesScreen').classList.toggle('hidden', mode !== 'saves');
     $('#talkOptions').classList.toggle('hidden', mode !== 'talk');
-    $('#ransomOptions').classList.toggle('hidden', mode !== 'ransom');
+    $('#ransomOptions').classList.toggle('hidden', !['ransom', 'grant', 'conquest'].includes(mode)); // the decisions that interrupt the map
     $('#titleExtras').classList.toggle('hidden', mode !== 'title');
     $('#overlayText').classList.toggle('hidden', mode === 'saves' || mode === 'journal' || mode === 'realm');
     const screen = screenFor(mode);
@@ -232,6 +240,71 @@
     if (mode === 'journal') renderJournal();
     if (mode === 'realm') renderRealm();
     if (mode === 'ransom') renderRansom();
+    if (mode === 'grant') renderGrant();
+    if (mode === 'conquest') renderConquest();
+  }
+
+  /** A decision's button: a bold label and a short note. */
+  function decision(id, label, note, onClick) {
+    const b = Object.assign(document.createElement('button'), { type: 'button', id });
+    b.append(Object.assign(document.createElement('b'), { textContent: label }), Object.assign(document.createElement('small'), { textContent: note }));
+    b.onclick = onClick;
+    return b;
+  }
+
+  // ---- A grant of land (P8-05): Accept or Decline ----
+
+  function openGrant() {
+    if (CL.game.mode !== 'map' || !CL.fiefs.grantDue(CL.campaign)) return;
+    changeMode('grant');
+  }
+
+  function renderGrant() {
+    const c = CL.campaign;
+    const g = CL.fiefs.grantDue(c);
+    if (!g) return changeMode('map');
+    const done = (choice) => () => {
+      const r = CL.fiefs.answer(c, choice);
+      CL.save.write();
+      changeMode('map');
+      if (r?.text) message(r.text);
+    };
+    $('#ransomOptions').replaceChildren(
+      decision('grant_accept', 'Accept', 'The holding is yours: its tax, its costs, a day there counts as service', done('accept')),
+      decision('grant_decline', 'Decline', 'The crown grants it to someone else', done('decline')),
+    );
+  }
+
+  // ---- The conqueror's choice (P8-05, D-P8f): ask, suggest, hand over or keep ----
+
+  function openConquest(sid) {
+    CL.game.conquest = sid;
+    changeMode('conquest');
+  }
+
+  function renderConquest() {
+    const c = CL.campaign;
+    const sid = CL.game.conquest;
+    if (!sid) return changeMode('map');
+    const f = CL.realm.sovereignOf(sid, c);
+    // The lord you'd name: the one who thinks best of you, else the realm's first landless lord.
+    const g = { sid, helper: null, declined: [], offeredTo: null };
+    const pick = CL.fiefs.candidates(c, g).find((id) => id !== 'player');
+    const choose = (choice, who = null) => () => {
+      const r = CL.fiefs.conquered(c, sid, 'player', choice, who);
+      CL.game.conquest = null;
+      CL.save.write();
+      changeMode('map');
+      const words = { ask: 'You ask the crown for it.', suggest: `You name ${who ? CL.realm.titled(who, c) : 'a lord'} for it.`, hand: 'You hand it to the crown outright.', keep: r?.accepted ? 'You keep it, and the crown lets it stand.' : 'You keep it, and the crown casts you out for it.' };
+      message(words[choice]);
+    };
+    const name = CL.realm.titled(CL.realm.rulerOf(f, c), c);
+    $('#ransomOptions').replaceChildren(
+      decision('conquest_ask', 'Ask the liege for it', `${name} decides; you did most in its taking (the default)`, choose('ask')),
+      ...(pick ? [decision('conquest_suggest', `Suggest ${CL.realm.titled(pick, c)}`, 'If granted, they will remember it', choose('suggest', pick))] : []),
+      decision('conquest_hand', 'Hand it to the crown', 'More influence with the ruler', choose('hand')),
+      decision('conquest_keep', 'Keep it unasked', 'The ruler may accept it, or cast you out', choose('keep')),
+    );
   }
 
   // ---- A ransom offer (P8-01): Accept, Hold or Release; it interrupts the map ----
@@ -520,6 +593,57 @@
     card.classList.add('allegianceCard');
     card.dataset.action = action;
     return card;
+  }
+
+  /**
+   * P8-05: the Realm screen's Fief tab: each of your holdings with who runs it, its garrison or militia,
+   * policies, money and last week; policies change in place, money and the castellan at the holding.
+   */
+  function fiefCards(c) {
+    const F = CL.fiefs;
+    const R = CL.realm;
+    const el = (tag, cls, text) => Object.assign(document.createElement(tag), { className: cls || '', textContent: text || '' });
+    const mine = R.fiefsOf('player', c);
+    if (!mine.length) return [el('p', 'realmNote', 'You hold no land. A sworn vassal may be granted a holding by their liege: a village first, a fort with more renown and service.')];
+    const redo = () => renderRealm();
+    const btn = (label, fn, disabled = false, title = '') => {
+      const b = el('button', '', label);
+      Object.assign(b, { type: 'button', disabled, title });
+      b.onclick = () => {
+        fn();
+        CL.save.write();
+        redo();
+      };
+      return b;
+    };
+    const next = (list, v) => list[(list.indexOf(v) + 1) % list.length];
+    return mine.map((sid) => {
+      const h = F.ensure(c, sid);
+      const s = CL.content.get('settlements', sid);
+      const card = el('div', 'contractCard fiefCard');
+      card.dataset.fief = sid;
+      card.append(el('h3', '', `${s.name} · ${F.adminName(c, sid)}`));
+      const men = h.kind === 'fort' ? `Garrison ${F.count(h.garrison)} (target ${F.RULES.garrisonTarget[h.policies.garrison]})${h.walls < 100 ? ` · walls ${h.walls}%` : ''}` : `Militia ${h.militia}`;
+      card.append(el('p', '', `${men} · prosperity ${h.prosperity} · unrest ${h.unrest}${h.unrest > F.RULES.unrest.stop ? ' (pays and recruits nothing)' : ''} · treasury ${F.cash(c, sid)} crowns`));
+      const r = h.report;
+      card.append(el('p', 'fiefReport', r ? `Last week: tax ${r.tax}, due ${r.due}, wages ${r.wages}${r.unpaid ? ` (${r.unpaid} unpaid)` : ''}${r.steward ? `, steward ${r.steward}` : ''}${r.repairs ? `, repairs ${r.repairs}` : ''}${r.refill ? `, recruits ${r.refill}` : ''}.` : 'No week run yet: the first report comes on payday.'));
+      const pol = el('div', 'row');
+      if (h.kind === 'fort') pol.append(btn(`Garrison: ${h.policies.garrison}`, () => F.setPolicy(c, sid, 'garrison', next(F.GARRISONS, h.policies.garrison))));
+      pol.append(btn(`Tax: ${h.policies.tax}`, () => F.setPolicy(c, sid, 'tax', next(F.STANCES, h.policies.tax))));
+      if (h.kind === 'fort') pol.append(btn(`Repairs: ${h.policies.repairs ? 'on' : 'off'}`, () => F.setPolicy(c, sid, 'repairs', !h.policies.repairs)));
+      card.append(pol);
+      const here = c.world?.location === sid;
+      const money = el('div', 'row');
+      money.append(btn('Put in 50', () => F.fund(c, sid, 50), !here || c.gold < 50, here ? '' : 'At the holding'));
+      money.append(btn('Draw 50', () => F.fund(c, sid, -50), !here || F.cash(c, sid) < 50, here ? '' : 'At the holding'));
+      if (h.castellan) money.append(btn(h.castellanLeaving ? 'Castellan: coming back' : 'Dismiss castellan', () => F.dismiss(c, sid), h.castellanLeaving));
+      else {
+        const vet = CL.detachments.captains(c).find((k) => k.kind === 'soldier');
+        money.append(btn(vet ? `Make ${vet.name} castellan` : 'No veteran to be castellan', () => F.appoint(c, sid, vet.id), !vet || !here, here ? '' : 'At the holding'));
+      }
+      card.append(money);
+      return card;
+    });
   }
 
   /** At a kingdom's capital: Service (a mercenary contract, or its renewal), and Swear fealty to its ruler. */
@@ -2236,12 +2360,13 @@
     const R = CL.realm;
     const el = (tag, cls, text) => Object.assign(document.createElement(tag), { className: cls || '', textContent: text || '' });
     const S = (id) => CL.content.get('settlements', id);
-    const tab = ['lords', 'allegiance'].includes(CL.game.realmTab) ? CL.game.realmTab : 'holdings';
+    const tab = ['lords', 'allegiance', 'fief'].includes(CL.game.realmTab) ? CL.game.realmTab : 'holdings';
     const tabs = el('div', 'row realmTabs');
     for (const [id, label] of [
       ['holdings', 'Holdings'],
       ['lords', 'Lords'],
       ['allegiance', 'Allegiance'],
+      ['fief', 'Fief'],
     ]) {
       const b = el('button', id === tab ? 'on' : '', label);
       b.type = 'button';
@@ -2254,6 +2379,10 @@
       tabs.append(b);
     }
     const cards = [];
+    if (tab === 'fief') {
+      $('#realmScreen').replaceChildren(tabs, ...fiefCards(c));
+      return;
+    }
     if (tab === 'allegiance') {
       // P8-04: what you are, its term or service, what is owed, and leaving, each with its preview.
       const s = CL.allegiance.summary(c);
@@ -2555,6 +2684,8 @@
     openRealm,
     closeRealm,
     openRansom,
+    openGrant,
+    openConquest,
     $,
     message,
     changeMode,

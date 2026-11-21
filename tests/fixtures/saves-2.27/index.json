@@ -1,0 +1,189 @@
+[
+ {
+  "file": "fresh.json",
+  "about": "A new game, just begun, before anything has happened.",
+  "expect": {
+   "build": "2.27.0",
+   "name": "Bot2",
+   "day": 0,
+   "gold": 60,
+   "renown": 0,
+   "battles": 0,
+   "victories": 0,
+   "soldierIds": [],
+   "troops": [],
+   "xp": [],
+   "location": "stonebridge",
+   "mills": [],
+   "followers": [],
+   "retinue": [],
+   "quests": {}
+  }
+ },
+ {
+  "file": "campaign-day20.json",
+  "about": "20 days of mercenary life by that build’s campaign bot.",
+  "expect": {
+   "build": "2.27.0",
+   "name": "Bot3",
+   "day": 20.01,
+   "gold": 53,
+   "renown": 26,
+   "battles": 14,
+   "victories": 8,
+   "soldierIds": [
+    2,
+    4,
+    5
+   ],
+   "troops": [
+    "skirmisher",
+    "footman",
+    "spearman"
+   ],
+   "xp": [
+    66,
+    40,
+    0
+   ],
+   "location": null,
+   "mills": [],
+   "followers": [],
+   "retinue": [],
+   "quests": {}
+  }
+ },
+ {
+  "file": "story-played.json",
+  "about": "A funded company playing the story with that build’s story bot until a middle quest is under way or the story ends (seed 4 reaches the Q4 ending).",
+  "expect": {
+   "build": "2.27.0",
+   "name": "Bot4",
+   "day": 28.234,
+   "gold": 2568,
+   "renown": 53,
+   "battles": 3,
+   "victories": 2,
+   "soldierIds": [
+    2,
+    4
+   ],
+   "troops": [
+    "footman",
+    "levy"
+   ],
+   "xp": [
+    44,
+    44
+   ],
+   "location": "greywall_fort",
+   "mills": [],
+   "followers": [],
+   "retinue": [],
+   "quests": {
+    "q2": "done",
+    "q3": "done",
+    "q4": "done"
+   }
+  }
+ },
+ {
+  "file": "q4-aurelia.json",
+  "about": "Q1–Q3 done, Q4 played through the real dialogue to the Aurelian ending: Greywall passes to Aurelia, with the player’s mill at Brackenfield (Greywall’s village) and a few days after.",
+  "expect": {
+   "build": "2.27.0",
+   "name": "Bot6",
+   "day": 3.167,
+   "gold": 2872,
+   "renown": 36,
+   "battles": 1,
+   "victories": 1,
+   "soldierIds": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "troops": [
+    "footman",
+    "footman",
+    "hunter",
+    "levy"
+   ],
+   "xp": [
+    20,
+    20,
+    20,
+    20
+   ],
+   "location": "greywall_fort",
+   "mills": [
+    {
+     "place": "brackenfield",
+     "owner": "aurelian",
+     "seizeOn": null
+    }
+   ],
+   "followers": [],
+   "retinue": [],
+   "quests": {
+    "q1": "done",
+    "q2": "done",
+    "q3": "done",
+    "q4": "done"
+   }
+  }
+ },
+ {
+  "file": "phase7-company.json",
+  "about": "A Phase 7 company at Hrothgard: quartermaster, surgeon, scout and blacksmith, Sigrun of the retinue, a mill at Birkholm, then a few days on the road.",
+  "expect": {
+   "build": "2.27.0",
+   "name": "Bot7",
+   "day": 4,
+   "gold": 3231,
+   "renown": 0,
+   "battles": 0,
+   "victories": 0,
+   "soldierIds": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "troops": [
+    "axeman",
+    "axeman",
+    "clansman",
+    "fell_archer",
+    "levy"
+   ],
+   "xp": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "location": "hrothgard",
+   "mills": [
+    {
+     "place": "birkholm",
+     "owner": "hrothmark",
+     "seizeOn": null
+    }
+   ],
+   "followers": [
+    "blacksmith",
+    "quartermaster",
+    "scout",
+    "surgeon"
+   ],
+   "retinue": [
+    "sigrun"
+   ],
+   "quests": {}
+  }
+ }
+]

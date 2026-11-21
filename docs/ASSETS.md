@@ -50,6 +50,7 @@ P8-02 shipped with no new image files: the Realm screen is text. These would rep
 | 8 | **House arms** for the lords' houses (Ardane, Greymantle, Westmere, Fernby; Aquila, Vatro, Celer, Corvo; Ulfring, Hallsdottir, Skarn, Brandsson; Salviati, Morosco, Canale, Lanza): a small shield each, on the kingdom's colour | The Realm screen's Lords and Holdings rows; later the lords' map banners (P8-01) | None: the names alone |
 | 10 | **Lords' banners** on the world map: each house's arms (row 8) on a gold-edged banner, a size bigger than a patrol's shield | World map, the lord's tap card | The realm's shield with its letter and a gold edge (`js/render.js`) |
 | 11 | **Lord portraits** in battle: a mounted or standing figure in the realm's best kit, with a pennant | Battles against a lord; the name over their head | The realm's best foot soldier's sprite with the lord's name above |
+| 12 | **Fief tab art**: a small icon for a steward, a reeve and a castellan, and for garrison, militia, prosperity and unrest | The Realm screen's Fief tab | Words |
 | 9 | **Holding marks** on the map: a pennant showing who holds the gates when they differ from the realm that claims it (an occupied fort) | World map | None yet: the settlement is drawn in its controller's colour, as before |
 
 ## Things to keep in mind (not legal advice)

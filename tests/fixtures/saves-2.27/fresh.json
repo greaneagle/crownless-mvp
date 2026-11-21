@@ -1,0 +1,2125 @@
+{
+ "format": "crownless-save",
+ "version": 21,
+ "game": "2.27.0",
+ "exportedAt": "2026-11-20T23:28:17.350Z",
+ "checksum": "df28545f",
+ "campaign": {
+  "version": 21,
+  "worldId": "sundered_realm",
+  "contentVersion": "2.27.0",
+  "gold": 60,
+  "renown": 0,
+  "battles": 0,
+  "victories": 0,
+  "day": 0,
+  "nextSoldierId": 1,
+  "roster": [],
+  "inventory": {},
+  "lastResolvedBattle": 0,
+  "world": {
+   "x": 100,
+   "y": 105,
+   "location": "stonebridge",
+   "sites": {
+    "looter_camp": {
+     "clearedUntil": 0
+    },
+    "reaver_hideout": {
+     "clearedUntil": 0
+    },
+    "raider_steading": {
+     "clearedUntil": 0
+    },
+    "broken_tower": {
+     "clearedUntil": 0
+    },
+    "outlaw_glade": {
+     "clearedUntil": 0
+    },
+    "burnt_mill": {
+     "clearedUntil": 0
+    },
+    "deserter_camp": {
+     "clearedUntil": 0
+    },
+    "old_watchtower": {
+     "clearedUntil": 0
+    },
+    "wreckers_cove": {
+     "clearedUntil": 0
+    },
+    "marsh_hideout": {
+     "clearedUntil": 0
+    }
+   }
+  },
+  "character": {
+   "name": "Bot2",
+   "gender": "unspecified",
+   "cloak": "crimson",
+   "background": "farmhand",
+   "attributes": {
+    "str": 6,
+    "agi": 5,
+    "int": 5,
+    "cha": 5
+   },
+   "skills": {
+    "one_handed": 1,
+    "shield": 0,
+    "archery": 0,
+    "riding": 0,
+    "leadership": 0,
+    "tactics": 0,
+    "pathfinding": 0,
+    "trade": 0
+   },
+   "level": 1,
+   "xp": 0,
+   "skillPoints": 0,
+   "attributePoints": 0
+  },
+  "equipment": {
+   "weapon": "worn_sword",
+   "offhand": "oak_shield",
+   "head": null,
+   "body": "clothing",
+   "hands": null,
+   "feet": null,
+   "horse": null,
+   "ring": null
+  },
+  "food": 3,
+  "morale": 70,
+  "nextWagesDay": 7,
+  "starving": false,
+  "markets": {
+   "stonebridge": {
+    "grain": 0.95,
+    "salt": 1.1,
+    "wool": 0.9,
+    "iron": 1.1,
+    "cloth": 1.05,
+    "tools": 1,
+    "timber": 1.1,
+    "wine": 1.15,
+    "flour": 1.07
+   },
+   "eastwatch": {
+    "grain": 1.15,
+    "salt": 0.9,
+    "wool": 1.1,
+    "iron": 1,
+    "cloth": 0.85,
+    "tools": 0.9,
+    "timber": 1.15,
+    "wine": 1.05,
+    "flour": 1.18
+   },
+   "oakford": {
+    "grain": 0.8,
+    "salt": 1.3,
+    "wool": 0.9,
+    "iron": 1.3,
+    "cloth": 1.2,
+    "tools": 1.25,
+    "timber": 1,
+    "wine": 1.25,
+    "flour": 0.9
+   },
+   "highmere": {
+    "grain": 1.1,
+    "salt": 1.25,
+    "wool": 0.8,
+    "iron": 0.85,
+    "cloth": 1.2,
+    "tools": 1.1,
+    "timber": 0.95,
+    "wine": 1.3,
+    "flour": 1.05
+   },
+   "brackenfield": {
+    "grain": 0.9,
+    "salt": 1.3,
+    "wool": 1,
+    "iron": 1.2,
+    "cloth": 1.25,
+    "tools": 1.3,
+    "timber": 1,
+    "wine": 1.3,
+    "flour": 0.95
+   },
+   "dunmarsh": {
+    "grain": 1.25,
+    "salt": 0.9,
+    "wool": 1.2,
+    "iron": 1.3,
+    "cloth": 1.1,
+    "tools": 1.2,
+    "timber": 1.2,
+    "wine": 1.1,
+    "flour": 1.12
+   },
+   "redfield": {
+    "grain": 0.85,
+    "salt": 1,
+    "wool": 1.05,
+    "iron": 1.25,
+    "cloth": 1.15,
+    "tools": 1.2,
+    "timber": 1.2,
+    "wine": 1,
+    "flour": 0.93
+   },
+   "saltmere": {
+    "grain": 1.2,
+    "salt": 0.8,
+    "wool": 1.2,
+    "iron": 1.3,
+    "cloth": 1,
+    "tools": 1.15,
+    "timber": 1.25,
+    "wine": 0.95,
+    "flour": 1.1
+   },
+   "ashby": {
+    "grain": 0.85,
+    "salt": 1.3,
+    "wool": 0.85,
+    "iron": 1.25,
+    "cloth": 1.2,
+    "tools": 1.2,
+    "timber": 0.95,
+    "wine": 1.35,
+    "flour": 0.93
+   },
+   "fernley": {
+    "grain": 0.8,
+    "salt": 1.25,
+    "wool": 0.95,
+    "iron": 1.3,
+    "cloth": 1.15,
+    "tools": 1.25,
+    "timber": 1,
+    "wine": 1.3,
+    "flour": 0.9
+   },
+   "calvinum": {
+    "grain": 1.15,
+    "salt": 1,
+    "wool": 0.9,
+    "iron": 0.9,
+    "cloth": 1.1,
+    "tools": 1,
+    "timber": 0.9,
+    "wine": 1.25,
+    "flour": 1.07
+   },
+   "tessaro": {
+    "grain": 0.9,
+    "salt": 0.95,
+    "wool": 1.15,
+    "iron": 1.25,
+    "cloth": 0.95,
+    "tools": 1.15,
+    "timber": 1.2,
+    "wine": 0.9,
+    "flour": 0.95
+   },
+   "hrothgard": {
+    "grain": 1.2,
+    "salt": 1.2,
+    "wool": 0.9,
+    "iron": 0.85,
+    "cloth": 1.2,
+    "tools": 0.95,
+    "timber": 0.8,
+    "wine": 1.35,
+    "flour": 1.2
+   },
+   "birkholm": {
+    "grain": 1.25,
+    "salt": 1.3,
+    "wool": 0.85,
+    "iron": 1,
+    "cloth": 1.25,
+    "tools": 1.1,
+    "timber": 0.8,
+    "wine": 1.4,
+    "flour": 1.12
+   },
+   "eldmoor": {
+    "grain": 1.3,
+    "salt": 1.25,
+    "wool": 0.8,
+    "iron": 0.9,
+    "cloth": 1.2,
+    "tools": 1.15,
+    "timber": 0.85,
+    "wine": 1.4,
+    "flour": 1.15
+   },
+   "thornvik": {
+    "grain": 1.2,
+    "salt": 1.1,
+    "wool": 0.9,
+    "iron": 0.8,
+    "cloth": 1.25,
+    "tools": 1,
+    "timber": 0.85,
+    "wine": 1.35,
+    "flour": 1.1
+   },
+   "kettleby": {
+    "grain": 1.15,
+    "salt": 1.2,
+    "wool": 0.95,
+    "iron": 0.95,
+    "cloth": 1.2,
+    "tools": 1.05,
+    "timber": 0.9,
+    "wine": 1.3,
+    "flour": 1.07
+   },
+   "vessara": {
+    "grain": 1,
+    "salt": 0.85,
+    "wool": 1.2,
+    "iron": 1.2,
+    "cloth": 0.9,
+    "tools": 1.05,
+    "timber": 1.3,
+    "wine": 0.8,
+    "flour": 1.1
+   },
+   "lucco": {
+    "grain": 1.05,
+    "salt": 0.8,
+    "wool": 1.25,
+    "iron": 1.35,
+    "cloth": 1.05,
+    "tools": 1.25,
+    "timber": 1.35,
+    "wine": 0.85,
+    "flour": 1.02
+   },
+   "marenna": {
+    "grain": 0.95,
+    "salt": 0.85,
+    "wool": 1.2,
+    "iron": 1.3,
+    "cloth": 1,
+    "tools": 1.2,
+    "timber": 1.3,
+    "wine": 0.8,
+    "flour": 0.97
+   },
+   "pellio": {
+    "grain": 0.9,
+    "salt": 0.9,
+    "wool": 1.15,
+    "iron": 1.3,
+    "cloth": 0.95,
+    "tools": 1.2,
+    "timber": 1.25,
+    "wine": 0.85,
+    "flour": 0.95
+   },
+   "sorra": {
+    "grain": 1,
+    "salt": 0.8,
+    "wool": 1.2,
+    "iron": 1.25,
+    "cloth": 1,
+    "tools": 1.15,
+    "timber": 1.3,
+    "wine": 0.9,
+    "flour": 1
+   },
+   "merrow": {
+    "grain": 1,
+    "salt": 0.9,
+    "wool": 1,
+    "iron": 1,
+    "cloth": 0.9,
+    "tools": 0.9,
+    "timber": 1,
+    "wine": 0.9,
+    "flour": 1.1
+   }
+  },
+  "cargo": {},
+  "rngSeed": 1064271451,
+  "rng": {
+   "casualties": 877001243,
+   "loot": 712701328,
+   "upkeep": 3286892888,
+   "names": 814592537
+  },
+  "nextResultId": 1,
+  "nextEventId": 1,
+  "parties": [
+   {
+    "id": 1,
+    "template": "bandits",
+    "x": 90,
+    "y": 97,
+    "troops": {
+     "looter": 5,
+     "reaver": 1
+    },
+    "tx": null,
+    "ty": null,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lair": "looter_camp"
+   },
+   {
+    "id": 2,
+    "template": "bandits",
+    "x": 96,
+    "y": 124,
+    "troops": {
+     "looter": 5,
+     "reaver": 3
+    },
+    "tx": null,
+    "ty": null,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lair": "reaver_hideout"
+   },
+   {
+    "id": 3,
+    "template": "bandits",
+    "x": 96,
+    "y": 124,
+    "troops": {
+     "looter": 4,
+     "reaver": 1
+    },
+    "tx": null,
+    "ty": null,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lair": "reaver_hideout"
+   },
+   {
+    "id": 4,
+    "template": "valedorn_patrol",
+    "x": 92,
+    "y": 80,
+    "troops": {
+     "footman": 3,
+     "hunter": 3,
+     "levy": 2
+    },
+    "tx": null,
+    "ty": null,
+    "ignoreUntil": 0,
+    "alerted": false
+   },
+   {
+    "id": 5,
+    "template": "valedorn_patrol",
+    "x": 92,
+    "y": 80,
+    "troops": {
+     "footman": 3,
+     "hunter": 3,
+     "levy": 3
+    },
+    "tx": null,
+    "ty": null,
+    "ignoreUntil": 0,
+    "alerted": false
+   },
+   {
+    "id": 6,
+    "template": "valedorn_patrol",
+    "x": 92,
+    "y": 80,
+    "troops": {
+     "footman": 3,
+     "hunter": 3,
+     "levy": 2
+    },
+    "tx": null,
+    "ty": null,
+    "ignoreUntil": 0,
+    "alerted": false
+   },
+   {
+    "id": 7,
+    "template": "aurelian_patrol",
+    "x": 120,
+    "y": 120,
+    "troops": {
+     "spearman": 4,
+     "skirmisher": 2,
+     "recruit": 3
+    },
+    "tx": null,
+    "ty": null,
+    "ignoreUntil": 0,
+    "alerted": false
+   },
+   {
+    "id": 8,
+    "template": "aurelian_patrol",
+    "x": 120,
+    "y": 120,
+    "troops": {
+     "spearman": 3,
+     "skirmisher": 2,
+     "recruit": 2
+    },
+    "tx": null,
+    "ty": null,
+    "ignoreUntil": 0,
+    "alerted": false
+   },
+   {
+    "id": 9,
+    "template": "aurelian_patrol",
+    "x": 120,
+    "y": 120,
+    "troops": {
+     "spearman": 3,
+     "skirmisher": 3,
+     "recruit": 2
+    },
+    "tx": null,
+    "ty": null,
+    "ignoreUntil": 0,
+    "alerted": false
+   },
+   {
+    "id": 10,
+    "template": "valedorn_caravan",
+    "x": 80,
+    "y": 95,
+    "troops": {
+     "levy": 3
+    },
+    "tx": null,
+    "ty": null,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "routeIndex": 3,
+    "good": "grain"
+   },
+   {
+    "id": 11,
+    "template": "aurelian_caravan",
+    "x": 128,
+    "y": 102,
+    "troops": {
+     "recruit": 3
+    },
+    "tx": null,
+    "ty": null,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "routeIndex": 1,
+    "good": "salt"
+   },
+   {
+    "id": 12,
+    "template": "highland_raiders",
+    "x": 44,
+    "y": 40,
+    "troops": {
+     "reaver": 3,
+     "looter": 1
+    },
+    "tx": null,
+    "ty": null,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lair": "raider_steading"
+   },
+   {
+    "id": 13,
+    "template": "highland_raiders",
+    "x": 44,
+    "y": 40,
+    "troops": {
+     "reaver": 4,
+     "looter": 3
+    },
+    "tx": null,
+    "ty": null,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lair": "raider_steading"
+   },
+   {
+    "id": 14,
+    "template": "western_outlaws",
+    "x": 40,
+    "y": 142,
+    "troops": {
+     "looter": 6
+    },
+    "tx": null,
+    "ty": null,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lair": "burnt_mill"
+   },
+   {
+    "id": 15,
+    "template": "western_outlaws",
+    "x": 40,
+    "y": 142,
+    "troops": {
+     "looter": 5
+    },
+    "tx": null,
+    "ty": null,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lair": "burnt_mill"
+   },
+   {
+    "id": 16,
+    "template": "eastern_deserters",
+    "x": 160,
+    "y": 142,
+    "troops": {
+     "mercenary": 1,
+     "looter": 4
+    },
+    "tx": null,
+    "ty": null,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lair": "old_watchtower"
+   },
+   {
+    "id": 17,
+    "template": "eastern_deserters",
+    "x": 160,
+    "y": 142,
+    "troops": {
+     "mercenary": 3,
+     "looter": 3
+    },
+    "tx": null,
+    "ty": null,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lair": "old_watchtower"
+   },
+   {
+    "id": 18,
+    "template": "southern_wreckers",
+    "x": 24,
+    "y": 158,
+    "troops": {
+     "reaver": 1,
+     "looter": 4
+    },
+    "tx": null,
+    "ty": null,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lair": "marsh_hideout"
+   },
+   {
+    "id": 19,
+    "template": "southern_wreckers",
+    "x": 24,
+    "y": 158,
+    "troops": {
+     "reaver": 3,
+     "looter": 3
+    },
+    "tx": null,
+    "ty": null,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lair": "marsh_hideout"
+   },
+   {
+    "id": 20,
+    "template": "hrothmark_patrol",
+    "x": 148,
+    "y": 26,
+    "troops": {
+     "axeman": 3,
+     "fell_archer": 3,
+     "clansman": 3
+    },
+    "tx": null,
+    "ty": null,
+    "ignoreUntil": 0,
+    "alerted": false
+   },
+   {
+    "id": 21,
+    "template": "hrothmark_patrol",
+    "x": 148,
+    "y": 26,
+    "troops": {
+     "axeman": 4,
+     "fell_archer": 2,
+     "clansman": 3
+    },
+    "tx": null,
+    "ty": null,
+    "ignoreUntil": 0,
+    "alerted": false
+   },
+   {
+    "id": 22,
+    "template": "hrothmark_patrol",
+    "x": 148,
+    "y": 26,
+    "troops": {
+     "axeman": 4,
+     "fell_archer": 2,
+     "clansman": 2
+    },
+    "tx": null,
+    "ty": null,
+    "ignoreUntil": 0,
+    "alerted": false
+   },
+   {
+    "id": 23,
+    "template": "vessaro_patrol",
+    "x": 136,
+    "y": 164,
+    "troops": {
+     "pikeman": 3,
+     "crossbowman": 3,
+     "militia": 2
+    },
+    "tx": null,
+    "ty": null,
+    "ignoreUntil": 0,
+    "alerted": false
+   },
+   {
+    "id": 24,
+    "template": "vessaro_patrol",
+    "x": 136,
+    "y": 164,
+    "troops": {
+     "pikeman": 3,
+     "crossbowman": 3,
+     "militia": 3
+    },
+    "tx": null,
+    "ty": null,
+    "ignoreUntil": 0,
+    "alerted": false
+   },
+   {
+    "id": 25,
+    "template": "vessaro_patrol",
+    "x": 136,
+    "y": 164,
+    "troops": {
+     "pikeman": 4,
+     "crossbowman": 2,
+     "militia": 2
+    },
+    "tx": null,
+    "ty": null,
+    "ignoreUntil": 0,
+    "alerted": false
+   },
+   {
+    "id": 26,
+    "template": "merrow_watch",
+    "x": 180,
+    "y": 170,
+    "troops": {
+     "mercenary": 4
+    },
+    "tx": null,
+    "ty": null,
+    "ignoreUntil": 0,
+    "alerted": false
+   },
+   {
+    "id": 27,
+    "template": "hrothmark_caravan",
+    "x": 176,
+    "y": 126,
+    "troops": {
+     "clansman": 3
+    },
+    "tx": null,
+    "ty": null,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "routeIndex": 3,
+    "good": "iron"
+   },
+   {
+    "id": 28,
+    "template": "vessaro_caravan",
+    "x": 116,
+    "y": 188,
+    "troops": {
+     "militia": 2
+    },
+    "tx": null,
+    "ty": null,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "routeIndex": 1,
+    "good": "wine"
+   },
+   {
+    "id": 29,
+    "template": "merrow_caravan",
+    "x": 180,
+    "y": 170,
+    "troops": {
+     "mercenary": 3
+    },
+    "tx": null,
+    "ty": null,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "routeIndex": 0,
+    "good": "cloth"
+   },
+   {
+    "id": 30,
+    "template": "lord_valedorn",
+    "x": 92,
+    "y": 80,
+    "troops": {
+     "guard": 2,
+     "longbowman": 2,
+     "rider": 2,
+     "footman": 6,
+     "hunter": 6,
+     "levy": 6
+    },
+    "tx": null,
+    "ty": null,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lordId": "person:2",
+    "intent": "rest"
+   },
+   {
+    "id": 31,
+    "template": "lord_valedorn",
+    "x": 24,
+    "y": 78,
+    "troops": {
+     "guard": 2,
+     "longbowman": 2,
+     "rider": 2,
+     "footman": 6,
+     "hunter": 6,
+     "levy": 6
+    },
+    "tx": null,
+    "ty": null,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lordId": "person:3",
+    "intent": "rest"
+   },
+   {
+    "id": 32,
+    "template": "lord_valedorn",
+    "x": 80,
+    "y": 95,
+    "troops": {
+     "guard": 1,
+     "longbowman": 1,
+     "footman": 4,
+     "hunter": 3,
+     "levy": 7
+    },
+    "tx": null,
+    "ty": null,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lordId": "person:4",
+    "intent": "rest"
+   },
+   {
+    "id": 33,
+    "template": "lord_valedorn",
+    "x": 36,
+    "y": 132,
+    "troops": {
+     "guard": 1,
+     "longbowman": 1,
+     "footman": 4,
+     "hunter": 3,
+     "levy": 7
+    },
+    "tx": null,
+    "ty": null,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lordId": "person:5",
+    "intent": "rest"
+   },
+   {
+    "id": 34,
+    "template": "lord_valedorn",
+    "x": 92,
+    "y": 80,
+    "troops": {
+     "guard": 1,
+     "footman": 3,
+     "hunter": 2,
+     "levy": 6
+    },
+    "tx": null,
+    "ty": null,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lordId": "person:6",
+    "intent": "rest"
+   },
+   {
+    "id": 35,
+    "template": "lord_valedorn",
+    "x": 100,
+    "y": 105,
+    "troops": {
+     "guard": 1,
+     "footman": 3,
+     "hunter": 2,
+     "levy": 6
+    },
+    "tx": null,
+    "ty": null,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lordId": "person:7",
+    "intent": "rest"
+   },
+   {
+    "id": 36,
+    "template": "lord_aurelian",
+    "x": 120,
+    "y": 120,
+    "troops": {
+     "legionary": 2,
+     "marksman": 2,
+     "horse_scout": 2,
+     "spearman": 6,
+     "skirmisher": 6,
+     "recruit": 6
+    },
+    "tx": null,
+    "ty": null,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lordId": "person:9",
+    "intent": "rest"
+   },
+   {
+    "id": 37,
+    "template": "lord_aurelian",
+    "x": 176,
+    "y": 96,
+    "troops": {
+     "legionary": 2,
+     "marksman": 2,
+     "horse_scout": 2,
+     "spearman": 6,
+     "skirmisher": 6,
+     "recruit": 6
+    },
+    "tx": null,
+    "ty": null,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lordId": "person:10",
+    "intent": "rest"
+   },
+   {
+    "id": 38,
+    "template": "lord_aurelian",
+    "x": 134,
+    "y": 130,
+    "troops": {
+     "legionary": 1,
+     "marksman": 1,
+     "spearman": 4,
+     "skirmisher": 3,
+     "recruit": 7
+    },
+    "tx": null,
+    "ty": null,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lordId": "person:11",
+    "intent": "rest"
+   },
+   {
+    "id": 39,
+    "template": "lord_aurelian",
+    "x": 176,
+    "y": 126,
+    "troops": {
+     "legionary": 1,
+     "marksman": 1,
+     "spearman": 4,
+     "skirmisher": 3,
+     "recruit": 7
+    },
+    "tx": null,
+    "ty": null,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lordId": "person:12",
+    "intent": "rest"
+   },
+   {
+    "id": 40,
+    "template": "lord_aurelian",
+    "x": 120,
+    "y": 120,
+    "troops": {
+     "legionary": 1,
+     "spearman": 3,
+     "skirmisher": 2,
+     "recruit": 6
+    },
+    "tx": null,
+    "ty": null,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lordId": "person:13",
+    "intent": "rest"
+   },
+   {
+    "id": 41,
+    "template": "lord_aurelian",
+    "x": 112,
+    "y": 90,
+    "troops": {
+     "legionary": 1,
+     "spearman": 3,
+     "skirmisher": 2,
+     "recruit": 6
+    },
+    "tx": null,
+    "ty": null,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lordId": "person:14",
+    "intent": "rest"
+   },
+   {
+    "id": 42,
+    "template": "lord_hrothmark",
+    "x": 60,
+    "y": 30,
+    "troops": {
+     "huscarl": 2,
+     "fell_warden": 2,
+     "hill_rider": 2,
+     "axeman": 6,
+     "fell_archer": 6,
+     "clansman": 6
+    },
+    "tx": null,
+    "ty": null,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lordId": "person:16",
+    "intent": "rest"
+   },
+   {
+    "id": 43,
+    "template": "lord_hrothmark",
+    "x": 148,
+    "y": 26,
+    "troops": {
+     "huscarl": 2,
+     "fell_warden": 2,
+     "hill_rider": 2,
+     "axeman": 6,
+     "fell_archer": 6,
+     "clansman": 6
+    },
+    "tx": null,
+    "ty": null,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lordId": "person:17",
+    "intent": "rest"
+   },
+   {
+    "id": 44,
+    "template": "lord_hrothmark",
+    "x": 178,
+    "y": 20,
+    "troops": {
+     "huscarl": 1,
+     "fell_warden": 1,
+     "axeman": 4,
+     "fell_archer": 3,
+     "clansman": 7
+    },
+    "tx": null,
+    "ty": null,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lordId": "person:18",
+    "intent": "rest"
+   },
+   {
+    "id": 45,
+    "template": "lord_hrothmark",
+    "x": 100,
+    "y": 22,
+    "troops": {
+     "huscarl": 1,
+     "axeman": 3,
+     "fell_archer": 2,
+     "clansman": 6
+    },
+    "tx": null,
+    "ty": null,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lordId": "person:19",
+    "intent": "rest"
+   },
+   {
+    "id": 46,
+    "template": "lord_hrothmark",
+    "x": 148,
+    "y": 26,
+    "troops": {
+     "huscarl": 1,
+     "axeman": 3,
+     "fell_archer": 2,
+     "clansman": 6
+    },
+    "tx": null,
+    "ty": null,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lordId": "person:20",
+    "intent": "rest"
+   },
+   {
+    "id": 47,
+    "template": "lord_vessaro",
+    "x": 52,
+    "y": 170,
+    "troops": {
+     "pavisier": 2,
+     "arbalester": 2,
+     "light_horse": 2,
+     "pikeman": 6,
+     "crossbowman": 6,
+     "militia": 6
+    },
+    "tx": null,
+    "ty": null,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lordId": "person:22",
+    "intent": "rest"
+   },
+   {
+    "id": 48,
+    "template": "lord_vessaro",
+    "x": 136,
+    "y": 164,
+    "troops": {
+     "pavisier": 2,
+     "arbalester": 2,
+     "light_horse": 2,
+     "pikeman": 6,
+     "crossbowman": 6,
+     "militia": 6
+    },
+    "tx": null,
+    "ty": null,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lordId": "person:23",
+    "intent": "rest"
+   },
+   {
+    "id": 49,
+    "template": "lord_vessaro",
+    "x": 64,
+    "y": 190,
+    "troops": {
+     "pavisier": 1,
+     "arbalester": 1,
+     "pikeman": 4,
+     "crossbowman": 3,
+     "militia": 7
+    },
+    "tx": null,
+    "ty": null,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lordId": "person:24",
+    "intent": "rest"
+   },
+   {
+    "id": 50,
+    "template": "lord_vessaro",
+    "x": 88,
+    "y": 176,
+    "troops": {
+     "pavisier": 1,
+     "pikeman": 3,
+     "crossbowman": 2,
+     "militia": 6
+    },
+    "tx": null,
+    "ty": null,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lordId": "person:25",
+    "intent": "rest"
+   },
+   {
+    "id": 51,
+    "template": "lord_vessaro",
+    "x": 88,
+    "y": 176,
+    "troops": {
+     "pavisier": 1,
+     "pikeman": 3,
+     "crossbowman": 2,
+     "militia": 6
+    },
+    "tx": null,
+    "ty": null,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lordId": "person:26",
+    "intent": "rest"
+   }
+  ],
+  "partySpawns": {},
+  "nextPartyId": 52,
+  "contract": null,
+  "contractOffers": {},
+  "nextContractId": 1,
+  "contractsDone": 0,
+  "reputation": {
+   "valedorn": 0,
+   "aurelian": 0,
+   "hrothmark": 0,
+   "vessaro": 0,
+   "merrow": 0
+  },
+  "people": {
+   "person:1": {
+    "id": "person:1",
+    "key": "godric_ardane",
+    "name": "Godric Ardane",
+    "gender": "male",
+    "realm": "valedorn",
+    "home": "stonebridge",
+    "kin": [
+     {
+      "person": "person:7",
+      "tie": "child"
+     }
+    ],
+    "traits": "stern, pious, slow to forgive",
+    "status": "free",
+    "heldBy": null
+   },
+   "person:2": {
+    "id": "person:2",
+    "key": "hamon_greymantle",
+    "name": "Hamon Greymantle",
+    "gender": "male",
+    "realm": "valedorn",
+    "home": "greywall_fort",
+    "kin": [
+     {
+      "person": "person:4",
+      "tie": "sibling"
+     },
+     {
+      "person": "person:6",
+      "tie": "child"
+     }
+    ],
+    "traits": "proud, watchful, a hard border lord",
+    "status": "free",
+    "heldBy": null
+   },
+   "person:3": {
+    "id": "person:3",
+    "key": "avice_westmere",
+    "name": "Avice Westmere",
+    "gender": "female",
+    "realm": "valedorn",
+    "home": "westholt_castle",
+    "kin": [
+     {
+      "person": "person:5",
+      "tie": "cousin"
+     }
+    ],
+    "traits": "shrewd, patient, keeps her word",
+    "status": "free",
+    "heldBy": null
+   },
+   "person:4": {
+    "id": "person:4",
+    "key": "hawise_greymantle",
+    "name": "Hawise Greymantle",
+    "gender": "female",
+    "realm": "valedorn",
+    "home": "brackenfield",
+    "kin": [
+     {
+      "person": "person:2",
+      "tie": "sibling"
+     }
+    ],
+    "traits": "blunt, generous, quick to anger",
+    "status": "free",
+    "heldBy": null
+   },
+   "person:5": {
+    "id": "person:5",
+    "key": "serlo_fernby",
+    "name": "Serlo Fernby",
+    "gender": "male",
+    "realm": "valedorn",
+    "home": "fernley",
+    "kin": [
+     {
+      "person": "person:3",
+      "tie": "cousin"
+     }
+    ],
+    "traits": "cautious, thrifty",
+    "status": "free",
+    "heldBy": null
+   },
+   "person:6": {
+    "id": "person:6",
+    "key": "tancred_greymantle",
+    "name": "Tancred Greymantle",
+    "gender": "male",
+    "realm": "valedorn",
+    "home": "greywall_fort",
+    "kin": [
+     {
+      "person": "person:2",
+      "tie": "parent"
+     }
+    ],
+    "traits": "eager, reckless, hungry for land",
+    "status": "free",
+    "heldBy": null
+   },
+   "person:7": {
+    "id": "person:7",
+    "key": "alys_ardane",
+    "name": "Alys Ardane",
+    "gender": "female",
+    "realm": "valedorn",
+    "home": "stonebridge",
+    "kin": [
+     {
+      "person": "person:1",
+      "tie": "parent"
+     }
+    ],
+    "traits": "clever, restless, her father’s favourite",
+    "status": "free",
+    "heldBy": null
+   },
+   "person:8": {
+    "id": "person:8",
+    "key": "severin_aquila",
+    "name": "Severin Aquila",
+    "gender": "male",
+    "realm": "aurelian",
+    "home": "eastwatch",
+    "kin": [
+     {
+      "person": "person:14",
+      "tie": "child"
+     }
+    ],
+    "traits": "learned, cold, bound by the law",
+    "status": "free",
+    "heldBy": null
+   },
+   "person:9": {
+    "id": "person:9",
+    "key": "cassian_vatro",
+    "name": "Cassian Vatro",
+    "gender": "male",
+    "realm": "aurelian",
+    "home": "ashgate_fort",
+    "kin": [
+     {
+      "person": "person:13",
+      "tie": "child"
+     }
+    ],
+    "traits": "ambitious, a veteran of the frontier",
+    "status": "free",
+    "heldBy": null
+   },
+   "person:10": {
+    "id": "person:10",
+    "key": "domitia_celer",
+    "name": "Domitia Celer",
+    "gender": "female",
+    "realm": "aurelian",
+    "home": "castra_nova",
+    "kin": [
+     {
+      "person": "person:12",
+      "tie": "sibling"
+     }
+    ],
+    "traits": "proud, exacting, old imperial blood",
+    "status": "free",
+    "heldBy": null
+   },
+   "person:11": {
+    "id": "person:11",
+    "key": "marcia_corvo",
+    "name": "Marcia Corvo",
+    "gender": "female",
+    "realm": "aurelian",
+    "home": "saltmere",
+    "kin": [],
+    "traits": "practical, a trader at heart",
+    "status": "free",
+    "heldBy": null
+   },
+   "person:12": {
+    "id": "person:12",
+    "key": "faustin_celer",
+    "name": "Faustin Celer",
+    "gender": "male",
+    "realm": "aurelian",
+    "home": "tessaro",
+    "kin": [
+     {
+      "person": "person:10",
+      "tie": "sibling"
+     }
+    ],
+    "traits": "easygoing, fond of wine",
+    "status": "free",
+    "heldBy": null
+   },
+   "person:13": {
+    "id": "person:13",
+    "key": "decimo_vatro",
+    "name": "Decimo Vatro",
+    "gender": "male",
+    "realm": "aurelian",
+    "home": "ashgate_fort",
+    "kin": [
+     {
+      "person": "person:9",
+      "tie": "parent"
+     }
+    ],
+    "traits": "dutiful, in his father’s shadow",
+    "status": "free",
+    "heldBy": null
+   },
+   "person:14": {
+    "id": "person:14",
+    "key": "junia_aquila",
+    "name": "Junia Aquila",
+    "gender": "female",
+    "realm": "aurelian",
+    "home": "eastwatch",
+    "kin": [
+     {
+      "person": "person:8",
+      "tie": "parent"
+     }
+    ],
+    "traits": "sharp-tongued, a rider of note",
+    "status": "free",
+    "heldBy": null
+   },
+   "person:15": {
+    "id": "person:15",
+    "key": "hakon_ulfring",
+    "name": "Hakon Ulfring",
+    "gender": "male",
+    "realm": "hrothmark",
+    "home": "hrothgard",
+    "kin": [
+     {
+      "person": "person:19",
+      "tie": "spouse"
+     }
+    ],
+    "traits": "bold, open-handed, loves a feast",
+    "status": "free",
+    "heldBy": null
+   },
+   "person:16": {
+    "id": "person:16",
+    "key": "astrid_hallsdottir",
+    "name": "Astrid Hallsdottir",
+    "gender": "female",
+    "realm": "hrothmark",
+    "home": "ulfstead_hold",
+    "kin": [
+     {
+      "person": "person:18",
+      "tie": "cousin"
+     }
+    ],
+    "traits": "fierce, honest, holds a grudge",
+    "status": "free",
+    "heldBy": null
+   },
+   "person:17": {
+    "id": "person:17",
+    "key": "torvald_skarn",
+    "name": "Torvald Skarn",
+    "gender": "male",
+    "realm": "hrothmark",
+    "home": "skarnwall",
+    "kin": [
+     {
+      "person": "person:20",
+      "tie": "child"
+     }
+    ],
+    "traits": "grim, careful, old and wary",
+    "status": "free",
+    "heldBy": null
+   },
+   "person:18": {
+    "id": "person:18",
+    "key": "kettil_brandsson",
+    "name": "Kettil Brandsson",
+    "gender": "male",
+    "realm": "hrothmark",
+    "home": "kettleby",
+    "kin": [
+     {
+      "person": "person:16",
+      "tie": "cousin"
+     }
+    ],
+    "traits": "loyal, plain-spoken",
+    "status": "free",
+    "heldBy": null
+   },
+   "person:19": {
+    "id": "person:19",
+    "key": "ingrid_ulfring",
+    "name": "Ingrid Ulfring",
+    "gender": "female",
+    "realm": "hrothmark",
+    "home": "hrothgard",
+    "kin": [
+     {
+      "person": "person:15",
+      "tie": "spouse"
+     }
+    ],
+    "traits": "wise, watchful, the hall’s true voice",
+    "status": "free",
+    "heldBy": null
+   },
+   "person:20": {
+    "id": "person:20",
+    "key": "ragna_skarn",
+    "name": "Ragna Skarn",
+    "gender": "female",
+    "realm": "hrothmark",
+    "home": "skarnwall",
+    "kin": [
+     {
+      "person": "person:17",
+      "tie": "parent"
+     }
+    ],
+    "traits": "restless, a shieldmaiden of the hills",
+    "status": "free",
+    "heldBy": null
+   },
+   "person:21": {
+    "id": "person:21",
+    "key": "lucrezia_salviati",
+    "name": "Lucrezia Salviati",
+    "gender": "female",
+    "realm": "vessaro",
+    "home": "vessara",
+    "kin": [
+     {
+      "person": "person:25",
+      "tie": "child"
+     }
+    ],
+    "traits": "cunning, rich, never in a hurry",
+    "status": "free",
+    "heldBy": null
+   },
+   "person:22": {
+    "id": "person:22",
+    "key": "ottavio_morosco",
+    "name": "Ottavio Morosco",
+    "gender": "male",
+    "realm": "vessaro",
+    "home": "torre_salina",
+    "kin": [
+     {
+      "person": "person:24",
+      "tie": "sibling"
+     }
+    ],
+    "traits": "vain, brave, deep in debt",
+    "status": "free",
+    "heldBy": null
+   },
+   "person:23": {
+    "id": "person:23",
+    "key": "ruggero_canale",
+    "name": "Ruggero Canale",
+    "gender": "male",
+    "realm": "vessaro",
+    "home": "castel_verro",
+    "kin": [],
+    "traits": "careful, a builder of walls",
+    "status": "free",
+    "heldBy": null
+   },
+   "person:24": {
+    "id": "person:24",
+    "key": "chiara_morosco",
+    "name": "Chiara Morosco",
+    "gender": "female",
+    "realm": "vessaro",
+    "home": "marenna",
+    "kin": [
+     {
+      "person": "person:22",
+      "tie": "sibling"
+     }
+    ],
+    "traits": "quiet, clever, pays her brother’s debts",
+    "status": "free",
+    "heldBy": null
+   },
+   "person:25": {
+    "id": "person:25",
+    "key": "matteo_salviati",
+    "name": "Matteo Salviati",
+    "gender": "male",
+    "realm": "vessaro",
+    "home": "vessara",
+    "kin": [
+     {
+      "person": "person:21",
+      "tie": "parent"
+     }
+    ],
+    "traits": "charming, idle, a gambler",
+    "status": "free",
+    "heldBy": null
+   },
+   "person:26": {
+    "id": "person:26",
+    "key": "bastiano_lanza",
+    "name": "Bastiano Lanza",
+    "gender": "male",
+    "realm": "vessaro",
+    "home": "vessara",
+    "kin": [],
+    "traits": "the Queen’s household knight; steady, sworn",
+    "status": "free",
+    "heldBy": null
+   }
+  },
+  "rulers": {
+   "valedorn": "person:1",
+   "aurelian": "person:8",
+   "hrothmark": "person:15",
+   "vessaro": "person:21"
+  },
+  "nextPersonId": 27,
+  "holdings": {
+   "stonebridge": {
+    "kind": "town",
+    "sovereign": "valedorn",
+    "holder": "person:1",
+    "controller": "valedorn",
+    "seat": null,
+    "administrator": null,
+    "claims": []
+   },
+   "greywall_fort": {
+    "kind": "fort",
+    "sovereign": "valedorn",
+    "holder": "person:2",
+    "controller": "valedorn",
+    "seat": null,
+    "administrator": null,
+    "claims": []
+   },
+   "oakford": {
+    "kind": "village",
+    "sovereign": "valedorn",
+    "holder": "person:1",
+    "controller": "valedorn",
+    "seat": "stonebridge",
+    "administrator": null,
+    "claims": []
+   },
+   "highmere": {
+    "kind": "village",
+    "sovereign": "valedorn",
+    "holder": "person:2",
+    "controller": "valedorn",
+    "seat": "greywall_fort",
+    "administrator": null,
+    "claims": []
+   },
+   "brackenfield": {
+    "kind": "village",
+    "sovereign": "valedorn",
+    "holder": "person:4",
+    "controller": "valedorn",
+    "seat": "greywall_fort",
+    "administrator": null,
+    "claims": []
+   },
+   "westholt_castle": {
+    "kind": "fort",
+    "sovereign": "valedorn",
+    "holder": "person:3",
+    "controller": "valedorn",
+    "seat": null,
+    "administrator": null,
+    "claims": []
+   },
+   "ashby": {
+    "kind": "village",
+    "sovereign": "valedorn",
+    "holder": "person:3",
+    "controller": "valedorn",
+    "seat": "westholt_castle",
+    "administrator": null,
+    "claims": []
+   },
+   "fernley": {
+    "kind": "village",
+    "sovereign": "valedorn",
+    "holder": "person:5",
+    "controller": "valedorn",
+    "seat": "westholt_castle",
+    "administrator": null,
+    "claims": []
+   },
+   "eastwatch": {
+    "kind": "town",
+    "sovereign": "aurelian",
+    "holder": "person:8",
+    "controller": "aurelian",
+    "seat": null,
+    "administrator": null,
+    "claims": []
+   },
+   "ashgate_fort": {
+    "kind": "fort",
+    "sovereign": "aurelian",
+    "holder": "person:9",
+    "controller": "aurelian",
+    "seat": null,
+    "administrator": null,
+    "claims": []
+   },
+   "dunmarsh": {
+    "kind": "village",
+    "sovereign": "aurelian",
+    "holder": "person:9",
+    "controller": "aurelian",
+    "seat": "ashgate_fort",
+    "administrator": null,
+    "claims": []
+   },
+   "redfield": {
+    "kind": "village",
+    "sovereign": "aurelian",
+    "holder": "person:8",
+    "controller": "aurelian",
+    "seat": "eastwatch",
+    "administrator": null,
+    "claims": []
+   },
+   "saltmere": {
+    "kind": "village",
+    "sovereign": "aurelian",
+    "holder": "person:11",
+    "controller": "aurelian",
+    "seat": "ashgate_fort",
+    "administrator": null,
+    "claims": []
+   },
+   "castra_nova": {
+    "kind": "fort",
+    "sovereign": "aurelian",
+    "holder": "person:10",
+    "controller": "aurelian",
+    "seat": null,
+    "administrator": null,
+    "claims": []
+   },
+   "calvinum": {
+    "kind": "village",
+    "sovereign": "aurelian",
+    "holder": "person:10",
+    "controller": "aurelian",
+    "seat": "castra_nova",
+    "administrator": null,
+    "claims": []
+   },
+   "tessaro": {
+    "kind": "village",
+    "sovereign": "aurelian",
+    "holder": "person:12",
+    "controller": "aurelian",
+    "seat": "castra_nova",
+    "administrator": null,
+    "claims": []
+   },
+   "hrothgard": {
+    "kind": "town",
+    "sovereign": "hrothmark",
+    "holder": "person:15",
+    "controller": "hrothmark",
+    "seat": null,
+    "administrator": null,
+    "claims": []
+   },
+   "ulfstead_hold": {
+    "kind": "fort",
+    "sovereign": "hrothmark",
+    "holder": "person:16",
+    "controller": "hrothmark",
+    "seat": null,
+    "administrator": null,
+    "claims": []
+   },
+   "skarnwall": {
+    "kind": "fort",
+    "sovereign": "hrothmark",
+    "holder": "person:17",
+    "controller": "hrothmark",
+    "seat": null,
+    "administrator": null,
+    "claims": []
+   },
+   "birkholm": {
+    "kind": "village",
+    "sovereign": "hrothmark",
+    "holder": "person:16",
+    "controller": "hrothmark",
+    "seat": "ulfstead_hold",
+    "administrator": null,
+    "claims": []
+   },
+   "eldmoor": {
+    "kind": "village",
+    "sovereign": "hrothmark",
+    "holder": "person:15",
+    "controller": "hrothmark",
+    "seat": "hrothgard",
+    "administrator": null,
+    "claims": []
+   },
+   "thornvik": {
+    "kind": "village",
+    "sovereign": "hrothmark",
+    "holder": "person:17",
+    "controller": "hrothmark",
+    "seat": "skarnwall",
+    "administrator": null,
+    "claims": []
+   },
+   "kettleby": {
+    "kind": "village",
+    "sovereign": "hrothmark",
+    "holder": "person:18",
+    "controller": "hrothmark",
+    "seat": "skarnwall",
+    "administrator": null,
+    "claims": []
+   },
+   "vessara": {
+    "kind": "town",
+    "sovereign": "vessaro",
+    "holder": "person:21",
+    "controller": "vessaro",
+    "seat": null,
+    "administrator": null,
+    "claims": []
+   },
+   "torre_salina": {
+    "kind": "fort",
+    "sovereign": "vessaro",
+    "holder": "person:22",
+    "controller": "vessaro",
+    "seat": null,
+    "administrator": null,
+    "claims": []
+   },
+   "castel_verro": {
+    "kind": "fort",
+    "sovereign": "vessaro",
+    "holder": "person:23",
+    "controller": "vessaro",
+    "seat": null,
+    "administrator": null,
+    "claims": []
+   },
+   "lucco": {
+    "kind": "village",
+    "sovereign": "vessaro",
+    "holder": "person:22",
+    "controller": "vessaro",
+    "seat": "torre_salina",
+    "administrator": null,
+    "claims": []
+   },
+   "marenna": {
+    "kind": "village",
+    "sovereign": "vessaro",
+    "holder": "person:24",
+    "controller": "vessaro",
+    "seat": "torre_salina",
+    "administrator": null,
+    "claims": []
+   },
+   "pellio": {
+    "kind": "village",
+    "sovereign": "vessaro",
+    "holder": "person:21",
+    "controller": "vessaro",
+    "seat": "vessara",
+    "administrator": null,
+    "claims": []
+   },
+   "sorra": {
+    "kind": "village",
+    "sovereign": "vessaro",
+    "holder": "person:23",
+    "controller": "vessaro",
+    "seat": "castel_verro",
+    "administrator": null,
+    "claims": []
+   }
+  },
+  "prisoners": [],
+  "allegiance": {
+   "kind": "independent",
+   "realm": null,
+   "since": 0,
+   "until": null,
+   "serviceDays": 0,
+   "summonsMissed": 0,
+   "history": [],
+   "window": null,
+   "lastOath": null,
+   "nextPay": null,
+   "served": null,
+   "hunt": null
+  },
+  "relations": {
+   "aurelian|valedorn": {
+    "state": "tension",
+    "since": 0,
+    "heat": 0,
+    "losses": 0,
+    "lastClash": null,
+    "incidentUntil": 0
+   },
+   "hrothmark|valedorn": {
+    "state": "peace",
+    "since": 0,
+    "heat": 0,
+    "losses": 0,
+    "lastClash": null,
+    "incidentUntil": 0
+   },
+   "valedorn|vessaro": {
+    "state": "peace",
+    "since": 0,
+    "heat": 0,
+    "losses": 0,
+    "lastClash": null,
+    "incidentUntil": 0
+   },
+   "merrow|valedorn": {
+    "state": "peace",
+    "since": 0,
+    "heat": 0,
+    "losses": 0,
+    "lastClash": null,
+    "incidentUntil": 0
+   },
+   "aurelian|hrothmark": {
+    "state": "peace",
+    "since": 0,
+    "heat": 0,
+    "losses": 0,
+    "lastClash": null,
+    "incidentUntil": 0
+   },
+   "aurelian|vessaro": {
+    "state": "peace",
+    "since": 0,
+    "heat": 0,
+    "losses": 0,
+    "lastClash": null,
+    "incidentUntil": 0
+   },
+   "aurelian|merrow": {
+    "state": "peace",
+    "since": 0,
+    "heat": 0,
+    "losses": 0,
+    "lastClash": null,
+    "incidentUntil": 0
+   },
+   "hrothmark|vessaro": {
+    "state": "peace",
+    "since": 0,
+    "heat": 0,
+    "losses": 0,
+    "lastClash": null,
+    "incidentUntil": 0
+   },
+   "hrothmark|merrow": {
+    "state": "peace",
+    "since": 0,
+    "heat": 0,
+    "losses": 0,
+    "lastClash": null,
+    "incidentUntil": 0
+   },
+   "merrow|vessaro": {
+    "state": "peace",
+    "since": 0,
+    "heat": 0,
+    "losses": 0,
+    "lastClash": null,
+    "incidentUntil": 0
+   }
+  },
+  "story": {
+   "flags": {},
+   "quests": {},
+   "visits": {}
+  },
+  "companion": null,
+  "news": {
+   "events": [],
+   "lines": [],
+   "next": 2,
+   "clashUntil": 0
+  },
+  "troopKnowledge": {
+   "levy": "seen",
+   "hunter": "seen",
+   "mercenary": "seen"
+  },
+  "chronicle": [
+   {
+    "day": 0,
+    "kind": "founded"
+   }
+  ],
+  "honour": {
+   "list": [],
+   "earlier": {
+    "fell": 0,
+    "deserted": 0,
+    "retired": 0
+   }
+  },
+  "accounts": {
+   "chest": 0,
+   "budgets": {}
+  },
+  "ledger": [],
+  "followers": {
+   "quartermaster": null,
+   "merchant": null,
+   "surgeon": null,
+   "blacksmith": null,
+   "scout": null
+  },
+  "medicine": 0,
+  "detachments": [],
+  "retinue": [],
+  "happenings": {
+   "open": [],
+   "past": [],
+   "cool": {},
+   "next": 2,
+   "nextId": 1
+  },
+  "tourney": {
+   "hosts": {
+    "stonebridge": {
+     "next": 4,
+     "wins": 0,
+     "entered": null
+    },
+    "eastwatch": {
+     "next": 7,
+     "wins": 0,
+     "entered": null
+    },
+    "hrothgard": {
+     "next": 10,
+     "wins": 0,
+     "entered": null
+    },
+    "vessara": {
+     "next": 13,
+     "wins": 0,
+     "entered": null
+    },
+    "merrow": {
+     "next": 16,
+     "wins": 0,
+     "entered": null
+    }
+   },
+   "open": [],
+   "bracket": null,
+   "rival": null
+  },
+  "businesses": {
+   "owned": [],
+   "past": []
+  }
+ }
+}

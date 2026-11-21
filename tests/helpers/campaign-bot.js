@@ -70,6 +70,17 @@ function makeBot(CL, { log = () => {}, style = 'hands-off', roam = false } = {})
       log(`day ${camp.day.toFixed(1)}: contract collected`);
     }
     spendPoints();
+    // The "landed" style (P8-05): it serves the kingdom whose capital it is in, swears when it may,
+    // takes the grants it is offered, and leaves the steward and the policies as they are.
+    if (style === 'landed') {
+      const f = CL.realm.owner(sid, camp);
+      const AL = CL.allegiance;
+      if (CL.realm.isRealm(f) && CL.realm.capitalOf(f) === sid) {
+        if (AL.preview(camp, 'swear', f).ok) AL.act(camp, 'swear', f);
+        else if (AL.state(camp).kind === 'independent' && AL.preview(camp, 'serve', f).ok) AL.act(camp, 'serve', f);
+        else if (AL.state(camp).kind === 'mercenary' && AL.state(camp).realm === f && AL.state(camp).until - camp.day < 5) AL.act(camp, 'renew', f);
+      }
+    }
     const s = CL.party.currentSettlement();
     if (s.services.includes('trade')) {
       const want = Math.ceil(U().dailyRations(camp) * 6 - camp.food);
@@ -322,7 +333,22 @@ function makeBot(CL, { log = () => {}, style = 'hands-off', roam = false } = {})
     for (let step = 0; step < maxSteps && c().day < end; step++) {
       stats.minGold = Math.min(stats.minGold, c().gold);
       const m = g.mode;
-      if (m === 'result') CL.world.returnToMap();
+      // The decisions that interrupt the map (P8-01, P8-05): a bot takes the default.
+      if (m === 'ransom') {
+        const x = CL.lords.offerDue(c());
+        if (x) CL.lords.answer(c(), x.lord, 'accept');
+        CL.ui.changeMode('map');
+        stats.decisions = (stats.decisions || 0) + 1;
+      } else if (m === 'grant') {
+        CL.fiefs.answer(c(), 'accept');
+        CL.ui.changeMode('map');
+        stats.decisions = (stats.decisions || 0) + 1;
+      } else if (m === 'conquest') {
+        if (g.conquest) CL.fiefs.conquered(c(), g.conquest, 'player', 'ask');
+        g.conquest = null;
+        CL.ui.changeMode('map');
+        stats.decisions = (stats.decisions || 0) + 1;
+      } else if (m === 'result') CL.world.returnToMap();
       else if (m === 'encounter') encounterTurn();
       else if (m === 'settlement' || m === 'town' || m === 'talk') settlementTurn(); // Stonebridge's streets too
       else if (m === 'map') {

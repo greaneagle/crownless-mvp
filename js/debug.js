@@ -505,6 +505,46 @@
         log('service days', { days: n });
         break;
       }
+      case 'conquer': {
+        // P8-05: the chosen fort taken for your realm, then the conqueror's choice.
+        const sid = $('#cheatHolding').value;
+        const f = CL.allegiance.sworn(c());
+        if (!f) return CL.ui.message('Swear to a realm first');
+        const right = CL.rights.may(c(), 'player', 'seize', sid);
+        if (!right.ok) return CL.ui.message(right.why);
+        if (CL.realm.sovereignOf(sid, c()) === f) return CL.ui.message('It is already your realm’s');
+        CL.realm.transfer(c(), sid, { controller: f, sovereign: f, by: 'player', reason: 'taken (debug)' });
+        log('conquered', { holding: sid, for: f });
+        toggle(false);
+        CL.ui.changeMode('map');
+        CL.ui.openConquest(sid);
+        return;
+      }
+      case 'grantsNow':
+        for (const g of c().grants) g.day = c().day;
+        CL.fiefs.weeklyGrants(c());
+        for (const g of c().grants) g.day = c().day;
+        CL.fiefs.decideGrants(c());
+        log('grants now', { waiting: c().grants.length });
+        if (CL.fiefs.grantDue(c())) {
+          toggle(false);
+          CL.ui.changeMode('map');
+          CL.ui.openGrant();
+          return;
+        }
+        break;
+      case 'fiefWeek': {
+        const line = CL.fiefs.payday(c());
+        log('fiefs week', { line });
+        break;
+      }
+      case 'fiefBroke':
+        for (const sid of CL.realm.fiefsOf('player', c())) {
+          const n = CL.fiefs.cash(c(), sid);
+          if (n > 0) CL.accounts.transfer(c(), CL.fiefs.account(sid), 'world', n, 'debug: emptied');
+        }
+        log('fief treasuries emptied');
+        break;
       case 'ransomNow': {
         const x = CL.lords.prisoners(c()).find((p) => p.by === 'player');
         if (!x) return CL.ui.message('You hold no prisoner');

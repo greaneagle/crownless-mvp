@@ -32,7 +32,8 @@
   const RANSOM = { base: 100, perTroop: 25, offerDays: [2, 4], escape: 0.03, escapeWeak: 0.08, weakBelow: 6, freedRenown: 5 };
   const AWAY_DAYS = [5, 15]; // a lord held off-screen by a realm comes home after this long
   const REGROUP = 0.4; // a lord back from captivity or defeat rides out with this share of their ranks
-  const LEADER = { hp: 2, damage: 1.35 }; // the lord in battle: their realm's best foot soldier, stronger
+  const LEADER = { hp: 2, damage: 1.35 };
+  const REFILL_COST = 3; // crowns a man, from a landed lord's fiefs (P8-05) // the lord in battle: their realm's best foot soldier, stronger
   const DEEDS_MAX = 12;
   const PRISONERS_MAX = 40;
   const WORDS = {
@@ -131,7 +132,25 @@
   /** Back home with thin ranks: the household refills to full strength. */
   function refill(c, p) {
     const full = troopsFor(c, p.lordId);
-    if (troopCount(p.troops) < troopCount(full)) p.troops = full;
+    const need = troopCount(full) - troopCount(p.troops);
+    if (need <= 0) return;
+    // P8-05: a landed lord pays for their men from their fiefs' treasuries (3 crowns a man); the landless
+    // are kept by their kin and the crown. What they can't pay for, they ride without.
+    const land = R().fiefsOf(p.lordId, c);
+    if (!land.length || !CL.fiefs) {
+      p.troops = full;
+      return;
+    }
+    let afford = 0;
+    for (const sid of land) {
+      const h = c.holdings[sid];
+      const n = Math.min(need - afford, Math.floor((h.treasury || 0) / REFILL_COST));
+      h.treasury -= n * REFILL_COST;
+      afford += n;
+      if (afford >= need) break;
+    }
+    const share = (troopCount(p.troops) + afford) / troopCount(full);
+    p.troops = afford >= need ? full : troopsFor(c, p.lordId, Math.max(share, troopCount(p.troops) / troopCount(full)));
   }
 
   /** Too few to ride on with: below half of full strength. */
@@ -305,6 +324,7 @@
     }
     ensure(c);
     if (offerDue(c) && CL.game.mode === 'map') CL.ui.openRansom?.();
+    else if (CL.fiefs?.grantDue(c) && CL.game.mode === 'map') CL.ui.openGrant?.();
   }
 
   /** Captured by a lord: the hero is ransomed and let go at that lord's home. Returns the lord's id, or null. */

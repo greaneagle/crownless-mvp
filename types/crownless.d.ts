@@ -210,6 +210,10 @@ declare global {
     /** v19 (P8-02): every settlement of a kingdom (not the free city), by settlement id. */
     holdings: Record<ContentId, Holding>;
     /** v20 (P8-01): lords held captive, by the player or off-screen by a realm. */
+    /** v22 (P8-05): the crown's grants waiting to be made. */
+    grants: { sid: ContentId; helper: string | null; day: number; declined: string[]; offeredTo: string | null; suggestedBy?: string }[];
+    /** v22 (P8-05): realm → your influence with its ruler (for P8-07). */
+    influence: Record<ContentId, number>;
     /** v21 (P8-04): independent, a realm's mercenary, or its vassal. */
     allegiance: { kind: 'independent' | 'mercenary' | 'vassal'; realm: ContentId | null; since: number; until: number | null; serviceDays: number; summonsMissed: number; history: any[]; window: { start: number; days: number } | null; lastOath: number | null; nextPay: number | null; served: number | null; hunt: { realm: ContentId; until: number } | null };
     prisoners: { lord: string; by: string; since: number; led: number; offerDay: number | null; offered: boolean; checked: number; release: number | null }[];
@@ -269,6 +273,24 @@ declare global {
     /** Villages: the fort or town they follow. */
     seat: ContentId | null;
     administrator: string | null;
+    /** v22 (P8-05): how it stands and runs. */
+    prosperity?: number;
+    unrest?: number;
+    garrison?: Record<ContentId, number> | null;
+    militia?: number | null;
+    policies?: { garrison: 'light' | 'normal' | 'strong'; tax: 'light' | 'normal' | 'heavy'; food: number; repairs: boolean };
+    walls?: number | null;
+    treasury?: number;
+    unpaid?: number;
+    deserting?: boolean;
+    desertDay?: number;
+    dueWeek?: number | null;
+    report?: any;
+    reports?: any[];
+    book?: any[];
+    castellan?: { kind: 'soldier'; id: number; name: string; soldier: any } | null;
+    castellanLeaving?: boolean;
+    crownLand?: boolean;
     claims: { by: string; realm: ContentId | null; since: number; kind: 'granted' | 'conquest' | 'old' }[];
   }
 
