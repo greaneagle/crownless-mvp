@@ -118,8 +118,11 @@ Phase 7   "The Living Company"  — the balance pass, followers, pursuit, office
                                   companions, traits, world events, tournament, a mill, battle extras
 Phase 8   "The Landed World"    — lords, holdings, permissions, allegiance, castellans, sieges, nobles;
                                   acceptance: Prototype D, "The Dispossessed Lord"
-Phase 9   "Kingdoms & Houses"   — realms, diplomacy, founding a kingdom, rebellion, armies, houses,
-                                  modding and a second world
+Phase 9   "Kingdoms & Houses"   — battles and the company at a bigger scale with command in layers,
+                                  realms, diplomacy, founding a kingdom, rebellion, armies, houses,
+                                  the lords' loose ends, modding and a second world
+Phase 10  "Ways In"             — onboarding, origin stories with their own opening quests, and a
+                                  more varied world to start in (more to come from the owner's testing)
 ```
 
 Each phase ends playable, measured and documented. The order follows the design's dependency map (Part 2 §26.6) with one change: **the world grows first**, at the owner's request.
@@ -289,15 +292,28 @@ All of Phase 9 is **Provisional**, except the three battle-scale tasks at its he
 | **P9-B1** | **Battle size, measured and raised:** a phone benchmark at 40, 60, 80, 100, 120 and 150 fighters; the performance work it shows is needed (cheaper thinking and drawing for far and idle fighters); the battle size adjustable in Settings from 20 to 150, with a default chosen by the measurement | M–L | B-01, P7-11 |
 | **P9-B2** | **Proportional battles, reserves on both sides:** the field shared by army size (300 against 200 at a size of 100 fights 60 against 40), both sides feeding in reserves as their men fall, and nearby parties joining a side's reserve; waves kept only for fixed encounters | M | P9-B1, V2-09 |
 | **P9-B3** | **A bigger company:** no hard cap of 20; a limit up to 200 grown by Leadership, renown, companions as officers and land; wages, food, recruits, the Party screen and the world's other parties scaled to match | M–L | P9-B2, P8-05 |
+| **P9-B4** | **Command in layers:** divisions you name and fill, formations per division, and four depths of command, each optional: none (a good plan chosen for you), orders by troop type, captains and placing each division, and live command on the field (timed flanks, falling back before a volley) | L | P9-B2 |
 | **P9-01** | Realms as organisations | M | P8-02, V2-11 |
 | **P9-02** | Diplomacy and treaties (grows from W-07's war and peace) | M | W-07, P9-01 |
 | **P9-03** | Founding or taking a kingdom (with rebel, sovereign and independent holdings, moved from P8-04), by the player or an AI lord | M | P8-04, P9-01 |
 | **P9-04** | Rebellion and deposition (AI lords as claimants who can take the ruler's office) | L | P8-07, P9-03 |
 | **P9-05** | Armies and campaigns (and towns changing hands, moved from Phase 8) | L | P8-06a, P8-06b, W-07, P9-B3 |
 | **P9-06** | Houses, marriage and claims (with lords' deaths and heirs, moved from Phase 8) | M | P8-07 |
+| **P9-L1** | **The living lords' loose ends** (from P8-07 and P8-08): lords ransoming each other's kin, asking each other for men, the land-hungry seeking sieges beyond the summons, the "escort my caravan" petition, and getting a lost fort back for service as well as for a price | M | P8-07, P8-08 |
 | **P9-07** | Modding: a declarative content format (namespaced ids moved here from W-04) | M–L | W-04 |
 | **P9-08** | Creator tools and a second world | L | P9-07 |
 | **P9-T** | Tuning and acceptance (SC-29, SC-41, the full matrix) | M | all above |
+
+## 6b. Phase 10 — "Ways In"
+
+All of Phase 10 is **Provisional**: the owner adds to it after in-depth testing and players' feedback. Its aim is a diverse, welcoming entry into the world, and a world that feels lived in from the first hour.
+
+| ID | Task | Size | Needs |
+|---|---|---|---|
+| **P10-01** | **Onboarding:** a first-time guide through the systems as you meet them (the map, a battle, a town, the Realms screen), and How to Play arranged by stage (captain, vassal, lord, ruler), every hint skippable | M | Phase 9 |
+| **P10-02** | **Origin stories with their own opening quests:** each origin begins in its own situation, its first quest leading into the world (for one: thrown from your horse, its thief gone into the woods, at a town's gate where the innkeeper offers rest and work; for an impoverished noble, a family matter) | L | P10-01 |
+| **P10-03** | **More origins, and other ways to begin:** more backgrounds (a noble house's younger child, a soldier left after a war, a merchant's heir, a pilgrim…), each with its standing, kin, money and first contacts; perhaps a start inside a realm's politics | M–L | P10-02, P9-06 |
+| **P10-04** | **Women soldiers** as troop types of their own (promised in D-P8g): lines in the realms where they fit, with their own names and portraits | M | P9-B3 |
 
 ## 7. Order, versions, saves and the per-task contract
 
@@ -312,11 +328,12 @@ All of Phase 9 is **Provisional**, except the three battle-scale tasks at its he
 6. **W-07,** then **W-08.** **W-09** if the owner chooses impassable terrain (D-W4), or before P7-04's "Avoid danger" routes.
 7. **B-01** early in Phase 7, then Phase 7 roughly in table order (P7-04 before P7-02; P7-05 before P7-06).
 8. **Phase 8** in the build order of §5 (re-specified 2026-11-20): P8-02, P8-03, P8-01, P8-04, P8-05, P8-06a, P8-06b, P8-07, P8-08, P8-T. W-09 is not needed: sieges and lords move on passable terrain.
-9. **Phase 9,** re-specified at its start, except its head: **P9-B1, P9-B2, P9-B3** first, in that order (owner, 2026-11-22), then the rest. P9-B1's phone measurement decides how far P9-B2 and P9-B3 can go.
+9. **Phase 9,** re-specified at its start, except its head: **P9-B1, P9-B2, P9-B3, P9-B4** first, in that order (owner, 2026-11-22), then the rest. P9-B1's phone measurement decides how far P9-B2 and P9-B3 can go. P9-L1 fits anywhere after the head.
+10. **Phase 10,** after Phase 9 ships 4.0.0, specified then with the owner's points from testing and players' feedback.
 
 ### Versions (owner decision D-V1)
 - Proposed: each finished task bumps the minor version (2.1.0, 2.2.0, …); fixes bump the patch.
-- The end of Phase 8 ships **3.0.0**, the end of Phase 9 **4.0.0**.
+- The end of Phase 8 ships **3.0.0**, the end of Phase 9 **4.0.0**, the end of Phase 10 **5.0.0**.
 - H-01 and documentation-only work bump the patch.
 
 ### Save schema steps (each with a migration, fixtures from the build before it, and SAVE-FORMAT updated)
@@ -396,6 +413,8 @@ Decisions marked **blocking** must be made before the named task starts. The oth
 | **D-P9a** | How large may a battle be, and who sets it? | **Owner, 2026-11-22:** adjustable in Settings, from 20 up to **150** fighters on the field at once; the default is the largest size the owner's phone holds at 30 fps or better in P9-B1's benchmark (100 is the hope). Battles of 200 at once are not a goal | P9-B1 |
 | **D-P9b** | How large may the company be? | **Owner, 2026-11-22:** up to **150–200**, not 20; it grows with Leadership, renown, companions (as officers) and land, with a hard ceiling (200 proposed). Those beyond the field come in as reserves | P9-B3 |
 | **D-P9c** | How are big armies shared on the field? | **Owner, 2026-11-22: as in Mount & Blade.** Each side's share of the field is its share of the fighters (300 against 200 at a size of 100: 60 against 40, never fewer than 10 a side); both sides send reserves in as men fall, keeping that share; a fixed encounter (a lair, a story fight) keeps its waves | P9-B2 |
+| **D-P9d** | How large may a save be? | **Owner, 2026-11-22: up to 10 MB; never optimise for size.** The world-sim test's limit is 4 MB (from 100 KB), because the browser's `localStorage` holds about 5 MB; past that the save moves to IndexedDB (a task when a save nears 4 MB) | — |
+| **D-P9e** | How deep is command in battle? | **Owner, 2026-11-22: in layers, every one optional.** 1: no orders, a good plan chosen for you from your soldiers and the field; 2: orders by troop type (cavalry follow me, infantry charge, archers hold); 3: captains and placing each division; 4: live command on the field (positions, coordinated flanks, falling back before your archers loose). Defaults must make the first layer fun | P9-B4 |
 
 ### D-P8b and D-P8c in full (owner, 2026-11-20: the defaults, accepted)
 
@@ -429,7 +448,7 @@ Decisions marked **blocking** must be made before the named task starts. The oth
 |---|---|
 | Map gestures set off travel by accident | W-02's gesture state machine; Node tests of it and W-00 browser tests that drag and pinch without travelling |
 | A bigger world slows the phone | W-07 grid, swept contacts and budgets; H-01's map benchmark; W-02's cached terrain layer and culling; a Debug-panel map test for the Zenfone that reports drawing and simulation ms |
-| Saves grow too large for `localStorage` or too slow to write on the phone | Today's played save is about 15 KB. W-07 adds a size test (a 90-day, 80-party save under 100 KB) and measures a save write on the phone |
+| Saves grow too large for `localStorage` or too slow to write on the phone | Owner, 2026-11-22 (D-P9d): up to 10 MB is fine; nothing is optimised for size. The browser's `localStorage` holds about 5 MB, so the world-sim test fails past 4 MB, and the save moves to IndexedDB before it gets there. W-07 measured a save write on the phone |
 | An old migration changes meaning when content changes later | Migrations stay pure: W-06's offset is a constant written into the migration, never read from the current world data |
 | Saves broken between builds | W-05b and W-06 ship together; fixtures from 2.0.0 before content changes; the pre-migration copy; SC-33's protections |
 | Hidden 0–100 assumptions | W-04 removes every hard-coded bound, with a test that the literals are gone and a test world bigger than 100 |
@@ -511,3 +530,4 @@ Decisions marked **blocking** must be made before the named task starts. The oth
 35. **Owner, 2026-11-20: men and women (D-P8g).** People have a gender; noblewomen hold land, lead parties and rule. Regular soldiers are men, so P8-02 splits each name culture's given names and soldiers draw only men's names; women soldiers come later as their own troop types.
 36. **P8-02 details settled at the check:** the domain event is `HoldingChanged` (the events are PascalCase, and nothing listens yet); the story lock is enforced in grants, sieges and the Debug panel, not in `setOwner`, so the existing tests that move Greywall before Q4 stay as they are; a village may have no seat only when its kingdom holds no fort or town (the W-04 test world's Iron Reach); the v19 migration's constants are for `sundered_realm`, and other worlds' saves keep only their owner overrides for `sanitize` to complete.
 37. **Owner, 2026-11-22: battles and the company at Mount & Blade's scale.** The company limit of 20 and the battle size of 40 are too small: the company should reach 150–200 (D-P9b) and a battle 100–150 at once, adjustable (D-P9a), with big armies sharing the field by size and both sides reinforcing from reserves (D-P9c). Three tasks open Phase 9, P9-B1 (measure on the phone and raise the battle size), P9-B2 (proportional battles) and P9-B3 (the bigger company), before armies (P9-05), which now needs them.
+38. **Owner, 2026-11-22: what else Phase 9 needs, and Phase 10.** The save budget goes: up to 10 MB is fine (D-P9d), the world-sim test now fails past 4 MB, where `localStorage` (about 5 MB) would force a move to IndexedDB. Command comes in four optional layers, from none to live command, with divisions and formations (D-P9e, P9-B4). The Phase 8 loose ends go to Phase 9 as P9-L1, for a living world. Onboarding, origin stories with their own opening quests, more origins and women soldiers go to a new Phase 10, "Ways In", which the owner will add to after testing.

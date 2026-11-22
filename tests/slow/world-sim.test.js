@@ -1,6 +1,8 @@
 // W-07 (slow): 80 parties over 90 days of rest, headless (scripts/bench-map.js --season). The world
 // stays full, no day takes far longer than the rest (no slowdown spikes), and the save of that world
-// stays inside its budget: under 100 KB. And fast-forward equivalence: a long rest in one step plays out
+// stays inside its budget: under 4 MB (owner, 2026-11-22, D-P9d: up to 10 MB is fine, but the browser's
+// localStorage holds about 5 MB, so past 4 MB the save moves to IndexedDB first).
+// And fast-forward equivalence: a long rest in one step plays out
 // like the same rest a day at a time (checked statistically: step size changes how the random streams
 // are drawn, so only the kinds and amounts of what happens can match).
 const test = require('node:test');
@@ -8,10 +10,10 @@ const assert = require('node:assert/strict');
 const { season } = require('../../scripts/bench-map');
 const { loadGame } = require('../helpers/load');
 
-test('80 parties over 90 days: steady day times, and the save stays under 100 KB', () => {
+test('80 parties over 90 days: steady day times, and the save stays under 4 MB', () => {
   const r = season(80, 90);
   assert.ok(r.live >= 70, `the world stays full: ${r.live} parties`);
-  assert.ok(r.saveKb < 100, `save ${r.saveKb.toFixed(1)} KB`);
+  assert.ok(r.saveKb < 4096, `save ${r.saveKb.toFixed(1)} KB`);
   assert.ok(r.worst < 3 * r.median, `worst day ${r.worst.toFixed(1)} ms against a median of ${r.median.toFixed(1)} ms`);
 });
 

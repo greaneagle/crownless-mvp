@@ -2438,7 +2438,7 @@ Needs are computed, not saved.
 
 ## Phase 9 — Kingdoms & Houses (Provisional)
 
-The phase opens with three battle-scale tasks (owner, 2026-11-22; decisions D-P9a–D-P9c), **Specified**, built first and in order. The rest of the phase is re-specified at its start.
+The phase opens with four battle-scale tasks (owner, 2026-11-22; decisions D-P9a–D-P9e), **Specified**, built first and in order. The rest of the phase is re-specified at its start.
 
 ### P9-B1 · Battle size, measured and raised (M–L) — Specified
 
@@ -2495,7 +2495,7 @@ The phase opens with three battle-scale tasks (owner, 2026-11-22; decisions D-P9
 - **The world to match:** lords' households and the realms' patrols grow (the lords from 12–30 to about 40–120 by what they hold); bands of Reavers larger in the wild; garrisons; sieges' numbers (P8-06a's ratios kept).
 - **The Party screen for a big company:** soldiers grouped by troop with counts, expanded on a tap; upgrades by group; the phone layout kept.
 - **Detachments** (P7-05) may take more, and lead more.
-- **Save:** none expected (the roster is already a list); if one is needed, a schema step with fixtures as usual.
+- **Save:** none expected (the roster is already a list); if one is needed, a schema step with fixtures as usual. Size is not a concern (D-P9d: up to 10 MB); if a save nears 4 MB, it moves to IndexedDB first.
 
 **Tests.**
 - The limit from each part, and the ceiling.
@@ -2504,6 +2504,42 @@ The phase opens with three battle-scale tasks (owner, 2026-11-22; decisions D-P9
 - Browser: the Party screen with 150 soldiers at both sizes.
 
 **Acceptance.** A company grows past 100 in play, the battles it fights use P9-B1's size and P9-B2's sharing, and the economy and the bots stay healthy.
+
+### P9-B4 · Command in layers (L) — Specified
+
+**Problem.** Today's orders (infantry, archers and cavalry; Follow, Hold, Charge; the shield wall and wedge; Rally) suit 20 soldiers. With 60–100 of yours on the field there is more to command. As everywhere in the game (D-P9e): the defaults should make just playing fun, and every deeper layer should be there for whoever wants it.
+
+**Build.**
+- **Divisions:** up to six (proposed), each a named group with a banner colour. A default split comes from your soldiers: infantry, archers, cavalry, and a second infantry or archer division when a type is large. You can move soldiers or whole troop types between divisions on the Prepare screen (or the Party screen) and rename them. Each keeps its own formation: loose, shield wall, wedge, and (new) a line, a column and a square against cavalry.
+- **Layer 1: no orders.** A plan is chosen for you from your divisions, the enemy's and the field (archers on a rise, infantry ahead of them, cavalry on the open flank, Hold against a stronger enemy, Charge against a weaker one), and the divisions carry it out. It is the default, and should win fair fights well.
+- **Layer 2: orders by type** (as now, per division): "cavalry, follow me; infantry, charge; archers, hold", with the formation row.
+- **Layer 3: captains and placement.** On the Prepare screen, each division gets a captain from your veterans or companions (their skill steadies and speeds it, as a detachment's captain), a place to stand and a facing; a few saved plans of your own (as Custom is today).
+- **Layer 4: live command.** During the battle, the tactical map (MAP) takes orders for each division: move to a point, face, hold, charge a chosen enemy group, fall back to a point; orders timed together ("cavalry round the left when the archers loose", "infantry back ten paces before the volley"). A pause keeps the phone usable.
+- **The phone:** layers 1 and 2 need no more than today's buttons; layer 4 lives on the tactical map, one division at a time, with large targets.
+- **The enemy** uses the same plans (layer 1, and layer 3's placement), so big battles have shape on both sides.
+
+**Layers.** As the build says: each one optional; nothing deeper is ever needed to win a fair fight.
+
+**Tests.**
+- The default split and plan from different companies and fields.
+- Each layer's orders reach the right division; timed orders fire in turn.
+- Parity (B-01): fought battles at layer 1 within 5–15 points over the odds, at 40 and at 100.
+- Browser: dividing the company, a captain and a placement on the Prepare screen, and a live order on the tactical map, at both sizes.
+
+**Acceptance.** A hands-off player wins fair big battles with no orders; an expert can stage a flank and a timed retreat on the phone.
+
+### P9-L1 · The living lords' loose ends (M)
+
+**Problem.** P8-07 and P8-08 left a few pieces of the lords' politics out. They make the world feel lived in (owner, 2026-11-22).
+
+**Build.**
+- **Lords ransom each other's kin:** a lord held by another realm is ransomed by their landed kin (paid from their fiefs), or by a friend at that court; the kin remember who held them and who paid.
+- **Lords ask each other for men:** a lord short of men asks a friend or kinsman, answered by P8-07's model.
+- **The land-hungry seek sieges** beyond the summons: a landless lord with a claim, or hungry for land, asks their ruler to press it (as you can, P8-08) and joins a siege that could win it.
+- **The "escort my caravan" petition** (the sixth of P8-07's petitions), with a caravan of the lord's own.
+- **A lost fort back for service:** P8-08's buying back also offered for a term of service to the realm holding it (the mercenary's 30 days, or a campaign).
+
+**Tests.** Each piece in the landed world (`npm run landed`) and as a scripted case; no churn (P8-07's cooldowns).
 
 ### P9-01 · Realms as organisations (M)
 
@@ -2570,3 +2606,33 @@ The phase opens with three battle-scale tasks (owner, 2026-11-22; decisions D-P9
 - The full scenario matrix SC-01–42.
 
 **Version.** 4.0.0 (proposed).
+
+---
+
+## Phase 10 — Ways In (Provisional)
+
+The owner adds to this phase after in-depth testing and players' feedback (2026-11-22). Its aim: a diverse, welcoming way into the world, and a world that feels lived in from the first hour.
+
+### P10-01 · Onboarding (M)
+
+**Build.**
+- A first-time guide through each system as you first meet it: the map and travel, a battle, a town, a contract, the Realms screen, a siege. One step at a time, each skippable, never repeated (P7's tips grow into it).
+- How to Play arranged by stage: a captain, a vassal, a lord, a ruler. What matters now first, the rest a tap away.
+
+### P10-02 · Origin stories with their own opening quests (L)
+
+**Build.**
+- Each origin begins in its own situation, with an opening quest that leads into the world and its people. For example:
+  - **thrown from your horse:** bandits ride off with it, and you stand at a town's gate; the innkeeper offers rest, and work that leads after the thieves;
+  - **an impoverished noble:** a family matter (a debt, a lost seat, a sibling held for ransom) that leads into a realm's politics.
+- The story's first quest (Q1) is then one way in among several, not the only one.
+
+### P10-03 · More origins, and other ways to begin (M–L)
+
+**Build.**
+- More backgrounds, each with its standing, kin, money and first contacts: a noble house's younger child, a soldier left after a war, a merchant's heir, a pilgrim, and others from the owner's list.
+- Perhaps a start inside a realm's politics (sworn already, or a household knight), once houses exist (P9-06).
+
+### P10-04 · Women soldiers (M)
+
+**Build.** Troop types and lines of their own where they fit the realms (promised in D-P8g, P8-02), with their own names and portraits.
