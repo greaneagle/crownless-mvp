@@ -80,7 +80,7 @@ test('the enemy picks on the exposed: an archer or the wounded a little further 
   assert.equal(e2.target, lone.g.hero, 'a hero away from the company is fair game');
 });
 
-test('the enemy keeps a loose line: a soldier far ahead of the rest waits for them (unless it has the numbers)', () => {
+test('the enemy keeps a loose line: a soldier far ahead of the rest waits for them, even with the numbers (P9-B2)', () => {
   const { CL, g } = field({ looter: 4 }, ['levy', 'levy', 'levy']);
   for (const a of g.allies) Object.assign(a, { x: 120, y: 300 });
   const [front, ...rest] = g.enemies;
@@ -102,7 +102,8 @@ test('the enemy keeps a loose line: a soldier far ahead of the rest waits for th
   const x0 = front.x;
   CL.combat.update(0.1);
   assert.ok(x0 - front.x > behind * 0.8, 'no waiting once close');
-  // Outnumbering the company by more than a quarter, it swarms: no line, nobody waits.
+  // P9-B2: outnumbering the company (here 6 to 2), it still keeps its line (before 3.2.0, it swarmed:
+  // with bands in waves of 8 that was fairer; as one army it made such fights far too easy).
   const s = field({ looter: 6 }, ['levy']);
   const [run, ...pack] = s.g.enemies;
   Object.assign(s.g.hero, { x: 200, y: 300 });
@@ -114,8 +115,8 @@ test('the enemy keeps a loose line: a soldier far ahead of the rest waits for th
   for (const e of s.g.enemies) Object.assign(e, { target: s.g.hero, aiTimer: 9 });
   const [r0, p0] = [run.x, pack[0].x];
   s.CL.combat.update(0.1);
-  assert.equal(s.g.enemyLine, null);
-  assert.ok(r0 - run.x > (p0 - pack[0].x) * 0.8, 'the runner keeps running');
+  assert.notEqual(s.g.enemyLine, null);
+  assert.ok(r0 - run.x < (p0 - pack[0].x) * 0.5, 'the runner waits for the rest');
 });
 
 test('enemy morale: a little steadier than the company, and a band defending its lair minds odds half as much', () => {

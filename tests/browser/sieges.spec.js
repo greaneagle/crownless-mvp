@@ -36,7 +36,9 @@ test('Sieges: at Castra Nova at war, the Besiege preview, then your siege’s ch
   await expect(page.locator('#siegeHere .siegeCard')).toContainText(/Storm it now: about \d+%\./);
   await press(page, '#siegeLift');
   await expect(page.locator('#siegeHere .siegeCard')).toHaveAttribute('data-siege', 'none');
-  expect(await game(page, (CL) => CL.campaign.sieges.length)).toBe(0);
+  // Yours is over. (Valedorn and Aurelia are at war: during the day you waited, Aurelia's lords may
+  // begin a siege of their own elsewhere, as the AI does.)
+  expect(await game(page, (CL) => CL.campaign.sieges.filter((s) => s.by !== 'ai').length)).toBe(0);
 });
 
 test('Sieges: your fort besieged interrupts the map with Ride back or Leave it', async ({ page }) => {

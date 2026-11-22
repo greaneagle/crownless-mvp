@@ -1,18 +1,20 @@
-// P7-T: the Phase 7 exit (design §26.3) as a scripted 90-day scenario. "An independent player builds a
+// P7-T: the Phase 7 exit (design §26.3) as a scripted 100-day scenario. "An independent player builds a
 // lasting company with non-combat roles, delegates, earns through trade or property, and meets dynamic
-// consequences, without needing a title." The expert bot (tests/helpers/campaign-bot.js) plays 90 days
-// of the real campaign with the world's events running, saving at day 45 and playing on from the
+// consequences, without needing a title." The expert bot (tests/helpers/campaign-bot.js) plays 100 days
+// of the real campaign with the world's events running, saving halfway and playing on from the
 // reloaded save (scripts/prototype-g.js). Two seeds; about two minutes.
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { run } = require('../../scripts/prototype-g');
 
 for (const seed of [1, 2]) {
-  test(`the Phase 7 exit holds over 90 days (seed ${seed})`, () => {
-    const r = run(seed, 'expert', 90);
-    // A lasting company: still there at day 90, resumed from its save, never stuck or starving.
+  // 100 days from 3.2.0 (90 before): bands now fight as one army (P9-B2), the company earns a little
+  // less early on, and on seed 1 its mill is bought a week later, so by day 90 it had run one week.
+  test(`the Phase 7 exit holds over 100 days (seed ${seed})`, () => {
+    const r = run(seed, 'expert', 100);
+    // A lasting company: still there at day 100, resumed from its save, never stuck or starving.
     assert.equal(r.resumed, true, 'resumed from the day-45 save');
-    assert.ok(r.day >= 90 - 1e-6);
+    assert.ok(r.day >= 100 - 1e-6);
     assert.ok(r.soldiers >= 10, `soldiers: ${r.soldiers}`);
     assert.equal(r.stuck, 0);
     assert.ok(r.warnings <= 6, `hardship warnings: ${r.warnings}`);

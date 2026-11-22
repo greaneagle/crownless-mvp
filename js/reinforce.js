@@ -206,6 +206,7 @@
     const list = A().expand(j.troops);
     const ally = j.side === 'ally';
     const alive = (arr) => arr.reduce((n, u) => n + (u.alive && !u.routing ? 1 : 0), 0);
+    if (g.share) return arriveShared(g, j, list, ally, alive);
     let room = CL.combat.BATTLE.activeCap - alive(g.allies) - (g.hero.alive ? 1 : 0) - alive(g.enemies);
     let waiting = 0;
     for (const troop of list) {
@@ -223,6 +224,23 @@
     else g.enemyCap = Math.max(g.enemyCap ?? 0, alive(g.enemies));
     CL.ui.message(ally ? `The ${j.name} arrive to fight beside you!${waiting ? ` (${waiting} more waiting)` : ''}` : `More ${j.name} join the fight!${waiting ? ` (${waiting} more waiting)` : ''}`);
     CL.diag.log('info', 'Reinforcements arrived', { party: j.id, side: j.side, troops: j.troops, waiting });
+  }
+
+  /**
+   * P9-B2: in a shared battle a party that rides in joins its side's reserve, first in line, and the
+   * field is shared again by the new numbers (nobody already fighting leaves it). Its men still ride
+   * in from their own side of the field. @param {any} g @param {any} j @param {string[]} list
+   */
+  function arriveShared(g, j, list, ally, alive) {
+    const reserve = ally ? g.allyReserve : g.enemyReserve;
+    reserve.unshift(...list.map((troop) => (ally ? { troop, soldierId: null, join: j.id } : { troop, join: j.id })));
+    const mine = alive(g.allies) + (g.hero.alive ? 1 : 0) + g.allyReserve.length;
+    const theirs = alive(g.enemies) + g.enemyReserve.length;
+    const s = CL.combat.shareOf(CL.combat.BATTLE.activeCap, mine, theirs);
+    Object.assign(g, { allyCap: s.allies, enemyCap: s.enemies });
+    CL.ui.message(ally ? `The ${j.name} (${list.length}) arrive to fight beside you!` : `More ${j.name} (${list.length}) join the enemy!`);
+    CL.diag.log('info', 'Reinforcements arrived', { party: j.id, side: j.side, troops: j.troops, share: s });
+    CL.combat.reinforce(g); // as many as there is room for ride straight in
   }
 
   /** Each frame of a battle: warnings and arrivals. @param {any} g */

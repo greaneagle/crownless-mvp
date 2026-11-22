@@ -11,6 +11,8 @@ test('battle extras: each effect, on and off, makes a measurable difference', ()
   const { 'wall-melee': wm, 'wall-arrows': wa, wedge, hill, ford, wagon } = out;
   assert.ok(wm.on.lost < wm.off.lost, `the shield wall loses fewer soldiers to Reavers (${wm.on.lost} vs ${wm.off.lost})`);
   assert.ok(wa.on.win > wa.off.win && wa.on.lost < wa.off.lost, `the shield wall stands up to crossbows (${wa.on.win}% vs ${wa.off.win}%)`);
+  // P9-B2: against 8 at once (its scenario since 3.2.0). It loses more men than loose ranks, and against
+  // 11 at once it wins less often: an open point for P9-B4's formations (docs/NEXT-TASKS.md, P9-B2).
   assert.ok(wedge.on.win >= wedge.off.win, `the wedge wins at least as often (${wedge.on.win}% vs ${wedge.off.win}%)`);
   assert.ok(hill.on.win > hill.off.win, `archers on the knoll beat the crossbows more often (${hill.on.win}% vs ${hill.off.win}%)`);
   assert.ok(Math.abs(ford.on.lost - ford.off.lost) >= 0.2, `wading breaking the wedge changes the fight (${ford.on.lost} vs ${ford.off.lost} lost)`);

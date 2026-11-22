@@ -202,13 +202,16 @@ test('a failed retreat forces the battle against exactly that band', () => {
   assert.deepEqual([looters, reavers], [p.troops.looter, p.troops.reaver]);
 });
 
-test('bands larger than 8 fight in waves of up to 8', () => {
+test('a band on the map fights as one army sharing the field (P9-B2); a story band keeps its waves of up to 8', () => {
   const { CL } = loadGame();
   const t = CL.content.get('party_templates', 'bandits');
-  const def = CL.parties.battleDef(t, { looter: 7, reaver: 4 });
-  assert.equal(def.waves.length, 2);
   const size = (w) => Object.values(w).reduce((a, b) => a + b, 0);
-  assert.deepEqual(Array.from(def.waves, size), [8, 3]);
+  const army = CL.parties.battleDef(t, { looter: 7, reaver: 4 });
+  assert.equal(army.share, true);
+  assert.deepEqual(Array.from(army.waves, size), [11]);
+  const story = CL.parties.battleDef(t, { looter: 7, reaver: 4 }, 'open_country', { share: false });
+  assert.equal(story.share, undefined);
+  assert.deepEqual(Array.from(story.waves, size), [8, 3]);
 });
 
 test('auto-resolve win: band destroyed, reward paid, someone always falls, exactly once', () => {

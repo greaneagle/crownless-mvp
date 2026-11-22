@@ -2502,7 +2502,7 @@ The phase opens with four battle-scale tasks (owner, 2026-11-22; decisions D-P9a
 - **The owner's phone benchmark (3.1.1, 2026-11-22):** every size from 40 to 150 at 60 fps, the slowest frame 17 ms. At 150: 2.4 ms of simulation and 2.6 ms of drawing a frame; at 40: 1 and 1.9. The acceptance holds (100 at 30 fps or better, with room to spare). The default is 150 on phones and computers, and the size now goes to **200** (the owner: "we could even go bigger"): Settings and the Debug panel offer 160 to 200, the large field grows to 4.2 screens at 200 (3.7 at 150), 200 joins the benchmark and Stress 200 the panel. In Node, 200 costs 2.7 ms a frame. 200 is a choice, not the default, until a benchmark shows it holds.
 - **Found for P9-B2:** fighters running from the field hold no place, so reserves step in while they are still on it (up to 193 drawn at a size of 150); and at 150 the reserves come in three at a time with a message each, which is too many messages.
 
-### P9-B2 · Proportional battles, reserves on both sides (M) — Specified
+### P9-B2 · Proportional battles, reserves on both sides (M) — ✅ Done in 3.2.0
 
 **Problem.** Today the enemy takes up to half of the field whatever the sizes, in waves, and only your side and helpers come in as reserves. In Mount & Blade, 300 meeting 200 fight in that proportion, and both sides send in reserves as men fall (D-P9c).
 
@@ -2521,6 +2521,30 @@ The phase opens with four battle-scale tasks (owner, 2026-11-22; decisions D-P9a
 - Browser: a 60-against-40 battle with both reserves coming in, at both sizes.
 
 **Acceptance.** A battle between two large parties fights in proportion, and both sides reinforce until one is beaten.
+
+**Done (3.2.0).**
+- **One army, not waves:** a band, patrol, caravan or lord met on the map (`parties.battleDef`) is one army (`share`), no longer cut into waves of 8. A story band keeps its waves; so do lairs, the tournament and the walls' assault.
+- **The share** (`CL.combat.shareOf`): everyone fights if everyone fits; otherwise each side gets the battle size in proportion to its numbers, never fewer than 10 (or all of a smaller side). Yours count the hero, the fit companions and the healthy soldiers. 300 against 200 at 100: 60 and 40.
+- **Reserves on both sides** keep their share as men fall or flee. They come in groups that grow with the size (3 at 40, 8 at 200), from behind their own standing line (its rearmost, 150 px further back, slid along until no opponent is close), five abreast. A shared battle says so at most every 6 seconds a side (before, a message for every 3).
+- **Parties riding in** (V2-09) join their side's reserve first in line, the share is worked out again by the new numbers (nobody already fighting leaves), and as many as there is room for ride straight in from their own side of the field.
+- **The end, morale, results:** as before. A side is beaten when its field and reserve are spent; morale already counted the reserve; Simulate counts everyone; the result commits once; only those who reached the field are rolled for.
+- **The Prepare screen** says "You: 150, 60 on the field. Them: 100, 40. The rest step in as men fall." (or that everyone fits).
+- **B-01's balance, re-measured** (`node scripts/parity.js`, 40 seeds):
+
+  | | lone hero | small | close | veterans | outnumbered |
+  |---|---|---|---|---|---|
+  | 3.1.1 (waves of 8) | +14 | +11 | +14 | +1 | +4 |
+  | 3.2.0 as one army, B-01's line as it was | +14 | +11 | +14 | −44 | +26 |
+  | 3.2.0 (line loosened, always kept) | +14 | +11 | +19 | +4 | +16 |
+
+  As one army, the enemy's loose line made the equal fight hopeless (fought 35% against odds of 79%), and its swarming when it had the numbers made the outnumbered fight easy. The line's slack is now 175 px (from 55), and it is kept whatever the numbers (`ENEMY.lineOutnumber` is infinite). The three close fights average +13 (target 5–15).
+- **Big battles** (`node scripts/parity.js --big`, 20 seeds; the close fights eight and six times over): close ×8 +37 at a size of 40 and at 100, veterans ×6 +29 at 40 and −6 at 100. All end. The slow parity test checks that they end and that fighting is never more than 15 under the odds; it sets no ceiling yet.
+- **Not done:** a ceiling for big battles. A company with many archers wins big fights far above the odds Simulate states, because Simulate values an archer like any soldier of its tier, and many archers firing together win battles. That is for P9-B4 (the enemy's plans) and P9-T (Simulate's tuning). Fighters running from the field still free their place at once (up to about 190 drawn at a size of 150): left as the spec has it ("as fighters fall or flee").
+- **The checkpoint (the whole slow suite, the full browser suite) found three more, fixed:**
+  - `battle-extras`: against 6 and 6 crossbows the company now won every time with or without the shield wall, so they are 8 and 8 (the wall: 85% against 42.5%). The wedge now meets 8 at once (the old first wave), where it wins as often as loose ranks but loses more men; **against 11 at once it wins less often (85% against 95%)**, and a stronger first blow doesn't mend it (no shield cover against a line that holds): open for P9-B4's formations.
+  - The Phase 7 exit, seed 1: the company earns a little less early (1,780 crowns at day 90 against 2,402) and buys its mill a week later, so at day 90 the mill had run one week (−26). It earns from then (+40 by day 97, +109 by day 104): the exit now runs 100 days.
+  - The sieges browser spec checked that no siege at all was left after Lift; at war, Aurelia's lords may begin their own during the day you wait (it failed 1 in 10 before 3.2.0, more often after). It now checks that yours is over.
+- **Played:** a 150-against-100 battle at 100 in the browser at 812×375: the Prepare line, the field at 60 and 40, both reserves coming in, the win at 64 s with 4 of 149 lost.
 
 ### P9-B3 · A bigger company (M–L) — Specified
 

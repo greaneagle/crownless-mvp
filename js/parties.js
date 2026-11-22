@@ -669,7 +669,7 @@
       const lord = p.lordId && c.people?.[p.lordId] ? CL.lords.describe(c, p) : null; // P8-01: who, and what they're doing
       const words = (hostile && t.hostileText ? t.hostileText : t.text).replace('{lord}', lord ? CL.realm.titled(p.lordId, c) : t.name);
       const text = spec?.text || ambushText || (lord ? `${lord.who}, ${lord.doing}. ${words}` : words);
-      const def = battleDef(t, p.troops, map);
+      const def = battleDef(t, p.troops, map, { share: !p.questTag }); // a story band keeps its waves (P9-B2)
       if (p.ambush) def.objective = 'wagon'; // protect the escort's wagon (P7-11, js/objective.js)
       if (lord) {
         def.name = CL.realm.titled(p.lordId, c);
@@ -687,13 +687,19 @@
     return null;
   }
 
-  /** A battle definition for a band: its actual troops, in waves of up to 8, on the local map. */
-  function battleDef(t, troops, map = 'open_country') {
+  /**
+   * A battle definition for a party on the map: its actual troops on the local map. From 3.2.0 (P9-B2,
+   * D-P9c) it is one army (`share`): the two sides share the field by their numbers and both feed in
+   * reserves as men fall. `share: false` (a story band) keeps the waves of up to 8 it always had.
+   * @param {any} t @param {Record<string, number>} troops @param {string} [map] @param {{ share?: boolean }} [opts]
+   */
+  function battleDef(t, troops, map = 'open_country', { share = true } = {}) {
     const list = A().expand(troops);
     const waves = [];
-    for (let i = 0; i < list.length; i += WAVE_SIZE) waves.push(A().collapse(list.slice(i, i + WAVE_SIZE)));
+    if (share) waves.push(A().collapse(list));
+    else for (let i = 0; i < list.length; i += WAVE_SIZE) waves.push(A().collapse(list.slice(i, i + WAVE_SIZE)));
     const loot = t.lootBySize?.find(([max]) => list.length <= max)?.[1] || 'low';
-    return { id: `party_${t.id}`, name: t.name, map, waves, reward: t.reward, loot };
+    return { id: `party_${t.id}`, name: t.name, map, waves, reward: t.reward, loot, ...(share ? { share: true } : {}) };
   }
 
   /** Open the encounter with a band. `caught`: it came at you (an ambush: a small deployment zone, V2-07). */

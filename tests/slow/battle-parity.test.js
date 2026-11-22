@@ -27,3 +27,16 @@ test('sieges: an assault fought on the walls comes out over the odds, but not fa
     assert.ok(r.overOdds >= -5 && r.overOdds <= 25, `${r.scenario}: fought ${r.foughtWin}% against the odds ${r.odds.toFixed(0)}%`);
   }
 });
+
+// P9-B2: big battles (the close fights eight and six times over) at a battle size of 40 and of 100,
+// the two armies sharing the field and both feeding in reserves. Every one ends, and fighting is never
+// far worse than the odds. Not yet asserted: a ceiling. A company with many archers wins big fights
+// far above the odds Simulate states (it values an archer like any soldier of its tier), measured and
+// kept for P9-B4's plans and P9-T's tuning (docs/NEXT-TASKS.md, P9-B2's Done).
+test('big battles, shared and reinforcing on both sides: every one ends; fighting never far under the odds', () => {
+  const rows = run({ seeds: 20, big: true });
+  for (const r of rows) {
+    assert.equal(r.unfinished, 0, `${r.scenario}: every fight ends`);
+    assert.ok(r.foughtWin - r.odds >= -15, `${r.scenario}: fought ${r.foughtWin}% against stated odds ${r.odds.toFixed(0)}%`);
+  }
+});

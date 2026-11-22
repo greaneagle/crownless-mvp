@@ -1,5 +1,25 @@
 # Crownless — Release Notes
 
+## v3.2.0 — Proportional battles, reserves on both sides (P9-B2) · 2026-11-22
+
+### New
+- **A band or a lord you meet on the map fights as one army,** no longer in waves of 8. The field is shared by the two sides' numbers: 300 against 200 at a battle size of 100 fight 60 against 40, never fewer than 10 a side. If everyone fits, everyone fights.
+- **Both sides send in their reserves** as men fall or flee, keeping their share: in groups (bigger in bigger battles), from behind their own line. The messages come at most every few seconds.
+- **A party that rides in** joins its side's reserve, first in line, and the field is shared again by the new numbers. As many as there is room for ride straight in.
+- **The Prepare screen** says how the field is shared: "You: 150, 60 on the field. Them: 100, 40."
+- Lairs, story fights, the tournament and the walls' assault still come in waves.
+
+### Changed
+- **The enemy's loose line** is looser and kept whatever the numbers. As one army, the old line made an even fight hopeless, and the old swarming made an outnumbered one easy. Fought battles are again a little better than Simulate's odds (5–15 points on average, `npm run parity`).
+
+### Known
+- In big battles a company with many archers wins far more often than Simulate's odds say. Against 11 at once the wedge now does worse than loose ranks. Both are for the command task (P9-B4) and Phase 9's tuning.
+
+### Under the hood
+- No save change.
+- `npm run parity -- --big` measures big battles at sizes 40 and 100.
+- **Tests:** 821 fast Node tests; the whole slow suite (18 tests, the checkpoint: two fixed and run again); 195 browser tests with 9 skipped. In the full run, the phone's battle-zoom pinch failed once under load (a known flake) and passed alone.
+
 ## v3.1.1 — The phone's battle size · 2026-11-22
 
 ### Changed

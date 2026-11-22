@@ -2,7 +2,7 @@
 // fought in person by the campaign bot's hero and, from the same seeded game, auto-resolved through
 // the game's own Simulate path. Reports the stated odds, each way's win rate and soldiers lost, and
 // the gap. B-01's target is fought battles 5–15 points over the stated odds.
-//   node scripts/parity.js [seeds=40] [--preset balanced|defensive|aggressive] [--json]
+//   node scripts/parity.js [seeds=40] [--preset balanced|defensive|aggressive] [--big] [--json]
 //
 // Seeds are spread with a hash: consecutive seeds fed straight to mulberry32 correlate their first
 // draws, which skewed the V2-T2 scratch runs. Each run is its own game (tests/helpers/load.js gives
@@ -21,6 +21,18 @@ const SCENARIOS = [
   { id: 'outnumbered', company: ['footman', 'levy', 'levy', 'hunter', 'hunter'], enemy: { looter: 6, reaver: 5 } },
 ];
 
+/**
+ * P9-B2: big battles, in which the two armies share the field by their numbers and both feed in
+ * reserves: the close fights eight and six times over, at a battle size of 40 and of 100.
+ */
+const times = (list, n) => list.flatMap((t) => Array(n).fill(t));
+const timesTroops = (o, n) => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, v * n]));
+const byId = (id) => SCENARIOS.find((s) => s.id === id);
+const BIG = [40, 100].flatMap((size) => [
+  { id: `close×8@${size}`, size, company: times(byId('close').company, 8), enemy: timesTroops(byId('close').enemy, 8) },
+  { id: `veterans×6@${size}`, size, company: times(byId('veterans').company, 6), enemy: timesTroops(byId('veterans').enemy, 6) },
+]);
+
 /** Murmur3's finaliser: spreads consecutive integers across the 32-bit range. */
 function spread(n) {
   let h = Math.imul(n ^ 0x9e3779b9, 0x85ebca6b) >>> 0;
@@ -33,6 +45,7 @@ function setup(scenario, seed, tweak = null) {
   const env = loadGame({ seed });
   const { CL } = env;
   tweak?.(CL); // B-01: a change to try, before the battle (for measuring one thing at a time)
+  if (scenario.size) CL.combat.setActiveCap(scenario.size); // P9-B2's big battles
   CL.ui = headlessUi(CL);
   const c = CL.campaign;
   c.roster = [];
@@ -82,8 +95,8 @@ function simulate(CL) {
   return { win: Boolean(r?.win), fallen: fallen(CL, before), odds };
 }
 
-function run({ seeds = 40, preset = 'balanced', tweak = null, only = null } = {}) {
-  return SCENARIOS.filter((s) => !only || only.includes(s.id)).map((s) => {
+function run({ seeds = 40, preset = 'balanced', tweak = null, only = null, big = false } = {}) {
+  return (big ? BIG : SCENARIOS).filter((s) => !only || only.includes(s.id)).map((s) => {
     const rows = [];
     for (let i = 1; i <= seeds; i++) {
       const seed = spread(i);
@@ -209,19 +222,19 @@ if (require.main === module && process.argv.includes('--siege')) {
   };
   const seeds = Number(args.find((a, i) => /^\d+$/.test(a) && args[i - 1] !== '--preset') ?? 40);
   const preset = opt('--preset') ?? 'balanced';
-  const out = run({ seeds, preset });
+  const out = run({ seeds, preset, big: args.includes('--big') }); // --big: P9-B2's big battles at 40 and 100
   if (args.includes('--json')) console.log(JSON.stringify({ seeds, preset, scenarios: out }, null, 2));
   else {
     console.log(`Fought (bot hero, ${preset}) versus auto-resolved, ${seeds} seeds each`);
     const f = (n, d = 0) => n.toFixed(d).padStart(6);
-    console.log(`${'scenario'.padEnd(12)}${'size'.padStart(8)}  odds%  auto%  fought%  over-odds  gap  auto-lost  fought-lost  fought-s`);
+    console.log(`${'scenario'.padEnd(16)}${'size'.padStart(8)}  odds%  auto%  fought%  over-odds  gap  auto-lost  fought-lost  fought-s`);
     for (const r of out) {
       console.log(
-        `${r.scenario.padEnd(12)}${`${r.company + 1}v${r.enemies}`.padStart(8)} ${f(r.odds)} ${f(r.autoWin)} ${f(r.foughtWin).padStart(8)} ${f(r.overOdds).padStart(10)} ${f(r.gap).padStart(4)} ${f(r.autoLost, 2).padStart(10)} ${f(r.foughtLost, 2).padStart(12)} ${f(r.foughtSeconds).padStart(9)}${r.unfinished ? `  (${r.unfinished} never ended)` : ''}`,
+        `${r.scenario.padEnd(16)}${`${r.company + 1}v${r.enemies}`.padStart(8)} ${f(r.odds)} ${f(r.autoWin)} ${f(r.foughtWin).padStart(8)} ${f(r.overOdds).padStart(10)} ${f(r.gap).padStart(4)} ${f(r.autoLost, 2).padStart(10)} ${f(r.foughtLost, 2).padStart(12)} ${f(r.foughtSeconds).padStart(9)}${r.unfinished ? `  (${r.unfinished} never ended)` : ''}`,
       );
     }
     console.log('over-odds: fought win% minus the stated odds (B-01 aims for 5–15). gap: fought win% minus auto win%.');
   }
 }
 
-module.exports = { run, runSiege, SCENARIOS, spread, setup, fight, simulate };
+module.exports = { run, runSiege, SCENARIOS, BIG, spread, setup, fight, simulate };

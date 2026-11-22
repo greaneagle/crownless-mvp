@@ -1253,6 +1253,16 @@
     changeMode('prepare');
   }
 
+  /**
+   * P9-B2: how the field is shared ("You: 300, 60 on the field. Them: 200, 40."), or that everyone fits.
+   * @param {any} def
+   */
+  function shareLine(def) {
+    const s = CL.combat.fieldShare(def);
+    if (s.mine + s.theirs <= CL.combat.BATTLE.activeCap) return `Everyone fits on the field at once (battle size ${CL.combat.BATTLE.activeCap}).`;
+    return `You: ${s.mine}, ${s.allies} on the field. Them: ${s.theirs}, ${s.enemies}. The rest step in as men fall.`;
+  }
+
   function renderPrep() {
     const g = CL.game;
     const p = g.prep;
@@ -1321,6 +1331,7 @@
     box.replaceChildren(
       Object.assign(document.createElement('h2'), { textContent: 'Prepare for battle' }),
       Object.assign(document.createElement('p'), { textContent: `${e.name}: ${foes} against your ${own} fit soldier${own === 1 ? '' : 's'}.${p.ambush ? ' Ambush! Little room to form up.' : ''}` }),
+      ...(e.def.share ? [Object.assign(document.createElement('p'), { id: 'prepShare', className: 'setNote', textContent: shareLine(e.def) })] : []),
       actions, // first, so Fight is always in reach (two taps from the encounter)
       presets,
       Object.assign(document.createElement('p'), { className: 'setNote', textContent: PRESET_ABOUT[p.plan.preset] }),

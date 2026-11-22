@@ -45,8 +45,11 @@ const ARCHERS = ['footman', 'footman', 'levy', 'levy', 'hunter', 'hunter', 'hunt
  */
 const EFFECTS = [
   { id: 'wall-melee', what: 'Shield wall (Defensive, steady hero) against Reavers', hero: 'steady', preset: 'defensive', company: SHIELDS, enemy: { reaver: 8, mercenary: 3 }, off: (CL) => (CL.formations.USE.wall = false) },
-  { id: 'wall-arrows', what: 'Shield wall (Defensive, steady hero) against crossbows', hero: 'steady', preset: 'defensive', company: SHIELDS, enemy: { crossbowman: 6, militia: 6 }, off: (CL) => (CL.formations.USE.wall = false) },
-  { id: 'wedge', what: 'Wedge (Aggressive, chosen in Orders)', preset: 'aggressive', formation: 'wedge', company: CLOSE, enemy: { looter: 4, reaver: 7 }, off: (CL) => (CL.formations.USE.wedge = false) },
+  // P9-B2: bands fight as one army, not in waves of 8. Against 6 and 6 the company now won every time with or
+  // without the wall, so the crossbows are 8 and 8. The wedge meets 8 at once (the old first wave): against
+  // 11 at once it now wins less often than loose ranks (85% against 95%, 40 seeds), for P9-B4's formations.
+  { id: 'wall-arrows', what: 'Shield wall (Defensive, steady hero) against crossbows', hero: 'steady', preset: 'defensive', company: SHIELDS, enemy: { crossbowman: 8, militia: 8 }, off: (CL) => (CL.formations.USE.wall = false) },
+  { id: 'wedge', what: 'Wedge (Aggressive, chosen in Orders)', preset: 'aggressive', formation: 'wedge', company: CLOSE, enemy: { looter: 4, reaver: 4 }, off: (CL) => (CL.formations.USE.wedge = false) },
   { id: 'hill', what: 'High ground: archers on the knoll against crossbows (Balanced, steady hero, Hill Slopes)', hero: 'steady', preset: 'balanced', company: ARCHERS, enemy: { crossbowman: 6, militia: 5 }, map: 'hill_slopes', off: (CL) => (CL.formations.USE.hill = false) },
   { id: 'ford', what: 'A ford breaks the wedge (Aggressive, wedge chosen in Orders, River Ford)', preset: 'aggressive', formation: 'wedge', company: CLOSE, enemy: { looter: 4, reaver: 7 }, map: 'river_ford', off: (CL) => (CL.formations.USE.fordBreaks = false) },
   { id: 'wagon', what: 'Soldiers mind the wagon (Balanced, escort ambush)', preset: 'balanced', company: CLOSE, enemy: { reaver: 8, looter: 4 }, ambush: true, off: (CL) => (CL.objective.USE.guard = false) },

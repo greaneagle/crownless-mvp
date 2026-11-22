@@ -29,7 +29,7 @@
   const ODDS_POWER = 2; // B-01: the square law
   // V2-T2: soldiers of the company count this much more (ranks, shields and cover: fought battles
   // since 1.11.0 are far kinder to a company than auto-resolve was, SC-37).
-  const COMPANY_FACTOR = 1.5;
+  const COMPANY = { factor: 1.5 }; // read as COMPANY_FACTOR; an object so a measurement can try another (scripts/parity.js)
   // Winner's per-troop chance to fall: 0.25 × (loser power / winner power), within these bounds
   // (V2-T2: was 0.35, 8–60%; a won fight in person costs far less).
   const WINNER_LOSS = { scale: 0.2, min: 0.05, max: 0.5 };
@@ -105,7 +105,7 @@
   /** The player's fighting power: healthy soldiers plus the hero, boosted by Tactics. */
   function playerPower(c = CL.campaign) {
     let p = heroPower(c);
-    for (const s of c.roster) if (s.woundedUntil === null) p += TIER_POWER[CL.content.troop(s.troop).tier] * COMPANY_FACTOR * (CL.blacksmith?.powerFactor(s) ?? 1) * (CL.traits?.power(s) ?? 1); // fine kit (P7-03), trait (P7-07)
+    for (const s of c.roster) if (s.woundedUntil === null) p += TIER_POWER[CL.content.troop(s.troop).tier] * COMPANY.factor * (CL.blacksmith?.powerFactor(s) ?? 1) * (CL.traits?.power(s) ?? 1); // fine kit (P7-03), trait (P7-07)
     p += CL.companion?.power(c) || 0; // Mara, if she is fit
     p += CL.retinue?.power(c) || 0; // the other companions with you (P7-06)
     return p * (1 + TACTICS * CL.character.skill('tactics', c));
@@ -124,7 +124,7 @@
       if (s.woundedUntil !== null) wounded++;
       else fit[CL.content.troop(s.troop).tier]++;
     }
-    for (const t of ['T1', 'T2', 'T3']) if (fit[t]) own.push(`${fit[t]} ${t} soldier${fit[t] === 1 ? '' : 's'} ${(fit[t] * TIER_POWER[t] * COMPANY_FACTOR).toFixed(1)}`);
+    for (const t of ['T1', 'T2', 'T3']) if (fit[t]) own.push(`${fit[t]} ${t} soldier${fit[t] === 1 ? '' : 's'} ${(fit[t] * TIER_POWER[t] * COMPANY.factor).toFixed(1)}`);
     const mara = CL.companion?.power(c) || 0;
     if (mara) own.push(`your companion ${mara.toFixed(1)}`);
     const others = CL.retinue?.power(c) || 0;
@@ -187,7 +187,10 @@
 
   CL.autoresolve = {
     TIER_POWER,
-    COMPANY_FACTOR,
+    COMPANY,
+    get COMPANY_FACTOR() {
+      return COMPANY.factor;
+    },
     heroPower,
     WINNER_LOSS,
     LOSER_LOSS,

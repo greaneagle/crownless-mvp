@@ -35,7 +35,38 @@
    * D-P9a; 20 / 30 / 40 before 3.1.0, up to 150 in 3.1.0). `base` is the size the battle's numbers were tuned at: above it,
    * the deployment grows with the size (`scaleOf`).
    */
-  const BATTLE = { activeCap: 40, capChoices: Array.from({ length: 19 }, (_, i) => 20 + i * 10), base: 40, stack: 3, minEnemies: 6, stall: 45 }; // stall: seconds without a blow (V2-T2)
+  const BATTLE = { activeCap: 40, capChoices: Array.from({ length: 19 }, (_, i) => 20 + i * 10), base: 40, stack: 3, minEnemies: 6, minShare: 10, stall: 45 }; // stall: seconds without a blow (V2-T2)
+  // P9-B2: in a shared battle, reserves come in groups that grow with the size (3 at 40, 8 at 200), and
+  // say so at most every few seconds a side.
+  const RESERVES = { groupPer: 25, noteEvery: 6, behind: 150 };
+  /** How many reserves step in at once. */
+  const stackOf = (g) => (g?.share ? Math.max(BATTLE.stack, Math.round(BATTLE.activeCap / RESERVES.groupPer)) : BATTLE.stack);
+
+  /**
+   * P9-B2 (D-P9c, as in Mount & Blade): each side's places on the field are its share of all the
+   * fighters. If everyone fits, everyone fights; otherwise each side gets the size in proportion to its
+   * numbers (300 against 200 at 100: 60 and 40), never fewer than 10 (or all of a smaller side).
+   * @param {number} size @param {number} mine @param {number} theirs
+   * @returns {{ allies: number, enemies: number }}
+   */
+  function shareOf(size, mine, theirs) {
+    if (mine + theirs <= size) return { allies: mine, enemies: theirs };
+    const least = (n) => Math.min(n, BATTLE.minShare);
+    const a = Math.max(least(mine), Math.min(size - least(theirs), Math.round((size * mine) / (mine + theirs))));
+    return { allies: a, enemies: size - a };
+  }
+
+  /**
+   * Both sides' numbers for a shared battle about to start from the campaign (the Prepare screen's
+   * line): yours are the hero, the companions who are fit and the healthy soldiers.
+   * @param {any} enc @returns {{ mine: number, theirs: number, allies: number, enemies: number }}
+   */
+  function fieldShare(enc) {
+    const withMara = (CL.companion.fit() ? 1 : 0) + CL.retinue.fighters(CL.campaign).length;
+    const mine = 1 + withMara + CL.party.healthySoldiers().length;
+    const theirs = (enc.waves || []).reduce((n, w) => n + Object.values(w).reduce((a, b) => a + b, 0), 0);
+    return { mine, theirs, ...shareOf(BATTLE.activeCap, mine, theirs) };
+  }
   /** How much bigger than the tuned size this battle is: 1 up to 40, 5 at 200. */
   const scaleOf = () => Math.max(1, BATTLE.activeCap / BATTLE.base);
   /** How many of a role may stand on the field at the start (the rest wait in reserve). @param {string} role */
@@ -54,11 +85,14 @@
   // one (a soldier this far ahead of the rest's middle, and not yet near its target, slows to wait),
   // unless it already has the numbers (then it just swarms: the line made such fights hopeless); and
   // it picks on the exposed: archers, the badly wounded, a hero standing alone.
+  // P9-B2: a band on the map now fights as one army, not in waves of 8, which made B-01's line too
+  // strong in equal fights (10 against 10: fought 35% against odds of 79%) and its swarm too weak when
+  // the enemy had the numbers. The line is looser and always kept: scripts/parity.js 5–15 points over again.
   const ENEMY = {
-    lineSlack: 55, // px a soldier may run ahead of the line before waiting for it
+    lineSlack: 175, // px a soldier may run ahead of the line before waiting for it (55 before 3.2.0)
     lineEngage: 150, // px from its target: from here on it closes at full speed
     lineWait: 0.3, // its speed while waiting for the line
-    lineOutnumber: 1.25, // no line once the enemy's standing soldiers outnumber the company by more than this
+    lineOutnumber: Number.POSITIVE_INFINITY, // no line once the enemy outnumbers the company by more than this (1.25 before 3.2.0: now always a line)
     preferRange: 90, // px: an exposed target this much further than the nearest is still chosen
     prefer: { archer: 60, wounded: 45, heroAlone: 75 }, // how much further each is worth going
     woundedAt: 0.5, // hp share below which a soldier counts as wounded
@@ -129,6 +163,8 @@
     g.frameTally = { frames: 0, ms: 0 }; // this device's frame rate in this battle (js/main.js; P9-B1's slow offer)
     g.allyReserve = [];
     g.enemyReserve = [];
+    g.share = Boolean(enc.share) && !enc.practice && !enc.duel; // P9-B2: one army a side, sharing the field
+    g.reserveNoteAt = {};
     // A practice battle (the debug panel's stress test) brings its own soldiers and changes nothing.
     g.practice = Array.isArray(enc.practice) ? { started: performance.now(), frames: 0, sim: 0, draw: 0, worst: 0, peak: 0 } : null;
     // A tournament bout (P7-09): the hero alone, in the loaner kit, against one fighter; its result goes
@@ -157,9 +193,17 @@
     const retinue = alone ? [] : CL.retinue.fighters(CL.campaign); // the other companions (P7-06)
     const withMara = (!alone && CL.companion.fit() ? 1 : 0) + retinue.length;
     const biggestWave = Math.max(...enc.waves.map((w) => Object.values(w).reduce((a, b) => a + b, 0)));
-    const enemyShare = Math.max(Math.min(biggestWave, Math.floor(BATTLE.activeCap / 2)), BATTLE.minEnemies);
-    g.allyCap = Math.max(1 + withMara, Math.min(1 + withMara + soldiers.length, BATTLE.activeCap - enemyShare));
-    g.enemyCap = BATTLE.activeCap - g.allyCap;
+    if (g.share) {
+      // P9-B2: the field shared by the armies' numbers (both sides feed in reserves to keep their share).
+      const s = shareOf(BATTLE.activeCap, 1 + withMara + soldiers.length, biggestWave);
+      g.allyCap = Math.max(1 + withMara, s.allies);
+      g.enemyCap = Math.max(1, BATTLE.activeCap - g.allyCap);
+    } else {
+      // A fixed encounter's waves: the enemies get room for their biggest wave (up to half the cap), the company the rest.
+      const enemyShare = Math.max(Math.min(biggestWave, Math.floor(BATTLE.activeCap / 2)), BATTLE.minEnemies);
+      g.allyCap = Math.max(1 + withMara, Math.min(1 + withMara + soldiers.length, BATTLE.activeCap - enemyShare));
+      g.enemyCap = BATTLE.activeCap - g.allyCap;
+    }
     const placed = { infantry: 0, archer: 0, cavalry: 0 };
     // How many of each role will form up at the start: a block no bigger than before 3.1.0 forms up as it always did.
     const forming = { infantry: 0, archer: 0, cavalry: 0 };
@@ -266,7 +310,8 @@
     const room = enemyCapOf(g);
     for (const troopId of troops.slice(0, room)) addEnemy(g, troopId, art);
     g.enemyReserve = troops.slice(room);
-    if (!g.duel) CL.ui.message(`Enemy wave ${g.wave} / ${g.totalWaves}${g.enemyReserve.length ? ` · ${g.enemyReserve.length} more waiting` : ''}`);
+    if (g.share) CL.ui.message(`${g.encounterDef.name}: ${troops.length} · ${g.enemies.length} on the field, the rest in reserve`);
+    else if (!g.duel) CL.ui.message(`Enemy wave ${g.wave} / ${g.totalWaves}${g.enemyReserve.length ? ` · ${g.enemyReserve.length} more waiting` : ''}`);
     CL.diag.log('info', 'Enemy wave spawned', { wave: g.wave, enemies: wave, reserve: g.enemyReserve.length });
   }
 
@@ -314,18 +359,67 @@
    */
   function reinforce(g) {
     const sides = [
-      { reserve: g.enemyReserve, alive: aliveCount(g.enemies), cap: enemyCapOf(g), add: (t) => addEnemy(g, t), who: 'Enemy reserves' },
-      { reserve: g.allyReserve, alive: (g.hero.alive ? 1 : 0) + aliveCount(g.allies), cap: g.allyCap ?? Number.POSITIVE_INFINITY, add: (r) => addAlly(g, r), who: 'Your reserves' },
+      { team: /** @type {'enemy'} */ ('enemy'), reserve: g.enemyReserve, alive: aliveCount(g.enemies), cap: enemyCapOf(g), add: (t) => addEnemy(g, t), who: 'Enemy reserves' },
+      { team: /** @type {'ally'} */ ('ally'), reserve: g.allyReserve, alive: (g.hero.alive ? 1 : 0) + aliveCount(g.allies), cap: g.allyCap ?? Number.POSITIVE_INFINITY, add: (r) => addAlly(g, r), who: 'Your reserves' },
     ];
+    const stack = stackOf(g);
     for (const s of sides) {
       if (!s.reserve?.length) continue;
       const free = s.cap - s.alive;
-      if (free < Math.min(BATTLE.stack, s.reserve.length)) continue;
+      if (free < Math.min(stack, s.reserve.length)) continue;
       const n = Math.min(free, s.reserve.length);
-      for (const r of s.reserve.splice(0, n)) s.add(r);
-      CL.ui.message(`${s.who}: ${n} join the fight${s.reserve.length ? ` (${s.reserve.length} still waiting)` : ''}`);
+      const entry = g.share ? reserveEntry(g, s.team) : null; // P9-B2: in a group, from behind their own line
+      s.reserve.splice(0, n).forEach((r, i) => {
+        const u = s.add(r);
+        if (entry && r?.join == null) formAt(u, entry, i);
+      });
+      // A shared battle's reserves come often: a word at most every few seconds a side.
+      const quiet = g.share && g.t - (g.reserveNoteAt?.[s.team] ?? -99) < RESERVES.noteEvery;
+      if (!quiet) {
+        if (g.reserveNoteAt) g.reserveNoteAt[s.team] = g.t;
+        CL.ui.message(`${s.who}: ${n} join the fight${s.reserve.length ? ` (${s.reserve.length} still waiting)` : ''}`);
+      }
       CL.diag.log('info', 'Reinforcements', { side: s.who, joined: n, waiting: s.reserve.length });
     }
+  }
+
+  /**
+   * P9-B2: where a side's reserves come in: behind its own standing line (its rearmost fighter, a little
+   * further back toward its own edge), level with its middle, slid along until no opponent is close;
+   * with nobody of theirs standing, at their own start. @param {any} g @param {'ally' | 'enemy'} team
+   */
+  function reserveEntry(g, team) {
+    const b = g.battleMap.bounds || CL.units.BOUNDS;
+    const own = (team === 'ally' ? [g.hero, ...g.allies.filter((a) => !a.outside)] : g.enemies).filter((u) => u?.alive && !u.routing);
+    const foes = (team === 'ally' ? g.enemies : [g.hero, ...g.allies]).filter((u) => u?.alive);
+    const back = team === 'ally' ? -1 : 1;
+    let x;
+    let y;
+    if (own.length) {
+      x = team === 'ally' ? Math.min(...own.map((u) => u.x)) - RESERVES.behind : Math.max(...own.map((u) => u.x)) + RESERVES.behind;
+      y = own.reduce((n, u) => n + u.y, 0) / own.length;
+    } else if (team === 'ally') [x, y] = [g.battleMap.spawn.hero.x - RESERVES.behind, g.battleMap.spawn.hero.y];
+    else {
+      const box = g.battleMap.spawn.enemies;
+      [x, y] = [box.x1, (box.y0 + box.y1) / 2];
+    }
+    const inset = 40;
+    x = Math.max(b.minX + inset, Math.min(b.maxX - inset, x));
+    for (let i = 0; i < 12; i++) {
+      const yy = Math.max(b.minY + inset, Math.min(b.maxY - inset, y + (i % 2 ? 1 : -1) * Math.ceil(i / 2) * 80));
+      if (!foes.some((u) => Math.hypot(u.x - x, u.y - yy) < 120)) return { x, y: yy, back };
+    }
+    return { x, y: Math.max(b.minY + inset, Math.min(b.maxY - inset, y)), back };
+  }
+
+  /** Put the i-th of an incoming group in its place: files of five across, ranks going back. */
+  function formAt(u, entry, i) {
+    u.x = entry.x + entry.back * Math.floor(i / 5) * 30;
+    u.y = entry.y + ((i % 5) - 2) * 30;
+    CL.units.resolveObstacles(u);
+    u.face = entry.back < 0 ? 'right' : 'left';
+    u.holdX = u.x;
+    u.holdY = u.y;
   }
 
   /**
@@ -793,6 +887,10 @@
     ENEMY,
     AI,
     BATTLE,
+    RESERVES,
+    shareOf,
+    fieldShare,
+    stackOf,
     scaleOf,
     deployCap,
     setActiveCap,
