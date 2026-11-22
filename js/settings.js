@@ -7,7 +7,15 @@
   const CL = root.Crownless;
 
   const KEY = 'crownless_settings';
-  const BATTLE_SIZES = [20, 30, 40];
+  // P9-B1 (D-P9a): 20 to 150 fighters at once, in steps of 10 (20 / 30 / 40 before 3.1.0).
+  const BATTLE_SIZES = Array.from({ length: 14 }, (_, i) => 20 + i * 10);
+  /**
+   * The battle size a device starts at, until its player chooses one: the largest the owner's phone
+   * held at 30 fps or better in Debug → Battle benchmark (P9-B1). `old` is the default before 3.1.0: a
+   * device still on it never chose, so it moves to the new default too.
+   */
+  const BATTLE_DEFAULT = { touch: 60, desktop: 100, old: { touch: 30, desktop: 40 } };
+  const SLOW = { fps: 30, seconds: 10 }; // a battle slower than this, for at least this long, offers a smaller size
   const BATTLEFIELDS = ['large', 'small']; // V2-05: large maps with a following camera, or one screen
   const PREP_PRESETS = ['balanced', 'defensive', 'aggressive', 'custom']; // V2-07
   const PREP_ORDERS = ['follow', 'hold', 'charge'];
@@ -34,16 +42,19 @@
     return out;
   }
 
-  /** Touch phones start at battle size 30 (every current battle still fits); desktops at 40. */
-  function defaults() {
-    let touch = false;
+  function isTouch() {
     try {
-      touch = Boolean(root.matchMedia?.('(pointer: coarse)').matches);
+      return Boolean(root.matchMedia?.('(pointer: coarse)').matches);
     } catch {
-      touch = false;
+      return false;
     }
+  }
+
+  /** Touch phones and desktops start at their own battle size (BATTLE_DEFAULT). */
+  function defaults() {
+    const touch = isTouch();
     // Full screen is on by default on phones, where the address bar costs the most room.
-    return { music: 50, sfx: 70, battleSize: touch ? 30 : 40, battlefield: 'large', prepPreset: 'balanced', prepSkip: false, prepCustom: null, reducedEffects: false, healthBars: true, tips: true, fullscreen: touch, textSize: 'normal', mapZoom: null, battleZoom: 1 };
+    return { music: 50, sfx: 70, battleSize: touch ? BATTLE_DEFAULT.touch : BATTLE_DEFAULT.desktop, battleSizeChosen: false, slowOffered: false, battlefield: 'large', prepPreset: 'balanced', prepSkip: false, prepCustom: null, reducedEffects: false, healthBars: true, tips: true, fullscreen: touch, textSize: 'normal', mapZoom: null, battleZoom: 1 };
   }
 
   let current = defaults();
@@ -57,7 +68,8 @@
     return {
       music: volume(r.music, d.music),
       sfx: volume(r.sfx, d.sfx),
-      battleSize: BATTLE_SIZES.includes(r.battleSize) ? r.battleSize : d.battleSize,
+      ...battleSize(r, d),
+      slowOffered: typeof r.slowOffered === 'boolean' ? r.slowOffered : d.slowOffered,
       battlefield: BATTLEFIELDS.includes(r.battlefield) ? r.battlefield : d.battlefield,
       prepPreset: PREP_PRESETS.includes(r.prepPreset) ? r.prepPreset : d.prepPreset,
       prepSkip: typeof r.prepSkip === 'boolean' ? r.prepSkip : d.prepSkip,
@@ -70,6 +82,32 @@
       mapZoom: mapZoom(r.mapZoom, d.mapZoom), // null: the world's own opening zoom
       battleZoom: battleZoom(r.battleZoom, d.battleZoom),
     };
+  }
+
+  /**
+   * The battle size and whether the player chose it. Not chosen, it follows the device's default (so a
+   * later default reaches it). Settings from before 3.1.0 have no flag: a size other than that build's
+   * default was chosen; the old default was not. @param {any} r @param {any} d
+   */
+  function battleSize(r, d) {
+    if (!BATTLE_SIZES.includes(r.battleSize)) return { battleSize: d.battleSize, battleSizeChosen: false };
+    const old = isTouch() ? BATTLE_DEFAULT.old.touch : BATTLE_DEFAULT.old.desktop;
+    const chosen = typeof r.battleSizeChosen === 'boolean' ? r.battleSizeChosen : r.battleSize !== old;
+    return chosen ? { battleSize: r.battleSize, battleSizeChosen: true } : { battleSize: d.battleSize, battleSizeChosen: false };
+  }
+
+  /**
+   * P9-B1: after a battle that ran slowly (under SLOW.fps for at least SLOW.seconds), a smaller battle
+   * size to offer, once per device and only while the player hasn't chosen one; null otherwise. Never
+   * applied by itself. @param {number} fps @param {number} seconds
+   */
+  function slowerOffer(fps, seconds) {
+    if (current.battleSizeChosen || current.slowOffered || seconds < SLOW.seconds || !(fps < SLOW.fps)) return null;
+    const size = Math.max(BATTLE_SIZES[0], Math.floor((current.battleSize * Math.max(fps, 1)) / SLOW.fps / 10) * 10);
+    if (size >= current.battleSize) return null;
+    current = { ...current, slowOffered: true };
+    persist();
+    return size;
   }
 
   function load() {
@@ -116,7 +154,8 @@
   /** Change one setting (validated), save it and apply it. Returns false for an invalid value. */
   function set(key, value) {
     if (!(key in current)) return false;
-    const next = sanitize({ ...current, [key]: value });
+    // Choosing a battle size keeps it, whatever later builds' defaults are (P9-B1).
+    const next = sanitize({ ...current, [key]: value, ...(key === 'battleSize' ? { battleSizeChosen: true } : {}) });
     if (JSON.stringify(next[key]) !== JSON.stringify(value)) return false; // objects compare by content
     current = next;
     persist();
@@ -125,5 +164,5 @@
     return true;
   }
 
-  CL.settings = { KEY, BATTLE_SIZES, BATTLEFIELDS, PREP_PRESETS, TEXT_SIZES, MAP_ZOOM, BATTLE_ZOOM, defaults, sanitize, load, get, all, set, apply, textScale, font };
+  CL.settings = { KEY, BATTLE_SIZES, BATTLE_DEFAULT, SLOW, slowerOffer, BATTLEFIELDS, PREP_PRESETS, TEXT_SIZES, MAP_ZOOM, BATTLE_ZOOM, defaults, sanitize, load, get, all, set, apply, textScale, font };
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -12,6 +12,7 @@
   function screenFor(mode) {
     const g = CL.game;
     if (mode === 'result' && g.result.practice) {
+      if (g.result.practice.bench) return { title: 'BATTLE BENCHMARK', text: 'How this device handled each battle size:', button: 'Continue' };
       return { title: g.result.practice.arena ? 'CAMERA TEST' : 'STRESS TEST', text: 'How this device handled the battle:', button: 'Continue' };
     }
     if (mode === 'result' && g.result.duel) {
@@ -225,7 +226,10 @@
     $('#titleExtras').classList.toggle('hidden', mode !== 'title');
     $('#overlayText').classList.toggle('hidden', mode === 'saves' || mode === 'journal' || mode === 'realm');
     const screen = screenFor(mode);
-    if (mode === 'result') $('#result').innerHTML = g.result.html;
+    if (mode === 'result') {
+      $('#result').innerHTML = g.result.html;
+      if (g.result.slowOffer) $('#result').append(slowOfferBox(g.result.slowOffer));
+    }
     $('#overlayTitle').textContent = screen.title;
     $('#overlayText').textContent = screen.text;
     $('#primaryBtn').classList.toggle('hidden', !screen.button);
@@ -248,6 +252,22 @@
     if (mode === 'grant') renderGrant();
     if (mode === 'conquest') renderConquest();
     if (mode === 'siegeAlarm') renderSiegeAlarm();
+  }
+
+  /**
+   * P9-B1: after a battle that ran slowly, the offer of a smaller battle size (never forced).
+   * @param {{ fps: number, size: number }} o
+   */
+  function slowOfferBox(o) {
+    const box = Object.assign(document.createElement('p'), { id: 'slowOffer', className: 'slowOffer' });
+    box.append(`This battle ran at ${o.fps} frames a second on this device. A battle size of ${o.size} at once would run smoother (Settings → Battle size). `);
+    const b = Object.assign(document.createElement('button'), { type: 'button', id: 'slowOfferUse', textContent: `Use ${o.size}` });
+    b.onclick = () => {
+      CL.settings.set('battleSize', o.size);
+      box.textContent = `Battle size set to ${o.size} at once. You can change it in Settings.`;
+    };
+    box.append(b);
+    return box;
   }
 
   /** A decision's button: a bold label and a short note. */

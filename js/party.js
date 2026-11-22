@@ -449,9 +449,24 @@
       names,
       wagon: CL.objective.fate(g, win),
     });
-    g.result = { win, html, ...r };
+    g.result = { win, html, ...r, slowOffer: slowOffer(g) };
     CL.diag.log('info', 'Battle ended', { ...outcome, result: r, day: CL.campaign.day });
     CL.ui.changeMode('result');
+  }
+
+  /**
+   * P9-B1: a battle that ran slowly on this device offers a smaller battle size on its result screen
+   * (once, and only while the player hasn't chosen a size; never applied by itself). The frame rate is
+   * counted from the battle's second second (js/main.js). @param {any} g
+   */
+  function slowOffer(g) {
+    const f = g.frameTally;
+    if (!f?.frames || !(f.ms > 0) || !CL.settings?.slowerOffer) return null;
+    const fps = Math.round(f.frames / (f.ms / 1000));
+    const size = CL.settings.slowerOffer(fps, f.ms / 1000);
+    if (!size) return null;
+    CL.diag.log('info', 'Battle ran slowly: a smaller size offered', { fps, size, from: CL.combat.BATTLE.activeCap });
+    return { fps, size };
   }
 
   /** A stress test is over: report how it ran; nothing in the campaign changes and nothing is saved. */
@@ -486,6 +501,7 @@
       ...(g.joining?.length ? [`Parties that rode in: ${g.joining.filter((j) => j.arrived).map((j) => `${j.name} (${j.size}) at ${Math.round(j.arriveAt)} s`).join(', ') || 'none (the battle ended first)'}`] : []),
       'Nothing in your campaign changed.',
     ].join('<br>');
+    if (CL.debugTools?.benching()) return CL.debugTools.benchDone(stats); // a size of the battle benchmark (P9-B1)
     g.result = { win, practice: stats, html };
     CL.diag.log('info', 'Stress battle', stats);
     CL.ui.changeMode('result');

@@ -59,11 +59,16 @@
 
   // ---- Detection ----
 
-  /** Is this enemy in sight of the company right now? @param {any} g @param {Unit} e */
-  function inSight(g, e) {
+  /** The company's living eyes, in a grid (P9-B1: once a scan, not once an enemy). @param {any} g */
+  const eyesOf = (g) => CL.units.proximity([g.hero, ...g.allies].filter((a) => a?.alive), SIGHT / 2);
+
+  /**
+   * Is this enemy in sight of the company right now? @param {any} g @param {Unit} e
+   * @param {{ any: (x: number, y: number, r: number) => boolean }} [eyes] the company's eyes (eyesOf)
+   */
+  function inSight(g, e, eyes = eyesOf(g)) {
     if (CL.camera.inSightView(g, e.x, e.y)) return true; // the 1× view, whatever the zoom (W-03)
-    const eyes = [g.hero, ...g.allies];
-    return eyes.some((a) => a?.alive && Math.hypot(a.x - e.x, a.y - e.y) <= SIGHT);
+    return eyes.any(e.x, e.y, SIGHT + 1e-9); // within SIGHT, the edge included
   }
 
   /** Update what the company sees (every SCAN seconds; called from the battle's update). @param {any} g @param {number} dt */
@@ -72,9 +77,10 @@
     g.scanIn = (g.scanIn ?? 0) - dt;
     if (g.scanIn > 0) return;
     g.scanIn = SCAN;
+    const eyes = eyesOf(g);
     for (const e of g.enemies) {
       if (!e.alive) continue;
-      e.seen = inSight(g, e);
+      e.seen = inSight(g, e, eyes);
       if (e.seen) {
         e.detected = true;
         e.lastSeen = { x: e.x, y: e.y };

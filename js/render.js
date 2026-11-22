@@ -332,15 +332,31 @@
   }
 
   /** Fallen unit: sprite laid on its side, faded. */
+  /**
+   * P9-B1: in a big battle (more than `from` at once) the drawing is thinned, as the Reduced effects
+   * setting does: no hit rings, health bars only on the badly hurt, and the fallen fade from the field
+   * after `bodyLasts` seconds (the hero and the companions never fade).
+   */
+  const BUSY = { from: 80, bodyLasts: 20, bodyFade: 3, hurt: 0.5 };
+  const busyBattle = () => (CL.combat?.BATTLE.activeCap ?? 0) > BUSY.from;
+  /** How visible a fallen body is now: 0.5 once settled, fading after a while in a big battle. @param {Unit} u */
+  function bodyAlpha(u) {
+    const age = CL.game.t - u.downAt;
+    if (age < 0.25) return 0.9 - age * 1.6;
+    if (!busyBattle() || u.role === 'hero' || u.companion) return 0.5;
+    return 0.5 * Math.max(0, Math.min(1, (BUSY.bodyLasts + BUSY.bodyFade - age) / BUSY.bodyFade));
+  }
+
   function drawDowned(u) {
     const hero = u.role === 'hero';
     const mounted = u.role === 'cavalry';
     const sh = hero ? 74 : mounted ? 62 : 43;
     const sw = hero ? 58 : mounted ? 42 : 37;
     const frames = unitFrames(u);
-    const age = CL.game.t - u.downAt;
+    const alpha = bodyAlpha(u);
+    if (alpha <= 0) return;
     ctx.save();
-    ctx.globalAlpha = age < 0.25 ? 0.9 - age * 1.6 : 0.5;
+    ctx.globalAlpha = alpha;
     ctx.translate(u.x, u.y - 6);
     ctx.rotate(u.face === 'left' ? -Math.PI / 2 : Math.PI / 2);
     (hero ? drawHeroFrame : drawImage)(CL.assets.key('u', frames[0]), -sh / 2, -sw / 2, sw, sh);
@@ -422,7 +438,7 @@
       ctx.arc(u.x, u.y - 13, 26, a - Math.PI / 3, a + Math.PI / 3);
       ctx.stroke();
     }
-    if (u.hp < u.maxhp && (hero || CL.settings?.get('healthBars') !== false)) {
+    if (u.hp < u.maxhp && (hero || (CL.settings?.get('healthBars') !== false && (!busyBattle() || u.hp < u.maxhp * BUSY.hurt || u.companion)))) {
       ctx.fillStyle = '#27191a';
       ctx.fillRect(u.x - 18, y - 9, 36, 5);
       ctx.fillStyle = u.team === 'ally' ? '#8bc3a9' : '#cd6762';
@@ -1454,8 +1470,9 @@
     const seen = (x, y, margin) => CL.camera.visible(g, x, y, margin);
     const chars = [...g.allies, ...g.enemies];
     if (g.hero) chars.push(g.hero);
-    chars.sort((a, b) => a.y - b.y); // painter's order by depth
-    for (const u of chars) if (u.ground && seen(u.x, u.y, 60)) drawDowned(u);
+    // The fallen first, in painter's order by depth: only those still showing and on screen are sorted (P9-B1).
+    const bodies = chars.filter((u) => u.ground && seen(u.x, u.y, 60) && bodyAlpha(u) > 0).sort((a, b) => a.y - b.y);
+    for (const u of bodies) drawDowned(u);
     // Living units and obstacles share one depth order, so units can pass behind trees and walls.
     const scene = [
       ...chars.filter((u) => u.alive && seen(u.x, u.y, 80)).map((u) => [u.y, () => drawUnit(u)]),
@@ -1465,15 +1482,21 @@
     ].sort((p, q) => p[0] - q[0]);
     for (const [, paint] of scene) paint();
 
-    for (const a of g.arrows) {
-      ctx.strokeStyle = a.team === 'ally' ? '#f6e8b4' : '#eec19e';
-      ctx.lineWidth = 3;
+    // Arrows: one path a side (P9-B1: one stroke for all of them, not one each).
+    ctx.lineWidth = 3;
+    for (const [team, color] of [['ally', '#f6e8b4'], ['enemy', '#eec19e']]) {
+      ctx.strokeStyle = color;
       ctx.beginPath();
-      ctx.moveTo(a.x, a.y);
-      ctx.lineTo(a.x - a.dx * 17, a.y - a.dy * 17);
+      for (const a of g.arrows) {
+        if (a.team !== team) continue;
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(a.x - a.dx * 17, a.y - a.dy * 17);
+      }
       ctx.stroke();
     }
-    for (const e of CL.settings?.get('reducedEffects') ? [] : g.effects) {
+    // Hit rings and flashes: none with Reduced effects; in a big battle only the Rally's ring (P9-B1).
+    const rings = CL.settings?.get('reducedEffects') ? [] : busyBattle() ? g.effects.filter((e) => e.kind === 'rally') : g.effects;
+    for (const e of rings) {
       ctx.strokeStyle = e.color;
       ctx.lineWidth = 3;
       ctx.beginPath();
@@ -1505,5 +1528,5 @@
     }
   }
 
-  CL.render = { init, draw, setBackingScale, backingScale: () => backing };
+  CL.render = { BUSY, busyBattle, bodyAlpha, init, draw, setBackingScale, backingScale: () => backing };
 })(typeof window !== 'undefined' ? window : globalThis);

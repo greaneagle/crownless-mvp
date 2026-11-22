@@ -91,8 +91,8 @@
   function braceAgainst(g, rider, opponents, chargeMomentum) {
     if ((rider.momentum || 0) < chargeMomentum || (rider.bracedUntil || 0) > g.t) return null;
     for (const o of opponents) {
-      if (!o?.alive || !braces(o) || CL.units.isCommitted(o)) continue;
-      if (Math.hypot(o.x - rider.x, o.y - rider.y) > BRACE.reach) continue;
+      if (!o?.alive || Math.hypot(o.x - rider.x, o.y - rider.y) > BRACE.reach) continue; // the cheap test first (P9-B1)
+      if (!braces(o) || CL.units.isCommitted(o)) continue;
       if (!CL.units.inArc(o, rider, CL.units.ARC.block)) continue; // spears face the charge, not the flank
       rider.momentum = 0;
       rider.overrun = 0;
@@ -151,12 +151,12 @@
     g.stateIn = (g.stateIn ?? 0) - dt;
     if (g.stateIn > 0) return g.groupState;
     g.stateIn = STATE_EVERY;
-    const foes = g.enemies.filter((e) => e.alive);
+    const near = CL.units.proximity(g.enemies.filter((e) => e.alive)); // once, not once a soldier (P9-B1)
     const state = {};
     for (const grp of ['infantry', 'archer', 'cavalry']) {
       const units = g.allies.filter((a) => a.alive && a.role === grp && !a.companion && !a.outside);
       if (!units.length) continue;
-      const engaged = units.some((u) => foes.some((e) => Math.hypot(e.x - u.x, e.y - u.y) < ENGAGE));
+      const engaged = units.some((u) => near.any(u.x, u.y, ENGAGE));
       const order = g.orders[grp];
       if (engaged) state[grp] = 'engaged';
       else if (order === 'charge') state[grp] = 'advancing';

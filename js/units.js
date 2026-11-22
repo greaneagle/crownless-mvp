@@ -295,6 +295,37 @@
     return pushes;
   }
 
+  /**
+   * P9-B1: "is any of these within r of a point?" without testing every one: the list goes into a grid
+   * of `cell`-sized squares once, and a query looks only at the squares that reach the point. The
+   * answer is exactly the plain test's (a distance strictly under r). For the checks that ran every
+   * fighter against every opponent: morale's regrouping and giving up, the group states, sight.
+   * @param {{ x: number, y: number }[]} list @param {number} [cell]
+   */
+  function proximity(list, cell = 128) {
+    const cells = new Map();
+    const keyOf = (cx, cy) => (cx + 4096) * 8192 + (cy + 4096);
+    for (const v of list) {
+      const k = keyOf(Math.floor(v.x / cell), Math.floor(v.y / cell));
+      const bucket = cells.get(k);
+      if (bucket) bucket.push(v);
+      else cells.set(k, [v]);
+    }
+    return {
+      /** Is any within `r` of (x, y)? @param {number} x @param {number} y @param {number} r */
+      any(x, y, r) {
+        if (!cells.size) return false;
+        const [x0, x1, y0, y1] = [Math.floor((x - r) / cell), Math.floor((x + r) / cell), Math.floor((y - r) / cell), Math.floor((y + r) / cell)];
+        for (let cx = x0; cx <= x1; cx++) {
+          for (let cy = y0; cy <= y1; cy++) {
+            for (const v of cells.get(keyOf(cx, cy)) || NONE) if (Math.hypot(v.x - x, v.y - y) < r) return true;
+          }
+        }
+        return false;
+      },
+    };
+  }
+
   /** Does a flying arrow at (x, y) hit cover that stops arrows (trees, walls, crates)? */
   const arrowBlocked = (x, y) => obstaclesNear(x, y).some((o) => o.blocksArrows !== false && inside(o, x, y));
 
@@ -330,6 +361,7 @@
   CL.units = {
     FACE_VECTORS,
     BOUNDS,
+    proximity,
     ARC,
     SWING,
     UNIT_RADIUS,

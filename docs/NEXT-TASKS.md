@@ -2463,7 +2463,7 @@ The phase opens with four battle-scale tasks (owner, 2026-11-22; decisions D-P9a
 
   A task that turns out to reach more than its row runs those files too, and says so.
 
-### P9-B1 · Battle size, measured and raised (M–L) — Specified
+### P9-B1 · Battle size, measured and raised (M–L) — ✅ Done in 3.1.0 (the owner's phone benchmark to come)
 
 **Problem.** A battle holds at most 40 fighters at once (Settings: 20, 30 or 40), set for the phone when battles were first scaled (GDD §6, V2). The owner wants 100–150 at once (D-P9a), and the phone was hardly stressed at 40.
 
@@ -2487,6 +2487,19 @@ The phase opens with four battle-scale tasks (owner, 2026-11-22; decisions D-P9a
 - Browser: the setting's range and its use in the next battle, at both sizes.
 
 **Acceptance.** On the owner's phone, the benchmark's 100 holds at 30 fps or better (or the measured largest size is recorded as the default, with what limits it).
+
+**Done (3.1.0).** Settled with the owner at the start (2026-11-22, D-P9a): the deployment grows with the size, the benchmark is an open field grown for the size, a device on the old default moves to the new one, and 60 fps stays the target at 40.
+- **The setting:** Battle size from 20 to 150 in steps of 10, in Settings and the Debug panel. A device that never chose a size follows the default; one that chose keeps it (`battleSizeChosen`; settings from before 3.1.0 on that build's default, 30 on a phone and 40 on a computer, count as not chosen). **The default is provisional:** 100 on a computer and 60 on a phone (`CL.settings.BATTLE_DEFAULT`), until the owner's benchmark gives the phone's number.
+- **A slow battle's offer:** a campaign battle that ran under 30 fps for at least 10 seconds offers a smaller size on its result screen ("Use 40"), once a device and only while no size was chosen. It is never applied by itself.
+- **The field:** the deployment limits (12 foot, 8 archers, 6 riders at 40) grow with the size (45, 30 and 23 at 150), so a company of 74 starts on the field instead of 26; a block bigger than the old limit forms a wide line, inside the field. A company no bigger than before forms up exactly as it did, at any size. Generated large fields grow above 80 (3 screens at 80, 3.75 at 150, `CL.arena.growth`); the one-screen fields and the courtyard don't.
+- **The benchmark:** Debug → Battle benchmark runs the same open-field battle at 40, 60, 80, 100, 120 and 150, 30 seconds each, each side with twice its share in reserve so the field stays full, the company following the hero so the fight is in view. The result screen and one line in Logs give each size's fps, slowest frame (from the second second on) and simulation and drawing ms, and the largest size at 30 fps or better. Stress 100 and Stress 150 join the panel. `npm run bench` runs the same battle at the same sizes in Node, with a count of fighters standing idle far from the fight.
+- **The performance work the numbers asked for** (simulation alone in Node, on the development machine, at 150: 4.0 ms a frame and 8.6 ms at the 95th percentile before; 1.9 and 2.6 after, with everyone following; 0.54 ms at 40):
+  - **thinking:** finding the nearest opponent is one pass instead of a sort of every fighter (a quarter of the battle's cost at 150); braced spears test distance before the troop;
+  - **morale, groups and sight:** the checks that tested every fighter against every opponent four or five times a second (regrouping, giving up the field, a group's "engaged", what the company sees) use one grid a check (`CL.units.proximity`), with exactly the same answers;
+  - **drawing:** above 80 at once the drawing is thinned as Reduced effects does (no hit rings except the Rally's, health bars only over the badly hurt, the fallen fading after 20 seconds, the hero and companions never), only the fallen still showing are sorted, and arrows are drawn in one stroke a side. Off-screen fighters were already skipped.
+- **Measured in the desktop preview:** the benchmark ran every size; that browser pane runs at 30 fps whatever the load, so its fps says nothing, but its work a frame does: at 150, 0.9 ms of simulation and 0.5 ms of drawing (0.4 and 0.4 at 40).
+- **Not done:** the owner's phone benchmark, and so the phone's default (60 until then); re-planning far or idle fighters less often, and cached sprite frames (the numbers didn't ask for them; the phone may). B-01's parity at 100 moves to P9-B2 (today's battles are under 40, so a bigger size changes nothing yet); P9-B1's tests check instead that battles of 40, 100 and 150 end and that the stronger side wins at each.
+- **Found for P9-B2:** fighters running from the field hold no place, so reserves step in while they are still on it (up to 193 drawn at a size of 150); and at 150 the reserves come in three at a time with a message each, which is too many messages.
 
 ### P9-B2 · Proportional battles, reserves on both sides (M) — Specified
 

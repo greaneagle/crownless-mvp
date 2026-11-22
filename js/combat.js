@@ -31,9 +31,15 @@
   /**
    * GDD §6 scaling: at most `activeCap` units fight at once (hero, companion, soldiers and enemies
    * together). Each side's share is fixed when the battle starts; the rest wait in reserve and step in
-   * as others fall, a stack at a time. The cap is a setting (20 / 30 / 40) for slower phones.
+   * as others fall, a stack at a time. The cap is a device setting, 20 to 150 in steps of 10 (P9-B1,
+   * D-P9a; 20 / 30 / 40 before 3.1.0). `base` is the size the battle's numbers were tuned at: above it,
+   * the deployment grows with the size (`scaleOf`).
    */
-  const BATTLE = { activeCap: 40, capChoices: [20, 30, 40], stack: 3, minEnemies: 6, stall: 45 }; // stall: seconds without a blow (V2-T2)
+  const BATTLE = { activeCap: 40, capChoices: Array.from({ length: 14 }, (_, i) => 20 + i * 10), base: 40, stack: 3, minEnemies: 6, stall: 45 }; // stall: seconds without a blow (V2-T2)
+  /** How much bigger than the tuned size this battle is: 1 up to 40, 3.75 at 150. */
+  const scaleOf = () => Math.max(1, BATTLE.activeCap / BATTLE.base);
+  /** How many of a role may stand on the field at the start (the rest wait in reserve). @param {string} role */
+  const deployCap = (role) => Math.round(DEPLOY_CAP[role] * scaleOf());
   const DEFAULT_ENCOUNTER = 'captains_trial';
   const GUARD_SPEED = 0.65;
   const MAX_DT = 0.05;
@@ -63,8 +69,20 @@
   const game = () => CL.game;
   // The wagon of an escort ambush (P7-11, js/objective.js) is one more thing for the enemy to go for.
   const opponentsOf = (u) => (u.team === 'enemy' ? (game().wagon?.alive ? [game().hero, ...game().allies, game().wagon] : [game().hero, ...game().allies]) : game().enemies);
-  const nearestAlive = (u, list) =>
-    list.filter((v) => v?.alive).sort((a, b) => dist(u, a) - dist(u, b))[0];
+  /**
+   * The nearest living one of a list (the first of equals, as a stable sort would give). One pass, no
+   * sort: with 150 fighters the sort was a quarter of the battle's cost (P9-B1).
+   */
+  function nearestAlive(u, list) {
+    let best;
+    let bd = Number.POSITIVE_INFINITY;
+    for (const v of list) {
+      if (!v?.alive) continue;
+      const d = (v.x - u.x) ** 2 + (v.y - u.y) ** 2;
+      if (d < bd) [best, bd] = [v, d];
+    }
+    return best;
+  }
   // Start a swing just inside reach; archers loose at their troop range.
   // An archer on high ground shoots further (P7-11, js/formations.js).
   const fireRange = (u) => (u.ranged ? CL.formations.rangeOf(u) : u.reach - 1);
@@ -108,6 +126,7 @@
     g.arrows = [];
     g.effects = [];
     g.attackQueuedAt = null;
+    g.frameTally = { frames: 0, ms: 0 }; // this device's frame rate in this battle (js/main.js; P9-B1's slow offer)
     g.allyReserve = [];
     g.enemyReserve = [];
     // A practice battle (the debug panel's stress test) brings its own soldiers and changes nothing.
@@ -142,20 +161,27 @@
     g.allyCap = Math.max(1 + withMara, Math.min(1 + withMara + soldiers.length, BATTLE.activeCap - enemyShare));
     g.enemyCap = BATTLE.activeCap - g.allyCap;
     const placed = { infantry: 0, archer: 0, cavalry: 0 };
+    // How many of each role will form up at the start: a block no bigger than before 3.1.0 forms up as it always did.
+    const forming = { infantry: 0, archer: 0, cavalry: 0 };
+    for (const s of soldiers) {
+      const role = CL.content.troop(s.troop).role;
+      if (role in forming) forming[role]++;
+    }
+    for (const role of Object.keys(forming)) forming[role] = Math.min(forming[role], deployCap(role));
     for (const s of soldiers) {
       const role = CL.content.troop(s.troop).role;
       if (!(role in placed)) continue;
-      if (placed[role] >= DEPLOY_CAP[role] || 1 + withMara + g.allies.length >= g.allyCap) {
+      if (placed[role] >= deployCap(role) || 1 + withMara + g.allies.length >= g.allyCap) {
         g.allyReserve.push({ troop: s.troop, soldierId: s.id });
         continue;
       }
-      const i = placed[role]++;
-      const [x, y] =
-        role === 'infantry'
-          ? [anchor.x - 95 + (i % 3) * 42, anchor.y - 85 + Math.floor(i / 3) * 47]
-          : role === 'archer'
-            ? [anchor.x - 166 + (i % 3) * 40, anchor.y + 58 + Math.floor(i / 3) * 44]
-            : [anchor.x - 210 + (i % 2) * 52, anchor.y - 120 + Math.floor(i / 2) * 56]; // cavalry on the left wing
+      const big = forming[role] > DEPLOY_CAP[role];
+      let [x, y] = startSpot(anchor, role, placed[role]++, big);
+      if (big) {
+        // A big company on a small field: kept inside it (separation spreads any crowd).
+        const b = g.battleMap.bounds || CL.units.BOUNDS;
+        [x, y] = [Math.max(b.minX, Math.min(b.maxX, x)), Math.max(b.minY, Math.min(b.maxY, y))];
+      }
       const u = CL.traits.apply(CL.blacksmith.applyKit(makeUnit(x, y, 'ally', s.troop, s.id), s), s); // fine kit (P7-03), trait (P7-07)
       CL.units.resolveObstacles(u); // form up around trees and walls
       g.allies.push(u);
@@ -204,6 +230,31 @@
     CL.tactics.scan(g, 0); // what the company can see from the start
     CL.ui.hideBattleOverlays();
     CL.diag.log('info', 'Battle begun', { encounter: enc.id, battleId: g.battleId, deployed: placed, reserve: g.allyReserve.length, cap: BATTLE.activeCap });
+  }
+
+  /**
+   * Where the i-th soldier of a role forms up when the battle starts (before any setup moves them):
+   * infantry ahead, archers behind and below, cavalry on the left wing. A block no bigger than before
+   * 3.1.0 (DEPLOY_CAP) forms up as it always did; a bigger one (`big`, P9-B1) is wider, so a big
+   * company forms a line rather than a long column.
+   * @param {{ x: number, y: number }} anchor @param {string} role @param {number} i @param {boolean} big
+   */
+  function startSpot(anchor, role, i, big) {
+    if (!big) {
+      if (role === 'infantry') return [anchor.x - 95 + (i % 3) * 42, anchor.y - 85 + Math.floor(i / 3) * 47];
+      if (role === 'archer') return [anchor.x - 166 + (i % 3) * 40, anchor.y + 58 + Math.floor(i / 3) * 44];
+      return [anchor.x - 210 + (i % 2) * 52, anchor.y - 120 + Math.floor(i / 2) * 56];
+    }
+    // Ranks run front to back (x), files across (y): the files grow with the block, so ranks stay few.
+    const filesOf = (n) => Math.max(3, Math.ceil(Math.sqrt(n * 2)));
+    const files = filesOf(deployCap(role));
+    const [rank, file] = [Math.floor(i / files), i % files];
+    if (role === 'infantry') return [anchor.x - 10 - rank * 42, anchor.y + (file - (files - 1) / 2) * 40];
+    if (role === 'archer') return [anchor.x - 230 - rank * 40, anchor.y + (file - (files - 1) / 2) * 38];
+    // Cavalry wait on the left wing (up the field, -y), clear of the infantry's line.
+    const cols = Math.max(2, Math.ceil(Math.sqrt(deployCap(role))));
+    const top = ((filesOf(deployCap('infantry')) - 1) / 2) * 40;
+    return [anchor.x - 200 + (i % cols) * 52, anchor.y - top - 70 - Math.floor(i / cols) * 50];
   }
 
   function spawnWave() {
@@ -742,6 +793,8 @@
     ENEMY,
     AI,
     BATTLE,
+    scaleOf,
+    deployCap,
     setActiveCap,
     reinforce,
     CAVALRY,

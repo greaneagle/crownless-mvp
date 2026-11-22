@@ -258,13 +258,26 @@
   const GENERATORS = { forest, field, ford, hills };
   const built = new Map();
 
-  /** Build a generated map record from the data (once; later calls get the same object). @param {any} rec */
-  function build(rec) {
+  /**
+   * P9-B1: a large field grows with the battle size, so 150 fighters have room. Up to `from` fighters
+   * it is the data's size; at `to` it is `most` times as wide and high (3 screens become 3.75).
+   */
+  const GROW = { from: 80, to: 150, most: 1.25 };
+  /** How much bigger than the data's size a generated field is at a battle size. @param {number} size */
+  const growth = (size) => 1 + (GROW.most - 1) * Math.max(0, Math.min(1, (size - GROW.from) / (GROW.to - GROW.from)));
+
+  /**
+   * Build a generated map record from the data (once per size; later calls get the same object).
+   * @param {any} rec @param {number} [size] the battle size (default: the current setting)
+   */
+  function build(rec, size = CL.combat?.BATTLE.activeCap ?? GROW.from) {
     if (!rec.generate) return rec;
-    if (built.has(rec.id)) return built.get(rec.id);
     const g = rec.generate;
-    const map = { ...GENERATORS[g.kind](g.scale, g.seed), id: rec.id, name: rec.name, small: rec.small || null };
-    built.set(rec.id, map);
+    const scale = Math.round(g.scale * growth(size) * 100) / 100;
+    const key = scale === g.scale ? rec.id : `${rec.id}@${scale}`;
+    if (built.has(key)) return built.get(key);
+    const map = { ...GENERATORS[g.kind](scale, g.seed), id: rec.id, name: rec.name, small: rec.small || null };
+    built.set(key, map);
     return map;
   }
 
@@ -278,5 +291,5 @@
     return build(rec);
   }
 
-  CL.arena = { KINDS, FORD_SLOW, WALL, forest, field, ford, hills, assault, wayThrough, build, mapFor };
+  CL.arena = { KINDS, FORD_SLOW, WALL, GROW, growth, forest, field, ford, hills, assault, wayThrough, build, mapFor };
 })(typeof window !== 'undefined' ? window : globalThis);

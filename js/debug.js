@@ -194,6 +194,104 @@
     log('map drawing test started', {});
   }
 
+  // ---- P9-B1: the battle benchmark, for the owner's phone ----
+
+  /**
+   * The same open-field battle at each size, 30 seconds of fighting each, one after another. Each side
+   * has twice its share waiting in reserve, so the field stays full while the fallen are replaced.
+   */
+  const BENCH = { sizes: [40, 60, 80, 100, 120, 150], seconds: 30, reserve: 2, map: 'open_country', target: 30 };
+  let bench = null; // { queue, rows, was } while the benchmark runs
+
+  /**
+   * The benchmark's battle at a size: half the field yours, half Reavers, in the usual mix of foot,
+   * archers and riders, on the large open field grown for that size (whatever the Battlefield setting).
+   * Also used by `scripts/bench-battle.js` and the tests, so Node measures the same battle.
+   * @param {number} size @param {{ reserve?: number }} [opts] reserve: each side's reserve, in shares of the field (0: none)
+   */
+  function benchDef(size, { reserve = BENCH.reserve } = {}) {
+    const share = Math.floor(size / 2);
+    const allies = (share - 1) * (1 + reserve);
+    const enemies = (size - share) * (1 + reserve);
+    const mix = ['footman', 'footman', 'hunter', 'levy', 'rider', 'guard', 'longbowman', 'spearman'];
+    const emix = ['reaver', 'looter', 'skirmisher', 'reaver', 'horse_scout', 'mercenary'];
+    const wave = {};
+    for (let i = 0; i < enemies; i++) wave[emix[i % emix.length]] = (wave[emix[i % emix.length]] || 0) + 1;
+    return {
+      id: `bench_${size}`,
+      name: `Battle benchmark (${size})`,
+      mapDef: CL.arena.build(CL.content.get('battle_maps', BENCH.map), size),
+      waves: [wave],
+      practice: Array.from({ length: allies }, (_, i) => mix[i % mix.length]),
+      reward: { goldBase: 0, goldPerKill: 0, renown: 0 },
+      loot: 'low',
+    };
+  }
+
+  /**
+   * Start one size of the benchmark. The hero can't fall, and the company follows them, so the fight
+   * comes to the hero and stays in view (the drawing is measured where the battle is). @param {number} size
+   */
+  function benchStart(size) {
+    CL.game.siteId = null;
+    CL.game.partyId = null;
+    CL.combat.setActiveCap(size);
+    CL.combat.startBattle(benchDef(size));
+    CL.game.godMode = true;
+    for (const grp of ['infantry', 'archer', 'cavalry']) CL.game.orders[grp] = 'follow';
+    CL.ui.message(`Battle benchmark: ${size} at once (${bench.rows.length + 1} of ${BENCH.sizes.length}), ${BENCH.seconds} s…`);
+  }
+
+  /** Debug → Battle benchmark: every size in turn; the result screen and the Logs get the numbers. */
+  function benchmark() {
+    bench = { queue: [...BENCH.sizes], rows: [], was: { cap: CL.combat.BATTLE.activeCap, god: Boolean(CL.game.godMode) } };
+    log('battle benchmark started', { sizes: BENCH.sizes, seconds: BENCH.seconds });
+    benchStart(bench.queue.shift());
+  }
+
+  const benching = () => Boolean(bench);
+
+  /** One frame of the benchmark (from the main loop): a size's time is up, or its battle was left. */
+  function benchFrame() {
+    if (!bench) return;
+    const g = CL.game;
+    if (g.mode === 'battle' && g.practice && g.t >= BENCH.seconds) CL.party.endBattle(true);
+    else if (g.mode !== 'battle' && g.mode !== 'result') benchStop('left');
+  }
+
+  /** A size's battle ended (its time, or one side ran out): record it, then the next or the report. @param {any} stats */
+  function benchDone(stats) {
+    bench.rows.push(stats);
+    if (bench.queue.length) return benchStart(bench.queue.shift());
+    const rows = bench.rows;
+    benchStop(null);
+    const ok = rows.filter((r) => r.fps >= BENCH.target);
+    const best = ok.length ? ok[ok.length - 1].cap : null;
+    const line = (r) => `${r.cap}: ${r.fps} fps, slowest ${r.worstFrameMs} ms, sim ${r.simMs} + draw ${r.drawMs} ms`;
+    const summary = `Battle benchmark: ${rows.map(line).join(' · ')} · best at ${BENCH.target} fps: ${best ?? 'none'} (canvas ${rows[0].canvas === 1 ? '960×540' : `${rows[0].canvas}×`}, text ${rows[0].textSize})`;
+    CL.diag.log('info', summary, { rows, best });
+    const g = CL.game;
+    g.result = {
+      win: true,
+      practice: { bench: true, rows, best },
+      html: [
+        `<strong>Largest size at ${BENCH.target} fps or better: ${best ?? 'none of them'}</strong>`,
+        ...rows.map((r) => `${r.cap} at once (up to ${r.peak} on the field, those running away included): ${r.fps} fps · slowest frame ${r.worstFrameMs} ms · simulation ${r.simMs} ms, drawing ${r.drawMs} ms a frame`),
+        'The same line is in Logs (F3). Nothing in your campaign changed.',
+      ].join('<br>'),
+    };
+    CL.ui.changeMode('result');
+  }
+
+  /** The benchmark ends: the battle size and God mode as they were. @param {string | null} why */
+  function benchStop(why) {
+    if (!bench) return;
+    CL.combat.setActiveCap(bench.was.cap);
+    CL.game.godMode = bench.was.god;
+    if (why) log('battle benchmark stopped', { why, done: bench.rows.length });
+    bench = null;
+  }
+
   const STRESS_HOURS_PER_SECOND = 24; // the map stress test runs a game day every second
   const STRESS_PROBE_KEY = 'crownless_stress_probe';
 
@@ -757,6 +855,11 @@
         toggle(false);
         stressBattle(n);
         return;
+      case 'benchmark': // P9-B1
+        if (mode === 'battle' || mode === 'result') return CL.ui.message('Finish the battle first');
+        toggle(false);
+        benchmark();
+        return;
       case 'camera':
         if (mode === 'battle' || mode === 'result') return CL.ui.message('Finish the battle first');
         toggle(false);
@@ -834,6 +937,13 @@
     teleport,
     endBattleNow,
     stressBattle,
+    BENCH,
+    benchDef,
+    benchmark,
+    benching,
+    benchFrame,
+    benchDone,
+    benchStop,
     cameraTest,
     fordTest,
     mapTest,

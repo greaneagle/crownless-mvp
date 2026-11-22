@@ -110,7 +110,11 @@
    * @param {any} g @param {string} team @param {string} role
    * @returns {{ total: number, parts: Record<string, number> } | null} null when the group has nobody standing
    */
-  function targetFor(g, team, role) {
+  /** The standing opponents of a team, in a grid for "is any near?" (P9-B1). @param {any} g @param {string} team */
+  const foesNear = (g, team) => CL.units.proximity((team === 'ally' ? g.enemies : [g.hero, ...g.allies]).filter((f) => f && standing(f)));
+
+  /** @param {any} g @param {string} team @param {string} role @param {{ any: (x: number, y: number, r: number) => boolean }} [near] the team's standing opponents (foesNear) */
+  function targetFor(g, team, role, near = foesNear(g, team)) {
     const rec = record(g, team, role);
     const list = listOf(g, team);
     const mine = list.filter((u) => inGroup(u, role) && rec.base.has(u.id));
@@ -126,7 +130,6 @@
       seen += all.length;
       gone += all.filter((u) => !standing(u)).length;
     }
-    const foes = team === 'ally' ? g.enemies : [g.hero, ...g.allies];
     const cx = up.reduce((n, u) => n + u.x, 0) / up.length;
     const cy = up.reduce((n, u) => n + u.y, 0) / up.length;
     /** @type {Record<string, number>} */
@@ -147,7 +150,7 @@
     parts.veterans = up.reduce((n, u) => n + (TERMS.tier[CL.content.troop(u.troop).tier] || 0), 0) / up.length;
     const steady = CL.traits?.cohesion(up) || 0; // steadfast soldiers hold their group together (P7-07)
     if (steady) parts.steadfast = steady;
-    const close = up.some((u) => foes.some((f) => f && standing(f) && Math.hypot(f.x - u.x, f.y - u.y) < TERMS.regroupRadius));
+    const close = up.some((u) => near.any(u.x, u.y, TERMS.regroupRadius));
     parts.regroup = close ? 0 : TERMS.regroup;
     if (team === 'ally') {
       const h = g.hero;
@@ -253,10 +256,11 @@
     const shown = {};
     for (const team of ['ally', 'enemy']) {
       const list = listOf(g, team);
+      const near = foesNear(g, team); // once a team, not once a soldier (P9-B1)
       for (const role of GROUPS) {
         const rec = record(g, team, role);
         for (const u of list) if (inGroup(u, role) && standing(u)) rec.base.add(u.id);
-        const t = targetFor(g, team, role);
+        const t = targetFor(g, team, role, near);
         if (!t) {
           if (list.some((u) => inGroup(u, role) && u.alive && u.routing)) shown[`${team}:${role}`] = 'rout';
           continue;
@@ -269,7 +273,7 @@
         const up = list.filter((u) => inGroup(u, role) && standing(u));
         // An enemy group falling back that nobody presses gives up the field (V2-T2: no stalemates).
         if (team === 'enemy' && rec.state === 'fallback') {
-          const pressed = up.some((u) => [g.hero, ...g.allies].some((a) => a && standing(a) && Math.hypot(a.x - u.x, a.y - u.y) < GIVE_UP.radius));
+          const pressed = up.some((u) => near.any(u.x, u.y, GIVE_UP.radius));
           rec.alone = pressed ? 0 : (rec.alone || 0) + step;
           if (rec.alone >= GIVE_UP.seconds) {
             rec.state = 'rout';

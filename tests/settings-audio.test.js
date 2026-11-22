@@ -7,17 +7,18 @@ const { loadGame } = require('./helpers/load');
 test('settings: defaults, validation, saved on the device and applied to the battle size', () => {
   const { CL, storage } = loadGame();
   const S = CL.settings;
-  assert.deepEqual({ ...S.load() }, { music: 50, sfx: 70, battleSize: 40, battlefield: 'large', prepPreset: 'balanced', prepSkip: false, prepCustom: null, reducedEffects: false, healthBars: true, tips: true, fullscreen: false, textSize: 'normal', mapZoom: null, battleZoom: 1 });
+  assert.deepEqual({ ...S.load() }, { music: 50, sfx: 70, battleSize: 100, battleSizeChosen: false, slowOffered: false, battlefield: 'large', prepPreset: 'balanced', prepSkip: false, prepCustom: null, reducedEffects: false, healthBars: true, tips: true, fullscreen: false, textSize: 'normal', mapZoom: null, battleZoom: 1 });
   assert.equal(S.set('battleSize', 20), true);
   assert.equal(CL.combat.BATTLE.activeCap, 20, 'applied at once');
   assert.equal(S.set('battleSize', 25), false, 'only the offered sizes');
+  assert.equal(S.set('battleSize', 160), false, 'no more than 150');
   assert.equal(S.set('music', 150), false);
   assert.equal(S.set('sfx', 35), true);
   assert.equal(S.set('nonsense', 1), false);
-  assert.deepEqual(JSON.parse(storage.data[S.KEY]), { music: 50, sfx: 35, battleSize: 20, battlefield: 'large', prepPreset: 'balanced', prepSkip: false, prepCustom: null, reducedEffects: false, healthBars: true, tips: true, fullscreen: false, textSize: 'normal', mapZoom: null, battleZoom: 1 });
+  assert.deepEqual(JSON.parse(storage.data[S.KEY]), { music: 50, sfx: 35, battleSize: 20, battleSizeChosen: true, slowOffered: false, battlefield: 'large', prepPreset: 'balanced', prepSkip: false, prepCustom: null, reducedEffects: false, healthBars: true, tips: true, fullscreen: false, textSize: 'normal', mapZoom: null, battleZoom: 1 });
   // Junk in storage falls back to the defaults, setting by setting.
   storage.data[S.KEY] = JSON.stringify({ music: 'loud', sfx: -20, battleSize: 99, reducedEffects: 'yes', healthBars: false });
-  assert.deepEqual({ ...S.load() }, { music: 50, sfx: 0, battleSize: 40, battlefield: 'large', prepPreset: 'balanced', prepSkip: false, prepCustom: null, reducedEffects: false, healthBars: false, tips: true, fullscreen: false, textSize: 'normal', mapZoom: null, battleZoom: 1 });
+  assert.deepEqual({ ...S.load() }, { music: 50, sfx: 0, battleSize: 100, battleSizeChosen: false, slowOffered: false, battlefield: 'large', prepPreset: 'balanced', prepSkip: false, prepCustom: null, reducedEffects: false, healthBars: false, tips: true, fullscreen: false, textSize: 'normal', mapZoom: null, battleZoom: 1 });
   storage.data[S.KEY] = '{not json';
   assert.equal(S.load().music, 50);
 });

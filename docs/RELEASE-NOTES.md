@@ -1,5 +1,22 @@
 # Crownless — Release Notes
 
+## v3.1.0 — Battle size, measured and raised (P9-B1) · 2026-11-22
+
+Phase 9, "Kingdoms & Houses", begins with battles at a bigger scale.
+
+### New
+- **Battle size from 20 to 150 at once** (Settings → Battle size, in steps of 10). Until you choose, a device starts at its default: for now 100 on a computer and 60 on a phone, until the owner's phone benchmark sets the phone's. A size you chose is kept.
+- **A slow battle offers a smaller size:** if a battle runs under 30 frames a second, its result screen offers a smaller battle size once. It never changes by itself.
+- **Big battles have room:** more of your company starts on the field (up to 74 of yours at 150), a big company forms a wide line, and the large fields grow in battles of over 80 (up to 3.75 screens across at 150). A company no bigger than before forms up exactly as before.
+- **Big battles stay readable:** above 80 at once there are no hit rings, health bars show only over the badly hurt, and the fallen fade from the field after 20 seconds.
+- **Debug → Battle benchmark:** the same open-field battle at 40, 60, 80, 100, 120 and 150, 30 seconds each, reporting each size's frame rate, slowest frame and simulation and drawing time, and the largest size at 30 fps or better. Also Stress 100 and Stress 150.
+
+### Under the hood
+- No save change. The battle size stays a device setting.
+- **Faster battles:** at 150 the simulation costs about half what it did (finding the nearest opponent without sorting everyone; one grid for morale, group states and sight, with the same answers). Arrows are drawn in one stroke a side.
+- `npm run bench` runs the benchmark's battle at the same sizes in Node.
+- **Tests:** 814 fast Node tests; the slow files this reaches (`battle-parity`, `battle-extras`); 193 browser tests with 9 skipped (the visual baselines, Linux only, and those for one device only). In the full run, the phone's ford battle failed once on its timed walking under load; it passed 8 times out of 8 alone.
+
 ## v3.0.0 — The Landed World (P8-T) · 2026-11-21
 
 Phase 8 is complete: holdings and the people of the realms, permissions, lords on the map, allegiance, fiefs, sieges and the assault battle, named nobles, and losing and retaking land. This release tunes it and checks the phase's exit; the evidence is in `docs/PHASE-8-VALIDATION.md`.

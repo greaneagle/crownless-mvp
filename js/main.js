@@ -57,16 +57,22 @@
       diag.simMs = diag.simMs * 0.95 + (t1 - t0) * 0.05;
       diag.drawMs = diag.drawMs * 0.95 + (t2 - t1) * 0.05;
       if (CL.game.mode === 'map') CL.mapView.testFrame(t1 - t0, t2 - t1, dt); // the Debug panel's map test, if running
+      const ft = CL.game.mode === 'battle' && !CL.game.paused && !CL.game.overview && CL.game.t > 1 ? CL.game.frameTally : null;
+      if (ft) {
+        ft.frames++;
+        ft.ms += dt * 1000;
+      }
       const p = CL.game.mode === 'battle' && !CL.game.paused ? CL.game.practice : null;
       if (p) {
         p.frames++;
         p.sim += t1 - t0;
         p.draw += t2 - t1;
-        p.worst = Math.max(p.worst, dt * 1000);
+        if (CL.game.t > 1) p.worst = Math.max(p.worst, dt * 1000); // from the second second: not the frame that set the battle up (P9-B1)
         const g = CL.game;
         const live = (l) => l.reduce((n, u) => n + (u.alive ? 1 : 0), 0);
         p.peak = Math.max(p.peak, (g.hero.alive ? 1 : 0) + live(g.allies) + live(g.enemies));
       }
+      CL.debugTools.benchFrame(); // the Debug panel's battle benchmark, if running (P9-B1)
       diag.frames++;
       if (ts - diag.lastFps > 1000) {
         diag.fps = Math.round((diag.frames * 1000) / (ts - diag.lastFps));
