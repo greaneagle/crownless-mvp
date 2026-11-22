@@ -282,15 +282,18 @@ _Re-specified 2026-11-20 at build 2.23.0 (commit 09176e8), against the code and 
 
 ## 6. Phase 9 — "Kingdoms & Houses"
 
-All of Phase 9 is **Provisional**.
+All of Phase 9 is **Provisional**, except the three battle-scale tasks at its head (owner, 2026-11-22), which are **Specified** and come first: armies (P9-05) need them.
 
 | ID | Task | Size | Needs |
 |---|---|---|---|
+| **P9-B1** | **Battle size, measured and raised:** a phone benchmark at 40, 60, 80, 100, 120 and 150 fighters; the performance work it shows is needed (cheaper thinking and drawing for far and idle fighters); the battle size adjustable in Settings from 20 to 150, with a default chosen by the measurement | M–L | B-01, P7-11 |
+| **P9-B2** | **Proportional battles, reserves on both sides:** the field shared by army size (300 against 200 at a size of 100 fights 60 against 40), both sides feeding in reserves as their men fall, and nearby parties joining a side's reserve; waves kept only for fixed encounters | M | P9-B1, V2-09 |
+| **P9-B3** | **A bigger company:** no hard cap of 20; a limit up to 200 grown by Leadership, renown, companions as officers and land; wages, food, recruits, the Party screen and the world's other parties scaled to match | M–L | P9-B2, P8-05 |
 | **P9-01** | Realms as organisations | M | P8-02, V2-11 |
 | **P9-02** | Diplomacy and treaties (grows from W-07's war and peace) | M | W-07, P9-01 |
 | **P9-03** | Founding or taking a kingdom (with rebel, sovereign and independent holdings, moved from P8-04), by the player or an AI lord | M | P8-04, P9-01 |
 | **P9-04** | Rebellion and deposition (AI lords as claimants who can take the ruler's office) | L | P8-07, P9-03 |
-| **P9-05** | Armies and campaigns (and towns changing hands, moved from Phase 8) | L | P8-06a, P8-06b, W-07 |
+| **P9-05** | Armies and campaigns (and towns changing hands, moved from Phase 8) | L | P8-06a, P8-06b, W-07, P9-B3 |
 | **P9-06** | Houses, marriage and claims (with lords' deaths and heirs, moved from Phase 8) | M | P8-07 |
 | **P9-07** | Modding: a declarative content format (namespaced ids moved here from W-04) | M–L | W-04 |
 | **P9-08** | Creator tools and a second world | L | P9-07 |
@@ -309,7 +312,7 @@ All of Phase 9 is **Provisional**.
 6. **W-07,** then **W-08.** **W-09** if the owner chooses impassable terrain (D-W4), or before P7-04's "Avoid danger" routes.
 7. **B-01** early in Phase 7, then Phase 7 roughly in table order (P7-04 before P7-02; P7-05 before P7-06).
 8. **Phase 8** in the build order of §5 (re-specified 2026-11-20): P8-02, P8-03, P8-01, P8-04, P8-05, P8-06a, P8-06b, P8-07, P8-08, P8-T. W-09 is not needed: sieges and lords move on passable terrain.
-9. **Phase 9,** re-specified at its start.
+9. **Phase 9,** re-specified at its start, except its head: **P9-B1, P9-B2, P9-B3** first, in that order (owner, 2026-11-22), then the rest. P9-B1's phone measurement decides how far P9-B2 and P9-B3 can go.
 
 ### Versions (owner decision D-V1)
 - Proposed: each finished task bumps the minor version (2.1.0, 2.2.0, …); fixes bump the patch.
@@ -390,6 +393,9 @@ Decisions marked **blocking** must be made before the named task starts. The oth
 | **D-P8f** | Who holds a fief after a conquest? | **Never vacant** (owner, 2026-11-20). It goes to whoever took it, or to the ruler. The conqueror (an AI lord or the player, if not the ruler) chooses one: **ask the liege for it** (the liege decides), **suggest someone** they like (their relationship grows), **hand it to the ruler outright** (relationship and influence with the ruler grow) or **keep it** without asking (the ruler may accept, or expel them and send lords to retake it). When the ruler took it, or it was taken in the ruler's name, the ruler decides who gets it, the player included once they can be a ruler (Phase 9). The same choices and rules for AI lords and the player. **Owner, 2026-11-20: decided.** | P8-02 (no vacant holder), P8-05, P8-06a, P8-07 |
 | **D-P8g** | Men and women | **Owner, 2026-11-20: decided.** People of the realms have a `gender`. Noblewomen are lords in full: they hold fiefs, lead parties and can be rulers (queens); followers can be women too. **Regular soldiers (levies and every troop line) are men.** Women soldiers come later as their own troop types. The hero keeps the gender chosen at character creation | P8-02 |
 | D-A1 | When art, commercial, packaging and demo come back | After the art team delivers; an art-integration task then | — |
+| **D-P9a** | How large may a battle be, and who sets it? | **Owner, 2026-11-22:** adjustable in Settings, from 20 up to **150** fighters on the field at once; the default is the largest size the owner's phone holds at 30 fps or better in P9-B1's benchmark (100 is the hope). Battles of 200 at once are not a goal | P9-B1 |
+| **D-P9b** | How large may the company be? | **Owner, 2026-11-22:** up to **150–200**, not 20; it grows with Leadership, renown, companions (as officers) and land, with a hard ceiling (200 proposed). Those beyond the field come in as reserves | P9-B3 |
+| **D-P9c** | How are big armies shared on the field? | **Owner, 2026-11-22: as in Mount & Blade.** Each side's share of the field is its share of the fighters (300 against 200 at a size of 100: 60 against 40, never fewer than 10 a side); both sides send reserves in as men fall, keeping that share; a fixed encounter (a lair, a story fight) keeps its waves | P9-B2 |
 
 ### D-P8b and D-P8c in full (owner, 2026-11-20: the defaults, accepted)
 
@@ -504,3 +510,4 @@ Decisions marked **blocking** must be made before the named task starts. The oth
 34. **Owner, 2026-11-20: no vacant fiefs (D-P8f).** A fief goes to its conqueror or the ruler; the conqueror asks for it, suggests someone, hands it to the ruler or keeps it (and may be expelled for it). P8-02's holder is never null; P8-05, P8-06a and P8-07 follow.
 35. **Owner, 2026-11-20: men and women (D-P8g).** People have a gender; noblewomen hold land, lead parties and rule. Regular soldiers are men, so P8-02 splits each name culture's given names and soldiers draw only men's names; women soldiers come later as their own troop types.
 36. **P8-02 details settled at the check:** the domain event is `HoldingChanged` (the events are PascalCase, and nothing listens yet); the story lock is enforced in grants, sieges and the Debug panel, not in `setOwner`, so the existing tests that move Greywall before Q4 stay as they are; a village may have no seat only when its kingdom holds no fort or town (the W-04 test world's Iron Reach); the v19 migration's constants are for `sundered_realm`, and other worlds' saves keep only their owner overrides for `sanitize` to complete.
+37. **Owner, 2026-11-22: battles and the company at Mount & Blade's scale.** The company limit of 20 and the battle size of 40 are too small: the company should reach 150–200 (D-P9b) and a battle 100–150 at once, adjustable (D-P9a), with big armies sharing the field by size and both sides reinforcing from reserves (D-P9c). Three tasks open Phase 9, P9-B1 (measure on the phone and raise the battle size), P9-B2 (proportional battles) and P9-B3 (the bigger company), before armies (P9-05), which now needs them.

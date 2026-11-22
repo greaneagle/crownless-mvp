@@ -2438,6 +2438,73 @@ Needs are computed, not saved.
 
 ## Phase 9 — Kingdoms & Houses (Provisional)
 
+The phase opens with three battle-scale tasks (owner, 2026-11-22; decisions D-P9a–D-P9c), **Specified**, built first and in order. The rest of the phase is re-specified at its start.
+
+### P9-B1 · Battle size, measured and raised (M–L) — Specified
+
+**Problem.** A battle holds at most 40 fighters at once (Settings: 20, 30 or 40), set for the phone when battles were first scaled (GDD §6, V2). The owner wants 100–150 at once (D-P9a), and the phone was hardly stressed at 40.
+
+**Build.**
+- **Measure first, on the owner's phone:**
+  - Debug → Battle size & stress test gains a **benchmark**: the same open-field battle at 40, 60, 80, 100, 120 and 150 fighters, each for 30 seconds of fighting, one after another;
+  - it reports, for each size: the average fps, the slowest frame, and simulation and drawing ms a frame (as the stress test does), and copies a one-line summary to the Logs;
+  - `scripts/bench-battle.js` (the Node benchmark) extended to the same sizes measures the simulation alone, for the record.
+- **Then the performance work the numbers ask for,** in this order, stopping when 100 holds at 30 fps on the phone:
+  - **thinking:** fighters far from any enemy, or holding, re-plan less often (every few frames, staggered); targets found through a grid of the battlefield (as `js/spatial.js` does for the map) instead of looking at every fighter;
+  - **drawing:** off-screen fighters not drawn; health bars, hit rings and arrow trails thinned with the size (the Reduced effects setting's cuts, by default above 80); sprites drawn from cached frames;
+  - **morale and groups:** counted per group, not per fighter, each frame.
+- **The setting:** Battle size from 20 to 150 in steps of 10 (Settings), saved with the device's settings as now. The default is the largest size the owner's phone held at 30 fps or better (100 is the hope); a lower one on a device that runs slower in its first battles is offered, never forced.
+- **The field:** the large battlefield's size grows with the battle size (more room for 150), and deployment zones with it.
+
+**Out.** Sharing the field by army size (P9-B2); a company beyond 20 (P9-B3).
+
+**Tests.**
+- The benchmark's Node run: every size completes, no fighter stuck, no frame over a bound in the simulation alone.
+- Battles at 100 and 150 end (no stalemate), with the same rules as at 40 (B-01's parity at 40 and at 100).
+- Browser: the setting's range and its use in the next battle, at both sizes.
+
+**Acceptance.** On the owner's phone, the benchmark's 100 holds at 30 fps or better (or the measured largest size is recorded as the default, with what limits it).
+
+### P9-B2 · Proportional battles, reserves on both sides (M) — Specified
+
+**Problem.** Today the enemy takes up to half of the field whatever the sizes, in waves, and only your side and helpers come in as reserves. In Mount & Blade, 300 meeting 200 fight in that proportion, and both sides send in reserves as men fall (D-P9c).
+
+**Build.**
+- **The share:** each side's places on the field are its share of all the fighters in the battle (yours with companions and helpers; theirs with their helpers): 300 against 200 at a battle size of 100 fight 60 against 40. Never fewer than 10 a side (or all of a smaller side).
+- **Reserves on both sides:** as fighters fall or flee the field, each side's reserve sends in the next, keeping its share; they enter from its own edge, in groups, never into the middle of a formation (as V2-09's helpers do).
+- **Nearby parties** (V2-09) join their side's reserve when they arrive, and the share is worked out again.
+- **The end:** a side is beaten when everyone on the field and in reserve has fallen or fled, or its morale breaks (the whole army's morale counts its reserve).
+- **What stays:** fixed encounters (a lair, a story battle, a tournament, the walls' assault) keep their waves; Simulate and auto-resolve count everyone, as now; the result commits once (V2-04).
+- **The Prepare screen** shows each side's numbers and their share of the field ("You: 300, 60 on the field. Them: 200, 40.").
+
+**Tests.**
+- The share at several sizes and battle sizes, the minimum of 10, rounding.
+- Both sides' reserves come in and keep the share; nobody enters twice; the totals at the end equal those at the start less the fallen.
+- Parity (B-01) re-measured: fought battles still 5–15 points over the odds, at 40 and at 100.
+- Browser: a 60-against-40 battle with both reserves coming in, at both sizes.
+
+**Acceptance.** A battle between two large parties fights in proportion, and both sides reinforce until one is beaten.
+
+### P9-B3 · A bigger company (M–L) — Specified
+
+**Problem.** The company can't pass 20 (`party.partyCap`). The owner wants 150–200 (D-P9b), the limit growing with what the hero becomes.
+
+**Build.**
+- **The limit,** with no fixed cap of 20 and a ceiling of 200: a base, plus Leadership, plus renown, plus each companion who can lead (as an officer: Mara and the retinue), plus land (a fort or town's levy; a village's men), plus Friendly standing as now. The Party screen shows how the limit is made up. Proposed: 8 + 5 per Leadership + 1 per 20 renown + 10 per officer + 15 a fort, 5 a village, up to 200 (tuned in P9-T).
+- **What a big company costs and needs, scaled:** wages and food (the quartermaster's budget with them); recruits (more per settlement and refilling faster, or the limit can't be met); upgrades and gear at volume.
+- **The world to match:** lords' households and the realms' patrols grow (the lords from 12–30 to about 40–120 by what they hold); bands of Reavers larger in the wild; garrisons; sieges' numbers (P8-06a's ratios kept).
+- **The Party screen for a big company:** soldiers grouped by troop with counts, expanded on a tap; upgrades by group; the phone layout kept.
+- **Detachments** (P7-05) may take more, and lead more.
+- **Save:** none expected (the roster is already a list); if one is needed, a schema step with fixtures as usual.
+
+**Tests.**
+- The limit from each part, and the ceiling.
+- A 150-soldier company's week: wages, food and the quartermaster exact; recruiting refills.
+- The world's sizes by what lords hold; `npm run landed` and the bots at the new sizes; the economy pass (`npm run economy`) still healthy.
+- Browser: the Party screen with 150 soldiers at both sizes.
+
+**Acceptance.** A company grows past 100 in play, the battles it fights use P9-B1's size and P9-B2's sharing, and the economy and the bots stay healthy.
+
 ### P9-01 · Realms as organisations (M)
 
 **Build.** Realm treasury, laws and offices; the ruler's wealth separate from the realm's (Part 2 §18.1).
@@ -2469,7 +2536,7 @@ Needs are computed, not saved.
 
 **Build.**
 - Armies from lords' retinues and the company: muster, march and supply.
-- Sieges and field battles at scale through the battle-size cap and reserves.
+- Sieges and field battles at scale through P9-B1's battle size and P9-B2's proportional sharing and reserves.
 - The phone budget kept; a Debug-panel army test.
 
 ### P9-06 · Houses, marriage and claims (M)
