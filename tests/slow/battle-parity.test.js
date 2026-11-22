@@ -33,12 +33,15 @@ test('layer 1: with Auto and no orders, fought battles are over the odds but not
 });
 
 // P8-06b: the assault on a fort's walls, fought and simulated with the walls' bonus, attack and defence.
+// P9-B5: at the world's scale (a company of 48, a garrison of 66), as one army a side, at the default
+// battle size of 150; at 40 every assault ends (its balance there is open: docs/NEXT-TASKS.md, P9-B5).
 test('sieges: an assault fought on the walls comes out over the odds, but not far, both ways', () => {
   const { runSiege } = require('../../scripts/parity');
   for (const r of runSiege({ seeds: 40 })) {
     assert.equal(r.unfinished, 0, `${r.scenario}: every fight ends`);
     assert.ok(r.overOdds >= -5 && r.overOdds <= 25, `${r.scenario}: fought ${r.foughtWin}% against the odds ${r.odds.toFixed(0)}%`);
   }
+  for (const r of runSiege({ seeds: 10, size: 40 })) assert.equal(r.unfinished, 0, `${r.scenario} at a battle size of 40: every fight ends`);
 });
 
 // P9-B2: big battles (the close fights eight and six times over) at a battle size of 40 and of 100,

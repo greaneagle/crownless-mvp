@@ -1,5 +1,22 @@
 # Crownless — Release Notes
 
+## v3.5.0 — The walls at the world's scale (P9-B5) · 2026-11-22
+
+### Changed
+- **Storming a fort is as hard as its odds again.** Since 3.3.0 garrisons are three times bigger, but they came down from the wall 8 at a time, so a company could take a fort it had little chance against. Now the assault is fought as one army a side, with reserves, as battles on the map have been since 3.2.0.
+- **You meet the part of the garrison on the stretch of wall you strike** (a little over half; the rest hold the other walls). **Defending,** most of the garrison fights beside you, and those who don't fit on the field come in as others fall.
+- **Ladders:** a ladder takes two at a time, climbing is slow and breaks ranks, and nobody can strike from a ladder. The rest wait at its foot.
+- **A battle where neither side will close now ends,** even with reserves still waiting: the whole army withdraws.
+- Debug: the practice assaults come as one army; new **Siege assault 100**.
+
+### Known
+- At a battle size of 40, storming is still much easier than its odds and defending a little harder. At the default of 150 they are about right.
+
+### Under the hood
+- No save change.
+- `node scripts/parity.js --siege` measures the walls at the world's scale (a company of 48 against a garrison of 66) at a battle size of 150; `--size 40` for another size.
+- **Tests:** 839 fast Node tests, all passing. The slow files this reaches (battle-parity with the siege test, battle-extras, campaign-bots), all passing; the other slow files were not run. 228 browser tests: 206 passing in the full run, 21 skipped by design, and one (the slow-battle offer, which reads this machine's frame rate) failing under the suite's load but passing alone.
+
 ## v3.4.0 — Command in layers (P9-B4) · 2026-11-22
 
 ### New

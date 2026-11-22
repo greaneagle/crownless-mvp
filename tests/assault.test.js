@@ -117,6 +117,7 @@ test('storming the walls: won, the fort is yours; lost, thrown back with your mo
   assert.equal(g.siege.ladders, 3);
   assert.equal(g.siege.ram, true);
   g.siege.holdT = won.CL.assault.RULES.hold.seconds; // they hold the courtyard, two defenders left in it
+  g.enemyReserve = []; // test setup: none of the garrison left to come (P9-B5: one army, with reserves)
   g.enemies.forEach((e, i) => {
     Object.assign(e, i < 2 ? { x: g.battleMap.wall.courtyard.x1 - 60 } : { alive: false });
   });
@@ -176,4 +177,93 @@ test('Simulate uses the same walls; practice assaults both ways end and change n
     env.CL.debugTools.endBattleNow(true);
     assert.equal(JSON.stringify(env.CL.campaign), before, `${side}: a practice changes nothing`);
   }
+});
+
+// ---- P9-B5: the walls at the world's scale ----
+
+test('storming: the garrison on the stretch of wall under assault, as one army sharing the field', () => {
+  const { CL, c } = siege(['footman', 'footman', 'guard', 'hunter']);
+  const garrison = CL.fiefs.count(CL.realm.holding('castra_nova', c).garrison);
+  const enc = CL.assault.encounter(c, 'castra_nova', 'attack', { ladders: 2 });
+  assert.equal(enc.share, true, 'one army a side (P9-B2), no longer waves of 8');
+  assert.equal(enc.waves.length, 1);
+  const n = Object.values(enc.waves[0]).reduce((a, b) => a + b, 0);
+  assert.equal(n, Math.ceil(garrison * CL.assault.RULES.garrisonShare.attack), 'the rest hold the other walls');
+  assert.ok(n < garrison && n > garrison / 2);
+  // Defending, the besiegers come on whole.
+  const d = CL.assault.encounter(c, 'castra_nova', 'defend', { enemyTroops: { footman: 30, hunter: 10 } });
+  assert.equal(Object.values(d.waves[0]).reduce((a, b) => a + b, 0), 40);
+  assert.deepEqual(CL.assault.onThisWall(Array(10).fill('levy'), 'defend').length, 9);
+});
+
+test('the ladders: two climb at a time, slowly, and a climber cannot strike; the rest wait at the foot', () => {
+  const { CL } = loadGame();
+  CL.ui = headlessUi(CL);
+  const g = CL.game;
+  CL.combat.startBattle(CL.assault.practice(20, 'attack'));
+  const w = g.battleMap.wall;
+  const ladder = w.gaps.find((x) => x.kind === 'ladder');
+  assert.ok(CL.units.groundFactor(w.centre, ladder.y) < 0.5, 'climbing is slow');
+  assert.equal(CL.units.groundFactor(w.centre - 200, ladder.y), 1, 'not at the ladder');
+  const [a, b, c] = g.allies;
+  Object.assign(a, { x: w.centre, y: ladder.y });
+  Object.assign(b, { x: w.centre - 5, y: ladder.y + 8 });
+  assert.equal(CL.assault.climbing(g, a), true);
+  assert.ok(CL.assault.ladderTop(g, a).x > w.centre + w.w / 2, 'the top is inside the wall');
+  assert.equal(CL.assault.climbing(g, g.enemies[0]), false, 'a defender never climbs');
+  // A third at the foot waits while two are on it.
+  const foot = CL.arena.wayThrough(g.battleMap, w.centre - 300, ladder.y, w.centre + 300, ladder.y);
+  Object.assign(c, { x: foot.x - 5, y: foot.y });
+  assert.equal(CL.assault.waitAtLadder(g, c, foot), true);
+  Object.assign(b, { x: w.centre - 300 });
+  assert.equal(CL.assault.waitAtLadder(g, c, foot), false, 'one on it: their turn');
+  // A climber with a defender in reach does not swing.
+  const e = g.enemies[0];
+  Object.assign(e, { x: w.centre + 30, y: ladder.y });
+  a.attackCooldown = 0;
+  for (let i = 0; i < 10; i++) CL.combat.update(0.02);
+  assert.ok(!a.attacking || !CL.assault.climbing(g, a), 'no blow from the ladder');
+});
+
+test('defending: the garrison counts on your side of the field; what does not fit comes in from reserve', () => {
+  const { CL } = loadGame({ seed: 77 });
+  CL.ui = headlessUi(CL);
+  const c = CL.campaign;
+  Object.assign(c.allegiance, { kind: 'vassal', realm: 'aurelian', since: 0, window: { start: 0, days: 10 } });
+  CL.realm.transfer(c, 'castra_nova', { holder: 'player', willing: true });
+  CL.realm.setRelation(c, 'valedorn', 'aurelian', 'war', 'test');
+  const f = CL.content.get('settlements', 'castra_nova');
+  Object.assign(c.world, { x: f.mapX, y: f.mapY, location: 'castra_nova' });
+  for (const t of Object.values(CL.content.table('party_templates'))) c.partySpawns[t.id] = t.kind === 'lord' ? 0 : 1e9;
+  CL.lords.ensure(c, c.day, true);
+  const lords = c.parties.filter((p) => p.lordId && c.people[p.lordId].realm === 'valedorn').slice(0, 2);
+  for (const q of lords) Object.assign(q, { x: f.mapX + 2, y: f.mapY + 2, troops: { footman: 40 } });
+  const s = { id: 1, sid: 'castra_nova', realm: 'valedorn', by: 'ai', lords: lords.map((q) => q.lordId), relief: [], phase: 'encircled', began: c.day - 2, gatherBy: null, lastDay: Math.floor(c.day), steppedTo: c.day, log: [] };
+  c.sieges.push(s);
+  CL.combat.setActiveCap(40);
+  CL.sieges.defend(c, s);
+  const g = CL.game;
+  const garrison = CL.assault.onThisWall(CL.autoresolve.expand(CL.realm.holding('castra_nova', c).garrison), 'defend').length;
+  const onField = g.allies.filter((a) => a.outside).length;
+  const waiting = g.allyReserve.filter((r) => r.garrison).length;
+  assert.equal(onField + waiting, garrison, 'all of it, on the field or waiting');
+  assert.ok(waiting > 0, 'a battle size of 40: some wait');
+  assert.ok(1 + g.allies.length <= g.allyCap, 'your side keeps its share');
+  // Room on the field: the garrison waiting comes in, fighting for itself.
+  for (const a of g.allies.filter((x) => !x.outside).slice(0, 6)) a.alive = false; // test setup: six of yours fall
+  for (let i = 0; i < 3; i++) CL.combat.update(0.02);
+  assert.ok(g.allyReserve.filter((r) => r.garrison).length < waiting, 'the garrison comes in from reserve');
+  assert.ok(g.allies.filter((a) => a.alive && a.outside).length > onField);
+});
+
+test('a stalled shared battle: the whole army withdraws, its reserves with it', () => {
+  const { CL } = loadGame();
+  CL.ui = headlessUi(CL);
+  const g = CL.game;
+  CL.combat.startBattle({ id: 'stall', name: 'Stall', map: 'open_country', waves: [{ looter: 60 }], share: true, reward: { goldBase: 0, goldPerKill: 0, renown: 0 } });
+  assert.ok(g.enemyReserve.length > 0);
+  g.lastBlowAt = g.t - CL.combat.BATTLE.stall - 1; // test setup: nobody has struck for the stall's time
+  CL.combat.update(0.02);
+  assert.equal(g.enemyReserve.length, 0, 'the reserve goes too');
+  assert.equal(g.enemies.some((e) => e.alive), false);
 });

@@ -195,9 +195,12 @@
     const retinue = alone ? [] : CL.retinue.fighters(CL.campaign); // the other companions (P7-06)
     const withMara = (!alone && CL.companion.fit() ? 1 : 0) + retinue.length;
     const biggestWave = Math.max(...enc.waves.map((w) => Object.values(w).reduce((a, b) => a + b, 0)));
+    // P8-06b: defending a fort, its garrison fights beside you, for itself (most of it; the rest hold the other
+    // walls). P9-B5: it counts on your side of the shared field, and what doesn't fit waits in reserve.
+    const guard = g.siege?.side === 'defend' && enc.garrison ? CL.assault.onThisWall(CL.autoresolve.expand(enc.garrison), 'defend') : [];
     if (g.share) {
       // P9-B2: the field shared by the armies' numbers (both sides feed in reserves to keep their share).
-      const s = shareOf(BATTLE.activeCap, 1 + withMara + soldiers.length, biggestWave);
+      const s = shareOf(BATTLE.activeCap, 1 + withMara + soldiers.length + guard.length, biggestWave);
       g.allyCap = Math.max(1 + withMara, s.allies);
       g.enemyCap = Math.max(1, BATTLE.activeCap - g.allyCap);
     } else {
@@ -254,17 +257,16 @@
       a.holdY = a.y;
     }
     if (opts.plan && !alone) CL.prep.place(g, opts.plan); // the chosen setup (V2-07)
-    if (g.siege?.side === 'defend' && enc.garrison) {
-      // P8-06b: defending a fort, its garrison fights beside you, for itself (as helpers do, V2-09).
+    if (guard.length) {
       const w = g.battleMap.wall;
-      // Half of it: the rest hold the other walls.
-      const garrison = CL.autoresolve.expand(enc.garrison);
-      garrison.slice(0, Math.min(Math.ceil(garrison.length * CL.assault.RULES.garrisonShare), Math.max(0, BATTLE.activeCap - g.allies.length - 1))).forEach((troopId, i) => {
+      const room = Math.max(0, Math.min(g.allyCap ?? BATTLE.activeCap, BATTLE.activeCap) - g.allies.length - 1);
+      guard.slice(0, room).forEach((troopId, i) => {
         const u = makeUnit(w.centre - w.outside * (50 + (i % 3) * 30), w.gaps[0].y + ((i * 47) % (g.battleMap.height - 200)), 'ally', troopId);
         u.outside = true;
         CL.units.resolveObstacles(u);
         g.allies.push(u);
       });
+      for (const troop of guard.slice(room)) g.allyReserve.push({ troop, soldierId: null, garrison: true });
     }
     spawnWave();
     enemyPlan(g); // P9-B4: the enemy's own plan (layer 1, and layer 3's placement), in a battle with an army
@@ -353,7 +355,8 @@
     u.face = 'right';
     u.holdX = u.x;
     u.holdY = u.y;
-    if (r.join == null) u.div = r.div || u.role; // their division (P9-B4); helpers who ride in fight for themselves
+    if (r.garrison) u.outside = true; // a fort's garrison (P9-B5) fights for itself, as helpers do
+    else if (r.join == null) u.div = r.div || u.role; // their division (P9-B4); helpers who ride in fight for themselves
     const j = r.join != null ? g.joining?.find((x) => x.id === r.join) : null;
     if (j) CL.reinforce.place(g, j, u); // a helper waiting in reserve rides in from its party's side
     g.allies.push(u);
@@ -703,6 +706,9 @@
       goal = 30;
     }
 
+    // P9-B5: a climber keeps climbing: up and off the ladder before anything else.
+    const top = CL.assault?.ladderTop(game(), u);
+    if (top) [dest, goal] = [top, 0];
     const d = dist(u, dest);
     if (d > goal + 5) {
       const s = u.speed;
@@ -714,7 +720,7 @@
       const post = CL.assault?.ramPost(game(), u) || (dest === target ? CL.assault?.holdWall(game(), u, target) : null);
       const to = post && dest === target && dist(u, target) > fireRange(u) + 40 ? post : dest;
       const via = CL.arena.wayThrough(game().battleMap, u.x, u.y, to.x, to.y) || to;
-      move(u, via.x - u.x, via.y - u.y, dt);
+      if (!CL.assault?.waitAtLadder(game(), u, via)) move(u, via.x - u.x, via.y - u.y, dt); // P9-B5: two on a ladder at a time
       u.speed = s;
     } else if (dest === target) aim(u, target);
     if (dist(u, target) < fireRange(u)) {
@@ -727,7 +733,7 @@
         }
       } else {
         u.losBlocked = 0;
-        if (!u.guard || CL.formations.strikesOver(game(), u)) startAttack(u); // no swinging behind a raised shield, except over a shield wall (P7-11)
+        if ((!u.guard || CL.formations.strikesOver(game(), u)) && !CL.assault?.climbing(game(), u)) startAttack(u); // no swinging behind a raised shield, except over a shield wall (P7-11)
       }
     }
   }
@@ -893,10 +899,12 @@
    */
   function stallGuard(g) {
     if (g.duel) return; // a bout is fought out: nobody slips away (or keeping away would win it)
-    if (g.t - (g.lastBlowAt ?? 0) < BATTLE.stall || g.enemyReserve?.length) return;
+    // P9-B5: in a shared battle the whole army withdraws, its reserves with it (they could wait for ever).
+    if (g.t - (g.lastBlowAt ?? 0) < BATTLE.stall || (g.enemyReserve?.length && !g.share)) return;
     const left = g.enemies.filter((e) => e.alive);
     if (!left.length || !(g.hero.alive || g.allies.some((a) => a.alive))) return;
     for (const e of left) CL.morale.leave(g, e);
+    if (g.share) g.enemyReserve = [];
     // B-01: also with waves still to come (before, a stuck pair could hold the next wave back for ever).
     g.lastBlowAt = g.t;
     CL.ui.message(g.wave < g.totalWaves ? 'Neither side will close. Those ones slip away, and more come on' : 'Neither side will close. The enemy slips away');

@@ -8,9 +8,15 @@
  * - **The ram** (after three days of preparation): attackers at the gate break it after 25 seconds
  *   there; then the gate is open to everyone. On a defence, a third of the attackers go for the gate.
  * - **Ways up:** only the ladders and a broken gate. A soldier whose way is across the wall goes to the
- *   nearest gap first (`arena.wayThrough`); without one open, they wait at the wall.
+ *   nearest gap first (`arena.wayThrough`); without one open, they wait at the wall. P9-B5: a ladder
+ *   takes two climbers at a time, slowly (slow ground, so ranks break as in a ford), and a climber
+ *   cannot strike; the others wait at its foot.
+ * - **The armies (P9-B5):** one army a side sharing the field, with reserves (P9-B2), no longer waves
+ *   of 8. Storming, you meet the part of the garrison on the stretch of wall you strike (58%); the rest
+ *   hold the other walls. Defending, the garrison runs to where the enemy climbs (90% of it beside you),
+ *   counted on your side of the field, the rest waiting in reserve.
  * - **Winning:** the attackers win by routing the defenders, or by holding the courtyard: three or more
- *   of them in it, outnumbering the defenders still standing there two to one, for 20 seconds. The
+ *   of them in it, outnumbering the defenders still standing there 1.5 to one, for 12 seconds. The
  *   defenders win by routing the attackers, or breaking their morale. The result feeds the siege
  *   (js/sieges.js): taken, thrown back, or held.
  * - **Setups on the walls:** Balanced puts the infantry at the ladders and the archers behind them;
@@ -21,7 +27,7 @@
   'use strict';
   const CL = root.Crownless;
 
-  const RULES = { ramSeconds: 25, ramReach: 70, hold: { seconds: 12, min: 3, ratio: 1.5 }, ramEvery: 3, garrisonShare: 0.52 };
+  const RULES = { ramSeconds: 25, ramReach: 70, hold: { seconds: 12, min: 3, ratio: 1.5 }, ramEvery: 3, garrisonShare: { attack: 0.58, defend: 0.9 }, ladder: { at: 2, foot: 20, wait: 30 } };
 
   /**
    * The battle definition for an assault on (or defence of) a fort. `side`: 'attack' or 'defend'.
@@ -30,10 +36,9 @@
   function encounter(c, sid, side, { ladders = 1, ram = false, enemyTroops = undefined } = {}) {
     const h = CL.realm.holding(sid, c);
     const troops = enemyTroops || h.garrison || {};
-    const list = CL.autoresolve.expand(troops);
-    const waves = [];
-    for (let i = 0; i < list.length; i += 8) waves.push(CL.autoresolve.collapse(list.slice(i, i + 8)));
-    if (!waves.length) waves.push({ levy: 1 });
+    const all = CL.autoresolve.expand(troops);
+    const list = enemyTroops ? all : onThisWall(all, 'attack'); // storming: the part of the garrison on this stretch of wall
+    const waves = [list.length ? CL.autoresolve.collapse(list) : { levy: 1 }];
     const name = CL.content.get('settlements', sid).name;
     return {
       id: `assault_${sid}`,
@@ -44,8 +49,16 @@
       reward: { goldBase: 60, goldPerKill: 4, renown: 15 },
       loot: 'high',
       siege: { sid, side, ladders, ram },
+      share: true,
     };
   }
+
+  /**
+   * The part of a garrison on the stretch of wall under assault; the rest hold the other walls. Storming,
+   * you choose where to strike (P9-B5: 58%); defending, the garrison runs to where the enemy climbs (90%).
+   * @param {string[]} list @param {'attack' | 'defend'} side
+   */
+  const onThisWall = (list, side) => list.slice(0, Math.ceil(list.length * RULES.garrisonShare[side]));
 
   /** At the start of an assault battle: the gate, the ram, the hold timer. Called by combat.startBattle. @param {any} g @param {any} enc */
   function begin(g, enc) {
@@ -98,6 +111,39 @@
     else s.holdT = Math.max(0, s.holdT - dt);
     if (s.holdT >= RULES.hold.seconds) return 'attackers';
     return null;
+  }
+
+  /** Is a unit on the attackers' side of this assault? @param {any} g @param {any} u */
+  const attacking = (g, u) => (g.siege.side === 'attack' ? u.team === 'ally' : u.team === 'enemy');
+
+  /** The ladder a unit is on, if any (in the wall's gap or at its very foot). @param {any} g @param {any} u */
+  function ladderAt(g, u) {
+    const w = g.battleMap?.wall;
+    if (!w || Math.abs(u.x - w.centre) > w.w / 2 + RULES.ladder.foot) return null;
+    return w.gaps.find((x) => x.kind === 'ladder' && Math.abs(u.y - x.y) < x.h / 2) || null;
+  }
+
+  /** P9-B5: an attacker on a ladder is climbing: slow (the ground's), and unable to strike. @param {any} g @param {any} u */
+  const climbing = (g, u) => Boolean(g.siege && attacking(g, u) && ladderAt(g, u));
+
+  /** The top of the ladder a climber is on: inside the wall, where they step off. Null if not climbing. @param {any} g @param {any} u */
+  function ladderTop(g, u) {
+    if (!climbing(g, u)) return null;
+    const w = g.battleMap.wall;
+    return { x: w.centre - w.outside * (w.w / 2 + RULES.ladder.foot + 16), y: ladderAt(g, u).y };
+  }
+
+  /**
+   * P9-B5: a ladder takes two climbers at a time. An attacker at its foot while two are on it waits
+   * their turn. @param {any} g @param {any} u @param {{ x: number, y: number }} via where they are heading
+   */
+  function waitAtLadder(g, u, via) {
+    const w = g.battleMap?.wall;
+    if (!g.siege || !w || !attacking(g, u) || ladderAt(g, u)) return false;
+    if (Math.hypot(u.x - via.x, u.y - via.y) > RULES.ladder.wait) return false;
+    const gap = w.gaps.find((x) => x.kind === 'ladder' && Math.abs(via.y - x.y) < 2);
+    if (!gap) return false;
+    return [g.hero, ...g.allies, ...g.enemies].filter((v) => v?.alive && !v.routing && attacking(g, v) && ladderAt(g, v) === gap).length >= RULES.ladder.at;
   }
 
   /** The gate breaks: open to everyone from now on. @param {any} g */
@@ -191,9 +237,7 @@
       const t = i % 3 === 2 ? 'skirmisher' : 'spearman';
       enemy[t] = (enemy[t] || 0) + 1;
     }
-    const list = CL.autoresolve.expand(enemy);
-    const waves = [];
-    for (let i = 0; i < list.length; i += 8) waves.push(CL.autoresolve.collapse(list.slice(i, i + 8)));
+    const waves = [enemy]; // P9-B5: one army, as the campaign's assaults
     return {
       id: `practice_assault_${side}`,
       name: side === 'attack' ? 'Siege assault (practice)' : 'Siege defence (practice)',
@@ -205,5 +249,5 @@
     };
   }
 
-  CL.assault = { RULES, encounter, begin, announce, update, breakGate, gatePoint, inCourtyard, ramPost, holdWall, anchors, resolve, practice };
+  CL.assault = { RULES, onThisWall, climbing, ladderTop, waitAtLadder, encounter, begin, announce, update, breakGate, gatePoint, inCourtyard, ramPost, holdWall, anchors, resolve, practice };
 })(typeof window !== 'undefined' ? window : globalThis);

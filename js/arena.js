@@ -171,7 +171,7 @@
 
   // ---- The assault (P8-06b) ----
 
-  const WALL = { at: 0.56, thick: 26, gate: 96, ladder: 48, walkway: 70, keep: 0.86 };
+  const WALL = { at: 0.56, thick: 26, gate: 96, ladder: 48, walkway: 70, keep: 0.86, climb: 0.25, foot: 20 };
   const LADDER_YS = [0.24, 0.76, 0.1];
 
   /**
@@ -230,6 +230,8 @@
       height: H,
       bounds: { minX: 47, maxX: W - 52, minY: 65, maxY: H - 50 },
       obstacles,
+      // P9-B5: climbing a ladder is slow (and breaks ranks, as wading does): the wall's own strength.
+      slow: gaps.filter((g) => g.kind === 'ladder').map((g) => ({ x: wallX - WALL.foot, y: g.y - g.h / 2, w: WALL.thick + 2 * WALL.foot, h: g.h, factor: WALL.climb })),
       spawn: { hero, enemies },
       high,
       wall: { x: wallX, w: WALL.thick, centre, gaps, outside: defend ? 1 : -1, courtyard },

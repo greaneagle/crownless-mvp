@@ -2438,7 +2438,7 @@ Needs are computed, not saved.
 
 ## Phase 9 — Kingdoms & Houses
 
-The phase opens with four battle-scale tasks (owner, 2026-11-22; decisions D-P9a–D-P9e), built first and in order, then the lords' loose ends (P9-L1) and the kingdoms (P9-01 to P9-08). Every task is **Specified** (2026-11-22); each is checked against the code when it starts, as Phase 8's were.
+The phase opens with five battle-scale tasks (owner, 2026-11-22; decisions D-P9a–D-P9e; P9-B5 added after P9-B4's checkpoint), built first and in order, then the lords' loose ends (P9-L1) and the kingdoms (P9-01 to P9-08). Every task is **Specified** (2026-11-22); each is checked against the code when it starts, as Phase 8's were.
 
 - **The same rules for everyone** (P8's "no fixed classes"): what the player can do as a ruler, a claimant or a commander, an AI lord can do by the same rules, and the reasons for the AI's choices use only what it could know.
 - **Layers everywhere** (D-P9e's principle): each system works by default, hands-off, with one decision at a time; the depth is there for whoever wants it.
@@ -2450,6 +2450,7 @@ The phase opens with four battle-scale tasks (owner, 2026-11-22; decisions D-P9a
   | P9-B2 proportional battles | `battle-parity`, `battle-extras`, `campaign-bots` | **Whole suite** |
   | P9-B3 a bigger company | `campaign-bots`, `world-sim`, `landed`, `phase7-exit` | |
   | P9-B4 command in layers | `battle-parity`, `battle-extras`, `campaign-bots` | **Whole suite** |
+  | P9-B5 the walls at the world's scale | `battle-parity`, `battle-extras`, `campaign-bots` | |
   | P9-L1 the lords' loose ends | `landed`, `prototype-f` | |
   | P9-01 realms as organisations | `landed`, `campaign-bots`, `world-sim` | |
   | P9-02 diplomacy and treaties | `landed`, `world-sim` | |
@@ -2616,6 +2617,40 @@ The phase opens with four battle-scale tasks (owner, 2026-11-22; decisions D-P9a
 - **Parity** (`npm run parity`, 40 seeds): the small fights at 40 are as 3.3.0 left them, with Balanced and with Auto alike: lone hero +14, small +11, close +19, veterans +4, outnumbered +16 (the close fights' average +13). The slow parity test checks Auto as well. **Not met: big battles at 100** (`--big`): close ×8 +37 and veterans ×6 +29 at 40 and at 100. A hands-off company wins every fair big fight (the acceptance's first half), but Simulate's odds undervalue a company in big fights (open since P9-B2), and the enemy's plan made its army a little easier (veterans ×6 at 100: −6 before it). Simulate for armies belongs with P9-05's armies and P9-T's tuning.
 - **Found at the checkpoint (the whole slow suite):** the extras script set the wedge the old way, so its wedge and ford scenarios fought in loose ranks; now set per division, and both pass. The enemy's plan re-placed a fort's defenders off its walls; it now skips the assault. **Still failing, since 3.3.0 (P9-B3):** the slow siege test (`siege-attack`: fought 58% against odds of 10%). The garrisons grew three times and the test's company of 16 did not. Scaled to the world (48), the odds are Phase 8's again (41%), but fought in waves of 8 the garrison loses every time (100%); as one army sharing the field, the assault wins none and some fights never end, as its wall placement is made for waves. Both tries were taken back. The assault needs re-fitting for armies.
 - **Played** at 812×375: the Divisions section on Prepare (four divisions with 40 footmen, their flags in the divisions' colours) and a timed order on the tactical map by real taps (Archers · Fall back · In 5 s, a tap on the field), which went off at 5.5 s. That play found the map's Orders panel covering the MAP button on the phone, now moved; and the browser spec found a troop move losing the captain and formation chosen before it, now kept.
+
+### P9-B5 · The walls at the world's scale (S–M) — ✅ Done in 3.5.0
+
+**Problem.** Found at P9-B4's checkpoint. P9-B3 made every garrison three times bigger (Castra Nova: 66), but the walls' assault (P8-06b) still fed the garrison in waves of 8, and its slow test still used Phase 8's company of 16. The odds of storming fell to 10%, while the fight won 58%: a company could beat a far bigger garrison a few at a time, and hold the courtyard against the 8 on the field. Owner, 2026-11-22: a small task of its own, before P9-L1.
+
+**Build.**
+- **The measure at the world's scale:** the siege test's company and the besieging lords three times as big (48; three lords of 51), so Phase 8's ratios hold. Measured at the default battle size (150, everyone on the field).
+- **One army a side** (P9-B2's shared field and reserves), no longer waves of 8.
+- **The garrison on this stretch of wall:** the rest hold the other walls (Phase 8 already put half of a garrison beside you when defending).
+- **The wall's own strength:** a ladder takes two climbers at a time; climbing is slow and breaks ranks, as wading does; a climber cannot strike. The others wait at the foot.
+- **Defending:** the garrison counts on your side of the shared field; what doesn't fit waits in reserve and comes in, fighting for itself.
+- **A stalled shared battle ends:** after 45 s without a blow, the whole army withdraws, its reserves with it (before, a reserve kept it going for ever).
+
+**Layers.** Nothing new to learn: the walls look and play as before; the numbers are bigger.
+
+**Tests.**
+- The assault's armies: one shared army; the garrison's part on this stretch; the besiegers whole.
+- The ladders: two at a time, slow, no blows from a ladder, waiting at the foot.
+- Defending: the garrison on the field or in reserve, and coming in.
+- A stalled shared battle withdraws whole.
+- Parity (B-01): fought assaults 5–15 points over the odds on average, never under −5 or over +25, both ways, at 150; every assault ends at 40 too.
+
+**Acceptance.** Storming a fort is about as hard as Simulate says, attacking and defending, at the world's scale.
+
+**Done (3.5.0).**
+- **The measure at the world's scale** (`scripts/parity.js`): the company 48 (Phase 8's sixteen, three times), the three lords 51 each, Castra Nova's garrison 66; at a battle size of 150, the default since 3.1.1 (`node scripts/parity.js --siege 40`, `--size 40` for the old one). Scaled, the odds are Phase 8's again: 41% to storm, 57% to hold.
+- **One army a side** (`js/assault.js`): the garrison (or the besiegers) as one wave sharing the field, with reserves (P9-B2). The Debug practice assaults too, and a new **Siege assault 100** (50 a side).
+- **The garrison on this stretch of wall:** storming, 58% of it (the rest hold the other walls); defending, 90% beside you (Phase 8's half was too few once it fought as one army). Defending, it counts on your side of the shared field; what doesn't fit waits in your reserve and comes in, fighting for itself.
+- **The ladders** (`js/arena.js`, `js/assault.js`): a ladder is slow ground (×0.25, so ranks break, as in a ford); it takes two climbers at a time, the rest waiting at its foot; a climber can't strike and always climbs on to the top (without that, a climber near a defender stopped on the ladder and nobody else could climb).
+- **A stalled shared battle ends** (`js/combat.js`): 45 s without a blow and the whole army withdraws, its reserves with it. Before, any reserve kept such a battle going for ever (found in defences at 40: the besiegers falling back outside the gate, nobody closing).
+- **The measuring bot** fights the walls as a careful captain: in reach only, behind its soldiers when storming, back in the courtyard when defending. As before 3.5.0 it ran first up a ladder (or out over the wall), fell, and broke its company.
+- **Parity** (40 seeds at 150): storming 60% fought against odds of 41% (+19), defending 58% against 57% (+1): an average of +10, B-01's aim. The slow test holds both inside −5 to +25 and checks that every assault ends at 40 too. **Not met at 40** (20 seeds): storming far easier (+39) and defending harder (−17), as big battles at 40 are (open since P9-B2): for P9-T. **The balance is steep:** storming against 39 of the garrison wins 60%, against 40 of it 38%; one rout decides it.
+- **What was tried first,** and dropped: counting the garrison still to come in the courtyard (the fight never won), waves sized by the world (+26 storming, −32 defending), and one army with the whole garrison (storming never won).
+- **Played** at 812×375: Siege assault 100 by real taps from Debug; with the infantry on Charge, never more than two on a ladder, the rest queued at its foot and the defenders at its head; won in 25 s.
 
 ### P9-L1 · The living lords' loose ends (M) — Specified
 
