@@ -41,7 +41,7 @@
     ladders: 1, // days
     ram: 3,
     assaultOdds: 0.6,
-    lastAssaultOdds: 0.75, // P8-T: against a realm's last fort, after the ram
+    lastAssaultOdds: 0.85, // P8-T: against a realm's last fort, after the ram (0.75 before 3.3.0: with the world's armies three times bigger, a last fort fell on one seed in six)
     hopeless: 0.9,
     walls: { base: 1.2, perWall: 0.4, ram: -0.3 },
     assaultLoss: { win: 0.3, lose: 0.4 },

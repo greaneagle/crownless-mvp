@@ -53,16 +53,28 @@ test('spending points: skills cap at 10, attributes at 20, and STR raises HP', (
   assert.equal(ch.attributePoints, 0);
 });
 
-test('GDD party cap: min(20, 8 + 2×Leadership + floor(Renown/40))', () => {
+test('the company limit (P9-B3): 8 + 5×Leadership + Renown/20 + 10 an officer + land, at most 200', () => {
   const { CL } = loadGame();
   const c = CL.campaign;
   assert.equal(CL.party.partyCap(), 8);
   c.character.skills.leadership = 3;
-  assert.equal(CL.party.partyCap(), 14);
+  assert.equal(CL.party.partyCap(), 23);
   c.renown = 85;
-  assert.equal(CL.party.partyCap(), 16);
+  assert.equal(CL.party.partyCap(), 27, 'renown 85: +4');
+  CL.companion.join(c, 'mara');
+  assert.equal(CL.party.partyCap(), 37, 'an officer: +10');
+  CL.realm.transfer(c, 'oakford', { holder: 'player', reason: 'test' });
+  assert.equal(CL.party.partyCap(), 42, 'a village: +5');
+  CL.realm.transfer(c, 'westholt_castle', { holder: 'player', reason: 'test' });
+  assert.equal(CL.party.partyCap(), 57, 'a fort: +15');
+  const parts = CL.party.limitParts(c).parts;
+  assert.equal(JSON.stringify(parts), JSON.stringify({ base: 8, leadership: 15, renown: 4, officers: 10, land: 20, friendly: 0 }));
+  c.renown = 4000;
   c.character.skills.leadership = 10;
-  assert.equal(CL.party.partyCap(), 20);
+  assert.equal(CL.party.partyCap(), 200, 'the ceiling');
+  CL.companion.part?.(c);
+  c.companion = null;
+  for (const sid of ['oakford', 'westholt_castle']) CL.realm.transfer(c, sid, { holder: CL.realm.rulerOf(CL.realm.owner(sid, c), c), reason: 'test' });
   c.character.skills.leadership = 0;
   c.renown = 0;
   c.gold = 999;

@@ -671,6 +671,14 @@ declare global {
     UPGRADE_XP: Record<string, number>;
     XP: Record<string, number>;
     partyCap(camp?: Campaign): number;
+    /** P9-B3: how many of a troop can be hired here at once, up to `n`. */
+    canHireMany(camp: Campaign, troopId: ContentId, n: number): number;
+    /** P9-B3: hire several of a troop at once; how many were hired. */
+    recruitMany(troopId: ContentId, n: number): number;
+    /** P9-B3: the company limit's rules. */
+    LIMIT: { base: number; leadership: number; renownPer: number; officer: number; seat: number; village: number; ceiling: number };
+    /** P9-B3: the limit's parts, their sum and the total (at most the ceiling). */
+    limitParts(camp?: Campaign): { parts: Record<string, number>; sum: number; total: number };
     upgradeOptions(troopId: ContentId): UpgradeOption[];
     readyFor(s: Soldier): boolean;
     upgrade(fromId: ContentId, toId: ContentId, max?: number, camp?: Campaign): number;

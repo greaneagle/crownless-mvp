@@ -248,6 +248,8 @@
 .soldierRow{display:flex;flex-wrap:wrap;gap:2px 10px;align-items:baseline;width:100%;text-align:left;min-height:calc(44px * var(--ui-grow));padding:calc(6px * var(--ui-scale)) calc(8px * var(--ui-scale));margin:3px 0;font-size:calc(13px * var(--ui-scale));font-weight:normal}
 .soldierRow b{color:#ecd6a4;font-size:calc(14px * var(--ui-scale))}
 .soldierRow span{color:#d9c8a2}
+.soldierGroup{margin:4px 0;border:1px solid #5a4a33;border-radius:6px;padding:0 calc(6px * var(--ui-scale))}
+.soldierGroup summary{min-height:calc(44px * var(--ui-grow));display:flex;align-items:center;cursor:pointer;color:#ecd6a4;font-size:calc(14px * var(--ui-scale));font-weight:bold}
 .soldierCard p{margin:4px 0}
 .soldierHead{display:flex;gap:10px;align-items:flex-start;margin-top:6px}
 .soldierHead .portrait{width:64px;height:64px;object-fit:cover;border:1px solid #5c4a28;border-radius:4px;image-rendering:pixelated}

@@ -21,7 +21,7 @@ test('Sieges: at Castra Nova at war, the Besiege preview, then your siege’s ch
   await card.scrollIntoViewIfNeeded();
   await expect(card).toHaveAttribute('data-siege', 'none');
   await expect(card.locator('h3')).toHaveText('Besiege Castra Nova');
-  await expect(card).toContainText(/The garrison: 22 soldiers \(power [\d.]+\), ×1\.60 behind walls at 100%\./);
+  await expect(card).toContainText(/The garrison: 66 soldiers \(power [\d.]+\), ×1\.60 behind walls at 100%\./); // P9-B3: the world's garrisons, three times the data's
   await expect(card).toContainText('Starving it out: about 14 days, if no relief comes.');
   const vp = page.viewportSize();
   const box = await card.boundingBox();
@@ -52,7 +52,7 @@ test('Sieges: your fort besieged interrupts the map with Ride back or Leave it',
     CL.realm.transfer(c, 'castra_nova', { holder: 'player', willing: true });
     CL.realm.setRelation(c, 'valedorn', 'aurelian', 'war', 'test');
     const fort = CL.content.get('settlements', 'castra_nova');
-    for (const q of c.parties.filter((p) => p.lordId && c.people[p.lordId].realm === 'valedorn').slice(0, 3)) Object.assign(q, { x: fort.mapX + 2, y: fort.mapY + 2, troops: { guard: 6, footman: 5, hunter: 3 } });
+    for (const q of c.parties.filter((p) => p.lordId && c.people[p.lordId].realm === 'valedorn').slice(0, 3)) Object.assign(q, { x: fort.mapX + 2, y: fort.mapY + 2, troops: { guard: 18, footman: 15, hunter: 9 } }); // P9-B3: households in the world's scale
     for (const q of c.parties.filter((p) => p.lordId && c.people[p.lordId].realm === 'valedorn').slice(3)) Object.assign(q, { x: 10, y: 10 });
     CL.sieges.plan(c, 'valedorn');
     CL.party.advanceDays(0.5);

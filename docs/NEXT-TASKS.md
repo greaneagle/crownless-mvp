@@ -2546,7 +2546,7 @@ The phase opens with four battle-scale tasks (owner, 2026-11-22; decisions D-P9a
   - The sieges browser spec checked that no siege at all was left after Lift; at war, Aurelia's lords may begin their own during the day you wait (it failed 1 in 10 before 3.2.0, more often after). It now checks that yours is over.
 - **Played:** a 150-against-100 battle at 100 in the browser at 812×375: the Prepare line, the field at 60 and 40, both reserves coming in, the win at 64 s with 4 of 149 lost.
 
-### P9-B3 · A bigger company (M–L) — Specified
+### P9-B3 · A bigger company (M–L) — ✅ Done in 3.3.0
 
 **Problem.** The company can't pass 20 (`party.partyCap`). The owner wants 150–200 (D-P9b), the limit growing with what the hero becomes.
 
@@ -2565,6 +2565,23 @@ The phase opens with four battle-scale tasks (owner, 2026-11-22; decisions D-P9a
 - Browser: the Party screen with 150 soldiers at both sizes.
 
 **Acceptance.** A company grows past 100 in play, the battles it fights use P9-B1's size and P9-B2's sharing, and the economy and the bots stay healthy.
+
+**Done (3.3.0).**
+- **The limit** (`party.limitParts`, as proposed): 8 + 5 a point of Leadership + 1 for every 20 renown + 10 for each companion who rides with you as an officer (Mara and the retinue) + 15 for each fort or town you hold and 5 for each village + 2 while Friendly, at most 200. The Party screen shows the sum in words. Mara joining takes a place and brings ten.
+- **At volume:** the recruiter hires five at once once there is room for five; the quartermaster's fixed weekly budget may go to 10,000 (it stopped at 1,000, below a big company's food); wages, food and the automatic budget already followed the roster. Recruiting has no per-settlement pool (only money and room), so "more recruits per settlement" had nothing to change.
+- **The Party screen:** above 20 soldiers the Soldiers list is grouped by troop ("Footman ×50 · T2 infantry · 3 wounded"), each group opened by a tap and kept open while the screen is; By type (with its upgrades by type) was already there. **Detachments:** no limit on their size before or now; above 16 fit soldiers the picker gains "Footman +5 · 10/50" by troop.
+- **The world to match** (`armies` in the world package, data/world_map.js, validated; `world.armies()`):
+  - a lord's household three times the data's (36 landless, 48 a village, 63 a fort, about 80 with three fiefs);
+  - a fort's garrison three times (66 on the defaults; targets 36/66/96, the refill nine a week), each soldier drawing a third of the wage he did, so a fort's book is as P8-T tuned it. Households and garrisons grow alike, so every ratio of Phase 8's sieges holds;
+  - bands, patrols and caravans that form beyond the Border March 2.5 times the template's (in the March, as they were: the story's land and the gentle start). This found that `world.regionAt` never returned a region's `home` flag; it does now.
+  - **A realm's last fort** is stormed only at odds of 0.85 after the ram (0.75): on six seeds of `npm run landed`, with the world's random history changed by three times the soldiers, one kingdom lost its last fort (Valedorn, seed 3, day 112); at 0.85 no kingdom is ever left without one, on all six seeds and every month.
+- **Measured:** `npm run landed` (six seeds, 180 days): 3–4 wars and 4–9 forts taken a run, as before, every invariant held. `npm run economy` (12 × 60 days): wages short 1.7 a campaign (1.6), never out of food, no desertions; money at day 60 164 (286); 21 soldiers at day 60 (19). The campaign bot hires only while it keeps two weeks of wages in hand, the newcomer's included (one week before): without that the landed bot hired beyond its pay (13 warnings in 180 days against 1).
+- **Tests that leaned on the old sizes** now read the world's factors (garrisons of 66, households of 36–81, bands beyond the March), and a noble's test and **Prototype F** bring companies in the world's scale. In Prototype F it takes 60 (12 before) for Lord Hamon to respect your company and name a price rather than refuse: his household is three times bigger, and the hero's own share of the company's power counts for less in bigger armies.
+- **A captain's income grows with the company** (owner, 2026-11-22: "raise the income"). First measured, the bots' companies stopped near 60 over a year: a hundred soldiers cost about 700 crowns a week, more than a captain earned. Now:
+  - **contracts fit the company:** a hunt's band and an escort's ambush were already matched to the company's strength, but stopped at 14; past 20 in the company their largest grows with the square root of the company's size over 20 (about 31 for 100), a hunt paying by the band's size and an escort by the same factor. Up to 20, the offers are as before. (Growing in full proportion overshot: 21,000–24,000 crowns at day 180 and 67,000–71,000 at a year.)
+  - **mercenary service** pays the company's wages and a tenth more, with the base and renown as before (it was 3 crowns a soldier, half a soldier's wage).
+  - **The bots** play as a careful captain: up to 20 soldiers they hire as they always did (one week's wages in hand); past 20 they keep three weeks' wages, the newcomer's included, and the expert buys its mill before growing past 20 (without that it never saved for one, and the Phase 7 exit's property failed). Seed 1: the expert has **85 soldiers at day 180 and 109 at a year**, on about 2,500 crowns and 3 warnings, its mill making +302 and +1,234; the landed bot 95 and 116, on about 2,000 crowns and 2 warnings. Before (limit 20): 19–20 soldiers hoarding 9,757–12,590. `npm run economy` (12 × 60 days, the early game): 18 soldiers and 250 crowns at day 60, 1.3 wages short a campaign, never out of food (3.2.0: 19, 286, 1.6).
+  - **The Phase 8 exit**'s loss of Ulfstead while away now brings Hrothmark's lords at half again their households: the campaign's dice fall differently from 3.3.0, and a first storm at 1.3 : 1 failed. The step is about the loss, not the odds of one storm.
 
 ### P9-B4 · Command in layers (L) — Specified
 

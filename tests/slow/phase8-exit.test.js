@@ -147,7 +147,9 @@ test('the Phase 8 exit: acquire, lose, go landless, change allegiance, retake, i
   // 4. Lose it: Hrothmark's lords take Ulfstead back while the company is at Stonebridge.
   c.holdings[FORT].weakUntil = c.day; // (its month of weakness over)
   const fort = CL.content.get('settlements', FORT);
-  for (const q of c.parties.filter((p) => p.lordId && c.people[p.lordId].realm === 'hrothmark')) Object.assign(q, { x: fort.mapX + 3, y: fort.mapY + 3, tx: null, ty: null, troops: CL.lords.troopsFor(c, q.lordId) });
+  // A host strong enough to take it (half again their households): this step is the loss while away, not
+  // the odds of one storm (from 3.3.0 the campaign's dice fall differently, and a first storm at 1.3 : 1 failed).
+  for (const q of c.parties.filter((p) => p.lordId && c.people[p.lordId].realm === 'hrothmark')) Object.assign(q, { x: fort.mapX + 3, y: fort.mapY + 3, tx: null, ty: null, troops: CL.lords.troopsFor(c, q.lordId, 1.5) });
   c.sieges = c.sieges.filter((x) => x.realm !== 'hrothmark');
   war('valedorn', 'hrothmark'); // the war comes again
   for (const h of Object.values(c.holdings)) if (h.controller === 'hrothmark') h.weakUntil = Math.min(h.weakUntil || 0, c.day); // nothing of theirs still settling

@@ -1,5 +1,25 @@
 # Crownless — Release Notes
 
+## v3.3.0 — A bigger company (P9-B3) · 2026-11-22
+
+### New
+- **Lead up to 200.** How many you can lead: 8, and 5 for each point of Leadership, 1 for every 20 renown, 10 for each companion riding with you as an officer, 15 for each fort or town you hold and 5 for each village, and 2 while a kingdom counts you Friendly. The Party screen shows the sum.
+- **Hire five at once** from a recruiter, once you have the room.
+- **A big company on the Party screen:** with more than 20 soldiers, they are grouped by troop with counts (wounded, ready to upgrade); tap a group to see who is in it.
+- **Detachments** from a big company: choose five more of a troop at a time.
+- **A bigger world to match:** every lord rides with a household three times the size (36 to about 80), and every fort's garrison is three times the size at the same cost to its holder. Beyond the Border March, bands, patrols and caravans are two and a half times the size. The March itself is as it was.
+- The quartermaster's fixed weekly budget may go up to 10,000 crowns.
+- **A bigger company earns more.** Contracts are matched to your company as before, but past 20 in it the boards offer bigger bands and ambushes, for bigger pay. A kingdom pays its mercenaries their soldiers' wages and a tenth more (it was 3 crowns a soldier).
+
+### Changed
+- A kingdom's last fort is stormed only at better odds (85%, from 75%), so no kingdom is left without one.
+
+### Under the hood
+- No save change. Older saves' garrisons grow to the new size within weeks.
+- The world package has `armies` (households, garrisons, beyondHome), validated with the rest.
+- The test bots play as careful captains past 20 soldiers (three weeks of wages in hand, a mill before growing further). They reach 85–95 soldiers by day 180 and over 100 within a year.
+- **Tests:** 828 fast Node tests; the slow files this reaches (the campaign bots, world-sim, landed, the Phase 7 and Phase 8 exits, Prototypes D and F), all passing after fixes; 199 browser tests with 9 skipped, all passing.
+
 ## v3.2.0 — Proportional battles, reserves on both sides (P9-B2) · 2026-11-22
 
 ### New

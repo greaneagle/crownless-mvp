@@ -5,6 +5,9 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const { loadGame } = require('./helpers/load');
+
+// P9-B3: the world's garrisons are this many times the data's (data/world_map.js `armies`).
+const K = loadGame().CL.world.armies().garrisons;
 const { newCampaign } = require('../scripts/simulate-campaign');
 const { makeBot } = require('./helpers/campaign-bot');
 
@@ -33,7 +36,7 @@ test('every holding has its state: prosperity, unrest, policies; forts a garriso
   for (const [sid, h] of Object.entries(c.holdings)) {
     assert.ok(h.prosperity >= 0 && h.unrest >= 0, sid);
     assert.deepEqual(plain(h.policies), plain(F.policies()), sid);
-    if (h.kind === 'fort') assert.equal(F.count(h.garrison), 22, `${sid}: its garrison`);
+    if (h.kind === 'fort') assert.equal(F.count(h.garrison), 22 * K, `${sid}: its garrison`);
     if (h.kind === 'village') assert.equal(h.militia, 6, sid);
     assert.ok(h.treasury > 0, `${sid}: something in hand`);
   }
@@ -114,8 +117,8 @@ test('SC-42: every policy makes a measured difference under the same rules', () 
   assert.ok(light.prosperity > normal.prosperity && normal.prosperity > heavy.prosperity, 'prosperity');
   const strong = run((F, c) => F.setPolicy(c, 'westholt_castle', 'garrison', 'strong'));
   const thin = run((F, c) => F.setPolicy(c, 'westholt_castle', 'garrison', 'light'));
-  assert.equal(strong.garrison, 32);
-  assert.equal(thin.garrison, 12);
+  assert.equal(strong.garrison, 32 * K);
+  assert.equal(thin.garrison, 12 * K);
   assert.ok(strong.wages > normal.wages && normal.wages > thin.wages, `wages ${thin.wages} / ${normal.wages} / ${strong.wages}`);
   const mended = run((_F, c) => {
     c.holdings.westholt_castle.walls = 40;
@@ -205,7 +208,7 @@ test('castellans: a veteran stays behind, the steward goes; dismissed, they rejo
   assert.deepEqual(plain(c.holdings.westholt_castle.policies), plain(F.policies()));
   assert.equal(CL.accounts.balance(c, F.account('westholt_castle')), 0, 'its money stayed with it');
   assert.ok(c.holdings.westholt_castle.treasury > 0);
-  assert.equal(F.count(c.holdings.westholt_castle.garrison), 22, 'the taker’s own garrison');
+  assert.equal(F.count(c.holdings.westholt_castle.garrison), 22 * K, 'the taker’s own garrison');
   assert.deepEqual(plain(CL.realm.invariants(c)), []);
 });
 

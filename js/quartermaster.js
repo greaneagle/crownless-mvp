@@ -30,7 +30,7 @@
   const WAGE = 6;
   const DEFAULTS = { reserveDays: 5, budget: null, coverWages: true, medicine: 4 }; // budget null: automatic (V2-T1)
   /** @type {Record<string, [number, number]>} */
-  const LIMITS = { reserveDays: [0, 14], budget: [0, 1000], medicine: [0, 20] };
+  const LIMITS = { reserveDays: [0, 14], budget: [0, 10000], medicine: [0, 20] }; // budget up to 10,000 from 3.3.0 (P9-B3: a company of 150 eats more than 1,000 a week)
   const AUTO_MARGIN = 1.25; // the automatic budget: a week's food and a quarter more
   const LOG_MAX = 20;
   const WARN_FOOD_DAYS = 2;

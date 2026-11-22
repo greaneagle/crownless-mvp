@@ -1,4 +1,4 @@
-# Crownless 3.2.0 — The Border March
+# Crownless 3.3.0 — The Border March
 
 A single-player, top-down party-battle prototype in plain HTML5 Canvas and classic JavaScript. There's no bundler, no runtime dependencies and no server (Playwright, for the browser tests, is the only development dependency). It's published to GitHub Pages straight from `main`.
 
@@ -7,14 +7,14 @@ A single-player, top-down party-battle prototype in plain HTML5 Canvas and class
 - **Current behavior (regression reference):** [`docs/BASELINE.md`](docs/BASELINE.md)
 - **Status and plan:** [`docs/ROADMAP.md`](docs/ROADMAP.md); the v2 plan is [`docs/V2-PLAN.md`](docs/V2-PLAN.md), from the owner's v2.0 design documents
 - **Release notes:** [`docs/RELEASE-NOTES.md`](docs/RELEASE-NOTES.md); v2.0 acceptance: [`docs/V2-VALIDATION.md`](docs/V2-VALIDATION.md); Phase 7 acceptance: [`docs/PHASE-7-VALIDATION.md`](docs/PHASE-7-VALIDATION.md); Phase 8 acceptance: [`docs/PHASE-8-VALIDATION.md`](docs/PHASE-8-VALIDATION.md)
-- **What comes next:** [`docs/NEXT-PLAN.md`](docs/NEXT-PLAN.md): browser regression tests, zoom and a bigger world, then Phases 7–9 (Phase 8, the landed world, complete in 3.0.0: holdings and the people of the realms in 2.24.0, permissions in 2.25.0, lords on the map in 2.26.0, allegiance in 2.27.0, fiefs in 2.28.0, sieges in 2.29.0, the assault battle in 2.30.0, named nobles in 2.31.0, losing and retaking land in 2.32.0, tuning and acceptance in 3.0.0; Phase 9, kingdoms and houses, begun: battles of 20 to 200 at once in 3.1.0 and 3.1.1, armies sharing the field by their numbers in 3.2.0); every task specified, with its readiness, in [`docs/NEXT-TASKS.md`](docs/NEXT-TASKS.md)
+- **What comes next:** [`docs/NEXT-PLAN.md`](docs/NEXT-PLAN.md): browser regression tests, zoom and a bigger world, then Phases 7–9 (Phase 8, the landed world, complete in 3.0.0: holdings and the people of the realms in 2.24.0, permissions in 2.25.0, lords on the map in 2.26.0, allegiance in 2.27.0, fiefs in 2.28.0, sieges in 2.29.0, the assault battle in 2.30.0, named nobles in 2.31.0, losing and retaking land in 2.32.0, tuning and acceptance in 3.0.0; Phase 9, kingdoms and houses, begun: battles of 20 to 200 at once in 3.1.0 and 3.1.1, armies sharing the field by their numbers in 3.2.0, a company of up to 200 in 3.3.0); every task specified, with its readiness, in [`docs/NEXT-TASKS.md`](docs/NEXT-TASKS.md)
 
 ## What is playable
 
 - Create your hero: a name, a cloak colour, and a background (Farmhand, Scout or Peddler). You start with 60 crowns, a worn sword, clothing, an oak shield and some food, and no soldiers.
 - Equip loot from the **Party** screen. Strength sets your HP, your weapon and One-Handed skill set your damage, armor reduces hits, a shield is needed to block, and Pathfinding or a horse speeds up travel.
 - Travel the Border March, a strategic map with 10 settlements. Click or tap to travel; roads are faster and forests slower, and time passes as you go.
-- Enter settlements to hire troops and rest. Valedorn towns train Levies and Hunters, Aurelian towns train Recruits and Skirmishers, and the two towns also hire out Mercenaries. Party size starts at 8 soldiers (wounded included) and grows with Leadership and renown, and every troop's stats come from `data/troops.js`.
+- Enter settlements to hire troops and rest. Valedorn towns train Levies and Hunters, Aurelian towns train Recruits and Skirmishers, and the two towns also hire out Mercenaries. Party size starts at 8 soldiers (wounded included) and grows with Leadership, renown, companions as officers and land, up to 200 (from 3.3.0), and every troop's stats come from `data/troops.js`.
 - **A living map:** kingdom patrols hunt bandits, caravans haul goods (which moves prices), and Road Reaver bands rob caravans and hunt travellers who look weak. Use **Wait** (or Space) to let time pass.
 - **Progression:** battles earn XP. Your hero levels up to 10 and gets skill points every level and an attribute point every second level. Soldiers who fight earn XP and can be upgraded along the Valedorn and Aurelian troop trees for gold. Party size grows with Leadership and renown.
 - **Reputation:** the Valedorn Crown and the Aurelian Remnant each see you as Friendly, Neutral or Hostile. Contracts and beating Reavers on their land raise it; attacking their patrols or caravans lowers it. Friendly gives +2 party slots. Hostile kingdoms refuse recruits and contracts, and their patrols hunt you. Greywall and Ashgate forts can change hands.

@@ -126,7 +126,8 @@ test('Greywall can change hands: recruits, garrison, patrols and the owner list 
   assert.equal(R.setOwner(c, 'greywall_fort', 'aurelian', 'test'), true);
   assert.ok(uiCalls.some((x) => x[0] === 'message' && /Greywall Fort now flies the banner of the Aurelian Remnant/.test(x[1])));
   assert.equal(R.owner('greywall_fort', c), 'aurelian');
-  assert.deepEqual({ ...R.garrison('greywall_fort', c) }, { spearman: 10, legionary: 4, skirmisher: 6, marksman: 2 });
+  const k = CL.world.armies().garrisons; // P9-B3: the world's garrisons (data/world_map.js `armies`)
+  assert.deepEqual({ ...R.garrison('greywall_fort', c) }, { spearman: 10 * k, legionary: 4 * k, skirmisher: 6 * k, marksman: 2 * k });
   c.world.location = 'greywall_fort';
   assert.deepEqual(Array.from(CL.party.recruitsHere()), ['recruit', 'skirmisher']);
   assert.ok(R.holdings(c, 'aurelian').some((s) => s.id === 'greywall_fort'));

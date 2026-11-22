@@ -113,7 +113,10 @@ test('she takes a party slot and eats', () => {
   c.gold = 999;
   assert.equal(CL.party.canRecruit(c, 'levy'), true);
   CL.companion.join(c, 'mara');
-  assert.equal(CL.party.canRecruit(c, 'levy'), false, 'the last slot is hers');
+  // P9-B3: she takes the last slot, but as an officer she brings ten more.
+  assert.equal(CL.party.headcount(c), cap, 'the last slot is hers');
+  assert.equal(CL.party.partyCap(c), cap + CL.party.LIMIT.officer);
+  assert.equal(CL.party.canRecruit(c, 'levy'), true, 'and room for more under her');
   assert.equal(CL.upkeep.partySize(c), eaters + (cap - 1 - 5) + 1, 'the new soldiers and Mara all eat');
 });
 

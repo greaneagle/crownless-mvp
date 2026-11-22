@@ -49,20 +49,57 @@
   const canRest = (camp = c()) => offers(currentSettlement(camp), 'rest');
 
   /**
-   * GDD §5 party cap: min(20, 8 + 2×Leadership + floor(Renown/40) + faction_bonus), the faction bonus
-   * being +2 while Friendly with a kingdom. Wounded soldiers take slots too (GDD §7).
+   * P9-B3 (D-P9b): the company's limit, from what the hero has become, up to a ceiling of 200 (GDD §5's
+   * min(20, 8 + 2×Leadership + Renown/40 + 2 Friendly) before 3.3.0). Wounded soldiers and those away
+   * on detachments take slots too (GDD §7).
+   *   base        8
+   *   leadership  5 a point of Leadership
+   *   renown      1 for every 20
+   *   officers    10 for each companion in the company who can lead: Mara and the retinue
+   *   land        15 for each fort or town you hold, 5 for each village (its levy rides with you)
+   *   friendly    2 while a kingdom counts you Friendly
    */
+  const LIMIT = { base: 8, leadership: 5, renownPer: 20, officer: 10, seat: 15, village: 5, ceiling: 200 };
   /** Everyone who takes a slot: the company, the companion, and soldiers away on detachments (P7-05). */
   function headcount(camp = c()) {
     return camp.roster.length + CL.companion.slots(camp) + (CL.retinue?.slots(camp) || 0) + (CL.detachments?.away(camp) || 0);
   }
 
+  /** The limit's parts, for the Party screen (P9-B3). @param {Campaign} [camp] */
+  function limitParts(camp = c()) {
+    const fiefs = camp.holdings ? CL.realm.fiefsOf('player', camp).map((sid) => camp.holdings[sid]) : [];
+    const parts = {
+      base: LIMIT.base,
+      leadership: LIMIT.leadership * CL.character.skill('leadership', camp),
+      renown: Math.floor((camp.renown || 0) / LIMIT.renownPer),
+      officers: LIMIT.officer * (CL.companion.slots(camp) + (CL.retinue?.slots(camp) || 0)),
+      land: fiefs.reduce((n, h) => n + (h.kind === 'village' ? LIMIT.village : LIMIT.seat), 0),
+      friendly: CL.realm.capBonus(camp),
+    };
+    const sum = Object.values(parts).reduce((a, b) => a + b, 0);
+    return { parts, sum, total: Math.min(LIMIT.ceiling, sum) };
+  }
+
   function partyCap(camp = c()) {
-    return Math.min(20, 8 + 2 * CL.character.skill('leadership', camp) + Math.floor(camp.renown / 40) + CL.realm.capBonus(camp));
+    return limitParts(camp).total;
   }
 
   function canRecruit(camp, troopId) {
     return camp.gold >= CL.content.troop(troopId).recruitCost && headcount(camp) < partyCap(camp);
+  }
+
+  /** How many of a troop can be hired here at once, up to `n`: by the money and the room left (P9-B3). */
+  function canHireMany(camp, troopId, n) {
+    const price = CL.content.troop(troopId).recruitCost;
+    return Math.max(0, Math.min(n, Math.floor(camp.gold / price), partyCap(camp) - headcount(camp)));
+  }
+
+  /** P9-B3: hire several of a troop at once (a big company needs it): each as one hire, one save. Returns how many. */
+  function recruitMany(troopId, n) {
+    let hired = 0;
+    while (hired < n && recruit(troopId, { write: false })) hired++;
+    if (hired) CL.save.write();
+    return hired;
   }
 
   // ---- Troop upgrades (GDD §7) ----
@@ -212,13 +249,13 @@
     return { heroXp, levels, troopXp, ready: camp.roster.filter(readyFor).length };
   }
 
-  function recruit(troopId) {
+  function recruit(troopId, { write = true } = {}) {
     if (!recruitsHere().includes(troopId) || !canRecruit(c(), troopId)) return false;
     const price = CL.content.troop(troopId).recruitCost;
     CL.accounts.spend(c(), price, `hiring a ${CL.content.troop(troopId).name}`);
     const s = CL.save.addSoldier(c(), troopId);
     CL.events.emit(c(), 'SoldierRecruited', { soldierId: s.id, troop: troopId, settlement: c().world.location, via: 'hire' });
-    CL.save.write();
+    if (write) CL.save.write();
     CL.ui.refreshRoster();
     CL.diag.log('info', 'Soldier recruited', { troop: troopId, cost: price });
     CL.story.emit('recruit', { troop: troopId, settlement: c().world.location });
@@ -563,6 +600,10 @@
     UPGRADE_XP,
     XP,
     partyCap,
+    canHireMany,
+    recruitMany,
+    LIMIT,
+    limitParts,
     upgradeOptions,
     readyFor,
     upgrade,

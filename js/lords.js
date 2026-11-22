@@ -80,9 +80,10 @@
   /** How many soldiers a lord leads at full strength: by what they hold now. */
   function sizeFor(c, pid) {
     const fiefs = R().fiefsOf(pid, c);
-    if (!fiefs.length) return SIZE.landless;
+    const k = CL.world.armies().households; // P9-B3: the world's armies (data/world_map.js)
+    if (!fiefs.length) return Math.round(SIZE.landless * k);
     const seat = fiefs.some((sid) => c.holdings[sid].kind !== 'village');
-    return (seat ? SIZE.seat : SIZE.village) + SIZE.perExtra * (fiefs.length - 1);
+    return Math.round(((seat ? SIZE.seat : SIZE.village) + SIZE.perExtra * (fiefs.length - 1)) * k);
   }
 
   /** The realm's troops by tier: T1 its first, T2 and T3 its foot, archers and (T3) horse. */

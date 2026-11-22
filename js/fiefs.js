@@ -121,8 +121,19 @@
   function startGarrison(sid, c) {
     const s = place(sid);
     if (s?.type !== 'fort') return null;
-    return { ...(R().owner(sid, c) === s.ownerFaction ? s.garrison : CL.content.table('factions')[R().owner(sid, c)]?.garrison || s.garrison || {}) };
+    const base = R().owner(sid, c) === s.ownerFaction ? s.garrison : CL.content.table('factions')[R().owner(sid, c)]?.garrison || s.garrison || {};
+    const k = garrisonScale();
+    return Object.fromEntries(Object.entries(base).map(([id, n]) => [id, Math.max(1, Math.round(n * k))]));
   }
+
+  /**
+   * P9-B3: the world's garrisons (data/world_map.js `armies.garrisons`): the target and the weekly
+   * refill grow by it, and each soldier draws that much less of a wage, so a fort's book is as before.
+   */
+  const garrisonScale = () => CL.world.armies().garrisons;
+  const garrisonTarget = (h) => Math.round(RULES.garrisonTarget[h.policies.garrison] * garrisonScale());
+  const garrisonWage = () => RULES.garrisonWage / garrisonScale();
+  const refillPerWeek = () => Math.round(RULES.refillPerWeek * garrisonScale());
 
   /** Fill in a holding's running state where it has none (new games, old saves). */
   function ensure(c, sid) {
@@ -175,7 +186,7 @@
       h.dueWeek = weekNo;
     }
     // Wages: the garrison (forts) or militia (villages); the steward of a fort of yours.
-    const owe = h.kind === 'fort' ? Math.round(Object.entries(h.garrison || {}).reduce((n, [id, k]) => n + (troop(id)?.wage || 0) * k, 0) * RULES.garrisonWage) : h.kind === 'village' ? RULES.militia.wage : 0;
+    const owe = h.kind === 'fort' ? Math.round(Object.entries(h.garrison || {}).reduce((n, [id, k]) => n + (troop(id)?.wage || 0) * k, 0) * garrisonWage()) : h.kind === 'village' ? RULES.militia.wage : 0;
     r.wages = pay(c, sid, owe, `wages at ${placeName(sid)}`);
     r.unpaid = owe - r.wages;
     if (mine(c, sid) && h.kind === 'fort' && !h.castellan) r.steward = pay(c, sid, RULES.steward, `the steward of ${placeName(sid)}`);
@@ -209,10 +220,10 @@
   /** Recruit toward the target, keeping the realm's garrison mix; returns the crowns spent. */
   function refillGarrison(c, sid) {
     const h = R().holding(sid, c);
-    const target = RULES.garrisonTarget[h.policies.garrison];
+    const target = garrisonTarget(h);
     const mix = CL.content.table('factions')[h.controller]?.garrison || {};
     let spent = 0;
-    for (let i = 0; i < RULES.refillPerWeek && count(h.garrison) < target; i++) {
+    for (let i = 0; i < refillPerWeek() && count(h.garrison) < target; i++) {
       const pick = Object.keys(mix).sort((a, b) => (h.garrison[a] || 0) / mix[a] - (h.garrison[b] || 0) / mix[b])[0];
       if (!pick) break;
       const cost = Math.ceil((troop(pick)?.recruitCost || 20) * RULES.refillCost);
@@ -486,7 +497,7 @@
     const lines = [`${R().titled(R().rulerOf(h.sovereign, c), c)} grants you ${placeName(g.sid)} (a ${h.kind}).`];
     const tax = Math.round(RULES.tax[h.kind] * (h.prosperity / 50));
     lines.push(`It pays about ${tax} crowns a week in tax; the crown takes a tenth.`);
-    if (h.kind === 'fort') lines.push(`Its garrison of ${count(h.garrison)} costs about ${Math.round(Object.entries(h.garrison || {}).reduce((n, [id, k]) => n + (troop(id)?.wage || 0) * k, 0) * RULES.garrisonWage)} a week, and the steward ${RULES.steward}.`);
+    if (h.kind === 'fort') lines.push(`Its garrison of ${count(h.garrison)} costs about ${Math.round(Object.entries(h.garrison || {}).reduce((n, [id, k]) => n + (troop(id)?.wage || 0) * k, 0) * garrisonWage())} a week, and the steward ${RULES.steward}.`);
     else lines.push(`Its militia costs ${RULES.militia.wage} a week; the reeve runs it for nothing.`);
     lines.push(`A day spent there counts as a day of service. You may hold three fiefs at most.`);
     return lines;
@@ -601,5 +612,5 @@
     for (const [f, n] of Object.entries(d?.influence || {})) if (R().isRealm(f) && num(n)) s.influence[f] = clamp(Math.round(n), 0, FULL);
   }
 
-  CL.fiefs = { RULES, STANCES, GARRISONS, CHOICES, keptPolicies, account, accountOf, cash, bookFor, label, policies, ensure, adminName, week, payday, tick, appoint, dismiss, returnCastellan, setPolicy, fund, givable, offer, weeklyGrants, candidates, decideGrants, give, grantDue, grantLines, answer, conquered, sanitize, count };
+  CL.fiefs = { RULES, garrisonTarget, garrisonScale, STANCES, GARRISONS, CHOICES, keptPolicies, account, accountOf, cash, bookFor, label, policies, ensure, adminName, week, payday, tick, appoint, dismiss, returnCastellan, setPolicy, fund, givable, offer, weeklyGrants, candidates, decideGrants, give, grantDue, grantLines, answer, conquered, sanitize, count };
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -31,9 +31,11 @@ test('a new world has its bands, patrols by holdings and caravans (W-05b)', () =
   for (const p of CL.campaign.parties) {
     const t = CL.content.get('party_templates', p.template);
     if (t.kind === 'lord') continue; // sized by what the lord holds (P8-01, tests/lords.test.js)
+    // P9-B3: beyond the story's own land the template's numbers are this many times bigger.
+    const k = CL.world.regionAt(p.x, p.y)?.home ? 1 : CL.world.armies().beyondHome;
     for (const [id, n] of Object.entries(p.troops)) {
       const [lo, hi] = t.troops[id];
-      assert.ok(n >= Math.max(1, lo) && n <= hi, `${t.id} ${id}=${n}`);
+      assert.ok(n >= Math.max(1, Math.round(lo * k)) && n <= Math.round(hi * k), `${t.id} ${id}=${n} (×${k})`);
     }
   }
 });
@@ -108,7 +110,7 @@ test('caravans deliver goods (cheaper at the destination); robbed caravans make 
   const g2 = car.good;
   c.markets[next][g2] = 1.0;
   const band = CL.parties.spawn(c, 'bandits');
-  Object.assign(band, { x: car.x, y: car.y, troops: { reaver: 9 } });
+  Object.assign(band, { x: car.x, y: car.y, troops: { reaver: 9 * 3 } }); // P9-B3: a caravan beyond the March has more guards
   CL.parties.tick(c, 0.25);
   assert.equal(c.parties.includes(car), false, 'caravan robbed');
   assert.ok(c.markets[next][g2] > 1.0);

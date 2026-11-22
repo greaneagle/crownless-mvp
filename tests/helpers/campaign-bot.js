@@ -108,11 +108,17 @@ function makeBot(CL, { log = () => {}, style = 'hands-off', roam = false } = {})
     }
     if (style === 'expert') followers(camp); // P7-T: the company's roles come before more recruits
     const recruits = CL.party.recruitsHere();
-    const reserve = () => U().weeklyWages(camp) + 8 * U().dailyRations(camp) + 20;
-    for (let i = 0; i < 20; i++) {
+    // P9-B3: with room for 200, a company is held back by its pay, not its limit. Like a careful
+    // captain, past 20 soldiers the bot hires only while it keeps three weeks of wages in hand, the
+    // newcomer's included (up to 20, one week, as it always did); and the expert gets its property (a
+    // mill) before it grows past 20.
+    const big = camp.roster.length >= 20;
+    const reserve = (id) => (big ? 3 * (U().weeklyWages(camp) + CL.content.troop(id).wage) : U().weeklyWages(camp)) + 8 * U().dailyRations(camp) + 20;
+    const saving = big && style === 'expert' && !CL.business.get(camp);
+    for (let i = 0; i < (saving ? 0 : 20); i++) {
       const id = recruits[i % Math.max(1, recruits.length)];
       if (!id) break;
-      if (camp.gold < CL.content.troop(id).recruitCost + reserve() || !CL.party.recruit(id)) break;
+      if (camp.gold < CL.content.troop(id).recruitCost + reserve(id) || !CL.party.recruit(id)) break;
       stats.hired++;
     }
     if (!camp.contract && CL.contracts.offersContracts(sid)) {

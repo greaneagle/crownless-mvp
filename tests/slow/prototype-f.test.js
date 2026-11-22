@@ -17,7 +17,10 @@ test('Prototype F: the same order, one obeys and one refuses, for reasons you ca
   for (const t of Object.values(CL.content.table('party_templates'))) if (t.kind !== 'lord') c.partySpawns[t.id] = 1e9;
   CL.lords.ensure(c, c.day, true);
   Object.assign(c, { gold: 3000, food: 600, renown: 120 });
-  for (let i = 0; i < 12; i++) CL.save.addSoldier(c, i % 3 ? 'footman' : 'hunter');
+  // A company Lord Hamon respects: 60 (12 before 3.3.0). With the world's households three times the
+  // data's (P9-B3), it takes five times the old company to stand as strong against his (the hero's own
+  // share counts for less in bigger armies): about 1.4 times his household's power, as the 12 were.
+  for (let i = 0; i < 60; i++) CL.save.addSoldier(c, i % 3 ? 'footman' : 'hunter');
   CL.story.state(c).flags.ending = 'valedorn'; // the sandbox after the story: Castra Nova may be besieged
   Object.assign(c.allegiance, { kind: 'vassal', realm: 'valedorn', since: c.day, window: { start: c.day, days: 10 } });
   CL.realm.setRelation(c, 'valedorn', 'aurelian', 'war', 'test');

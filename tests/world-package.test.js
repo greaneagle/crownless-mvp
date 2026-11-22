@@ -38,6 +38,8 @@ test('validation: places, terrain and parties inside the bounds; owners and part
   assert.match(problems((C) => (C.settlements.redfield.mapX = 204)), /settlement redfield outside the map/);
   assert.match(problems((C) => (C.world_map.sundered_realm.sites.looter_camp.mapY = -1)), /site looter_camp outside the map/);
   assert.match(problems((C) => C.world_map.sundered_realm.river.push([50, 230])), /terrain outside the map/);
+  assert.match(problems((C) => (C.world_map.sundered_realm.armies.garrisons = 0.5)), /armies\.garrisons must be/); // P9-B3
+  assert.match(problems((C) => (C.world_map.sundered_realm.armies.dragons = 2)), /armies\.dragons must be/);
   assert.match(problems((C) => (C.settlements.oakford.ownerFaction = 'nobody')), /oakford/);
   assert.match(problems((C) => (C.world_map.sundered_realm.factions = ['valedorn', 'ghosts'])), /unknown kingdom ghosts/);
   assert.match(problems((C) => (C.world_map.sundered_realm.start = 'atlantis')), /unknown start atlantis/);

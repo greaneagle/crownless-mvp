@@ -87,7 +87,9 @@ test('a mercenary’s pay: weekly, from the realm, and every crown of it in the 
   const { CL, c, AL } = camp();
   AL.act(c, 'serve', 'aurelian');
   const pay = AL.weeklyPay(c);
-  assert.equal(pay, Math.round(20 + 3 * c.roster.length + 0.1 * c.renown));
+  const R = AL.RULES.pay; // 20 + the company's wages and a tenth more (3 a soldier before 3.3.0) + 0.1 a point of renown
+  assert.equal(pay, Math.round(R.base + R.wages * CL.upkeep.weeklyWages(c) + R.perRenown * c.renown));
+  assert.equal(R.wages, 1.1);
   const gold = c.gold;
   days(CL, 15);
   const lines = c.ledger.filter((l) => l.why === 'pay from the Aurelian Remnant');

@@ -27,7 +27,7 @@
 
   const RULES = {
     term: 30, // days of a mercenary contract
-    pay: { base: 20, perSoldier: 3, perRenown: 0.1 }, // crowns a week
+    pay: { base: 20, wages: 1.1, perRenown: 0.1 }, // crowns a week (P9-B3: the company's wages and a tenth more, so a mercenary company pays its way; 3 a soldier before 3.3.0)
     vassal: { renown: 150, serviceDays: 20 }, // to swear (tuned in P8-T)
     window: { days: 30, service: 10 }, // a vassal's service: 10 days in every 30
     release: { owing: -15, early: -10 }, // standing lost asking for release while owing service; a contract left early
@@ -55,8 +55,8 @@
   /** The realm you are sworn to as a vassal, or null. */
   const sworn = (c) => (state(c).kind === 'vassal' ? state(c).realm : null);
 
-  /** A week's pay for a mercenary: by renown and the size of the company. */
-  const weeklyPay = (c) => Math.round(RULES.pay.base + RULES.pay.perSoldier * c.roster.length + RULES.pay.perRenown * c.renown);
+  /** A week's pay for a mercenary: by renown and what the company costs (P9-B3: its wages and a tenth more). */
+  const weeklyPay = (c) => Math.round(RULES.pay.base + RULES.pay.wages * CL.upkeep.weeklyWages(c) + RULES.pay.perRenown * c.renown);
 
   /** Days of mercenary service you have given a realm, in all (for the vassal's oath). */
   function mercenaryDays(c, f) {

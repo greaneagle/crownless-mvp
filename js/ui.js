@@ -407,6 +407,8 @@
       for (const id of P.recruitsHere()) {
         const t = CL.content.troop(id);
         opt(`Hire a ${t.name} · ${t.recruitCost} crowns`, () => P.recruit(id) && redo(), !P.canRecruit(c, id), `${t.tier} ${t.role} · wage ${t.wage}/week`);
+        // P9-B3: five at once, for a company that has room for many.
+        if (P.partyCap(c) - P.headcount(c) >= HIRE_MANY) opt(`Hire ${HIRE_MANY} ${plural(t.name, HIRE_MANY)} · ${HIRE_MANY * t.recruitCost} crowns`, () => P.recruitMany(id, HIRE_MANY) && redo(), P.canHireMany(c, id, HIRE_MANY) < HIRE_MANY, `wages ${HIRE_MANY * t.wage}/week`);
       }
       opt('Review my troops', () => openSheet(), false, `${CL.party.headcount(c)}/${P.partyCap()} in the company${CL.detachments.away(c) ? ` (${CL.detachments.away(c)} away)` : ''}`);
     } else if (n.action === 'tavern') {
@@ -650,7 +652,7 @@
       const card = el('div', 'contractCard fiefCard');
       card.dataset.fief = sid;
       card.append(el('h3', '', `${s.name} · ${F.adminName(c, sid)}`));
-      const men = h.kind === 'fort' ? `Garrison ${F.count(h.garrison)} (target ${F.RULES.garrisonTarget[h.policies.garrison]})${h.walls < 100 ? ` · walls ${h.walls}%` : ''}` : `Militia ${h.militia}`;
+      const men = h.kind === 'fort' ? `Garrison ${F.count(h.garrison)} (target ${F.garrisonTarget(h)})${h.walls < 100 ? ` · walls ${h.walls}%` : ''}` : `Militia ${h.militia}`;
       card.append(el('p', '', `${men} · prosperity ${h.prosperity} · unrest ${h.unrest}${h.unrest > F.RULES.unrest.stop ? ' (pays and recruits nothing)' : ''} · treasury ${F.cash(c, sid)} crowns`));
       const r = h.report;
       card.append(el('p', 'fiefReport', r ? `Last week: tax ${r.tax}, due ${r.due}, wages ${r.wages}${r.unpaid ? ` (${r.unpaid} unpaid)` : ''}${r.steward ? `, steward ${r.steward}` : ''}${r.repairs ? `, repairs ${r.repairs}` : ''}${r.refill ? `, recruits ${r.refill}` : ''}.` : 'No week run yet: the first report comes on payday.'));
@@ -1196,6 +1198,8 @@
         mk('p', { textContent: `Soldiers going (${going.length}):` }),
         mk('div', { className: 'row' }, btn('Half the company', () => (draft.soldiers = fitSoldiers.slice(0, Math.floor(fitSoldiers.length / 2)).map((s) => s.id))), btn('None', () => (draft.soldiers = []))),
         mk('div', { className: 'row' }, ...fitSoldiers.slice(0, 16).map(toggle)),
+        // P9-B3: a big company chooses by troop, five at a time.
+        ...(fitSoldiers.length > 16 ? [mk('div', { className: 'row detachByTroop' }, ...byTroopPicks(fitSoldiers, draft))] : []),
         mk('p', { textContent: 'Orders:' }),
         mk(
           'div',
@@ -1251,6 +1255,50 @@
     if (CL.settings.get('prepSkip')) return CL.parties.attack(plan);
     g.prep = { map, plan, ambush, remember: CL.settings.get('prepPreset') !== 'balanced', skip: false, drag: null };
     changeMode('prepare');
+  }
+
+  const HIRE_MANY = 5; // P9-B3: the recruiter's "Hire 5"
+
+  /**
+   * P9-B3: a detachment's soldiers chosen by troop, five more at a time ("Footman +5 · 10/24"); the
+   * draft re-renders through the button helper's redraw. @param {any[]} fit @param {any} draft
+   */
+  function byTroopPicks(fit, draft) {
+    const by = new Map();
+    for (const s of fit) {
+      if (!by.has(s.troop)) by.set(s.troop, []);
+      by.get(s.troop).push(s);
+    }
+    return [...by.entries()].map(([id, list]) => {
+      const chosen = list.filter((s) => draft.soldiers.includes(s.id)).length;
+      const b = Object.assign(document.createElement('button'), { type: 'button', textContent: `${CL.content.troop(id).name} +${HIRE_MANY} · ${chosen}/${list.length}`, disabled: chosen === list.length });
+      b.dataset.troop = id;
+      b.onclick = () => {
+        const more = list.filter((s) => !draft.soldiers.includes(s.id)).slice(0, HIRE_MANY).map((s) => s.id);
+        draft.soldiers = [...draft.soldiers, ...more];
+        renderDetachments();
+      };
+      return b;
+    });
+  }
+
+  /**
+   * P9-B3: how the company's limit is made up, in words: "8 + Leadership 3 ×5 + renown 4 + 1 officer 10
+   * + land 15 + Friendly 2", and the ceiling when it is reached. @param {Campaign} c
+   */
+  function limitWords(c) {
+    const { parts: p, sum } = CL.party.limitParts(c);
+    const L = CL.party.LIMIT;
+    const officers = p.officers / L.officer;
+    const words = [
+      `${p.base}`,
+      `Leadership ${CL.character.skill('leadership', c)} ×${L.leadership}`,
+      `renown ${p.renown} (1 per ${L.renownPer})`,
+      officers ? `${officers} officer${officers === 1 ? '' : 's'} ${p.officers}` : '',
+      p.land ? `land ${p.land}` : '',
+      p.friendly ? `Friendly ${p.friendly}` : '',
+    ].filter(Boolean);
+    return `${words.join(' + ')}${sum > L.ceiling ? `, at most ${L.ceiling}` : ''}`;
   }
 
   /**
@@ -1620,7 +1668,6 @@
       ch.attributePoints ? `${ch.attributePoints} attribute point${ch.attributePoints > 1 ? 's' : ''} to spend` : '',
     ].filter(Boolean);
     const cap = CL.party.partyCap(c);
-    const lead = C.skill('leadership', c);
     stats.replaceChildren(
       line([levelText, ...points]),
       spendLine(
@@ -1643,7 +1690,7 @@
         ),
       ),
       line([
-        `Party size ${CL.party.headcount(c)}/${cap} (8 + 2×Leadership ${lead} + Renown ${c.renown}/40${CL.realm.capBonus(c) ? ` + ${CL.realm.capBonus(c)} Friendly` : ''}${cap === 20 ? ', max 20' : ''})`,
+        `Party size ${CL.party.headcount(c)}/${cap} (${limitWords(c)})`,
       ]),
       line(
         CL.realm.kingdoms().map((f) => {
@@ -1786,8 +1833,37 @@
       tabs,
       upgradeAllBlock(),
       el('label', { className: 'soldierFilter' }, 'Show ', select),
-      ...(rows.length ? rows : [el('p', { textContent: 'Nobody matches.' })]),
+      ...(rows.length ? (shown.length > GROUP_FROM ? soldierGroups(shown, rows) : rows) : [el('p', { textContent: 'Nobody matches.' })]),
     );
+  }
+
+  const GROUP_FROM = 20; // P9-B3: a longer list is grouped by troop, each group opened by a tap
+
+  /**
+   * P9-B3: the soldiers grouped by troop, with counts (wounded, ready to upgrade), each group's rows
+   * shown on a tap and remembered while the screen is open. @param {any[]} shown @param {HTMLElement[]} rows
+   */
+  function soldierGroups(shown, rows) {
+    const g = CL.game;
+    const c = CL.campaign;
+    g.soldierOpen ??= {};
+    const by = new Map();
+    shown.forEach((s, i) => {
+      if (!by.has(s.troop)) by.set(s.troop, []);
+      by.get(s.troop).push([s, rows[i]]);
+    });
+    return [...by.entries()].map(([id, list]) => {
+      const t = CL.content.troop(id);
+      const hurt = list.filter(([s]) => s.woundedUntil !== null).length;
+      const ready = list.filter(([s]) => CL.party.soldierUpgrades(s, c).some((o) => o.can)).length;
+      const box = el('details', { className: 'soldierGroup', open: Boolean(g.soldierOpen[id]) });
+      box.dataset.troop = id;
+      box.ontoggle = () => {
+        g.soldierOpen[id] = box.open;
+      };
+      box.append(el('summary', { textContent: `${t.name} ×${list.length} · ${t.tier} ${t.role}${hurt ? ` · ${hurt} wounded` : ''}${ready ? ` · ${ready} ready to upgrade` : ''}` }), ...list.map(([, row]) => row));
+      return box;
+    });
   }
 
   /** The roll of honour (V2-10): those who fell or left, newest first, then how many before them. */

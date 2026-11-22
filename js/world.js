@@ -24,6 +24,8 @@
     return w && CL.content.table('world_map')[w] ? w : defaultId();
   }
   const map = () => CL.content.get('world_map', id());
+  /** P9-B3: the world's army sizes (data/world_map.js `armies`), each 1 where the world doesn't say. */
+  const armies = () => ({ households: 1, garrisons: 1, beyondHome: 1, ...(map().armies || {}) });
   /** The map's size in map units: { w, h } (100 × 100 for the Border March). */
   const bounds = () => map().bounds || { w: 100, h: 100 };
   /** A map point kept inside the map, `margin` units from its edges. @returns {[number, number]} */
@@ -37,7 +39,7 @@
   const start = () => settlement(map().start);
   /** The named area holding a map point (data `regions`), or null. */
   function regionAt(x, y) {
-    for (const [rid, r] of Object.entries(map().regions || {})) if (x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h) return { id: rid, name: r.name };
+    for (const [rid, r] of Object.entries(map().regions || {})) if (x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h) return { id: rid, name: r.name, home: Boolean(r.home) };
     return null;
   }
   const world = () => CL.campaign.world;
@@ -450,6 +452,7 @@
     inBounds,
     start,
     regionAt,
+    armies,
     VIEW,
     HIT_RADIUS_PX,
     HOURS_PER_SECOND,

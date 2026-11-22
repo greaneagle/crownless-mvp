@@ -43,9 +43,10 @@ test('every free lord rides with their household, formed at home; rulers keep to
 test('party sizes follow what a lord holds, and change as land is granted and lost', () => {
   const { CL, c, L } = world();
   const size = (key) => L.sizeFor(c, byKey(c, key));
-  assert.equal(size('tancred_greymantle'), 12, 'landless');
-  assert.equal(size('hawise_greymantle'), 16, 'a village');
-  assert.equal(size('hamon_greymantle'), 24, 'a fort and a village');
+  const k = CL.world.armies().households; // P9-B3: the world's households (data/world_map.js `armies`)
+  assert.equal(size('tancred_greymantle'), 12 * k, 'landless');
+  assert.equal(size('hawise_greymantle'), 16 * k, 'a village');
+  assert.equal(size('hamon_greymantle'), 24 * k, 'a fort and a village');
   for (const key of ['tancred_greymantle', 'hawise_greymantle', 'hamon_greymantle']) assert.equal(count(L.partyOf(c, byKey(c, key)).troops), size(key), key);
   // More veterans with a higher standing.
   const share = (key) => {
@@ -57,13 +58,13 @@ test('party sizes follow what a lord holds, and change as land is granted and lo
   // A grant: Tancred is given Oakford and leads more; Hamon loses Greywall and leads fewer.
   const tancred = byKey(c, 'tancred_greymantle');
   CL.realm.transfer(c, 'oakford', { holder: tancred, reason: 'test' });
-  assert.equal(L.sizeFor(c, tancred), 16);
+  assert.equal(L.sizeFor(c, tancred), 16 * k);
   CL.realm.setOwner(c, 'greywall_fort', 'aurelian', 'test');
-  assert.equal(size('hamon_greymantle'), 12, 'landless now');
+  assert.equal(size('hamon_greymantle'), 12 * k, 'landless now');
   // Back home, the household refills to what they hold now.
   const p = L.partyOf(c, tancred);
   L.refill(c, p);
-  assert.equal(count(p.troops), 16);
+  assert.equal(count(p.troops), 16 * k);
 });
 
 test('intentions follow the state: landless lords campaign, nobody rides home from home, the thin go home', () => {

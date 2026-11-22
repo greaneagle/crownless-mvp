@@ -26,6 +26,12 @@
       relations: [{ between: ['valedorn', 'aurelian'], state: 'tension', story: true }],
       // The world simulation's budget (W-07): no more than this many regular parties spawn in one region.
       simulation: { partiesPerRegion: 16 },
+      // P9-B3 (D-P9b): the size of the world's armies, to match a company of up to 200. `households`:
+      // a lord's household, by what they hold (12–27 at 1; 36–81 here, as the garrisons, so every ratio of Phase 8's sieges holds); `garrisons`: a fort's garrison,
+      // its target and refill (at the same cost a week: each soldier draws that much less of a wage);
+      // `beyondHome`: bands, patrols and caravans that form outside the story's own land (a region marked
+      // `home`), which stays as it was for a gentle start.
+      armies: { households: 3, garrisons: 3, beyondHome: 2.5 },
       // P8-08: Prototype D's start (design §28.1, Debug → Prototype D start): the player holds `fort` and
       // its `village` for `realm` at `home`; `enemy` goes to war with it and gathers against the fort.
       prototypeD: { realm: 'valedorn', fort: 'westholt_castle', village: 'ashby', enemy: 'hrothmark', home: 'stonebridge' },

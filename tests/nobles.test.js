@@ -339,7 +339,8 @@ test('a lord who joins your siege: his promise ends with it, without a word of l
   vassal(c);
   const avice = id('avice_westmere');
   N.note(c, avice, 'player', 'freed');
-  for (let i = 0; i < 12; i++) CL.save.addSoldier(c, 'footman');
+  // A company of 12 in the world's scale (P9-B3: households three times the data's).
+  for (let i = 0; i < 12 * CL.world.armies().households; i++) CL.save.addSoldier(c, 'footman');
   const s = siege(c, 'castra_nova', 'valedorn', 'player');
   assert.equal(N.ask(c, avice, 'siege').answer, 'obey');
   assert.ok(s.lords.includes(avice));

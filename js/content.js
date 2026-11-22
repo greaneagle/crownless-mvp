@@ -89,6 +89,8 @@
       if (!ours.has(s.ownerFaction)) err(`${w}: settlement ${s.id} owned by ${s.ownerFaction}, not one of this world's factions`);
     }
     for (const st of Object.values(m.sites || {})) if (!inside(st.mapX, st.mapY)) err(`${w}: site ${st.id} outside the map`);
+    // P9-B3: the world's army sizes, each a factor from 1 to 10 (missing ones are 1).
+    for (const [k, v] of Object.entries(m.armies || {})) if (!['households', 'garrisons', 'beyondHome'].includes(k) || !(Number.isFinite(v) && v >= 1 && v <= 10)) err(`${w}: armies.${k} must be households, garrisons or beyondHome, a number from 1 to 10`);
     const points = [...(m.river || []), ...(m.forests || []).flat(), ...(m.hills || [])];
     if (points.some(([x, y]) => !inside(x, y))) err(`${w}: terrain outside the map`);
     for (const [id, r] of Object.entries(m.regions || {})) {

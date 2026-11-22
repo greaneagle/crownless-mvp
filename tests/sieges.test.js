@@ -85,18 +85,20 @@ test('starved out: at no food the garrison surrenders; the fort passes once, its
   const fort = s.sid;
   const was = R.holderOf(fort, c);
   c.holdings[fort].food = 0.5;
-  const n = events(CL, 'HoldingChanged');
+  const changes = () => CL.events.recent.filter((e) => e.type === 'HoldingChanged' && (e.data?.holding ?? e.holding) === fort).length;
+  const n = changes();
   hours(CL, 30);
   assert.equal(c.sieges.includes(s), false, 'over');
   assert.equal(R.owner(fort, c), 'valedorn', 'taken');
-  assert.equal(events(CL, 'HoldingChanged'), n + 1, 'transferred once');
+  // This fort, once (Aurelia's own siege of a Valedorn fort in the same war may end in these hours too).
+  assert.equal(changes(), n + 1, 'transferred once');
   for (const v of R.villagesOf(fort, c)) assert.equal(R.owner(v, c), 'valedorn', `${v} followed its seat`);
   assert.ok(R.claimsOn(fort, c).some((k) => k.by === was), 'the old holder keeps a claim');
   const h = c.holdings[fort];
   assert.equal(h.unrest >= 60, true, 'restless');
   assert.ok(h.walls < 100);
   assert.ok(h.weakUntil > c.day);
-  assert.ok(CL.fiefs.count(h.garrison) <= 11, 'half a garrison');
+  assert.ok(CL.fiefs.count(h.garrison) <= 11 * CL.world.armies().garrisons, 'half a garrison');
   assert.ok(c.news.events.some((e) => e.kind === 'fort_fell' && /surrendered/.test(e.text)));
   // The conqueror asked; the crown will grant it, the commander first.
   const g = c.grants.find((x) => x.sid === fort);
@@ -208,7 +210,9 @@ test('your own siege: the preview, the shut villages, a day’s wait, starved ou
   Object.assign(c.world, { x: fort.mapX, y: fort.mapY, location: 'castra_nova' });
   const p = S.preview(c, 'castra_nova');
   assert.equal(p.ok, true, p.why);
-  assert.match(p.lines[0], /^The garrison: 22 soldiers \(power [\d.]+\), ×1\.60 behind walls at 100%\.$/);
+  const men = 22 * CL.world.armies().garrisons; // P9-B3: the world's garrisons (data/world_map.js `armies`)
+  assert.ok(p.lines[0].startsWith(`The garrison: ${men} soldiers (power `), p.lines[0]);
+  assert.match(p.lines[0], /^The garrison: \d+ soldiers \(power [\d.]+\), ×1\.60 behind walls at 100%\.$/);
   assert.match(p.lines[2], /^Starving it out: about 14 days, if no relief comes\.$/);
   assert.equal(p.lines.at(-1), 'Leaving the camp lifts the siege.');
   const s = S.begin(c, 'castra_nova');

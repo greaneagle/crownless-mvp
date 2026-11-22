@@ -26,13 +26,13 @@
   // ---- Offers ----
 
   /** Build a band whose power is the given multiple range of the player's, from a troop pool. */
-  function rollTroops(c, t, strength = t.strength) {
+  function rollTroops(c, t, strength = t.strength, most = t.maxTroops) {
     const [lo, hi] = strength;
     const target = A().playerPower(c) * between(lo, hi, A().next(c));
     const troops = {};
     let power = 0;
     let n = 0;
-    while (n < t.maxTroops && (n < t.minTroops || power < target)) {
+    while (n < most && (n < t.minTroops || power < target)) {
       const id = t.troopPool[Math.floor(A().next(c) * t.troopPool.length)];
       troops[id] = (troops[id] || 0) + 1;
       power += A().TIER_POWER[CL.content.troop(id).tier];
@@ -51,12 +51,22 @@
     return pool[Math.floor(A().next(c) * pool.length)];
   }
 
+  /**
+   * P9-B3: the work a board offers fits the company. Bands and ambushes are matched to the company's
+   * strength as always, but no longer stop at the template's largest band (14) once the company passes
+   * `from` (the hero, companions and soldiers): the most grows in proportion. A hunt pays by the band's
+   * size; an escort by the same factor.
+   */
+  const WORK = { from: 20 };
+  const workScale = (c) => Math.max(1, (1 + CL.party.headcount(c)) / WORK.from);
+
   function makeOffer(c, sid, templateId = 'bandit_hunt') {
     const t = tpl(templateId);
     const s = settlement(sid);
     const base = { id: c.nextContractId++, template: t.id, giver: sid, days: t.timeLimitDays, offeredUntil: c.day + OFFER_REFRESH_DAYS };
+    const k = workScale(c);
     if (t.kind === 'hunt') {
-      const troops = rollTroops(c, t);
+      const troops = rollTroops(c, t, t.strength, Math.round(t.maxTroops * Math.sqrt(k)));
       const size = Object.values(troops).reduce((a, b) => a + b, 0);
       const angle = A().next(c) * Math.PI * 2;
       const dist = between(t.distance[0], t.distance[1], A().next(c));
@@ -73,7 +83,7 @@
     if (t.kind === 'escort') {
       // The ambush waits 40–70% of the way along the road.
       const f = between(0.4, 0.7, A().next(c));
-      return { ...base, to: to.id, troops: rollTroops(c, t, t.ambushStrength), x: s.mapX + (to.mapX - s.mapX) * f, y: s.mapY + (to.mapY - s.mapY) * f, reward };
+      return { ...base, to: to.id, troops: rollTroops(c, t, t.ambushStrength, Math.round(t.maxTroops * Math.sqrt(k))), x: s.mapX + (to.mapX - s.mapX) * f, y: s.mapY + (to.mapY - s.mapY) * f, reward: { ...reward, gold: Math.round(reward.gold * Math.sqrt(k)) } };
     }
     // Delivery: goods or a letter.
     if (A().next(c) < t.letterChance) return { ...base, to: to.id, letter: true, reward };
@@ -393,6 +403,9 @@
 
   CL.contracts = {
     OFFER_REFRESH_DAYS,
+    WORK,
+    workScale,
+    makeOffer,
     offersContracts,
     rollTroops,
     offersAt,
