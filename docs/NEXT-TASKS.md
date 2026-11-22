@@ -1309,7 +1309,29 @@ _Re-specified 2026-11-20 at build 2.23.0 (commit 09176e8); NEXT-PLAN §5 has the
   | P8-08 losing and retaking land | `campaign-bots`, `test-world`; ran also `landed` (siege targets, revocation) and both prototypes | |
   | P8-T tuning and acceptance | all, with Prototypes D and F | **Whole suite** |
 
-  A task that turns out to reach more than its row runs those files too, and says so.
+  A task that turns out to reach more than its row runs those files too, and says so. **From P9-L1 the rows are replaced by each task's Brief (its "Run" line), and the way of working below.**
+
+### How each task runs from P9-L1 (owner, 2026-11-23)
+
+The battle tasks took long and spent most of their effort around the task: reading the whole plan, re-running suites, and tuning loops. From P9-L1 a task is done by its section alone. Each task below ends with a **Brief**: where to start in the code, the defaults already decided, the save step, the build order, the tests to write, the checks to run, what to play and what to leave out. The owner's rules (commit only when asked; never push, tag, open pull requests or publish; same rules for the AI; only what a character could know; plain short sentences) are unchanged.
+
+1. **Read** this section, the task's own section and the files its Brief names. Not the rest of this file, NEXT-PLAN, ROADMAP, the release notes or the review log, unless the Brief points there. The Brief's numbers and names are the defaults: use them; nothing in a Brief needs the owner's answer.
+2. **Build** in the Brief's order. Content facts (realm names, laws, numbers) go in `data/`; no kingdom name or 0–100 bound literal in `js/` (the grep tests); every right through `js/rights.js` or `js/realm.js`. Files with LF line endings (on Windows, the Edit tool or Python with `newline=''`).
+3. **Check, once each,** in this order; a step that fails is fixed and that step alone run again:
+   - while building: the task's own Node files only (`node --test tests/<file>.test.js`);
+   - at the end: `npm test` (about 3 minutes) and `npm run lint` (about 1 minute);
+   - the browser specs the Brief names, both projects (`npx playwright test tests/browser/<file>.spec.js`). The full browser suite only at checkpoints, or when the task changes the HUD, the overlay's layout or shared rules in `style.css` (not for a button or card inside one screen);
+   - the slow files the Brief names, once, in the background, sequentially (`node --test --test-concurrency=1 tests/slow/<a>.test.js …`), while the docs are written. `battle-parity` takes about 26 minutes since 3.5.0 (its sieges fight at 150): run it only when the task changes combat, the assault or auto-resolve;
+   - a measurement (`node scripts/landed.js <days> <seeds>`, `node scripts/parity.js …`) with the Brief's numbers, once.
+4. **Tuning is time-boxed:** at most two changes of a number toward its target. If it is still off, ship the better of the tries and write the numbers in the Done paragraph as open for P9-T. (Most of P9-B5's time went on a third, fourth and fifth try.)
+5. **Failures outside the task:** a test in a file the task neither changed nor reaches is run once alone. Still failing: note it in the report and the Done paragraph and go on; don't fix it in this task unless it blocks it. Known flakes under load: the tourney's "BOUT LOST", the battle-zoom pinch and the ford battle on the phone, and the battle-size spec's slow-battle offer.
+6. **Play** only what the Brief's "Play" line names: one pass in the preview ("crownless", port 8123) at 812×375, by real taps, and one screenshot. A task with no new screen is played by its scripted case and its `landed` run; no preview.
+7. **Docs,** short, in this order: this file (the heading ✅ Done in x.y.0 and a Done paragraph of at most eight bullets: what was built, the numbers measured, what is open); NEXT-PLAN (the row's ✅; a review-log item only if the plan changed); ROADMAP (one line); RELEASE-NOTES (New, Changed, Known, Under the hood with the test counts); `data/help.js` (the topic the Brief names, for player-facing systems only; topics are the `title:` entries near its top, and the first-time tips the table at its end); SAVE-FORMAT (only with a save step); Debug tools as the Brief says. The version in its places: `CL.BUILD` in `js/core.js`, `package.json`, `package-lock.json` (twice), `index.html` (the title, the `<small>` and the version line) and README (the title and the Phase 9 line).
+8. **Report** in at most fifteen lines: what changed, the numbers, the checks run, the slow files skipped, what is open; then ask to commit.
+
+**The save step** (P9-01 to P9-06 each add one: v25 to v30). In `js/save.js`: `VERSION`; a `MIGRATIONS[n]` entry (defaults, or the owning module's `migrate`, as `nobles.migrate` does for v24); the required-fields row for the new version (the table at the top, one row a version); the field in `sanitize` through the owning module's `sanitize`. Then `types/crownless.d.ts`, a SAVE-FORMAT entry, and in the module's test file: v(n−1) → v(n), a round trip, junk repaired, and the latest fixture folder (`tests/fixtures/saves-2.30`) loading through the new step. No new fixture folder is needed until the owner plays on a build with the new state.
+
+**Checkpoints** stay: the whole slow suite and the full browser suite after P9-04, P9-06 and P9-T, run in the background in one go.
 - **Art:** lord banners, siege camps and wall pieces go to the asset request list (`docs/ASSETS.md`) and ship as placeholders.
 
 ### P8-02 · Holdings model (L) — ✅ Done in 2.24.0
@@ -2665,6 +2687,22 @@ The phase opens with five battle-scale tasks (owner, 2026-11-22; decisions D-P9a
 
 **Tests.** Each piece in the landed world (`npm run landed`) and as a scripted case; no churn (P8-07's cooldowns).
 
+**Brief (2026-11-23).** Five small pieces on P8-07's model; none needs a new module or a save step.
+- **Start from:** `js/lords.js` (`payerOf`: the kin with land, else the ruler; `prisoners`; a lord held off-screen comes home after `AWAY_DAYS`, 5–15 days, today without any payment), `js/nobles.js` (`NEEDS`, `KINDS`, `PETITIONS`, `consider`, `ask`, `weekly`, `petitionFor`, `petitionText`, `answerPetition`, `note` and `DEEDS`), `js/claims.js` (`canBuyBack`, `buyBack`, `askLiege`, `pressedFor`), `js/sieges.js` (`plan` already aims at a fort a free lord of the realm claims, line 162), `js/allegiance.js` (`serve`, `RULES.term` 30), `js/contracts.js` (the escort's caravan that rolls only while you stay close).
+- **Decided:**
+  - **Kin ransom:** a lord held by another realm is freed when the payer (`payerOf`) pays the lord's `RANSOM` price from the treasury of one of their holdings into a holding of the captor's realm (the captor's, else the ruler's capital). Holding to holding, never from `world` (P9-01 moves it into realm treasuries). Short of money: try again in 7 days; after 30 days unpaid, the realm's ruler pays. New deeds: `ransomed` (+15, payer → freed lord) and `held_kin` (−10, freed lord's kin → captor).
+  - **Men:** weekly, a lord whose top need is men asks one friend or kinsman (`ties`) through `consider` (a new kind `men`). Obeyed: up to a quarter of the giver's troops move to the asker. At most once in 30 days a pair.
+  - **Land-hungry:** weekly, a landless lord with a claim, or with land as their top need, asks their ruler to press a claim, at most every 30 days (answered as the player's `askLiege` is); pressed, `sieges.plan` already prefers it, and such a lord rides to that siege unsummoned.
+  - **Escort petition:** a sixth petition, `escort`, from a lord whose holding has a market: their own caravan to a town of their realm, run by `contracts.js`'s escort rules, reward 1.5 times a board escort's pay, 10 days.
+  - **A fort back for service:** on the Claims tab, beside Buy back, "Serve for it": a mercenary term (`RULES.term`, 30 days) with the realm that holds it, offered only while it is at peace with your liege; served to the end, the fort is handed back as by `buyBack`; broken off, the offer is gone for 60 days.
+- **Save:** none. New fields are optional inside `c.nobles` and `c.prisoners`; `sanitize` keeps them well formed.
+- **Build order:** kin ransom → men → land-hungry → escort petition → serve for a fort.
+- **Write tests in:** `tests/lords.test.js` (an AI-held lord ransomed by kin, the money between treasuries, the memory), `tests/nobles.test.js` (men lent and refused; a land-hungry lord's request and the siege it leads to; the escort petition offered, done and failed), `tests/claims.test.js` (serve for a fort: offered, served, broken off). Add their counts to `scripts/landed.js`'s report (kin ransoms, men lent, claims pressed, escorts).
+- **Run:** those three files; `npm test`, lint; browser `tests/browser/nobles.spec.js` and `tests/browser/claims.spec.js` (one new case each, by real taps); slow `landed` and `prototype-f`; `node scripts/landed.js 180 3` (no churn: each new count a handful per realm in 180 days, not dozens).
+- **Play:** the escort petition from the Lords tab, and Serve for it on the Claims tab.
+- **Explain:** "The lands" topic in `data/help.js` (`id: 'lands'`), a sentence each; Debug: the existing "Petition now" gives the escort where there is a market.
+- **Not here:** realm treasuries (P9-01), lords' deaths (P9-06).
+
 ### P9-01 · Realms as organisations (M–L) — Specified
 
 **Problem.** A realm is a ruler, some land and a relation to the others. Its money is the world's (the ledger's `world` account): a mercenary's pay, a garrison's refill and a lord's ransom come from nowhere, and a war costs the crown nothing. Design §18.1: a kingdom has a ruler, laws, territory, a treasury, offices, vassals and grievances, and the ruler's wealth is separate from the realm's.
@@ -2704,6 +2742,24 @@ The phase opens with five battle-scale tasks (owner, 2026-11-22; decisions D-P9a
 - Saves: v24 migrates (treasuries from a few weeks of their income), round-trip, junk repaired, fixtures from 3.x.
 
 **Acceptance.** Every realm's spending comes from its own treasury, and over 180 days of the world alone the books balance and no realm goes broke by accident (a realm at long war may, by design).
+
+**Brief (2026-11-23).**
+- **Start from:** `js/accounts.js` (accounts `world`, `purse`, `chest`, `budget:*`; `known` decides which exist; `transfer` writes the player's ledger), `js/fiefs.js` (`week`: tax, costs and the crown's due, today paid into `world`, line 185; a holding not yours keeps its money in `holding.treasury`; garrisons refill at half hire cost), `js/allegiance.js` (a mercenary's pay, `CL.accounts.earn` from `world`, line 309), `js/lords.js` (`payerOf`, ransoms; P9-L1's kin ransom), `js/realm.js` (`realms`, `rulerOf`, `FIEF_CAP`, `tickRelations` where wars start), `js/nobles.js` (`opinion`, the `passed_over` deed), `data/factions.js`, `js/ui.js` `renderRealm` (the Holdings tab's cards).
+- **Decided:**
+  - **A new module `js/crowns.js`** (realm treasuries, laws, offices), loaded after `js/realm.js` in `index.html` and in `LOGIC_MODULES` (`tests/helpers/load.js`).
+  - **Money:** a realm's treasury is a number in `c.crowns[id].treasury`, moved by `crowns.pay(c, from, to, n, why)`, where either side is a realm, a holding or `world`. The player's ledger only sees what touches the player. Each realm keeps a weekly book (`book`: the last 12 weeks, in and out by line).
+  - **In:** the crown's due (the fiefs' 10%, now into the treasury); the whole tax of holdings the ruler holds; ransoms paid to it. **Out:** mercenaries' pay (allegiance), the garrisons of the ruler's forts, ransoms for its lords after 30 days (P9-L1), office wages (10 a week each). Never below nothing: a realm that can't pay doesn't hire (allegiance's offer says why), can't ransom, and its own garrisons go unpaid (the fiefs' desertion rule).
+  - **The ruler's purse:** the treasuries of holdings a ruler holds stay theirs, as now; no loans between purse and realm in this task (P9-T if needed).
+  - **Laws** in `data/factions.js`, per realm: `laws: { power: 'crown' | 'league', share: 0.1, succession: 'eldest' | 'kin' | 'council', fiefCap: 3, war: 'ruler' | 'council' }`; the Vessaro League a league with council war; validated in `js/content.js`. `FIEF_CAP` and the due read the laws. A council decides war by its riding lords' average opinion of the other realm's ruler (below −20: war).
+  - **Offices:** marshal, steward and chancellor per realm, filled within 3 days of a vacancy by the ruler's best opinion among riding lords with land (standing breaks ties). A steward adds 5% to the crown's due; the marshal leads sieges (`sieges.plan` names them first); the chancellor waits for P9-02. Passed over: the `passed_over` deed. Merrow: a treasury, no offices.
+  - **Start money:** four weeks of its income.
+- **Save:** v25, `c.crowns` (treasury, book, offices; laws only where they differ from the data). The save step as above.
+- **Build order:** module and save → money in and out → the broke realm → laws → offices → the Realms screen.
+- **Write tests in:** `tests/crowns.test.js` (new: conservation, a broke realm, a league's war, offices and vacancies, the save step); adjust `tests/allegiance.test.js` and `tests/fiefs.test.js` where pay and the due now go to a realm.
+- **Run:** those files; `npm test`, lint; browser `tests/browser/realm.spec.js` (a realm's card shows its treasury, laws and offices); slow `landed`, `campaign-bots`, `world-sim`, `phase7-exit` (the accounts); `node scripts/landed.js 180 3`, reporting each realm's treasury at the start, its lowest and the end, with the books checked weekly (`crowns.invariants`, called where `landed` calls the others).
+- **Play:** the Realms screen's cards; take service with a realm and see its pay line.
+- **Explain:** "The lands" topic in `data/help.js`, a paragraph; Debug: "Realm treasury ±1000" for the chosen holding's realm.
+- **Not here:** treaties and tribute (P9-02), your own realm (P9-03), armies' upkeep (P9-05).
 
 ### P9-02 · Diplomacy and treaties (M) — Specified
 
@@ -2749,6 +2805,23 @@ The phase opens with five battle-scale tasks (owner, 2026-11-22; decisions D-P9a
 
 **Acceptance.** The AI realms make and keep or break treaties for reasons the news can tell, and their wars and peace follow from them.
 
+**Brief (2026-11-23).**
+- **Start from:** `js/realm.js` (`RELATIONS`, `STATES`, `relation`, `setRelation`, `tickRelations`: where wars and peace come today; `storyHeld` for the story's locks), `js/sieges.js` (`end`: the truce after a siege war), `js/crowns.js` (P9-01: treasuries for tribute; the chancellor; a league's council), `js/nobles.js` (`consider`'s factors, for offers between rulers), `js/news.js` (`record` and its kinds), `js/contracts.js` (errands, for the envoy), `js/ui.js` `renderRealm` (a new tab).
+- **Decided:**
+  - **A new module `js/diplomacy.js`:** `c.treaties` (`{ id, kind, between: [a, b], since, until, terms, broken }`) and `c.trust` (`trust[a][b]`, −100 to 100, sparse; the bounds as named constants).
+  - **Lengths:** truce 30 days, nonaggression 90, alliance 180, access 90, trade 120, tribute as long as the peace that made it (else 90). Peace has no end day.
+  - **Trust:** a kept treaty +5 a month to both; a broken one −40 with the injured realm and −15 with every other. Under −30, a realm won't sign with that one.
+  - **The AI,** weekly, one offer a realm at most: at war on two fronts, or having lost a fort in 30 days, or with a treasury under two weeks' costs → asks for a truce or peace; a neighbour with twice its riding lords' strength (`autoresolve` power) → asks that neighbour's rival for an alliance; beaten (two forts lost this war) → accepts peace with tribute of a tenth of its weekly income; rich (a treasury over 12 weeks' costs) and at peace → offers trade. Answers by `consider`'s factors between the rulers; in a league, the council's average.
+  - **Today's tension and war states stay;** treaties sit on top. War between treaty partners is a breach.
+  - **The envoy:** a board errand ("carry the Crown's offer to …"), offered to a vassal of the realm; reward 60 and +5 standing, and the offer gains 10 in its answer.
+- **Save:** v26, `c.treaties` and `c.trust`. The migration turns today's siege truce into a truce treaty.
+- **Build order:** module and save → treaties' start, end and breach → trust → the AI's offers → news → the Diplomacy tab → the envoy.
+- **Write tests in:** `tests/diplomacy.test.js` (new: each kind's life, a breach heard everywhere, an ally joining a defensive war and declining an offensive one, tribute exact between treasuries, the save step).
+- **Run:** that file and `tests/realm.test.js`; `npm test`, lint; browser `tests/browser/realm.spec.js` (the Diplomacy tab); slow `landed`, `world-sim`; `node scripts/landed.js 180 3`, reporting treaties made, kept and broken, and days at war per pair (no pair at war more than 150 of 180 days; no realm at peace with all for all of them).
+- **Play:** the Diplomacy tab; the envoy errand from a town's board.
+- **Explain:** a Diplomacy paragraph in "The lands", and a first-time tip for the tab; Debug: "Offer a treaty now" (the chosen holding's realm makes its next offer).
+- **Not here:** your own offers as a ruler (P9-03), marriage alliances (P9-06).
+
 ### P9-03 · Founding or taking a kingdom (L) — Specified
 
 **Problem.** The player can be independent, a mercenary or a vassal (P8-04), never a ruler; land is held only of a realm (P8-08 left holding land as an independent to here). Design §18.2: a ruler's powers are a lord's, with a wider reach; there is no separate "kingdom game".
@@ -2786,6 +2859,23 @@ The phase opens with five battle-scale tasks (owner, 2026-11-22; decisions D-P9a
 
 **Acceptance.** A player can found or take a kingdom, appoint its officers, grant land, make a treaty and keep riding as a captain, with every routine decision delegated.
 
+**Brief (2026-11-23).** The largest of the kingdom tasks. Its first step is plumbing across many files; do it first and alone, with its grep test, before anything visible.
+- **Start from:** `js/realm.js` (`kingdoms()` and `realms()` read `data/factions.js`; `isRealm`, `capitalOf`, `rulerOf`, `transfer`, `addClaim`, `relation`); every `CL.content.table('factions')` and `content.get('factions', …)` outside `js/content.js` (grep them: they become realm lookups); `js/render.js` (map colours and banners from a faction's `color` and `emblem`); the `factionName` helpers in several modules; `js/rights.js` (`ACTIONS`, `may`); `js/claims.js` (land taken back with no liege); `js/nobles.js` (`changeRealm`, `summon`, `consider`); `js/fiefs.js` (`decideGrants`, `give`, `offer`); `js/crowns.js` (offices, laws); `js/diplomacy.js` (recognition); `scripts/prototype-g.js` (the bots' screen counts).
+- **Decided:**
+  - **Realms in play:** `c.realms[id] = { id, name, short, emblem, color, culture, laws, founded, by }`, merged into `realm.kingdoms()`; ids `r1`, `r2`…; the banner colour from a fixed palette in `data/factions.js` (`palette`); the culture of the capital's settlement. A grep test fails on any `table('factions')` outside `js/content.js` and `js/realm.js`.
+  - **Declaring** (a new right, `declare`): you hold a fort or town, with 600 renown and 40 soldiers. The old realm gets a claim on each holding and a grievance; at peace, war follows in 7 days unless it accepts (by its ruler's opinion of you, as `consider`). AI lords by the same rule; at most one new realm in the world in 180 days (P9-T tunes).
+  - **Independent land:** a claim taken back with no liege becomes your holding with no realm (`controller: 'player'`), shown as unrecognised; any realm may besiege it as if at war.
+  - **Recognition:** each realm answers by its trust (P9-02) and its ruler's opinion of the founder; an unrecognised realm counts as at war for sieges, not for battles on the road.
+  - **Vassals:** in `nobles.weekly`, a lord who thinks −30 or worse of their ruler and +20 or better of you asks to swear to you; you accept or not (a message). Your grants and summons use the existing flows, with you as the ruler.
+  - **Delegation (SC-41):** three policies, a line each, on the Your realm tab: steward (`hold` | `grow` | `hoard`), marshal (`defend` | `expand <realm>` | `peace`), chancellor (`peace` | `allies` | `none`); defaults grow, defend, peace. Alerts only for a treaty offer, a vassal's grievance turning to a faction (P9-04), and your capital besieged.
+- **Save:** v27, `c.realms` and the player's policies (`c.rule`); independent holdings need no new field (`controller: 'player'`).
+- **Build order:** 1) realms in play and the grep test (nothing visible changes; `npm test` green before going on) → 2) independent land → 3) declaring and recognition → 4) vassals, grants and summons → 5) policies, alerts and the Your realm tab → 6) AI lords declaring.
+- **Write tests in:** `tests/founding.test.js` (new: a founded realm everywhere a data realm is, declaring, recognition, a vassal, a grant, a summons, delegation's alerts, the save step) and `tests/rights.test.js` (the grep test; `declare`).
+- **Run:** those files and `tests/realm.test.js`; `npm test`, lint; browser `tests/browser/realm.spec.js` (the Your realm tab by real taps: declare, set a policy) and `tests/browser/world-map.spec.js` (the new banner draws); slow `landed`, `campaign-bots`, `test-world`, `phase8-exit`; `node scripts/landed.js 180 3` (an AI realm founded on some seeds, the invariants). SC-41: a scripted ten days of riding while ruling, counting screens the game opens (none forced).
+- **Play:** declare a realm from a held fort, set the marshal's policy, accept a vassal.
+- **Explain:** a "Your realm" topic in `data/help.js`, and a first-time tip for the tab; Debug: "Declare my realm here" (without the thresholds).
+- **Not here:** rebellion and deposition (P9-04), armies and the capital's fall (P9-05), houses (P9-06).
+
 ### P9-04 · Rebellion and deposition (L) — Specified
 
 **Problem.** P8-07's lords grumble and change realm one at a time; nobody contests a crown. Design §18.5–18.6: rebellion grows from grievances, with warnings and responses, and deposition is not a game over.
@@ -2819,6 +2909,25 @@ The phase opens with five battle-scale tasks (owner, 2026-11-22; decisions D-P9a
 
 **Acceptance.** Design §18.9's second half: a disloyal noble can decline an order, form a faction and rebel; a deposed player plays on in the same save as a free claimant or a captive.
 
+**Brief (2026-11-23).**
+- **Start from:** `js/nobles.js` (`opinion`, `ties`, `deeds`, `RULES.leaveBelow`, `changeRealm`, `summon`, `summonPlayer`, `weekly`), `js/realm.js` (`transfer`, `addClaim`, `setRelation`), P9-03's founded realms (a rising is a realm for its war), `js/crowns.js` (offices and a lower share as concessions), `js/allegiance.js` (the player's side), `js/news.js`, `js/companion.js` and `js/retinue.js` (a companion's word as a warning).
+- **Decided:**
+  - **A new module `js/rebellion.js`;** `c.rebellions` (factions and risings, one a realm at a time).
+  - **A faction forms** when three or more riding lords of a realm think −30 or worse of the ruler and +10 or better of one another. Its claimant: the one with a claim to the crown (kin of the ruler), else the strongest by riding troops. No random roll.
+  - **Warnings,** a week apart: a rumour in the news (for anyone), a companion's word (if one rides with you), a petition from a faction lord who thinks well of you. AI rulers learn the same way.
+  - **Responses** (an AI ruler by its motives; the player from a message): concession (a fief from the crown's own, the share 2 points lower, or an office: the faction's average opinion +15); mediator (a lord liked by both: +10 and a 30-day pause); divide (a fief to one member: they leave the faction); arrest (the claimant held: half the time the faction rises at once); prepare (summons the loyal: the rising starts weaker).
+  - **Demands,** 14 days: met, the faction breaks up; refused, it rises as a founded realm at war with the crown, and every other lord chooses a side by opinion.
+  - **Outcomes,** when that war ends (P9-02's peace, all rebel forts taken, or all the crown's): the rebels win (the claimant rules; the old ruler keeps their own holdings as a lord, or is held); the crown wins (the rebels' fiefs revoked and granted); a compromise (concessions; the claimant pardoned).
+  - **After:** 90 days of peace in that realm before another faction; a ruler who conceded gains +10 with all its lords.
+  - **The player deposed:** your realm (P9-03) ends; you keep your person, company, the companions loyal to you (all, by default), your businesses, and a claim to the crown; an old enemy may offer refuge (by P9-02's trust and opinion).
+- **Save:** v28, `c.rebellions`.
+- **Build order:** a faction from grievances → warnings → responses → demands and the rising → outcomes → the player's part (summoned by both sides; mediator; claimant; deposed).
+- **Write tests in:** `tests/rebellion.test.js` (new: forms only from grievances, each response, each outcome with holdings, garrisons and claims right, SC-26, SC-27, the save step).
+- **Run:** that file and `tests/nobles.test.js`; `npm test`, lint; browser `tests/browser/nobles.spec.js` (summoned by both sides, choosing one); `node scripts/landed.js 360 3` (some factions, a rising or two; no realm in civil war more than 120 of 360 days). **Checkpoint:** the whole slow suite and the full browser suite after this task.
+- **Play:** receive the warnings, then the summons from both sides, and choose.
+- **Explain:** a Rebellion paragraph in "The lands"; Debug: "Faction now" (the chosen realm's unhappiest lords form one) and "Rise now".
+- **Not here:** a claimant's death (P9-06), foreign backing beyond P9-02's alliance rule.
+
 ### P9-05 · Armies and campaigns (L) — Specified
 
 **Problem.** Sieges gather two to four lords (P8-06a); there are no armies, no marches, no supply, and capitals never fall. Design §20.1–20.3: an army is several parties under a commander, with assembly, supply and objectives.
@@ -2851,6 +2960,26 @@ The phase opens with five battle-scale tasks (owner, 2026-11-22; decisions D-P9a
 
 **Acceptance.** Realms wage wars with armies that gather, march, eat, fight and break up, and the player can ride in one or command one.
 
+**Brief (2026-11-23).** Large: build it in two halves and check the first before starting the second (one commit at the end).
+- **Start from:** `js/sieges.js` (`plan` picks a fort and gathers free lords; `begin`, `step`, `end`, `take`, `callRelief`, `relieve`), `js/nobles.js` (`summon(c, f, sid, pids, max)`, `consider`), `js/parties.js` (lords' intents and movement on the map; off-screen fights between parties; `battleDef(…, { share })`), `js/autoresolve.js` (`winChance`, the square law), `js/fiefs.js` (a village's prosperity, for raids and foraging), `js/realm.js` (`isCapital`, `capitalOf`, `locked`), `js/crowns.js` (the marshal; the treasury for upkeep), `js/render.js` and `scripts/bench-map.js` (the map's cost).
+- **Decided:**
+  - **A new module `js/armies.js`;** `c.armies` (`{ id, realm, commander, members: [partyId], objective, target, rally, since, food }`). A member party keeps its own troops, wages and losses, and gets `armyId`.
+  - **Raising:** the marshal (else the ruler) calls up to 6 lords by `summon`; the rally is the capital, or the fort nearest the target; the army marches when half have come, or after 7 days.
+  - **Moving:** members follow the commander's party at the slowest one's speed, drawn as one banner with the total.
+  - **Objectives,** chosen by the marshal's policy and P9-02's state: besiege (P8-06a's siege, gathered by the army), relieve, raid (a village: prosperity −20, a week of its tax as spoils to the raiders, its lord's opinion of them −20), pursue (an enemy army within 30 map units), defend (the nearest threatened fort), regroup.
+  - **Supply:** food in days (5 at the start, +1 a day in friendly land); in enemy land it forages (the nearest village −2 prosperity a day) or uses a day; at 0, the furthest member party loses a tenth of its troops a day.
+  - **Upkeep:** 1 crown a soldier a week from the realm's treasury; broke, the army disbands after 7 days.
+  - **Battles of armies:** off-screen by the square law on both armies' power, losses spread over the members; the loser retreats to its nearest friendly holding, or breaks up if it lost half (its lords captured at the usual chance). With you in it: the shared battle (`battleDef` with `share`).
+  - **Capitals:** besieged by an army only (food and garrison ×1.5); taken, the ruler's seat moves to their next holding. A realm with no holdings is gone (a founded realm removed; a data realm marked `gone` in `c.crowns`); its lords seek service (`nobles.destination`). A realm's last holding: the siege needs twice the odds.
+  - **You:** summoned, you ride with the army (follow its banner, fight its battles); as its commander (marshal or ruler), the army's card gives its orders: objective, target, retreat.
+- **Save:** v29, `c.armies`; a raid's effects live on the holdings.
+- **Build order:** first half: module and save → raising → moving → supply and upkeep → sieges by armies → the AI's objectives; check it (its tests, `npm test`, `node scripts/landed.js 180 3`). Second half: battles of armies → capitals and realms gone → you in an army → the map's banner and the Debug army test.
+- **Write tests in:** `tests/armies.test.js` (new: who comes and why not, supply and foraging, starvation, upkeep, a battle between armies and its result on every party, a capital taken and a realm gone, the save step).
+- **Run:** that file, `tests/sieges.test.js` and `tests/parties.test.js`; `npm test`, lint; browser `tests/browser/sieges.spec.js` (riding with an army when summoned) and `tests/browser/world-map.spec.js` (the banner); slow `landed`, `world-sim`, `campaign-bots` (and `battle-parity` only if `js/combat.js` or `js/autoresolve.js` change); `node scripts/landed.js 180 5` (wars with campaigns; capitals change hands rarely; no realm gone on most seeds) and `node scripts/bench-map.js` with four armies of five parties (within the phone's budget).
+- **Play:** be summoned and ride with an army to a siege; the Debug army test.
+- **Explain:** an Armies topic in `data/help.js`; Debug: "Four armies" (the phone test) and "Raise an army here".
+- **Not here:** hiring mercenary companies into armies (P9-T if wanted).
+
 ### P9-06 · Houses, marriage and claims (M–L) — Specified
 
 **Problem.** People have kin ties (P8-02) but no houses; nobody marries, dies or inherits. Design §19: houses as entities, marriage with real agency, and succession, the founding-house model first (§19.3).
@@ -2882,6 +3011,23 @@ The phase opens with five battle-scale tasks (owner, 2026-11-22; decisions D-P9a
 
 **Acceptance.** Design §19.6, and a lord's death passes their fiefs and office by the realm's law.
 
+**Brief (2026-11-23).**
+- **Start from:** `js/realm.js` (people and their `kin`, `TIES` with `spouse`, `person`, `addClaim`, `transfer`), `js/nobles.js` (`consider` for proposals; `opinion` per person), `js/lords.js` (`beaten`: where a death after a lost battle goes), `js/crowns.js` (the laws' `succession`; vacant offices), `js/rebellion.js` (a contested succession), `js/retinue.js` (a spouse riding as a companion), `js/fiefs.js` (`appoint`: a spouse running a holding).
+- **Decided:**
+  - **A new module `js/houses.js`;** `c.houses[id] = { id, name, colors, head, members, alliances, rivals }`, built in the migration from P8-02's kin (the eldest's name gives the house's). Opinion of a house: its members' average, plus a house-level `rel` moved by deeds against the house.
+  - **Your house:** founded when you first hold land, named by you (your name by default), or later from an origin (Phase 10).
+  - **Marriage:** proposed between unmarried adults of two houses; answered by `consider` (relationship, the houses' interests: land, an alliance against a common rival; obligations; a dowry offered). Terms: a dowry (crowns), a claim through the spouse (their claims become shared), a house alliance (each answers the other's call to war by `consider` with +20). Your spouse is a named person who may ride in the retinue or run a holding, may refuse an order (by `consider`), and may end the marriage after 90 days, with a feud deed (so may you).
+  - **Deaths (D-P9g):** a lord beaten in battle dies of wounds 3% of the time; old age only with a setting (off by default); the player never dies. The dead keep their record with `status: 'dead'`.
+  - **Succession** by the realm's law: eldest child (kin `child`, the eldest by id); kin by election (the kin the realm's lords think best of); council (the lord the council thinks best of). The heir gets the fiefs and the office. Contested (two kin within 10 opinion): claims, and a faction (P9-04) if three lords back the loser. No heir: the crown takes and grants (P8-05).
+  - **No births or ageing.**
+- **Save:** v30, `c.houses`; marriages on people (`spouse`); `status: 'dead'`; heirs computed, not stored.
+- **Build order:** houses from kin → your house → deaths → succession by each law → marriages between AI houses → marriage for you → claims through houses and petitions for restoration (§19.6).
+- **Write tests in:** `tests/houses.test.js` (new: §19.6's four checks, a death and each law's succession, a contested one, a refused proposal's reasons, the save step).
+- **Run:** that file, `tests/nobles.test.js` and `tests/realm.test.js`; `npm test`, lint; browser `tests/browser/nobles.spec.js` (propose a marriage from the Lords tab; the answer and its reasons); `node scripts/landed.js 360 3` (some marriages, a few deaths, successions with the invariants). **Checkpoint:** the whole slow suite and the full browser suite after this task.
+- **Play:** propose a marriage; see a lord's death and their heir in the news.
+- **Explain:** a Houses topic in `data/help.js`; Debug: "Lord dies" (the nearest) and "Marry me" (the nearest lord's kin accepts).
+- **Not here:** births, ageing, playing on as your heir.
+
 ### P9-07 · Modding: a declarative content format (M–L) — Specified
 
 **Problem.** The world is a package of `data/*.js` files (W-04), loaded with the code. Design §23: a declarative, validated format; stable namespaced ids; safe import; saves tied to their packs.
@@ -2900,6 +3046,22 @@ The phase opens with five battle-scale tasks (owner, 2026-11-22; decisions D-P9a
 
 **Acceptance.** A sample pack adds a troop line and a settlement without code; removing it gives a precise error.
 
+**Brief (2026-11-23).**
+- **Start from:** `js/content.js` (the tables, `get`, `table`, load-time validation), `data/world_map.js` (the world package, W-04), `tests/world-package.test.js` and `tests/helpers/test-world.js` (a second package already exists for tests: the three-kingdom world), `js/save.js` (`worldId`, `knownWorld`), `js/storage.js` (saves; packs go to IndexedDB beside them), `js/settings.js` and the Settings panel in `index.html`, `js/portable.js` (the import's checks, as a pattern).
+- **Decided:**
+  - **The format:** `docs/WORLD-FORMAT.md` describes the tables of `data/*.js` as JSON: a manifest (`id`, `title`, `author`, `version`, `engine` (a semver range), `requires`) and the tables by name. A script (`node scripts/export-world.js`) writes the official world out as a JSON pack, and a test loads it and compares it with `data/*.js`, table by table.
+  - **Ids:** `world:id`; a short id is the official world's (`border_march`). Audit every regex on ids (`/^[a-z_]+$/` and the like), the save keys and the grep tests for `:`.
+  - **Packs:** data only. A pack adds entries or changes fields of existing ones (`"merge"`), never deletes. Loaded from JSON in the browser, kept in IndexedDB (a store `packs`), listed in Settings with on and off; a change takes effect on a new game or a reload.
+  - **Safe import:** 2 MB at most; JSON only; strings only where strings belong; references checked; nothing evaluated.
+  - **Saves:** an optional `packs: [{ id, version }]`; a save whose pack is missing fails to load with "This save needs the pack … (version …)" and changes nothing. No schema step (an optional field).
+  - **The sample pack** (`packs/sample/`): a troop line of three and a settlement, used by the tests.
+- **Build order:** the format document → ids → the loader and validator (in Node first) → the official world's round trip → packs in the browser (IndexedDB, Settings) → saves and packs.
+- **Write tests in:** `tests/packs.test.js` (new: the sample pack plays; a table of bad packs, each with its message; the official world from JSON equals `data/*.js`; a save with a missing pack).
+- **Run:** that file, `tests/content.test.js`, `tests/world-package.test.js` and `tests/save.test.js`; `npm test`, lint; browser, a new `tests/browser/packs.spec.js` (import the sample pack in Settings, start a game, see the settlement on the map); slow `test-world` (and `gate-d-campaigns`, about 27 minutes, only if story or quest ids had to change).
+- **Play:** import the sample pack, turn it on, start a new game and find its settlement.
+- **Explain:** a short note in Settings; no help topic.
+- **Not here:** the checker command and the preview page (P9-08); packs with code (never).
+
 ### P9-08 · Creator tools and a second world (L) — Specified
 
 **Problem.** Making a world means reading the code. Design §23.1: Crownless is a platform, and the Border March its first world.
@@ -2912,6 +3074,20 @@ The phase opens with five battle-scale tasks (owner, 2026-11-22; decisions D-P9a
 **Tests.** The checker against good and bad packs; the second world played end to end by the same bots (the campaign bots, `npm run landed`, Prototype G); its invariants.
 
 **Acceptance.** The second world plays end to end with the same bots, and a new world can be checked and previewed without the game's code.
+
+**Brief (2026-11-23).**
+- **Start from:** P9-07's validator and loader; `tests/helpers/test-world.js` (start the second world from it: three kingdoms on a 150 × 120 map); `scripts/landed.js`, `scripts/prototype-g.js` and `tests/helpers/campaign-bot.js` (the bots, which take `content`); the character-creation screen in `js/ui.js` (the world's choice).
+- **Decided:**
+  - **The checker:** `scripts/check-pack.js` (`npm run check-pack <dir>`): the game's own validator in Node, with the same messages; exit code 1 on errors.
+  - **The preview:** `tools/preview.html`, a page that loads a pack's JSON (a file input), draws its map, settlements, roads and regions on a canvas, and lists the checker's findings beside it. No game code beyond `js/content.js`'s validator.
+  - **The second world:** "The Sundered Coast" (a working name in data; the owner may rename it): two realms and a free city, built from the test world's map, with their own cultures, troop lines (three a realm, reusing today's art) and 8 lords; a sandbox start (no story). Chosen at a new game ("Which world?") when more than one is installed.
+  - **Art:** placeholders; an asset request list in `docs/ASSETS.md`.
+- **Build order:** the checker → the preview → the second world's data → choosing a world → the bots on it.
+- **Write tests in:** `tests/packs.test.js` (the checker on good and bad packs) and `tests/world-package.test.js` (the second world validates).
+- **Run:** those files; `npm test`, lint; browser `tests/browser/startup.spec.js` (choosing a world at a new game); slow: all of them once, with the bots on the second world as well (`campaign-bots`, `landed` and `prototype-g` given its content).
+- **Play:** a new game in the second world: ride, fight a band, meet its lords.
+- **Explain:** a "Worlds" line in "Getting started"; `docs/WORLD-FORMAT.md` gains "Making a world", with the checker and the preview.
+- **Not here:** a world editor; sharing packs online.
 
 ### P9-T · Phase 9 tuning and acceptance (M) — Specified
 
@@ -2926,6 +3102,18 @@ The phase opens with five battle-scale tasks (owner, 2026-11-22; decisions D-P9a
 **Version.** 4.0.0 (D-V1).
 
 **Acceptance.** The exit holds in the bot and in the owner's play.
+
+**Brief (2026-11-23).** Tuning and the exit. The only task allowed more than two tries at a number, and only for the targets below.
+- **Start from:** every Phase 9 Done paragraph's open items (big battles' parity; the walls at a battle size of 40; whatever the kingdom tasks leave), `scripts/landed.js`, `scripts/prototype-g.js`, `scripts/parity.js`, and `tests/slow/phase8-exit.test.js` (the pattern for an exit as a scripted campaign).
+- **Decided:**
+  - **What is tuned, and the targets:** treasuries (no realm broke at peace over 360 days; one at long war may be); treaties (each pair signs at least one in 360 days; wars 20–50% of days); rebellions (one to three in the world a year); armies (two to six campaigns a year; a capital falls on at most one seed in three over 360 days); deaths (two to six lords a year); P9-B2's big battles (fought at most 25 points over the odds at 40 and 100); the walls at 40 (between −5 and +25).
+  - **Long runs:** 20 years in a new slow file (`tests/slow/long-run.test.js`), 100 in `npm run long-run` (`scripts/long-run.js`, overnight, in no suite): every invariant every day; no negative money; no runaway realm (one holding more than half the land).
+  - **Prototype G's ruler style:** founds a realm when it can (P9-03's thresholds), delegates everything, and counts forced screens (none).
+  - **The exit** (`tests/slow/phase9-exit.test.js`): §18.9 as a scripted campaign with one reload. You rule, command a vassal army, make a treaty, appoint a castellan and grant land; a disloyal lord declines an order, forms a faction and rebels; you lose and are deposed; the same save goes on with you as a free claimant.
+  - **The scenario matrix** and `docs/PHASE-9-VALIDATION.md` (as Phase 8's), with the owner's phone checks.
+- **Run:** the whole slow suite and the full browser suite once at the end (the checkpoint); the long run once overnight, and its report.
+- **Version:** 4.0.0.
+- **Not here:** Phase 10.
 
 ---
 
