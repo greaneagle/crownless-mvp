@@ -92,8 +92,9 @@
     if ((rider.momentum || 0) < chargeMomentum || (rider.bracedUntil || 0) > g.t) return null;
     for (const o of opponents) {
       if (!o?.alive || Math.hypot(o.x - rider.x, o.y - rider.y) > BRACE.reach) continue; // the cheap test first (P9-B1)
-      if (!braces(o) || CL.units.isCommitted(o)) continue;
-      if (!CL.units.inArc(o, rider, CL.units.ARC.block)) continue; // spears face the charge, not the flank
+      const square = CL.formations?.squared(g, o); // P9-B4: a square braces on every side, spears or not
+      if ((!braces(o) && !square) || CL.units.isCommitted(o)) continue;
+      if (!square && !CL.units.inArc(o, rider, CL.units.ARC.block)) continue; // spears face the charge, not the flank
       rider.momentum = 0;
       rider.overrun = 0;
       rider.bracedUntil = g.t + BRACE.cooldown;
@@ -128,20 +129,32 @@
 
   // ---- Follow formation ----
 
-  /** Where this soldier stands in the company's loose ranks around the hero on Follow. @param {any} g @param {Unit} u */
+  /**
+   * Where a division's block stands beside the hero on Follow (P9-B4): infantry ahead, archers behind;
+   * a second division of a role stands to the side of the first (below it, so the two don't overlap).
+   * @param {any} g @param {string} div
+   */
+  function followAnchor(g, div) {
+    const h = g.hero;
+    const role = CL.divisions ? CL.divisions.roleOf(div) : div;
+    const second = /2$/.test(div);
+    const first = second ? g.allies.filter((a) => a.alive && a.div === role && !a.companion && !a.outside).length : 0;
+    const beside = second ? (Math.min(FORM.perRank, first) / 2 + Math.min(FORM.perRank, first) / 2 + 1) * FORM.fileGap : 0;
+    return { x: role === 'archer' ? h.x - FORM.archersBehind : h.x + FORM.infantryAhead, y: h.y + beside };
+  }
+
+  /** Where this soldier stands in their division's loose ranks around the hero on Follow. @param {any} g @param {Unit} u */
   function followSlot(g, u) {
-    const formed = CL.formations?.slot(g, u); // a shield wall or a wedge (P7-11)
+    const formed = CL.formations?.slot(g, u); // a formed division: wall, wedge, line, column, square
     if (formed) return formed;
-    const mates = g.allies.filter((a) => a.alive && a.role === u.role && !a.companion && !a.outside);
+    const div = u.div || u.role;
+    const mates = g.allies.filter((a) => a.alive && (a.div || a.role) === div && !a.companion && !a.outside);
     const i = Math.max(0, mates.indexOf(u));
     const files = Math.min(FORM.perRank, mates.length);
     const rank = Math.floor(i / FORM.perRank);
     const file = i % FORM.perRank;
-    const h = g.hero;
-    const front = u.role === 'archer' ? h.x - FORM.archersBehind : h.x + FORM.infantryAhead;
-    const x = u.role === 'archer' ? front - rank * FORM.rankGap : front - rank * FORM.rankGap;
-    const y = h.y + (file - (files - 1) / 2) * FORM.fileGap;
-    return { x, y };
+    const at = followAnchor(g, div);
+    return { x: at.x - rank * FORM.rankGap, y: at.y + (file - (files - 1) / 2) * FORM.fileGap };
   }
 
   // ---- Group states (Orders panel; morale in V2-08b) ----
@@ -153,18 +166,19 @@
     g.stateIn = STATE_EVERY;
     const near = CL.units.proximity(g.enemies.filter((e) => e.alive)); // once, not once a soldier (P9-B1)
     const state = {};
-    for (const grp of ['infantry', 'archer', 'cavalry']) {
-      const units = g.allies.filter((a) => a.alive && a.role === grp && !a.companion && !a.outside);
+    for (const grp of CL.divisions ? CL.divisions.present(g) : ['infantry', 'archer', 'cavalry']) {
+      const units = g.allies.filter((a) => a.alive && (a.div || a.role) === grp && !a.companion && !a.outside);
       if (!units.length) continue;
       const engaged = units.some((u) => near.any(u.x, u.y, ENGAGE));
       const order = g.orders[grp];
+      const role = CL.divisions ? CL.divisions.roleOf(grp) : grp;
       if (engaged) state[grp] = 'engaged';
       else if (order === 'charge') state[grp] = 'advancing';
       else {
-        const spot = (u) => (order === 'hold' ? { x: u.holdX, y: u.holdY } : grp === 'cavalry' ? g.hero : followSlot(g, u));
+        const spot = (u) => (order === 'hold' ? { x: u.holdX, y: u.holdY } : role === 'cavalry' ? g.hero : followSlot(g, u));
         const far = units.filter((u) => {
           const s = spot(u);
-          return Math.hypot(s.x - u.x, s.y - u.y) > (grp === 'cavalry' ? 110 : 45);
+          return Math.hypot(s.x - u.x, s.y - u.y) > (role === 'cavalry' ? 110 : 45);
         }).length;
         state[grp] = far > units.length / 3 ? 'forming' : 'formed';
       }
@@ -173,5 +187,5 @@
     return state;
   }
 
-  CL.groups = { COVER_REACH, BRACE, FORM, hasShield, braces, shouldGuard, coverFor, braceAgainst, clearShot, seekShot, followSlot, updateStates };
+  CL.groups = { COVER_REACH, BRACE, FORM, hasShield, braces, shouldGuard, coverFor, braceAgainst, clearShot, seekShot, followAnchor, followSlot, updateStates };
 })(typeof window !== 'undefined' ? window : globalThis);

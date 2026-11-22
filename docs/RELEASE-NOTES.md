@@ -1,5 +1,26 @@
 # Crownless — Release Notes
 
+## v3.4.0 — Command in layers (P9-B4) · 2026-11-22
+
+### New
+- **Divisions.** Your company fights in up to six divisions: infantry, archers, cavalry, and a second of each. A type of more than 30 splits in two by default. On the Prepare screen you can move a troop type to another division and rename a division; on a soldier's card on the Party screen, move one soldier. A company that changes nothing fights as before.
+- **New formations:** a **line** (wide, two deep), a **column** (narrow, quicker on the march) and a **square** (a ring that braces against riders from every side, slow). Foot may take all six, archers loose, line and column, horse loose, wedge, line and column.
+- **Auto, the new default setup.** It chooses from the odds: Aggressive when you are much the stronger, Defensive with a shield wall when you are much the weaker, Balanced between. Archers on a rise stay there, and the horse go to the open flank.
+- **The enemy plans too,** when it is an army of more than 20 met on the map: much the weaker, it holds and waits; otherwise it comes on. Either way it forms up in blocks.
+- **Orders by division:** the Orders panel has a button for each division in the battle (keys 1 to 6), and only the formations that division may take.
+- **Captains and plans of your own.** On Prepare, a folded Divisions section: each division's captain (a veteran of tier 3 with 10 battles, or a companion), formation, facing and name, and three plans you can save and use again. A captain steadies their division and quickens it a little. Every division's flag can be dragged.
+- **Live command on the tactical map:** choose a division, then Move, Charge, Fall back or Face, and when: now, in 5 or 10 seconds, or on your archers' next volley. Orders given together go off together.
+- Debug: Reset divisions.
+
+### Known
+- Big battles at 40 and 100 are still won far more often than Simulate's odds say (+29 to +37).
+- **Storming a fort is too easy since 3.3.0.** The garrisons grew three times, but they still come down from the walls 8 at a time, so a company can beat a far bigger garrison. The assault needs re-fitting for armies.
+
+### Under the hood
+- No schema step: an optional `divisions` field in the campaign, and `prepPlans` in the device's settings.
+- The extras measurement sets the wedge per division again (it had been fighting in loose ranks).
+- **Tests:** 835 fast Node tests, all passing. The whole slow suite: 18 of 19 passing; the siege test fails as above (since 3.3.0). 226 browser tests: 205 passing after fixes to the text-size checks (a closed fold is no longer counted, the Divisions fold is checked open, and the formation row wraps), 21 skipped by design (the visual snapshots, and checks for the other device).
+
 ## v3.3.0 — A bigger company (P9-B3) · 2026-11-22
 
 ### New

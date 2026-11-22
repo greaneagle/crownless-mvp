@@ -24,30 +24,44 @@
   'use strict';
   const CL = root.Crownless;
 
-  const KINDS = ['loose', 'wall', 'wedge'];
-  const NAMES = { loose: 'Loose', wall: 'Shield wall', wedge: 'Wedge' };
+  const KINDS = ['loose', 'wall', 'wedge', 'line', 'column', 'square'];
+  const NAMES = { loose: 'Loose', wall: 'Shield wall', wedge: 'Wedge', line: 'Line', column: 'Column', square: 'Square' };
+  // P9-B4: a line is wide and a little slower; a column narrow and quicker on the march; a square braces
+  // against horse on every side (as spears do in front, js/groups.js) and is slow. Each forms on Hold and
+  // Follow; on Charge it breaks up (a column marches on Charge too).
+  const MARCH = { line: 0.9, column: 1.1, square: 0.5 };
   const WALL = { fileGap: 22, rankGap: 26, perRank: 6, speed: 0.7, cover: 46, lookout: 1.6, arrowSlack: 30 };
   const WEDGE = { speed: 1.15, firstBlow: 1.3, rearm: 120, step: 26, fileGap: 26, ahead: 60 };
   const HILL = { range: 1.25 };
   const USE = { wall: true, wedge: true, hill: true, fordBreaks: true };
 
-  const isInfantry = (u) => u && u.team === 'ally' && u.role === 'infantry' && !u.companion && !u.outside;
+  const isSoldier = (u) => u && u.team === 'ally' && !u.companion && !u.outside;
+  /** A division's chosen formation (P9-B4: each division its own; before, the infantry's only). @param {any} g @param {string} div */
+  const chosenFor = (g, div) => g.formations?.[div] || (div === 'infantry' ? g.formation : null) || 'loose';
 
-  /** Which formation a soldier is in right now: the infantry's chosen one, if the order suits it and the ground allows. @param {any} g @param {Unit} u */
+  /** Which formation a soldier is in right now: their division's, if the order suits it and the ground allows. @param {any} g @param {Unit} u */
   function of(g, u) {
-    const f = g.formation || 'loose';
-    if (f === 'loose' || !isInfantry(u) || !u.alive || u.routing || u.morale === 'fallback') return 'loose';
+    if (!isSoldier(u) || !u.alive || u.routing || u.morale === 'fallback') return 'loose';
+    const div = u.div || u.role;
+    const f = chosenFor(g, div);
+    if (f === 'loose' || !(CL.divisions?.FORMATIONS[u.role] || ['loose']).includes(f)) return 'loose';
     if (USE.fordBreaks && CL.units.groundFactor(u.x, u.y) < 1) return 'loose'; // wading breaks ranks
-    const order = g.orders?.infantry;
+    const order = g.orders?.[div];
     if (f === 'wall') return USE.wall && order !== 'charge' ? 'wall' : 'loose';
-    return USE.wedge && order !== 'hold' ? 'wedge' : 'loose';
+    if (f === 'wedge') return USE.wedge && order !== 'hold' ? 'wedge' : 'loose';
+    if (f === 'column') return 'column';
+    return order !== 'charge' ? f : 'loose';
   }
 
-  /** How fast a soldier moves in their formation. @param {any} g @param {Unit} u */
+  /** How fast a soldier moves in their formation (and with their division's captain, P9-B4). @param {any} g @param {Unit} u */
   function speed(g, u) {
     const f = of(g, u);
-    return f === 'wall' ? WALL.speed : f === 'wedge' ? WEDGE.speed : 1;
+    const k = f === 'wall' ? WALL.speed : f === 'wedge' ? WEDGE.speed : MARCH[f] || 1;
+    return k * (CL.divisions?.speedOf(g, u) || 1);
   }
+
+  /** Does a soldier in a square brace against a rider from any side? @param {any} g @param {Unit} u */
+  const squared = (g, u) => of(g, u) === 'square';
 
   /**
    * In a shield wall the shields stay up whenever a foe is in front and near, or an archer in front is in
@@ -84,54 +98,59 @@
     return WEDGE.firstBlow;
   }
 
-  /** Where a soldier stands on Follow in a wall (a tight line) or a wedge (a point ahead). Null: the loose ranks. @param {any} g @param {Unit} u */
+  /**
+   * Where a soldier stands on Follow in a formed division (a wall, a wedge, a line, a column, a square),
+   * around their division's place beside the hero. Null: the loose ranks (js/groups.js). @param {any} g @param {Unit} u
+   */
   function slot(g, u) {
     const f = of(g, u);
     if (f === 'loose') return null;
-    const mates = g.allies.filter((a) => isInfantry(a) && a.alive);
+    const div = u.div || u.role;
+    const mates = g.allies.filter((a) => isSoldier(a) && a.alive && (a.div || a.role) === div);
     const i = Math.max(0, mates.indexOf(u));
     const h = g.hero;
-    if (f === 'wall') {
-      const files = Math.min(WALL.perRank, mates.length);
-      const rank = Math.floor(i / WALL.perRank);
-      const file = i % WALL.perRank;
-      return { x: h.x + CL.groups.FORM.infantryAhead - rank * WALL.rankGap, y: h.y + (file - (files - 1) / 2) * WALL.fileGap };
-    }
-    // The wedge: 0 at the point, then pairs either side, each pair a step further back.
-    const k = Math.ceil(i / 2);
-    const side = i === 0 ? 0 : i % 2 ? -1 : 1;
-    return { x: h.x + WEDGE.ahead - k * WEDGE.step, y: h.y + side * k * WEDGE.fileGap };
+    const at = CL.groups.followAnchor(g, div);
+    // A wall and a wedge as before (P7-11): the wall a step ahead of the hero, the wedge's point further.
+    const base = f === 'wedge' ? { x: h.x + WEDGE.ahead, y: at.y } : f === 'wall' ? { x: h.x + CL.groups.FORM.infantryAhead, y: at.y } : at;
+    const o = CL.divisions.turn(CL.divisions.shape(f, i, mates.length), g.facings?.[div] || 'right');
+    return { x: base.x + o.dx, y: base.y + o.dy };
   }
 
-  /** On Hold in a shield wall the infantry close up into a tight line where they stand. @param {any} g */
-  function closeUp(g) {
-    if (g.formation !== 'wall' || g.orders?.infantry !== 'hold') return;
-    const units = g.allies.filter((a) => isInfantry(a) && a.alive && !a.routing);
+  /** On Hold, a formed division closes up into its shape where it stands. @param {any} g @param {string} [div] */
+  function closeUp(g, div = 'infantry') {
+    const f = chosenFor(g, div);
+    if (f === 'loose' || f === 'wedge' || g.orders?.[div] !== 'hold') return;
+    const units = g.allies.filter((a) => isSoldier(a) && a.alive && !a.routing && (a.div || a.role) === div && (CL.divisions?.FORMATIONS[a.role] || []).includes(f));
     if (!units.length) return;
     const cx = units.reduce((n, u) => n + u.holdX, 0) / units.length;
     const cy = units.reduce((n, u) => n + u.holdY, 0) / units.length;
-    const files = Math.min(WALL.perRank, units.length);
     [...units]
       .sort((a, b) => a.holdY - b.holdY)
       .forEach((u, i) => {
-        const rank = Math.floor(i / WALL.perRank);
-        const file = i % WALL.perRank;
-        u.holdX = cx - rank * WALL.rankGap;
-        u.holdY = cy + (file - (files - 1) / 2) * WALL.fileGap;
+        const o = CL.divisions.turn(CL.divisions.shape(f, i, units.length), g.facings?.[div] || 'right');
+        u.holdX = cx + o.dx;
+        u.holdY = cy + o.dy;
       });
   }
 
-  /** Choose the infantry's formation (Orders, or the battle setup). @param {any} g @param {string} kind */
-  function set(g, kind, quiet = false) {
+  /** Choose a division's formation (Orders, or the battle setup); the selected division by default. @param {any} g @param {string} kind */
+  function set(g, kind, quiet = false, div = g.group || 'infantry') {
     if (!KINDS.includes(kind)) return false;
-    g.formation = kind;
-    closeUp(g);
-    if (!quiet) {
-      const order = g.orders?.infantry;
-      const note = kind === 'wall' && order === 'charge' ? ': it forms on Hold or Follow' : kind === 'wedge' && order === 'hold' ? ': it forms on Follow or Charge' : '';
-      CL.ui.message(`Infantry: ${NAMES[kind].toLowerCase()}${note}`);
+    const role = CL.divisions?.roleOf(div) || 'infantry';
+    if (!(CL.divisions?.FORMATIONS[role] || KINDS).includes(kind)) {
+      if (!quiet) CL.ui.message(`${CL.divisions.name(CL.campaign, div)} can't form a ${NAMES[kind].toLowerCase()}`);
+      return false;
     }
-    CL.diag.log('info', 'Formation', { formation: kind });
+    g.formations ??= {};
+    g.formations[div] = kind;
+    if (div === 'infantry') g.formation = kind; // the infantry's, as before P9-B4 (older code and tests read it)
+    closeUp(g, div);
+    if (!quiet) {
+      const order = g.orders?.[div];
+      const note = kind === 'wall' && order === 'charge' ? ': it forms on Hold or Follow' : kind === 'wedge' && order === 'hold' ? ': it forms on Follow or Charge' : ['line', 'square'].includes(kind) && order === 'charge' ? ': it forms on Hold or Follow' : '';
+      CL.ui.message(`${CL.divisions?.name(CL.campaign, div) || 'Infantry'}: ${NAMES[kind].toLowerCase()}${note}`);
+    }
+    CL.diag.log('info', 'Formation', { formation: kind, division: div });
     return true;
   }
 
@@ -149,5 +168,5 @@
     return u.ranged.range * (USE.hill && highAt(u.x, u.y) ? HILL.range : 1);
   }
 
-  CL.formations = { KINDS, NAMES, WALL, WEDGE, HILL, USE, of, speed, guard, strikesOver, cover, arm, blow, slot, closeUp, set, highAt, rangeOf };
+  CL.formations = { KINDS, NAMES, MARCH, WALL, WEDGE, HILL, USE, chosenFor, squared, of, speed, guard, strikesOver, cover, arm, blow, slot, closeUp, set, highAt, rangeOf };
 })(typeof window !== 'undefined' ? window : globalThis);

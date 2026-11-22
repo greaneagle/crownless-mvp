@@ -19,6 +19,19 @@ test('fought battles: over the stated odds, but not far; Simulate only a little 
   assert.ok(avg >= 2 && avg <= 18, `close fights: ${avg.toFixed(1)} points over the odds on average (target 5–15)`);
 });
 
+// P9-B4, layer 1: the same fights with no orders at all, the Auto setup choosing the plan (the default).
+test('layer 1: with Auto and no orders, fought battles are over the odds but not far', () => {
+  const rows = run({ seeds: 40, preset: 'auto' });
+  for (const r of rows) {
+    assert.equal(r.unfinished, 0, `${r.scenario}: every fight ends`);
+    const over = r.foughtWin - r.odds;
+    assert.ok(over >= -8 && over <= 25, `${r.scenario}: fought ${r.foughtWin}% with Auto against stated odds ${r.odds.toFixed(0)}%`);
+  }
+  const close = rows.filter((r) => ['close', 'veterans', 'outnumbered'].includes(r.scenario));
+  const avg = close.reduce((n, r) => n + r.foughtWin - r.odds, 0) / close.length;
+  assert.ok(avg >= 2 && avg <= 18, `close fights with Auto: ${avg.toFixed(1)} points over the odds on average (target 5–15)`);
+});
+
 // P8-06b: the assault on a fort's walls, fought and simulated with the walls' bonus, attack and defence.
 test('sieges: an assault fought on the walls comes out over the odds, but not far, both ways', () => {
   const { runSiege } = require('../../scripts/parity');

@@ -29,7 +29,7 @@ async function controlsSound(page, root, label) {
       const sel = ['button', 'select', 'input:not([type=hidden]):not([type=checkbox]):not([type=file])', 'summary'].map((s) => `${root} ${s}`).join(',');
       for (const b of document.querySelectorAll(sel)) {
         const cs = getComputedStyle(b);
-        if (cs.display === 'none' || cs.visibility === 'hidden' || !b.getClientRects().length) continue;
+        if (cs.display === 'none' || cs.visibility === 'hidden' || !b.getClientRects().length || !b.checkVisibility()) continue; // inside a closed fold: not shown
         b.scrollIntoView({ block: 'nearest', inline: 'nearest' });
         const r = b.getBoundingClientRect();
         if (!r.width || !r.height) continue;
@@ -133,6 +133,10 @@ async function walkScreens(page, size) {
   await press(page, page.locator('#encounterOptions button', { hasText: 'Attack' }).first());
   await waitMode(page, 'prepare');
   await controlsSound(page, '#prepPanel', at('prepare'));
+  // P9-B4: the Divisions fold, opened.
+  await page.locator('#prepPanel details.divisions summary').scrollIntoViewIfNeeded();
+  await press(page, page.locator('#prepPanel details.divisions summary'));
+  await controlsSound(page, '#prepPanel', at('prepare, divisions'));
   await press(page, page.locator('#prepPanel button', { hasText: 'Fight' }));
   await waitMode(page, 'battle');
   await expectLayoutSound(page, BATTLE_CONTROLS, { info: ['#topLeft'] });

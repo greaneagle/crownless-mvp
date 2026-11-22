@@ -87,7 +87,8 @@ test('the ram: attackers at the gate break it after 25 seconds; the setups make 
   assert.equal(CL.formations.highAt(q.anchors.archer.x, q.anchors.archer.y), true, 'archers on the walkway');
   const gate = def.wall.gaps.find((x) => x.kind === 'gate');
   assert.ok(Math.abs(q.anchors.infantry.y - gate.y) < 40, 'infantry at the gate');
-  assert.deepEqual(plain(q.orders), { infantry: 'hold', archer: 'hold', cavalry: 'hold' });
+  const roles = (o) => ({ infantry: o.infantry, archer: o.archer, cavalry: o.cavalry }); // P9-B4: the second divisions follow their first
+  assert.deepEqual(plain(roles(q.orders)), { infantry: 'hold', archer: 'hold', cavalry: 'hold' });
 });
 
 /** You three days into a siege of Castra Nova for Valedorn, with `company`. */

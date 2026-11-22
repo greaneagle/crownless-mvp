@@ -6,7 +6,7 @@
   root.Crownless = root.Crownless || /** @type {CrownlessNS} */ ({}); // filled in by every module below
   const CL = root.Crownless;
 
-  CL.BUILD = '3.3.0';
+  CL.BUILD = '3.4.0';
 
   /**
    * Developer tools (the Logs and Debug buttons) show on a local dev server, and on any build when the

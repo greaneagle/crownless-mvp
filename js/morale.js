@@ -158,6 +158,8 @@
       const camp = CL.campaign?.morale;
       parts.supply = Number.isFinite(camp) && !g.practice ? Math.max(TERMS.supply.min, Math.min(TERMS.supply.max, ((camp - 70) / 30) * 8)) : 0;
       parts.rally = RALLY.bonus * Math.max(0, 1 - (g.t - rec.rallyAt) / RALLY.lasts);
+      // P9-B4: a division of this group led by its captain, standing, steadies it.
+      if (CL.divisions && Object.keys(g.captains || {}).some((d) => CL.divisions.roleOf(d) === role && CL.divisions.led(g, d))) parts.captain = CL.divisions.CAPTAIN.morale;
     }
     const total = Math.max(0, Math.min(100, Object.values(parts).reduce((a, b) => a + b, 0)));
     return { total, parts };

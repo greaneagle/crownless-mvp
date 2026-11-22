@@ -69,6 +69,7 @@
   }
   /** How much bigger than the tuned size this battle is: 1 up to 40, 5 at 200. */
   const scaleOf = () => Math.max(1, BATTLE.activeCap / BATTLE.base);
+  const ARMY = { from: 20 }; // P9-B4: an enemy of more than this plans as an army (enemyPlan)
   /** How many of a role may stand on the field at the start (the rest wait in reserve). @param {string} role */
   const deployCap = (role) => Math.round(DEPLOY_CAP[role] * scaleOf());
   const DEFAULT_ENCOUNTER = 'captains_trial';
@@ -171,7 +172,8 @@
     // to the bracket (js/tourney.js), never the encounter commit path.
     g.duel = enc.duel ? { opponent: { ...enc.duel.opponent }, kit: { ...enc.duel.kit } } : null;
     g.group = 'infantry';
-    g.orders = { infantry: 'follow', archer: 'hold', cavalry: 'charge' };
+    g.orders = CL.divisions.startOrders(); // per division (P9-B4): its role's to start with
+    Object.assign(g, { formations: {}, facings: {}, captains: {}, timed: [] }); // P9-B4: each division's formation, facing and captain; layer 4's timed orders
     // A ready-made arena (the debug camera test, PROTO-A) or a battle map from the content.
     g.battleMap = enc.mapDef || CL.arena.mapFor(enc.map || 'open_country');
     g.formation = 'loose'; // the infantry's formation (P7-11): the battle setup or Orders may change it
@@ -212,11 +214,13 @@
       if (role in forming) forming[role]++;
     }
     for (const role of Object.keys(forming)) forming[role] = Math.min(forming[role], deployCap(role));
+    const divs = CL.divisions.plan(alone ? null : CL.campaign, soldiers); // P9-B4: each soldier's division
+    const divOf = (s) => divs.get(s.id ?? `#${soldiers.indexOf(s)}`);
     for (const s of soldiers) {
       const role = CL.content.troop(s.troop).role;
       if (!(role in placed)) continue;
       if (placed[role] >= deployCap(role) || 1 + withMara + g.allies.length >= g.allyCap) {
-        g.allyReserve.push({ troop: s.troop, soldierId: s.id });
+        g.allyReserve.push({ troop: s.troop, soldierId: s.id, div: divOf(s) });
         continue;
       }
       const big = forming[role] > DEPLOY_CAP[role];
@@ -227,6 +231,7 @@
         [x, y] = [Math.max(b.minX, Math.min(b.maxX, x)), Math.max(b.minY, Math.min(b.maxY, y))];
       }
       const u = CL.traits.apply(CL.blacksmith.applyKit(makeUnit(x, y, 'ally', s.troop, s.id), s), s); // fine kit (P7-03), trait (P7-07)
+      u.div = divOf(s);
       CL.units.resolveObstacles(u); // form up around trees and walls
       g.allies.push(u);
     }
@@ -234,13 +239,13 @@
     if (!alone && CL.companion.fit()) {
       const m = CL.companion.get();
       const u = makeUnit(anchor.x - 40, anchor.y + 34, 'ally', 'mercenary');
-      Object.assign(u, CL.companion.combat(), { companion: m.id, frames: CL.companion.def(m.id).frames, role: 'infantry' });
+      Object.assign(u, CL.companion.combat(), { companion: m.id, frames: CL.companion.def(m.id).frames, role: 'infantry', div: 'infantry' });
       CL.units.resolveObstacles(u);
       g.allies.push(u);
     }
     retinue.forEach((m, i) => {
       const u = makeUnit(anchor.x - 40 - (i + 1) * 30, anchor.y + 34 + ((i % 2) * 2 - 1) * 26, 'ally', 'mercenary');
-      Object.assign(u, CL.retinue.combat(m), { companion: m.id, frames: CL.retinue.def(m.id).frames, role: 'infantry' });
+      Object.assign(u, CL.retinue.combat(m), { companion: m.id, frames: CL.retinue.def(m.id).frames, role: 'infantry', div: 'infantry' });
       CL.units.resolveObstacles(u);
       g.allies.push(u);
     });
@@ -262,6 +267,7 @@
       });
     }
     spawnWave();
+    enemyPlan(g); // P9-B4: the enemy's own plan (layer 1, and layer 3's placement), in a battle with an army
     // P8-01: a lord fights in person, at the head of the first wave: their realm's best foot soldier, stronger, with their name.
     const lead = enc.leader && !g.duel ? g.enemies.find((u) => u.troop === enc.leader.troop) || g.enemies[0] : null;
     if (lead) Object.assign(lead, { hp: Math.round(lead.hp * enc.leader.hp), maxhp: Math.round(lead.maxhp * enc.leader.hp), damage: lead.damage * enc.leader.damage, named: enc.leader.name });
@@ -347,6 +353,7 @@
     u.face = 'right';
     u.holdX = u.x;
     u.holdY = u.y;
+    if (r.join == null) u.div = r.div || u.role; // their division (P9-B4); helpers who ride in fight for themselves
     const j = r.join != null ? g.joining?.find((x) => x.id === r.join) : null;
     if (j) CL.reinforce.place(g, j, u); // a helper waiting in reserve rides in from its party's side
     g.allies.push(u);
@@ -381,6 +388,43 @@
       }
       CL.diag.log('info', 'Reinforcements', { side: s.who, joined: n, waiting: s.reserve.length });
     }
+  }
+
+  /**
+   * P9-B4: the enemy plans by the same rules as the company's Auto setup (js/prep.js): clearly the weaker
+   * by the odds Simulate would state (the company's at 75% or better), it holds its ground and waits;
+   * otherwise it comes on, as it always did. Either way it forms up in blocks on its side: foot in front,
+   * archers behind, horse on the flanks. Only for an army (more than ARMY.from in it, so big battles have
+   * shape on both sides: a band's small fight is as B-01 tuned it) met on the map (P9-B2's shared
+   * battles; not an escort's ambush, whose raiders burst from cover); a lair, a story fight, the
+   * tournament and the walls keep their own. @param {any} g
+   */
+  function enemyPlan(g) {
+    g.enemyOrders = null;
+    if (!g.share || !g.enemies.length || g.wagon || g.siege || g.enemies.length + g.enemyReserve.length <= ARMY.from) return;
+    const A = CL.autoresolve;
+    const theirs = {};
+    for (const e of [...g.enemies, ...g.enemyReserve.map((t) => ({ troop: t.troop || t }))]) theirs[e.troop] = (theirs[e.troop] || 0) + 1;
+    const odds = A.winChance(A.playerPower(CL.campaign), A.troopsPower(theirs));
+    const weak = odds >= CL.prep.AUTO.strong;
+    g.enemyOrders = { infantry: weak ? 'hold' : 'charge', archer: weak ? 'hold' : 'charge', cavalry: weak ? 'hold' : 'charge' };
+    // Blocks on their side (facing the company, -x): foot in front, archers behind, horse on the flanks.
+    const box = g.battleMap.spawn.enemies;
+    const cx = (box.x0 + box.x1) / 2;
+    const cy = (box.y0 + box.y1) / 2;
+    const at = { infantry: { x: box.x0 + 30, y: cy }, archer: { x: cx + 60, y: cy }, cavalry: { x: cx, y: box.y0 } };
+    for (const role of ['infantry', 'archer', 'cavalry']) {
+      const list = g.enemies.filter((e) => e.role === role);
+      list.forEach((e, i) => {
+        const o = CL.divisions.turn(CL.divisions.shape('loose', i, list.length), 'left');
+        const flank = role === 'cavalry' && i % 2 ? box.y1 - box.y0 : 0;
+        e.x = at[role].x + o.dx;
+        e.y = at[role].y + flank + o.dy;
+        CL.units.resolveObstacles(e);
+        Object.assign(e, { holdX: e.x, holdY: e.y, face: 'left' });
+      });
+    }
+    CL.diag.log('info', 'Enemy plan', { odds: Math.round(odds * 100), orders: g.enemyOrders });
   }
 
   /**
@@ -505,6 +549,7 @@
           [dx, dy] = [dx * Math.cos(off) - dy * Math.sin(off), dx * Math.sin(off) + dy * Math.cos(off)];
         }
         game().arrows.push({ x: u.x, y: u.y - 20, dx, dy, speed: r.projectileSpeed, team: u.team, life: ARROW.life, source: u, damage: u.damage * (u.moraleMul || 1) });
+        if (u.team === 'ally' && !u.outside) game().lastVolley = game().t; // the company's archers loose (P9-B4's timed orders)
       }
       return true;
     }
@@ -563,7 +608,7 @@
     const target = u.target;
     const g = game();
     if (u.routing) return; // running: js/morale.js moves them
-    let cmd = u.team === 'ally' && !u.outside ? g.orders.cavalry : 'charge'; // helpers fight for themselves
+    let cmd = u.team === 'ally' && !u.outside ? CL.divisions.orderOf(g, u) : (u.team === 'enemy' && g.enemyOrders?.[u.role]) || 'charge'; // helpers fight for themselves; the enemy by its plan (P9-B4)
     if (u.morale === 'fallback') cmd = 'fallback'; // giving ground (V2-08b)
     // Braced spears in front stop the charge and hurt the rider (V2-08a).
     if (CL.groups.braceAgainst(g, u, opponentsOf(u), CAVALRY.chargeMomentum)) return;
@@ -607,7 +652,8 @@
       u.aiTimer = rand(0.17, 0.41);
       const foes = u.trait ? opponentsOf(u).filter((o) => CL.traits.pursues(u, o)) : opponentsOf(u); // a cautious soldier lets runners go (P7-07)
       // Your soldiers mind the escort's wagon unasked (P7-11).
-      u.target = (u.team === 'enemy' && ENEMY.use.target ? enemyTarget(u) : (u.team === 'ally' && CL.objective.pick(game(), u, foes)) || nearestAlive(u, foes)) || null;
+      const focus = u.team === 'ally' && u.div ? game().focusAt?.[u.div] : null; // P9-B4: a charge at a spot on the tactical map
+      u.target = (u.team === 'enemy' && ENEMY.use.target ? enemyTarget(u) : (u.team === 'ally' && CL.objective.pick(game(), u, foes)) || nearestAlive(focus || u, foes)) || null;
     }
     const target = u.target;
     if (u.routing) return; // running: js/morale.js moves them (V2-08b)
@@ -620,8 +666,13 @@
     let dest = target;
     let goal = p.chase;
 
+    if (u.team === 'enemy' && game().enemyOrders?.[u.role] === 'hold' && dist(u, target) >= p.holdEngage) {
+      // P9-B4: an enemy on Hold (its plan) keeps its place until the company comes within reach.
+      dest = { x: u.holdX, y: u.holdY };
+      goal = 5;
+    }
     if (u.team === 'ally' && !u.outside) {
-      const cmd = game().orders[u.role];
+      const cmd = CL.divisions.orderOf(game(), u);
       if (cmd === 'follow') {
         // Loose ranks around the hero (V2-08a); break ranks to fight anything close.
         dest = u.companion ? game().hero : CL.groups.followSlot(game(), u);
@@ -640,6 +691,11 @@
         }
       }
       // 'charge': chase the nearest enemy (defaults above).
+      if (u.div && game().falling?.[u.div]) {
+        // P9-B4: falling back to a spot (the tactical map): there first, fighting only what reaches them.
+        dest = { x: u.holdX, y: u.holdY };
+        goal = 5;
+      }
     }
     if (u.morale === 'fallback' && dist(u, target) > fireRange(u) + 10) {
       // Falling back (V2-08b): give ground toward their own side, fighting only what reaches them.
@@ -797,6 +853,7 @@
     CL.reinforce.update(g); // nearby parties riding in (V2-09)
     reinforce(g);
     CL.tactics.scan(g, dt); // what the company can see (V2-06)
+    CL.tactics.tickOrders(g); // timed orders, and divisions falling back (P9-B4)
     const before = g.groupState;
     if (CL.groups.updateStates(g, dt) !== before) CL.ui.groupStates?.(g.groupState); // forming · formed · advancing · engaged
     CL.camera.follow(g, dt);
@@ -824,7 +881,7 @@
   function heroDownOrders(g) {
     if (g.hero.alive || g.heroDownNote || !g.allies.some((a) => a.alive && !a.outside)) return;
     g.heroDownNote = true;
-    for (const grp of ['infantry', 'archer', 'cavalry']) g.orders[grp] = 'charge';
+    for (const grp of Object.keys(g.orders)) g.orders[grp] = 'charge';
     CL.ui.message('You are down! Your sergeants take over: the company charges');
     CL.diag.log('info', 'Hero down: the company charges');
   }
@@ -855,32 +912,40 @@
   }
 
   /** Select a unit group and/or issue an order to the selected group. */
+  /**
+   * Select a division and/or give it an order (layer 2, P9-B4: by division; the default divisions are the
+   * roles, so a company that never changed them commands its infantry, archers and cavalry as before).
+   */
   function order(group, cmd) {
     const g = game();
     if (group) g.group = group;
-    if (cmd && !g.allies.some((a) => a.role === g.group && a.alive && !a.companion && !a.outside)) {
+    const D = CL.divisions;
+    const div = g.group;
+    const role = D.roleOf(div);
+    const plain = { infantry: 'infantry', archer: 'archers', cavalry: 'cavalry' };
+    const named = D.name(CL.campaign, div);
+    if (cmd && !D.members(g, div).length) {
       // An order nobody can carry out says so (V2-08a; GDD §7 shows cavalry as unavailable).
-      CL.ui.message(`No ${{ infantry: 'infantry', archer: 'archers', cavalry: 'cavalry' }[g.group]} in this battle`);
+      CL.ui.message(div === role ? `No ${plain[role]} in this battle` : `Nobody in ${named} in this battle`);
       return;
     }
     if (cmd) {
-      g.orders[g.group] = cmd;
+      g.orders[div] = cmd;
       if (cmd === 'hold') {
-        for (const a of g.allies.filter((a) => a.role === g.group && a.alive)) {
+        for (const a of D.members(g, div)) {
           a.holdX = a.x;
           a.holdY = a.y;
         }
-        if (g.group === 'infantry') CL.formations.closeUp(g); // a shield wall closes up (P7-11)
+        CL.formations.closeUp(g, div); // a formed division closes up (P7-11, P9-B4)
       }
       // A shaken group takes the order but can't carry it out yet (V2-08b; design §8.5).
-      const name = { infantry: 'Infantry', archer: 'Archers', cavalry: 'Cavalry' }[g.group];
-      const mood = CL.morale.word(g, 'ally', g.group);
-      if (mood === 'routing') CL.ui.message(`${name} are routing: Rally them first (R)`);
-      else if (mood === 'falling back') CL.ui.message(`${name} are falling back: they obey once steadied`);
-      else CL.ui.message(`${g.group.toUpperCase()} — ${cmd.toUpperCase()}`);
-      CL.diag.log('info', 'Command issued', { group: g.group, cmd });
+      const mood = CL.morale.word(g, 'ally', role);
+      if (mood === 'routing') CL.ui.message(`${named} are routing: Rally them first (R)`);
+      else if (mood === 'falling back') CL.ui.message(`${named} are falling back: they obey once steadied`);
+      else CL.ui.message(`${div === role ? div.toUpperCase() : named.toUpperCase()} — ${cmd.toUpperCase()}`);
+      CL.diag.log('info', 'Command issued', { group: div, cmd });
     }
-    CL.ui.showSelectedGroup(g.group);
+    CL.ui.showSelectedGroup(div);
   }
 
   CL.combat = {

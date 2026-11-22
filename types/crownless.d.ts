@@ -159,6 +159,8 @@ declare global {
   interface Campaign {
     /** Save schema version (3 from build 1.2.0). */
     version: number;
+    /** P9-B4: the company's division choices (optional): names, a troop type's division, a soldier's. */
+    divisions?: { names: Record<string, string>; troops: Record<string, string>; soldiers: Record<string, string> };
     /** The world (content package) this campaign belongs to, e.g. "border_march". */
     worldId: string;
     /** The build that last wrote this save ("unknown" right after migrating a v2 save). */

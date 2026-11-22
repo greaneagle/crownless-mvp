@@ -8,6 +8,9 @@
     Digit1: ['infantry', null],
     Digit2: ['archer', null],
     Digit3: ['cavalry', null],
+    Digit4: ['infantry2', null], // P9-B4: the second divisions
+    Digit5: ['archer2', null],
+    Digit6: ['cavalry2', null],
     KeyF: [null, 'follow'],
     KeyH: [null, 'hold'],
     KeyC: [null, 'charge'],
@@ -117,7 +120,20 @@
     $('#mapBtn').onclick = () => CL.tactics.overview(game);
     for (const b of document.querySelectorAll('[data-group]')) b.onclick = () => combat.order(b.dataset.group, null);
     for (const b of document.querySelectorAll('[data-order]')) b.onclick = () => combat.order(null, b.dataset.order);
-    // P7-11: the infantry's formation.
+    // P9-B4, layer 4: what a tap on the tactical map does, and when.
+    for (const b of document.querySelectorAll('[data-map-action]')) {
+      b.onclick = () => {
+        game.mapAction = b.dataset.mapAction;
+        ui.showSelectedGroup(game.group);
+      };
+    }
+    for (const b of document.querySelectorAll('[data-map-timing]')) {
+      b.onclick = () => {
+        game.mapTiming = b.dataset.mapTiming === 'now' || b.dataset.mapTiming === 'volley' ? b.dataset.mapTiming : Number(b.dataset.mapTiming);
+        ui.showSelectedGroup(game.group);
+      };
+    }
+    // P7-11: the selected division's formation (P9-B4).
     for (const b of document.querySelectorAll('[data-formation]')) {
       b.onclick = () => {
         CL.formations.set(game, b.dataset.formation);
@@ -257,7 +273,7 @@
         // Battle preparation (V2-07): pick up a group's flag to drag it.
         const r = canvas.getBoundingClientRect();
         const [sx, sy] = [((e.clientX - r.left) * CL.W) / r.width, ((e.clientY - r.top) * CL.H) / r.height];
-        const groups = CL.prep.GROUPS.filter((grp) => CL.party.healthySoldiers().some((s) => CL.content.troop(s.troop).role === grp));
+        const groups = CL.divisions.preview(CL.campaign).map((d) => d.div).filter((d) => g.prep.plan.anchors[d]); // every division's flag (P9-B4)
         g.prep.drag = CL.prep.flagAt(g.prep.plan, g.prep.map, groups, sx, sy);
         if (g.prep.drag) canvas.setPointerCapture?.(e.pointerId);
         return;

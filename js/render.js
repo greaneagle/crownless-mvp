@@ -1252,7 +1252,7 @@
       }
     };
     for (const k of T.knownEnemies(g)) pip(k.x, k.y, k.live ? '#ff5a4a' : '#ff5a4a99', dot, !k.live);
-    for (const a of g.allies) if (a.alive) pip(a.x, a.y, GROUP_COLOR[a.role] || '#8fb8ff', dot);
+    for (const a of g.allies) if (a.alive) pip(a.x, a.y, (a.div && CL.divisions.COLORS[a.div]) || GROUP_COLOR[a.role] || '#8fb8ff', dot);
     if (g.hero?.alive) {
       pip(g.hero.x, g.hero.y, '#1b1208', dot + 1.5);
       pip(g.hero.x, g.hero.y, '#fff3c4', dot);
@@ -1310,12 +1310,11 @@
     ctx.beginPath();
     ctx.arc(h.x, h.y, 4.5, 0, Math.PI * 2);
     ctx.fill();
-    // One flag per group that has soldiers fit to fight.
-    const fit = { infantry: 0, archer: 0, cavalry: 0 };
-    for (const s of CL.party.healthySoldiers()) fit[CL.content.troop(s.troop).role]++;
-    const letters = { infantry: 'I', archer: 'A', cavalry: 'C' };
-    for (const grp of CL.prep.GROUPS) {
-      if (!fit[grp]) continue;
+    // One flag per division that has soldiers fit to fight (P9-B4: by division, in its colour).
+    const fit = Object.fromEntries(CL.divisions.preview(CL.campaign).map((d) => [d.div, d.soldiers.length]));
+    const letters = { infantry: 'I', archer: 'A', cavalry: 'C', infantry2: 'I²', archer2: 'A²', cavalry2: 'C²' };
+    for (const grp of CL.divisions.SLOTS) {
+      if (!fit[grp] || !p.plan.anchors[grp]) continue;
       const a = T.toScreen(r, p.plan.anchors[grp].x, p.plan.anchors[grp].y);
       ctx.strokeStyle = '#1b1208';
       ctx.lineWidth = 2;
@@ -1323,7 +1322,7 @@
       ctx.moveTo(a.x, a.y + 10);
       ctx.lineTo(a.x, a.y - 16);
       ctx.stroke();
-      ctx.fillStyle = GROUP_COLOR[grp];
+      ctx.fillStyle = CL.divisions.color(grp);
       const [fw, fh] = [22 * ts(), 14 * ts()]; // the flag grows with its label
       ctx.fillRect(a.x, a.y - 2 - fh, fw, fh);
       ctx.strokeRect(a.x, a.y - 2 - fh, fw, fh);
@@ -1364,20 +1363,20 @@
     ctx.lineWidth = 2;
     ctx.strokeRect(r.x - 1, r.y - 1, r.w + 2, r.h + 2);
     // Where each held group was sent: a flag at the middle of its spots.
-    for (const group of ['infantry', 'archer', 'cavalry']) {
+    for (const group of CL.divisions.present(g)) {
       if (g.orders[group] !== 'hold') continue;
-      const units = g.allies.filter((a) => a.alive && a.role === group);
+      const units = CL.divisions.members(g, group);
       if (!units.length) continue;
       const hx = units.reduce((n, u) => n + u.holdX, 0) / units.length;
       const hy = units.reduce((n, u) => n + u.holdY, 0) / units.length;
       const p = CL.tactics.toScreen(r, hx, hy);
-      ctx.strokeStyle = GROUP_COLOR[group];
+      ctx.strokeStyle = CL.divisions.color(group);
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(p.x, p.y);
       ctx.lineTo(p.x, p.y - 14);
       ctx.stroke();
-      ctx.fillStyle = GROUP_COLOR[group];
+      ctx.fillStyle = CL.divisions.color(group);
       ctx.fillRect(p.x, p.y - 14, 9, 6);
     }
     ctx.restore(); // the instructions are in the message line (CL.tactics.overview), clear of the HUD

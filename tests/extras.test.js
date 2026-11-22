@@ -73,7 +73,7 @@ test('Orders: the formation buttons set it, say so, and an order of Hold closes 
   g.orders.infantry = 'charge';
   assert.equal(CL.formations.set(g, 'wall'), true);
   assert.ok(uiCalls.some((x) => x[0] === 'message' && x[1] === 'Infantry: shield wall: it forms on Hold or Follow'));
-  assert.equal(CL.formations.set(g, 'square'), false, 'no such formation');
+  assert.equal(CL.formations.set(g, 'phalanx'), false, 'no such formation'); // (a square is one from P9-B4)
   for (const [i, u] of foot(g).entries()) Object.assign(u, { x: 300 + i * 90, y: 400 + i * 60 });
   CL.combat.order('infantry', 'hold');
   const pts = foot(g).map((u) => [u.holdX, u.holdY]);

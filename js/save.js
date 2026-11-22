@@ -502,6 +502,12 @@
     // purses, once the companion, the parties and the accounts are in place.
     CL.detachments.sanitize(s, d, (e) => soldierOf(e, seen, s));
     CL.detachments.relink(s);
+    // P9-B4: the company's division choices (optional; kept only when there are any).
+    if (d.divisions) {
+      const dv = CL.divisions.sanitize(d.divisions);
+      for (const id of Object.keys(dv.soldiers)) if (!s.roster.some((x) => String(x.id) === id) && !s.detachments?.some?.((x) => x.soldiers?.some?.((y) => String(y.id) === id))) delete dv.soldiers[id]; // soldiers still with you
+      if (Object.keys(dv.names).length || Object.keys(dv.troops).length || Object.keys(dv.soldiers).length) s.divisions = dv;
+    }
     const awayMax = s.detachments.reduce((m, x) => Math.max(m, ...x.soldiers.map((e) => e.id)), 0);
     s.nextSoldierId = Math.max(s.nextSoldierId, awayMax + 1);
     // Named random streams (after parties, which restores rngSeed) and the result and event counters.

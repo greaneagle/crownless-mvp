@@ -18,7 +18,7 @@
   const BATTLE_DEFAULT = { touch: 150, desktop: 150, old: { touch: 30, desktop: 40 } };
   const SLOW = { fps: 30, seconds: 10 }; // a battle slower than this, for at least this long, offers a smaller size
   const BATTLEFIELDS = ['large', 'small']; // V2-05: large maps with a following camera, or one screen
-  const PREP_PRESETS = ['balanced', 'defensive', 'aggressive', 'custom']; // V2-07
+  const PREP_PRESETS = ['auto', 'balanced', 'defensive', 'aggressive', 'custom']; // V2-07; P9-B4: Auto (the plan chosen for you)
   const PREP_ORDERS = ['follow', 'hold', 'charge'];
   // W-01: text size, the substitute for the browser's pinch-zoom (the page blocks it, because pinch
   // belongs to the map and battle gestures). It scales the game's HTML text and controls and the text
@@ -51,11 +51,30 @@
     }
   }
 
+  /**
+   * P9-B4: plans of your own (layer 3), at most three: each division's offset from the hero's start,
+   * order, formation and facing. Anything malformed is dropped (an empty slot stays null).
+   */
+  function savedPlans(v) {
+    if (!Array.isArray(v)) return [];
+    const DIVS = ['infantry', 'archer', 'cavalry', 'infantry2', 'archer2', 'cavalry2'];
+    const KINDS = ['loose', 'wall', 'wedge', 'line', 'column', 'square'];
+    const FACE = ['right', 'up', 'down', 'left'];
+    const pick = (o, ok) => Object.fromEntries(Object.entries(o && typeof o === 'object' ? o : {}).filter(([k, x]) => DIVS.includes(k) && ok(x)));
+    return v.slice(0, 3).map((p) => {
+      if (!p || typeof p !== 'object') return null;
+      const anchors = pick(p.anchors, (a) => a && Number.isFinite(a.dx) && Number.isFinite(a.dy));
+      for (const k of Object.keys(anchors)) anchors[k] = { dx: Math.max(-800, Math.min(800, Math.round(anchors[k].dx))), dy: Math.max(-800, Math.min(800, Math.round(anchors[k].dy))) };
+      if (!Object.keys(anchors).length) return null;
+      return { name: typeof p.name === 'string' ? p.name.slice(0, 20) : 'Plan', anchors, orders: pick(p.orders, (x) => PREP_ORDERS.includes(x)), formations: pick(p.formations, (x) => KINDS.includes(x)), facings: pick(p.facings, (x) => FACE.includes(x)) };
+    });
+  }
+
   /** Touch phones and desktops start at their own battle size (BATTLE_DEFAULT). */
   function defaults() {
     const touch = isTouch();
     // Full screen is on by default on phones, where the address bar costs the most room.
-    return { music: 50, sfx: 70, battleSize: touch ? BATTLE_DEFAULT.touch : BATTLE_DEFAULT.desktop, battleSizeChosen: false, slowOffered: false, battlefield: 'large', prepPreset: 'balanced', prepSkip: false, prepCustom: null, reducedEffects: false, healthBars: true, tips: true, fullscreen: touch, textSize: 'normal', mapZoom: null, battleZoom: 1 };
+    return { music: 50, sfx: 70, battleSize: touch ? BATTLE_DEFAULT.touch : BATTLE_DEFAULT.desktop, battleSizeChosen: false, slowOffered: false, battlefield: 'large', prepPreset: 'auto', prepSkip: false, prepCustom: null, prepPlans: [], reducedEffects: false, healthBars: true, tips: true, fullscreen: touch, textSize: 'normal', mapZoom: null, battleZoom: 1 };
   }
 
   let current = defaults();
@@ -75,6 +94,7 @@
       prepPreset: PREP_PRESETS.includes(r.prepPreset) ? r.prepPreset : d.prepPreset,
       prepSkip: typeof r.prepSkip === 'boolean' ? r.prepSkip : d.prepSkip,
       prepCustom: customSetup(r.prepCustom),
+      prepPlans: savedPlans(r.prepPlans),
       reducedEffects: typeof r.reducedEffects === 'boolean' ? r.reducedEffects : d.reducedEffects,
       healthBars: typeof r.healthBars === 'boolean' ? r.healthBars : d.healthBars,
       tips: typeof r.tips === 'boolean' ? r.tips : d.tips,

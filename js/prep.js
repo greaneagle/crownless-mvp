@@ -27,7 +27,16 @@
   'use strict';
   const CL = root.Crownless;
 
-  const PRESETS = ['balanced', 'defensive', 'aggressive', 'custom'];
+  const PRESETS = ['auto', 'balanced', 'defensive', 'aggressive', 'custom'];
+  /**
+   * P9-B4, layer 1: Auto chooses a setup from the odds Simulate would state: Aggressive when clearly the
+   * stronger, Defensive (a shield wall on Hold) when clearly the weaker, Balanced between; archers on a
+   * rise keep it (as every setup does), and the cavalry go to the flank with fewer trees and walls.
+   */
+  const AUTO = { strong: 0.85, weak: 0.45, flankProbe: 190 }; // strong 0.85: at 79% charging a band of veterans cost more than following in ranks (scripts/parity.js)
+  /** A second division of a role stands this far below its first (y), the same distance from the hero. */
+  const SECOND = 150;
+  const PLANS_MAX = 3; // plans of your own (layer 3), kept on the device
   const GROUPS = ['infantry', 'archer', 'cavalry'];
   const ORDERS = ['follow', 'hold', 'charge'];
   const SETUPS = {
@@ -83,9 +92,26 @@
    * order (missing ones fall back to Balanced). Every anchor is made legal (inside the zone, clear).
    * @param {string} preset @param {any} map @param {{ ambush?: boolean, custom?: any }} [opts]
    */
+  /** Auto's choice for this encounter: 'aggressive', 'defensive' or 'balanced'. */
+  function autoChoice() {
+    const e = CL.parties?.current?.();
+    if (!e?.troops) return 'balanced';
+    const A = CL.autoresolve;
+    const odds = A.winChance(A.playerPower(), A.troopsPower(e.troops));
+    return odds >= AUTO.strong ? 'aggressive' : odds <= AUTO.weak ? 'defensive' : 'balanced';
+  }
+
+  /** The cavalry's flank for Auto: up (-1) or down (+1), whichever has less in the way. @param {any} map */
+  function openFlank(map) {
+    const a = anchorOf(map);
+    const count = (dy) => (map.obstacles || []).filter((o) => Math.hypot(o.x - a.x, o.y - (a.y + dy)) < AUTO.flankProbe).length;
+    return count(AUTO.flankProbe) < count(-AUTO.flankProbe) ? 1 : -1;
+  }
+
   function plan(preset, map, { ambush = false, custom = null } = {}) {
     const p = PRESETS.includes(preset) ? preset : 'balanced';
-    const base = SETUPS[p === 'custom' ? 'balanced' : p];
+    const choice = p === 'auto' ? autoChoice() : null;
+    const base = SETUPS[p === 'custom' ? 'balanced' : choice || p];
     const z = zone(map, ambush);
     const a = anchorOf(map);
     /** @type {Record<string, string>} */
@@ -94,9 +120,11 @@
     const anchors = {};
     const prevMap = CL.game.battleMap;
     CL.game.battleMap = map; // obstacle checks use the map being planned
+    const flank = choice ? openFlank(map) : -1;
     for (const grp of GROUPS) {
       const c = p === 'custom' ? custom?.[grp] : null;
-      const off = c && Number.isFinite(c.dx) && Number.isFinite(c.dy) ? c : base.offsets[grp];
+      const set = base.offsets[grp];
+      const off = c && Number.isFinite(c.dx) && Number.isFinite(c.dy) ? c : grp === 'cavalry' && flank > 0 ? { dx: set.dx, dy: -set.dy } : set;
       orders[grp] = c && ORDERS.includes(c.order) ? c.order : base.orders[grp];
       anchors[grp] = legal(z, a.x + off.dx, a.y + off.dy);
     }
@@ -113,20 +141,26 @@
       if (attacking) Object.assign(orders, { infantry: 'charge', archer: 'hold', cavalry: 'follow' });
       else Object.assign(orders, { infantry: 'hold', archer: 'hold', cavalry: 'hold' });
     }
+    // P9-B4: the second divisions stand beside their first, with its orders.
+    for (const grp of GROUPS) {
+      anchors[`${grp}2`] = legal(z, anchors[grp].x, anchors[grp].y + SECOND);
+      orders[`${grp}2`] = orders[grp];
+    }
     CL.game.battleMap = prevMap;
-    return { preset: p, ambush, orders, anchors, formation: p === 'custom' ? 'loose' : base.formation };
+    const formation = p === 'custom' ? 'loose' : base.formation;
+    return { preset: p, auto: choice, ambush, orders, anchors, formation, formations: { infantry: formation, infantry2: formation }, facings: {}, captains: {} };
   }
 
   /**
    * Put the deployed company in place for a plan: each group in a block around its anchor, ranks one
    * behind another away from the enemy, and the plan's starting orders. Called by combat.startBattle.
-   * @param {any} g @param {{ preset: string, ambush?: boolean, formation?: string, orders: Record<string, string>, anchors: Record<string, { x: number, y: number }> }} p
+   * @param {any} g @param {{ preset: string, ambush?: boolean, formation?: string, formations?: Record<string, string>, facings?: Record<string, string>, captains?: Record<string, any>, orders: Record<string, string>, anchors: Record<string, { x: number, y: number }> }} p
    */
   function place(g, p) {
-    for (const grp of GROUPS) {
-      const units = g.allies.filter((u) => u.role === grp && !u.companion);
+    for (const grp of CL.divisions.SLOTS) {
+      const units = g.allies.filter((u) => (u.div || u.role) === grp && !u.companion && !u.outside);
       const at = p.anchors[grp];
-      if (!at) continue;
+      if (!at || !units.length) continue;
       const rows = Math.min(PER_RANK, units.length);
       units.forEach((u, i) => {
         const rank = Math.floor(i / PER_RANK);
@@ -136,11 +170,22 @@
         CL.units.resolveObstacles(u);
         u.holdX = u.x;
         u.holdY = u.y;
-        u.face = 'right';
+        u.face = p.facings?.[grp] || 'right';
       });
-      g.orders[grp] = p.orders[grp];
+      if (p.orders[grp]) g.orders[grp] = p.orders[grp];
     }
-    CL.formations.set(g, p.formation || 'loose', true); // a shield wall closes up on Hold (P7-11)
+    // Each division's formation (a shield wall closes up on Hold, P7-11), facing and captain (P9-B4).
+    g.facings = { ...(p.facings || {}) };
+    g.captains = { ...(p.captains || {}) };
+    for (const [div, k] of Object.entries(g.captains)) {
+      // A captain stands with the division they lead (a soldier of another role leads it from among them).
+      const u = k?.kind === 'soldier' ? g.allies.find((a) => a.soldierId === k.id) : null;
+      if (u) u.div = div;
+    }
+    for (const div of CL.divisions.present(g)) {
+      const kind = p.formations?.[div] ?? (div === 'infantry' ? p.formation : null) ?? 'loose';
+      CL.formations.set(g, kind, true, div);
+    }
     // The companion stands by the hero, whatever the setup.
     g.prepPlan = p.preset;
     CL.diag.log('info', 'Battle setup', { preset: p.preset, ambush: Boolean(p.ambush), orders: { ...p.orders } });
@@ -222,13 +267,75 @@
     return p.anchors[grp];
   }
 
-  /** Set one group's starting order: the plan becomes Custom. @param {any} p */
+  /** Set one division's starting order: the plan becomes Custom. @param {any} p */
   function setOrder(p, grp, order) {
-    if (!GROUPS.includes(grp) || !ORDERS.includes(order)) return false;
+    if (!CL.divisions.SLOTS.includes(grp) || !ORDERS.includes(order)) return false;
     p.orders[grp] = order;
     p.preset = 'custom';
     return true;
   }
 
-  CL.prep = { PRESETS, GROUPS, ORDERS, SETUPS, anchorOf, zone, legal, plan, place, remembered, remember, previewRect, flagAt, moveFlag, setOrder };
+  // ---- Layer 3: a division's captain, formation and facing, and plans of your own ----
+
+  /** A division's captain ({ kind, id } from CL.divisions.captains), or null for none. @param {any} p */
+  function setCaptain(p, div, captain) {
+    if (!CL.divisions.SLOTS.includes(div)) return false;
+    p.captains ??= {};
+    for (const d of Object.keys(p.captains)) if (captain && p.captains[d]?.kind === captain.kind && p.captains[d]?.id === captain.id) delete p.captains[d]; // one division a captain
+    if (captain) p.captains[div] = { kind: captain.kind, id: captain.id };
+    else delete p.captains[div];
+    return true;
+  }
+
+  /** A division's starting formation: the plan becomes Custom. @param {any} p */
+  function setFormation(p, div, kind) {
+    if (!(CL.divisions.FORMATIONS[CL.divisions.roleOf(div)] || []).includes(kind)) return false;
+    p.formations ??= {};
+    p.formations[div] = kind;
+    if (div === 'infantry') p.formation = kind;
+    p.preset = 'custom';
+    return true;
+  }
+
+  /** A division's facing (the way it looks and forms up): right (the enemy), up, down or left. @param {any} p */
+  function setFacing(p, div, facing) {
+    if (!CL.divisions.SLOTS.includes(div) || !CL.divisions.FACINGS.includes(facing)) return false;
+    p.facings ??= {};
+    p.facings[div] = facing;
+    p.preset = 'custom';
+    return true;
+  }
+
+  /** Keep a plan as one of your own (slot 0–2, on the device), by its offsets from the hero's start. @param {any} p @param {any} map */
+  function savePlan(p, map, slot, label = `Plan ${slot + 1}`) {
+    const S = CL.settings;
+    if (!S || !(slot >= 0 && slot < PLANS_MAX)) return false;
+    const a = anchorOf(map);
+    const anchors = Object.fromEntries(Object.entries(p.anchors).map(([d, at]) => [d, { dx: Math.round(at.x - a.x), dy: Math.round(at.y - a.y) }]));
+    const plans = [...(S.get('prepPlans') || [])];
+    while (plans.length < slot) plans.push(null);
+    plans[slot] = { name: String(label).slice(0, 20), anchors, orders: { ...p.orders }, formations: { ...(p.formations || {}) }, facings: { ...(p.facings || {}) } };
+    return S.set('prepPlans', plans);
+  }
+
+  /** One of your plans for this map (null if that slot is empty). @param {any} map @param {boolean} [ambush] */
+  function loadPlan(slot, map, ambush = false) {
+    const saved = (CL.settings?.get('prepPlans') || [])[slot];
+    if (!saved) return null;
+    const p = plan('custom', map, { ambush });
+    const a = anchorOf(map);
+    const z = zone(map, ambush);
+    const prevMap = CL.game.battleMap;
+    CL.game.battleMap = map;
+    for (const [d, o] of Object.entries(saved.anchors)) p.anchors[d] = legal(z, a.x + o.dx, a.y + o.dy);
+    CL.game.battleMap = prevMap;
+    Object.assign(p.orders, saved.orders);
+    p.formations = { ...saved.formations };
+    p.formation = saved.formations.infantry || 'loose';
+    p.facings = { ...saved.facings };
+    p.plan = slot;
+    return p;
+  }
+
+  CL.prep = { PRESETS, AUTO, SECOND, PLANS_MAX, GROUPS, ORDERS, SETUPS, anchorOf, zone, legal, autoChoice, openFlank, plan, place, remembered, remember, previewRect, flagAt, moveFlag, setOrder, setCaptain, setFormation, setFacing, savePlan, loadPlan };
 })(typeof window !== 'undefined' ? window : globalThis);

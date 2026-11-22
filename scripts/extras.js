@@ -62,7 +62,7 @@ function once(effect, seed, on) {
     if (effect.map) CL.world.battleMapAt = () => effect.map;
     if (effect.formation) {
       const place = CL.prep.place;
-      CL.prep.place = (g, p) => place(g, { ...p, formation: effect.formation });
+      CL.prep.place = (g, p) => place(g, { ...p, formation: effect.formation, formations: { infantry: effect.formation, infantry2: effect.formation } });
     }
   });
   if (effect.ambush) CL.campaign.parties.find((p) => p.id === CL.game.partyId).ambush = true;

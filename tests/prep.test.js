@@ -35,7 +35,8 @@ test('SC-06: Balanced in two taps: infantry in front, archers behind, cavalry on
   assert.ok(centre(by('infantry')).x > hero.x, 'infantry in front of the hero');
   assert.ok(centre(by('archer')).x < hero.x, 'archers behind');
   assert.ok(centre(by('cavalry')).y < hero.y - 100, 'cavalry out on a flank');
-  assert.deepEqual({ ...g.orders }, { infantry: 'follow', archer: 'follow', cavalry: 'follow' }, 'everyone goes with the hero (V2-T2)');
+  const { infantry, archer, cavalry } = g.orders; // the three divisions this company has (P9-B4: six slots)
+  assert.deepEqual({ infantry, archer, cavalry }, { infantry: 'follow', archer: 'follow', cavalry: 'follow' }, 'everyone goes with the hero (V2-T2)');
   for (const u of g.allies) assert.equal(CL.units.blocked(u.x, u.y), false, `${u.troop} placed clear`);
   const z = CL.prep.zone(map);
   for (const u of g.allies) assert.ok(u.x >= z.x0 - 70 && u.x <= z.x1 && u.y >= z.y0 - 70 && u.y <= z.y1 + 70, 'inside the deployment zone (ranks may step back a little)');
@@ -45,8 +46,10 @@ test('the presets differ: Defensive holds tight, Aggressive goes forward and cha
   const { CL, map } = band();
   const d = CL.prep.plan('defensive', map);
   const a = CL.prep.plan('aggressive', map);
-  assert.deepEqual({ ...d.orders }, { infantry: 'hold', archer: 'hold', cavalry: 'hold' });
-  assert.deepEqual({ ...a.orders }, { infantry: 'charge', archer: 'follow', cavalry: 'charge' });
+  const roles = (o) => ({ infantry: o.infantry, archer: o.archer, cavalry: o.cavalry }); // P9-B4: the second divisions follow their first
+  assert.deepEqual(roles(d.orders), { infantry: 'hold', archer: 'hold', cavalry: 'hold' });
+  assert.deepEqual(roles(a.orders), { infantry: 'charge', archer: 'follow', cavalry: 'charge' });
+  assert.equal(d.orders.infantry2, 'hold');
   assert.ok(a.anchors.infantry.x > d.anchors.infantry.x + 100, 'aggressive infantry starts further forward');
   assert.equal(CL.prep.plan('nonsense', map).preset, 'balanced');
 });

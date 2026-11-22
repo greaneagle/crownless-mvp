@@ -1228,14 +1228,84 @@
 
   // ---- Battle preparation (V2-07; js/prep.js) ----
 
-  const PRESET_NAMES = { balanced: 'Balanced', defensive: 'Defensive', aggressive: 'Aggressive', custom: 'Custom' };
+  const PRESET_NAMES = { auto: 'Auto', balanced: 'Balanced', defensive: 'Defensive', aggressive: 'Aggressive', custom: 'Custom' };
   const PRESET_ABOUT = {
+    auto: 'A plan chosen for you from the odds: forward and charging when you are much the stronger, a shield wall that holds when you are the weaker, Balanced between. You need give no orders.',
     balanced: 'Infantry in front, archers behind, cavalry on a flank, and all of them go with you: the archers keep behind you, the cavalry rides out at anything close.',
     defensive: 'A tight block. Everyone holds and fights what comes to them, the infantry in a shield wall.',
     aggressive: 'Infantry and cavalry forward and charging, archers following you.',
     custom: 'Drag the flags on the map to place each group, and choose each group’s starting order below.',
   };
   const GROUP_NAMES = { infantry: 'Infantry', archer: 'Archers', cavalry: 'Cavalry' };
+
+  /**
+   * P9-B4, layer 3: the company's divisions on the Prepare screen, folded away by default. Each division:
+   * its captain, formation and facing, and a new name; each troop type: which division it is in; and
+   * plans of your own (three, on this device). Every choice is optional: the plan works without them.
+   * @param {any} p the preparation state (g.prep) @param {() => void} redo
+   */
+  function divisionsBox(p, redo) {
+    const c = CL.campaign;
+    const D = CL.divisions;
+    const P = CL.prep;
+    const el2 = (tag, props = {}, ...kids) => {
+      const n = Object.assign(document.createElement(tag), props);
+      n.append(...kids.filter(Boolean));
+      return n;
+    };
+    const select = (label, options, value, onchange, extra = {}) => {
+      const sel = el2('select', { ariaLabel: label, onchange: (e) => { onchange(e.target.value); redo(); }, ...extra }, ...options.map(([v, t]) => el2('option', { value: v, textContent: t, selected: v === value })));
+      return el2('label', { className: 'divField' }, `${label} `, sel);
+    };
+    const divs = D.preview(c);
+    const caps = D.captains(c);
+    const box = el2('details', { className: 'divisions', open: Boolean(p.divisionsOpen), ontoggle: (e) => (p.divisionsOpen = e.target.open) });
+    box.append(el2('summary', { textContent: `Divisions (${divs.length}) · captains, formations, your plans` }));
+    for (const d of divs) {
+      const role = D.roleOf(d.div);
+      const capKey = (k) => `${k.kind}:${k.id}`;
+      const cur = p.plan.captains?.[d.div];
+      box.append(
+        el2(
+          'div',
+          { className: 'divRow' },
+          el2('b', { textContent: `${d.name} (${d.soldiers.length})`, style: `color:${D.color(d.div)}` }),
+          select('Captain', [['', 'None'], ...caps.map((k) => [capKey(k), k.name])], cur ? capKey(cur) : '', (v) => P.setCaptain(p.plan, d.div, caps.find((k) => capKey(k) === v) || null), { className: 'divCaptain' }),
+          select('Formation', D.FORMATIONS[role].map((f) => [f, CL.formations.NAMES[f]]), p.plan.formations?.[d.div] || (d.div === 'infantry' ? p.plan.formation : 'loose') || 'loose', (v) => P.setFormation(p.plan, d.div, v), { className: 'divFormation' }),
+          select('Facing', D.FACINGS.map((f) => [f, { right: 'The enemy', up: 'North', down: 'South', left: 'Back' }[f]]), p.plan.facings?.[d.div] || 'right', (v) => P.setFacing(p.plan, d.div, v)),
+          el2('label', { className: 'divField' }, 'Name ', el2('input', { className: 'divName', value: d.name, maxLength: 20, ariaLabel: `A name for ${d.name}`, spellcheck: false, autocomplete: 'off', onchange: (e) => { D.rename(c, d.div, e.target.value); CL.save.write(); redo(); } })),
+        ),
+      );
+    }
+    // Which division each troop type is in (soldiers one by one: their card on the Party screen).
+    const types = [...new Set(CL.party.healthySoldiers().map((s) => s.troop))];
+    const moveRow = el2('div', { className: 'divRow' }, el2('b', { textContent: 'Troops' }));
+    for (const t of types) {
+      const role = CL.content.troop(t).role;
+      const options = D.SLOTS.filter((x) => D.roleOf(x) === role || x === role).map((x) => [x, D.name(c, x)]);
+      const now = c.divisions?.troops?.[t] || '';
+      moveRow.append(select(CL.content.troop(t).name, [['', 'By default'], ...options], now, (v) => {
+        D.assign(c, 'troop', t, v || null);
+        CL.save.write();
+        // The divisions' places again (a new division may now have soldiers), keeping what was chosen for them.
+        const kept = { captains: p.plan.captains, formations: p.plan.formations, facings: p.plan.facings, formation: p.plan.formation };
+        p.plan = { ...P.plan(p.plan.preset === 'custom' ? 'custom' : p.plan.preset, p.map, { ambush: p.ambush, custom: CL.settings.get('prepCustom') }), ...kept };
+      }, { className: 'divTroop' }));
+    }
+    box.append(moveRow);
+    // Plans of your own (the device's).
+    const plans = CL.settings.get('prepPlans') || [];
+    const planRow = el2('div', { className: 'divRow' }, el2('b', { textContent: 'Your plans' }));
+    for (let i = 0; i < P.PLANS_MAX; i++) {
+      const saved = plans[i];
+      planRow.append(
+        el2('button', { type: 'button', textContent: saved ? `Use ${saved.name}` : `Plan ${i + 1}: empty`, disabled: !saved, className: p.plan.plan === i ? 'active' : '', onclick: () => { const q = P.loadPlan(i, p.map, p.ambush); if (q) p.plan = q; redo(); } }),
+        el2('button', { type: 'button', textContent: `Save as ${i + 1}`, onclick: () => { P.savePlan(p.plan, p.map, i); redo(); } }),
+      );
+    }
+    box.append(planRow);
+    return box;
+  }
 
   /** The fit soldiers by group, for the setup (Mara stands with the hero). */
   function fitByGroup() {
@@ -1376,14 +1446,16 @@
         changeMode('encounter');
       }),
     );
+    const auto = p.plan.preset === 'auto' && p.plan.auto ? ` (${PRESET_NAMES[p.plan.auto]} for this fight)` : '';
     box.replaceChildren(
       Object.assign(document.createElement('h2'), { textContent: 'Prepare for battle' }),
       Object.assign(document.createElement('p'), { textContent: `${e.name}: ${foes} against your ${own} fit soldier${own === 1 ? '' : 's'}.${p.ambush ? ' Ambush! Little room to form up.' : ''}` }),
       ...(e.def.share ? [Object.assign(document.createElement('p'), { id: 'prepShare', className: 'setNote', textContent: shareLine(e.def) })] : []),
       actions, // first, so Fight is always in reach (two taps from the encounter)
       presets,
-      Object.assign(document.createElement('p'), { className: 'setNote', textContent: PRESET_ABOUT[p.plan.preset] }),
+      Object.assign(document.createElement('p'), { className: 'setNote', textContent: PRESET_ABOUT[p.plan.preset] + auto }),
       ...rows,
+      divisionsBox(p, () => renderPrep()),
       check('Remember this setup', 'remember'),
       check('Skip this screen next time', 'skip'),
     );
@@ -1866,6 +1938,21 @@
     });
   }
 
+  /** P9-B4: a soldier's division (theirs, their troop's, or by default), chosen on their card. @param {any} s */
+  function divisionLine(s) {
+    const c = CL.campaign;
+    const D = CL.divisions;
+    const role = CL.content.troop(s.troop).role;
+    const now = c.divisions?.soldiers?.[s.id] || '';
+    const sel = el(
+      'select',
+      { ariaLabel: 'Division', className: 'soldierDivision', onchange: (e) => { D.assign(c, 'soldier', s.id, e.target.value || null); CL.save.write(); renderTroops(); } },
+      el('option', { value: '', textContent: `As their troop (${D.name(c, c.divisions?.troops?.[s.troop] || role)})`, selected: !now }),
+      ...D.SLOTS.filter((x) => D.roleOf(x) === role).map((x) => el('option', { value: x, textContent: D.name(c, x), selected: x === now })),
+    );
+    return el('label', { className: 'soldierDivisionRow' }, 'Division ', sel);
+  }
+
   /** The roll of honour (V2-10): those who fell or left, newest first, then how many before them. */
   function honourRoll() {
     const h = CL.campaign.honour || CL.chronicle.blankHonour();
@@ -1951,6 +2038,7 @@
         stat('crowns paid', r.wagesPaid),
       ),
       traitLine(s),
+      divisionLine(s),
       el('ul', { className: 'soldierNotes' }, ...s.notes.map((n) => el('li', { textContent: `Day ${P.dayNumber(n.day)}: ${CL.soldiers.noteText(n)}` }))),
       upgrades.length ? el('div', { className: 'soldierUpgrades' }, ...upgrades) : el('p', { className: 'muted', textContent: `${t.name} is at max tier; experience still counts toward the record.` }),
       retireButton(s),
@@ -2463,29 +2551,58 @@
     if (on) showSelectedGroup(CL.game.group);
   }
 
+  /**
+   * The Orders panel for the selected division (P9-B4: a button for each division the battle has, its
+   * formations, and on the tactical map what a tap does and when).
+   */
   function showSelectedGroup(group) {
-    const state = CL.game.groupState?.[group]; // forming · formed · advancing · engaged (V2-08a)
-    const mood = CL.morale?.word(CL.game, 'ally', group); // wavering · falling back · routing (V2-08b)
-    $('#selectedGroup').textContent = { infantry: 'Infantry', archer: 'Archers', cavalry: 'Cavalry' }[group] + (state && mood !== 'routing' ? ` · ${state}` : '') + (mood ? ` · ${mood}` : '');
-    const wait = CL.game.mode === 'battle' ? Math.ceil(CL.morale?.rallyIn(CL.game) || 0) : 0;
+    const g = CL.game;
+    const D = CL.divisions;
+    const c = CL.campaign;
+    const role = D.roleOf(group);
+    const state = g.groupState?.[group]; // forming · formed · advancing · engaged (V2-08a)
+    const mood = CL.morale?.word(g, 'ally', role); // wavering · falling back · routing (V2-08b)
+    $('#selectedGroup').textContent = D.name(c, group) + (state && mood !== 'routing' ? ` · ${state}` : '') + (mood ? ` · ${mood}` : '');
+    const wait = g.mode === 'battle' ? Math.ceil(CL.morale?.rallyIn(g) || 0) : 0;
     const rb = $('#rallyBtn');
     if (rb) {
       rb.textContent = wait ? `Rally in ${wait} s` : 'R Rally';
-      rb.disabled = Boolean(wait) || !CL.game.hero?.alive;
+      rb.disabled = Boolean(wait) || !g.hero?.alive;
     }
-    // GDD §7: unit sets without cavalry show cavalry as unavailable.
-    const hasCav = CL.game.allies?.some((a) => a.role === 'cavalry' && a.alive);
-    const cavBtn = document.querySelector('[data-group="cavalry"]');
-    if (cavBtn) cavBtn.disabled = !hasCav;
-    const current = CL.game.orders[group];
-    for (const b of document.querySelectorAll('[data-group]')) b.classList.toggle('active', b.dataset.group === group);
+    // The divisions: the three of the roles always (one without soldiers shown unavailable, GDD §7), and the others the battle has.
+    const here = new Set(D.present(g));
+    const shown = D.SLOTS.filter((d, i) => i < 3 || here.has(d));
+    const row = $('#groupRow');
+    if (row && row.childElementCount !== shown.length) {
+      row.replaceChildren(
+        ...shown.map((d) => {
+          const btn = Object.assign(document.createElement('button'), { type: 'button' });
+          btn.dataset.group = d;
+          btn.onclick = () => CL.combat.order(d, null);
+          return btn;
+        }),
+      );
+    }
+    for (const b of row ? row.querySelectorAll('[data-group]') : []) {
+      b.textContent = `${D.SLOTS.indexOf(b.dataset.group) + 1} ${D.name(c, b.dataset.group)}`;
+      b.disabled = !g.allies?.some((a) => a.alive && (a.div || a.role) === b.dataset.group && !a.companion && !a.outside) && D.roleOf(b.dataset.group) !== 'infantry';
+      b.classList.toggle('active', b.dataset.group === group);
+    }
+    const current = g.orders?.[group];
     for (const b of document.querySelectorAll('[data-order]')) b.classList.toggle('active', b.dataset.order === current);
-    // P7-11: the infantry's formation (for the infantry only: no foot soldiers, no formation).
-    const foot = CL.game.allies?.some((a) => a.role === 'infantry' && a.alive && !a.companion && !a.outside);
+    // The selected division's formation: only those its soldiers can take (P7-11, P9-B4).
+    const can = D.FORMATIONS[role] || ['loose'];
+    const has = D.members(g, group).length > 0;
     for (const b of document.querySelectorAll('[data-formation]')) {
-      b.classList.toggle('active', b.dataset.formation === (CL.game.formation || 'loose'));
-      b.disabled = !foot;
+      b.classList.toggle('hidden', !can.includes(b.dataset.formation));
+      b.classList.toggle('active', b.dataset.formation === CL.formations.chosenFor(g, group));
+      b.disabled = !has;
     }
+    // Layer 4: on the tactical map, what a tap does and when.
+    for (const id of ['#mapActionRow', '#mapTimingRow']) $(id)?.classList.toggle('hidden', !g.overview);
+    $('#ordersPanel').classList.toggle('onMap', Boolean(g.overview)); // on the map: the divisions, the action and when, out of the field's way
+    for (const b of document.querySelectorAll('[data-map-action]')) b.classList.toggle('active', b.dataset.mapAction === (g.mapAction || 'move'));
+    for (const b of document.querySelectorAll('[data-map-timing]')) b.classList.toggle('active', b.dataset.mapTiming === String(g.mapTiming ?? 'now'));
   }
 
   function setPaused(paused, reason) {

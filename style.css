@@ -249,6 +249,14 @@
 .soldierRow b{color:#ecd6a4;font-size:calc(14px * var(--ui-scale))}
 .soldierRow span{color:#d9c8a2}
 .soldierGroup{margin:4px 0;border:1px solid #5a4a33;border-radius:6px;padding:0 calc(6px * var(--ui-scale))}
+.divisions{margin:6px 0;border:1px solid #5a4a33;border-radius:6px;padding:0 calc(6px * var(--ui-scale))}
+.divisions summary{min-height:calc(44px * var(--ui-grow));display:flex;align-items:center;cursor:pointer;color:#ecd6a4;font-weight:bold;font-size:calc(13px * var(--ui-scale))}
+.divRow{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;margin:6px 0;font-size:calc(12px * var(--ui-scale))}
+.divField select,.divField input,.soldierDivisionRow select{min-height:calc(36px * var(--ui-grow));font-size:calc(12px * var(--ui-scale))}
+@media(pointer:coarse){.divField select,.divField input,.soldierDivisionRow select{min-height:calc(44px * var(--ui-grow))}}
+#ordersPanel #formationRow{flex-wrap:wrap}
+#ordersPanel #formationRow button{flex:1 1 28%}
+.divField input{width:9em}
 .soldierGroup summary{min-height:calc(44px * var(--ui-grow));display:flex;align-items:center;cursor:pointer;color:#ecd6a4;font-size:calc(14px * var(--ui-scale));font-weight:bold}
 .soldierCard p{margin:4px 0}
 .soldierHead{display:flex;gap:10px;align-items:flex-start;margin-top:6px}
@@ -343,3 +351,7 @@
 /* 2.4.0 — W-03 battle zoom: the zoom button sits with MAP, on a large field only */
 #stage:not([data-field="large"]) #zoomBtn,#stage[data-mode="town"] #zoomBtn{display:none}
 #rightControls #zoomBtn{align-self:flex-start;width:clamp(50px,6.6vw,82px);height:clamp(50px,6.6vw,82px);font-size:calc(clamp(9px,1.1vw,14px) * var(--ui-scale))}
+#ordersPanel.onMap .ordersRow:not(#groupRow):not(#mapActionRow):not(#mapTimingRow){display:none}
+#ordersPanel.onMap{top:calc(2% + 52px * var(--ui-grow));bottom:auto;right:1%;max-width:60%;max-height:calc(100% - 2% - 52px * var(--ui-grow) - 5% - clamp(83px,12vw,136px) - 16px);overflow-x:hidden}
+#ordersPanel.onMap .ordersRow{display:flex;flex-wrap:wrap}
+#ordersPanel.onMap button{margin:2px;font-size:calc(11px * var(--ui-scale));padding:calc(4px * var(--ui-scale)) calc(7px * var(--ui-scale))}

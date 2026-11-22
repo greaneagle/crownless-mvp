@@ -129,9 +129,9 @@
    * @param {any} g @param {string} group 'infantry' | 'archer' | 'cavalry' @param {number} wx @param {number} wy
    */
   function sendGroup(g, group, wx, wy) {
-    const units = g.allies.filter((a) => a.alive && a.role === group && !a.outside);
+    const units = g.allies.filter((a) => a.alive && (a.div || a.role) === group && !a.outside && !a.companion);
     if (!units.length) {
-      CL.ui.message(`No ${group === 'archer' ? 'archers' : group} in this battle`);
+      CL.ui.message(group === CL.divisions.roleOf(group) ? `No ${group === 'archer' ? 'archers' : group} in this battle` : `Nobody in ${CL.divisions.name(CL.campaign, group)} in this battle`);
       return 0;
     }
     const b = g.battleMap.bounds || CL.units.BOUNDS;
@@ -153,7 +153,8 @@
     });
     g.orders[group] = 'hold';
     g.group = group;
-    CL.ui.message(`${{ infantry: 'Infantry', archer: 'Archers', cavalry: 'Cavalry' }[group] || group}: move there and hold`);
+    CL.formations.closeUp(g, group); // a formed division takes its shape there (P9-B4)
+    CL.ui.message(`${CL.divisions.name(CL.campaign, group)}: move there and hold`);
     CL.ui.showSelectedGroup?.(group);
     CL.diag.log('info', 'Group sent', { group, soldiers: units.length, x: Math.round(wx), y: Math.round(wy) });
     return units.length;
@@ -163,13 +164,88 @@
    * A tap or click on the battle screen at (sx, sy), in screen pixels. Returns true if the minimap or
    * the overview used it (so it is not also a sword swing). @param {any} g
    */
+  // ---- Layer 4 (P9-B4): live command on the tactical map ----
+
+  /** What a tap on the overview does with the selected division, and when. */
+  const ACTIONS = ['move', 'charge', 'fallback', 'face'];
+  const ACTION_NAMES = { move: 'Move', charge: 'Charge', fallback: 'Fall back', face: 'Face' };
+  const TIMINGS = ['now', 5, 10, 'volley'];
+  const TIMING_NAMES = { now: 'Now', 5: 'In 5 s', 10: 'In 10 s', volley: 'On the volley' };
+  const FALLBACK_DONE = 24; // px from its spot: a division falling back has arrived
+
+  /** Carry out an order for a division at a point of the field (now). @param {any} g @param {{ div: string, kind: string, x: number, y: number }} o */
+  function carry(g, o) {
+    const D = CL.divisions;
+    const name = D.name(CL.campaign, o.div);
+    if (!D.members(g, o.div).length) return false;
+    g.focusAt ??= {};
+    g.falling ??= {};
+    if (o.kind === 'move' || o.kind === 'fallback') {
+      sendGroup(g, o.div, o.x, o.y);
+      delete g.focusAt[o.div];
+      if (o.kind === 'fallback') {
+        g.falling[o.div] = true; // back to the spot without stopping to fight (js/combat.js), then hold
+        CL.ui.message(`${name}: fall back there and hold`);
+      } else delete g.falling[o.div];
+    } else if (o.kind === 'charge') {
+      g.orders[o.div] = 'charge';
+      g.focusAt[o.div] = { x: o.x, y: o.y }; // the enemies nearest this spot first
+      delete g.falling[o.div];
+      CL.ui.message(`${name}: charge them there`);
+    } else if (o.kind === 'face') {
+      const units = D.members(g, o.div);
+      const cx = units.reduce((n, u) => n + u.x, 0) / units.length;
+      const cy = units.reduce((n, u) => n + u.y, 0) / units.length;
+      const [dx, dy] = [o.x - cx, o.y - cy];
+      const facing = Math.abs(dx) >= Math.abs(dy) ? (dx >= 0 ? 'right' : 'left') : dy >= 0 ? 'down' : 'up';
+      g.facings ??= {};
+      g.facings[o.div] = facing;
+      for (const u of units) u.face = facing;
+      CL.formations.closeUp(g, o.div);
+      CL.ui.message(`${name}: face ${facing === 'right' ? 'east' : facing === 'left' ? 'west' : facing === 'up' ? 'north' : 'south'}`);
+    } else return false;
+    CL.diag.log('info', 'Division order', { ...o, x: Math.round(o.x), y: Math.round(o.y) });
+    return true;
+  }
+
+  /**
+   * Give the selected division the chosen order at a point: now, or timed (after a few seconds, or when
+   * the company's archers next loose), so several can be set while the overview holds the battle and go
+   * off together. @param {any} g
+   */
+  function command(g, wx, wy) {
+    const o = { div: g.group, kind: ACTIONS.includes(g.mapAction) ? g.mapAction : 'move', x: wx, y: wy };
+    const when = TIMINGS.includes(g.mapTiming) ? g.mapTiming : 'now';
+    if (when === 'now') return carry(g, o);
+    g.timed ??= [];
+    g.timed = g.timed.filter((t) => t.div !== o.div); // one waiting order a division: the newest
+    g.timed.push({ ...o, ...(when === 'volley' ? { volley: g.lastVolley ?? -1 } : { at: g.t + when }) });
+    CL.ui.message(`${CL.divisions.name(CL.campaign, o.div)}: ${ACTION_NAMES[o.kind].toLowerCase()}, ${when === 'volley' ? 'when the archers loose' : `in ${when} s`}`);
+    return true;
+  }
+
+  /** Each frame: timed orders whose moment has come, and divisions falling back that have arrived. @param {any} g */
+  function tickOrders(g) {
+    if (g.timed?.length) {
+      const due = g.timed.filter((t) => (t.at != null ? g.t >= t.at : (g.lastVolley ?? -1) > t.volley));
+      if (due.length) {
+        g.timed = g.timed.filter((t) => !due.includes(t));
+        for (const t of due) carry(g, t);
+      }
+    }
+    for (const div of Object.keys(g.falling || {})) {
+      const units = CL.divisions.members(g, div);
+      if (!units.length || units.every((u) => Math.hypot(u.x - u.holdX, u.y - u.holdY) <= FALLBACK_DONE)) delete g.falling[div];
+    }
+  }
+
   function tap(g, sx, sy) {
     if (!active(g)) return false;
     if (g.overview) {
       const r = overviewRect(g);
       if (inside(r, sx, sy)) {
         const p = toWorld(r, sx, sy);
-        sendGroup(g, g.group, p.x, p.y);
+        command(g, p.x, p.y);
       }
       return true; // every tap belongs to the overview while it is open
     }
@@ -180,5 +256,5 @@
     return true;
   }
 
-  CL.tactics = { SIGHT, SCAN, FOCUS_SECONDS, active, minimapRect, overviewRect, toScreen, toWorld, inside, inSight, scan, knownEnemies, focus, focusPoint, overview, sendGroup, tap };
+  CL.tactics = { SIGHT, SCAN, FOCUS_SECONDS, ACTIONS, ACTION_NAMES, TIMINGS, TIMING_NAMES, active, minimapRect, overviewRect, toScreen, toWorld, inside, inSight, scan, knownEnemies, focus, focusPoint, overview, sendGroup, carry, command, tickOrders, tap };
 })(typeof window !== 'undefined' ? window : globalThis);

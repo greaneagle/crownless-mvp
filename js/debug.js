@@ -855,6 +855,11 @@
         toggle(false);
         stressBattle(n);
         return;
+      case 'divisionsReset': // P9-B4
+        delete c().divisions;
+        log('divisions reset', {});
+        CL.ui.message('Divisions: back to the default split');
+        break;
       case 'benchmark': // P9-B1
         if (mode === 'battle' || mode === 'result') return CL.ui.message('Finish the battle first');
         toggle(false);
