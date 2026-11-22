@@ -1,11 +1,11 @@
 // Battle simulation benchmark (GDD §6 scaling; §12 performance targets; P9-B1). Runs the Debug
-// panel's battle benchmark headlessly (the same open-field battle at 40, 60, 80, 100, 120 and 150 at
+// panel's battle benchmark headlessly (the same open-field battle at 40, 60, 80, 100, 120, 150 and 200 at
 // once, with reserves keeping the field full) at a fixed 60 Hz step, and reports the simulation's cost
 // per frame. Drawing is not included: measure that in the browser with Debug → Battle benchmark.
 //   node scripts/bench-battle.js [seconds=20] [--maps]   (--maps: also the forest and the courtyard)
 const { loadGame } = require('../tests/helpers/load');
 
-const SIZES = [40, 60, 80, 100, 120, 150];
+const SIZES = [40, 60, 80, 100, 120, 150, 200];
 const MAPS = ['open_country', 'forest_wilds', 'greywall_courtyard'];
 const STEP = 1 / 60;
 const STUCK = { every: 5, moved: 2, near: 140 }; // s between samples; px moved; px to the nearest opponent
@@ -110,7 +110,7 @@ if (require.main === module) {
   const args = process.argv.slice(2);
   const seconds = Number(args.find((a) => /^\d+$/.test(a)) || 20);
   console.table(run(seconds, args.includes('--maps') ? MAPS : MAPS.slice(0, 1)));
-  console.log('Budget: 33 ms a frame at 30 fps, 16.7 ms at 60, for everything (simulation and drawing). A phone is several times slower than this machine.');
+  console.log("Budget: 33 ms a frame at 30 fps, 16.7 ms at 60, for everything (simulation and drawing). The owner's phone measured about this machine's speed (2.4 ms of simulation at 150, 3.1.1).");
 }
 
 module.exports = { SIZES, MAPS, run, bench, setup, setupBench };

@@ -1,5 +1,15 @@
 # Crownless — Release Notes
 
+## v3.1.1 — The phone's battle size · 2026-11-22
+
+### Changed
+- **Battles start at 150 at once** on phones and computers. On the owner's phone every size from 40 to 150 ran at 60 frames a second (Debug → Battle benchmark).
+- **The battle size goes up to 200** (Settings → Battle size). The large fields grow to fit (4.2 screens across at 200), and the benchmark measures 200 too, as does Debug → Stress 200.
+
+### Under the hood
+- No save change.
+- **Tests:** 814 fast Node tests; the battle size's own browser specs at both sizes.
+
 ## v3.1.0 — Battle size, measured and raised (P9-B1) · 2026-11-22
 
 Phase 9, "Kingdoms & Houses", begins with battles at a bigger scale.

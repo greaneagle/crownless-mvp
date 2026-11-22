@@ -7,14 +7,15 @@
   const CL = root.Crownless;
 
   const KEY = 'crownless_settings';
-  // P9-B1 (D-P9a): 20 to 150 fighters at once, in steps of 10 (20 / 30 / 40 before 3.1.0).
-  const BATTLE_SIZES = Array.from({ length: 14 }, (_, i) => 20 + i * 10);
+  // P9-B1 (D-P9a): 20 to 200 fighters at once, in steps of 10 (20 / 30 / 40 before 3.1.0; 150 at most in 3.1.0).
+  const BATTLE_SIZES = Array.from({ length: 19 }, (_, i) => 20 + i * 10);
   /**
    * The battle size a device starts at, until its player chooses one: the largest the owner's phone
-   * held at 30 fps or better in Debug → Battle benchmark (P9-B1). `old` is the default before 3.1.0: a
-   * device still on it never chose, so it moves to the new default too.
+   * held at 30 fps or better in Debug → Battle benchmark (P9-B1): 150, at 60 fps (2.4 ms of simulation
+   * and 2.6 of drawing a frame, the owner's phone, 3.1.1). `old` is the default before 3.1.0: a device
+   * still on it never chose, so it moves to the new default too.
    */
-  const BATTLE_DEFAULT = { touch: 60, desktop: 100, old: { touch: 30, desktop: 40 } };
+  const BATTLE_DEFAULT = { touch: 150, desktop: 150, old: { touch: 30, desktop: 40 } };
   const SLOW = { fps: 30, seconds: 10 }; // a battle slower than this, for at least this long, offers a smaller size
   const BATTLEFIELDS = ['large', 'small']; // V2-05: large maps with a following camera, or one screen
   const PREP_PRESETS = ['balanced', 'defensive', 'aggressive', 'custom']; // V2-07

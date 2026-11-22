@@ -259,10 +259,10 @@
   const built = new Map();
 
   /**
-   * P9-B1: a large field grows with the battle size, so 150 fighters have room. Up to `from` fighters
-   * it is the data's size; at `to` it is `most` times as wide and high (3 screens become 3.75).
+   * P9-B1: a large field grows with the battle size, so 200 fighters have room. Up to `from` fighters
+   * it is the data's size; at `to` it is `most` times as wide and high (3 screens become 4.2; 3.7 at 150).
    */
-  const GROW = { from: 80, to: 150, most: 1.25 };
+  const GROW = { from: 80, to: 200, most: 1.4 };
   /** How much bigger than the data's size a generated field is at a battle size. @param {number} size */
   const growth = (size) => 1 + (GROW.most - 1) * Math.max(0, Math.min(1, (size - GROW.from) / (GROW.to - GROW.from)));
 

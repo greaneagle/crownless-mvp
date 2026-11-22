@@ -16,13 +16,13 @@ function mulberry(seed) {
   };
 }
 
-test('the battle size: 20 to 150 in steps of 10, nothing else', () => {
+test('the battle size: 20 to 200 in steps of 10, nothing else', () => {
   const { CL } = loadGame();
   const same = (a, b, note) => assert.equal(JSON.stringify(a), JSON.stringify(b), note); // the game's arrays are of its own sandbox
-  same(CL.combat.BATTLE.capChoices, [20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150]);
+  same(CL.combat.BATTLE.capChoices, [20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200]);
   same(CL.settings.BATTLE_SIZES, CL.combat.BATTLE.capChoices, 'the setting offers what the battle takes');
-  for (const n of [20, 90, 150]) assert.equal(CL.combat.setActiveCap(n), true);
-  for (const n of [10, 45, 160, 'x']) assert.equal(CL.combat.setActiveCap(n), false, `${n} refused`);
+  for (const n of [20, 90, 200, 150]) assert.equal(CL.combat.setActiveCap(n), true);
+  for (const n of [10, 45, 210, 'x']) assert.equal(CL.combat.setActiveCap(n), false, `${n} refused`);
   assert.equal(CL.combat.BATTLE.activeCap, 150);
   CL.combat.setActiveCap(40);
   assert.equal(CL.combat.scaleOf(), 1);
@@ -58,7 +58,7 @@ test('a slow battle offers a smaller size once, never by itself, and not to one 
   S.load();
   assert.equal(S.slowerOffer(45, 60), null, 'fast enough');
   assert.equal(S.slowerOffer(12, 5), null, 'too short to judge');
-  assert.equal(S.slowerOffer(15, 60), 50, 'half the frame rate wanted: half the size');
+  assert.equal(S.slowerOffer(15, 60), Math.floor(S.BATTLE_DEFAULT.desktop / 20) * 10, 'half the frame rate wanted: half the size, to the step below');
   assert.equal(S.get('battleSize'), S.BATTLE_DEFAULT.desktop, 'only offered');
   assert.equal(S.slowerOffer(15, 60), null, 'once');
   assert.equal(JSON.parse(storage.data[S.KEY]).slowOffered, true, 'remembered on the device');
@@ -102,7 +102,8 @@ test('a big company forms a wide line inside the field, and fills its share of a
   CL.combat.startBattle(band(75, 'reaver'));
   const g = CL.game;
   const b = g.battleMap.bounds;
-  assert.equal(g.battleMap.width, Math.round(CL.W * 3 * CL.arena.GROW.most), 'the field grown for 150');
+  assert.equal(g.battleMap.width, Math.round(CL.W * Math.round(3 * CL.arena.growth(150) * 100) / 100), 'the field grown for 150');
+  assert.ok(g.battleMap.width > 2880);
   assert.equal(1 + g.allies.length, 75, 'the hero and 74 on the field');
   assert.equal(g.allyReserve.length, 120 - 74);
   assert.equal(g.enemies.length, 75);
@@ -126,7 +127,10 @@ test('the large field grows with the size above 80; the small field and the cour
   assert.equal(CL.arena.mapFor('open_country'), m80, 'the same map at 40 and 80');
   CL.combat.setActiveCap(150);
   const m150 = CL.arena.mapFor('open_country');
-  assert.deepEqual([m150.width, m150.height], [3600, 2025]);
+  assert.deepEqual([m150.width, m150.height], [3552, 1998]);
+  CL.combat.setActiveCap(200);
+  assert.equal(CL.arena.mapFor('open_country').width, 4032, '4.2 screens at 200');
+  CL.combat.setActiveCap(150);
   assert.equal(CL.arena.mapFor('open_country'), m150, 'built once a size');
   assert.equal(CL.arena.mapFor('greywall_courtyard').width, CL.content.get('battle_maps', 'greywall_courtyard').width);
   S.set('battlefield', 'small');

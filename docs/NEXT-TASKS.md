@@ -2463,7 +2463,7 @@ The phase opens with four battle-scale tasks (owner, 2026-11-22; decisions D-P9a
 
   A task that turns out to reach more than its row runs those files too, and says so.
 
-### P9-B1 · Battle size, measured and raised (M–L) — ✅ Done in 3.1.0 (the owner's phone benchmark to come)
+### P9-B1 · Battle size, measured and raised (M–L) — ✅ Done in 3.1.0 (the owner's phone benchmark in 3.1.1)
 
 **Problem.** A battle holds at most 40 fighters at once (Settings: 20, 30 or 40), set for the phone when battles were first scaled (GDD §6, V2). The owner wants 100–150 at once (D-P9a), and the phone was hardly stressed at 40.
 
@@ -2499,6 +2499,7 @@ The phase opens with four battle-scale tasks (owner, 2026-11-22; decisions D-P9a
   - **drawing:** above 80 at once the drawing is thinned as Reduced effects does (no hit rings except the Rally's, health bars only over the badly hurt, the fallen fading after 20 seconds, the hero and companions never), only the fallen still showing are sorted, and arrows are drawn in one stroke a side. Off-screen fighters were already skipped.
 - **Measured in the desktop preview:** the benchmark ran every size; that browser pane runs at 30 fps whatever the load, so its fps says nothing, but its work a frame does: at 150, 0.9 ms of simulation and 0.5 ms of drawing (0.4 and 0.4 at 40).
 - **Not done:** the owner's phone benchmark, and so the phone's default (60 until then); re-planning far or idle fighters less often, and cached sprite frames (the numbers didn't ask for them; the phone may). B-01's parity at 100 moves to P9-B2 (today's battles are under 40, so a bigger size changes nothing yet); P9-B1's tests check instead that battles of 40, 100 and 150 end and that the stronger side wins at each.
+- **The owner's phone benchmark (3.1.1, 2026-11-22):** every size from 40 to 150 at 60 fps, the slowest frame 17 ms. At 150: 2.4 ms of simulation and 2.6 ms of drawing a frame; at 40: 1 and 1.9. The acceptance holds (100 at 30 fps or better, with room to spare). The default is 150 on phones and computers, and the size now goes to **200** (the owner: "we could even go bigger"): Settings and the Debug panel offer 160 to 200, the large field grows to 4.2 screens at 200 (3.7 at 150), 200 joins the benchmark and Stress 200 the panel. In Node, 200 costs 2.7 ms a frame. 200 is a choice, not the default, until a benchmark shows it holds.
 - **Found for P9-B2:** fighters running from the field hold no place, so reserves step in while they are still on it (up to 193 drawn at a size of 150); and at 150 the reserves come in three at a time with a message each, which is too many messages.
 
 ### P9-B2 · Proportional battles, reserves on both sides (M) — Specified

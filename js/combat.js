@@ -31,12 +31,12 @@
   /**
    * GDD §6 scaling: at most `activeCap` units fight at once (hero, companion, soldiers and enemies
    * together). Each side's share is fixed when the battle starts; the rest wait in reserve and step in
-   * as others fall, a stack at a time. The cap is a device setting, 20 to 150 in steps of 10 (P9-B1,
-   * D-P9a; 20 / 30 / 40 before 3.1.0). `base` is the size the battle's numbers were tuned at: above it,
+   * as others fall, a stack at a time. The cap is a device setting, 20 to 200 in steps of 10 (P9-B1,
+   * D-P9a; 20 / 30 / 40 before 3.1.0, up to 150 in 3.1.0). `base` is the size the battle's numbers were tuned at: above it,
    * the deployment grows with the size (`scaleOf`).
    */
-  const BATTLE = { activeCap: 40, capChoices: Array.from({ length: 14 }, (_, i) => 20 + i * 10), base: 40, stack: 3, minEnemies: 6, stall: 45 }; // stall: seconds without a blow (V2-T2)
-  /** How much bigger than the tuned size this battle is: 1 up to 40, 3.75 at 150. */
+  const BATTLE = { activeCap: 40, capChoices: Array.from({ length: 19 }, (_, i) => 20 + i * 10), base: 40, stack: 3, minEnemies: 6, stall: 45 }; // stall: seconds without a blow (V2-T2)
+  /** How much bigger than the tuned size this battle is: 1 up to 40, 5 at 200. */
   const scaleOf = () => Math.max(1, BATTLE.activeCap / BATTLE.base);
   /** How many of a role may stand on the field at the start (the rest wait in reserve). @param {string} role */
   const deployCap = (role) => Math.round(DEPLOY_CAP[role] * scaleOf());

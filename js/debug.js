@@ -197,10 +197,10 @@
   // ---- P9-B1: the battle benchmark, for the owner's phone ----
 
   /**
-   * The same open-field battle at each size, 30 seconds of fighting each, one after another. Each side
+   * The same open-field battle at each size (40 to 200), 30 seconds of fighting each, one after another. Each side
    * has twice its share waiting in reserve, so the field stays full while the fallen are replaced.
    */
-  const BENCH = { sizes: [40, 60, 80, 100, 120, 150], seconds: 30, reserve: 2, map: 'open_country', target: 30 };
+  const BENCH = { sizes: [40, 60, 80, 100, 120, 150, 200], seconds: 30, reserve: 2, map: 'open_country', target: 30 };
   let bench = null; // { queue, rows, was } while the benchmark runs
 
   /**

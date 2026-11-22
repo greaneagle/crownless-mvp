@@ -2,14 +2,14 @@
 // and its result screen; a slow battle's offer of a smaller size (W-00's flows, desktop and phone).
 const { test, expect, open, waitMode, game, press, newGame, toMap, debug } = require('./helpers');
 
-test('Settings: the battle size goes from 20 to 150, and the next battle uses it', async ({ page }) => {
+test('Settings: the battle size goes from 20 to 200, and the next battle uses it', async ({ page }) => {
   await open(page);
   await newGame(page);
   await toMap(page);
   await press(page, '#settingsBtn');
   await expect(page.locator('#settingsPanel')).toBeVisible();
   const sizes = await page.locator('#setBattleSize option').evaluateAll((os) => os.map((o) => Number(o.value)));
-  expect(sizes).toEqual([20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150]);
+  expect(sizes).toEqual([20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200]);
   await page.locator('#setBattleSize').scrollIntoViewIfNeeded();
   await page.locator('#setBattleSize').selectOption('120');
   expect(await game(page, (CL) => [CL.settings.get('battleSize'), CL.settings.get('battleSizeChosen'), CL.combat.BATTLE.activeCap])).toEqual([120, true, 120]);
@@ -61,8 +61,8 @@ test('Debug → Battle benchmark runs every size and reports each on its result 
 
 test('a battle that ran slowly offers a smaller size once; Use sets it', async ({ page }) => {
   await open(page, { settings: { battleSize: 100, battleSizeChosen: false } });
-  // Never chosen: the device's own default (100 on a desktop, 60 on a phone); at 12 fps of the 30
-  // wanted, the offer is the size cut in proportion, to the step below (40 and 20).
+  // Never chosen: the device's own default (150); at 12 fps of the 30 wanted, the offer is the size
+  // cut in proportion, to the step below (60).
   const size = await game(page, (CL) => CL.settings.BATTLE_DEFAULT[matchMedia('(pointer: coarse)').matches ? 'touch' : 'desktop']);
   const offer = Math.max(20, Math.floor((size * 12) / 30 / 10) * 10);
   expect(await game(page, (CL) => CL.settings.get('battleSize'))).toBe(size);
