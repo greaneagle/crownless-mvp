@@ -2436,9 +2436,32 @@ Needs are computed, not saved.
 
 ---
 
-## Phase 9 — Kingdoms & Houses (Provisional)
+## Phase 9 — Kingdoms & Houses
 
-The phase opens with four battle-scale tasks (owner, 2026-11-22; decisions D-P9a–D-P9e), **Specified**, built first and in order. The rest of the phase is re-specified at its start.
+The phase opens with four battle-scale tasks (owner, 2026-11-22; decisions D-P9a–D-P9e), built first and in order, then the lords' loose ends (P9-L1) and the kingdoms (P9-01 to P9-08). Every task is **Specified** (2026-11-22); each is checked against the code when it starts, as Phase 8's were.
+
+- **The same rules for everyone** (P8's "no fixed classes"): what the player can do as a ruler, a claimant or a commander, an AI lord can do by the same rules, and the reasons for the AI's choices use only what it could know.
+- **Layers everywhere** (D-P9e's principle): each system works by default, hands-off, with one decision at a time; the depth is there for whoever wants it.
+- **Tests by tier** (NEXT-PLAN §7): every task runs `npm test`, lint and its own browser specs on desktop and phone; the full browser suite when shared UI changes; the slow files its code reaches. The whole slow suite runs at the checkpoints after **P9-B2**, **P9-B4**, **P9-04**, **P9-06** and **P9-T**. The slow files each task is expected to need:
+
+  | Task | Slow files | Checkpoint |
+  |---|---|---|
+  | P9-B1 battle size | `battle-parity`, `battle-extras` | |
+  | P9-B2 proportional battles | `battle-parity`, `battle-extras`, `campaign-bots` | **Whole suite** |
+  | P9-B3 a bigger company | `campaign-bots`, `world-sim`, `landed`, `phase7-exit` | |
+  | P9-B4 command in layers | `battle-parity`, `battle-extras`, `campaign-bots` | **Whole suite** |
+  | P9-L1 the lords' loose ends | `landed`, `prototype-f` | |
+  | P9-01 realms as organisations | `landed`, `campaign-bots`, `world-sim` | |
+  | P9-02 diplomacy and treaties | `landed`, `world-sim` | |
+  | P9-03 founding or taking a kingdom | `landed`, `campaign-bots`, `test-world`, `phase8-exit` | |
+  | P9-04 rebellion and deposition | `landed`, `prototype-d`, `prototype-f` | **Whole suite** |
+  | P9-05 armies and campaigns | `landed`, `world-sim`, `campaign-bots`, `battle-parity` | |
+  | P9-06 houses, marriage and claims | `landed`, `campaign-bots` | **Whole suite** |
+  | P9-07 modding | `test-world` | |
+  | P9-08 creator tools and a second world | all (a second world for the bots) | |
+  | P9-T tuning and acceptance | all, with the long runs | **Whole suite** |
+
+  A task that turns out to reach more than its row runs those files too, and says so.
 
 ### P9-B1 · Battle size, measured and raised (M–L) — Specified
 
@@ -2528,7 +2551,7 @@ The phase opens with four battle-scale tasks (owner, 2026-11-22; decisions D-P9a
 
 **Acceptance.** A hands-off player wins fair big battles with no orders; an expert can stage a flank and a timed retreat on the phone.
 
-### P9-L1 · The living lords' loose ends (M)
+### P9-L1 · The living lords' loose ends (M) — Specified
 
 **Problem.** P8-07 and P8-08 left a few pieces of the lords' politics out. They make the world feel lived in (owner, 2026-11-22).
 
@@ -2541,71 +2564,267 @@ The phase opens with four battle-scale tasks (owner, 2026-11-22; decisions D-P9a
 
 **Tests.** Each piece in the landed world (`npm run landed`) and as a scripted case; no churn (P8-07's cooldowns).
 
-### P9-01 · Realms as organisations (M)
+### P9-01 · Realms as organisations (M–L) — Specified
 
-**Build.** Realm treasury, laws and offices; the ruler's wealth separate from the realm's (Part 2 §18.1).
-
-### P9-02 · Diplomacy and treaties (M)
+**Problem.** A realm is a ruler, some land and a relation to the others. Its money is the world's (the ledger's `world` account): a mercenary's pay, a garrison's refill and a lord's ransom come from nowhere, and a war costs the crown nothing. Design §18.1: a kingdom has a ruler, laws, territory, a treasury, offices, vassals and grievances, and the ruler's wealth is separate from the realm's.
 
 **Build.**
-- War, peace, truce, alliance and trade access, with durations and breach rules.
-- AI kingdoms treat among themselves.
-- Grows from W-07's relations.
+- **A treasury per realm** (an account `realm:<id>` in `js/accounts.js`, with its own book, as the fiefs have):
+  - **in:** the crown's tenth from every holding (P8-05's due), the tax of the crown's own land, a toll on its markets, spoils and ransoms its lords bring in, tribute (P9-02);
+  - **out:** the pay of mercenaries it hires (P8-04's pay, today from `world`), the garrisons of the crown's own forts, ransoms for its captive lords (P8-01's "ransomed by their own"), the upkeep of armies (P9-05), the offices' wages;
+  - never below nothing: a realm that can't pay hires no mercenaries, pays its garrisons late (P8-05's desertion) and can't ransom its lords. This is anti-snowball by cost (§20.7), not by rubber-banding.
+- **The ruler's own purse,** separate: the ruler's personal holdings' treasuries (as any lord's) and their household. A ruler may lend to the realm (a debt, P8-07's) or take from it (a grievance).
+- **Laws** (data per realm, `data/factions.js`, with defaults; no kingdom named in `js/`):
+  - **power:** a crown (the ruler decides) or a league (a council of the great lords decides war, peace and grants by their opinions; the Vessaro League);
+  - **the crown's share** (the tenth, or more or less);
+  - **succession** (P9-06): eldest child, kin by election, or the council's choice;
+  - **fiefs a lord may hold** (P8-02's cap of three, per realm);
+  - **war:** can the ruler declare it alone, or does it need the council (the great lords' opinions, P8-07)?
+- **Offices** held by lords, appointed by the ruler by opinion and standing (P8-07): **marshal** (leads the realm's armies, P9-05), **steward** (the treasury: a good one raises its income a little), **chancellor** (diplomacy, P9-02). An office brings standing and a wage, and obligations: a marshal who refuses to lead loses it. A lord passed over for an office remembers it (P8-07's `passed_over`).
+- **The Realms screen:** each realm's card gains its treasury (a figure and a trend, not the book, unless you are its ruler or steward), its laws in a line, and its offices.
+- **The same for the player:** as a vassal you see your realm's laws and offices; you can be given an office (from P9-03 a ruler, you appoint them).
 
-**Acceptance.** SC-25.
+**Layers.** Default: realms run themselves; their wealth shows in what they can do. One decision: accept an office when offered. Expert: read a realm's treasury before taking service or choosing a side.
 
-### P9-03 · Founding or taking a kingdom (M)
+**Save.** v25: realm treasuries and books, offices and their holders, laws only where they differ from the data.
+
+**Edges.**
+- A realm with an empty treasury at war: it fights on with what it has; its lords pay their own (P8-05).
+- An office holder captured, defecting or dying (P9-06): the office falls vacant and is filled again within days.
+- The free city (Merrow) has a treasury and no offices.
+
+**Out.** Treaties (P9-02); ruling as the player (P9-03).
+
+**Tests.**
+- Money is conserved: over 180 days of `npm run landed` every crown's book balances against its weekly lines; nothing comes from or goes to `world` that should be a realm's (Prototype E's rule: no money without a source).
+- A broke realm can't hire or ransom; its garrisons desert.
+- A league decides war by its lords' opinions; a crown by its ruler.
+- Offices filled by opinion and standing; a vacancy filled again.
+- Saves: v24 migrates (treasuries from a few weeks of their income), round-trip, junk repaired, fixtures from 3.x.
+
+**Acceptance.** Every realm's spending comes from its own treasury, and over 180 days of the world alone the books balance and no realm goes broke by accident (a realm at long war may, by design).
+
+### P9-02 · Diplomacy and treaties (M) — Specified
+
+**Problem.** Realms are at peace, in tension or at war (W-07), with a truce after a war (P8-06a). Design §18.3: a small vocabulary of treaties with dates, obligations and breach rules, and no "alliance = +50" shortcut.
 
 **Build.**
-- Declaring a realm from held land; recognition and enforcement separate from the claim.
-- Vassals by grant; delegated authority (SC-41).
-- **For everyone:** an AI lord with enough land and discontent can declare a realm too, by the same rules (P8's "no fixed classes"). The ruler's office (`c.rulers`, P8-02) is what changes hands.
+- **Treaties** (`c.treaties`): `{ kind, between, since, until, terms, broken? }`, a small vocabulary:
+  - **peace** (ends a war; may carry terms: a holding handed over, tribute);
+  - **truce** (P8-06a's, now a treaty with its end day);
+  - **nonaggression** (no war between them while it lasts);
+  - **alliance** (each joins the other's defensive wars; asked to join an attacking war, it may decline by its interests);
+  - **military access** (their lords and armies may cross and rest in its land);
+  - **trade** (their caravans pay no toll; prices move a little toward each other's);
+  - **tribute** (one pays the other weekly, from its treasury, P9-01).
+- **Diplomatic standing:** each realm's trust in each other realm (−100…100), raised by kept treaties and lowered by broken ones (by everyone who hears of it, not just the injured realm). A realm that breaks treaties finds fewer partners.
+- **The AI's diplomacy,** by interests it could know:
+  - at war on two fronts, or losing (forts lost, treasury low): seeks peace, or a truce;
+  - weaker than a neighbour that threatens it: seeks an alliance with that neighbour's rival;
+  - beaten: may accept peace with tribute or a holding;
+  - rich and secure: offers trade.
 
-### P9-04 · Rebellion and deposition (L)
+  Offers are answered by the same factors as P8-07's (relationship between the rulers, the realm's interests, its obligations, fear). In a league (P9-01), the council's opinions decide.
+- **The chancellor** (P9-01) makes the realm's offers; a good one makes them better.
+- **The news** tells treaties made and broken; the Realms screen gains a **Diplomacy** tab: each pair's state, their treaties with their end days, and trust.
+- **The player before ruling:** as a vassal, you are bound by your realm's treaties (attacking an ally's people is attacking your own: P8-04's breach); you may be sent as an envoy (a small errand: carry the offer, a reward and standing if it is accepted).
+
+**Layers.** Default: the world's diplomacy happens around you, in the news. Expert: read the Diplomacy tab to choose whom to serve; as a ruler (P9-03), make the offers yourself.
+
+**Save.** v26: treaties, trust.
+
+**Edges.**
+- An ally asked to join a war it can't afford (P9-01): declines, with a reason; the asker's trust in it drops a little.
+- A treaty whose realm is gone (P9-05): ends.
+- Story pairs (D-W5) keep their locks until the story ends.
+
+**Out.** Secret treaties, hostages, marriage alliances (P9-06 brings marriage).
+
+**Tests.**
+- Each treaty's start, end, obligations and breach; a broken treaty's trust everywhere.
+- An alliance brings the ally into a defensive war, and lets it decline an offensive one.
+- Tribute moves money between treasuries, exactly.
+- `npm run landed`: treaties form and end over 180 days; wars still come and go; no realm locked in permanent peace or permanent war.
+
+**Acceptance.** The AI realms make and keep or break treaties for reasons the news can tell, and their wars and peace follow from them.
+
+### P9-03 · Founding or taking a kingdom (L) — Specified
+
+**Problem.** The player can be independent, a mercenary or a vassal (P8-04), never a ruler; land is held only of a realm (P8-08 left holding land as an independent to here). Design §18.2: a ruler's powers are a lord's, with a wider reach; there is no separate "kingdom game".
 
 **Build.**
-- Ambitions, claimants, escalating uncertain warnings, civil war.
-- The deposed keep person and warband (SC-26, SC-27).
-- **AI lords as claimants:** a discontented lord (P8-07's needs and opinions), backed by friends and kin, can rebel, depose the ruler and take the office. The deposed ruler rides on as a lord, keeping what they hold personally. The player can be on either side, or be the claimant.
+- **Realms that aren't in the data** (D-P9f): a realm can be founded in play (`c.realms`), with a name the founder chooses, a banner colour from a palette, the culture (and troops) of its capital's land, and P9-01's laws (a crown by default). Every module that asks "is this a realm?" asks `realm.realms(c)`, the data's and the new ones (a grep test, as P8-03's rights).
+- **Ways to rule:**
+  - **declare a realm** from land you hold (a fort or town, with renown and a company: thresholds tuned in P9-T): your holdings leave their realm (as a defection: a claim and a grievance for the old crown, and likely a war);
+  - **hold land as an independent** first (P8-08's claim made good with no liege): a fief of your own, recognised by nobody, which a realm will try to take;
+  - **take a realm's crown** by a claim and a rebellion (P9-04), or by being chosen in a league (P9-01's council).
+- **Recognition:** other realms recognise you or not (P9-02's trust and a treaty); unrecognised, you are fair game. Recognition is separate from the claim (design §18).
+- **Vassals:** lords may swear to you by P8-07's rules (a lord who thinks ill of their own ruler and well of you; kin; those you freed). You grant them land (P8-05's grants, the ruler's choice now yours), summon them (P8-07's summons from your side: they answer by the model), and keep their opinions.
+- **Ruling, delegated (SC-41):** the steward runs the treasury, the marshal the wars (P9-05), the chancellor the treaties (P9-02), each by a policy you set in a line ("defend", "expand toward…", "seek peace"), with alerts only for what needs you (a rebellion's warning, a treaty offer, a siege of your capital). You keep riding with your company; ruling never needs a screen.
+- **The ruler's screen** (the Realms screen's **Your realm** tab): treasury, laws, offices, vassals with their opinions, treaties and offers, and the policies. Everything is also done by default.
+- **The same for AI lords** (P8's "no fixed classes"): a lord with land, renown and discontent (P8-07) can declare a realm too, and the same rules follow.
 
-### P9-05 · Armies and campaigns (L)
+**Layers.** Default: you can found a realm and let your officers run it. One decision at a time: an offer, a grant, an alert. Expert: set laws, choose officers, negotiate each treaty, give each vassal their orders.
+
+**Save.** v27: realms founded in play, the player's realm and its policies, independent holdings.
+
+**Edges.**
+- Founding while at war with your old realm: the war is with your new one.
+- Your capital taken (P9-05): you move your seat to another holding; with none left, your realm is gone and you are independent again, with claims.
+- The story's realms and locks: the story's ending must have happened before you can found a realm in the March (D-W5).
+
+**Out.** Rebellion and deposition (P9-04); armies (P9-05); houses (P9-06).
+
+**Tests.**
+- A founded realm everywhere a data realm is (the grep test, rights, the map's colours, news).
+- Declaring from a fort: the old realm's claim and war; recognition by a friend.
+- A lord swears to you; you grant them a village; you summon them and they answer.
+- SC-41: ten days of fighting while ruling: routine governance delegated, alerts reach you, no forced screen (the bots count screens, as P8-T's).
+- SC-25 (with P9-02): you make an alliance, then break it: it ends, and trust drops everywhere.
+- An AI lord founds a realm in `npm run landed` when the conditions come, and the invariants hold.
+
+**Acceptance.** A player can found or take a kingdom, appoint its officers, grant land, make a treaty and keep riding as a captain, with every routine decision delegated.
+
+### P9-04 · Rebellion and deposition (L) — Specified
+
+**Problem.** P8-07's lords grumble and change realm one at a time; nobody contests a crown. Design §18.5–18.6: rebellion grows from grievances, with warnings and responses, and deposition is not a game over.
 
 **Build.**
-- Armies from lords' retinues and the company: muster, march and supply.
-- Sieges and field battles at scale through P9-B1's battle size and P9-B2's proportional sharing and reserves.
-- The phone budget kept; a Debug-panel army test.
+- **Grievances** (P8-07's opinions of the ruler, and their deeds: passed over, revoked, taxed, a feud the ruler ignores, a war they didn't want) gather into **factions:** lords who think ill of the ruler and well of one another (friends, kin), around a **claimant** (a lord with a claim to the crown by kin or law, or the strongest among them).
+- **Warnings,** uncertain and escalating: rumours (the news), a companion's word, a lord's petition; the ruler hears what anyone at court could.
+- **The ruler's responses** (AI and player alike): concessions (land, a lower share, an office), a mediator, dividing the faction (favour to one member), arresting the claimant (risky: it can start the war), or preparing for war.
+- **Demands** with a deadline: met, the faction breaks up; refused, they **rise**: their holdings and garrisons go with their holders (a realm of their own for the war, P9-03's founded realm); the lords who stay loyal fight them; the others choose by opinion.
+- **Outcomes:** the rebels win (the claimant takes the office; the deposed ruler rides on as a lord with their personal holdings, or is held); the crown wins (rebel lords captured, fiefs revoked and granted to the loyal); a compromise (concessions, the claimant pardoned).
+- **The deposed** (SC-26, SC-27, §18.6), the player included: alive, free or captive; their company and companions (those personally loyal stay); their businesses; their claim to the crown kept; a foreign ruler may offer exile, service or support for a return.
+- **The player's part:** on either side (summoned by both), as a mediator, or as the claimant.
+- **No cascades:** one rebellion a realm at a time, a long peace after one (90 days proposed), and a ruler who wins by concessions is trusted more for a while.
 
-### P9-06 · Houses, marriage and claims (M)
+**Layers.** Default: rebellions happen to the realms you know, and you choose a side when summoned. Expert: court the faction, stir it, or stand as claimant.
+
+**Save.** v28: factions, demands, rebellions.
+
+**Edges.**
+- A rebellion during a foreign war: the foreign enemy may back the rebels (P9-02).
+- The claimant captured or dead (P9-06): the faction's next strongest, or it breaks.
+- The player deposed while away: told, and the same save goes on.
+
+**Tests.**
+- A faction forms from grievances only (no random roll); its warnings come first.
+- Each response's effect; demands met and refused.
+- The three outcomes, with holdings, garrisons and claims right (§25.3 invariants throughout).
+- SC-26: your vassals rebel and depose you; you keep your person, company and claim; the save goes on.
+- SC-27: deposed, you seek refuge with an old enemy, who answers by diplomacy and opinion.
+- `npm run landed` over a year: some rebellions, no realm in constant civil war.
+
+**Acceptance.** Design §18.9's second half: a disloyal noble can decline an order, form a faction and rebel; a deposed player plays on in the same save as a free claimant or a captive.
+
+### P9-05 · Armies and campaigns (L) — Specified
+
+**Problem.** Sieges gather two to four lords (P8-06a); there are no armies, no marches, no supply, and capitals never fall. Design §20.1–20.3: an army is several parties under a commander, with assembly, supply and objectives.
 
 **Build.**
-- The founding house; marriages as alliances; rival houses.
-- **Succession:** when a ruler or lord dies (deaths arrive here), the office and fiefs pass to an heir among their kin, or are contested by claims. P8-02's kin ties are the starting families.
-- Generational play optional and later (Part 2 §19).
+- **An army:** several parties (lords' households, the company, mercenaries) under one commander (the marshal, the ruler, or you), moving as one on the map at the slowest's pace, with shared food and the commander's authority. Each party's soldiers, wages and losses stay its own (§20.2).
+- **Raising it:** the commander calls (P8-07's summons: each lord answers by the model, and comes in their own time), sets a rally point and a day, and marches when enough have come; mercenaries for the realm's coin (P9-01).
+- **Objectives:** besiege (P8-06a's siege, now by an army), relieve, raid (an enemy village: its prosperity falls, the raiders take spoils, its lord's opinion of them sinks), pursue, defend the border, regroup. The marshal chooses by the realm's policy (P9-03).
+- **Supply:** an army eats; far from friendly land it forages (the villages it passes lose prosperity) or starves (desertion, P7's rules); long campaigns wear it out (§20.7).
+- **Battles of armies:** two armies meeting fight a P9-B2 battle (proportional, both sides reinforcing), or auto-resolve (the square law) off-screen; a beaten army retreats, breaks apart, or surrenders (§20.6: its lords captured and ransomed).
+- **Towns change hands** (moved here from Phase 8): a capital can be besieged by an army (a long siege: walls, food, a large garrison), and taken: the ruler moves their seat; a realm with no holdings left is gone (its lords seek service elsewhere, P8-07). Anti-snowball: a realm's last holding is the hardest siege; armies cost the treasury every day.
+- **You in an army:** summoned, you ride with it and fight its battles (as the marshal's vassal); as its commander you give the army's orders (an objective, a target, retreat) and fight beside it. A lord in your army obeys or not by the model.
+- **The map:** an army is one banner with its size; its parties ride together. The phone's map budget kept (a Debug army test: four armies of five parties on the map at once).
 
-### P9-07 · Modding: a declarative content format (M–L)
+**Layers.** Default: you are summoned and ride along. Expert: raise and command an army, plan a campaign, mind its supply.
+
+**Save.** v29: armies (members, commander, objective, rally), raids' effects.
+
+**Edges.**
+- A lord who defects in an army leaves when it next halts (P8-07's rule).
+- The commander captured: the next ranking lord takes over, or the army breaks up.
+- An army without food: desertion from the furthest parties first.
+
+**Tests.**
+- Raising an army: who comes, when, and why not.
+- Supply and foraging; a starving army.
+- A battle between armies (proportional, reinforcing) and its result on every party.
+- A capital taken; a realm gone; its lords placed.
+- `npm run landed` with armies: wars with campaigns, capitals change hands rarely, no realm wiped out in 180 days on most seeds (tuned in P9-T); the invariants.
+
+**Acceptance.** Realms wage wars with armies that gather, march, eat, fight and break up, and the player can ride in one or command one.
+
+### P9-06 · Houses, marriage and claims (M–L) — Specified
+
+**Problem.** People have kin ties (P8-02) but no houses; nobody marries, dies or inherits. Design §19: houses as entities, marriage with real agency, and succession, the founding-house model first (§19.3).
 
 **Build.**
-- **The format:** the world package (W-04) published as a format.
-- **Namespaced ids** (moved here from W-04): every id validator, save key and regex audited for `:`.
-- **Packs:** data-only packs, validation, safe import, a pack list in Settings.
-- **Compatibility:** SC-33's protections extended to packs.
+- **Houses** (`c.houses`): a name, colours, members (from P8-02's kin), a head, the holdings and claims of its members, its alliances and rivalries. Opinions of a house are separate from opinions of a person (§19.1). A house can lose all its land and keep its members and name (§19.6). The player founds a house (on first holding land, or from an origin in Phase 10).
+- **Marriage:** between people of two houses (the player included), proposed, negotiated and accepted or refused by the P8-07 model (relationship, the houses' interests, obligations). Terms: a dowry, a claim through the spouse, an alliance between the houses (mutual aid, P9-02's terms between houses). The spouse is a named person with goals, who can ride as a companion or run a holding as its administrator (P8-05). Never a bonus to trade: a spouse can refuse, and a marriage can end, with consequences.
+- **Deaths** (D-P9g): lords can die: rarely, of wounds after a lost battle; by old age only with a setting on (off by default). The player never dies unless a later setting says so.
+- **Succession** by the realm's law (P9-01): an office or fief passes to an heir among the kin (eldest child, kin by election, or the council's choice); a contested one becomes claims (P8-02) and perhaps a rebellion (P9-04). A ruler's death is the realm's crisis.
+- **Claims through houses:** a house's claims outlive the member who held them; a claimant can petition a liege for restoration (§19.6).
+- **No generations** by default: no births or ageing to adulthood (§19.3's founding-house model). Children may be named in data as adult heirs.
+
+**Layers.** Default: houses and marriages happen in the world; you are asked when it concerns you. Expert: arrange marriages for alliance, plan an heir, press a house's claim.
+
+**Save.** v30: houses, marriages, deaths (a person's `status: 'dead'`, kept for the record), heirs.
+
+**Edges.**
+- A lord dies with fiefs and no kin: the crown takes them and grants them (P8-05).
+- A married couple's realms go to war: both remember it (P8-07's "kin on opposite sides").
+- The player's spouse captured: a ransom offer reaches you (P8-01's flow, the other way).
+
+**Out.** Births and ageing (backlog: generational play); the player as heir after death.
+
+**Tests.**
+- §19.6: two houses form a marriage alliance with tracked obligations; their members' opinions stay separate; a family loses all its holdings and keeps its members and name; a claimant petitions for restoration.
+- A death's succession by each law; a contested one makes claims.
+- A marriage proposal refused for reasons that read.
+- `npm run landed` over a year: some marriages, a few deaths, successions without broken holdings (the invariants).
+
+**Acceptance.** Design §19.6, and a lord's death passes their fiefs and office by the realm's law.
+
+### P9-07 · Modding: a declarative content format (M–L) — Specified
+
+**Problem.** The world is a package of `data/*.js` files (W-04), loaded with the code. Design §23: a declarative, validated format; stable namespaced ids; safe import; saves tied to their packs.
+
+**Build.**
+- **The format:** the world package (W-04) written down as a documented JSON format (`docs/WORLD-FORMAT.md`): a manifest (id, title, author, version, engine compatibility, required packs) and the content tables (factions and their laws, settlements, map, troops, items, characters and houses, businesses, quests and dialogue, battle maps, rules).
+- **Namespaced ids** (moved here from W-04): `world:id` (`border_march:stonebridge`), with today's short ids read as the official world's. Every id validator, save key and regex is audited for `:`.
+- **Packs:** data-only packs that add to or change a world, loaded from JSON, validated with precise errors (which file, which entry, what is wrong), stored in IndexedDB (§23.6), listed in Settings where they can be turned on and off.
+- **Safe import:** a pack imported from a file is checked (size, paths, references, no code) before it is stored; nothing executable is ever run (§23.4).
+- **Saves and packs** (SC-33): a save records its world, content version and packs; loading it with a pack missing gives a precise error and changes nothing; no named soldier is silently dropped.
+
+**Tests.**
+- A sample pack adds a troop line and a settlement without code; the game plays with it; removing it gives a precise error, and the save is untouched.
+- Every validator rejects a bad pack with a precise message (a table of bad packs).
+- The official world loads from the format exactly as from `data/*.js`.
 
 **Acceptance.** A sample pack adds a troop line and a settlement without code; removing it gives a precise error.
 
-### P9-08 · Creator tools and a second world (L)
+### P9-08 · Creator tools and a second world (L) — Specified
 
-**Build.** A pack checker (CLI), a map preview of a world package, and a smaller second official world.
-
-**Acceptance.** It plays end to end with the same bots.
-
-### P9-T · Phase 9 tuning and acceptance (M)
+**Problem.** Making a world means reading the code. Design §23.1: Crownless is a platform, and the Border March its first world.
 
 **Build.**
-- Long runs: SC-29, 100 simulated years with no exploits or loops.
-- Ruler fatigue (SC-41).
-- The full scenario matrix SC-01–42.
+- **A pack checker** (`npm run check-pack <dir>`): every rule of the format, with the same precise messages as the game.
+- **A map preview** of a world package: a page that draws its map, settlements, roads and regions, and lists what the checker found.
+- **A second official world,** smaller: two or three realms on its own map, its own cultures, troops and lords (the rules of Phases 8 and 9 apply as they are), and a sandbox start (no story, or a short one). It is chosen at a new game.
 
-**Version.** 4.0.0 (proposed).
+**Tests.** The checker against good and bad packs; the second world played end to end by the same bots (the campaign bots, `npm run landed`, Prototype G); its invariants.
+
+**Acceptance.** The second world plays end to end with the same bots, and a new world can be checked and previewed without the game's code.
+
+### P9-T · Phase 9 tuning and acceptance (M) — Specified
+
+**Build.**
+- **Tuning:** treasuries and the crown's share; treaty frequency; rebellion frequency; army sizes, assembly and supply; deaths and successions; the company's limit and the world's sizes (P9-B3) at play.
+- **Long runs** (SC-29): the world alone with delegated rulers for 20 years in the slow suite, and 100 years in an overnight script (`npm run long-run`): no negative-money exploit, no repeated ownership collision, no endless event loop, no realm wiped out by a runaway, every invariant every day.
+- **The bots:** Prototype G gains a ruler style (founds or takes a realm and delegates); forced screens counted for a ruler (SC-41).
+- **The exit as a scripted campaign:** design §18.9: a player ruler commands a vassal army, negotiates a treaty, appoints a castellan and issues a land grant; a disloyal noble declines an order, forms a faction and rebels; the player loses the war and is deposed, and the same save goes on with the player as a free claimant (in one save with a reload).
+- **The scenario matrix:** SC-01 to SC-44 each accounted for (a test, a slow test, or the owner's play), listed in the validation document.
+- **A validation document,** `docs/PHASE-9-VALIDATION.md`, with the checks waiting on the owner's phone play.
+
+**Version.** 4.0.0 (D-V1).
+
+**Acceptance.** The exit holds in the bot and in the owner's play.
 
 ---
 

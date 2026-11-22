@@ -285,7 +285,7 @@ _Re-specified 2026-11-20 at build 2.23.0 (commit 09176e8), against the code and 
 
 ## 6. Phase 9 — "Kingdoms & Houses"
 
-All of Phase 9 is **Provisional**, except the three battle-scale tasks at its head (owner, 2026-11-22), which are **Specified** and come first: armies (P9-05) need them.
+Every Phase 9 task is **Specified** (2026-11-22; NEXT-TASKS has each in full). The four battle-scale tasks at its head come first (owner, 2026-11-22): armies (P9-05) need them. Each task is checked against the code when it starts.
 
 | ID | Task | Size | Needs |
 |---|---|---|---|
@@ -293,16 +293,16 @@ All of Phase 9 is **Provisional**, except the three battle-scale tasks at its he
 | **P9-B2** | **Proportional battles, reserves on both sides:** the field shared by army size (300 against 200 at a size of 100 fights 60 against 40), both sides feeding in reserves as their men fall, and nearby parties joining a side's reserve; waves kept only for fixed encounters | M | P9-B1, V2-09 |
 | **P9-B3** | **A bigger company:** no hard cap of 20; a limit up to 200 grown by Leadership, renown, companions as officers and land; wages, food, recruits, the Party screen and the world's other parties scaled to match | M–L | P9-B2, P8-05 |
 | **P9-B4** | **Command in layers:** divisions you name and fill, formations per division, and four depths of command, each optional: none (a good plan chosen for you), orders by troop type, captains and placing each division, and live command on the field (timed flanks, falling back before a volley) | L | P9-B2 |
-| **P9-01** | Realms as organisations | M | P8-02, V2-11 |
-| **P9-02** | Diplomacy and treaties (grows from W-07's war and peace) | M | W-07, P9-01 |
-| **P9-03** | Founding or taking a kingdom (with rebel, sovereign and independent holdings, moved from P8-04), by the player or an AI lord | M | P8-04, P9-01 |
-| **P9-04** | Rebellion and deposition (AI lords as claimants who can take the ruler's office) | L | P8-07, P9-03 |
-| **P9-05** | Armies and campaigns (and towns changing hands, moved from Phase 8) | L | P8-06a, P8-06b, W-07, P9-B3 |
-| **P9-06** | Houses, marriage and claims (with lords' deaths and heirs, moved from Phase 8) | M | P8-07 |
+| **P9-01** | **Realms as organisations:** a treasury per realm (the crown's tenth, its own land, tolls; mercenaries, garrisons, ransoms paid from it), the ruler's purse separate, laws (a crown or a league, the crown's share, succession, the cap of fiefs, who declares war), offices (marshal, steward, chancellor) | M–L | P8-05, V2-11 |
+| **P9-02** | **Diplomacy and treaties:** peace, truce, nonaggression, alliance, military access, trade and tribute, with dates, terms and breach; trust between realms; the AI treating by its interests; a Diplomacy tab | M | W-07, P9-01 |
+| **P9-03** | **Founding or taking a kingdom:** realms founded in play (D-P9f), independent holdings, recognition, vassals, ruling delegated to officers by policy (SC-41), by the player or an AI lord | L | P8-04, P8-08, P9-01, P9-02 |
+| **P9-04** | **Rebellion and deposition:** grievances into factions around a claimant, warnings, the ruler's responses, demands, civil war and its outcomes; the deposed play on (SC-26, SC-27) | L | P8-07, P9-03 |
+| **P9-05** | **Armies and campaigns:** armies of several parties under a commander, raised by summons, with objectives (besiege, relieve, raid, pursue, defend) and supply; battles of armies; capitals that can fall (D-P9h) | L | P8-06a, P8-06b, P9-B4, P9-01 |
+| **P9-06** | **Houses, marriage and claims:** houses as entities, marriage with agency (the player too), deaths (D-P9g), succession by the realm's law, claims that outlive their holder; no generations by default | M–L | P8-07, P9-01, P9-04 |
 | **P9-L1** | **The living lords' loose ends** (from P8-07 and P8-08): lords ransoming each other's kin, asking each other for men, the land-hungry seeking sieges beyond the summons, the "escort my caravan" petition, and getting a lost fort back for service as well as for a price | M | P8-07, P8-08 |
-| **P9-07** | Modding: a declarative content format (namespaced ids moved here from W-04) | M–L | W-04 |
-| **P9-08** | Creator tools and a second world | L | P9-07 |
-| **P9-T** | Tuning and acceptance (SC-29, SC-41, the full matrix) | M | all above |
+| **P9-07** | **Modding:** the world package as a documented JSON format, namespaced ids, data-only packs in IndexedDB with precise errors, saves tied to their packs (SC-33) | M–L | W-04 |
+| **P9-08** | **Creator tools and a second world:** a pack checker, a map preview, a smaller second official world the bots play | L | P9-07 |
+| **P9-T** | **Tuning and acceptance:** long runs (20 years in the slow suite, 100 overnight: SC-29, D-P9i), a ruler style in Prototype G, design §18.9 as a scripted campaign, SC-01–44 accounted for, `docs/PHASE-9-VALIDATION.md` | M | all above |
 
 ## 6b. Phase 10 — "Ways In"
 
@@ -328,7 +328,7 @@ All of Phase 10 is **Provisional**: the owner adds to it after in-depth testing 
 6. **W-07,** then **W-08.** **W-09** if the owner chooses impassable terrain (D-W4), or before P7-04's "Avoid danger" routes.
 7. **B-01** early in Phase 7, then Phase 7 roughly in table order (P7-04 before P7-02; P7-05 before P7-06).
 8. **Phase 8** in the build order of §5 (re-specified 2026-11-20): P8-02, P8-03, P8-01, P8-04, P8-05, P8-06a, P8-06b, P8-07, P8-08, P8-T. W-09 is not needed: sieges and lords move on passable terrain.
-9. **Phase 9,** re-specified at its start, except its head: **P9-B1, P9-B2, P9-B3, P9-B4** first, in that order (owner, 2026-11-22), then the rest. P9-B1's phone measurement decides how far P9-B2 and P9-B3 can go. P9-L1 fits anywhere after the head.
+9. **Phase 9** (specified 2026-11-22): **P9-B1, P9-B2, P9-B3, P9-B4**, then **P9-L1**, **P9-01, P9-02, P9-03, P9-04, P9-05, P9-06, P9-07, P9-08**, **P9-T**. P9-B1's phone measurement decides how far P9-B2 and P9-B3 can go. Each task is a minor version from 3.1.0; P9-T ships 4.0.0. Whole-suite checkpoints after P9-B2, P9-B4, P9-04, P9-06 and P9-T.
 10. **Phase 10,** after Phase 9 ships 4.0.0, specified then with the owner's points from testing and players' feedback.
 
 ### Versions (owner decision D-V1)
@@ -348,6 +348,13 @@ All of Phase 10 is **Provisional**: the owner adds to it after in-depth testing 
 | v22 | P8-05 | Fief administration: garrisons, policies, prosperity, the holding's book |
 | v23 | P8-06a | Sieges (`c.sieges`) |
 | v24 | P8-07 | Nobles' opinions (of the player, the ruler and each other), debts, petitions and history |
+| v25 | P9-01 | Realm treasuries and books, offices, laws where they differ from the data |
+| v26 | P9-02 | Treaties, trust between realms |
+| v27 | P9-03 | Realms founded in play, the player's realm and policies, independent holdings |
+| v28 | P9-04 | Factions, demands, rebellions |
+| v29 | P9-05 | Armies, raids' effects |
+| v30 | P9-06 | Houses, marriages, deaths, heirs |
+| (v31) | P9-07 | A save's packs (if the manifest needs more than optional fields) |
 | later | Phase 9 | Re-specified at its start |
 
 **Device settings** (text size, zoom levels) need no schema step. They live in `crownless_settings`, whose loader already fills missing keys with defaults.
@@ -415,6 +422,10 @@ Decisions marked **blocking** must be made before the named task starts. The oth
 | **D-P9c** | How are big armies shared on the field? | **Owner, 2026-11-22: as in Mount & Blade.** Each side's share of the field is its share of the fighters (300 against 200 at a size of 100: 60 against 40, never fewer than 10 a side); both sides send reserves in as men fall, keeping that share; a fixed encounter (a lair, a story fight) keeps its waves | P9-B2 |
 | **D-P9d** | How large may a save be? | **Owner, 2026-11-22: up to 10 MB; never optimise for size.** The world-sim test's limit is 4 MB (from 100 KB), because the browser's `localStorage` holds about 5 MB; past that the save moves to IndexedDB (a task when a save nears 4 MB) | — |
 | **D-P9e** | How deep is command in battle? | **Owner, 2026-11-22: in layers, every one optional.** 1: no orders, a good plan chosen for you from your soldiers and the field; 2: orders by troop type (cavalry follow me, infantry charge, archers hold); 3: captains and placing each division; 4: live command on the field (positions, coordinated flanks, falling back before your archers loose). Defaults must make the first layer fun | P9-B4 |
+| **D-P9f** | Can realms that aren't in the data appear in play? | **Proposed: yes.** A realm founded by the player or an AI lord (P9-03) or by rebels (P9-04) is a realm like the data's, with a name its founder chooses, a banner colour from a palette, its capital's culture and troops, and P9-01's laws; every "is this a realm?" asks `realm.realms(c)` | P9-03 |
+| **D-P9g** | Do people die? | **Proposed:** lords may die rarely, of wounds after a lost battle; of old age only with a setting on (off by default); the player never dies unless a later setting says so (permadeath is in the backlog). No births or ageing (the founding-house model, design §19.3) | P9-06 |
+| **D-P9h** | Can capitals fall, and realms end? | **Proposed: yes, from P9-05.** A capital besieged by an army is the hardest siege; taken, its ruler moves the seat; a realm with no holdings left is gone, and its lords seek service elsewhere | P9-05 |
+| **D-P9i** | How long are the long runs? | **Proposed:** 20 simulated years in the slow suite, 100 years in an overnight script (`npm run long-run`), both with delegated rulers and no player | P9-T |
 
 ### D-P8b and D-P8c in full (owner, 2026-11-20: the defaults, accepted)
 
@@ -531,3 +542,4 @@ Decisions marked **blocking** must be made before the named task starts. The oth
 36. **P8-02 details settled at the check:** the domain event is `HoldingChanged` (the events are PascalCase, and nothing listens yet); the story lock is enforced in grants, sieges and the Debug panel, not in `setOwner`, so the existing tests that move Greywall before Q4 stay as they are; a village may have no seat only when its kingdom holds no fort or town (the W-04 test world's Iron Reach); the v19 migration's constants are for `sundered_realm`, and other worlds' saves keep only their owner overrides for `sanitize` to complete.
 37. **Owner, 2026-11-22: battles and the company at Mount & Blade's scale.** The company limit of 20 and the battle size of 40 are too small: the company should reach 150–200 (D-P9b) and a battle 100–150 at once, adjustable (D-P9a), with big armies sharing the field by size and both sides reinforcing from reserves (D-P9c). Three tasks open Phase 9, P9-B1 (measure on the phone and raise the battle size), P9-B2 (proportional battles) and P9-B3 (the bigger company), before armies (P9-05), which now needs them.
 38. **Owner, 2026-11-22: what else Phase 9 needs, and Phase 10.** The save budget goes: up to 10 MB is fine (D-P9d), the world-sim test now fails past 4 MB, where `localStorage` (about 5 MB) would force a move to IndexedDB. Command comes in four optional layers, from none to live command, with divisions and formations (D-P9e, P9-B4). The Phase 8 loose ends go to Phase 9 as P9-L1, for a living world. Onboarding, origin stories with their own opening quests, more origins and women soldiers go to a new Phase 10, "Ways In", which the owner will add to after testing.
+39. **Phase 9 specified (2026-11-22, the owner's request).** Every Phase 9 task now has a full specification in NEXT-TASKS (problem, build, layers, save, edges, out, tests, acceptance), from design §18–§20 and §23: realms with treasuries, laws and offices (P9-01), treaties and trust (P9-02), founding or taking a kingdom with ruling delegated (P9-03), rebellion and deposition (P9-04), armies with supply and capitals that can fall (P9-05), houses, marriage, deaths and succession (P9-06), modding (P9-07), creator tools and a second world (P9-08), and the acceptance with long runs (P9-T). Save steps v25–v30. Four proposed defaults for the owner: D-P9f (realms founded in play), D-P9g (deaths), D-P9h (capitals fall), D-P9i (the long runs). The slow files per task and five whole-suite checkpoints are in NEXT-TASKS's Phase 9 introduction.
