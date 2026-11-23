@@ -6,6 +6,8 @@
 // P8-07: the lords' changes of realm (per realm, and the grumbling first), refused summonses,
 // revocations, the friendships, rivalries and feuds that formed, land gained and lost, and the
 // riding lords each realm has at the end (none may empty).
+// P9-L1: lords ransomed by their own (and let go unpaid), men asked and lent between lords, claims
+// pressed for land-hungry lords, and sieges they rode to unsummoned.
 const { loadGame } = require('../tests/helpers/load');
 
 function run(seed, days = 180) {
@@ -22,12 +24,20 @@ function run(seed, days = 180) {
     for (const f of CL.realm.realms()) out[f.id] = Object.values(c.holdings).filter((h) => h.kind === 'fort' && h.controller === f.id).length;
     return out;
   };
-  const tally = { wars: 0, begun: 0, lifted: 0, surrendered: 0, stormed: 0, relieved: 0, abandoned: 0, grants: 0, fell: 0, problems: [], left: {}, joined: {}, grumbled: 0, refused: 0, revoked: 0, gained: 0, lost: 0 };
+  const tally = { loose: { ransomed: 0, letGo: 0, menAsked: 0, menLent: 0, pressed: 0, joined: 0 }, wars: 0, begun: 0, lifted: 0, surrendered: 0, stormed: 0, relieved: 0, abandoned: 0, grants: 0, fell: 0, problems: [], left: {}, joined: {}, grumbled: 0, refused: 0, revoked: 0, gained: 0, lost: 0 };
   // Counted as they happen (the diagnostic log keeps only the latest lines).
   const log = CL.diag.log;
   CL.diag.log = (level, msg, data) => {
     if (msg === 'Siege planned') tally.begun++;
     if (msg === 'Siege ended' && tally[data?.how] != null) tally[data.how]++;
+    // P9-L1
+    if (msg === 'Kin ransom') tally.loose[data.amount ? 'ransomed' : 'letGo']++;
+    if (msg === 'Men asked') {
+      tally.loose.menAsked++;
+      if (data.lent) tally.loose.menLent++;
+    }
+    if (msg === 'Claim pressed' && data.agreed) tally.loose.pressed++;
+    if (msg === 'Joins a siege unsummoned') tally.loose.joined++;
     if (msg === 'Lord changes realm') {
       tally.left[data.from] = (tally.left[data.from] || 0) + 1;
       tally.joined[data.to] = (tally.joined[data.to] || 0) + 1;
@@ -104,5 +114,7 @@ if (require.main === module) {
     const per = (o) => Object.entries(o).map(([f, n]) => `${f} ${n}`).join(', ') || 'none';
     console.log(`  land: ${r.won} of ${r.wereLandless} landless lords won land; ${r.lostAll} landed lords lost it all; the most of a realm's holdings one lord holds: ${r.most}%`);
     console.log(`  nobles: land gained ${r.gained}, lost ${r.lost}; ${r.grumbled} grumbled; left: ${per(r.left)}; joined: ${per(r.joined)}; summonses refused ${r.refused}; revoked ${r.revoked}; friends ${r.ties.friend}, rivals ${r.ties.rival}, feuds ${r.ties.feud}; riding lords: ${per(r.riders)}`);
+    const L = r.loose;
+    console.log(`  loose ends: ${L.ransomed} ransomed by their own, ${L.letGo} let go unpaid; men asked ${L.menAsked}, lent ${L.menLent}; claims pressed ${L.pressed}; sieges joined unsummoned ${L.joined}`);
   }
 }

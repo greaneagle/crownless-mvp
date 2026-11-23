@@ -50,8 +50,10 @@
     moveGap: 60, // days between changes of realm
     minRiders: 3, // a realm keeps at least this many riding lords
     revokeAfter: 2, // summonses refused in 60 days before a fief is revoked
-    petition: { goodwill: 10, chance: 0.12, gap: 5, days: 10, loan: 100, interest: 30, loanDays: 14, bandits: 80, reach: 25 },
+    petition: { goodwill: 10, chance: 0.12, gap: 5, days: 10, loan: 100, interest: 30, loanDays: 14, bandits: 80, reach: 25, escortPay: 1.5 },
     price: { base: 50, perPoint: 8 },
+    lend: { share: 0.25, gap: 30 }, // P9-L1: a quarter of a household lent to a friend or kinsman short of men, once in 30 days a pair
+    hungry: { gap: 30, reachDays: 2 }, // P9-L1: a landless lord presses a claim, or rides to a siege unsummoned, once in 30 days
   };
   // How each deed moves the doer in the eyes of the one it was done to.
   const DEEDS = {
@@ -84,9 +86,9 @@
   const FRIENDLY_DEEDS = ['fought_beside', 'relieved', 'freed', 'ransomed_kin', 'helped', 'backed', 'suggested'];
   const CLOSE = ['parent', 'child', 'sibling', 'spouse'];
   const NEEDS = ['land', 'coin', 'men', 'safety', 'standing'];
-  const KINDS = ['siege', 'relief', 'ride', 'back', 'summons'];
+  const KINDS = ['siege', 'relief', 'ride', 'back', 'summons', 'men'];
   const ANSWERS = ['obey', 'negotiate', 'delay', 'refuse'];
-  const PETITIONS = ['bandits', 'loan', 'ransom', 'claim', 'grant'];
+  const PETITIONS = ['bandits', 'loan', 'ransom', 'claim', 'grant', 'escort'];
   // Motives from the trait line: the first words that match decide (a few per lord, stable).
   const MOTIVES = [
     ['guard', /watchful|cautious|careful|wary|walls|border/],
@@ -117,7 +119,7 @@
   };
 
   /** @returns {any} */
-  const blank = () => ({ opinions: {}, debts: [], petitions: [], asks: {}, pledges: [], moved: {}, warned: {}, summons: null, nextPetition: 1, petitionAfter: 0, week: 0 });
+  const blank = () => ({ opinions: {}, debts: [], petitions: [], asks: {}, pledges: [], moved: {}, warned: {}, lent: {}, pressed: {}, summons: null, nextPetition: 1, petitionAfter: 0, week: 0 });
   /** @returns {any} */
   const state = (c) => (c.nobles ||= blank());
 
@@ -403,6 +405,13 @@
       // Summoned to war, a lord expects to ride: the road counts for less than in a favour asked.
       const pts = f.days < 0.6 ? 5 : -Math.round(Math.min(20, f.d / (ask.kind === 'summons' ? 12 : 8)) * k);
       say(`${target ? `${target.name} is` : by === PLAYER ? 'You are' : `${asker} is`} ${f.words}${has(c, pid, 'guard') && pts < 0 ? `, and ${he(c, pid)} guards ${his(c, pid)} lands` : ''}`, pts);
+    }
+    if (ask.kind === 'men') {
+      // P9-L1: men lent to a friend or kinsman: their own ranks first.
+      if (top?.need === 'men') {
+        say(`${cap(his(c, pid))} own ranks are thin`, -25);
+        temporary = true;
+      } else say(`It costs ${him(c, pid)} men`, -5);
     }
     if (military && ask.kind !== 'summons' && top?.need === 'men') {
       say(`${cap(his(c, pid))} ranks are thin`, -25);
@@ -795,6 +804,8 @@
         CL.fiefs?.offer(c, sid, null);
       }
     }
+    askMen(c, pid); // P9-L1: short of men, a friend or kinsman is asked
+    seekLand(c, pid); // P9-L1: landless, a claim pressed or a siege joined unsummoned
     // Leaving: a warning first, then a week later.
     const low = opinion(c, pid, ruler) < RULES.leaveBelow;
     if (!low) {
@@ -816,6 +827,83 @@
     changeRealm(c, pid, to);
   }
 
+  // ---- Between lords: men and land (P9-L1) ----
+
+  /**
+   * A lord short of men asks one friend or kinsman a week (by the model, `consider` with kind `men`):
+   * obeyed, a quarter of the giver's household rides over (no more than the asker lacks). Once in 30
+   * days a pair; not across a war. Returns the number lent, or null when nobody was asked.
+   */
+  function askMen(c, pid) {
+    const n = state(c);
+    const p = c.people[pid];
+    const q = CL.lords?.partyOf(c, pid);
+    if (!q || topNeed(c, pid)?.need !== 'men') return null;
+    const lack = Math.max(0, (CL.lords.sizeFor(c, pid) || 0) - troopCount(q.troops));
+    const recent = (id) => n.lent[`${pid}>${id}`] != null && c.day - n.lent[`${pid}>${id}`] < RULES.lend.gap;
+    const givers = [...new Set([...p.kin.map((k) => k.person), ...ties(c, pid, 'friend')])]
+      .filter((id) => id !== PLAYER && c.people[id]?.status === 'free' && !R().rules(id, c) && CL.lords.partyOf(c, id) && R().relation(c, c.people[id].realm, p.realm) !== 'war' && !recent(id))
+      .sort((a, b) => opinion(c, b, pid) - opinion(c, a, pid) || (a < b ? -1 : 1));
+    const giver = givers[0];
+    if (!giver || !lack) return null;
+    n.lent[`${pid}>${giver}`] = Math.floor(c.day);
+    const r = consider(c, giver, { by: pid, kind: 'men' });
+    if (r.answer !== 'obey') {
+      CL.diag.log('info', 'Men asked', { lord: pid, of: giver, answer: r.answer, lent: 0 });
+      return 0;
+    }
+    const gq = CL.lords.partyOf(c, giver);
+    const list = A().expand(gq.troops);
+    const k = Math.min(lack, Math.floor(list.length * RULES.lend.share));
+    const moved = list.slice(list.length - k);
+    gq.troops = A().collapse(list.slice(0, list.length - k));
+    for (const t of moved) q.troops[t] = (q.troops[t] || 0) + 1;
+    note(c, pid, giver, 'helped', { kin: false });
+    CL.diag.log('info', 'Men asked', { lord: pid, of: giver, answer: 'obey', lent: k });
+    return k;
+  }
+
+  /**
+   * A landless lord hungry for land (their top need): a claim on a fort of a realm at war with theirs is
+   * pressed, if their ruler thinks well enough of them (as yours, P8-08); and they ride unsummoned to a
+   * siege of their realm that could win them land: the one at their claim, else the nearest within two
+   * days. Once in 30 days. Returns what they did, or null.
+   */
+  function seekLand(c, pid) {
+    const n = state(c);
+    const p = c.people[pid];
+    if (R().fiefsOf(pid, c).length || topNeed(c, pid)?.need !== 'land') return null;
+    if (n.pressed[pid] != null && c.day - n.pressed[pid] < RULES.hungry.gap) return null;
+    const ruler = R().rulerOf(p.realm, c);
+    let did = null;
+    const claim = Object.keys(c.holdings || {})
+      .map((sid) => ({ sid, k: c.holdings[sid].claims.find((x) => x.by === pid) }))
+      .find(({ sid, k }) => k && c.holdings[sid].kind !== 'village' && R().relation(c, p.realm, c.holdings[sid].controller) === 'war' && !R().locked(c, sid) && !(k.pressed != null && c.day < k.pressed));
+    if (claim) {
+      n.pressed[pid] = Math.floor(c.day);
+      const agreed = opinion(c, ruler, pid) >= 0;
+      if (agreed) claim.k.pressed = Math.floor(c.day) + (CL.claims?.RULES.pressDays || 30);
+      CL.diag.log('info', 'Claim pressed', { lord: pid, sid: claim.sid, agreed });
+      did = agreed ? 'pressed' : 'refused';
+    }
+    const q = CL.lords?.partyOf(c, pid);
+    const all = CL.sieges?.list(c) || [];
+    if (!q || all.some((s) => s.lords.includes(pid) || s.relief.includes(pid))) return did;
+    const open = all.filter((s) => s.realm === p.realm && s.by !== PLAYER && !s.lords.some((o) => tie(c, pid, o) === 'feud'));
+    const mineFirst = open.find((s) => R().claimsOn(s.sid, c).some((k) => k.by === pid));
+    const near = open
+      .map((s) => ({ s, f: place(s.sid) ? farness(c, pid, place(s.sid).mapX, place(s.sid).mapY) : null }))
+      .filter((x) => x.f && x.f.days <= RULES.hungry.reachDays)
+      .sort((a, b) => a.f.d - b.f.d)[0]?.s;
+    const s = mineFirst || near;
+    if (!s) return did;
+    n.pressed[pid] = Math.floor(c.day);
+    s.lords.push(pid);
+    Object.assign(q, { intent: s.phase === 'encircled' ? 'besiege' : 'gather', siegeId: s.id });
+    CL.diag.log('info', 'Joins a siege unsummoned', { lord: pid, sid: s.sid });
+    return 'joined';
+  }
+
   // ---- Petitions to the player ----
 
   /** The petition a lord would make by their top need, or null: { kind, sid?, kin?, amount? }. */
@@ -831,6 +919,9 @@
       if (n.need === 'coin') {
         const held = p.kin.map((k) => (c.prisoners || []).find((x) => x.lord === k.person && x.by !== PLAYER)).find(Boolean);
         if (held) return { kind: 'ransom', kin: held.lord, amount: CL.lords.ransomOf(held) };
+        // P9-L1: short of coin with a market of their own: escort their caravan to a town of their realm.
+        const esc = n.score >= 0.45 ? escortFor(c, pid) : null;
+        if (esc) return esc;
         return { kind: 'loan', amount: RULES.petition.loan };
       }
       if (n.need === 'land') {
@@ -841,6 +932,19 @@
       }
     }
     return null;
+  }
+
+  /** P9-L1: a lord's caravan to escort: from a fief with a market to the nearest other town of their realm. */
+  function escortFor(c, pid) {
+    const realm = c.people[pid].realm;
+    const from = R().fiefsOf(pid, c).find((sid) => place(sid)?.services.includes('trade') && c.holdings[sid].controller === realm);
+    if (!from || !CL.contracts?.escortPay) return null;
+    const a = place(from);
+    const to = Object.values(CL.content.table('settlements'))
+      .filter((s) => s.type === 'town' && s.id !== from && c.holdings?.[s.id]?.controller === realm)
+      .sort((x, y) => CL.world.mapDist(a.mapX, a.mapY, x.mapX, x.mapY) - CL.world.mapDist(a.mapX, a.mapY, y.mapX, y.mapY))[0];
+    if (!to) return null;
+    return { kind: 'escort', sid: from, to: to.id, amount: Math.round(CL.contracts.escortPay(c, from, to.id) * RULES.petition.escortPay) };
   }
 
   /** Open a lord's petition to the player (one at a time). */
@@ -862,6 +966,7 @@
     if (x.kind === 'loan') return `lend ${him(c, pid)} ${x.amount} crowns, to be repaid ${x.amount + RULES.petition.interest} in ${RULES.petition.loanDays} days`;
     if (x.kind === 'ransom') return `pay the ${x.amount}-crown ransom of ${R().titled(x.kin, c)}`;
     if (x.kind === 'claim') return `back ${his(c, pid)} claim to ${placeName(x.sid)}`;
+    if (x.kind === 'escort') return `escort ${his(c, pid)} caravan from ${placeName(x.sid)} to ${placeName(x.to)}, for ${x.amount} crowns`;
     return `support ${him(c, pid)} for the grant of ${placeName(x.sid)}`;
   }
 
@@ -895,6 +1000,14 @@
       closePetition(c, x, 'declined');
       return { ok: true, text: `You turn down ${name}'s petition.` };
     }
+    if (x.kind === 'escort') {
+      if (x.accepted) return { ok: false, text: 'You are on the road with it already.' };
+      const r = CL.contracts.forLord(c, x.sid, x.to, { gold: x.amount, days: RULES.petition.days, petition: x.id });
+      if (!r.ok) return { ok: false, text: `${r.reason}.` };
+      x.accepted = true;
+      x.until = Math.max(x.until, Math.ceil(c.contract.deadline) + 1); // the contract's deadline decides it
+      return { ok: true, text: `You take ${name}'s caravan from ${placeName(x.sid)} to ${placeName(x.to)}: ${x.amount} crowns on arrival.` };
+    }
     if (x.kind === 'bandits') {
       x.accepted = true;
       return { ok: true, text: `You promise ${name} to clear the bandits about ${placeName(x.sid)} by day ${CL.party.dayNumber(x.until)}.` };
@@ -918,6 +1031,14 @@
     const kind = x.kind;
     closePetition(c, x, 'backed');
     return { ok: true, text: kind === 'grant' ? `You will speak for ${name} for ${placeName(x.sid)}.` : `You back ${name}'s claim to ${placeName(x.sid)}.` };
+  }
+
+  /** P9-L1: a lord's escort ended (js/contracts.js): paid on arrival, the petition is done; failed, it lapses. */
+  function onContract(c, k, status) {
+    const x = state(c).petitions.find((y) => y.id === k.petition);
+    if (!x) return;
+    if (status === 'collected') closePetition(c, x, 'done');
+    else closePetition(c, x, 'lapsed');
   }
 
   /** A battle won: bandits beaten near a petitioner's lands (a lord beaten by you is noted in js/lords.js). */
@@ -1074,8 +1195,8 @@
     n.debts = (Array.isArray(x.debts) ? x.debts : []).filter((y) => y && who(y.from) && who(y.to) && ['loan', 'freed', 'help'].includes(y.kind) && num(y.day)).slice(-40).map((y) => ({ from: y.from, to: y.to, kind: y.kind, day: y.day, ...(y.kind === 'loan' ? { amount: Math.max(0, Math.floor(num(y.amount) ? y.amount : 0)), due: num(y.due) ? y.due : s.day } : {}) }));
     const pet = (Array.isArray(x.petitions) ? x.petitions : [])[0];
     if (pet && s.people[pet.lord] && PETITIONS.includes(pet.kind) && num(pet.until) && Number.isInteger(pet.id)) {
-      const ok = (pet.kind === 'loan' || pet.kind === 'ransom' ? num(pet.amount) : true) && (pet.kind === 'ransom' ? Boolean(s.people[pet.kin]) : true) && (['bandits', 'claim', 'grant'].includes(pet.kind) ? Boolean(s.holdings?.[pet.sid]) : true);
-      if (ok) n.petitions.push({ id: pet.id, lord: pet.lord, kind: pet.kind, ...(pet.sid ? { sid: pet.sid } : {}), ...(pet.kin ? { kin: pet.kin } : {}), ...(num(pet.amount) ? { amount: Math.floor(pet.amount) } : {}), day: num(pet.day) ? pet.day : s.day, until: pet.until, accepted: pet.accepted === true, ...(KINDS.includes(pet.forAsk) ? { forAsk: pet.forAsk } : {}) });
+      const ok = (['loan', 'ransom', 'escort'].includes(pet.kind) ? num(pet.amount) : true) && (pet.kind === 'ransom' ? Boolean(s.people[pet.kin]) : true) && (['bandits', 'claim', 'grant', 'escort'].includes(pet.kind) ? Boolean(s.holdings?.[pet.sid]) : true) && (pet.kind === 'escort' ? Boolean(place(pet.to)) : true);
+      if (ok) n.petitions.push({ id: pet.id, lord: pet.lord, kind: pet.kind, ...(pet.sid ? { sid: pet.sid } : {}), ...(pet.kind === 'escort' ? { to: pet.to } : {}), ...(pet.kin ? { kin: pet.kin } : {}), ...(num(pet.amount) ? { amount: Math.floor(pet.amount) } : {}), day: num(pet.day) ? pet.day : s.day, until: pet.until, accepted: pet.accepted === true, ...(KINDS.includes(pet.forAsk) ? { forAsk: pet.forAsk } : {}) });
     }
     for (const [pid, a] of Object.entries(x.asks && typeof x.asks === 'object' ? x.asks : {})) {
       if (!s.people[pid] || !a || !KINDS.includes(a.kind) || !ANSWERS.includes(a.answer) || !num(a.until) || !num(a.day)) continue;
@@ -1085,7 +1206,11 @@
       .filter((y) => y && s.people[y.lord]?.status === 'free' && [...KINDS, 'backLord'].includes(y.kind) && num(y.from) && num(y.until) && y.until > s.day)
       .slice(0, 30)
       .map((y) => ({ lord: y.lord, kind: y.kind, by: PLAYER, sid: s.holdings?.[y.sid] ? y.sid : null, grant: s.holdings?.[y.grant] ? y.grant : null, from: y.from, until: y.until, ...(y.begun === true ? { begun: true } : {}) }));
-    for (const k of ['moved', 'warned']) for (const [pid, day] of Object.entries(x[k] && typeof x[k] === 'object' ? x[k] : {})) if (s.people[pid] && num(day)) n[k][pid] = Math.floor(day);
+    for (const k of ['moved', 'warned', 'pressed']) for (const [pid, day] of Object.entries(x[k] && typeof x[k] === 'object' ? x[k] : {})) if (s.people[pid] && num(day)) n[k][pid] = Math.floor(day);
+    for (const [pair, day] of Object.entries(x.lent && typeof x.lent === 'object' ? x.lent : {})) {
+      const [a, b] = pair.split('>');
+      if (s.people[a] && s.people[b] && num(day) && s.day - day < RULES.lend.gap) n.lent[pair] = Math.floor(day);
+    }
     const m = x.summons;
     if (m && R().isRealm(m.realm) && s.holdings?.[m.sid] && Number.isInteger(m.siegeId) && num(m.day)) n.summons = { realm: m.realm, sid: m.sid, siegeId: m.siegeId, day: m.day, answered: m.answered === true };
     n.nextPetition = Number.isInteger(x.nextPetition) && x.nextPetition > 0 ? x.nextPetition : 1;
@@ -1136,7 +1261,11 @@
     destination,
     changeRealm,
     weekly,
+    askMen,
+    seekLand,
     petitionFor,
+    escortFor,
+    onContract,
     openPetition,
     petitionText,
     petition,

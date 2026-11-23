@@ -555,9 +555,13 @@
           if (!['granted', 'conquest', 'old'].includes(k.kind)) continue;
           const claim = { by: k.by, realm: isKingdom(k.realm) ? k.realm : null, since: num(k.since, 0), kind: k.kind };
           // P8-08 (optional): your policies kept with it, your liege pressing it, when you last asked, a grant offered once.
+          if (typeof k.pressed === 'number' && Number.isFinite(k.pressed)) claim.pressed = Math.floor(k.pressed); // P9-L1: a lord's, pressed too
           if (k.by === PLAYER) {
             if (k.policies && typeof k.policies === 'object') claim.policies = CL.fiefs ? CL.fiefs.keptPolicies(k.policies) : k.policies;
-            for (const f of ['pressed', 'asked']) if (typeof k[f] === 'number' && Number.isFinite(k[f])) claim[f] = Math.floor(k[f]);
+            // P9-L1: a term of service for it (its realm, start, end, battles won), or when it may be offered again.
+            for (const f of ['asked', 'serveFrom', 'serveUntil', 'serveWins', 'serveAgain']) if (typeof k[f] === 'number' && Number.isFinite(k[f])) claim[f] = Math.floor(k[f]);
+            if (isKingdom(k.serveRealm) && claim.serveUntil != null) claim.serveRealm = k.serveRealm;
+            else for (const f of ['serveFrom', 'serveUntil', 'serveWins']) delete claim[f];
             if (k.offered === true) claim.offered = true;
           }
           h.claims.push(claim);

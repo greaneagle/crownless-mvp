@@ -1,5 +1,22 @@
 # Crownless — Release Notes
 
+## v3.6.0 — The lords' loose ends (P9-L1) · 2026-11-23
+
+### New
+- **Lords ransom their own.** A lord held by another crown is bought back by their kin (or, after a month, their ruler) from the treasuries of their fiefs, and remembers who held them. After two months unpaid, the captors let them go.
+- **Lords lend each other men.** A lord whose ranks are thin asks a kinsman or a friend, who answers as lords answer you; kin of one crown usually help.
+- **Land-hungry lords.** A landless lord asks the crown to press their claim, and rides unsummoned to a siege that could win them land. A claim the crown presses leads its next siege.
+- **A new petition:** a lord short of coin with a market may ask you to escort their own caravan to a town of their realm, for half again a board escort's pay.
+- **Serve for it:** on the Claims tab, at peace, instead of buying a lost fort back: win four battles against the holding crown's enemies within 30 days, without touching its people, and it is handed back.
+
+### Fixed
+- Accepting a lord's petition to pay a ransom for their kin no longer fails.
+
+### Under the hood
+- No save change: the new fields are optional and kept in saves.
+- `npm run landed` reports the loose ends: ransoms, men lent, claims pressed and sieges joined.
+- **Tests:** 845 fast Node tests, all passing. Slow `landed` and `prototype-f`, passing; the others not run. Browser `nobles` and `claims`, passing at both sizes; the full suite not run.
+
 ## v3.5.0 — The walls at the world's scale (P9-B5) · 2026-11-22
 
 ### Changed

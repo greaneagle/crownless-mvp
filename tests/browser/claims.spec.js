@@ -46,6 +46,31 @@ test('Claims: Debug → Prototype D start; the fort falls; the Claims tab, and b
   expect(await game(page, (CL) => [CL.campaign.gold, CL.realm.fiefsOf('player', CL.campaign).sort()])).toEqual([200, ['ashby', 'westholt_castle']]);
 });
 
+test('Claims: P9-L1 serve for it: with no money, take the season of service from the Claims tab', async ({ page }) => {
+  await open(page);
+  await newGame(page);
+  await toMap(page);
+  await debug(page, '[data-cheat="prototypeD"]');
+  await waitMode(page, 'map');
+  // Test setup: the fort taken while you are away, then peace, and an empty purse.
+  await game(page, (CL) => {
+    const c = CL.campaign;
+    CL.sieges.take(c, c.sieges[0], 'stormed');
+    CL.realm.setRelation(c, 'valedorn', 'hrothmark', 'peace', 'test');
+    c.gold = 0;
+  });
+  await realmTab(page, 'fief');
+  const card = page.locator('#realmScreen .claimCard[data-claim="westholt_castle"]');
+  await expect(card.locator('[data-act="buy"]')).toBeDisabled();
+  const serve = card.locator('[data-act="serve"]');
+  await serve.scrollIntoViewIfNeeded();
+  await expect(serve).toBeEnabled();
+  await press(page, serve);
+  await expect(page.locator('#message')).toContainText('win 4 battles against their enemies');
+  await expect(page.locator('#realmScreen .claimCard[data-claim="westholt_castle"]')).toContainText('0 of 4 battles won against their enemies');
+  await expect(page.locator('#realmScreen .claimCard[data-claim="westholt_castle"] [data-act="serve"]')).toBeDisabled();
+});
+
 test('Claims: hand a fief back from the Fief tab, after a word of what it means', async ({ page }) => {
   await open(page);
   await newGame(page);

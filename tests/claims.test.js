@@ -301,3 +301,46 @@ test('saves: claims with their policies, pressing and asking; a held castellan; 
   assert.deepEqual(plain(fk.policies), { garrison: 'normal', tax: 'heavy', food: 14, repairs: true });
   assert.equal(fixed.holdings.westholt_castle.heldCastellan ?? null, null);
 });
+
+test('P9-L1 serve for it: at peace, four battles won against its holder’s enemies in 30 days hand the fort back; an attack or the season’s end breaks it off', () => {
+  const { CL, c, C, R } = landed();
+  fall(CL, c, 'westholt_castle', 'hrothmark');
+  R.setRelation(c, 'valedorn', 'hrothmark', 'peace', 'test');
+  c.gold = 0; // no money needed
+  assert.equal(C.canBuyBack(c, 'westholt_castle').ok, false);
+  const can = C.canServeBack(c, 'westholt_castle');
+  assert.equal(can.ok, true, can.why);
+  const r = C.serveBack(c, 'westholt_castle');
+  assert.match(r.text, /win 4 battles against their enemies by day \d+, and never raise a hand against their people\./);
+  assert.match(C.canServeBack(c, 'westholt_castle').why, /^You serve the Kingdom of Hrothmark for it until day \d+: 0 of 4 battles won$/);
+  assert.match(C.card(c, 'westholt_castle').lines.join(' '), /0 of 4 battles won against their enemies/);
+  // Wins against Reavers or Hrothmark's enemies count; a loss or a friend of theirs doesn't.
+  C.afterBattle(c, { win: true, kind: 'bandit', faction: 'neutral' });
+  C.afterBattle(c, { win: false, kind: 'bandit', faction: 'neutral' });
+  C.afterBattle(c, { win: true, kind: 'lord', faction: 'valedorn' });
+  assert.equal(C.claimOf(c, 'westholt_castle').serveWins, 1);
+  // Saved mid-service.
+  const back = CL.save.sanitize(plain(c));
+  assert.equal(back.holdings.westholt_castle.claims.find((k) => k.by === 'player').serveWins, 1);
+  for (let i = 0; i < 3; i++) C.afterBattle(c, { win: true, kind: 'bandit', faction: 'neutral' });
+  assert.deepEqual(plain(R.fiefsOf('player', c).sort()), ['ashby', 'westholt_castle'], 'handed back, its village with it');
+  assert.equal(c.holdings.westholt_castle.sovereign, 'valedorn');
+  assert.deepEqual(plain(R.invariants(c)), []);
+  // Again, broken off by an attack on their people; then not offered for 60 days.
+  const two = landed();
+  fall(two.CL, two.c, 'westholt_castle', 'hrothmark');
+  two.R.setRelation(two.c, 'valedorn', 'hrothmark', 'peace', 'test');
+  two.C.serveBack(two.c, 'westholt_castle');
+  two.C.onAttack(two.c, 'hrothmark');
+  assert.equal(two.C.claimOf(two.c, 'westholt_castle').serveUntil, undefined);
+  assert.match(two.C.canServeBack(two.c, 'westholt_castle').why, /won't offer it again before day/);
+  // And the season running out.
+  const three = landed();
+  fall(three.CL, three.c, 'westholt_castle', 'hrothmark');
+  three.R.setRelation(three.c, 'valedorn', 'hrothmark', 'peace', 'test');
+  three.C.serveBack(three.c, 'westholt_castle');
+  three.c.day += 31;
+  three.C.tick(three.c);
+  assert.equal(three.C.claimOf(three.c, 'westholt_castle').serveUntil, undefined);
+  assert.equal(three.R.holderOf('westholt_castle', three.c) === 'player', false);
+});

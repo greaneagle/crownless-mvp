@@ -788,6 +788,7 @@
     if (e.kind !== 'party' || e.hostile || !e.t.faction || e.t.kind === 'bandit') return;
     CL.realm.adjust(c, e.t.faction, e.t.kind === 'lord' ? LORD_ATTACK : CL.realm.REP.attack, `attacked ${e.t.id}`);
     CL.allegiance?.onAttack(c, e.t.faction); // attacking those you serve breaks the contract or oath (P8-04)
+    CL.claims?.onAttack(c, e.t.faction); // and a service for a fort (P9-L1)
   }
 
   /** Fight the open encounter. `plan`: the setup chosen on the preparation screen (V2-07), if any. */

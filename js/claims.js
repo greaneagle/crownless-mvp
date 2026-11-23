@@ -28,6 +28,7 @@
     askGap: 7, // days between asking your liege about one claim
     pressDays: 30, // how long a pressed claim leads the realm's sieges
     grudge: -10, // a ruler who thinks less of you than this won't back your claim
+    serve: { days: 30, wins: 4, again: 60 }, // P9-L1: a fort back for a term of service: battles won against its holder's enemies
   };
   const LOSSES = ['stormed', 'surrendered', 'revoked', 'released', 'defected', 'expelled', 'handed'];
 
@@ -131,6 +132,70 @@
     return { ok: true, why: '', price };
   }
 
+  /**
+   * P9-L1: serve the realm holding it for it, instead of paying: within 30 days, win four battles
+   * against its enemies (Reavers, or a realm at war with it) and never attack its people. Offered as
+   * buying back is (sworn to a liege at peace with it), with no price; broken off, not again for 60 days.
+   */
+  function canServeBack(c, sid) {
+    const k = claimOf(c, sid);
+    const buy = canBuyBack(c, sid);
+    const S = RULES.serve;
+    if (!k) return { ok: false, why: buy.why };
+    if (k.serveUntil != null) return { ok: false, why: `You serve the ${factionName(k.serveRealm)} for it until day ${CL.party.dayNumber(k.serveUntil)}: ${k.serveWins || 0} of ${S.wins} battles won` };
+    if (k.serveAgain != null && c.day < k.serveAgain) return { ok: false, why: `They won't offer it again before day ${CL.party.dayNumber(k.serveAgain)}` };
+    // The same conditions as buying it back, but money.
+    if (!buy.ok && !/^It costs /.test(buy.why)) return { ok: false, why: buy.why };
+    return { ok: true, why: '' };
+  }
+
+  /** Take the term of service for it. */
+  function serveBack(c, sid) {
+    const can = canServeBack(c, sid);
+    if (!can.ok) return { ok: false, text: can.why };
+    const k = claimOf(c, sid);
+    const f = R().holding(sid, c).controller;
+    Object.assign(k, { serveRealm: f, serveFrom: Math.floor(c.day), serveUntil: Math.floor(c.day) + RULES.serve.days, serveWins: 0 });
+    return { ok: true, text: `The ${factionName(f)} will hand ${placeName(sid)} back to you for a season's service: win ${RULES.serve.wins} battles against their enemies by day ${CL.party.dayNumber(k.serveUntil)}, and never raise a hand against their people.` };
+  }
+
+  /** The service ends: done (the fort handed back, as bought), or broken off. */
+  function endService(c, sid, done, why = '') {
+    const k = claimOf(c, sid);
+    if (!k || k.serveUntil == null) return null;
+    const f = k.serveRealm;
+    for (const f of ['serveRealm', 'serveFrom', 'serveUntil', 'serveWins']) delete k[f];
+    if (!done) {
+      k.serveAgain = Math.floor(c.day) + RULES.serve.again;
+      CL.ui.message(`Your service to the ${factionName(f)} for ${placeName(sid)} is broken off${why ? `: ${why}` : ''}.`);
+      return { done: false };
+    }
+    const liegeF = liege(c);
+    R().transfer(c, sid, { controller: liegeF, sovereign: liegeF, holder: PLAYER, willing: true, reason: 'served for' });
+    restoreVillages(c, sid);
+    CL.news?.record(c, 'fief_granted', { place: sid, text: `The ${factionName(f)} hand ${placeName(sid)} back to ${c.character?.name || 'its old holder'} for a season's service.` });
+    CL.ui.message(`Your service is done: the ${factionName(f)} hand ${placeName(sid)} back. It is yours again, held of the ${factionName(liegeF)}.`);
+    return { done: true };
+  }
+
+  /** A battle fought (js/encounter.js): a win against the realm's enemies counts for your service. */
+  function afterBattle(c, { win, faction, kind }) {
+    if (!win) return;
+    for (const { sid, claim: k } of mine(c)) {
+      if (k.serveUntil == null) continue;
+      const enemy = kind === 'bandit' || faction === R().outlaws() || (R().isRealm(faction) && R().relation(c, k.serveRealm, faction) === 'war');
+      if (!enemy) continue;
+      k.serveWins = (k.serveWins || 0) + 1;
+      if (k.serveWins >= RULES.serve.wins) endService(c, sid, true);
+      else CL.ui.message(`A battle for the ${factionName(k.serveRealm)}: ${k.serveWins} of ${RULES.serve.wins} for ${placeName(sid)}.`);
+    }
+  }
+
+  /** You attacked a realm's people (js/parties.js): a service to them is broken off. */
+  function onAttack(c, f) {
+    for (const { sid, claim: k } of mine(c)) if (k.serveUntil != null && k.serveRealm === f) endService(c, sid, false, 'you attacked their people');
+  }
+
   /** Buy it back: the realm holding it sells it to your liege, with you as its holder, and its villages you claimed. */
   function buyBack(c, sid) {
     const can = canBuyBack(c, sid);
@@ -191,11 +256,21 @@
       if (h.sovereign === f && h.holder === R().rulerOf(f, c)) press.push('Your liege holds it: the crown will offer it to you as a grant.');
     }
     if (k.pressed != null && c.day < k.pressed) press.push(`Your liege presses it in their war until day ${CL.party.dayNumber(k.pressed)}.`);
-    return { title: placeName(sid), lines: [...lines, ...press], liege: canAskLiege(c, sid), buy: canBuyBack(c, sid) };
+    if (k.serveUntil != null) press.push(`You serve the ${factionName(k.serveRealm)} for it: ${k.serveWins || 0} of ${RULES.serve.wins} battles won against their enemies, by day ${CL.party.dayNumber(k.serveUntil)}.`);
+    return { title: placeName(sid), lines: [...lines, ...press], liege: canAskLiege(c, sid), buy: canBuyBack(c, sid), serve: canServeBack(c, sid) };
   }
 
   /** Day by day: a claim on land your liege's crown holds becomes a grant offered to you. */
   function tick(c) {
+    // P9-L1: a service for a fort runs out, or can no longer be done (the conditions of buying it back).
+    for (const { sid, claim: k } of mine(c)) {
+      if (k.serveUntil == null) continue;
+      if (c.day >= k.serveUntil) endService(c, sid, false, 'the season ran out');
+      else {
+        const h = c.holdings[sid];
+        if (h.controller !== k.serveRealm || !liege(c) || R().relation(c, liege(c), k.serveRealm) === 'war') endService(c, sid, false, 'things have changed');
+      }
+    }
     const f = liege(c);
     if (!f || !CL.fiefs) return;
     for (const { sid } of mine(c)) {
@@ -242,5 +317,5 @@
     return { fort, village, enemy, siege: s?.sid || null, mill: CL.business.get(c)?.place || null };
   }
 
-  CL.claims = { RULES, LOSSES, prototypeD, mine, claimOf, howWords, backing, canAskLiege, askLiege, pressedFor, canBuyBack, buyBack, restoreVillages, onRetake, handBack, card, tick };
+  CL.claims = { RULES, LOSSES, prototypeD, mine, claimOf, howWords, backing, canAskLiege, askLiege, pressedFor, canBuyBack, buyBack, canServeBack, serveBack, endService, afterBattle, onAttack, restoreVillages, onRetake, handBack, card, tick };
 })(typeof window !== 'undefined' ? window : globalThis);

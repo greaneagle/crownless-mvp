@@ -492,3 +492,115 @@ test('saves: the nobles round-trip; junk is repaired; v23 migrates the deeds; 2.
     assert.equal(JSON.stringify(again.campaign), JSON.stringify(G.campaign), `${f.file}: stable`);
   }
 });
+
+// ---- P9-L1: the lords' loose ends ----
+
+test('P9-L1 men: a lord short of men asks kin by the model; a quarter rides over; once in 30 days a pair', () => {
+  const { c, N, L, id } = world();
+  const tancred = id('tancred_greymantle');
+  const hamon = id('hamon_greymantle');
+  L.partyOf(c, tancred).troops = { footman: 3 };
+  const giver = L.partyOf(c, hamon);
+  const before = Object.values(giver.troops).reduce((a, b) => a + b, 0);
+  assert.equal(N.topNeed(c, tancred).need, 'men');
+  const r = N.consider(c, hamon, { by: tancred, kind: 'men' });
+  assert.equal(r.answer, 'obey', N.reasonLine(r));
+  assert.match(N.reasonLine(r), /It costs him men/);
+  const lent = N.askMen(c, tancred);
+  assert.equal(lent, Math.min(Math.floor(before / 4), L.sizeFor(c, tancred) - 3));
+  assert.equal(Object.values(giver.troops).reduce((a, b) => a + b, 0), before - lent);
+  assert.equal(Object.values(L.partyOf(c, tancred).troops).reduce((a, b) => a + b, 0), 3 + lent);
+  assert.ok(N.opinion(c, tancred, hamon) > 10, 'thanks');
+  // Thin again at once: not the same pair within 30 days (nobody else to ask: none).
+  L.partyOf(c, tancred).troops = { footman: 3 };
+  assert.equal(N.askMen(c, tancred), null);
+  // A giver short of men themselves: not now.
+  c.nobles.lent = {};
+  giver.troops = { footman: 2 };
+  assert.equal(N.consider(c, hamon, { by: tancred, kind: 'men' }).answer, 'delay');
+  assert.equal(N.askMen(c, tancred), 0);
+});
+
+test('P9-L1 land-hungry: a landless lord has their claim pressed, rides to a siege unsummoned, and the realm aims there first', () => {
+  const { c, N, R, S, L, id } = world();
+  const tancred = id('tancred_greymantle');
+  R.setRelation(c, 'valedorn', 'aurelian', 'war', 'test');
+  R.addClaim(c, 'castra_nova', { by: tancred, realm: 'valedorn', kind: 'old' });
+  const ruler = R.rulerOf('valedorn', c);
+  assert.ok(N.opinion(c, ruler, tancred) >= 0);
+  // No siege yet: the claim pressed.
+  assert.equal(N.seekLand(c, tancred), 'pressed');
+  const k = c.holdings.castra_nova.claims.find((x) => x.by === tancred);
+  assert.equal(k.pressed, Math.floor(c.day) + 30);
+  assert.equal(N.seekLand(c, tancred), null, 'once in 30 days');
+  // A siege of his realm at his claim: he rides to it unsummoned.
+  c.nobles.pressed = {};
+  k.pressed = 0;
+  const s = siege(c, 'castra_nova', 'valedorn');
+  assert.equal(N.seekLand(c, tancred), 'joined');
+  assert.ok(s.lords.includes(tancred));
+  assert.equal(L.partyOf(c, tancred).siegeId, s.id);
+  // A pressed claim leads the realm's next siege, before a claim merely held.
+  c.sieges = [];
+  R.addClaim(c, 'tessaro', { by: id('alys_ardane'), realm: 'valedorn', kind: 'old' });
+  k.pressed = Math.floor(c.day) + 30;
+  for (const pid of Object.keys(c.people)) if (L.partyOf(c, pid) && c.people[pid].realm === 'valedorn') Object.assign(L.partyOf(c, pid), { x: 110, y: 100 });
+  const plan = S.plan(c, 'valedorn');
+  if (plan) assert.equal(plan.sid, 'castra_nova');
+  // Saved: the lord's pressed claim and the pause.
+  assert.equal(R.holding('castra_nova', c).claims.find((x) => x.by === tancred).pressed, k.pressed);
+});
+
+test('P9-L1 escort petition: a lord short of coin with a market asks you to escort their caravan; done on arrival, failed lapses', () => {
+  const { CL, c, N, R, id } = world();
+  const hawise = id('hawise_greymantle');
+  const from = R.fiefsOf(hawise, c)[0];
+  assert.ok(CL.content.get('settlements', from).services.includes('trade'));
+  for (const sid of R.fiefsOf(hawise, c)) c.holdings[sid].treasury = 0; // short of coin
+  const p = N.petitionFor(c, hawise);
+  assert.equal(p.kind, 'escort');
+  assert.equal(c.holdings[p.to].controller, 'valedorn');
+  assert.equal(p.amount, Math.round(CL.contracts.escortPay(c, from, p.to) * 1.5));
+  const x = N.openPetition(c, hawise);
+  assert.match(N.petitionText(c, x), new RegExp(`^escort her caravan from .+ to .+, for ${p.amount} crowns$`));
+  // Busy with a contract: not now.
+  c.contract = { id: 999 };
+  assert.equal(N.answerPetition(c, 'accept').ok, false);
+  c.contract = null;
+  const r = N.answerPetition(c, 'accept');
+  assert.equal(r.ok, true, r.text);
+  assert.equal(c.contract.petition, x.id);
+  assert.equal(c.contract.reward.gold, p.amount);
+  assert.equal(c.contract.giver, from);
+  // Saved and loaded: the contract from a lord's fief and the petition.
+  const back = CL.save.sanitize(plain(c));
+  assert.equal(back.contract.petition, x.id);
+  assert.equal(back.nobles.petitions[0].to, p.to);
+  // Arrives: paid as an escort, and the petition is done (her thanks).
+  const gold = c.gold;
+  c.contract.status = 'done';
+  c.contract.payAt = p.to;
+  c.world.location = p.to;
+  CL.contracts.collect(c);
+  assert.equal(c.gold, gold + p.amount);
+  assert.equal(N.petition(c), null);
+  assert.ok(N.opinion(c, hawise, 'player') >= 10);
+  // Another, failed: it lapses.
+  c.nobles.petitionAfter = 0;
+  N.openPetition(c, hawise);
+  N.answerPetition(c, 'accept');
+  CL.contracts.abandon(c);
+  assert.equal(N.petition(c), null);
+});
+
+test('a ransom petition accepted frees the kin (P8-07’s path, fixed in 3.6.0)', () => {
+  const { c, N, L, id } = world();
+  const hamon = id('hamon_greymantle');
+  L.beaten(c, L.partyOf(c, id('hawise_greymantle')), 'aurelian');
+  N.note(c, hamon, 'player', 'freed', { kin: false });
+  const x = N.openPetition(c, hamon, 'ransom');
+  assert.ok(x);
+  assert.equal(N.answerPetition(c, 'accept').ok, true);
+  assert.equal(L.prisonerOf(c, id('hawise_greymantle')), null);
+  assert.equal(c.people[id('hawise_greymantle')].status, 'free');
+});

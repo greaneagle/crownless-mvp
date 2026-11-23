@@ -2674,7 +2674,7 @@ The phase opens with five battle-scale tasks (owner, 2026-11-22; decisions D-P9a
 - **What was tried first,** and dropped: counting the garrison still to come in the courtyard (the fight never won), waves sized by the world (+26 storming, −32 defending), and one army with the whole garrison (storming never won).
 - **Played** at 812×375: Siege assault 100 by real taps from Debug; with the infantry on Charge, never more than two on a ladder, the rest queued at its foot and the defenders at its head; won in 25 s.
 
-### P9-L1 · The living lords' loose ends (M) — Specified
+### P9-L1 · The living lords' loose ends (M) — ✅ Done in 3.6.0
 
 **Problem.** P8-07 and P8-08 left a few pieces of the lords' politics out. They make the world feel lived in (owner, 2026-11-22).
 
@@ -2702,6 +2702,16 @@ The phase opens with five battle-scale tasks (owner, 2026-11-22; decisions D-P9a
 - **Play:** the escort petition from the Lords tab, and Serve for it on the Claims tab.
 - **Explain:** "The lands" topic in `data/help.js` (`id: 'lands'`), a sentence each; Debug: the existing "Petition now" gives the escort where there is a market.
 - **Not here:** realm treasuries (P9-01), lords' deaths (P9-06).
+
+**Done (3.6.0).**
+- **Kin ransom** (`lords.kinRansom`): a lord held by a realm is ransomed from their payer's fiefs into the captor crown's chest (its capital, else a holding it controls); short, a week later; from day 30 the ruler; after 60 days unpaid, let go. The freed lord thanks the payer (`helped`) and, with their kin, remembers the captor (`held`): the Brief's two new deeds were already in the table as other words, so these existing ones serve.
+- **Men** (`nobles.askMen`, a new request kind `men`): kin of one realm lend (a quarter, never more than is lacking); a friend alone rarely, a giver short of men never. "It costs him men" weighs −5 (−10 left a father refusing his son).
+- **Land-hungry** (`nobles.seekLand`): a claim pressed (if the ruler thinks 0 or better of them) and a siege joined unsummoned, once in 30 days; `sieges.plan` now ranks a pressed claim first, then a lord's claim, then the rest. A lord's `pressed` is now kept in saves (it was kept for yours only).
+- **Escort petition:** a lord short of coin (need 0.45 or more) with a fief that has a market asks you to take their caravan to the nearest town of their realm, at 1.5 times a board escort's pay, by the board's escort rules (`contracts.forLord`); a lord's fief is a valid giver for that contract. Paid on arrival, the petition is done; failed or abandoned, it lapses.
+- **Serve for it** (Claims tab): **changed from the Brief**, which asked for a mercenary term with the holding realm; that would be a second allegiance while sworn to your liege. Instead: on the same conditions as buying back, no price, win four battles against the holding realm's enemies within 30 days and never attack its people; done, the fort is handed back as if bought; broken off or run out, not again for 60 days.
+- **Fixed on the way:** accepting a lord's ransom petition called `lords.free`, which wasn't exported (P8-07): it would have thrown. Exported and tested.
+- **Measured** (`node scripts/landed.js 180 3`, new "loose ends" line): 6–16 lords ransomed by their own and 0–3 let go a seed; men asked 8–16, lent 7–11; 1–2 claims pressed; 0–1 sieges joined unsummoned; every invariant held.
+- **Checks:** `npm test` (845), lint; browser `nobles` and `claims` (one new case each, by real taps); slow `landed` and `prototype-f`. Played at 812×375: Lady Hawise's escort petition accepted from the Lords tab. Not run: the other slow files and the full browser suite (no shared UI changed).
 
 ### P9-01 · Realms as organisations (M–L) — Specified
 

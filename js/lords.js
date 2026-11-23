@@ -30,7 +30,9 @@
     great: { T1: 0.25, T2: 0.5, T3: 0.25 },
   };
   const RANSOM = { base: 100, perTroop: 25, offerDays: [2, 4], escape: 0.03, escapeWeak: 0.08, weakBelow: 6, freedRenown: 5 };
-  const AWAY_DAYS = [5, 15]; // a lord held off-screen by a realm comes home after this long
+  const AWAY_DAYS = [5, 15]; // a lord held off-screen by a realm: their kin's first offer after this long
+  /** P9-L1: a lord held by a realm is ransomed by their own: the payer's fiefs pay the captor's crown. */
+  const KIN_RANSOM = { retry: 7, rulerAfter: 30, letGo: 60 };
   const REGROUP = 0.4; // a lord back from captivity or defeat rides out with this share of their ranks
   const LEADER = { hp: 2, damage: 1.35 };
   const REFILL_COST = 3; // crowns a man, from a landed lord's fiefs (P8-05) // the lord in battle: their realm's best foot soldier, stronger
@@ -311,11 +313,60 @@
     return held.map((x) => x.lord);
   }
 
-  /** Day by day: held lords may escape; lords held off-screen come home. */
+  /** A person's fiefs that can pay, richest first (never yours: your treasuries are your own accounts). */
+  const purses = (c, pid) => (pid && pid !== 'player' ? R().fiefsOf(pid, c) : []).map((sid) => c.holdings[sid]).filter((h) => h && h.holder !== 'player').sort((a, b) => (b.treasury || 0) - (a.treasury || 0));
+  /** Where a realm's ransoms are paid: its capital, else any holding it controls (not yours). */
+  function crownChest(c, f) {
+    const cap = R().capitalOf(f);
+    const h = cap && c.holdings?.[cap];
+    if (h && h.controller === f && h.holder !== 'player') return h;
+    return Object.values(c.holdings || {}).find((x) => x.controller === f && x.holder !== 'player') || null;
+  }
+
+  /**
+   * P9-L1: a lord held by a realm (off-screen) is ransomed by their own, paid from the payer's fiefs
+   * into the captor crown's (holding to holding; P9-01 moves it to realm treasuries). The kinsman with
+   * land pays first; after 30 days, the lord's ruler; short of money, they try again in a week. After 60
+   * days unpaid, the captors let them go. The freed lord thanks the payer; they and their kin remember
+   * who held them. Returns 'paid', 'wait' or 'let go'.
+   */
+  function kinRansom(c, x) {
+    const person = c.people[x.lord];
+    const ruler = R().rulerOf(person.realm, c);
+    const payer = c.day - x.since >= KIN_RANSOM.rulerAfter ? ruler : payerOf(c, x.lord);
+    const n = ransomOf(x);
+    const from = purses(c, payer);
+    const to = crownChest(c, x.by);
+    const captor = R().rulerOf(x.by, c);
+    if (to && from.reduce((k, h) => k + (h.treasury || 0), 0) >= n) {
+      let left = n;
+      for (const h of from) {
+        const take = Math.min(left, h.treasury || 0);
+        h.treasury -= take;
+        left -= take;
+      }
+      to.treasury = (to.treasury || 0) + n;
+      if (payer !== x.lord) CL.nobles?.note(c, x.lord, payer, 'helped', { kin: false }); // thanks to who paid
+      if (captor) CL.nobles?.note(c, x.lord, captor, 'held'); // and they and their kin remember who held them
+      free(c, x, `${R().titled(x.lord, c)} is home again, ransomed by ${payer === x.lord ? 'their own' : R().titled(payer, c)} for ${n} crowns.`);
+      CL.diag.log('info', 'Kin ransom', { lord: x.lord, payer, by: x.by, amount: n });
+      return 'paid';
+    }
+    if (c.day - x.since >= KIN_RANSOM.letGo) {
+      if (captor) CL.nobles?.note(c, x.lord, captor, 'held');
+      free(c, x, `${R().titled(x.lord, c)} is home again: the ${factionName(x.by)} let ${person.gender === 'female' ? 'her' : 'him'} go unransomed.`);
+      CL.diag.log('info', 'Kin ransom', { lord: x.lord, payer: null, by: x.by, amount: 0 });
+      return 'let go';
+    }
+    x.release = c.day + KIN_RANSOM.retry;
+    return 'wait';
+  }
+
+  /** Day by day: held lords may escape; lords held off-screen are ransomed by their own (P9-L1). */
   function tick(c) {
     for (const x of [...prisoners(c)]) {
       if (x.by !== 'player') {
-        if (c.day >= x.release) free(c, x, `${R().titled(x.lord, c)} is home again, ransomed by their own.`);
+        if (c.day >= x.release) kinRansom(c, x);
         continue;
       }
       while (x.checked < Math.floor(c.day)) {
@@ -408,6 +459,9 @@
     MIX,
     RANSOM,
     AWAY_DAYS,
+    KIN_RANSOM,
+    kinRansom,
+    free,
     REGROUP,
     LEADER,
     WORDS,

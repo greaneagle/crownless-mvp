@@ -72,3 +72,25 @@ test('Lords: a petition from a lord, accepted at the top of the Lords tab', asyn
   expect(await game(page, (CL) => CL.campaign.gold)).toBe(400);
   expect(await game(page, (CL) => CL.campaign.nobles.debts.map((d) => [d.kind, d.amount]))).toEqual([['loan', 130]]);
 });
+
+test('Lords: P9-L1 a lord short of coin asks you to escort her caravan; accepted, it is your contract', async ({ page }) => {
+  await open(page);
+  await newGame(page);
+  await toMap(page);
+  // Test setup: Lady Hawise, her fief's treasury empty, petitions you.
+  const want = await game(page, (CL) => {
+    const c = CL.campaign;
+    const hawise = Object.keys(c.people).find((id) => c.people[id].key === 'hawise_greymantle');
+    for (const sid of CL.realm.fiefsOf(hawise, c)) c.holdings[sid].treasury = 0;
+    const x = CL.nobles.openPetition(c, hawise);
+    return { kind: x.kind, to: CL.content.get('settlements', x.to).name, amount: x.amount };
+  });
+  expect(want.kind).toBe('escort');
+  await lordsTab(page);
+  const card = page.locator('#realmScreen .petitionCard');
+  await expect(card).toHaveAttribute('data-petition', 'escort');
+  await expect(card).toContainText(new RegExp(`Escort her caravan from .+ to ${want.to}, for ${want.amount} crowns[.]`));
+  await press(page, '#petitionAccept');
+  await expect(page.locator('#message')).toContainText(`${want.amount} crowns on arrival`);
+  expect(await game(page, (CL) => [CL.campaign.contract?.reward.gold, CL.contracts.summary()])).toEqual([want.amount, expect.stringMatching(new RegExp(`^escort to ${want.to}`))]);
+});

@@ -60,7 +60,15 @@
   const WORK = { from: 20 };
   const workScale = (c) => Math.max(1, (1 + CL.party.headcount(c)) / WORK.from);
 
-  function makeOffer(c, sid, templateId = 'bandit_hunt') {
+  /** P9-L1: what an escort from one place to another pays (as the board's escort would). */
+  function escortPay(c, from, to) {
+    const t = tpl('escort');
+    const a = settlement(from);
+    const b = settlement(to);
+    return Math.round((t.reward.goldBase + t.reward.goldPerLeague * Math.round(CL.world.mapDist(a.mapX, a.mapY, b.mapX, b.mapY))) * Math.sqrt(workScale(c)));
+  }
+
+  function makeOffer(c, sid, templateId = 'bandit_hunt', dest = null) {
     const t = tpl(templateId);
     const s = settlement(sid);
     const base = { id: c.nextContractId++, template: t.id, giver: sid, days: t.timeLimitDays, offeredUntil: c.day + OFFER_REFRESH_DAYS };
@@ -77,7 +85,7 @@
         reward: { gold: t.reward.goldBase + t.reward.goldPerTroop * size, renown: t.reward.renown, xp: t.reward.xpBase + t.reward.xpPerTroop * size },
       };
     }
-    const to = pickDestination(c, sid, t);
+    const to = dest ? settlement(dest) : pickDestination(c, sid, t);
     const leagues = Math.round(CL.world.mapDist(s.mapX, s.mapY, to.mapX, to.mapY));
     const reward = { gold: t.reward.goldBase + t.reward.goldPerLeague * leagues, renown: t.reward.renown, xp: t.reward.xpBase + t.reward.xpPerLeague * leagues };
     if (t.kind === 'escort') {
@@ -133,8 +141,29 @@
     if (c.contract) return { ok: false, reason: 'Finish your current contract first' };
     const o = offerAt(c, sid, templateId);
     if (!o) return { ok: false, reason: 'No contracts here' };
-    const t = tpl(o.template);
     if (o.deposit && c.gold < o.deposit) return { ok: false, reason: `You need ${o.deposit} crowns for the deposit` };
+    start(c, o);
+    c.contractOffers[sid][templateId] = null; // the board refills when offers refresh
+    c.contractOffers[sid][`${templateId}_until`] = o.offeredUntil;
+    return { ok: true };
+  }
+
+  /**
+   * P9-L1: a lord's petition, an escort of their own caravan from their fief to a town of their realm
+   * (`gold`: what they pay; `days` to do it). The board's escort rules, the petition's reward.
+   */
+  function forLord(c, from, to, { gold, days, petition }) {
+    if (c.contract) return { ok: false, reason: 'Finish your current contract first' };
+    const o = makeOffer(c, from, 'escort', to);
+    Object.assign(o, { days, petition, reward: { ...o.reward, gold } });
+    start(c, o);
+    return { ok: true };
+  }
+
+  /** Begin a contract from its offer: its marked parties on the map. */
+  function start(c, o) {
+    const sid = o.giver;
+    const t = tpl(o.template);
     const k = { ...o, status: 'active', deadline: c.day + o.days };
     if (t.kind === 'hunt') {
       k.partyId = markParty(c, t.band, o.troops, o.x, o.y, { contractId: o.id }).id;
@@ -151,10 +180,8 @@
       c.cargo[o.good] = (c.cargo[o.good] || 0) + o.qty;
     }
     c.contract = k;
-    c.contractOffers[sid][templateId] = null; // the board refills when offers refresh
-    c.contractOffers[sid][`${templateId}_until`] = o.offeredUntil;
-    CL.diag.log('info', 'Contract accepted', { id: o.id, template: o.template, giver: sid, to: o.to, reward: o.reward });
-    return { ok: true };
+    CL.diag.log('info', 'Contract accepted', { id: o.id, template: o.template, giver: sid, to: o.to, reward: o.reward, ...(o.petition != null ? { petition: o.petition } : {}) });
+    return k;
   }
 
   /** Remove this contract's marked parties from the map (escort caravan and ambush). */
@@ -170,6 +197,7 @@
     CL.diag.log(status === 'collected' ? 'info' : 'warn', `Contract ${status}`, { id: k.id, note });
     if (tpl(k.template).kind !== 'hunt') clearParties(c, { ...k, kind: tpl(k.template).kind });
     c.contract = null;
+    if (k.petition != null) CL.nobles?.onContract(c, k, status); // P9-L1: a lord's escort, done or failed
   }
 
   /** The marked band was destroyed by the player. */
@@ -335,7 +363,8 @@
 
   function sanitizeContract(k, d) {
     const t = k && typeof k === 'object' && CL.content.table('contracts')[k.template];
-    if (!t || !offersContracts(k.giver) || !Number.isInteger(k.id)) return null;
+    const lords = Number.isInteger(k?.petition) && CL.content.table('settlements')[k.giver]?.services.includes('trade'); // P9-L1: a lord's escort from their fief
+    if (!t || !(offersContracts(k.giver) || lords) || !Number.isInteger(k.id)) return null;
     const num = (n) => typeof n === 'number' && Number.isFinite(n);
     const troops = {};
     for (const [id, n] of Object.entries(k.troops || {})) {
@@ -362,6 +391,7 @@
     if (Number.isInteger(k.partyId)) out.partyId = k.partyId;
     if (Number.isInteger(k.ambushId)) out.ambushId = k.ambushId;
     if (k.payAt && CL.content.table('settlements')[k.payAt]) out.payAt = k.payAt;
+    if (lords) out.petition = k.petition;
     return out;
   }
 
@@ -402,6 +432,8 @@
   }
 
   CL.contracts = {
+    escortPay,
+    forLord,
     OFFER_REFRESH_DAYS,
     WORK,
     workScale,

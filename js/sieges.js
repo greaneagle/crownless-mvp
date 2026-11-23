@@ -159,7 +159,9 @@
     if (!forts.length) return null;
     const d = (sid) => CL.world.mapDist(home.mapX, home.mapY, place(sid).mapX, place(sid).mapY);
     // P8-07: a feud's claim is pressed in war: a fort one of the realm's lords claims comes first.
-    const claimed = (sid) => (sid === prefer || CL.claims?.pressedFor(c, sid, f) || R().claimsOn(sid, c).some((k) => c.people[k.by]?.realm === f && c.people[k.by].status === 'free') ? 0 : 1); // P8-08: and your claim, pressed by your liege
+    // P9-L1: a claim the ruler presses (yours, P8-08, or a land-hungry lord's) before one merely held.
+    const ours = (k) => c.people[k.by]?.realm === f && c.people[k.by].status === 'free';
+    const claimed = (sid) => (sid === prefer || CL.claims?.pressedFor(c, sid, f) || R().claimsOn(sid, c).some((k) => ours(k) && k.pressed != null && c.day < k.pressed) ? 0 : R().claimsOn(sid, c).some(ours) ? 0.5 : 1);
     const sid = forts.sort((a, b) => claimed(a) - claimed(b) || d(a) - d(b))[0];
     const fort = place(sid);
     const nearby = CL.lords

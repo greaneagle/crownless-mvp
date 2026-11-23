@@ -209,16 +209,28 @@ test('escape ends a ransom: 3% a day, 8% with under six soldiers', () => {
   assert.equal(L.RANSOM.escapeWeak, 0.08);
 });
 
-test('off-screen: a lord beaten by a rival realm is held 5–15 days, then rides again; Reavers only send them home', () => {
+test('off-screen: a lord beaten by a rival realm is ransomed by their own after 5–15 days, then rides again; Reavers only send them home', () => {
   const { CL, c, L } = world();
   const tancred = byKey(c, 'tancred_greymantle');
   L.beaten(c, L.partyOf(c, tancred), 'aurelian');
   const x = L.prisonerOf(c, tancred);
   assert.equal(c.people[tancred].heldBy, 'aurelian');
-  assert.ok(x.release >= c.day + 5 && x.release <= c.day + 15);
+  assert.ok(x.release >= c.day + 5 && x.release <= c.day + 15, 'their kin first offer');
   assert.equal(x.offerDay, null, 'no offer to you');
-  CL.party.advanceDays(16);
+  // P9-L1: who pays, from their fiefs, into the captor crown's chest (test setup: enough in one fief).
+  const payer = L.payerOf(c, tancred);
+  const purse = CL.realm.fiefsOf(payer, c).map((sid) => c.holdings[sid]);
+  for (const h of purse) h.treasury = 0;
+  purse[0].treasury = L.ransomOf(x) + 40;
+  const chest = c.holdings[CL.realm.capitalOf('aurelian')];
+  const before = chest.treasury || 0;
+  c.day = x.release; // test setup: their offer's day
+  assert.equal(L.kinRansom(c, x), 'paid');
+  assert.equal(purse[0].treasury, 40, 'paid from the payer’s fief');
+  assert.equal(chest.treasury, before + L.ransomOf(x), 'into the captor crown’s chest: no money from nowhere');
   assert.equal(L.prisonerOf(c, tancred), null);
+  assert.ok(CL.nobles.opinion(c, tancred, CL.realm.rulerOf('aurelian', c)) < 0, 'they remember who held them');
+  CL.party.advanceDays(2);
   assert.ok(L.partyOf(c, tancred), 'riding again');
   const hawise = byKey(c, 'hawise_greymantle');
   assert.equal(L.beaten(c, L.partyOf(c, hawise), null), null);
@@ -306,4 +318,35 @@ test('90 days of a bot company with the lords: the invariants hold every day', (
   }
   assert.deepEqual(plain(bot.stats.invariants), []);
   assert.ok(CL.campaign.parties.filter((p) => p.lordId).length >= 18, 'most lords still riding');
+});
+
+test('P9-L1 kin ransom: short of money they wait a week; after 30 days the ruler pays; after 60 unpaid they are let go', () => {
+  const { CL, c, L } = world();
+  const tancred = byKey(c, 'tancred_greymantle');
+  L.beaten(c, L.partyOf(c, tancred), 'aurelian');
+  const x = L.prisonerOf(c, tancred);
+  const ruler = CL.realm.rulerOf('valedorn', c);
+  const broke = () => {
+    for (const h of Object.values(c.holdings)) if (h.holder !== 'player') h.treasury = 0; // test setup: nobody can pay
+  };
+  broke();
+  c.day = x.release;
+  assert.equal(L.kinRansom(c, x), 'wait');
+  assert.equal(x.release, c.day + L.KIN_RANSOM.retry);
+  // Day 30: the ruler's turn, and they can pay.
+  c.day = x.since + L.KIN_RANSOM.rulerAfter;
+  const purse = CL.realm.fiefsOf(ruler, c).map((sid) => c.holdings[sid]).filter((h) => h.holder !== 'player');
+  assert.ok(purse.length, 'the ruler holds land');
+  purse[0].treasury = L.ransomOf(x);
+  assert.equal(L.kinRansom(c, x), 'paid');
+  assert.equal(purse[0].treasury, 0);
+  // Another, never paid: let go after 60 days.
+  const hawise = byKey(c, 'hawise_greymantle');
+  L.beaten(c, L.partyOf(c, hawise), 'aurelian');
+  const y = L.prisonerOf(c, hawise);
+  broke();
+  c.day = y.since + L.KIN_RANSOM.letGo;
+  assert.equal(L.kinRansom(c, y), 'let go');
+  assert.equal(c.people[hawise].status, 'free');
+  assert.equal(L.invariants(c).length, 0, L.invariants(c).join('; '));
 });

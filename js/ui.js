@@ -729,9 +729,10 @@
       if (R_kind(c, sid) !== 'village') {
         row.append(act('liege', 'Ask your liege to press it', k.liege, () => C.askLiege(c, sid)));
         row.append(act('buy', `Buy it back (${k.buy.price} crowns)`, k.buy, () => C.buyBack(c, sid)));
+        row.append(act('serve', 'Serve for it', k.serve, () => C.serveBack(c, sid))); // P9-L1
       }
       if (row.children.length) card.append(row);
-      const why = [k.liege, k.buy].find((x) => !x.ok && x.why)?.why;
+      const why = [k.liege, k.buy, k.serve].find((x) => !x.ok && x.why)?.why;
       if (why && R_kind(c, sid) !== 'village') card.append(el('p', 'claimWhy', `${why}.`));
       out.push(card);
     }

@@ -77,6 +77,7 @@
       const foeKind = foeParty ? CL.content.get('party_templates', foeParty.template).kind : (x.siteId ?? g.siteId) ? 'bandit' : null;
       CL.retinue.afterBattle(c, { win: o.win, down: x.companionsDown || [], foe: foeKind, attacked: Boolean(foeParty && foeParty.chasing !== 'player') });
       CL.allegiance?.afterBattle(c, { win: o.win, kind: foeKind, faction: foeParty ? CL.content.get('party_templates', foeParty.template).faction : null }); // a day of service (P8-04)
+      CL.claims?.afterBattle(c, { win: o.win, kind: foeKind, faction: foeParty ? CL.content.get('party_templates', foeParty.template).faction : null }); // a fort's service (P9-L1)
       CL.nobles?.afterBattle(c, { win: o.win, kind: foeKind }); // a petition to clear bandits (P8-07)
       CL.world.onBattleResolved(o.win, x.siteId ?? g.siteId);
       CL.parties.onBattleResolved(o.win, x.partyId ?? g.partyId, x.fallenEnemies || [], { wagonLost: Boolean(x.wagonLost) });
