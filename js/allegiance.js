@@ -225,6 +225,30 @@
     close(c, a.kind === 'vassal' && was === old ? 'defect' : 'switched');
   }
 
+  /**
+   * P9-04: you take the rising's side (`to`) against the crown you served (`from`): a defection, and your
+   * fiefs of it go with you. With `home`, the rising is over: back to the realm (`keep`), or out (the
+   * crown won).
+   */
+  function joinRising(c, from, to, { home = false, keep = true } = {}) {
+    const a = state(c);
+    if (home) {
+      if (!keep) return close(c, 'expelled');
+      Object.assign(a, { kind: 'vassal', realm: to, window: { start: c.day, days: 0 } });
+      return;
+    }
+    R().adjust(c, from, RULES.defect, 'joined the rising');
+    close(c, 'defect');
+    for (const sid of R().fiefsOf(R().PLAYER, c)) if (c.holdings[sid].sovereign === from) R().transfer(c, sid, { controller: c.holdings[sid].controller === from ? to : undefined, sovereign: to, holder: R().PLAYER, willing: true, reason: 'rising', quiet: true });
+    Object.assign(a, { kind: 'vassal', realm: to, since: c.day, until: null, serviceDays: 0, summonsMissed: 0, window: { start: c.day, days: 0 }, nextPay: null, served: null, lastOath: c.day });
+  }
+  /** P9-04: refuge after you were deposed: you swear to that realm at once. */
+  function refuge(c, f) {
+    const a = state(c);
+    if (a.kind !== 'independent') close(c, 'switched');
+    Object.assign(a, { kind: 'vassal', realm: f, since: c.day, until: null, serviceDays: 0, summonsMissed: 0, window: { start: c.day, days: 0 }, nextPay: null, served: null, lastOath: c.day });
+  }
+
   /** Thrown out: as defection, without the hunt (no preview: it happens to you). */
   function expel(c, why) {
     const a = state(c);
@@ -414,5 +438,5 @@
     }
   }
 
-  CL.allegiance = { crowned, RULES, KINDS, blank, state, serves, sworn, weeklyPay, mercenaryDays, favour, capital, owed, atWar, preview, act, expel, onAttack, afterBattle, missed, standingWarning, serve, hunted, tick, offerWhy, summary, sanitize };
+  CL.allegiance = { crowned, joinRising, refuge, RULES, KINDS, blank, state, serves, sworn, weeklyPay, mercenaryDays, favour, capital, owed, atWar, preview, act, expel, onAttack, afterBattle, missed, standingWarning, serve, hunted, tick, offerWhy, summary, sanitize };
 })(typeof window !== 'undefined' ? window : globalThis);

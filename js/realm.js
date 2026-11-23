@@ -556,6 +556,7 @@
       const k = s.realms[id];
       if (!k) continue;
       k.recognised = [...new Set((Array.isArray(r.recognised) ? r.recognised : []).filter((f) => typeof f === 'string' && (factionTable()[f] || s.realms[f]) && f !== id))];
+      if (typeof r.rising === 'string' && (factionTable()[r.rising] || s.realms[r.rising])) k.rising = r.rising; // P9-04: a rising of that realm
       if (r.pending && (factionTable()[r.pending.realm] || s.realms[r.pending.realm]) && typeof r.pending.day === 'number' && Number.isFinite(r.pending.day)) k.pending = { realm: r.pending.realm, day: r.pending.day };
     }
     ensureTemplates(s);
@@ -805,6 +806,7 @@
     out.push(...(CL.nobles?.invariants(c) || [])); // promises, petitions and opinions (P8-07)
     out.push(...(CL.crowns?.invariants(c) || [])); // the realms' treasuries and books (P9-01)
     out.push(...(CL.diplomacy?.invariants(c) || [])); // treaties and trust (P9-02)
+    out.push(...(CL.rebellion?.invariants(c) || [])); // factions and risings (P9-04)
     return out;
   }
 

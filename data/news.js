@@ -69,6 +69,21 @@
       priority: 7,
       lines: ['{faction} has broken its word to {other}.']
     },
+    faction_rumour: {
+      id: 'faction_rumour',
+      priority: 6,
+      lines: ['There is talk of a faction at the court of {faction}.']
+    },
+    rising: {
+      id: 'rising',
+      priority: 9,
+      lines: ['Civil war: lords of {other} have risen against their ruler.']
+    },
+    rebellion_ended: {
+      id: 'rebellion_ended',
+      priority: 7,
+      lines: ['The troubles in {faction} are over.']
+    },
     realm_founded: {
       id: 'realm_founded',
       priority: 8,

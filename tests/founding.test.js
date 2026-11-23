@@ -240,7 +240,7 @@ test('saves: v26 → v27, a founded realm round-trips with its holdings, ruler a
   for (const sid of Object.keys(v26.holdings)) if (v26.holdings[sid].sovereign === id) Object.assign(v26.holdings[sid], { sovereign: 'valedorn', controller: 'valedorn' });
   delete v26.rulers[id];
   const m = CL.save.migrate(v26);
-  assert.equal(m.version, 27);
+  assert.equal(m.version, CL.save.VERSION); // and on through the later steps
   assert.deepEqual(plain(m.realms), {});
   assert.deepEqual(plain(m.rule), plain(F.blank()));
   const index = JSON.parse(fs.readFileSync(path.join(FIX, 'index.json'), 'utf8'));

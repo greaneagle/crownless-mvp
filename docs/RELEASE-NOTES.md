@@ -1,5 +1,25 @@
 # Crownless — Release Notes
 
+## v3.10.0 — Rebellion and deposition (P9-04) · 2026-11-23
+
+### New
+- **Factions.** Lords who think ill enough of their ruler, and well of one another, gather around a claimant: the ruler's kin if one is among them, else the strongest. Grievances alone make them; there is no dice roll.
+- **Warnings,** a week apart: whispers in the news, your companion's word, a lord who trusts you. Rulers hear them too.
+- **The ruler's answers:** concede land, a lower share or an office; send a mediator both sides trust; win one of them over; arrest the claimant (they may rise at once); or prepare for war. If you rule, the Your realm tab offers them, and the demands after.
+- **The rising.** Demands refused, the faction becomes a realm of its own at war with the crown, its lords' land and garrisons with it, and the other lords choose a side. Sworn to that realm, you are summoned by both: choose on the Allegiance tab.
+- **Three ends:** a peace is a compromise (the claimant pardoned); take all the rebels' forts and the crown wins (their fiefs revoked); leave the crown no fort and the claimant rules. Then 90 quiet days in that realm.
+- **Deposed,** you keep your company, companions, businesses and a claim to the crown, and an old enemy who thinks well of you may offer refuge.
+- Debug: **Faction now** and **Rise now** for the chosen holding's realm.
+
+### Known
+- In a year of the world alone, factions form (five or six) but every ruler sends a mediator and they break up: no rising yet. The rules for a faction are looser than planned (a grudge of −10 rather than −30), and still need tuning. For P9-T.
+- A rising's leader is styled as its ruler ("King Hamon").
+
+### Under the hood
+- Save version 28: `rebellions`.
+- `npm run landed` reports factions, how they were answered, risings, how they ended, and days of civil war per realm.
+- **Tests:** 878 fast tests pass; the full browser suite (221 passed, 21 skipped); the slow suite 18 of 19 (Prototype D fails, as it did in 3.9.0).
+
 ## v3.9.0 — Founding a kingdom (P9-03) · 2026-11-23
 
 ### New

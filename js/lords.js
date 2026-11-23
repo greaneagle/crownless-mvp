@@ -232,6 +232,22 @@
     return null;
   }
 
+  /**
+   * P9-04: a ruler arrests one of their own lords (a faction's claimant): held by their own realm, not
+   * ransomed, until the rebellion ends. Returns the record, or null.
+   */
+  function arrest(c, pid, f, day = c.day) {
+    const person = c.people[pid];
+    if (person?.status !== 'free' || person.realm !== f) return null;
+    const q = partyOf(c, pid);
+    if (q) c.parties.splice(c.parties.indexOf(q), 1);
+    Object.assign(person, { status: 'captive', heldBy: f });
+    const x = { lord: pid, by: f, since: day, led: 1, offerDay: null, offered: false, checked: Math.floor(day), release: null, arrested: true };
+    prisoners(c).push(x);
+    CL.diag.log('info', 'Lord arrested', { lord: pid, by: f });
+    return x;
+  }
+
   /** What their ransom is: 100 crowns and 25 for each soldier they led. */
   const ransomOf = (x) => RANSOM.base + RANSOM.perTroop * x.led;
 
@@ -357,7 +373,7 @@
   function tick(c) {
     for (const x of [...prisoners(c)]) {
       if (x.by !== 'player') {
-        if (c.day >= x.release) kinRansom(c, x);
+        if (!x.arrested && c.day >= x.release) kinRansom(c, x); // an arrest waits for its rebellion (P9-04)
         continue;
       }
       while (x.checked < Math.floor(c.day)) {
@@ -426,7 +442,7 @@
     const seen = new Set();
     for (const x of Array.isArray(d?.prisoners) ? d.prisoners.slice(0, PRISONERS_MAX) : []) {
       const p = s.people?.[x?.lord];
-      if (!p || seen.has(x.lord) || R().rules(x.lord, s) || !(x.by === 'player' || R().isRealm(x.by)) || x.by === p.realm) continue;
+      if (!p || seen.has(x.lord) || R().rules(x.lord, s) || !(x.by === 'player' || R().isRealm(x.by)) || (x.by === p.realm && x.arrested !== true)) continue;
       if (s.parties.some((q) => q.lordId === x.lord)) continue; // never both captive and on the map
       seen.add(x.lord);
       s.prisoners.push({
@@ -438,6 +454,7 @@
         offered: false,
         checked: Math.floor(num(x.checked) ? x.checked : s.day),
         release: x.by === 'player' ? null : num(x.release) ? x.release : s.day + AWAY_DAYS[0],
+        ...(x.arrested === true && x.by === p.realm ? { arrested: true } : {}),
       });
       Object.assign(p, { status: 'captive', heldBy: x.by });
     }
@@ -451,6 +468,7 @@
     RANSOM,
     AWAY_DAYS,
     KIN_RANSOM,
+    arrest,
     kinRansom,
     free,
     REGROUP,

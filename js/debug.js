@@ -713,6 +713,15 @@
         log('fiefs week', { line });
         break;
       }
+      case 'factionNow':
+      case 'riseNow': {
+        // P9-04: the chosen holding's realm: its unhappiest lords form a faction now, or its faction rises now.
+        const f = CL.realm.sovereignOf($('#cheatHolding').value, c());
+        const x = btn.dataset.cheat === 'factionNow' ? CL.rebellion.factionNow(c(), f) : CL.rebellion.riseNow(c(), f);
+        log(btn.dataset.cheat, { realm: f, rebellion: x ? { id: x.id, stage: x.stage, claimant: x.claimant, members: x.members } : null });
+        if (!x) CL.ui.message(btn.dataset.cheat === 'factionNow' ? 'No faction could form there' : 'No faction there to rise');
+        break;
+      }
       case 'declareHere': {
         // P9-03: a realm of your own at the chosen fort, without the thresholds (made yours first if need be).
         const sid = $('#cheatHolding').value;

@@ -257,6 +257,7 @@
     CL.crowns?.week(c); // a free city's trade, the offices' wages
     CL.diplomacy?.weekly(c, day); // tribute, treaties kept and run out, the realms' offers (P9-02)
     CL.founding?.weekly(c); // founded realms: the old crown's answer, recognition, AI lords declaring (P9-03)
+    CL.rebellion?.weekly(c); // factions, warnings, demands, risings and their ends (P9-04)
     weeklyGrants(c, day);
     if (mineNow.length) {
       const parts = mineNow.map((sid) => {
@@ -288,7 +289,7 @@
       if (h.castellanLeaving && h.castellan && c.world?.location === sid) returnCastellan(c, sid);
     }
     for (const x of CL.lords?.prisoners(c) || []) {
-      if (c.day - x.since < RULES.heldDays || x.forfeit) continue;
+      if (c.day - x.since < RULES.heldDays || x.forfeit || x.arrested) continue; // an arrest isn't a forfeit (P9-04)
       x.forfeit = true; // a lord held unransomed 30 days: their land goes to the crown, which will grant it
       const had = R().fiefsOf(x.lord, c);
       for (const sid of had) R().transfer(c, sid, { holder: R().rulerOf(R().sovereignOf(sid, c), c), reason: 'held unransomed' });

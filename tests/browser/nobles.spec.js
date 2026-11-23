@@ -94,3 +94,34 @@ test('Lords: P9-L1 a lord short of coin asks you to escort her caravan; accepted
   await expect(page.locator('#message')).toContainText(`${want.amount} crowns on arrival`);
   expect(await game(page, (CL) => [CL.campaign.contract?.reward.gold, CL.contracts.summary()])).toEqual([want.amount, expect.stringMatching(new RegExp(`^escort to ${want.to}`))]);
 });
+
+test('P9-04: a rising in your realm: summoned by both sides on the Allegiance tab, you choose one', async ({ page }) => {
+  await open(page);
+  await newGame(page);
+  await game(page, (CL) => {
+    const c = CL.campaign; // test setup: a vassal of Valedorn, three of whose lords rise against the king
+    Object.assign(c.allegiance, { kind: 'vassal', realm: 'valedorn', since: c.day, window: { start: c.day, days: 10 } });
+    const ruler = CL.realm.rulerOf('valedorn', c);
+    const lords = CL.lords.riders(c).filter((p) => c.people[p].realm === 'valedorn').slice(0, 3);
+    for (const a of lords) {
+      for (let i = 0; i < 3; i++) CL.nobles.note(c, a, ruler, 'abandoned', { kin: false });
+      for (const b of lords) if (a !== b) for (let i = 0; i < 2; i++) CL.nobles.note(c, a, b, 'helped', { kin: false });
+    }
+    const x = CL.rebellion.form(c, 'valedorn');
+    x.stage = 'demands';
+    CL.rebellion.refuse(c, x.id);
+  });
+  await toMap(page);
+  await press(page, '#journalBtn');
+  await waitMode(page, 'journal');
+  await press(page, '#journalRealmBtn');
+  await waitMode(page, 'realm');
+  await press(page, '#realmScreen [data-tab="allegiance"]');
+  const card = page.locator('#realmScreen .risingCard');
+  await expect(card.locator('h3')).toHaveText('Civil war: both sides summon you');
+  await expect(card).toContainText('Civil war:');
+  await press(page, card.locator('button', { hasText: 'Ride with the rising' }));
+  await expect(page.locator('#realmScreen .risingCard')).toHaveCount(0);
+  const sworn = await game(page, (CL) => ({ realm: CL.allegiance.sworn(CL.campaign), rising: CL.campaign.rebellions.list[0].rising }));
+  expect(sworn.realm).toBe(sworn.rising);
+});

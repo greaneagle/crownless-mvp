@@ -2916,7 +2916,7 @@ The phase opens with five battle-scale tasks (owner, 2026-11-22; decisions D-P9a
 - **Measured** (`node scripts/landed.js 180 3`, a new realms line): every invariant held; **no AI realm was founded** on any seed, after two tries (the AI's grudge −30 → −20 → −15 and its men 40 → 30): grudges that deep are rare and their lords ride thin. **Open for P9-T.** Also open: your own treaty offers; SC-25 (your alliance broken) waits for them.
 - **Checks:** `npm test` (870, with the new `founding` file of 8 and the grep test), lint; browser `realm` (the Your realm tab: declare, a policy) and `world-map` (the new banner); slow `landed`, `campaign-bots`, `test-world`, `phase8-exit`, passing. `phase8-exit` had failed since 3.7.0, when P9-01's changes made the crown grant you two of Greywall's villages on the way; its run list didn't name the file. The test now hands them back before its landless step. Played at 812×375: declared at Westholt, set the marshal to expand, accepted Lady Astrid as a vassal, all by taps (her grudge set up in the console).
 
-### P9-04 · Rebellion and deposition (L) — Specified
+### P9-04 · Rebellion and deposition (L) — ✅ Done in 3.10.0
 
 **Problem.** P8-07's lords grumble and change realm one at a time; nobody contests a crown. Design §18.5–18.6: rebellion grows from grievances, with warnings and responses, and deposition is not a game over.
 
@@ -2967,6 +2967,16 @@ The phase opens with five battle-scale tasks (owner, 2026-11-22; decisions D-P9a
 - **Play:** receive the warnings, then the summons from both sides, and choose.
 - **Explain:** a Rebellion paragraph in "The lands"; Debug: "Faction now" (the chosen realm's unhappiest lords form one) and "Rise now".
 - **Not here:** a claimant's death (P9-06), foreign backing beyond P9-02's alliance rule.
+
+**Done (3.10.0).**
+- **`js/rebellion.js`:** `c.rebellions = { list, quiet, nextId, summons, refuge, deposed }`, weekly on the payday. A faction: the largest group of a realm's riding lords at the grudge or worse toward the ruler who all think the bond or better of one another (3 or more; no roll); claimant: the ruler's kin among them, else the strongest.
+- **Warnings** a week apart (news; your companion's word; a member who thinks +20 of you), then demands of 14 days. **Responses** as the Brief (`respond`); the AI answers after the second warning (it prepares when its loyal lords are twice the faction's strength, else a mediator, a gift, readiness, the cell) and meets demands when the faction rides with half the loyal's strength. Arrest: `lords.arrest` (held by their own realm, never ransomed or forfeit).
+- **The rising** (`rise`): a realm founded in play (P9-03) with `rising: <realm>`, the members' forts and towns (a village under a loyal seat goes to the crown, with a claim), garrisons with them; others join who think 10 better of the claimant than of the ruler; war; you summoned by both (`chooseSide`, the Allegiance tab; `allegiance.joinRising`).
+- **Outcomes** (`outcome`, `end`): no war any more → compromise; the rebels with no fort (after 14 days) → the crown (fiefs revoked); the crown with no fort → the rebels (the claimant rules; the old ruler a lord within the cap). The rising realm is removed with its relations, treaties, trust and sieges; its treasury to the crown; 90 quiet days; a ruler who conceded: `kept_peace` with all its lords.
+- **Deposed** (`depose`): your land to the new ruler with your claims, a claim on the seat, `refuge` from the realm whose ruler thinks best of you less half its trust in your old realm (`acceptRefuge`: sworn at once). SC-26 and SC-27 in `tests/rebellion.test.js`.
+- **Save v28**; deeds `conceded`, `mediated`, `pardoned`, `kept_peace`; news `faction_rumour`, `rising`, `rebellion_ended`; Debug "Faction now", "Rise now"; a Rebellion paragraph in "The lands".
+- **Measured** (`node scripts/landed.js 360 3`): with the Brief's −30 and +10, no faction in a year. Try 1 (grudge −10, bond 0): 5–6 factions a seed, all mediated and dispersed. Try 2 (a confident ruler prepares): the same, since a faction of three never faces twice its strength. **Open for P9-T:** no rising in the world alone (no realm in civil war: well under 120 of 360 days). Also: over 360 days an AI lord founded a realm on seeds 1 and 3 (P9-03's open item, at 180 days none).
+- **Checks:** 878 fast tests; lint clean but the 2 old warnings; the P9-04 browser case at both sizes. Checkpoint: the full browser suite 221 passed, 21 skipped; the slow suite 18 of 19. **Prototype D fails** ("retaken for Aurelia": Hrothmark retakes it): it fails the same at 3.9.0, so it is not from this task. For P9-T. Played at 812×375 by taps: warnings, the king mediates and meets the demands; Debug "Rise now": both sides summon you, "Stand with the crown" works. Seen: the Allegiance card can say "-26 days left" in the month of service. For P9-T.
 
 ### P9-05 · Armies and campaigns (L) — Specified
 

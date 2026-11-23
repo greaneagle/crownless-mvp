@@ -82,6 +82,10 @@
     neglected: -2,
     abandoned: -20,
     paid: 6,
+    conceded: 15, // P9-04: the ruler gave the faction what it asked
+    mediated: 10,
+    pardoned: 10,
+    kept_peace: 10, // a ruler who conceded rather than fought
   };
   const FRIENDLY_DEEDS = ['fought_beside', 'relieved', 'freed', 'ransomed_kin', 'helped', 'backed', 'suggested'];
   const CLOSE = ['parent', 'child', 'sibling', 'spouse'];
@@ -250,6 +254,10 @@
       neglected: `${you} left ${h} landless`,
       abandoned: `${you} left ${h} in a cell`,
       paid: `${you} paid ${his(c, from)} price`,
+      conceded: `${you} gave way to ${his(c, from)} faction`,
+      mediated: `${you} heard ${h} through a mediator`,
+      pardoned: `${you} pardoned ${h}`,
+      kept_peace: `${you} kept the peace in the realm`,
     };
     return `${words[d[0]] || 'they have a history'} on day ${CL.party.dayNumber(d[1])}`;
   }

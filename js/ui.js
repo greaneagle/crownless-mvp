@@ -684,6 +684,52 @@
       pol.append(row);
     }
     cards.push(pol);
+    // P9-04: a faction in your realm: answer it, then its demands.
+    const RB = CL.rebellion;
+    const x = RB?.active(c, f);
+    if (x && x.warned >= 1 && x.stage !== 'rising') {
+      const say = (fn) => act(() => {
+        const r = fn();
+        CL.ui.message(r.text);
+        return r.ok;
+      });
+      const buttons = x.stage === 'demands'
+        ? [['Meet the demands', say(() => RB.meet(c, x.id))], ['Refuse', say(() => RB.refuse(c, x.id))]]
+        : [['Concede', say(() => RB.respond(c, x.id, 'concession'))], ['A mediator', say(() => RB.respond(c, x.id, 'mediator'))], ['Divide them', say(() => RB.respond(c, x.id, 'divide'))], ['Arrest the claimant', say(() => RB.respond(c, x.id, 'arrest'))], ['Prepare', say(() => RB.respond(c, x.id, 'prepare'))]];
+      const card = contractCard('A faction at your court', [RB.line(c, x), x.stage === 'demands' ? 'Met, they disperse. Refused, they rise.' : 'Concede land, a lower share or an office; send a mediator; win one of them over; arrest the claimant (they may rise at once); or prepare for war.'], buttons);
+      card.classList.add('ruleCard');
+      card.dataset.faction = String(x.id);
+      cards.push(card);
+    }
+    return cards;
+  }
+
+  /** P9-04: the Allegiance tab's civil war: summoned by both sides; deposed, a refuge offered. */
+  function risingCards(c, redo) {
+    const RB = CL.rebellion;
+    const st = RB?.state(c);
+    if (!st) return [];
+    const say = (fn) => () => {
+      const r = fn();
+      CL.ui.message(r.text);
+      if (r.ok) CL.save.write();
+      redo();
+    };
+    const cards = [];
+    const x = st.summons && RB.byId(c, st.summons.id);
+    if (x) {
+      const card = contractCard('Civil war: both sides summon you', [RB.line(c, x), `Stand with the crown and keep your oath; or ride with the rising, which breaks it (your fiefs go with you).`], [
+        ['Stand with the crown', say(() => RB.chooseSide(c, 'crown'))],
+        ['Ride with the rising', say(() => RB.chooseSide(c, 'rebels'))],
+      ]);
+      card.classList.add('risingCard');
+      cards.push(card);
+    }
+    if (st.refuge && c.day <= st.refuge.until) {
+      const card = contractCard(`Refuge in ${CL.realm.faction(st.refuge.realm)?.name}`, [`Their ruler offers you a place at court, until day ${CL.party.dayNumber(st.refuge.until)}.`], [['Accept the refuge', say(() => RB.acceptRefuge(c))]]);
+      card.classList.add('risingCard');
+      cards.push(card);
+    }
     return cards;
   }
 
@@ -2864,7 +2910,7 @@
         leave.push(allegianceCard(c, 'release', a.realm, 'Ask for release', 'Ask for release', redo));
         leave.push(allegianceCard(c, 'defect', a.realm, 'Break your oath', 'Defect', redo));
       }
-      $('#realmScreen').replaceChildren(tabs, me, ...leave);
+      $('#realmScreen').replaceChildren(tabs, me, ...leave, ...risingCards(c, redo));
       return;
     }
     for (const f of R.realms()) {
@@ -2874,6 +2920,8 @@
       if (tab === 'holdings') {
         // P9-01: its treasury and trend, its laws, its offices.
         for (const line of CL.crowns?.cardLines(c, f.id) || []) card.append(el('p', 'realmCrown', line));
+        const reb = CL.rebellion?.active(c, f.id);
+        if (reb && reb.warned >= 1) card.append(el('p', 'realmCrown', CL.rebellion.line(c, reb))); // P9-04: what the court hears
         const list = el('ul', 'realmList');
         const ids = Object.keys(c.holdings).filter((sid) => c.holdings[sid].sovereign === f.id);
         const order = { town: 0, fort: 1, village: 2 };

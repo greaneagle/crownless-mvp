@@ -157,7 +157,8 @@
     const enemies = [...R().realms().map((k) => k.id), R().PLAYER].filter((e) => e !== f && R().siegeWar(c, f, e));
     if (!enemies.length) return null;
     const ruler = R().rulerOf(f, c);
-    const home = place(R().capitalOf(f));
+    const home = place(R().capitalOf(f)) || place(c.people?.[ruler]?.home); // P9-04: a rising with no fort plans from its leader's home
+    if (!home) return null;
     const forts = Object.keys(c.holdings).filter((sid) => c.holdings[sid].kind === 'fort' && enemies.includes(c.holdings[sid].controller) && (force || !CL.founding || CL.founding.mayPlan(c, f, c.holdings[sid].controller)) && (!force || !prefer || sid === prefer) && !at(c, sid) && CL.rights.may(c, someLord(c, f) || ruler, 'besiege', sid).ok);
     if (!forts.length) return null;
     const d = (sid) => CL.world.mapDist(home.mapX, home.mapY, place(sid).mapX, place(sid).mapY);

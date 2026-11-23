@@ -249,6 +249,8 @@ declare global {
     nextRealmId: number;
     /** v27 (P9-03): your rule: the officers' policies and the lords asking to swear to you. */
     rule: { steward: 'hold' | 'grow' | 'hoard'; marshal: string; chancellor: 'peace' | 'allies' | 'none'; asks: { lord: string; day: number }[] };
+    /** v28 (P9-04): factions and risings (one a realm), each realm's quiet after one, your summons by both sides, a refuge offered, and when you were deposed. */
+    rebellions: { list: any[]; quiet: Record<string, number>; nextId: number; summons: { id: number; day: number } | null; refuge: { realm: string; until: number } | null; deposed: { realm: string; day: number } | null };
     nextSiegeId?: number;
     siegePlanned?: number | null;
     /** v22 (P8-05): the crown's grants waiting to be made. */
