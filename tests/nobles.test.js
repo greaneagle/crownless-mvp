@@ -475,7 +475,7 @@ test('saves: the nobles round-trip; junk is repaired; v23 migrates the deeds; 2.
   delete v23.nobles;
   v23.people[tancred].deeds = [{ by: 'player', kind: 'freed', day: 2 }];
   const m = CL.save.migrate(v23);
-  assert.equal(m.version, 24);
+  assert.equal(m.version, CL.save.VERSION); // and on through the later steps
   assert.deepEqual(plain(m.nobles.opinions[tancred].player), { rel: 20, log: [['freed', 2]] });
   const index = JSON.parse(fs.readFileSync(path.join(FIX, 'index.json'), 'utf8'));
   for (const f of index) {

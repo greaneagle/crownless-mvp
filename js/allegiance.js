@@ -109,7 +109,7 @@
     if (!right.ok) return { ok: false, why: right.why, lines: [], effects };
     if (action === 'serve' || action === 'renew') {
       effects.pay = weeklyPay(c);
-      lines.push(`You serve the ${factionName(realm)} for ${RULES.term} days, at ${effects.pay} crowns a week from their purse.`);
+      lines.push(`You serve the ${factionName(realm)} for ${RULES.term} days, at ${effects.pay} crowns a week from their treasury${CL.crowns ? ` (${CL.crowns.treasury(c, realm)} crowns in it)` : ''}.`);
       lines.push(`Their patrols and lords will side with you; attacking theirs breaks the contract.`);
       if (action === 'serve' && serves(c) && a.realm !== realm) {
         effects.ends = a.kind;
@@ -306,7 +306,10 @@
         a.serviceDays++;
       }
       while (a.nextPay != null && c.day >= a.nextPay) {
-        CL.accounts.earn(c, weeklyPay(c), `pay from the ${factionName(a.realm)}`);
+        // P9-01: from the realm's treasury, only what is there.
+        const want = weeklyPay(c);
+        const got = CL.crowns ? CL.crowns.pay(c, CL.crowns.side(a.realm), 'purse', want, 'mercenary', { partial: true, text: `pay from the ${factionName(a.realm)}` }) : CL.accounts.earn(c, want, `pay from the ${factionName(a.realm)}`) && want;
+        if (got < want) CL.ui.message(`The ${factionName(a.realm)}'s treasury is short: ${got ? `only ${got} of` : 'none of'} your ${want} crowns this week.`);
         a.nextPay += 7;
       }
       if (c.day >= a.until) {

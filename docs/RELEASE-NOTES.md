@@ -1,5 +1,28 @@
 # Crownless — Release Notes
 
+## v3.7.0 — Realms as organisations (P9-01) · 2026-11-23
+
+### New
+- **Every realm has a treasury.** It takes the crown's due from every fief, the whole tax of its ruler's own land and the ransoms paid to it. It pays its mercenaries, the garrisons of the ruler's land, its lords' ransoms when their kin can't, and its officers. Nothing comes from nowhere any more.
+- **A realm with an empty treasury** hires no company (the offer says why), pays its mercenaries short, can't ransom its lords, and its own garrisons go unpaid and desert.
+- **Laws.** Each realm has laws: a crown or a league, the crown's share of the tax, how an heir is chosen, how many fiefs a lord may hold, and who makes war. The Vessaro League is a league: its council of lords decides war, and goes to war only when its lords think ill of the other ruler.
+- **Offices.** Every realm has a marshal (named first for its sieges), a steward (a little more of the crown's due) and a chancellor, chosen by the ruler from the lords with land. A lord passed over remembers it. A captive's office falls vacant and is filled within three days.
+- **The Realms screen:** each realm's card shows its treasury and whether it is rising or falling, its laws in a line, and its officers.
+- Debug: **Realm treasury +1000** and **−1000** for the chosen holding's realm.
+
+### Changed
+- A mercenary's pay comes from the realm's treasury, and the service offer says how much is in it.
+- The ruler's own land is the crown's: its tax goes to the treasury and its costs come from it. The treasuries of the ruler's holdings are the ruler's own purse, untouched.
+
+### Known
+- The Vessaro League rarely goes to war now: its lords seldom think badly enough of another ruler. Treasuries grow over 180 days of peace (from about 800 crowns to about 5,000). Both are for P9-T.
+- You can't be given an office yet (P9-03).
+
+### Under the hood
+- Save version 25: `crowns`. Older saves load, each realm starting with four weeks of its income.
+- `npm run landed` reports each realm's treasury at the start, its lowest and the end; the books are checked every day with the other invariants.
+- **Tests:** 853 fast Node tests, all passing. Slow `landed`, `campaign-bots`, `world-sim` and `phase7-exit`, passing; the others not run. Browser `realm`, passing at both sizes; the full suite not run.
+
 ## v3.6.0 — The lords' loose ends (P9-L1) · 2026-11-23
 
 ### New

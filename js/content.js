@@ -3,6 +3,14 @@
 (function (root) {
   'use strict';
   const CL = root.Crownless;
+  /** P9-01: the laws a realm may have (data/factions.js `laws`), each with its check. */
+  const LAWS = {
+    power: (v) => ['crown', 'league'].includes(v),
+    share: (v) => typeof v === 'number' && v >= 0 && v <= 0.5,
+    succession: (v) => ['eldest', 'kin', 'council'].includes(v),
+    fiefCap: (v) => Number.isInteger(v) && v >= 1 && v <= 9,
+    war: (v) => ['ruler', 'council'].includes(v),
+  };
 
   const TABLES = [
     'factions',
@@ -233,6 +241,11 @@
       for (const [id, n] of Object.entries(f.garrison || {})) {
         if (!C.troops?.[id] || !(Number.isInteger(n) && n > 0)) err(`faction ${f.id}: bad garrison entry ${id}`);
       }
+      // P9-01: a realm's laws (js/crowns.js reads them).
+      if (f.laws !== undefined) {
+        if (!f.laws || typeof f.laws !== 'object') err(`faction ${f.id}: laws must be an object`);
+        else for (const [k, v] of Object.entries(f.laws)) if (!LAWS[k]?.(v)) err(`faction ${f.id}: bad law ${k}`);
+      }
     }
     for (const m of Object.values(C.world_map || {})) {
       if (!C.settlements?.[m.start]) err(`world_map ${m.id}: unknown start ${m.start}`);
@@ -366,5 +379,5 @@
     return errors;
   }
 
-  CL.content = { TABLES, table, get, troop, item, encounter, lootTable, validate, init };
+  CL.content = { TABLES, LAWS, table, get, troop, item, encounter, lootTable, validate, init };
 })(typeof window !== 'undefined' ? window : globalThis);

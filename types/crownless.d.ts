@@ -229,6 +229,14 @@ declare global {
       week: number;
       lastPetitionCheck?: number;
     };
+    /** v25 (P9-01): each realm's treasury (crowns, never below nothing), its last 12 weeks' book, its offices and any law changed from the data. */
+    crowns: Record<ContentId, {
+      treasury: number;
+      book: { week: number; start: number; in: Record<string, number>; out: Record<string, number> }[];
+      offices: Partial<Record<'marshal' | 'steward' | 'chancellor', string | null>>;
+      vacant: Partial<Record<'marshal' | 'steward' | 'chancellor', number>>;
+      laws?: Partial<{ power: 'crown' | 'league'; share: number; succession: 'eldest' | 'kin' | 'council'; fiefCap: number; war: 'ruler' | 'council' }>;
+    }>;
     nextSiegeId?: number;
     siegePlanned?: number | null;
     /** v22 (P8-05): the crown's grants waiting to be made. */

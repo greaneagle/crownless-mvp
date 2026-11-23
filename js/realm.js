@@ -112,6 +112,10 @@
   const RETURN_TIE = { parent: 'child', child: 'parent', sibling: 'sibling', cousin: 'cousin', spouse: 'spouse' };
   const STATUS = ['free', 'captive', 'wounded'];
   const FIEF_CAP = 3; // holdings a lord may have (D-P8d); the ruler's office is not capped
+  /** P9-01: a realm's law says how many (data/factions.js `laws.fiefCap`), else FIEF_CAP. */
+  const fiefCap = (f, c = CL.campaign) => (f && CL.crowns ? CL.crowns.laws(c, f).fiefCap : FIEF_CAP);
+  /** The cap for a person: their realm's (yours: the realm you are sworn to). */
+  const fiefCapOf = (id, c = CL.campaign) => fiefCap(id === PLAYER ? CL.allegiance?.sworn(c) : c?.people?.[id]?.realm, c);
   const PLAYER = 'player';
   const TIE_WORD = {
     parent: { male: 'father', female: 'mother' },
@@ -269,7 +273,7 @@
     const toHolder = holder ?? (toSovereign !== h.sovereign ? rulerOf(toSovereign, c) : h.holder);
     const p = person(toHolder, c);
     if (!p || (toHolder !== PLAYER && p.realm !== toSovereign)) return false; // sworn to its sovereign, or its ruler
-    if (toHolder !== rulerOf(toSovereign, c) && toHolder !== h.holder && fiefsOf(toHolder, c).length >= FIEF_CAP) return false;
+    if (toHolder !== rulerOf(toSovereign, c) && toHolder !== h.holder && fiefsOf(toHolder, c).length >= fiefCap(toSovereign, c)) return false;
     if (toController === h.controller && toSovereign === h.sovereign && toHolder === h.holder) return false;
     const before = { controller: h.controller, sovereign: h.sovereign, holder: h.holder };
     const changed = [move(c, h, sid, toController, toSovereign, toHolder, willing, claimKind)];
@@ -419,7 +423,7 @@
     r.heat++;
     r.lastClash = day;
     if (r.state === 'war') r.losses += lost;
-    else if (r.heat >= RELATIONS.warHeat && !storyHeld(c, a, b) && day >= (r.truceUntil || 0)) setRelation(c, a, b, 'war', 'border clashes', at, day);
+    else if (r.heat >= RELATIONS.warHeat && !storyHeld(c, a, b) && day >= (r.truceUntil || 0) && (CL.crowns?.mayWar(c, a, b) ?? true)) setRelation(c, a, b, 'war', 'border clashes', at, day); // P9-01: a council may hold its realm back
   }
 
   /** Time passing (CL.party.advanceDays): tension cools, wars wear themselves out. */
@@ -585,7 +589,7 @@
     // A lord over the cap gives the extra back to the crown (newest last).
     for (const id of Object.keys(s.people)) {
       if (rules(id, s)) continue;
-      for (const sid of fiefsOf(id, s).slice(FIEF_CAP)) s.holdings[sid].holder = s.rulers[s.holdings[sid].sovereign];
+      for (const sid of fiefsOf(id, s).slice(fiefCap(s.people[id].realm, s))) s.holdings[sid].holder = s.rulers[s.holdings[sid].sovereign];
     }
     delete s.owners;
   }
@@ -672,11 +676,12 @@
       seen.add(r);
     }
     for (const [id, p] of Object.entries(c.people || {})) {
-      if (!rules(id, c) && fiefsOf(id, c).length > FIEF_CAP) out.push(`${id}: more than ${FIEF_CAP} fiefs`);
+      if (!rules(id, c) && fiefsOf(id, c).length > fiefCapOf(id, c)) out.push(`${id}: more than ${fiefCapOf(id, c)} fiefs`);
       for (const k of p.kin) if (!c.people[k.person]?.kin.some((x) => x.person === id && x.tie === RETURN_TIE[k.tie])) out.push(`${id}: kin tie to ${k.person} not returned`);
     }
     out.push(...(CL.lords?.invariants(c) || [])); // the lords on the map and their captivity (P8-01)
     out.push(...(CL.nobles?.invariants(c) || [])); // promises, petitions and opinions (P8-07)
+    out.push(...(CL.crowns?.invariants(c) || [])); // the realms' treasuries and books (P9-01)
     return out;
   }
 
@@ -750,6 +755,8 @@
     capitalOf,
     TIES,
     FIEF_CAP,
+    fiefCap,
+    fiefCapOf,
     PLAYER,
     startingPeople,
     startingHoldings,

@@ -62,3 +62,21 @@ test('Realm: a change of hands shows; a settlement tells its holder on a tap and
   await pressAt(page, at.x, at.y);
   await expect(page.locator('#message')).toContainText('Greywall Fort: held by Lord Hamon Greymantle for Valedorn.');
 });
+
+test('P9-01: each realm’s card shows its treasury and trend, its laws and its officers', async ({ page }) => {
+  await open(page);
+  await newGame(page);
+  await toMap(page);
+  await press(page, '#journalBtn');
+  await waitMode(page, 'journal');
+  await press(page, '#journalRealmBtn');
+  await waitMode(page, 'realm');
+  const want = await game(page, (CL) => ({ t: CL.crowns.treasury(CL.campaign, 'valedorn'), m: CL.realm.titled(CL.crowns.holder(CL.campaign, 'valedorn', 'marshal'), CL.campaign) }));
+  const vale = page.locator('#realmScreen .realmCard[data-realm="valedorn"]');
+  await expect(vale.locator('.realmCrown').first()).toHaveText(`Treasury: ${want.t} crowns, steady.`);
+  await expect(vale).toContainText('Laws: a crown; 10% to the crown; the eldest child inherits; 3 fiefs a lord; the ruler makes war.');
+  await expect(vale).toContainText(`Offices: Marshal: ${want.m} · Steward:`);
+  const ves = page.locator('#realmScreen .realmCard[data-realm="vessaro"]');
+  await expect(ves).toContainText('Laws: a league; 10% to the crown; the council chooses an heir; 3 fiefs a lord; the council makes war.');
+  await expectLayoutSound(page, ['#realmScreen [data-tab="holdings"]', '#primaryBtn']);
+});

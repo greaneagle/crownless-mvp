@@ -80,15 +80,19 @@
   /** Your fiefs. */
   const fiefs = (c) => R().fiefsOf(PLAYER, c);
 
-  /** A holding's money now: your fief's account, or its treasury. */
-  const cash = (c, sid) => (mine(c, sid) ? A().balance(c, account(sid)) : R().holding(sid, c)?.treasury || 0);
+  /** P9-01: the ruler's own land is the crown's: its tax and costs are the realm's treasury. */
+  const crownLand = (c, sid) => Boolean(CL.crowns?.crownLand(c, sid));
 
-  /** Spend from a holding, only what is there. Returns what was paid. */
-  function pay(c, sid, n, why) {
+  /** A holding's money now: your fief's account, the crown's treasury, or its own. */
+  const cash = (c, sid) => (mine(c, sid) ? A().balance(c, account(sid)) : crownLand(c, sid) ? CL.crowns.balance(c, sid) : R().holding(sid, c)?.treasury || 0);
+
+  /** Spend from a holding, only what is there. Returns what was paid. `line`: the crown's book line. */
+  function pay(c, sid, n, why, line = 'wages') {
     const h = R().holding(sid, c);
     const amount = Math.min(Math.floor(n), Math.floor(cash(c, sid)));
     if (amount <= 0) return 0;
-    if (mine(c, sid)) A().transfer(c, account(sid), 'world', amount, why);
+    if (crownLand(c, sid)) CL.crowns.pay(c, sid, 'world', amount, line);
+    else if (mine(c, sid)) A().transfer(c, account(sid), 'world', amount, why);
     else h.treasury -= amount;
     return amount;
   }
@@ -96,7 +100,8 @@
     const h = R().holding(sid, c);
     const amount = Math.floor(n);
     if (amount <= 0) return 0;
-    if (mine(c, sid)) A().transfer(c, 'world', account(sid), amount, why);
+    if (crownLand(c, sid)) CL.crowns.pay(c, 'world', sid, amount, 'tax');
+    else if (mine(c, sid)) A().transfer(c, 'world', account(sid), amount, why);
     else h.treasury += amount;
     return amount;
   }
@@ -180,9 +185,10 @@
     const stop = h.unrest > RULES.unrest.stop;
     r.tax = stop ? 0 : Math.round(RULES.tax[h.kind] * (h.prosperity / 50) * RULES.stance[p.tax]);
     receive(c, sid, r.tax, `tax of ${placeName(sid)}`);
-    // The liege's due: once a week, to the crown (not from the crown's own land).
+    // The liege's due: once a week, into the crown's treasury (P9-01: the law's share), not from its own land.
     if (h.dueWeek !== weekNo && R().rulerOf(h.sovereign, c) !== h.holder) {
-      r.due = pay(c, sid, Math.round(r.tax * RULES.due), `the crown's due from ${placeName(sid)}`);
+      const owed = CL.crowns ? CL.crowns.due(c, h.sovereign, r.tax) : Math.round(r.tax * RULES.due);
+      r.due = CL.crowns ? CL.crowns.pay(c, sid, CL.crowns.side(h.sovereign), Math.min(owed, Math.floor(cash(c, sid))), 'due', { text: `the crown's due from ${placeName(sid)}` }) : pay(c, sid, owed, `the crown's due from ${placeName(sid)}`);
       h.dueWeek = weekNo;
     }
     // Wages: the garrison (forts) or militia (villages); the steward of a fort of yours.
@@ -191,12 +197,12 @@
     r.unpaid = owe - r.wages;
     if (mine(c, sid) && h.kind === 'fort' && !h.castellan) r.steward = pay(c, sid, RULES.steward, `the steward of ${placeName(sid)}`);
     if (h.kind === 'fort' && p.repairs && h.walls < 100) {
-      r.repairs = pay(c, sid, RULES.repairs.cost, `repairs at ${placeName(sid)}`);
+      r.repairs = pay(c, sid, RULES.repairs.cost, `repairs at ${placeName(sid)}`, 'repairs');
       if (r.repairs) h.walls = Math.min(100, h.walls + RULES.repairs.mend);
     }
     // Refill toward the target, from what is left.
     if (h.kind === 'fort' && !stop) r.refill = refillGarrison(c, sid);
-    if (h.kind === 'village' && h.militia < RULES.militia.size && !stop && pay(c, sid, RULES.militia.refill, `militia at ${placeName(sid)}`)) h.militia++;
+    if (h.kind === 'village' && h.militia < RULES.militia.size && !stop && pay(c, sid, RULES.militia.refill, `militia at ${placeName(sid)}`, 'militia')) h.militia++;
     // Unpaid men: warnings, then desertion (forts), and unrest.
     if (r.unpaid > 0) {
       h.unpaid++;
@@ -227,7 +233,7 @@
       const pick = Object.keys(mix).sort((a, b) => (h.garrison[a] || 0) / mix[a] - (h.garrison[b] || 0) / mix[b])[0];
       if (!pick) break;
       const cost = Math.ceil((troop(pick)?.recruitCost || 20) * RULES.refillCost);
-      if (!pay(c, sid, cost, `recruits for ${placeName(sid)}`)) break;
+      if (!pay(c, sid, cost, `recruits for ${placeName(sid)}`, 'recruits')) break;
       spent += cost;
       h.garrison[pick] = (h.garrison[pick] || 0) + 1;
     }
@@ -245,7 +251,9 @@
     ensureAll(c);
     const weekNo = Math.floor(day / 7);
     const mineNow = fiefs(c);
+    CL.crowns?.ensure(c); // the realms' treasuries before the week's due (P9-01)
     for (const sid of Object.keys(c.holdings)) week(c, sid, weekNo);
+    CL.crowns?.week(c); // a free city's trade, the offices' wages
     weeklyGrants(c, day);
     if (mineNow.length) {
       const parts = mineNow.map((sid) => {
@@ -284,6 +292,7 @@
       if (had.length) CL.nobles?.note(c, x.lord, R().rulerOf(c.people[x.lord].realm, c), 'abandoned'); // left in a cell (P8-07)
     }
     decideGrants(c);
+    CL.crowns?.tick(c); // offices fall vacant and are filled (P9-01)
   }
 
   // ---- Administration ----
@@ -442,7 +451,7 @@
     // P8-07: the court weighs opinions: the ruler's of each candidate, friends backing, rivals opposing.
     const court = (id) => Math.round(CL.nobles?.court(c, g, id) || 0);
     return people
-      .filter((id) => fiefCount(id) < R().FIEF_CAP && !g.declined.includes(id))
+      .filter((id) => fiefCount(id) < R().fiefCapOf(id, c) && !g.declined.includes(id))
       .sort((x, y) => {
         // P8-08: after who did most in its taking, you, if you held it and claim it (you first, for what you held).
         const helped = (id) => (id === g.helper ? 0 : id === PLAYER && R().claimsOn(g.sid, c).some((k) => k.by === id) ? 1 : 2);
@@ -546,7 +555,7 @@
       return { choice, influence: taker === PLAYER ? c.influence[f] : 0, grant: offer(c, sid, null) };
     }
     // Keep it unasked: the ruler accepts, or casts the taker out.
-    const accepts = R().fiefsOf(taker, c).length < R().FIEF_CAP && (taker !== PLAYER || (R().standing(c, f) === 'friendly' && !CL.allegiance.state(c).summonsMissed));
+    const accepts = R().fiefsOf(taker, c).length < R().fiefCapOf(taker, c) && (taker !== PLAYER || (R().standing(c, f) === 'friendly' && !CL.allegiance.state(c).summonsMissed));
     R().transfer(c, sid, { holder: taker, willing: true, reason: 'kept by its taker' });
     if (accepts) return { choice, accepted: true };
     if (taker === PLAYER) CL.allegiance.expel(c, 'you kept what was not yours to keep');

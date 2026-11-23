@@ -2713,7 +2713,7 @@ The phase opens with five battle-scale tasks (owner, 2026-11-22; decisions D-P9a
 - **Measured** (`node scripts/landed.js 180 3`, new "loose ends" line): 6–16 lords ransomed by their own and 0–3 let go a seed; men asked 8–16, lent 7–11; 1–2 claims pressed; 0–1 sieges joined unsummoned; every invariant held.
 - **Checks:** `npm test` (845), lint; browser `nobles` and `claims` (one new case each, by real taps); slow `landed` and `prototype-f`. Played at 812×375: Lady Hawise's escort petition accepted from the Lords tab. Not run: the other slow files and the full browser suite (no shared UI changed).
 
-### P9-01 · Realms as organisations (M–L) — Specified
+### P9-01 · Realms as organisations (M–L) — ✅ Done in 3.7.0
 
 **Problem.** A realm is a ruler, some land and a relation to the others. Its money is the world's (the ledger's `world` account): a mercenary's pay, a garrison's refill and a lord's ransom come from nowhere, and a war costs the crown nothing. Design §18.1: a kingdom has a ruler, laws, territory, a treasury, offices, vassals and grievances, and the ruler's wealth is separate from the realm's.
 
@@ -2770,6 +2770,16 @@ The phase opens with five battle-scale tasks (owner, 2026-11-22; decisions D-P9a
 - **Play:** the Realms screen's cards; take service with a realm and see its pay line.
 - **Explain:** "The lands" topic in `data/help.js`, a paragraph; Debug: "Realm treasury ±1000" for the chosen holding's realm.
 - **Not here:** treaties and tribute (P9-02), your own realm (P9-03), armies' upkeep (P9-05).
+
+**Done (3.7.0).**
+- **`js/crowns.js`** (after `realm.js`): `c.crowns[realm] = { treasury, book, offices, vacant, laws? }`, for every realm and the free city. Money moves only by `crowns.pay(c, from, to, n, line)` between a realm (`realm:<id>`), a holding, your purse or `world`, never below nothing; each realm's book keeps 12 weeks by line, checked daily in `realm.invariants`.
+- **In:** the due (the law's share, +5% with a steward) from `fiefs.week`; the ruler's own land (`crowns.crownLand`), whose tax goes to the treasury and whose costs (wages, repairs, recruits, militia) come from it, leaving its holding treasury as the ruler's purse; kin ransoms into the captor's treasury; a free city's trade (a town's tax a week). **Out:** a mercenary's pay (short when broke, with a message), ransoms paid by the ruler after 30 days, office wages (10 a week into the holder's first fief).
+- **Broke:** no hiring (the `serve` right needs two weeks of your pay in the treasury and says why); no ransom by the ruler; the crown's garrisons unpaid, then deserting.
+- **Laws** in `data/factions.js` (`laws`, checked in `js/content.js` `LAWS`); Vessaro a league with council war and council succession. `realm.fiefCap(f)` / `fiefCapOf(id)` replace the fixed cap everywhere it is used for a lord. A council goes to war (`crowns.mayWar`, in `realm.clashed`) only when its riding lords' average opinion of the other ruler is below −20.
+- **Offices:** filled at the start and within 3 days of a vacancy by the ruler's best opinion among riding lords with land (standing, then id, breaks ties); the runner-up notes `passed_over`; a captive, a lord who left or lost all land leaves it vacant. The marshal is named first among a siege's lords. The chancellor waits for P9-02; offices for the player wait for P9-03.
+- **Save v25:** `crowns` (`crowns.migrate` adds `{}`; on load, four weeks of income; junk repaired). Realms screen: treasury and trend, laws, offices on each card. Debug: Realm treasury ±1000. Help: a paragraph in "The lands".
+- **Measured** (`node scripts/landed.js 180 3`, a new treasuries line): every book balanced every day on every seed; no realm below 73 crowns (Valedorn and Aurelian at war, after ransoms and refills), none broke. Treasuries start at about 800 and end at 1,100–8,900. **Open for P9-T:** the Vessaro League's council keeps it out of war (its lords' opinions of other rulers stay near 0): on seed 1 it fought no war in 180 days, against 12 days at war with Valedorn without the council. Treasuries pile up at peace until P9-02 to P9-05 give them things to spend on.
+- **Checks:** `npm test` (853, with the new `crowns` file of 8; the world-sim rule test now sets Vessaro's war law to the ruler, since its council holds it back), lint; browser `realm` (one new case, both sizes); slow `landed`, `campaign-bots`, `world-sim`, `phase7-exit`, all passing. Played at 812×375: the Realms cards; the service offer's line and a week's pay, read in the preview's console rather than by taps.
 
 ### P9-02 · Diplomacy and treaties (M) — Specified
 

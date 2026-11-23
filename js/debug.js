@@ -713,6 +713,16 @@
         log('fiefs week', { line });
         break;
       }
+      case 'realmTreasury': {
+        // P9-01: the chosen holding's realm, ±1000 crowns (on its book as debug).
+        const f = CL.realm.sovereignOf($('#cheatHolding').value, c());
+        if (!f || !CL.crowns.record(c(), f)) return CL.ui.message('Choose a holding of a realm');
+        const n = Number(btn.dataset.n);
+        const K = CL.crowns;
+        const moved = n > 0 ? K.pay(c(), 'world', K.side(f), n, 'debug') : K.pay(c(), K.side(f), 'world', -n, 'debug', { partial: true });
+        log('realm treasury', { realm: f, moved: n > 0 ? moved : -moved, treasury: K.treasury(c(), f) });
+        break;
+      }
       case 'fiefBroke':
         for (const sid of CL.realm.fiefsOf('player', c())) {
           const n = CL.fiefs.cash(c(), sid);

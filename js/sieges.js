@@ -164,12 +164,14 @@
     const claimed = (sid) => (sid === prefer || CL.claims?.pressedFor(c, sid, f) || R().claimsOn(sid, c).some((k) => ours(k) && k.pressed != null && c.day < k.pressed) ? 0 : R().claimsOn(sid, c).some(ours) ? 0.5 : 1);
     const sid = forts.sort((a, b) => claimed(a) - claimed(b) || d(a) - d(b))[0];
     const fort = place(sid);
+    const marshal = CL.crowns?.holder(c, f, 'marshal');
+    const lead = (q) => (q.lordId === marshal ? 0 : 1); // P9-01: the marshal is named first
     const nearby = CL.lords
       .riders(c)
       .filter((pid) => c.people[pid].realm === f && c.people[pid].status === 'free' && !of(c, pid))
       .map((pid) => CL.lords.partyOf(c, pid))
       .filter((q) => q && !CL.lords.thin(c, q) && CL.world.mapDist(q.x, q.y, fort.mapX, fort.mapY) <= RULES.reach * 2)
-      .sort((a, b) => CL.world.mapDist(a.x, a.y, fort.mapX, fort.mapY) - CL.world.mapDist(b.x, b.y, fort.mapX, fort.mapY));
+      .sort((a, b) => lead(a) - lead(b) || CL.world.mapDist(a.x, a.y, fort.mapX, fort.mapY) - CL.world.mapDist(b.x, b.y, fort.mapX, fort.mapY));
     // The ruler's summons (P8-07): each lord answers by their needs and opinions; who refuses stays home.
     const answer = CL.nobles ? CL.nobles.summon(c, f, sid, nearby.map((q) => q.lordId)) : { come: nearby.map((q) => q.lordId).slice(0, 4), refused: [] };
     const lords = answer.come.map((pid) => CL.lords.partyOf(c, pid));

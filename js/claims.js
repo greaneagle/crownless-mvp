@@ -70,7 +70,7 @@
     if (!f) return { ok: false, why: 'No crown stands behind you: swear to one' };
     const ruler = R().rulerOf(f, c);
     if (opinion(c, ruler) < RULES.grudge) return { ok: false, why: `${R().titled(ruler, c)} thinks too little of you to back it` };
-    if (R().fiefsOf(PLAYER, c).length >= R().FIEF_CAP) return { ok: false, why: `You hold ${R().FIEF_CAP} fiefs already` };
+    if (R().fiefsOf(PLAYER, c).length >= R().fiefCapOf(PLAYER, c)) return { ok: false, why: `You hold ${R().fiefCapOf(PLAYER, c)} fiefs already` };
     return { ok: true, why: '' };
   }
 
@@ -127,7 +127,7 @@
     if (R().isHostile(c, h.controller)) return { ok: false, why: `The ${factionName(h.controller)} count you an enemy`, price };
     if (R().locked(c, sid)) return { ok: false, why: 'Only the story decides this fort until it ends', price };
     if (CL.sieges?.at(c, sid)) return { ok: false, why: 'It is besieged', price };
-    if (R().fiefsOf(PLAYER, c).length >= R().FIEF_CAP) return { ok: false, why: `You hold ${R().FIEF_CAP} fiefs already`, price };
+    if (R().fiefsOf(PLAYER, c).length >= R().fiefCapOf(PLAYER, c)) return { ok: false, why: `You hold ${R().fiefCapOf(PLAYER, c)} fiefs already`, price };
     if (c.gold < price) return { ok: false, why: `It costs ${price} crowns (you have ${c.gold})`, price };
     return { ok: true, why: '', price };
   }
@@ -213,7 +213,7 @@
   /** The villages of a seat you held come back to you with it (the crown's to grant, you first). */
   function restoreVillages(c, seat) {
     for (const v of R().villagesOf(seat, c)) {
-      if (!claimOf(c, v) || R().fiefsOf(PLAYER, c).length >= R().FIEF_CAP) continue;
+      if (!claimOf(c, v) || R().fiefsOf(PLAYER, c).length >= R().fiefCapOf(PLAYER, c)) continue;
       R().transfer(c, v, { holder: PLAYER, willing: true, reason: 'claim restored', quiet: true });
     }
   }
@@ -277,7 +277,7 @@
       const h = c.holdings[sid];
       if (h.sovereign !== f || h.controller !== f || h.holder !== R().rulerOf(f, c)) continue;
       if ((c.grants || []).some((g) => g.sid === sid) || claimOf(c, sid).offered) continue; // offered once: declined, it goes elsewhere
-      if (R().fiefsOf(PLAYER, c).length >= R().FIEF_CAP || R().locked(c, sid) || (h.seat && R().locked(c, h.seat))) continue;
+      if (R().fiefsOf(PLAYER, c).length >= R().fiefCapOf(PLAYER, c) || R().locked(c, sid) || (h.seat && R().locked(c, h.seat))) continue;
       const g = CL.fiefs.offer(c, sid, PLAYER);
       if (!g) continue;
       claimOf(c, sid).offered = true;

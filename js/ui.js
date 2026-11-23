@@ -2790,6 +2790,8 @@
       card.dataset.realm = f.id;
       card.append(el('h3', '', `${f.name} · ${R.titled(R.rulerOf(f.id, c), c)}`));
       if (tab === 'holdings') {
+        // P9-01: its treasury and trend, its laws, its offices.
+        for (const line of CL.crowns?.cardLines(c, f.id) || []) card.append(el('p', 'realmCrown', line));
         const list = el('ul', 'realmList');
         const ids = Object.keys(c.holdings).filter((sid) => c.holdings[sid].sovereign === f.id);
         const order = { town: 0, fort: 1, village: 2 };

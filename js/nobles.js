@@ -700,7 +700,7 @@
     if (!p) return ['ask', null];
     const ruler = R().rulerOf(p.realm, c);
     const n = R().fiefsOf(pid, c).length;
-    if (has(c, pid, 'restless') && n < R().FIEF_CAP && opinion(c, pid, ruler) < -10) return ['keep', null];
+    if (has(c, pid, 'restless') && n < R().fiefCapOf(pid, c) && opinion(c, pid, ruler) < -10) return ['keep', null];
     const kin = p.kin.find((k) => c.people[k.person]?.realm === p.realm && c.people[k.person].status === 'free' && !R().fiefsOf(k.person, c).length && !R().rules(k.person, c));
     if (kin && n >= 1) return ['suggest', kin.person];
     if (has(c, pid, 'loyal') && n >= 2) return ['hand', null];

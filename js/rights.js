@@ -156,6 +156,7 @@
         const a = A().state(c);
         if (a.kind === 'vassal') return no(`You are sworn to the ${factionName(a.realm)}: ask for release first`);
         if (enemyOf(c, who, f)) return no(`The ${factionName(f)} count you Hostile: they will not hire you`);
+        if (CL.crowns && !CL.crowns.canHire(c, f, A().weeklyPay(c))) return no(`The ${factionName(f)}'s treasury can't pay a company now (${CL.crowns.treasury(c, f)} crowns)`); // P9-01
         if (!(a.kind === 'mercenary' && a.realm === f) && sinceOath(c) < A().RULES.oathGap) return no(`You changed your allegiance lately: from day ${CL.party.dayNumber(c.day + A().RULES.oathGap - sinceOath(c))}`);
         return yes();
       }

@@ -148,6 +148,7 @@ test('rules: an incident sours peace; clashes heat tension into war; war wears o
   const R = CL.realm;
   const [a, b] = ['hrothmark', 'vessaro'];
   const at = { x: 100, y: 30 };
+  CL.crowns.record(c, b).laws = { war: 'ruler' }; // test setup: the League's council out of the way (P9-01; tests/crowns.test.js covers it)
   // Peace → tension on a border incident (at most one a day).
   c.rngSeed = 1;
   let soured = false;

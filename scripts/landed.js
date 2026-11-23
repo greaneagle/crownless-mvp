@@ -62,6 +62,8 @@ function run(seed, days = 180) {
   const timeline = [];
   // P8-T: who held land at the start, to see who won it and who lost it all.
   const startLand = Object.fromEntries(Object.keys(c.people).filter((id) => !CL.realm.rules(id, c)).map((id) => [id, CL.realm.fiefsOf(id, c).length]));
+  // P9-01: each realm's treasury at the start, its lowest, and the end (the books are checked daily, in the invariants).
+  const crowns = Object.fromEntries(Object.keys(CL.crowns.ensure(c)).map((f) => [f, { start: CL.crowns.treasury(c, f), low: CL.crowns.treasury(c, f), end: 0 }]));
   for (let d = 1; d <= days; d++) {
     Object.assign(c, { food: 1e4, gold: 1e4 });
     CL.party.advanceDays(1);
@@ -74,7 +76,9 @@ function run(seed, days = 180) {
     }
     for (const p of CL.realm.invariants(c)) if (tally.problems.length < 10) tally.problems.push(`day ${d}: ${p}`);
     if (d % 30 === 0) timeline.push({ day: d, forts: forts() });
+    for (const f of Object.keys(crowns)) crowns[f].low = Math.min(crowns[f].low, CL.crowns.treasury(c, f));
   }
+  for (const f of Object.keys(crowns)) crowns[f].end = CL.crowns.treasury(c, f);
   const lords = Object.keys(c.people).filter((id) => !CL.realm.rules(id, c));
   const land = (id) => CL.realm.fiefsOf(id, c).length;
   const lordsBy = { landless: lords.filter((id) => !land(id)).length, one: lords.filter((id) => land(id) === 1).length, several: lords.filter((id) => land(id) > 1).length };
@@ -95,7 +99,7 @@ function run(seed, days = 180) {
     for (const id of lords) if (c.people[id].realm === f.id && all) most = Math.max(most, land(id) / all);
   }
   const riders = Object.fromEntries(CL.realm.realms().map((f) => [f.id, CL.lords.riders(c).filter((id) => c.people[id].realm === f.id).length]));
-  return { seed, days, ...tally, forts: forts(), timeline, lords: lordsBy, ties, riders, won, wereLandless, lostAll, most: Math.round(most * 100) };
+  return { seed, days, ...tally, forts: forts(), timeline, lords: lordsBy, ties, riders, won, wereLandless, lostAll, most: Math.round(most * 100), crowns };
 }
 
 module.exports = { run };
@@ -115,6 +119,7 @@ if (require.main === module) {
     console.log(`  land: ${r.won} of ${r.wereLandless} landless lords won land; ${r.lostAll} landed lords lost it all; the most of a realm's holdings one lord holds: ${r.most}%`);
     console.log(`  nobles: land gained ${r.gained}, lost ${r.lost}; ${r.grumbled} grumbled; left: ${per(r.left)}; joined: ${per(r.joined)}; summonses refused ${r.refused}; revoked ${r.revoked}; friends ${r.ties.friend}, rivals ${r.ties.rival}, feuds ${r.ties.feud}; riding lords: ${per(r.riders)}`);
     const L = r.loose;
+    console.log(`  treasuries (start/lowest/end): ${Object.entries(r.crowns).map(([f, t]) => `${f} ${t.start}/${t.low}/${t.end}`).join(', ')}`);
     console.log(`  loose ends: ${L.ransomed} ransomed by their own, ${L.letGo} let go unpaid; men asked ${L.menAsked}, lent ${L.menLent}; claims pressed ${L.pressed}; sieges joined unsummoned ${L.joined}`);
   }
 }

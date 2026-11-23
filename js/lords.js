@@ -314,18 +314,10 @@
   }
 
   /** A person's fiefs that can pay, richest first (never yours: your treasuries are your own accounts). */
-  const purses = (c, pid) => (pid && pid !== 'player' ? R().fiefsOf(pid, c) : []).map((sid) => c.holdings[sid]).filter((h) => h && h.holder !== 'player').sort((a, b) => (b.treasury || 0) - (a.treasury || 0));
-  /** Where a realm's ransoms are paid: its capital, else any holding it controls (not yours). */
-  function crownChest(c, f) {
-    const cap = R().capitalOf(f);
-    const h = cap && c.holdings?.[cap];
-    if (h && h.controller === f && h.holder !== 'player') return h;
-    return Object.values(c.holdings || {}).find((x) => x.controller === f && x.holder !== 'player') || null;
-  }
-
+  const purses = (c, pid) => (pid && pid !== 'player' ? R().fiefsOf(pid, c) : []).filter((sid) => c.holdings[sid] && c.holdings[sid].holder !== 'player' && !CL.crowns?.crownLand(c, sid)).sort((a, b) => (c.holdings[b].treasury || 0) - (c.holdings[a].treasury || 0));
   /**
    * P9-L1: a lord held by a realm (off-screen) is ransomed by their own, paid from the payer's fiefs
-   * into the captor crown's (holding to holding; P9-01 moves it to realm treasuries). The kinsman with
+   * into the captor crown's treasury (P9-01; the ruler pays from their realm's). The kinsman with
    * land pays first; after 30 days, the lord's ruler; short of money, they try again in a week. After 60
    * days unpaid, the captors let them go. The freed lord thanks the payer; they and their kin remember
    * who held them. Returns 'paid', 'wait' or 'let go'.
@@ -335,17 +327,16 @@
     const ruler = R().rulerOf(person.realm, c);
     const payer = c.day - x.since >= KIN_RANSOM.rulerAfter ? ruler : payerOf(c, x.lord);
     const n = ransomOf(x);
-    const from = purses(c, payer);
-    const to = crownChest(c, x.by);
+    const K = CL.crowns;
+    const crown = payer === ruler; // the ruler pays from the realm's treasury
+    const from = crown ? [] : purses(c, payer);
+    const to = K.side(x.by);
     const captor = R().rulerOf(x.by, c);
-    if (to && from.reduce((k, h) => k + (h.treasury || 0), 0) >= n) {
-      let left = n;
-      for (const h of from) {
-        const take = Math.min(left, h.treasury || 0);
-        h.treasury -= take;
-        left -= take;
-      }
-      to.treasury = (to.treasury || 0) + n;
+    const has = crown ? K.treasury(c, person.realm) : from.reduce((k, sid) => k + (c.holdings[sid].treasury || 0), 0);
+    if (has >= n) {
+      if (crown) K.pay(c, K.side(person.realm), to, n, 'ransom');
+      let left = crown ? 0 : n;
+      for (const sid of from) left -= K.pay(c, sid, to, left, 'ransom', { partial: true });
       if (payer !== x.lord) CL.nobles?.note(c, x.lord, payer, 'helped', { kin: false }); // thanks to who paid
       if (captor) CL.nobles?.note(c, x.lord, captor, 'held'); // and they and their kin remember who held them
       free(c, x, `${R().titled(x.lord, c)} is home again, ransomed by ${payer === x.lord ? 'their own' : R().titled(payer, c)} for ${n} crowns.`);
