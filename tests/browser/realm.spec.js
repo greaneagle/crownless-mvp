@@ -80,3 +80,27 @@ test('P9-01: each realm’s card shows its treasury and trend, its laws and its 
   await expect(ves).toContainText('Laws: a league; 10% to the crown; the council chooses an heir; 3 fiefs a lord; the council makes war.');
   await expectLayoutSound(page, ['#realmScreen [data-tab="holdings"]', '#primaryBtn']);
 });
+
+test('P9-02: the Diplomacy tab shows each pair of realms, their treaties with end days, and trust', async ({ page }) => {
+  await open(page);
+  await newGame(page);
+  await game(page, (CL) => {
+    const c = CL.campaign;
+    CL.diplomacy.sign(c, 'trade', 'valedorn', 'hrothmark'); // test setup: a treaty to show
+    CL.diplomacy.addTrust(c, 'aurelian', 'vessaro', -15);
+  });
+  await toMap(page);
+  await press(page, '#journalBtn');
+  await waitMode(page, 'journal');
+  await press(page, '#journalRealmBtn');
+  await waitMode(page, 'realm');
+  await press(page, '#realmScreen [data-tab="diplomacy"]');
+  await expect(page.locator('#realmScreen [data-tab="diplomacy"]')).toHaveAttribute('aria-pressed', 'true');
+  const cards = page.locator('#realmScreen .diplomacyCard');
+  await expect(cards).toHaveCount(6);
+  const vh = page.locator('#realmScreen .diplomacyCard[data-pair="hrothmark|valedorn"]');
+  await expect(vh.locator('h3')).toHaveText(/^Valedorn and Hrothmark: at peace/);
+  await expect(vh).toContainText('Treaties: trade until day 121.');
+  await expect(page.locator('#realmScreen .diplomacyCard[data-pair="aurelian|vessaro"]')).toContainText('Trust: Aurelian in Vessaro -15, Vessaro in Aurelian 0.');
+  await expectLayoutSound(page, ['#realmScreen [data-tab="holdings"]', '#realmScreen [data-tab="diplomacy"]', '#primaryBtn']);
+});

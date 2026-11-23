@@ -222,7 +222,7 @@ test('saves: v24 → v25 (four weeks of income), a round trip, junk repaired, an
   v24.version = 24;
   delete v24.crowns;
   const m = CL.save.migrate(v24);
-  assert.equal(m.version, 25);
+  assert.equal(m.version, CL.save.VERSION); // and on through the later steps
   assert.deepEqual(plain(m.crowns), {});
   const loaded = CL.save.fromRaw(v24).campaign;
   for (const f of ['valedorn', 'merrow']) assert.equal(loaded.crowns[f].treasury, K.RULES.startWeeks * K.income(loaded, f));
@@ -232,7 +232,7 @@ test('saves: v24 → v25 (four weeks of income), a round trip, junk repaired, an
     const { CL: G } = loadGame({ party: false });
     const r = G.portable.importText(fs.readFileSync(path.join(FIX, f.file), 'utf8'));
     assert.equal(r.ok, true, `${f.file}: ${r.reason}`);
-    assert.equal(G.campaign.version, 25);
+    assert.equal(G.campaign.version, G.save.VERSION);
     for (const k of Object.keys(G.campaign.crowns)) assert.ok(G.campaign.crowns[k].treasury >= 0);
     assert.deepEqual(plain(G.realm.invariants(G.campaign)), [], f.file);
     const again = loadGame({ party: false }).CL;

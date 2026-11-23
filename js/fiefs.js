@@ -254,6 +254,7 @@
     CL.crowns?.ensure(c); // the realms' treasuries before the week's due (P9-01)
     for (const sid of Object.keys(c.holdings)) week(c, sid, weekNo);
     CL.crowns?.week(c); // a free city's trade, the offices' wages
+    CL.diplomacy?.weekly(c, day); // tribute, treaties kept and run out, the realms' offers (P9-02)
     weeklyGrants(c, day);
     if (mineNow.length) {
       const parts = mineNow.map((sid) => {

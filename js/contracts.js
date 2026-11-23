@@ -18,9 +18,12 @@
   const xy = ([x, y]) => ({ x, y });
   const tpl = (id) => CL.content.get('contracts', id);
   const templates = () => Object.values(CL.content.table('contracts'));
+  /** The templates a board rolls its own offers from (P9-02: not the envoy, which the game posts). */
+  const rolled = () => templates().filter((t) => t.board !== false);
   const settlement = (id) => CL.content.get('settlements', id);
   const offersContracts = (sid) => Boolean(sid && settlement(sid).services.includes('contracts'));
-  const fill = (text, k) => text.replace('{giver}', settlement(k.giver).name).replace('{to}', k.to ? settlement(k.to).name : '');
+  const fill = (text, k) => text.replace('{giver}', settlement(k.giver).name).replace('{to}', k.to ? settlement(k.to).name : '').replace('{treaty}', k.envoy ? TREATY[k.envoy.kind] || 'terms' : '');
+  const TREATY = { truce: 'a truce', peace: 'peace', alliance: 'an alliance', trade: 'a treaty of trade' };
   const between = (lo, hi, r) => lo + (hi - lo) * r;
 
   // ---- Offers ----
@@ -107,7 +110,8 @@
     if (!offersContracts(sid) || !CL.rights.may(c, 'player', 'contract', sid).ok) return []; // no work for enemies (P8-03)
     if (!c.contractOffers[sid]) c.contractOffers[sid] = {};
     const board = c.contractOffers[sid];
-    for (const t of templates()) {
+    expireEnvoy(c, sid);
+    for (const t of rolled()) {
       const o = board[t.id];
       if (o === null && c.day < (board[`${t.id}_until`] || 0)) continue; // taken; the board refills later
       if (!o || c.day >= o.offeredUntil) {
@@ -118,6 +122,30 @@
     return templates()
       .map((t) => board[t.id])
       .filter(Boolean);
+  }
+
+  /**
+   * P9-02: a realm's offer of a treaty, posted on its capital's board as an envoy's errand: a sealed
+   * letter to the other capital. Returns the offer posted, or null (a board without one, or one taken).
+   */
+  function postEnvoy(c, from, to, envoy, rules) {
+    if (!offersContracts(from) || from === to) return null;
+    c.contractOffers[from] ||= {};
+    const board = c.contractOffers[from];
+    if (board.envoy) return null;
+    const t = tpl('envoy');
+    board.envoy = { id: c.nextContractId++, template: 'envoy', giver: from, days: t.timeLimitDays, offeredUntil: c.day + rules.days, to, letter: true, reward: { gold: rules.gold, renown: t.reward.renown, xp: t.reward.xpBase }, envoy };
+    CL.diag.log('info', 'Envoy posted', { at: from, to, kind: envoy.kind });
+    return board.envoy;
+  }
+  /** P9-02: an envoy's errand left on the board too long: the offer goes without you. */
+  function expireEnvoy(c, sid) {
+    const board = c.contractOffers?.[sid];
+    const o = board?.envoy;
+    if (!o || c.day < o.offeredUntil) return;
+    delete board.envoy;
+    CL.diag.log('info', 'Envoy not taken', { at: sid, kind: o.envoy.kind });
+    CL.diplomacy?.onEnvoy(c, o.envoy, false);
   }
 
   /** The offer of one template at a settlement (the bandit hunt by default). Null if none. */
@@ -198,6 +226,7 @@
     if (tpl(k.template).kind !== 'hunt') clearParties(c, { ...k, kind: tpl(k.template).kind });
     c.contract = null;
     if (k.petition != null) CL.nobles?.onContract(c, k, status); // P9-L1: a lord's escort, done or failed
+    if (k.envoy) CL.diplomacy?.onEnvoy(c, k.envoy, status === 'collected'); // P9-02: the offer is put
   }
 
   /** The marked band was destroyed by the player. */
@@ -315,6 +344,7 @@
 
   /** Daily check from the campaign clock: an active contract past its deadline fails. */
   function tick(c) {
+    for (const sid of Object.keys(c.contractOffers || {})) expireEnvoy(c, sid); // P9-02
     const k = c.contract;
     if (k?.status === 'active' && c.day > k.deadline) {
       CL.ui.message(`Your contract from ${settlement(k.giver).name} has run out. Your name suffers for it.`);
@@ -339,7 +369,7 @@
     const levels = CL.character.gainXp(k.reward.xp, c);
     c.contractsDone += 1;
     CL.story.emit('contract', { template: k.template, giver: k.giver }, c);
-    CL.realm.adjust(c, CL.realm.owner(k.giver, c), CL.realm.REP.help, 'contract'); // GDD §10: helping a faction
+    CL.realm.adjust(c, CL.realm.owner(k.giver, c), tpl(k.template).standing ?? CL.realm.REP.help, 'contract'); // GDD §10: helping a faction
     end(c, 'collected');
     return { ...k.reward, levels };
   }
@@ -392,6 +422,14 @@
     if (Number.isInteger(k.ambushId)) out.ambushId = k.ambushId;
     if (k.payAt && CL.content.table('settlements')[k.payAt]) out.payAt = k.payAt;
     if (lords) out.petition = k.petition;
+    if (k.template === 'envoy') {
+      const e = k.envoy;
+      if (!e || !CL.realm.isRealm(e.from) || !CL.realm.isRealm(e.to) || !['truce', 'peace', 'alliance', 'trade'].includes(e.kind)) return null;
+      const terms = {};
+      if (Number.isInteger(e.terms?.amount) && e.terms.amount > 0 && [e.from, e.to].includes(e.terms.to)) Object.assign(terms, { from: e.terms.from, to: e.terms.to, amount: e.terms.amount });
+      if (CL.realm.isRealm(e.terms?.against)) terms.against = e.terms.against;
+      out.envoy = { kind: e.kind, from: e.from, to: e.to, terms };
+    }
     return out;
   }
 
@@ -432,8 +470,10 @@
   }
 
   CL.contracts = {
+    fill,
     escortPay,
     forLord,
+    postEnvoy,
     OFFER_REFRESH_DAYS,
     WORK,
     workScale,

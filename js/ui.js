@@ -530,7 +530,7 @@
       const [x, y] = [CL.content.get('settlements', a), CL.content.get('settlements', b)];
       return Math.round(CL.world.mapDist(x.mapX, x.mapY, y.mapX, y.mapY));
     };
-    const fill = (text, o) => text.replace('{giver}', name(o.giver)).replace('{to}', o.to ? name(o.to) : '');
+    const fill = (text, o) => CL.contracts.fill(text, o); // the board's words: giver, destination and (P9-02) the envoy's treaty
     const rewardLine = (o) => `Reward: ${o.reward.gold} crowns${o.deposit ? ` (${o.deposit} of it your deposit back)` : ''} · +${o.reward.renown} renown · +${o.reward.xp} XP`;
     const after = (fn) => () => {
       const r = fn();
@@ -2745,13 +2745,14 @@
     const R = CL.realm;
     const el = (tag, cls, text) => Object.assign(document.createElement(tag), { className: cls || '', textContent: text || '' });
     const S = (id) => CL.content.get('settlements', id);
-    const tab = ['lords', 'allegiance', 'fief'].includes(CL.game.realmTab) ? CL.game.realmTab : 'holdings';
+    const tab = ['lords', 'allegiance', 'fief', 'diplomacy'].includes(CL.game.realmTab) ? CL.game.realmTab : 'holdings';
     const tabs = el('div', 'row realmTabs');
     for (const [id, label] of [
       ['holdings', 'Holdings'],
       ['lords', 'Lords'],
       ['allegiance', 'Allegiance'],
       ['fief', CL.realm.fiefsOf('player', c).length || !CL.claims?.mine(c).length ? 'Fief' : 'Claims'], // P8-08: landless with claims
+      ['diplomacy', 'Diplomacy'], // P9-02
     ]) {
       const b = el('button', id === tab ? 'on' : '', label);
       b.type = 'button';
@@ -2760,12 +2761,24 @@
       b.onclick = () => {
         CL.game.realmTab = id;
         renderRealm();
+        CL.tips?.check('realm'); // P9-02: the Diplomacy tab's first-time tip
       };
       tabs.append(b);
     }
     const cards = [];
     if (tab === 'fief') {
       $('#realmScreen').replaceChildren(tabs, ...fiefCards(c));
+      return;
+    }
+    if (tab === 'diplomacy') {
+      // P9-02: each pair of realms, at peace, in tension or at war, their treaties and trust.
+      const pairs = CL.diplomacy.pairLines(c).map((p) => {
+        const card = el('div', 'contractCard realmCard diplomacyCard');
+        card.dataset.pair = p.pair;
+        card.append(el('h3', '', p.title), ...p.lines.map((l) => el('p', '', l)));
+        return card;
+      });
+      $('#realmScreen').replaceChildren(tabs, ...pairs);
       return;
     }
     if (tab === 'allegiance') {

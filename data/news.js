@@ -58,6 +58,22 @@
       priority: 4,
       lines: ['Tempers cool between {faction} and {other}: the border is quiet again.']
     },
+    // P9-02: treaties. Each line is written by its teller (js/diplomacy.js), naming the treaty.
+    treaty_signed: {
+      id: 'treaty_signed',
+      priority: 5,
+      lines: ['{faction} and {other} have come to terms.']
+    },
+    treaty_broken: {
+      id: 'treaty_broken',
+      priority: 7,
+      lines: ['{faction} has broken its word to {other}.']
+    },
+    ally_joins: {
+      id: 'ally_joins',
+      priority: 6,
+      lines: ['{faction} has gone to war beside its ally, against {other}.']
+    },
     // P8-01: the lords on the map. Each line is written by its teller (js/lords.js), naming the lord.
     lord_beaten: {
       id: 'lord_beaten',

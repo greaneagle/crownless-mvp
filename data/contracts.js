@@ -9,7 +9,11 @@
  *   Escort: a marked caravan rolls toward the destination only while the player stays within
  *     escortRange; a Reaver ambush (ambushStrength) waits on the route. Paid on arrival.
  *   Delivery: goods (qty of one trade good, a refundable deposit at their value) or a sealed message
- *     (letterChance); delivered by entering the destination. Paid on arrival. */
+ *     (letterChance); delivered by entering the destination. Paid on arrival.
+ *   board: false (P9-02): never rolled for a board; posted by the game itself (the envoy).
+ *   standing: the standing with the giver's realm when it is paid (default the usual for helping).
+ *   Envoy (P9-02): a realm's offer of a treaty, carried as a sealed letter from its capital to the
+ *     other realm's; posted only for a vassal of the realm (js/diplomacy.js). */
 (function (root) {
   root.CROWNLESS_CONTENT = root.CROWNLESS_CONTENT || {};
   var C = root.CROWNLESS_CONTENT;
@@ -60,6 +64,22 @@
       offer: 'A load needs carrying to {to}, and the carters are all on the road already.',
       offerLetter: 'A sealed letter must reach {to}, unopened. Speed matters more than strength.',
       done: 'Delivered to {to}. You are paid on the spot.'
+    },
+    envoy: {
+      id: 'envoy',
+      name: 'Envoy',
+      kind: 'delivery',
+      board: false,
+      distance: [0, 999],
+      goodsQty: [1, 1],
+      letterChance: 1,
+      timeLimitDays: 6,
+      reward: { goldBase: 60, goldPerLeague: 0, renown: 0, xpBase: 20, xpPerLeague: 0 },
+      standing: 5,
+      failRenown: 2,
+      offer: 'The Crown needs an envoy: carry its offer of {treaty} to {to}, and speak for it there.',
+      offerLetter: 'The Crown needs an envoy: carry its offer of {treaty} to {to}, and speak for it there.',
+      done: 'You put the Crown’s offer before the court of {to}, and are paid for the ride.'
     }
   };
 })(typeof window !== 'undefined' ? window : globalThis);

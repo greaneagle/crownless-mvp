@@ -30,6 +30,7 @@ test('Gate D scope: the region, troops, maps, quests, contracts, companion, repu
   );
   assert.deepEqual(
     t('contracts')
+      .filter((k) => k.board !== false) // P9-02: the envoy is posted by the game, not rolled for a board
       .map((k) => k.kind || 'hunt')
       .sort(),
     ['delivery', 'escort', 'hunt'],

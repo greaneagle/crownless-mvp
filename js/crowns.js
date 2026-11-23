@@ -33,7 +33,7 @@
   };
   const OFFICES = ['marshal', 'steward', 'chancellor'];
   const DEFAULT_LAWS = { power: 'crown', share: 0.1, succession: 'eldest', fiefCap: 3, war: 'ruler' };
-  const LINES = ['due', 'tax', 'trade', 'ransom', 'wages', 'steward', 'repairs', 'recruits', 'militia', 'mercenary', 'office', 'debug'];
+  const LINES = ['due', 'tax', 'trade', 'tribute', 'ransom', 'wages', 'steward', 'repairs', 'recruits', 'militia', 'mercenary', 'office', 'debug'];
   const PLAYER = 'player';
   const PREFIX = 'realm:';
 

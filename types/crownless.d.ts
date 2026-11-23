@@ -237,6 +237,13 @@ declare global {
       vacant: Partial<Record<'marshal' | 'steward' | 'chancellor', number>>;
       laws?: Partial<{ power: 'crown' | 'league'; share: number; succession: 'eldest' | 'kin' | 'council'; fiefCap: number; war: 'ruler' | 'council' }>;
     }>;
+    /** v26 (P9-02): the treaties in force between realms. */
+    treaties: { id: number; kind: 'peace' | 'truce' | 'nonaggression' | 'alliance' | 'access' | 'trade' | 'tribute'; between: [ContentId, ContentId]; since: number; until: number | null; terms: { from?: ContentId; to?: ContentId; amount?: number; against?: ContentId }; kept: number; broken: ContentId | null }[];
+    nextTreatyId: number;
+    /** v26 (P9-02): trust[a][b], what realm a thinks of b's word (−100…100), sparse. */
+    trust: Record<ContentId, Record<ContentId, number>>;
+    /** v26 (P9-02): "from|to|kind" → the day a realm last made that offer. */
+    offers: Record<string, number>;
     nextSiegeId?: number;
     siegePlanned?: number | null;
     /** v22 (P8-05): the crown's grants waiting to be made. */

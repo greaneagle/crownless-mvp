@@ -1,5 +1,26 @@
 # Crownless — Release Notes
 
+## v3.8.0 — Diplomacy and treaties (P9-02) · 2026-11-23
+
+### New
+- **Treaties.** Realms make peace (sometimes with a weekly tribute), truces, pacts of nonaggression, alliances, treaties of passage and of trade, each with its end day. A war that wears out leaves a 30-day truce, now a treaty.
+- **A pact holds.** A border that heats to the brink stays short of war while a pact of nonaggression or an alliance stands, unless one side's rulers think ill enough of the other to break it.
+- **Allies.** An attacked realm's allies march if they can afford a war. Asked to join an attack, an ally weighs it and may say no.
+- **Trust.** Each realm trusts the others' word more for every month a treaty is kept, and much less when one is broken: the injured realm most, every other court a little. A realm that trusts another too little won't sign with it.
+- **The realms' offers.** Once a week a realm may make an offer: a truce when a war goes badly or its treasury runs low, peace with tribute when beaten, an alliance against a neighbour twice its strength, trade when rich and at peace. The news tells of treaties made and broken.
+- **The Diplomacy tab** on the Realms screen: each pair of realms, their state, their treaties with end days, and their trust. A first-time tip explains it.
+- **The envoy.** As a vassal, your realm's offer may wait on its capital's board for three days: carry it to the other court for 60 crowns and +5 standing, and it is better heard. Left there, it goes without you.
+- Debug: **Offer a treaty now** for the chosen holding's realm.
+
+### Known
+- Treaties of passage and of trade have no effect yet beyond trust: there are no tolls or borders for them to lift.
+- Pacts are rarely broken: rulers seldom think that ill of each other. For P9-T.
+
+### Under the hood
+- Save version 26: `treaties`, `nextTreatyId`, `trust` and `offers`. Older saves load, each truce still running becoming a truce treaty.
+- `npm run landed` reports treaties made by kind, kept to their end and broken, allies declining, days at war per pair, and days each realm is at peace with all.
+- **Tests:** 861 fast Node tests, all passing. Slow `landed` and `world-sim`, passing; the others not run. Browser `realm`, `settlement` and `allegiance`, passing at both sizes (the allegiance spec's service line, out of date since 3.7.0, updated); the full suite not run.
+
 ## v3.7.0 — Realms as organisations (P9-01) · 2026-11-23
 
 ### New

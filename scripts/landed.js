@@ -24,7 +24,7 @@ function run(seed, days = 180) {
     for (const f of CL.realm.realms()) out[f.id] = Object.values(c.holdings).filter((h) => h.kind === 'fort' && h.controller === f.id).length;
     return out;
   };
-  const tally = { loose: { ransomed: 0, letGo: 0, menAsked: 0, menLent: 0, pressed: 0, joined: 0 }, wars: 0, begun: 0, lifted: 0, surrendered: 0, stormed: 0, relieved: 0, abandoned: 0, grants: 0, fell: 0, problems: [], left: {}, joined: {}, grumbled: 0, refused: 0, revoked: 0, gained: 0, lost: 0 };
+  const tally = { treaties: { made: {}, kept: 0, broken: 0, declined: 0, warDays: {}, peaceAll: {} }, loose: { ransomed: 0, letGo: 0, menAsked: 0, menLent: 0, pressed: 0, joined: 0 }, wars: 0, begun: 0, lifted: 0, surrendered: 0, stormed: 0, relieved: 0, abandoned: 0, grants: 0, fell: 0, problems: [], left: {}, joined: {}, grumbled: 0, refused: 0, revoked: 0, gained: 0, lost: 0 };
   // Counted as they happen (the diagnostic log keeps only the latest lines).
   const log = CL.diag.log;
   CL.diag.log = (level, msg, data) => {
@@ -38,6 +38,11 @@ function run(seed, days = 180) {
     }
     if (msg === 'Claim pressed' && data.agreed) tally.loose.pressed++;
     if (msg === 'Joins a siege unsummoned') tally.loose.joined++;
+    // P9-02: treaties made (by kind), kept to their end, and broken.
+    if (msg === 'Treaty signed') tally.treaties.made[data.kind] = (tally.treaties.made[data.kind] || 0) + 1;
+    if (msg === 'Treaty ended') tally.treaties.kept++;
+    if (msg === 'Treaty broken') tally.treaties.broken++;
+    if (msg === 'Ally declines') tally.treaties.declined++;
     if (msg === 'Lord changes realm') {
       tally.left[data.from] = (tally.left[data.from] || 0) + 1;
       tally.joined[data.to] = (tally.joined[data.to] || 0) + 1;
@@ -77,6 +82,8 @@ function run(seed, days = 180) {
     for (const p of CL.realm.invariants(c)) if (tally.problems.length < 10) tally.problems.push(`day ${d}: ${p}`);
     if (d % 30 === 0) timeline.push({ day: d, forts: forts() });
     for (const f of Object.keys(crowns)) crowns[f].low = Math.min(crowns[f].low, CL.crowns.treasury(c, f));
+    for (const [k, r] of Object.entries(c.relations)) if (r.state === 'war') tally.treaties.warDays[k] = (tally.treaties.warDays[k] || 0) + 1;
+    for (const f of CL.realm.realms()) if (CL.realm.realms().every((g) => g.id === f.id || CL.realm.relation(c, f.id, g.id) === 'peace')) tally.treaties.peaceAll[f.id] = (tally.treaties.peaceAll[f.id] || 0) + 1;
   }
   for (const f of Object.keys(crowns)) crowns[f].end = CL.crowns.treasury(c, f);
   const lords = Object.keys(c.people).filter((id) => !CL.realm.rules(id, c));
@@ -120,6 +127,8 @@ if (require.main === module) {
     console.log(`  nobles: land gained ${r.gained}, lost ${r.lost}; ${r.grumbled} grumbled; left: ${per(r.left)}; joined: ${per(r.joined)}; summonses refused ${r.refused}; revoked ${r.revoked}; friends ${r.ties.friend}, rivals ${r.ties.rival}, feuds ${r.ties.feud}; riding lords: ${per(r.riders)}`);
     const L = r.loose;
     console.log(`  treasuries (start/lowest/end): ${Object.entries(r.crowns).map(([f, t]) => `${f} ${t.start}/${t.low}/${t.end}`).join(', ')}`);
+    const T = r.treaties;
+    console.log(`  treaties: made ${per(T.made)}; kept to their end ${T.kept}; broken ${T.broken}; allies declining ${T.declined}; days at war per pair: ${per(T.warDays)}; days at peace with all: ${per(T.peaceAll)}`);
     console.log(`  loose ends: ${L.ransomed} ransomed by their own, ${L.letGo} let go unpaid; men asked ${L.menAsked}, lent ${L.menLent}; claims pressed ${L.pressed}; sieges joined unsummoned ${L.joined}`);
   }
 }

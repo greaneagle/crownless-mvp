@@ -391,8 +391,11 @@
 
   const NEWS = { war: 'war_declared', tension: 'tension_rising', peace: 'peace_made' };
 
-  /** Set two kingdoms' relation, with a news line (`at`: where it happened, for the news). */
-  function setRelation(c, a, b, state, reason = '', at = null, day = c.day) {
+  /**
+   * Set two kingdoms' relation, with a news line (`at`: where it happened, for the news). `by`: the
+   * realm that went to war (P9-02: it breaks their treaties; allies are called).
+   */
+  function setRelation(c, a, b, state, reason = '', at = null, day = c.day, by = null) {
     if (!STATES.includes(state) || relation(c, a, b) === null) return false;
     const r = record(c, a, b);
     if (r.state === state) return false;
@@ -403,6 +406,8 @@
     CL.diag.log('info', 'Relations', { a, b, from, to: state, reason });
     const kind = from === 'war' && state === 'tension' ? 'truce' : NEWS[state];
     CL.news?.record(c, kind, { ...(at || {}), faction: a, other: b }, day);
+    if (from === 'war' && state === 'tension') CL.diplomacy?.truceAfterWar(c, a, b, r.truceUntil, day); // P9-02: the truce is a treaty
+    if (state === 'war') CL.diplomacy?.onWar(c, a, b, by || a, reason);
     return true;
   }
 
@@ -423,7 +428,11 @@
     r.heat++;
     r.lastClash = day;
     if (r.state === 'war') r.losses += lost;
-    else if (r.heat >= RELATIONS.warHeat && !storyHeld(c, a, b) && day >= (r.truceUntil || 0) && (CL.crowns?.mayWar(c, a, b) ?? true)) setRelation(c, a, b, 'war', 'border clashes', at, day); // P9-01: a council may hold its realm back
+    else if (r.heat >= RELATIONS.warHeat && !storyHeld(c, a, b) && day >= (r.truceUntil || 0) && (CL.crowns?.mayWar(c, a, b) ?? true)) {
+      // P9-01: a council may hold its realm back. P9-02: so may a pact, unless a side breaks it.
+      const by = CL.diplomacy ? CL.diplomacy.goesToWar(c, a, b) : a;
+      if (by) setRelation(c, a, b, 'war', 'border clashes', at, day, by);
+    }
   }
 
   /** Time passing (CL.party.advanceDays): tension cools, wars wear themselves out. */
@@ -682,6 +691,7 @@
     out.push(...(CL.lords?.invariants(c) || [])); // the lords on the map and their captivity (P8-01)
     out.push(...(CL.nobles?.invariants(c) || [])); // promises, petitions and opinions (P8-07)
     out.push(...(CL.crowns?.invariants(c) || [])); // the realms' treasuries and books (P9-01)
+    out.push(...(CL.diplomacy?.invariants(c) || [])); // treaties and trust (P9-02)
     return out;
   }
 

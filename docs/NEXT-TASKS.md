@@ -2781,7 +2781,7 @@ The phase opens with five battle-scale tasks (owner, 2026-11-22; decisions D-P9a
 - **Measured** (`node scripts/landed.js 180 3`, a new treasuries line): every book balanced every day on every seed; no realm below 73 crowns (Valedorn and Aurelian at war, after ransoms and refills), none broke. Treasuries start at about 800 and end at 1,100–8,900. **Open for P9-T:** the Vessaro League's council keeps it out of war (its lords' opinions of other rulers stay near 0): on seed 1 it fought no war in 180 days, against 12 days at war with Valedorn without the council. Treasuries pile up at peace until P9-02 to P9-05 give them things to spend on.
 - **Checks:** `npm test` (853, with the new `crowns` file of 8; the world-sim rule test now sets Vessaro's war law to the ruler, since its council holds it back), lint; browser `realm` (one new case, both sizes); slow `landed`, `campaign-bots`, `world-sim`, `phase7-exit`, all passing. Played at 812×375: the Realms cards; the service offer's line and a week's pay, read in the preview's console rather than by taps.
 
-### P9-02 · Diplomacy and treaties (M) — Specified
+### P9-02 · Diplomacy and treaties (M) — ✅ Done in 3.8.0
 
 **Problem.** Realms are at peace, in tension or at war (W-07), with a truce after a war (P8-06a). Design §18.3: a small vocabulary of treaties with dates, obligations and breach rules, and no "alliance = +50" shortcut.
 
@@ -2841,6 +2841,16 @@ The phase opens with five battle-scale tasks (owner, 2026-11-22; decisions D-P9a
 - **Play:** the Diplomacy tab; the envoy errand from a town's board.
 - **Explain:** a Diplomacy paragraph in "The lands", and a first-time tip for the tab; Debug: "Offer a treaty now" (the chosen holding's realm makes its next offer).
 - **Not here:** your own offers as a ruler (P9-03), marriage alliances (P9-06).
+
+**Done (3.8.0).**
+- **`js/diplomacy.js`** (after `crowns.js`): `c.treaties` (`{ id, kind, between, since, until, terms, kept, broken }`), `c.trust[a][b]` (−100…100 as `TRUST.min`/`max`), and `c.offers` (the day an offer was last made, so it waits 30 days). Lengths as the Brief; one treaty of a kind per pair.
+- **War and treaties:** `realm.clashed` asks `diplomacy.goesToWar`: a nonaggression pact or alliance holds the brink unless a side's deciders (the ruler; a league's council) think worse than −20 of the other ruler; without one, the side that thinks less of the other goes first. `setRelation(…, by)` then breaks every treaty between them by the attacker (−40 the injured, −15 every other court). A war worn out into tension leaves a truce treaty with the relation's `truceUntil` as its end. A kept treaty: +5 to both a month.
+- **Allies:** the attacked realm's allies join unless short of money (under two weeks' costs, −5 trust); the attacker's allies are asked like an offer (a quarrel of their own with the target +20, none −20). Joins don't call further allies.
+- **The AI** (weekly, on the payday, one offer a realm): the Brief's four reasons. Answers: the deciders' average opinion of the other ruler, half the trust, the chancellor (+5), and interests (weariness up to +20, losing +20, winning −15, tribute +15; a common foe ±; peace for trade). Forts lost are read from their old holders' claims.
+- **Envoy:** while you are sworn to the offering realm and have no contract, the offer waits 3 days on its capital's board as an `envoy` errand (a new board-less contract template, a sealed letter to the other capital): carried, it is answered +10, for 60 crowns and +5 standing; failed or left, it is answered as it is.
+- **Save v26** (`treaties`, `nextTreatyId`, `trust`, `offers`; truces migrate). Diplomacy tab on the Realms screen with a first-time tip; news kinds `treaty_signed`, `treaty_broken`, `ally_joins`; Debug "Offer a treaty now"; a paragraph in "The lands".
+- **Measured** (`node scripts/landed.js 180 3`, a new treaties line): 10–12 treaties made a seed (mostly trade; a truce or four; one to three alliances; on seed 1 a peace with tribute), 4–6 kept to their end, 0–1 broken; days at war per pair at most 27 of 180; no realm at peace with all for more than 44 days; every invariant held. **Open for P9-T:** pacts rarely break (rulers seldom think ill of each other); fewer wars on seed 3 (one).
+- **Not built:** trade and access have no effect beyond trust (no tolls or borders for them to lift); the player's own offers wait for P9-03. **Checks:** `npm test` (861, with the new `diplomacy` file of 8; the Gate D template count leaves out the board-less envoy), lint; browser `realm` (one new case), and `settlement` and `allegiance` (the board's text): the allegiance spec still expected 3.6.0's "from their purse", broken since 3.7.0 and fixed here; slow `landed`, `world-sim`. Played at 812×375: the envoy taken from Stonebridge's board by taps (the ride to Hrothgard skipped in the console), and the Diplomacy tab with its tip; playing it found and fixed the board showing `{treaty}` raw.
 
 ### P9-03 · Founding or taking a kingdom (L) — Specified
 

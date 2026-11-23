@@ -26,7 +26,7 @@
   'use strict';
   const CL = root.Crownless;
 
-  const VERSION = 25;
+  const VERSION = 26;
   const KEY = 'crownless_save';
   const BACKUP_KEY = 'crownless_save_backup';
   const LEGACY_KEY = 'crownless_v03_party';
@@ -107,6 +107,10 @@
       sieges: [], // forts besieged, and by whom (P8-06a)
       nobles: CL.nobles.blank(), // the lords' opinions, debts, promises and petitions (P8-07)
       crowns: {}, // realm → its treasury, book, offices and changed laws (P9-01), filled on first use
+      treaties: [], // treaties between realms, in force (P9-02)
+      nextTreatyId: 0,
+      trust: {}, // trust[a][b]: what realm a thinks of b's word, sparse (P9-02)
+      offers: {}, // "from|to|kind" → the day a realm last made that offer (P9-02)
       relations: CL.realm.defaultRelations(), // kingdom pair → peace, tension or war (W-07)
       story: CL.story.blank(), // quest progress, story flags, conversation visits (GDD §13)
       companion: null, // Mara, once she joins (GDD §10)
@@ -219,6 +223,7 @@
     23: [...V3_FIELDS.filter(([f]) => f !== 'owners'), ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object'], ['accounts', 'object'], ['ledger', 'array'], ['followers', 'object'], ['relations', 'object'], ['medicine', 'number'], ['detachments', 'array'], ['retinue', 'array'], ['happenings', 'object'], ['tourney', 'object'], ['businesses', 'object'], ['people', 'object'], ['rulers', 'object'], ['nextPersonId', 'number'], ['holdings', 'object'], ['prisoners', 'array'], ['allegiance', 'object'], ['grants', 'array'], ['influence', 'object'], ['sieges', 'array']],
     24: [...V3_FIELDS.filter(([f]) => f !== 'owners'), ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object'], ['accounts', 'object'], ['ledger', 'array'], ['followers', 'object'], ['relations', 'object'], ['medicine', 'number'], ['detachments', 'array'], ['retinue', 'array'], ['happenings', 'object'], ['tourney', 'object'], ['businesses', 'object'], ['people', 'object'], ['rulers', 'object'], ['nextPersonId', 'number'], ['holdings', 'object'], ['prisoners', 'array'], ['allegiance', 'object'], ['grants', 'array'], ['influence', 'object'], ['sieges', 'array'], ['nobles', 'object']],
     25: [...V3_FIELDS.filter(([f]) => f !== 'owners'), ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object'], ['accounts', 'object'], ['ledger', 'array'], ['followers', 'object'], ['relations', 'object'], ['medicine', 'number'], ['detachments', 'array'], ['retinue', 'array'], ['happenings', 'object'], ['tourney', 'object'], ['businesses', 'object'], ['people', 'object'], ['rulers', 'object'], ['nextPersonId', 'number'], ['holdings', 'object'], ['prisoners', 'array'], ['allegiance', 'object'], ['grants', 'array'], ['influence', 'object'], ['sieges', 'array'], ['nobles', 'object'], ['crowns', 'object']],
+    26: [...V3_FIELDS.filter(([f]) => f !== 'owners'), ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object'], ['accounts', 'object'], ['ledger', 'array'], ['followers', 'object'], ['relations', 'object'], ['medicine', 'number'], ['detachments', 'array'], ['retinue', 'array'], ['happenings', 'object'], ['tourney', 'object'], ['businesses', 'object'], ['people', 'object'], ['rulers', 'object'], ['nextPersonId', 'number'], ['holdings', 'object'], ['prisoners', 'array'], ['allegiance', 'object'], ['grants', 'array'], ['influence', 'object'], ['sieges', 'array'], ['nobles', 'object'], ['crowns', 'object'], ['treaties', 'array'], ['trust', 'object']],
   };
 
   /** @param {unknown} v @param {string} kind */
@@ -427,6 +432,8 @@
     23: (d) => CL.nobles.migrate(d),
     // 24 → 25 (build 3.7.0, P9-01): realm treasuries, filled on load from four weeks of their income.
     24: (d) => CL.crowns.migrate(d),
+    // 25 → 26 (build 3.8.0, P9-02): treaties and trust; today's truces become truce treaties.
+    25: (d) => CL.diplomacy.migrate(d),
     20: (d) => ({ ...d, version: 21, allegiance: { kind: 'independent', realm: null, since: typeof d.day === 'number' ? d.day : 0, until: null, serviceDays: 0, summonsMissed: 0, history: [], window: null, lastOath: null, nextPay: null, served: null, hunt: null } }),
   };
 
@@ -499,6 +506,7 @@
     CL.sieges.sanitize(s, d); // sieges, and each fort's food (P8-06a), after holdings and parties
     CL.nobles.sanitize(s, d); // the lords' opinions, debts, promises and petitions (P8-07), after the sieges
     CL.crowns.sanitize(s, d); // the realms' treasuries, books and offices (P9-01), after the holdings and opinions
+    CL.diplomacy.sanitize(s, d); // treaties, trust and recent offers (P9-02), after the relations and crowns
     CL.surgeon.sanitize(s, d); // the surgeon and the medicine (P7-01)
     CL.blacksmith.sanitize(s, d); // the blacksmith, and fine kit within its cap (P7-03)
     CL.scout.sanitize(s, d); // the scout (P7-02)

@@ -713,6 +713,14 @@
         log('fiefs week', { line });
         break;
       }
+      case 'treatyNow': {
+        // P9-02: the chosen holding's realm makes its next offer now (if it has a reason to).
+        const f = CL.realm.sovereignOf($('#cheatHolding').value, c());
+        const r = f && CL.diplomacy.offerNow(c(), f);
+        log('treaty offer now', { realm: f, offer: r?.offer || null, result: r?.result || null });
+        if (!r) CL.ui.message(`${f ? CL.content.get('factions', f).short : 'That realm'} has no offer to make now.`);
+        break;
+      }
       case 'realmTreasury': {
         // P9-01: the chosen holding's realm, ±1000 crowns (on its book as debug).
         const f = CL.realm.sovereignOf($('#cheatHolding').value, c());

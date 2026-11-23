@@ -18,7 +18,7 @@ test('Allegiance: take service at Stonebridge from its preview, then see it and 
   await waitMode(page, 'contracts');
   const serve = page.locator('#contractsScreen .allegianceCard[data-action="serve"]');
   await expect(serve.locator('h3')).toHaveText('Service with the Valedorn Crown');
-  await expect(serve).toContainText(/You serve the Valedorn Crown for 30 days, at \d+ crowns a week from their purse\./);
+  await expect(serve).toContainText(/You serve the Valedorn Crown for 30 days, at \d+ crowns a week from their treasury \(\d+ crowns in it\)\./);
   await expect(serve).toContainText('Your soldiers and money stay yours.');
   await fits(page, serve);
   // Swearing isn't open yet: the reason is on the card, its button disabled.

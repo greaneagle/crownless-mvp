@@ -67,6 +67,8 @@
     },
     // P8-07: a lord's petition is waiting for your answer.
     petition: (c) => Boolean(CL.nobles?.petition(c)),
+    // P9-02: the Realms screen's Diplomacy tab is open.
+    diplomacyTab: () => CL.game.realmTab === 'diplomacy',
   };
 
   /** The text for this device: touch phones get the touch wording, keyboards the key wording. */
