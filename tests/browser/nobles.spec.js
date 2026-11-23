@@ -23,7 +23,7 @@ test('Lords: each lord’s lines; Ask… Lord Tancred to ride with you: a price 
     c.gold = 1000;
   });
   await lordsTab(page);
-  const tancred = page.locator('#realmScreen .lordRow').filter({ hasText: 'Lord Tancred Greymantle · Valedorn · landless' });
+  const tancred = page.locator('#realmScreen .lordRow').filter({ hasText: 'Lord Tancred Greymantle of House Greymantle · Valedorn · landless' }); // P9-06: and their house
   await expect(tancred).toContainText('Kin: Hamon Greymantle (father)');
   await expect(tancred).toContainText('Wants land of his own');
   await expect(tancred).toContainText('hungry for glory, hungry for land');
@@ -124,4 +124,41 @@ test('P9-04: a rising in your realm: summoned by both sides on the Allegiance ta
   await expect(page.locator('#realmScreen .risingCard')).toHaveCount(0);
   const sworn = await game(page, (CL) => ({ realm: CL.allegiance.sworn(CL.campaign), rising: CL.campaign.rebellions.list[0].rising }));
   expect(sworn.realm).toBe(sworn.rising);
+});
+
+test('P9-06: propose a marriage from the Lords tab: the answer and its reasons, then a dowry that wins it', async ({ page }) => {
+  await open(page);
+  await newGame(page);
+  await toMap(page);
+  await game(page, (CL) => {
+    const c = CL.campaign; // test setup: a vassal of Valedorn granted Ashby (your house), with crowns
+    Object.assign(c.allegiance, { kind: 'vassal', realm: 'valedorn', since: c.day, window: { start: c.day, days: 10 } });
+    CL.realm.transfer(c, 'ashby', { holder: 'player', willing: true, reason: 'test' });
+    CL.houses.found(c);
+    c.gold = 3000;
+    const tancred = Object.keys(c.people).find((id) => c.people[id].key === 'tancred_greymantle');
+    for (let i = 0; i < 5; i++) CL.nobles.note(c, tancred, 'player', 'freed', { kin: false });
+  });
+  await lordsTab(page);
+  const house = page.locator('#realmScreen .houseCard');
+  await expect(house.locator('h3')).toHaveText(/^House /);
+  await expect(house).toContainText('Unmarried.');
+  const tancred = page.locator('#realmScreen .lordRow').filter({ hasText: 'Lord Tancred Greymantle of House Greymantle' });
+  await tancred.locator('.lordAskBtn').scrollIntoViewIfNeeded();
+  await press(page, tancred.locator('.lordAskBtn'));
+  const card = page.locator('#realmScreen .lordAskCard');
+  await press(page, card.locator('[data-ask="marry"]'));
+  const answer = card.locator('.lordAnswer');
+  await expect(answer).toContainText('A marriage is for life, not a favour (−).');
+  const first = await answer.getAttribute('data-answer');
+  if (first !== 'obey') {
+    // Not yet: a dowry, in one tap if they named one, else the larger offer.
+    const again = answer.locator('[data-ask="marryAgain"]');
+    if (await again.count()) await press(page, again);
+    else await press(page, card.locator('[data-ask="marryDowry"]'));
+  }
+  await expect.poll(() => game(page, (CL) => CL.houses.spouseOf(CL.campaign))).not.toBeNull();
+  const vp = page.viewportSize();
+  const box = await card.boundingBox();
+  expect(box.x + box.width).toBeLessThanOrEqual(vp.width + 1);
 });

@@ -24,9 +24,9 @@ test('Realm: Holdings and Lords tabs from the map’s Journal, every realm, and 
   // The Lords tab: what each holds (or landless), their kin, need and where they are (P8-07's lines).
   await press(page, '#realmScreen [data-tab="lords"]');
   await expect(page.locator('#realmScreen [data-tab="lords"]')).toHaveAttribute('aria-pressed', 'true');
-  await expect(vale).toContainText('Lord Hamon Greymantle · Valedorn · holds Greywall Fort, Highmere');
+  await expect(vale).toContainText('Lord Hamon Greymantle of House Greymantle · Valedorn · holds Greywall Fort, Highmere');
   await expect(vale).toContainText('Kin: Hawise Greymantle (sister), Tancred Greymantle (son)');
-  await expect(vale).toContainText('Lord Tancred Greymantle · Valedorn · landless');
+  await expect(vale).toContainText('Lord Tancred Greymantle of House Greymantle · Valedorn · landless');
   await expect(vale).toContainText('Kin: Hamon Greymantle (father)');
   // It scrolls, and every card fits the width.
   const last = screen.locator('.realmCard').last();

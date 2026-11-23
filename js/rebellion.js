@@ -87,9 +87,9 @@
   // ---- Forming and warning ----
 
   /** A faction forms where grievances are (the realm's first in its quiet days, one at a time). */
-  function form(c, f, { force = false } = {}) {
+  function form(c, f, { force = false, members: given = null, claimant: chosen = null } = {}) {
     if (active(c, f) || ofRising(c, f) || (!force && (state(c).quiet[f] || 0) > c.day)) return null;
-    let members = grievances(c, f);
+    let members = given || grievances(c, f); // P9-06: a contested succession names its own
     if (force && members.length < RULES.least) {
       const ruler = R().rulerOf(f, c);
       members = riders(c, f).sort((a, b) => opinion(c, a, ruler) - opinion(c, b, ruler)).slice(0, RULES.least); // Debug: the unhappiest
@@ -97,7 +97,7 @@
     if (members.length < RULES.least) return null;
     const s = state(c);
     s.nextId += 1;
-    const x = { id: s.nextId, realm: f, claimant: claimantOf(c, f, members), members, formed: Math.floor(c.day), stage: 'faction', warned: 0, nextWarn: c.day, pausedUntil: null, demand: null, prepared: false, responded: null, conceded: false, rising: null, rose: null };
+    const x = { id: s.nextId, realm: f, claimant: chosen && members.includes(chosen) ? chosen : claimantOf(c, f, members), members, formed: Math.floor(c.day), stage: 'faction', warned: 0, nextWarn: c.day, pausedUntil: null, demand: null, prepared: false, responded: null, conceded: false, rising: null, rose: null };
     s.list.push(x);
     CL.diag.log('info', 'Faction formed', { realm: f, claimant: x.claimant, members });
     return x;

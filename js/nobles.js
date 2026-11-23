@@ -86,12 +86,13 @@
     mediated: 10,
     pardoned: 10,
     kept_peace: 10, // a ruler who conceded rather than fought
+    marriage_ended: -40, // P9-06: they ended the marriage
     raided: -20, // P9-05: an army raided their village
   };
   const FRIENDLY_DEEDS = ['fought_beside', 'relieved', 'freed', 'ransomed_kin', 'helped', 'backed', 'suggested'];
   const CLOSE = ['parent', 'child', 'sibling', 'spouse'];
   const NEEDS = ['land', 'coin', 'men', 'safety', 'standing'];
-  const KINDS = ['siege', 'relief', 'ride', 'back', 'summons', 'men'];
+  const KINDS = ['siege', 'relief', 'ride', 'back', 'summons', 'men', 'marriage'];
   const ANSWERS = ['obey', 'negotiate', 'delay', 'refuse'];
   const PETITIONS = ['bandits', 'loan', 'ransom', 'claim', 'grant', 'escort'];
   // Motives from the trait line: the first words that match decide (a few per lord, stable).
@@ -259,6 +260,7 @@
       mediated: `${you} heard ${h} through a mediator`,
       pardoned: `${you} pardoned ${h}`,
       kept_peace: `${you} kept the peace in the realm`,
+      marriage_ended: `${you} ended ${his(c, from)} marriage`,
       raided: `${you} raided ${his(c, from)} village`,
     };
     return `${words[d[0]] || 'they have a history'} on day ${CL.party.dayNumber(d[1])}`;
@@ -398,7 +400,13 @@
     } else if (by === PLAYER && !debt) say(`${H} owes you nothing`, 0);
     if (by === ruler && has(c, pid, 'loyal')) say(`${H} is loyal to the crown`, Math.round(lean * 0.4));
     else if (by === ruler && has(c, pid, 'restless')) say(`${H} owes the ${short(p.realm)} crown nothing`, Math.round(lean * 0.4));
+    // P9-06: houses: an allied house answers its ally's call; a rival house is cold.
+    if (CL.houses && by && by !== pid && ask.kind !== 'marriage') {
+      if (CL.houses.allied(c, pid, by)) say(`${cap(his(c, pid))} house is allied to ${by === PLAYER ? 'yours' : `${R().titled(by, c)}'s`}`, CL.houses.RULES.ally);
+      else if (CL.houses.rivals(c, pid, by)) say(`${cap(his(c, pid))} house is a rival of ${by === PLAYER ? 'yours' : `${R().titled(by, c)}'s`}`, CL.houses.RULES.rival);
+    }
     // 3. Interest: their lands, their needs, the place and the company.
+    if (ask.kind === 'marriage' && CL.houses) for (const [text, pts] of CL.houses.interests(c, pid, ask)) say(text, pts); // P9-06: the houses' interests and the dowry
     const top = topNeed(c, pid);
     const danger = threatened(c, pid);
     const target = ask.sid ? place(ask.sid) : null;
@@ -485,7 +493,8 @@
     else answer = 'negotiate';
     /** @type {any} */
     const out = { answer, score, reasons };
-    if (answer === 'negotiate') {
+    if (answer === 'negotiate' && ask.kind === 'marriage') out.dowry = Math.ceil((RULES.obey - score) / 8) * 100; // P9-06: a larger dowry would do it
+    else if (answer === 'negotiate') {
       // Men for a siege or a relief cost money: a price in crowns. Otherwise a favour, unless they want coin.
       const coin = top?.need === 'coin' || has(c, pid, 'coin') || ask.kind === 'siege' || ask.kind === 'relief' || !petitionFor(c, pid);
       if (coin) out.price = Math.round((RULES.price.base + (RULES.obey - score) * RULES.price.perPoint) / 10) * 10;
@@ -1143,12 +1152,16 @@
     const list = (ids) => ids.map(name).join(', ');
     const lines = [];
     const ruler = R().rules(pid, c);
-    lines.push(`${R().titled(pid, c)} · ${short(p.realm)}${ruler ? ' · rules' : ''} · ${fiefs.length ? `holds ${fiefs.map(placeName).join(', ')}` : 'landless'}`);
+    // P9-06: their house, and the dead with the day they died.
+    const house = CL.houses?.houseOf(c, pid);
+    if (p.status === 'dead') return [`${R().titled(pid, c)} · ${short(p.realm)} · died on day ${CL.party.dayNumber(p.died ?? c.day)}${p.cause === 'wounds' ? ', of wounds' : ''}`];
+    lines.push(`${R().titled(pid, c)}${house ? ` of ${CL.houses.name(house)}` : ''} · ${short(p.realm)}${ruler ? ' · rules' : ''} · ${fiefs.length ? `holds ${fiefs.map(placeName).join(', ')}` : 'landless'}`);
     const kin = p.kin.map((k) => `${c.people[k.person]?.name || 'someone'} (${R().tieWord(k.tie, c.people[k.person])}${c.people[k.person]?.realm !== p.realm ? `, ${short(c.people[k.person]?.realm)}` : ''})`);
     const friends = ties(c, pid, 'friend');
     const rivals = ties(c, pid, 'rival');
     const feuds = ties(c, pid, 'feud');
-    const social = [kin.length ? `Kin: ${kin.join(', ')}` : '', friends.length ? `Friends: ${list(friends)}` : '', rivals.length ? `Rivals: ${list(rivals)}` : '', feuds.length ? `Feuds: ${list(feuds)}` : ''].filter(Boolean);
+    const wed = p.spouse ? `Married to ${p.spouse === PLAYER ? 'you' : R().titled(p.spouse, c)}` : '';
+    const social = [wed, kin.length ? `Kin: ${kin.join(', ')}` : '', friends.length ? `Friends: ${list(friends)}` : '', rivals.length ? `Rivals: ${list(rivals)}` : '', feuds.length ? `Feuds: ${list(feuds)}` : ''].filter(Boolean);
     if (social.length) lines.push(social.join(' · '));
     if (!ruler) {
       const q = CL.lords?.partyOf(c, pid);

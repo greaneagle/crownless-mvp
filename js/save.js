@@ -26,7 +26,7 @@
   'use strict';
   const CL = root.Crownless;
 
-  const VERSION = 29;
+  const VERSION = 30;
   const KEY = 'crownless_save';
   const BACKUP_KEY = 'crownless_save_backup';
   const LEGACY_KEY = 'crownless_v03_party';
@@ -108,6 +108,8 @@
       nextArmyId: 0,
       armyRest: {},
       armyCall: null,
+      houses: {}, // houses, from the people's kin (P9-06), built below
+      nextHouseId: 0,
       prisoners: [], // lords held captive: by you, or off-screen by a realm (P8-01)
       allegiance: CL.allegiance.blank(), // independent, a realm's mercenary, or its vassal (P8-04)
       grants: [], // the crown's grants waiting to be made (P8-05)
@@ -138,6 +140,7 @@
     };
     CL.realm.sanitizeHoldings(c, null); // the world's people and holdings as its data begins them
     CL.fiefs.sanitize(c, null); // and how each holding stands: prosperity, garrison, policies (P8-05)
+    CL.houses.sanitize(c, null); // the houses, from the people's kin (P9-06)
     CL.character.applyKit(c, background);
     CL.upkeep.stowFood(c);
     CL.parties.ensure(c, true);
@@ -235,6 +238,7 @@
     27: [...V3_FIELDS.filter(([f]) => f !== 'owners'), ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object'], ['accounts', 'object'], ['ledger', 'array'], ['followers', 'object'], ['relations', 'object'], ['medicine', 'number'], ['detachments', 'array'], ['retinue', 'array'], ['happenings', 'object'], ['tourney', 'object'], ['businesses', 'object'], ['people', 'object'], ['rulers', 'object'], ['nextPersonId', 'number'], ['holdings', 'object'], ['prisoners', 'array'], ['allegiance', 'object'], ['grants', 'array'], ['influence', 'object'], ['sieges', 'array'], ['nobles', 'object'], ['crowns', 'object'], ['treaties', 'array'], ['trust', 'object'], ['realms', 'object'], ['rule', 'object']],
     28: [...V3_FIELDS.filter(([f]) => f !== 'owners'), ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object'], ['accounts', 'object'], ['ledger', 'array'], ['followers', 'object'], ['relations', 'object'], ['medicine', 'number'], ['detachments', 'array'], ['retinue', 'array'], ['happenings', 'object'], ['tourney', 'object'], ['businesses', 'object'], ['people', 'object'], ['rulers', 'object'], ['nextPersonId', 'number'], ['holdings', 'object'], ['prisoners', 'array'], ['allegiance', 'object'], ['grants', 'array'], ['influence', 'object'], ['sieges', 'array'], ['nobles', 'object'], ['crowns', 'object'], ['treaties', 'array'], ['trust', 'object'], ['realms', 'object'], ['rule', 'object'], ['rebellions', 'object']],
     29: [...V3_FIELDS.filter(([f]) => f !== 'owners'), ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object'], ['accounts', 'object'], ['ledger', 'array'], ['followers', 'object'], ['relations', 'object'], ['medicine', 'number'], ['detachments', 'array'], ['retinue', 'array'], ['happenings', 'object'], ['tourney', 'object'], ['businesses', 'object'], ['people', 'object'], ['rulers', 'object'], ['nextPersonId', 'number'], ['holdings', 'object'], ['prisoners', 'array'], ['allegiance', 'object'], ['grants', 'array'], ['influence', 'object'], ['sieges', 'array'], ['nobles', 'object'], ['crowns', 'object'], ['treaties', 'array'], ['trust', 'object'], ['realms', 'object'], ['rule', 'object'], ['rebellions', 'object'], ['armies', 'array']],
+    30: [...V3_FIELDS.filter(([f]) => f !== 'owners'), ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object'], ['accounts', 'object'], ['ledger', 'array'], ['followers', 'object'], ['relations', 'object'], ['medicine', 'number'], ['detachments', 'array'], ['retinue', 'array'], ['happenings', 'object'], ['tourney', 'object'], ['businesses', 'object'], ['people', 'object'], ['rulers', 'object'], ['nextPersonId', 'number'], ['holdings', 'object'], ['prisoners', 'array'], ['allegiance', 'object'], ['grants', 'array'], ['influence', 'object'], ['sieges', 'array'], ['nobles', 'object'], ['crowns', 'object'], ['treaties', 'array'], ['trust', 'object'], ['realms', 'object'], ['rule', 'object'], ['rebellions', 'object'], ['armies', 'array'], ['houses', 'object']],
   };
 
   /** @param {unknown} v @param {string} kind */
@@ -451,6 +455,8 @@
     27: (d) => CL.rebellion.migrate(d),
     // 28 → 29 (build 3.11.0, P9-05): no armies in the field yet.
     28: (d) => CL.armies.migrate(d),
+    // 29 → 30 (build 3.12.0, P9-06): houses, built on load from the people's kin.
+    29: (d) => CL.houses.migrate(d),
     20: (d) => ({ ...d, version: 21, allegiance: { kind: 'independent', realm: null, since: typeof d.day === 'number' ? d.day : 0, until: null, serviceDays: 0, summonsMissed: 0, history: [], window: null, lastOath: null, nextPay: null, served: null, hunt: null } }),
   };
 
@@ -534,6 +540,7 @@
     CL.founding.sanitize(s, d); // your rule: policies and lords asking to swear (P9-03); founded realms came first
     CL.rebellion.sanitize(s, d); // factions and risings (P9-04), after the people, realms and prisoners
     CL.armies.sanitize(s, d); // armies in the field (P9-05), after the parties and sieges
+    CL.houses.sanitize(s, d); // houses, marriages and the dead (P9-06), after the people
     CL.surgeon.sanitize(s, d); // the surgeon and the medicine (P7-01)
     CL.blacksmith.sanitize(s, d); // the blacksmith, and fine kit within its cap (P7-03)
     CL.scout.sanitize(s, d); // the scout (P7-02)

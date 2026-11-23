@@ -145,7 +145,7 @@
 
   const TIES = ['parent', 'child', 'sibling', 'cousin', 'spouse'];
   const RETURN_TIE = { parent: 'child', child: 'parent', sibling: 'sibling', cousin: 'cousin', spouse: 'spouse' };
-  const STATUS = ['free', 'captive', 'wounded'];
+  const STATUS = ['free', 'captive', 'wounded', 'dead']; // P9-06: the dead keep their record
   const FIEF_CAP = 3; // holdings a lord may have (D-P8d); the ruler's office is not capped
   /** P9-01: a realm's law says how many (data/factions.js `laws.fiefCap`), else FIEF_CAP. */
   const fiefCap = (f, c = CL.campaign) => (f && CL.crowns ? CL.crowns.laws(c, f).fiefCap : FIEF_CAP);
@@ -814,6 +814,7 @@
     out.push(...(CL.diplomacy?.invariants(c) || [])); // treaties and trust (P9-02)
     out.push(...(CL.rebellion?.invariants(c) || [])); // factions and risings (P9-04)
     out.push(...(CL.armies?.invariants(c) || [])); // armies in the field (P9-05)
+    out.push(...(CL.houses?.invariants(c) || [])); // houses, marriages, the dead (P9-06)
     return out;
   }
 

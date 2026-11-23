@@ -84,10 +84,14 @@ test('intentions follow the state: landless lords campaign, nobody rides home fr
   }
   assert.ok(seen.has('patrol') && (seen.has('campaign') || seen.has('ride')), [...seen].join());
   // A thinned household turns for home and refills there.
-  const p = c.parties.find((q) => q.lordId && q.intent !== 'chase');
+  const away = (q) => {
+    const h = CL.content.table('settlements')[L.homeOf(c, q.lordId)];
+    return CL.world.mapDist(q.x, q.y, h.mapX, h.mapY) > 3;
+  };
+  const p = c.parties.find((q) => q.lordId && q.intent !== 'chase' && away(q)); // one away from home
   p.troops = { [Object.keys(p.troops)[0]]: 2 };
-  p.tx = null;
-  CL.party.advanceDays(0.05);
+  Object.assign(p, { tx: null, intent: 'campaign' });
+  for (let i = 0; i < 12 && p.intent !== 'home'; i++) CL.party.advanceDays(1 / 24); // a party far from you acts once its hour comes (W-07)
   assert.equal(p.intent, 'home');
   assert.equal(L.doingLine(c, p), 'riding home to refill the ranks');
   for (let i = 0; i < 40 && p.intent === 'home'; i++) CL.party.advanceDays(0.25);

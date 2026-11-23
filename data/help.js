@@ -199,6 +199,16 @@
         'An army eats. In its own land it fills its stores; in enemy land it forages, and the villages it passes suffer; with nothing to forage and no food left, its men desert, from the furthest first. It costs its realm a crown a soldier a week, and an unpaid army breaks up after a week. After a month in the field it goes home.',
         'As a vassal you are summoned: the Allegiance tab shows the army, with a button to ride to its banner. Near its banner you ride with it, and its battles are yours: both armies’ lords ride into the field. As a ruler, raise your own army on the Your realm tab: your lords ride with you, and you give the orders: besiege or raid a place, ride with you, or go home.'
       ]
+    },
+    houses: {
+      id: 'houses',
+      order: 13,
+      title: 'Houses',
+      body: [
+        'Every lord belongs to a house: their parents, children and siblings, under the eldest’s name. A house keeps its name and its people even when it loses all its land. Lords think of a house as of its people, and also remember what was done to the house itself. Once you hold land you found a house of your own, in your name; rename it at the top of the Lords tab.',
+        'A marriage joins two houses. Propose one from the Lords tab (Ask…, then Propose marriage): the one you ask answers by what they think of you and your house, what the match is worth to their house, and the dowry you offer. They give their reasons. Married, you share each other’s claims, and the two houses are allies: each answers the other’s call more readily. Your spouse may ride with you or run one of your holdings, and may refuse. After 90 days either of you may end the marriage, and the houses become rivals. Lords marry among themselves too.',
+        'Lords can die: now and then of wounds after a lost battle (you never do). Their land and office pass by their realm’s law: to the eldest child, to the kin the lords think best of, or to the council’s choice. A close second keeps a claim, and may raise a faction. With no heir, the crown takes the land and grants it. A claim outlives the one who held it: it passes to the heir or the house, and a claimant may petition their liege to restore what the crown holds.'
+      ]
     }
   };
 

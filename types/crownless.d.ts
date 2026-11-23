@@ -256,6 +256,9 @@ declare global {
     nextArmyId: number;
     armyRest: Record<string, number>;
     armyCall: { army: number; day: number; answered: boolean } | null;
+    /** P9-06: houses (js/houses.js), from the people's kin; marriages live on people (`spouse`, `married`). */
+    houses: Record<string, { id: string; name: string; colors: string[]; head: string | null; members: string[]; alliances: string[]; rivals: string[]; rel: Record<string, number>; founded?: number }>;
+    nextHouseId: number;
     nextSiegeId?: number;
     siegePlanned?: number | null;
     /** v22 (P8-05): the crown's grants waiting to be made. */

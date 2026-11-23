@@ -259,6 +259,7 @@
     CL.founding?.weekly(c); // founded realms: the old crown's answer, recognition, AI lords declaring (P9-03)
     CL.rebellion?.weekly(c); // factions, warnings, demands, risings and their ends (P9-04)
     CL.armies?.weekly(c); // the armies' upkeep from the treasuries (P9-05)
+    CL.houses?.weekly(c); // houses: yours founded, a match sought, petitions, your spouse (P9-06)
     weeklyGrants(c, day);
     if (mineNow.length) {
       const parts = mineNow.map((sid) => {

@@ -650,6 +650,31 @@
         CL.ui.message(s ? `The ${CL.realm.faction(f)?.name} gather against ${CL.content.get('settlements', s.sid).name}` : 'No siege could be planned');
         break;
       }
+      case 'lordDies':
+      case 'marryMe': {
+        // P9-06: the nearest riding lord dies (their heir inherits by the realm's law); or their kin (else
+        // they) marries you, whatever they think (your house founded first if need be).
+        const w = c().world;
+        const near = c()
+          .parties.filter((p) => p.lordId)
+          .sort((a, b) => CL.world.mapDist(w.x, w.y, a.x, a.y) - CL.world.mapDist(w.x, w.y, b.x, b.y))[0];
+        if (!near) return CL.ui.message('No lord is riding');
+        const H = CL.houses;
+        if (act === 'lordDies') {
+          const s = H.die(c(), near.lordId, 'wounds');
+          log('lord dies', { lord: near.lordId, heir: s?.heir || null, law: s?.law, contested: s?.contested || false });
+          CL.ui.message(s?.heir ? `${CL.realm.titled(near.lordId, c())} dies; ${CL.realm.titled(s.heir, c())} inherits (${s.law})` : `${CL.realm.titled(near.lordId, c())} dies; the crown takes their land`);
+          break;
+        }
+        H.found(c(), H.mine(c()) ? null : CL.houses.surname(c().character?.name || 'Wanderer'));
+        const p = c().people[near.lordId];
+        const kin = p.kin.map((k) => k.person).find((x) => H.canMarry(c(), 'player', x).ok);
+        const who = kin || (H.canMarry(c(), 'player', near.lordId).ok ? near.lordId : null);
+        if (!who) return CL.ui.message(H.spouseOf(c()) ? 'You are married already' : 'Nobody there may marry you');
+        H.marry(c(), 'player', who);
+        log('marry me', { spouse: who });
+        break;
+      }
       case 'nobleFriend':
       case 'nobleGrumble':
       case 'nobleLeave': {

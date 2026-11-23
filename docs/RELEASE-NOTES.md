@@ -1,5 +1,27 @@
 # Crownless — Release Notes
 
+## v3.12.0 — Houses, marriage and claims (P9-06) · 2026-11-23
+
+### New
+- **Houses.** Every lord belongs to one: parents, children and siblings under the eldest's name. A house keeps its name and people even with no land. Lords think of a house as of its people, and also remember what was done to the house itself.
+- **Your house,** founded when you first hold land, in your name. Rename it at the top of the Lords tab.
+- **Marriage.** On the Lords tab, Ask… a lord, then Propose marriage, with or without a dowry. They answer for reasons you can read: what they think of you and your house, what the match is worth to their house, the dowry. Married, you share each other's claims and the houses are allies. Your spouse may ride with you or run one of your holdings, and may refuse. After 90 days either of you may end it, and the houses become rivals. Lords marry among themselves too.
+- **Deaths.** Now and then a lord beaten in battle dies of wounds (3%). You never die. The dead stay in the Lords tab with the day they died.
+- **Succession** by the realm's law: the eldest child, the kin the lords think best of, or the council's choice. The heir takes the land and the office; a ruler's heir the crown. A close second keeps a claim and may raise a faction. With no heir, the crown takes the land and grants it.
+- **Claims through houses.** A claim passes to the heir, or the house, when its holder dies. A claimant may petition their liege to restore what the crown holds (the Lords tab, for you).
+- Debug: **Lord dies** (the nearest) and **Marry me**.
+
+### Known
+- Marriages are few: one or two a year in a world.
+- No heir was seen in play: every lord near the owner's save holds no land.
+- On one test seed Valedorn loses every fort in 90 days. Without the houses' rules the same seed keeps them, so the order of events changed; the armies (3.11.0) take the forts.
+- Three slow tests (the Phase 8 exit, Prototypes D and F) fail since 3.11.0's armies.
+
+### Under the hood
+- Save version 30: `houses`, `nextHouseId`; `spouse`, `married` and `status: 'dead'` on people.
+- `npm run landed` reports marriages, deaths, heirs by law, contested successions and restorations.
+- **Tests:** 896 fast tests (7 new in `houses.test.js`); the full browser suite 227 passed, 9 skipped; the slow suite 15 of 19.
+
 ## v3.11.0 — Armies and campaigns (P9-05) · 2026-11-23
 
 ### New

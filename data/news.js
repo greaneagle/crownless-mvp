@@ -109,6 +109,31 @@
       priority: 10,
       lines: ['{faction} are no more.']
     },
+    lord_died: {
+      id: 'lord_died',
+      priority: 8,
+      lines: ['A lord of {faction} has died.']
+    },
+    succession_contested: {
+      id: 'succession_contested',
+      priority: 7,
+      lines: ['An inheritance in {faction} is disputed.']
+    },
+    married: {
+      id: 'married',
+      priority: 5,
+      lines: ['A wedding near {place}.']
+    },
+    marriage_ended: {
+      id: 'marriage_ended',
+      priority: 5,
+      lines: ['A marriage has ended near {place}.']
+    },
+    restored: {
+      id: 'restored',
+      priority: 5,
+      lines: ['{place} is restored to an old claimant.']
+    },
     realm_founded: {
       id: 'realm_founded',
       priority: 8,

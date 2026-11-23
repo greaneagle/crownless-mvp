@@ -3040,7 +3040,7 @@ The phase opens with five battle-scale tasks (owner, 2026-11-22; decisions D-P9a
 - **Fixed on the way:** a founded realm's lords got troops of no kind (`lords.ranks`, 3.9.0); two old type errors (diplomacy, rebellion). `sieges.test.js` rests armies in its hand-planned sieges, and its conqueror check allows a suggested kinsman (it passed by luck before).
 - **Checks:** 889 fast tests; lint clean but the 2 old warnings; browser sieges, world-map, nobles, allegiance 32 of 32 (two new P9-05 cases). Slow landed, campaign-bots, world-sim pass (world-sim's day times failed once under load, passed alone). `landed 180 5`: 2–9 armies a seed, sieges, battles and raids; invariants held; no capital taken, no data realm gone (a founded realm retaken on seed 2). Played at 812×375: summoned, rode with the army on a raid of Ashby (no siege: 120 soldiers too few); Four armies 32–33 fps in the pane (sim 3.7 ms, drawing 1.1). **Open for P9-T:** armies often go home with nothing they can do; the owner's phone on Four armies; news "Valedorn and unknown are at war" and "the The …" in siege lines.
 
-### P9-06 · Houses, marriage and claims (M–L) — Specified
+### P9-06 · Houses, marriage and claims (M–L) — ✅ Done in 3.12.0
 
 **Problem.** People have kin ties (P8-02) but no houses; nobody marries, dies or inherits. Design §19: houses as entities, marriage with real agency, and succession, the founding-house model first (§19.3).
 
@@ -3087,6 +3087,16 @@ The phase opens with five battle-scale tasks (owner, 2026-11-22; decisions D-P9a
 - **Play:** propose a marriage; see a lord's death and their heir in the news.
 - **Explain:** a Houses topic in `data/help.js`; Debug: "Lord dies" (the nearest) and "Marry me" (the nearest lord's kin accepts).
 - **Not here:** births, ageing, playing on as your heir.
+
+**Done (3.12.0).**
+- **`js/houses.js`:** `c.houses` built from kin (parents, children, siblings; the eldest's surname); `regard` adds what was done to the house (`wronged`), allies and rivals; your house is founded when you first hold land (`found`, a HoldingChanged listener, `yoursIfLanded` for old saves); `rename`.
+- **Marriage:** `canMarry`, `answer` (reasons from opinion, house, realm, dowry), `propose`, `marry` (shared claims, houses allied), `end` after 90 days (the deed `marriage_ended` −40, houses rivals); `askSpouse` (ride with you or run a holding, may refuse), `ransomSpouse`; lords marry each other (`seekMatch`, weekly).
+- **Deaths and succession:** `woundsKill` (3% for a lord beaten in battle; never you; old age a rule, off), `die`, `heirs` by the realm's law (eldest, kin, council), `succession` (fiefs, office, crown, claims; a close second keeps a claim and may form a faction through `rebellion.form({ members, claimant })`; with no heir the crown takes it).
+- **Claims:** pass to the heir or the house; `restorable` and `petition` to the liege. Status `'dead'` in the realm's STATUS; the dead stay listed.
+- **UI:** the Lords tab's house card (rename, spouse orders, ransom, petitions), Propose marriage with and without a dowry, no Ask… for the dead; lord lines "of House …" and "Married to"; Help topic Houses; Debug Lord dies and Marry me. Save v30; news `lord_died`, `succession_contested`, `married`, `marriage_ended`, `restored`.
+- **Tests changed:** the `lords.test.js` intentions test picks a lord away from home and steps hourly (it broke on the new RNG order); three browser lines read "of House …".
+- **Checks:** 896 fast tests; lint clean but the 2 old warnings; nobles and realm specs 20 of 20 (a new marriage case). Checkpoint: browser 227 passed, 9 skipped; slow 15 of 19. The Phase 8 exit and Prototypes D and F fail at 3.11.0 too (armies). New here: `landed` seed 3, Valedorn has no fort from day 90; with the houses' rules off the seed keeps them, and Aurelian armies take the forts.
+- **Played at 812×375:** a v30 load with 17 houses; Brackenfield by Debug founded House Wanderer with Rename; Tancred refused a proposal with reasons (one wrong reason fixed); Lord dies killed him, in the news. **Open for P9-T:** few marriages; no heir seen in play; Valedorn's forts on seed 3; the three slow tests failing since 3.11.0.
 
 ### P9-07 · Modding: a declarative content format (M–L) — Specified
 

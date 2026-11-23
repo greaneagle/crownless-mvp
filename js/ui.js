@@ -2993,7 +2993,7 @@
           li.dataset.person = p.id;
           const [first, ...rest] = CL.nobles.lordLines(c, p.id);
           li.append(el('b', '', first), ...rest.map((l) => el('span', 'lordLine', l)));
-          if (!R.rules(p.id, c)) {
+          if (!R.rules(p.id, c) && p.status !== 'dead') {
             const b = el('button', 'lordAskBtn', 'Ask…');
             b.type = 'button';
             b.onclick = () => {
@@ -3014,6 +3014,52 @@
     const note = free.length ? el('p', 'realmNote', `${free.map((f) => f.name).join(', ')}: ${free.length > 1 ? 'free cities' : 'a free city'}, with no lords and no fiefs.`) : null;
     const top = tab === 'lords' ? lordsTop(c) : [];
     $('#realmScreen').replaceChildren(tabs, ...top, ...cards, ...(note ? [note] : []));
+  }
+
+  /**
+   * P9-06: your house at the top of the Lords tab: its line and name; your spouse, with their orders
+   * (ride with me, run a holding, end the marriage, a ransom); petitions for restoration.
+   */
+  function houseCards(c, redo) {
+    const H = CL.houses;
+    const h = H?.mine(c);
+    if (!h) return [];
+    const R = CL.realm;
+    const el = (tag, cls, text) => Object.assign(document.createElement(tag), { className: cls || '', textContent: text || '' });
+    const say = (fn) => () => {
+      const r = fn();
+      const t = r?.text || r?.why || r?.line;
+      if (t) CL.ui.message(t);
+      if (r?.ok) CL.save.write();
+      redo();
+    };
+    const buttons = [];
+    const sp = H.spouseOf(c);
+    const lines = [H.line(c, h)];
+    if (sp) {
+      lines.push(`You are married to ${R.titled(sp, c)}, since day ${CL.party.dayNumber(c.people[sp].married ?? c.day)}.`);
+      if (c.people[sp].status === 'captive') buttons.push([`Ransom them (${H.RULES.ransom} crowns)`, say(() => H.ransomSpouse(c))]);
+      else {
+        buttons.push(['Ride with me', say(() => H.askSpouse(c, 'ride'))]);
+        const fief = R.fiefsOf('player', c)[0];
+        if (fief) buttons.push([`Run ${CL.content.get('settlements', fief).name}`, say(() => H.askSpouse(c, 'run', fief))]);
+      }
+      buttons.push(['End the marriage', say(() => H.end(c, 'player'))]);
+    } else lines.push('Unmarried. Ask a lord of another house on the Lords tab: Ask…, then Propose marriage.');
+    for (const sid of H.restorable(c, 'player').slice(0, 2)) buttons.push([`Petition for ${CL.content.get('settlements', sid).name}`, say(() => H.petition(c, 'player', sid))]);
+    const card = contractCard(H.name(h), lines, buttons);
+    card.classList.add('houseCard');
+    card.dataset.house = h.id;
+    // Its name: yours to choose.
+    const row = el('div', 'row');
+    const input = Object.assign(el('input', ''), { value: h.name, maxLength: 24 });
+    input.setAttribute('aria-label', 'Your house’s name');
+    const save = el('button', '', 'Rename');
+    save.type = 'button';
+    save.onclick = say(() => (H.rename(c, input.value) ? { ok: true, text: `Your house is ${H.name(h)} now.` } : { why: 'Give it a name' }));
+    row.append(input, save);
+    card.append(row);
+    return [card];
   }
 
   /**
@@ -3057,6 +3103,7 @@
       }
       out.push(card);
     }
+    out.push(...houseCards(c, redo));
     const pid = CL.game.realmLord;
     if (!pid || !c.people[pid] || R.rules(pid, c)) return out;
     const card = el('div', 'contractCard lordAskCard');
@@ -3081,6 +3128,27 @@
       row.append(b);
     }
     card.append(row);
+    // P9-06: a marriage, proposed by you (with a dowry, if you will); answered by the same model.
+    if (CL.houses) {
+      const may = CL.houses.canMarry(c, 'player', pid);
+      const wed = el('div', 'row lordMarry');
+      for (const dowry of [0, 200]) {
+        const b = btn(
+          dowry ? `Propose, with ${dowry} crowns` : 'Propose marriage',
+          () => {
+            CL.game.lordAnswer = { pid, offered: dowry, ...CL.houses.propose(c, 'player', pid, { dowry }) };
+            CL.save.write();
+            redo();
+            $('#realmScreen .lordAnswer')?.scrollIntoView({ block: 'nearest' });
+          },
+          !may.ok,
+          may.why,
+        );
+        b.dataset.ask = dowry ? 'marryDowry' : 'marry';
+        wed.append(b);
+      }
+      card.append(wed);
+    }
     const why = Object.values(can).find((k) => !k.ok && k.why)?.why;
     if (why && !Object.values(can).some((k) => k.ok)) card.append(el('p', 'lordWhyNot', `${why}.`));
     // A price named earlier and not yet paid stays open until the lord's answer runs out.
@@ -3103,6 +3171,17 @@
         pay.id = 'lordPay';
         ans.append(pay);
       } else if (r.answer === 'negotiate' && r.favour) ans.append(el('p', '', 'Their petition is open above.'));
+      else if (r.answer === 'negotiate' && r.dowry && CL.houses) {
+        // P9-06: the dowry that would do it, offered in one tap.
+        const n = r.dowry + (r.offered || 0);
+        const again = btn(`Propose, with ${n} crowns`, () => {
+          CL.game.lordAnswer = { pid, offered: n, ...CL.houses.propose(c, 'player', pid, { dowry: n }) };
+          CL.save.write();
+          redo();
+        });
+        again.dataset.ask = 'marryAgain';
+        ans.append(again);
+      }
       card.append(ans);
     } else if (r && r.pid === pid && r.why) card.append(el('p', 'lordWhyNot', `${r.why}.`));
     const close = btn('Close', () => {

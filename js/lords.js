@@ -217,6 +217,8 @@
     const i = c.parties.indexOf(p);
     if (i >= 0) c.parties.splice(i, 1);
     if (!person || person.status === 'captive') return null;
+    // P9-06 (D-P9g): now and then a lord beaten in battle dies of their wounds; their heir inherits.
+    if (by !== null && CL.houses?.woundsKill(c, pid, by)) return null;
     const at = { x: p.x, y: p.y, faction: person.realm, text: '' };
     if (by === 'player' || R().isRealm(by)) {
       if (by === 'player') CL.nobles?.note(c, pid, 'player', 'beat'); // beaten in the field (P8-07)
