@@ -252,6 +252,24 @@
     }
     const w = world();
     const t = g.travel;
+    if (t.type === 'army') {
+      // P9-05: ride with an army's banner: keep beside its commander, wherever it goes, until you ride elsewhere.
+      const a = CL.armies?.byId(CL.campaign, t.id);
+      const q = a && CL.armies.lead(CL.campaign, a);
+      if (!q?.id) {
+        g.travel = null;
+        CL.ui.message('The army has broken up.');
+        return 0;
+      }
+      [t.x, t.y] = CL.world.clampToMap(q.x + 1.2, q.y + 1.2, 2);
+      if (mapDist(w.x, w.y, t.x, t.y) <= 0.3) {
+        const hours = Math.min(dt, 0.1) * HOURS_PER_SECOND;
+        CL.clock.advance(CL.campaign, hours, 'travel');
+        CL.save.autosave();
+        checkContact();
+        return hours;
+      }
+    }
     if (t.type === 'party') {
       // Chase a moving party: aim at where it is now.
       const p = CL.parties.find(CL.campaign, t.id);
@@ -283,7 +301,7 @@
     CL.clock.advance(CL.campaign, hours, 'travel');
     CL.save.autosave(); // once per game day on the map
     if (checkContact()) return hours;
-    if (w.x === t.x && w.y === t.y) arrive(t);
+    if (w.x === t.x && w.y === t.y && t.type !== 'army') arrive(t);
     return hours;
   }
 

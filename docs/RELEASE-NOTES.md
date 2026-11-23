@@ -1,5 +1,26 @@
 # Crownless — Release Notes
 
+## v3.11.0 — Armies and campaigns (P9-05) · 2026-11-23
+
+### New
+- **Armies.** A realm at war raises an army: its marshal calls up to six lords, and each answers by what they think of the ruler. They gather at the realm's fort nearest the target and march when half have come, or after a week. On the map an army is one banner with its size; each lord keeps their own men and losses.
+- **What armies do.** Besiege a fort (the siege of P8-06a, laid by the army), relieve one of their own, raid a village (its prosperity falls, the raiders take a week of its tax, and its lord remembers), chase an enemy army, defend, or fall back.
+- **Supply and cost.** An army eats: it fills its stores in its own land, forages in enemy land (the villages suffer), and starves when there is nothing left (its men desert, the furthest first). It costs its realm a crown a soldier a week; unpaid for a week, it breaks up. After a month in the field it goes home.
+- **Battles of armies.** Two armies that meet fight it out. The beaten one falls back, or breaks up if it lost half its strength, and some of its lords are taken.
+- **Capitals can fall,** to an army only, with a garrison and stores half again a fort's. The ruler moves to their next holding; a realm that holds nothing is gone, and its lords seek service elsewhere.
+- **You in an army.** Summoned, the Allegiance tab shows the army and **Ride to its banner**: you keep beside it until you ride elsewhere, and its battles are yours (both armies' lords ride into the field). As a ruler, **Raise an army** on the Your realm tab and give its orders: besiege or raid a place, ride with you, or go home.
+- Debug: **Raise an army here** (the chosen holding's realm) and **Four armies** (the phone test: four armies on the map at once in the map stress test).
+
+### Known
+- Armies often go home with nothing they can do: too weak for the forts in reach. In five worlds of 180 days, no capital fell. For P9-T.
+- Some news names a realm founded in play "unknown", and some siege lines say "the The …".
+
+### Under the hood
+- Save version 29: `armies`, `nextArmyId`, `armyRest`, `armyCall`; a raid's effects on the holding.
+- `npm run landed` reports armies raised, their sieges, battles and raids, why they broke up, capitals taken and realms gone. `node scripts/bench-map.js --armies` times the map with four armies.
+- Fixed on the way: a realm founded in play gave its lords troops of no kind (3.9.0); two type errors (3.8.0, 3.10.0).
+- **Tests:** 889 fast tests pass; the browser specs for sieges, the map, nobles and allegiance (32 of 32); the slow landed, campaign-bots and world-sim tests (world-sim's day times failed once while other tests ran, and passed alone).
+
 ## v3.10.0 — Rebellion and deposition (P9-04) · 2026-11-23
 
 ### New

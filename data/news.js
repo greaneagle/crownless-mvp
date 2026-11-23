@@ -84,6 +84,31 @@
       priority: 7,
       lines: ['The troubles in {faction} are over.']
     },
+    army_raised: {
+      id: 'army_raised',
+      priority: 6,
+      lines: ['{faction} raise an army near {place}.']
+    },
+    army_battle: {
+      id: 'army_battle',
+      priority: 8,
+      lines: ['The armies of {faction} and {other} have met near {place}.']
+    },
+    village_raided: {
+      id: 'village_raided',
+      priority: 6,
+      lines: ['{faction} have raided {place}.']
+    },
+    army_disbanded: {
+      id: 'army_disbanded',
+      priority: 3,
+      lines: ['The army of {faction} breaks up.']
+    },
+    realm_gone: {
+      id: 'realm_gone',
+      priority: 10,
+      lines: ['{faction} are no more.']
+    },
     realm_founded: {
       id: 'realm_founded',
       priority: 8,

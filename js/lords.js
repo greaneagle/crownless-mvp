@@ -51,6 +51,7 @@
     besiege: 'besieging',
     relief: 'riding to relieve a besieged fort',
     escort: 'riding with you',
+    army: 'riding with an army',
   };
 
   const R = () => CL.realm;
@@ -90,7 +91,9 @@
 
   /** The realm's troops by tier: T1 its first, T2 and T3 its foot, archers and (T3) horse. */
   function ranks(f) {
-    const all = Object.values(CL.content.table('troops')).filter((t) => t.faction === f && t.id !== 'hero');
+    // P9-05: a realm founded in play draws its men from the realm its troops come from (`troops`, P9-03).
+    const from = typeof R().faction(f)?.troops === 'string' ? R().faction(f).troops : f;
+    const all = Object.values(CL.content.table('troops')).filter((t) => t.faction === from && t.id !== 'hero');
     const by = (tier) => all.filter((t) => t.tier === tier).map((t) => t.id);
     return { T1: by('T1'), T2: by('T2'), T3: by('T3') };
   }
@@ -180,6 +183,7 @@
   function doingLine(c, p) {
     if (p.intent === 'rest') return `resting at ${placeName(c.people[p.lordId].home)}`;
     if (p.intent === 'ride' && p.kin) return `riding with ${R().titled(p.kin, c)}`;
+    if (p.armyId != null && CL.armies) return CL.armies.doing(c, p) || WORDS.army; // P9-05
     return WORDS[p.intent] || WORDS.campaign;
   }
 

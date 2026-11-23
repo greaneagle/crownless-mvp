@@ -704,6 +704,60 @@
     return cards;
   }
 
+  /**
+   * P9-05: armies. Summoned (the Allegiance tab): the army, and a button to ride to its banner. Ruling
+   * (Your realm): raise your army, or give it its orders: besiege or raid a place, ride with you, go home.
+   */
+  function armyCards(c, redo, { ruling = false } = {}) {
+    const AR = CL.armies;
+    if (!AR) return [];
+    const name = (sid) => CL.content.get('settlements', sid).name;
+    const cards = [];
+    const card = (title, lines, buttons, key) => {
+      const x = contractCard(title, lines, buttons);
+      x.classList.add('armyCard');
+      x.dataset.army = key;
+      cards.push(x);
+    };
+    if (!ruling) {
+      const m = c.armyCall;
+      const a = m && AR.byId(c, m.army);
+      if (!a) return [];
+      const q = AR.lead(c, a);
+      const ride = () => {
+        if (!q?.id) return;
+        CL.ui.changeMode('map');
+        CL.world.travelTo({ type: 'army', id: a.id, x: q.x, y: q.y }); // you keep beside its banner until you ride elsewhere
+      };
+      const lines = [AR.line(c, a), m.answered ? (AR.riding(c, a) ? 'You ride with it: its battles are yours.' : 'You answered: keep near its banner.') : 'Ride to its banner to answer. Not answered, it is marked against you.', 'Riding to its banner, you keep beside it until you ride elsewhere.'];
+      card('Summoned to the army', lines, [['Ride to its banner', ride, !q?.id]], 'summons');
+      return cards;
+    }
+    const a = AR.mine(c);
+    const say = (fn) => () => {
+      const r = fn();
+      if (r?.why) CL.ui.message(r.why);
+      if (r?.ok) CL.save.write();
+      redo();
+    };
+    if (!a) {
+      card('Your army', ['Call your vassals to ride with you. Each answers by what they think of you. The army eats, and costs your treasury a crown a soldier a week.'], [['Raise an army', say(() => AR.raiseMine(c))]], 'raise');
+      return cards;
+    }
+    const lines = [AR.line(c, a)];
+    if (a.phase === 'rally') lines.push(`It marches once half your lords have come to ${name(a.rally)}, or after a week.`);
+    const buttons = [];
+    if (a.phase !== 'rally') {
+      for (const sid of AR.targets(c, a.realm, c.world).slice(0, 3)) buttons.push([`Besiege ${name(sid)}`, say(() => AR.order(c, 'besiege', sid))]);
+      for (const sid of AR.raidable(c, a, c.world).slice(0, 2)) buttons.push([`Raid ${name(sid)}`, say(() => AR.order(c, 'raid', sid))]);
+      buttons.push(['Ride with me', say(() => AR.order(c, 'follow'))]);
+      lines.push('To besiege, ride to its gates: your lords come with you.');
+    }
+    buttons.push(['Send them home', say(() => AR.order(c, 'home'))]);
+    card('Your army', lines, buttons, 'mine');
+    return cards;
+  }
+
   /** P9-04: the Allegiance tab's civil war: summoned by both sides; deposed, a refuge offered. */
   function risingCards(c, redo) {
     const RB = CL.rebellion;
@@ -2882,7 +2936,7 @@
       return;
     }
     if (tab === 'rule') {
-      $('#realmScreen').replaceChildren(tabs, ...ruleCards(c, () => renderRealm()));
+      $('#realmScreen').replaceChildren(tabs, ...ruleCards(c, () => renderRealm()), ...(CL.founding?.mine(c) ? armyCards(c, () => renderRealm(), { ruling: true }) : []));
       return;
     }
     if (tab === 'diplomacy') {
@@ -2910,7 +2964,7 @@
         leave.push(allegianceCard(c, 'release', a.realm, 'Ask for release', 'Ask for release', redo));
         leave.push(allegianceCard(c, 'defect', a.realm, 'Break your oath', 'Defect', redo));
       }
-      $('#realmScreen').replaceChildren(tabs, me, ...leave, ...risingCards(c, redo));
+      $('#realmScreen').replaceChildren(tabs, me, ...leave, ...armyCards(c, redo), ...risingCards(c, redo));
       return;
     }
     for (const f of R.realms()) {
@@ -2922,6 +2976,8 @@
         for (const line of CL.crowns?.cardLines(c, f.id) || []) card.append(el('p', 'realmCrown', line));
         const reb = CL.rebellion?.active(c, f.id);
         if (reb && reb.warned >= 1) card.append(el('p', 'realmCrown', CL.rebellion.line(c, reb))); // P9-04: what the court hears
+        const army = CL.armies?.ofRealm(c, f.id);
+        if (army) card.append(el('p', 'realmCrown', CL.armies.line(c, army))); // P9-05: its army in the field
         const list = el('ul', 'realmList');
         const ids = Object.keys(c.holdings).filter((sid) => c.holdings[sid].sovereign === f.id);
         const order = { town: 0, fort: 1, village: 2 };

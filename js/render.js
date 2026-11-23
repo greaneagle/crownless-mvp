@@ -671,8 +671,8 @@
     if (CL.mapView.showMinorLabels()) label(active ? st.name : `${st.name} (cleared)`, x, y + 22, active ? '#ffb3a1' : '#c9bda8', { prio: LABEL_PRIORITY.site, iy: y });
   }
 
-  /** A world party: banner in its faction colour, a shape by kind, and its size. */
-  function drawParty(p) {
+  /** A world party: banner in its faction colour, a shape by kind, and its size (P9-05: an army's, on its commander's banner). */
+  function drawParty(p, army = null) {
     const t = CL.content.get('party_templates', p.template);
     const { x, y, crowded } = CL.world.partyDrawPos(p); // beside a landmark, not on its name
     if (x < -60 || x > W + 60 || y < -60 || y > H + 60) return; // culled: off the screen (W-02)
@@ -688,7 +688,7 @@
       ctx.restore();
     }
     const color = t.kind === 'bandit' ? '#7a1e16' : t.kind === 'detachment' ? '#c9a24a' : CL.realm.faction(t.faction)?.color; // your patrols: gold (P7-05)
-    const n = CL.parties.troopCount(p);
+    const n = army ? CL.armies.soldiers(CL.campaign, army) : CL.parties.troopCount(p);
     const hostile = CL.parties.hostileTo(CL.campaign, t);
     ctx.save();
     ctx.fillStyle = '#00000055';
@@ -712,6 +712,21 @@
       }
     } else {
       // Shield for patrols, jagged pennant for bandits.
+      if (army) {
+        // An army: a second banner behind the first.
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.moveTo(x - 13, y - 14);
+        ctx.lineTo(x + 3, y - 14);
+        ctx.lineTo(x + 3, y - 5);
+        ctx.lineTo(x - 5, y + 2);
+        ctx.lineTo(x - 13, y - 5);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = '#f1c75b';
+        ctx.stroke();
+        ctx.strokeStyle = '#1b1208';
+      }
       ctx.fillStyle = color;
       ctx.beginPath();
       if (t.kind === 'patrol' || t.kind === 'detachment' || t.kind === 'lord') {
@@ -750,7 +765,7 @@
     else if (!crowded) {
       const marked = (p.contractId && !p.ambush) || p.questTag || p.escortTo;
       const own = t.kind === 'detachment' ? CL.detachments.find(CL.campaign, p.detachment) : null;
-      const name = own ? `${own.captainName}${own.status === 'returning' ? ' (coming back)' : ''}` : p.lordId ? CL.realm.titled(p.lordId, CL.campaign) : p.escortTo ? 'Escort' : p.contractId && !p.ambush ? 'Contract target' : p.questTag ? (t.kind === 'bandit' ? 'Quest: Reavers' : 'Quest: Column') : t.kind === 'bandit' ? 'Reavers' : t.kind === 'patrol' ? 'Patrol' : 'Caravan';
+      const name = army ? `${CL.realm.faction(army.realm)?.short || 'An'} army` : own ? `${own.captainName}${own.status === 'returning' ? ' (coming back)' : ''}` : p.lordId ? CL.realm.titled(p.lordId, CL.campaign) : p.escortTo ? 'Escort' : p.contractId && !p.ambush ? 'Contract target' : p.questTag ? (t.kind === 'bandit' ? 'Quest: Reavers' : 'Quest: Column') : t.kind === 'bandit' ? 'Reavers' : t.kind === 'patrol' ? 'Patrol' : 'Caravan';
       const prio = marked ? LABEL_PRIORITY.quest : hostile ? LABEL_PRIORITY.hostile : LABEL_PRIORITY.party;
       // If there is no room for its name, the party keeps its size as a badge on the icon.
       label(`${name} ${n}`, x, y + 20, marked ? '#ffd34d' : hostile ? '#ffb3a1' : '#e8f0ff', { prio, iy: y, fallback: () => countBadge(x, y, n, hostile) });
@@ -1101,7 +1116,10 @@
     for (const p of CL.campaign.parties || []) {
       const at = CL.sight.shown(CL.campaign, p);
       if (!at || !seen(at.x, at.y)) continue;
-      if (at.live) drawParty(p);
+      // P9-05: a marching army is one banner, on its commander's party; its lords riding with it are under it.
+      const army = p.armyId != null ? CL.armies?.bannerOf(CL.campaign, p) : null;
+      if (army === false) continue;
+      if (at.live) drawParty(p, army);
       else drawLastSeen(p, at);
     }
     if (CL.sight.isNight(CL.campaign.day)) {

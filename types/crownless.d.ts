@@ -251,6 +251,11 @@ declare global {
     rule: { steward: 'hold' | 'grow' | 'hoard'; marshal: string; chancellor: 'peace' | 'allies' | 'none'; asks: { lord: string; day: number }[] };
     /** v28 (P9-04): factions and risings (one a realm), each realm's quiet after one, your summons by both sides, a refuge offered, and when you were deposed. */
     rebellions: { list: any[]; quiet: Record<string, number>; nextId: number; summons: { id: number; day: number } | null; refuge: { realm: string; until: number } | null; deposed: { realm: string; day: number } | null };
+    /** P9-05: armies in the field (js/armies.js): lords under a commander, with an objective and food. */
+    armies: { id: number; realm: string; commander: string; members: string[]; objective: string; target: string | number; rally: string; since: number; food: number; phase: string; strength: number; fedDay: number; log: { day: number; text: string }[]; [k: string]: any }[];
+    nextArmyId: number;
+    armyRest: Record<string, number>;
+    armyCall: { army: number; day: number; answered: boolean } | null;
     nextSiegeId?: number;
     siegePlanned?: number | null;
     /** v22 (P8-05): the crown's grants waiting to be made. */

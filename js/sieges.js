@@ -115,8 +115,9 @@
   /** What besieging a fort would mean for the player, before they choose: { ok, why, lines }. */
   function preview(c, sid) {
     const right = CL.rights.may(c, PLAYER, 'besiege', sid);
-    const h = R().holding(sid, c);
     if (!right.ok) return { ok: false, why: right.why, lines: [] };
+    CL.armies?.readyTown(c, sid); // P9-05: a capital's garrison and stores, as your army comes for it
+    const h = R().holding(sid, c);
     const s = { sid, phase: 'encircled', began: c.day - RULES.ladders, lords: [], relief: [], by: PLAYER };
     const d = defence(c, s);
     const now = A().winChance(A().playerPower(c), d.power);
@@ -140,6 +141,15 @@
     c.nextSiegeId = (c.nextSiegeId || 0) + 1;
     const s = { id: c.nextSiegeId, sid, realm, by: PLAYER, lords: [], relief: [], phase: 'encircled', began: c.day, gatherBy: null, lastDay: Math.floor(c.day), steppedTo: c.day, log: [] };
     list(c).push(s);
+    // P9-05: your own army, with you at the gates, besieges with you.
+    const army = CL.armies?.mine(c);
+    if (army && army.phase !== 'rally') {
+      s.army = army.id;
+      s.lords = army.members.filter((pid) => CL.lords.partyOf(c, pid));
+      for (const pid of s.lords) Object.assign(CL.lords.partyOf(c, pid), { intent: 'besiege', siegeId: s.id });
+      army.siegeId = s.id;
+      Object.assign(army, { objective: 'besiege', target: sid, set: c.day });
+    }
     log(s, c.day, `You lay siege to ${placeName(sid)}.`);
     CL.news?.record(c, 'siege_begun', { place: sid, faction: h.controller, text: `${c.character?.name || 'A free company'} has laid siege to ${placeName(sid)}.` });
     CL.ui.message(`You lay siege to ${placeName(sid)}. Its gates are shut; its villages stop trading.`);
@@ -172,7 +182,7 @@
     const lead = (q) => (q.lordId === marshal ? 0 : 1); // P9-01: the marshal is named first
     const nearby = CL.lords
       .riders(c)
-      .filter((pid) => c.people[pid].realm === f && c.people[pid].status === 'free' && !of(c, pid))
+      .filter((pid) => c.people[pid].realm === f && c.people[pid].status === 'free' && !of(c, pid) && !CL.armies?.of(c, pid))
       .map((pid) => CL.lords.partyOf(c, pid))
       .filter((q) => q && !CL.lords.thin(c, q) && CL.world.mapDist(q.x, q.y, fort.mapX, fort.mapY) <= RULES.reach * 2)
       .sort((a, b) => lead(a) - lead(b) || CL.world.mapDist(a.x, a.y, fort.mapX, fort.mapY) - CL.world.mapDist(b.x, b.y, fort.mapX, fort.mapY));
@@ -193,6 +203,30 @@
   }
   const someLord = (c, f) => Object.keys(c.people || {}).find((id) => c.people[id].realm === f && !R().rules(id, c));
 
+  /** P9-05: an army arrived before a fort or a capital lays siege to it: its lords there, gathered at once. */
+  function byArmy(c, army, sid) {
+    const h = R().holding(sid, c);
+    if (!h || h.kind === 'village' || at(c, sid) || list(c).some((s) => s.realm === army.realm) || R().locked(c, sid) || !R().siegeWar(c, army.realm, h.controller)) return null;
+    CL.armies.readyTown(c, sid);
+    const lords = army.members.filter((pid) => CL.lords.partyOf(c, pid));
+    if (lords.length < RULES.minLords) return null;
+    c.nextSiegeId = (c.nextSiegeId || 0) + 1;
+    const s = { id: c.nextSiegeId, sid, realm: army.realm, by: army.commander === PLAYER ? PLAYER : 'ai', army: army.id, lords, relief: [], phase: 'gathering', began: null, gatherBy: c.day + 2, lastDay: Math.floor(c.day), steppedTo: c.day, log: [] };
+    list(c).push(s);
+    for (const pid of lords) Object.assign(CL.lords.partyOf(c, pid), { intent: 'gather', siegeId: s.id });
+    log(s, c.day, `The ${factionName(army.realm)}'s army comes before ${placeName(sid)}.`);
+    if (CL.armies.riding(c, army)) log(s, c.day, 'You ride with it.');
+    CL.founding?.onSiege(c, s);
+    CL.diag.log('info', 'Siege by an army', { realm: army.realm, fort: sid, army: army.id });
+    return s;
+  }
+  /** A realm's last fort (a fort), or its last holding at all (a capital): the hardest siege (§20.7). */
+  function lastHeld(c, sid) {
+    const h = R().holding(sid, c);
+    if (h.kind === 'town') return Object.values(c.holdings).filter((x) => x.kind !== 'village' && x.controller === h.controller).length <= 1;
+    return Object.values(c.holdings).filter((x) => x.kind === 'fort' && x.controller === h.controller).length <= 1;
+  }
+
   /** End a siege: its lords go home to refill (lifted, taken or surrendered). */
   function end(c, s, how, ctx = {}) {
     const i = list(c).indexOf(s);
@@ -200,8 +234,9 @@
     CL.nobles?.onSiegeEnd(c, s, how, ctx); // who fought beside whom, who relieved whom (P8-07)
     for (const pid of [...s.lords, ...s.relief]) {
       const q = CL.lords.partyOf(c, pid);
-      if (q) Object.assign(q, { intent: 'home', siegeId: null, tx: null, ty: null });
+      if (q) Object.assign(q, { intent: q.armyId != null ? 'army' : 'home', siegeId: null, tx: null, ty: null }); // P9-05: an army's lords stay with it
     }
+    CL.armies?.onSiegeEnd(c, s, how);
     if (how === 'lifted') {
       CL.news?.record(c, 'siege_lifted', { place: s.sid, text: `The siege of ${placeName(s.sid)} is lifted.` });
       if (s.by === PLAYER) CL.ui.message(`The siege of ${placeName(s.sid)} is lifted.`);
@@ -225,7 +260,7 @@
       h.castellan = null;
       h.castellanLeaving = false;
     }
-    if (taker) R().transfer(c, s.sid, { controller: taker, sovereign: taker, by: commander, reason: how === 'stormed' ? 'stormed' : 'surrendered' });
+    if (taker) R().transfer(c, s.sid, { controller: taker, sovereign: taker, by: commander, reason: how === 'stormed' ? 'stormed' : 'surrendered', capital: s.army != null });
     // Weak and restless for a month; the walls broken.
     h.walls = Math.max(0, (h.walls ?? 100) - (how === 'stormed' ? RULES.wallsLost : RULES.wallsLost / 2));
     if (h.garrison) {
@@ -238,6 +273,7 @@
     h.weakUntil = c.day + RULES.takenWeakDays;
     h.food = Math.min(h.food ?? 0, 3);
     end(c, s, how, { was: was.holder, wasRealm: R().person(was.holder, c)?.realm || null, commander });
+    if (h.controller !== was.controller) CL.armies?.onTaken(c, s.sid, was.controller); // P9-05: a seat moved, or a realm gone
     const words = `${placeName(s.sid)} has ${how === 'stormed' ? 'been stormed' : 'surrendered'}${taker ? `: the ${factionName(taker)} hold it now` : ''}.`;
     CL.news?.record(c, 'fort_fell', { place: s.sid, faction: taker, text: words });
     if (s.by === PLAYER || was.holder === PLAYER) CL.chronicle?.add(c, { day: c.day, kind: 'holding', place: s.sid, event: was.holder === PLAYER ? 'lost' : s.by === PLAYER ? 'changed' : 'changed', by: taker || was.controller });
@@ -352,7 +388,7 @@
     // A realm's last fort: every free lord of it rides home to save it (§20.7: its lords nearer home).
     const last = Object.values(c.holdings).filter((x) => x.kind === 'fort' && x.controller === f).length <= 1;
     for (const pid of CL.lords.riders(c)) {
-      if (c.people[pid].realm !== f || c.people[pid].status !== 'free' || of(c, pid)) continue;
+      if (c.people[pid].realm !== f || c.people[pid].status !== 'free' || of(c, pid) || CL.armies?.of(c, pid)) continue; // an army relieves as one (P9-05)
       const q = CL.lords.partyOf(c, pid);
       if (!q || CL.lords.thin(c, q) || (!last && CL.world.mapDist(q.x, q.y, fort.mapX, fort.mapY) > RULES.reach)) continue;
       if (!last && CL.nobles && !CL.nobles.answersRelief(c, pid, s.sid)) continue; // the call for relief, answered by the model (P8-07)
@@ -399,7 +435,7 @@
   function step(c) {
     // Food comes back in peace.
     for (const [sid, h] of Object.entries(c.holdings || {})) {
-      if (h.kind !== 'fort') continue;
+      if (h.kind !== 'fort' && !(h.kind === 'town' && h.food != null)) continue; // P9-05: a town an army came for
       if (h.food == null) h.food = h.policies?.food ?? 14;
       if (at(c, sid)?.phase !== 'encircled') {
         const last = h.fedTo ?? c.day;
@@ -408,11 +444,12 @@
       h.fedTo = c.day;
     }
     for (const s of [...list(c)]) stepOne(c, s);
-    // Realms at war plan their next siege (once a day each).
+    CL.armies?.step(c); // P9-05: armies march, eat, fight and lay sieges
+    // Realms at war raise an army (P9-05), or (with no armies) plan their next siege (once a day each).
     const today = Math.floor(c.day);
     if (c.siegePlanned !== today) {
       c.siegePlanned = today;
-      for (const k of R().realms()) plan(c, k.id);
+      for (const k of R().realms()) (CL.armies ? CL.armies.plan : plan)(c, k.id);
     }
   }
 
@@ -421,11 +458,11 @@
     const defender = h.controller;
     if (s.realm && !R().siegeWar(c, s.realm, defender) && s.by !== PLAYER) return end(c, s, 'lifted'); // the war is over (P9-03: or the land is recognised)
     if (s.realm === defender) return end(c, s, 'lifted'); // it changed hands some other way
-    if (s.by === PLAYER && (c.world.location !== s.sid || CL.allegiance.serves(c) !== s.realm)) return end(c, s, 'lifted'); // you rode off
+    if (s.by === PLAYER && (c.world.location !== s.sid || (R().rules(PLAYER, c) || CL.allegiance.serves(c)) !== s.realm)) return end(c, s, 'lifted'); // you rode off
     if (s.phase === 'gathering') {
       const there = s.lords.map((pid) => CL.lords.partyOf(c, pid)).filter((q) => q && near(c, q, s.sid));
       // A realm's last fort is harder to besiege: twice its garrison's power, not 1.5× (§20.7).
-      const last = Object.values(c.holdings).filter((x) => x.kind === 'fort' && x.controller === defender).length <= 1;
+      const last = lastHeld(c, s.sid);
       if (attack(c, s) >= (last ? RULES.lastFortRatio : RULES.gatherRatio) * defence(c, s).raw && there.length >= RULES.minLords) {
         s.phase = 'encircled';
         s.began = c.day;
@@ -449,7 +486,7 @@
     // The day's choice. P8-T: a realm's last fort holds out longer: no surrender for hopeless odds
     // (only hunger), and its besiegers wait for the ram and better odds, so the relief can come.
     const o = A().winChance(attack(c, s), defence(c, s).power);
-    const lastFort = Object.values(c.holdings).filter((x) => x.kind === 'fort' && x.controller === defender).length <= 1;
+    const lastFort = lastHeld(c, s.sid);
     if (h.food <= 0 || (!lastFort && c.day - s.began >= RULES.ladders && o >= RULES.hopeless)) {
       log(s, c.day, `${placeName(s.sid)} surrenders.`);
       return take(c, s, 'surrendered');
@@ -499,7 +536,7 @@
     const lordOK = (pid) => s.people?.[pid]?.status === 'free' && s.parties.some((q) => q.lordId === pid);
     for (const x of Array.isArray(d?.sieges) ? d.sieges : []) {
       const hh = s.holdings?.[x?.sid];
-      if (hh?.kind !== 'fort' || s.sieges.some((y) => y.sid === x.sid || (x.realm && y.realm === x.realm)) || !['gathering', 'encircled'].includes(x.phase)) continue;
+      if ((hh?.kind !== 'fort' && hh?.kind !== 'town') || s.sieges.some((y) => y.sid === x.sid || (x.realm && y.realm === x.realm)) || !['gathering', 'encircled'].includes(x.phase)) continue;
       if (x.by !== PLAYER && x.by !== 'ai') continue;
       if (x.by === 'ai' && !R().isRealm(x.realm)) continue;
       const siege = {
@@ -516,6 +553,7 @@
         steppedTo: num(x.steppedTo) ? x.steppedTo : s.day,
         log: (Array.isArray(x.log) ? x.log : []).filter((l) => l && num(l.day) && typeof l.text === 'string').slice(-RULES.logMax),
       };
+      if (Number.isInteger(x.army)) siege.army = x.army; // P9-05: checked again by js/armies.js sanitize
       if (x.alarmed === true) siege.alarmed = true;
       if (x.warned === true) siege.warned = true;
       s.nextSiegeId = Math.max(s.nextSiegeId, siege.id);
@@ -532,8 +570,12 @@
       }
     }
     for (const hh of Object.values(s.holdings || {})) {
-      if (hh.kind !== 'fort') continue;
+      if (hh.kind !== 'fort' && hh.kind !== 'town') continue;
       const e = d?.holdings?.[Object.keys(s.holdings).find((k) => s.holdings[k] === hh)];
+      if (hh.kind === 'town' && !num(e?.food)) {
+        hh.food = null;
+        continue;
+      }
       hh.food = num(e?.food) ? Math.max(0, Math.min(60, e.food)) : (hh.policies?.food ?? 14);
       if (num(e?.fedTo)) hh.fedTo = e.fedTo;
       else delete hh.fedTo;
@@ -542,5 +584,5 @@
     s.siegePlanned = Number.isInteger(d?.siegePlanned) ? d.siegePlanned : null;
   }
 
-  CL.sieges = { RULES, list, at, shut, of, defence, attack, odds, foodDays, preview, begin, plan, end, take, assault, playerAssault, prepared, storm, defend, lift, callRelief, relieve, step, postFor, sanitize };
+  CL.sieges = { RULES, list, at, shut, of, defence, attack, odds, foodDays, preview, begin, plan, byArmy, lastHeld, end, take, assault, playerAssault, prepared, storm, defend, lift, callRelief, relieve, step, postFor, sanitize };
 })(typeof window !== 'undefined' ? window : globalThis);

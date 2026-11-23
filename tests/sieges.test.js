@@ -29,6 +29,7 @@ function war({ lords = 3, random, strength = 0.55 } = {}) {
   for (const q of c.parties.filter((p) => p.lordId && c.people[p.lordId].realm === 'valedorn' && !mine.includes(p))) Object.assign(q, { x: 10, y: 10, tx: null, ty: null });
   // Aurelia's lords far away (no relief unless a test asks for it).
   for (const q of c.parties.filter((p) => p.lordId && c.people[p.lordId].realm === 'aurelian')) Object.assign(q, { x: 10, y: 190, tx: null, ty: null });
+  c.armyRest = { valedorn: 1e9, aurelian: 1e9 }; // P9-05: these sieges are planned by hand, with no armies raised
   CL.game.mode = 'map';
   Object.assign(c.world, { x: 30, y: 30, location: null });
   return { ...env, c, S: CL.sieges, R: CL.realm, mine };
@@ -102,7 +103,7 @@ test('starved out: at no food the garrison surrenders; the fort passes once, its
   assert.ok(c.news.events.some((e) => e.kind === 'fort_fell' && /surrendered/.test(e.text)));
   // The conqueror asked; the crown will grant it, the commander first.
   const g = c.grants.find((x) => x.sid === fort);
-  assert.ok(g && s.lords.includes(g.helper), 'the conqueror asked the liege');
+  assert.ok(g && (s.lords.includes(g.helper) || s.lords.includes(g.suggestedBy)), 'the conqueror asked the liege (or suggested their landless kin, P8-07)');
   // Lords go home to refill.
   for (const pid of s.lords) {
     const q = CL.lords.partyOf(c, pid);

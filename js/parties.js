@@ -332,12 +332,20 @@
         return;
       }
       p.siegeId = null;
-      p.intent = 'home';
+      p.intent = p.armyId != null ? 'army' : 'home';
     }
     // P8-07: a lord who agreed to ride with you keeps beside you for their days.
     if (CL.nobles?.ridesWith(c, p.lordId)) {
       p.intent = 'escort';
       [p.tx, p.ty] = W().clampToMap(c.world.x + 2, c.world.y + 2, EDGE);
+      return;
+    }
+    // P9-05: a lord in an army rides with it: to the rally, beside the commander, or (the commander) to the objective.
+    if (p.armyId != null) {
+      const post = CL.armies?.postFor(c, p);
+      p.intent = 'army';
+      if (post) [p.tx, p.ty] = W().clampToMap(post[0], post[1], EDGE);
+      else p.tx = p.ty = null;
       return;
     }
     if (wantsPlayer(c, p)) {
@@ -459,7 +467,7 @@
     if (p.tx === null) return;
     const t = tpl(p.template);
     const m = W().map();
-    const speed = t.speed * m.terrain[W().terrainAt(p.x, p.y)];
+    const speed = Math.min(t.speed, p.pace ?? Infinity) * m.terrain[W().terrainAt(p.x, p.y)]; // P9-05: an army at its slowest member's pace
     const d = W().mapDist(p.x, p.y, p.tx, p.ty);
     const step = speed * hours;
     if (step >= d) [p.x, p.y] = [p.tx, p.ty];
@@ -542,7 +550,7 @@
    */
   function frontierClash(c) {
     // Patrols and lords (P8-01) alike.
-    const patrols = c.parties.filter((p) => !p.questTag && (tpl(p.template).kind === 'patrol' || tpl(p.template).kind === 'lord') && !CL.reinforce?.locked(p));
+    const patrols = c.parties.filter((p) => !p.questTag && (tpl(p.template).kind === 'patrol' || tpl(p.template).kind === 'lord') && p.armyId == null && !CL.reinforce?.locked(p)); // P9-05: an army fights as one (js/armies.js)
     const grid = options.grid ? CL.spatial.build(patrols) : null;
     const r0 = reach();
     borderIncidents(c, patrols, grid, r0);
@@ -861,6 +869,7 @@
   /** After a battle with a band: a win destroys it; a loss leaves it weakened but alive. */
   function onBattleResolved(win, partyId, fallenEnemyTroops, { wagonLost = false } = {}) {
     const c = CL.campaign;
+    CL.armies?.afterBattle(c, partyId, win); // P9-05: a battle of armies you fought in
     const p = partyId != null ? find(c, partyId) : null;
     // An escort ambush (P7-11): the wagon burned, or the fight was lost, and the caravan with it.
     if (p?.ambush && (wagonLost || !win)) CL.contracts.onCaravanLost(c, p);

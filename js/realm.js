@@ -171,6 +171,12 @@
     // P9-03: a realm founded in play has its seat (`capital`), else the first fort or town it holds.
     const r = c?.realms?.[f];
     if (r) return (c.holdings?.[r.capital]?.controller === f ? r.capital : Object.keys(c.holdings || {}).find((sid) => c.holdings[sid].controller === f && c.holdings[sid].kind !== 'village')) || null;
+    // P9-05: a data realm whose town was taken holds court at its next holding.
+    const town = realmSettlements(f).find((s) => s.type === 'town');
+    if (town && c?.holdings?.[town.id] && c.holdings[town.id].controller !== f) {
+      const next = Object.keys(c.holdings).find((sid) => c.holdings[sid].controller === f && c.holdings[sid].kind !== 'village');
+      if (next) return next;
+    }
     const own = realmSettlements(f);
     return (own.find((s) => s.type === 'town') || own.find((s) => s.type === 'fort') || own[0] || null)?.id || null;
   };
@@ -300,12 +306,12 @@
    * @param {{ controller?: string, sovereign?: string, holder?: string, reason?: string, willing?: boolean, by?: string }} change
    * @returns {boolean} true when anything changed
    */
-  function transfer(c, sid, { controller, sovereign, holder, reason = '', willing = false, by, claimKind = 'old', quiet = false } = {}) {
+  function transfer(c, sid, { controller, sovereign, holder, reason = '', willing = false, by, claimKind = 'old', quiet = false, capital = false } = {}) {
     const h = holding(sid, c);
     if (!h) return false;
     const toController = controller ?? h.controller;
     if (!isKingdom(toController) && toController !== PLAYER) return false; // P9-03: or yours, of no realm
-    if (toController !== h.controller && (h.seat || isCapital(sid))) return false; // villages follow their seat; capitals hold (P9-05)
+    if (toController !== h.controller && (h.seat || (isCapital(sid) && !capital))) return false; // villages follow their seat; a capital falls only to an army (P9-05)
     const toSovereign = sovereign ?? (toController !== h.controller && (isRealm(toController) || toController === PLAYER) ? toController : h.sovereign);
     if (!isRealm(toSovereign) && toSovereign !== PLAYER) return false;
     if ((toSovereign === PLAYER) !== (toController === PLAYER)) return false; // your own land is yours to hold and to keep
@@ -807,6 +813,7 @@
     out.push(...(CL.crowns?.invariants(c) || [])); // the realms' treasuries and books (P9-01)
     out.push(...(CL.diplomacy?.invariants(c) || [])); // treaties and trust (P9-02)
     out.push(...(CL.rebellion?.invariants(c) || [])); // factions and risings (P9-04)
+    out.push(...(CL.armies?.invariants(c) || [])); // armies in the field (P9-05)
     return out;
   }
 

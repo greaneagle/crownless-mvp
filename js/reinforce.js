@@ -40,6 +40,7 @@
   const SIGHT = 6; // map units: parties this close to the battle are seen from the start
   const AWARE = 1; // × a party's detection: how far off it hears the fight
   const MAX_PARTIES = 2;
+  const ARMY_PARTIES = 4; // P9-05: more, when the battle is two armies'
   const AUTO_WINDOW = 20; // s: auto-resolve counts the parties that would be in the fight by then (a typical battle's length)
   const EDGE_INSET = 40; // px in from the edge of the field
   const CLEAR = 120; // px: no opponent this close to an entry point
@@ -126,7 +127,8 @@
       });
     }
     out.sort((a, b) => a.hours - b.hours || a.id - b.id);
-    return out.slice(0, MAX_PARTIES);
+    // P9-05: a battle of armies brings more of both armies' lords (the shared field takes them by numbers).
+    return out.slice(0, CL.armies?.fighting(c, foe.partyId) ? MAX_PARTIES + ARMY_PARTIES : MAX_PARTIES);
   }
 
   /** A sentence for the encounter screen about the parties your company can see. @param {Campaign} c @param {any} e */

@@ -133,7 +133,7 @@
         const h = R().holding(target, c);
         if (!s || !h || s.type === 'village') return no('Only a fort or a town can be besieged');
         if (R().locked(c, target)) return no('Only the story decides this fort until it ends');
-        if (R().isCapital(target)) return no('A capital never falls in this age');
+        if (R().isCapital(target) && !(who === PLAYER && CL.armies?.mine(c)?.phase === 'march')) return no('A capital falls only to an army'); // P9-05: js/armies.js
         if (CL.sieges?.at(c, target)) return no(`${s.name} is already besieged`);
         // P8-06a: the player serves a realm at war with it, or (independent) at the cost of attacking it.
         const mine = who === PLAYER ? R().rules(PLAYER, c) || CL.allegiance?.serves(c) || null : allegiance(c, who); // P9-03: your own realm first

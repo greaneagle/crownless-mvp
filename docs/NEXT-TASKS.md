@@ -2978,7 +2978,7 @@ The phase opens with five battle-scale tasks (owner, 2026-11-22; decisions D-P9a
 - **Measured** (`node scripts/landed.js 360 3`): with the Brief's −30 and +10, no faction in a year. Try 1 (grudge −10, bond 0): 5–6 factions a seed, all mediated and dispersed. Try 2 (a confident ruler prepares): the same, since a faction of three never faces twice its strength. **Open for P9-T:** no rising in the world alone (no realm in civil war: well under 120 of 360 days). Also: over 360 days an AI lord founded a realm on seeds 1 and 3 (P9-03's open item, at 180 days none).
 - **Checks:** 878 fast tests; lint clean but the 2 old warnings; the P9-04 browser case at both sizes. Checkpoint: the full browser suite 221 passed, 21 skipped; the slow suite 18 of 19. **Prototype D fails** ("retaken for Aurelia": Hrothmark retakes it): it fails the same at 3.9.0, so it is not from this task. For P9-T. Played at 812×375 by taps: warnings, the king mediates and meets the demands; Debug "Rise now": both sides summon you, "Stand with the crown" works. Seen: the Allegiance card can say "-26 days left" in the month of service. For P9-T.
 
-### P9-05 · Armies and campaigns (L) — Specified
+### P9-05 · Armies and campaigns (L) — ✅ Done in 3.11.0
 
 **Problem.** Sieges gather two to four lords (P8-06a); there are no armies, no marches, no supply, and capitals never fall. Design §20.1–20.3: an army is several parties under a commander, with assembly, supply and objectives.
 
@@ -3029,6 +3029,16 @@ The phase opens with five battle-scale tasks (owner, 2026-11-22; decisions D-P9a
 - **Play:** be summoned and ride with an army to a siege; the Debug army test.
 - **Explain:** an Armies topic in `data/help.js`; Debug: "Four armies" (the phone test) and "Raise an army here".
 - **Not here:** hiring mercenary companies into armies (P9-T if wanted).
+
+**Done (3.11.0).**
+- **`js/armies.js`:** `c.armies` (members are lords; their parties carry `armyId`, the commander's a `pace`), raised once a day per realm at war (`plan`: one a realm, a week's rest after, none while a fort it took is weak; `nobles.summon`, up to 6, the marshal first); the rally, the march at half or after 7 days; members ride a ring round the commander.
+- **Objectives** (`choose`): regroup (hungry, worn, a month out), pursue (30 units, not much stronger), relieve, defend, besiege (`sieges.byArmy`: forts first, then capitals), raid (−20 prosperity, a week's tax as spoils, the deed `raided` −20), else regroup. Supply, foraging, starvation and upkeep as the Brief.
+- **Battles of armies** (`battle`): square law, losses on every party, the loser falls back or breaks (captures at even odds). With you in it (`engage`): the enemy commander is the encounter and up to 4 more lords ride in (`reinforce`), `afterBattle` settles both armies.
+- **Capitals:** `transfer(…, { capital })` and the besiege right for an army only; a town gets a garrison and stores ×1.5; the seat moves (`capitalOf`); a realm with nothing is gone (`gone`: lords to `destination`, a founded realm removed, a data realm `gone` in `c.crowns`).
+- **You:** summoned (`armyCall`), the Allegiance tab's card and Ride to its banner (travel type `army`: you keep beside it); as a ruler, Raise an army and its orders on Your realm (`raiseMine`, `order`; commander `player`).
+- **Map:** one banner per marching army with its total (`bannerOf`); Debug Raise an army here and Four armies (`testArmies`); `bench-map.js --armies`: the same cost as 3.10.0. Save v29; news `army_raised`, `army_battle`, `village_raided`, `army_disbanded`, `realm_gone`; an Armies help topic.
+- **Fixed on the way:** a founded realm's lords got troops of no kind (`lords.ranks`, 3.9.0); two old type errors (diplomacy, rebellion). `sieges.test.js` rests armies in its hand-planned sieges, and its conqueror check allows a suggested kinsman (it passed by luck before).
+- **Checks:** 889 fast tests; lint clean but the 2 old warnings; browser sieges, world-map, nobles, allegiance 32 of 32 (two new P9-05 cases). Slow landed, campaign-bots, world-sim pass (world-sim's day times failed once under load, passed alone). `landed 180 5`: 2–9 armies a seed, sieges, battles and raids; invariants held; no capital taken, no data realm gone (a founded realm retaken on seed 2). Played at 812×375: summoned, rode with the army on a raid of Ashby (no siege: 120 soldiers too few); Four armies 32–33 fps in the pane (sim 3.7 ms, drawing 1.1). **Open for P9-T:** armies often go home with nothing they can do; the owner's phone on Four armies; news "Valedorn and unknown are at war" and "the The …" in siege lines.
 
 ### P9-06 · Houses, marriage and claims (M–L) — Specified
 

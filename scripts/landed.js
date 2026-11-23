@@ -24,11 +24,24 @@ function run(seed, days = 180) {
     for (const f of CL.realm.realms()) out[f.id] = Object.values(c.holdings).filter((h) => h.kind === 'fort' && h.controller === f.id).length;
     return out;
   };
-  const tally = { rebel: { factions: 0, answers: {}, risings: 0, ended: {}, civilDays: {} }, founded: [], recognised: 0, treaties: { made: {}, kept: 0, broken: 0, declined: 0, warDays: {}, peaceAll: {} }, loose: { ransomed: 0, letGo: 0, menAsked: 0, menLent: 0, pressed: 0, joined: 0 }, wars: 0, begun: 0, lifted: 0, surrendered: 0, stormed: 0, relieved: 0, abandoned: 0, grants: 0, fell: 0, problems: [], left: {}, joined: {}, grumbled: 0, refused: 0, revoked: 0, gained: 0, lost: 0 };
+  const tally = { army: { raised: 0, sieges: 0, battles: 0, broken: 0, raids: 0, disbanded: {}, capitals: [], gone: [] }, rebel: { factions: 0, answers: {}, risings: 0, ended: {}, civilDays: {} }, founded: [], recognised: 0, treaties: { made: {}, kept: 0, broken: 0, declined: 0, warDays: {}, peaceAll: {} }, loose: { ransomed: 0, letGo: 0, menAsked: 0, menLent: 0, pressed: 0, joined: 0 }, wars: 0, begun: 0, lifted: 0, surrendered: 0, stormed: 0, relieved: 0, abandoned: 0, grants: 0, fell: 0, problems: [], left: {}, joined: {}, grumbled: 0, refused: 0, revoked: 0, gained: 0, lost: 0 };
   // Counted as they happen (the diagnostic log keeps only the latest lines).
   const log = CL.diag.log;
   CL.diag.log = (level, msg, data) => {
     if (msg === 'Siege planned') tally.begun++;
+    // P9-05: armies raised, their sieges, battles and raids, and why they broke up.
+    if (msg === 'Army raised') tally.army.raised++;
+    if (msg === 'Siege by an army') {
+      tally.army.sieges++;
+      tally.begun++;
+    }
+    if (msg === 'Army battle') {
+      tally.army.battles++;
+      if (data.broken) tally.army.broken++;
+    }
+    if (msg === 'Village raided') tally.army.raids++;
+    if (msg === 'Army disbanded') tally.army.disbanded[data.why] = (tally.army.disbanded[data.why] || 0) + 1;
+    if (msg === 'Realm gone') tally.army.gone.push(`${data.realm} (day ${Math.floor(c.day)})`);
     if (msg === 'Siege ended' && tally[data?.how] != null) tally[data.how]++;
     // P9-L1
     if (msg === 'Kin ransom') tally.loose[data.amount ? 'ransomed' : 'letGo']++;
@@ -61,6 +74,7 @@ function run(seed, days = 180) {
     if (e.reason === 'grant') tally.grants++;
     if (e.reason === 'revoked') tally.revoked++;
     if (e.from.controller !== e.to.controller) tally.fell++;
+    if (e.from.controller !== e.to.controller && c.holdings[e.holding]?.kind === 'town') tally.army.capitals.push(`${e.holding} to ${e.to.controller} (day ${Math.floor(c.day)})`);
     const lord = (id) => Boolean(c.people[id]) && !CL.realm.rules(id, c);
     if (e.from.holder !== e.to.holder && lord(e.to.holder)) tally.gained++;
     if (e.from.holder !== e.to.holder && lord(e.from.holder)) tally.lost++;
@@ -138,6 +152,8 @@ if (require.main === module) {
     console.log(`  treasuries (start/lowest/end): ${Object.entries(r.crowns).map(([f, t]) => `${f} ${t.start}/${t.low}/${t.end}`).join(', ')}`);
     const T = r.treaties;
     console.log(`  treaties: made ${per(T.made)}; kept to their end ${T.kept}; broken ${T.broken}; allies declining ${T.declined}; days at war per pair: ${per(T.warDays)}; days at peace with all: ${per(T.peaceAll)}`);
+    const M = r.army;
+    console.log(`  armies: ${M.raised} raised, ${M.sieges} sieges laid, ${M.battles} battles (${M.broken} broke an army), ${M.raids} raids; broke up: ${per(M.disbanded)}; capitals taken: ${M.capitals.length ? M.capitals.join('; ') : 'none'}; realms gone: ${M.gone.length ? M.gone.join('; ') : 'none'}`);
     const B = r.rebel;
     console.log(`  rebellion: ${B.factions} factions (answered: ${per(B.answers)}), ${B.risings} risings, ended: ${per(B.ended)}; days of civil war per realm: ${per(B.civilDays)}`);
     console.log(`  realms founded: ${r.founded.length ? r.founded.join('; ') : 'none'}; recognitions ${r.recognised}`);

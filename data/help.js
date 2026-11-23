@@ -188,6 +188,17 @@
         'You rule as you ride. Your three officers run the realm by a policy each, set in a line: the steward the taxes on your land (grow, hold or hoard), the marshal its sieges (defend, peace, or expand toward a realm), the chancellor its treaties (accept peace, alliances too, or nothing). Only what needs you comes as a message: a treaty offer and what your chancellor did with it, a lord asking to swear to you, your seat besieged.',
         'Lords who think ill of their own ruler and well of you ask to swear to you: accept and they are your vassals, with their fiefs left behind. You grant them land and summon them to a siege as any ruler does, and they answer by what they think of you. Lords of other realms may found realms of their own too: one with land, men and a grudge against their ruler.'
       ]
+    },
+    armies: {
+      id: 'armies',
+      order: 12,
+      title: 'Armies',
+      body: [
+        'A realm at war raises an army: its marshal calls up to six lords, and each answers by what they think of the ruler. They gather at the realm’s fort nearest the target, and march when half have come, or after a week. On the map an army is one banner with its size. Each lord keeps their own men, and their own losses.',
+        'The marshal chooses what it does: besiege a fort, relieve one of its own, raid a village (its prosperity falls, the raiders take a week of its tax, and its lord remembers), chase an enemy army, defend, or fall back. Two armies that meet fight it out. The beaten one falls back, or breaks up if it lost half its strength, and some of its lords are taken. Only an army can take a capital; then the ruler moves to their next holding, and a realm that holds nothing is gone.',
+        'An army eats. In its own land it fills its stores; in enemy land it forages, and the villages it passes suffer; with nothing to forage and no food left, its men desert, from the furthest first. It costs its realm a crown a soldier a week, and an unpaid army breaks up after a week. After a month in the field it goes home.',
+        'As a vassal you are summoned: the Allegiance tab shows the army, with a button to ride to its banner. Near its banner you ride with it, and its battles are yours: both armies’ lords ride into the field. As a ruler, raise your own army on the Your realm tab: your lords ride with you, and you give the orders: besiege or raid a place, ride with you, or go home.'
+      ]
     }
   };
 

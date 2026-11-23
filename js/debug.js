@@ -332,11 +332,29 @@
       Object.assign(c, back);
       Object.assign(g, was);
       g.mapStressResult = result;
+      if (g.armyTestSnapshot) {
+        // P9-05: the army test's armies go too.
+        const before = JSON.parse(g.armyTestSnapshot);
+        for (const k of Object.keys(c)) delete c[k];
+        Object.assign(c, before);
+        g.armyTestSnapshot = null;
+        result.armies = true;
+      }
       log('map stress test', result);
       const run = (x) => `${x.zoom}×: ${x.fps} fps, sim ${x.simMs} ms, drawing ${x.drawMs} ms, slowest ${x.worstFrameMs} ms`;
-      CL.ui.message(`Map stress ${n} + ${lords} lords: ${r.runs.map(run).join(' · ')} · ${result.days} days · save ${saveMs} ms (${result.saveKb} KB)`);
+      CL.ui.message(`Map stress ${n} + ${lords} lords${result.armies ? ', with the four armies' : ''}: ${r.runs.map(run).join(' · ')} · ${result.days} days · save ${saveMs} ms (${result.saveKb} KB)`);
       g.messageUntil = performance.now() + 15000;
     });
+  }
+
+  /**
+   * P9-05: the phone's army test: four realms' armies of up to five lords each march around you, as one
+   * banner each, during the map stress test (40 parties more); your campaign is put back after.
+   */
+  function fourArmies() {
+    const r = CL.armies.testArmies(CL.campaign, CL.campaign.world);
+    log('four armies', r);
+    return r;
   }
 
   /** One frame of the map stress test (from the main loop, inside its simulation timing). */
@@ -831,6 +849,27 @@
         toggle(false);
         mapStress(n);
         return;
+      case 'fourArmies': {
+        // P9-05: the phone's army test: four armies of up to five lords on the map at once, in the map stress test.
+        if (mode !== 'map') return CL.ui.message('Open the world map first');
+        toggle(false);
+        const snap = JSON.stringify(c());
+        const r = fourArmies();
+        mapStress(n);
+        // The stress test puts the campaign back from its own snapshot, taken with the armies in it: undo them too.
+        CL.game.armyTestSnapshot = snap;
+        CL.ui.message(`Four armies: ${r.armies} armies of ${r.lords} lords, and ${n} parties, a day a second, 8 seconds…`);
+        return;
+      }
+      case 'raiseArmy': {
+        // P9-05: the chosen holding's realm raises an army now (no week's rest), if it is at war and its lords answer.
+        const f = CL.realm.sovereignOf($('#cheatHolding').value, c());
+        if (c().armyRest) delete c().armyRest[f];
+        const a = CL.armies.plan(c(), f);
+        log('raise an army', { realm: f, army: a ? { id: a.id, rally: a.rally, target: a.target, members: a.members } : null });
+        CL.ui.message(a ? CL.armies.line(c(), a) : `${CL.realm.faction(f)?.name || 'That realm'} raises no army: no war, an army already out, or too few lords answer`);
+        break;
+      }
       case 'days':
         passDays(n);
         break;

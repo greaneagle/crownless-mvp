@@ -2,6 +2,7 @@
 // world parties' simulation (CL.parties.tick: targets, movement, contacts and off-screen fights) and
 // everything time drives (CL.party.advanceDays: upkeep, markets, contracts, story, news and parties).
 //   node scripts/bench-map.js [hours=240] [--parties 10,25,50,100,200] [--json]
+//   node scripts/bench-map.js [hours] --armies   (P9-05: with four armies of up to five lords on the map, the phone test)
 //   node scripts/bench-map.js --season [parties=80] [days=90]   (W-07: a long rest with a full world:
 //     ms per game day, the worst day, and the size of the save at the end)
 //
@@ -15,10 +16,20 @@ const { headlessUi } = require(path.join(ROOT, 'tests/helpers/campaign-bot'));
 
 const now = () => performance.now();
 
+const ARMIES = process.argv.includes('--armies');
+
 function setup(seed) {
   const { CL } = loadGame({ seed, worldParties: true });
   CL.ui = headlessUi(CL);
   CL.game.mode = 'map';
+  if (ARMIES && CL.armies) {
+    // P9-05: four armies in the field, and their realms at war (so they keep marching and meeting).
+    const c = CL.campaign;
+    CL.lords.ensure(c, c.day, true);
+    CL.realm.setRelation(c, 'valedorn', 'aurelian', 'war', 'bench');
+    CL.realm.setRelation(c, 'hrothmark', 'vessaro', 'war', 'bench');
+    CL.armies.testArmies(c, { x: CL.world.bounds().w / 2, y: CL.world.bounds().h / 2 });
+  }
   return CL;
 }
 
@@ -101,7 +112,7 @@ if (require.main === module && process.argv.includes('--season')) {
   const perSecond = setup(1).world.HOURS_PER_SECOND; // game hours per real second of travel
   if (args.includes('--json')) console.log(JSON.stringify({ hours, hoursPerSecond: perSecond, rows }, null, 2));
   else {
-    console.log(`World simulation per game hour, ${hours} hours after a day's warm-up (ms; median and worst hour)`);
+    console.log(`World simulation per game hour, ${hours} hours after a day's warm-up (ms; median and worst hour)${ARMIES ? ', with four armies in the field' : ''}`);
     console.log(`${'parties'.padStart(8)}  ${'parties.tick'.padEnd(26)}${'advanceDays (all of time)'.padEnd(26)}per real second of travel`);
     const cell = (x) => `${x.msPerHour.toFixed(3)} (${x.median.toFixed(3)}, ${x.worst.toFixed(2)})`.padEnd(26);
     for (const r of rows) console.log(`${String(r.parties).padStart(8)}  ${cell(r['parties.tick'])}${cell(r.advanceDays)}${(r.advanceDays.msPerHour * perSecond).toFixed(1)} ms`);

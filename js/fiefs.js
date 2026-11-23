@@ -258,6 +258,7 @@
     CL.diplomacy?.weekly(c, day); // tribute, treaties kept and run out, the realms' offers (P9-02)
     CL.founding?.weekly(c); // founded realms: the old crown's answer, recognition, AI lords declaring (P9-03)
     CL.rebellion?.weekly(c); // factions, warnings, demands, risings and their ends (P9-04)
+    CL.armies?.weekly(c); // the armies' upkeep from the treasuries (P9-05)
     weeklyGrants(c, day);
     if (mineNow.length) {
       const parts = mineNow.map((sid) => {
@@ -581,7 +582,7 @@
       h.crownLand = e.crownLand === false ? false : starts[sid]?.holder === s.rulers[h.sovereign] && h.holder === s.rulers[h.sovereign];
       if (num(e.prosperity)) h.prosperity = clamp(Math.round(e.prosperity), 0, FULL);
       if (num(e.unrest)) h.unrest = clamp(Math.round(e.unrest), 0, FULL);
-      if (h.kind === 'fort' && e.garrison && typeof e.garrison === 'object') {
+      if ((h.kind === 'fort' || h.kind === 'town') && e.garrison && typeof e.garrison === 'object') { // P9-05: a town an army came for
         h.garrison = {};
         for (const [id, n] of Object.entries(e.garrison)) if (troop(id) && Number.isInteger(n) && n > 0) h.garrison[id] = Math.min(n, 60);
       }
@@ -592,7 +593,7 @@
         if (Number.isInteger(e.policies.food) && e.policies.food >= 0 && e.policies.food <= 60) h.policies.food = e.policies.food;
         if (typeof e.policies.repairs === 'boolean') h.policies.repairs = e.policies.repairs;
       }
-      if (h.kind === 'fort' && num(e.walls)) h.walls = clamp(Math.round(e.walls), 0, FULL);
+      if ((h.kind === 'fort' || h.kind === 'town') && num(e.walls)) h.walls = clamp(Math.round(e.walls), 0, FULL);
       if (h.holder === PLAYER) h.treasury = 0; // a fief of yours keeps its money in its account
       else if (num(e.treasury)) h.treasury = Math.max(0, Math.floor(e.treasury));
       h.unpaid = Math.max(0, Math.min(9, Math.floor(num(e.unpaid) ? e.unpaid : 0)));

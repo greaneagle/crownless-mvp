@@ -78,7 +78,7 @@
     for (const t of between(c, a, b, kind)) list(c).splice(list(c).indexOf(t), 1);
     c.nextTreatyId = (c.nextTreatyId || 0) + 1;
     const length = kind === 'tribute' ? terms.days || DAYS.tribute : DAYS[kind];
-    const t = { id: c.nextTreatyId, kind, between: [a, b], since: day, until: kind === 'peace' ? null : day + length, terms: { ...terms }, kept: 0, broken: null };
+    const t = { id: c.nextTreatyId, kind, between: [a, b], since: day, until: kind === 'peace' ? null : day + length, terms: /** @type {any} */ ({ ...terms }), kept: 0, broken: null };
     delete t.terms.days;
     list(c).push(t);
     CL.diag.log('info', 'Treaty signed', { kind, between: t.between, until: t.until, terms: t.terms });

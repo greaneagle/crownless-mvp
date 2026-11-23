@@ -260,7 +260,7 @@
     for (const pid of x.members) {
       // Forts and towns first (their villages go with them); a village under a loyal seat stays with the
       // crown, and its holder keeps a claim to it.
-      const fiefs = R().fiefsOf(pid, c).sort((a, b) => (c.holdings[a].kind === 'village') - (c.holdings[b].kind === 'village'));
+      const fiefs = R().fiefsOf(pid, c).sort((a, b) => Number(c.holdings[a].kind === 'village') - Number(c.holdings[b].kind === 'village'));
       for (const sid of fiefs) {
         if (c.holdings[sid].sovereign === id) continue;
         if (!R().locked(c, sid) && R().transfer(c, sid, { controller: id, sovereign: id, holder: pid, willing: true, reason: 'rising', quiet: true })) {

@@ -86,6 +86,7 @@
     mediated: 10,
     pardoned: 10,
     kept_peace: 10, // a ruler who conceded rather than fought
+    raided: -20, // P9-05: an army raided their village
   };
   const FRIENDLY_DEEDS = ['fought_beside', 'relieved', 'freed', 'ransomed_kin', 'helped', 'backed', 'suggested'];
   const CLOSE = ['parent', 'child', 'sibling', 'spouse'];
@@ -258,6 +259,7 @@
       mediated: `${you} heard ${h} through a mediator`,
       pardoned: `${you} pardoned ${h}`,
       kept_peace: `${you} kept the peace in the realm`,
+      raided: `${you} raided ${his(c, from)} village`,
     };
     return `${words[d[0]] || 'they have a history'} on day ${CL.party.dayNumber(d[1])}`;
   }

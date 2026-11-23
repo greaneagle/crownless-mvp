@@ -292,7 +292,7 @@ test('saves: v27 → v28, a faction and a rising round-trip, junk repaired, and 
   v27.version = 27;
   delete v27.rebellions;
   const m = CL.save.migrate(v27);
-  assert.equal(m.version, 28);
+  assert.equal(m.version, CL.save.VERSION);
   assert.deepEqual(plain(m.rebellions.list), []);
   const index = JSON.parse(fs.readFileSync(path.join(FIX, 'index.json'), 'utf8'));
   for (const f of index) {

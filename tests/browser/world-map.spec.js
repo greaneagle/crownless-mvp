@@ -91,3 +91,31 @@ test('P9-03: a realm founded in play flies its own banner on the map', async ({ 
   await press(page, '#centreBtn');
   await expect.poll(() => game(page, (_CL, want) => window.__banners.includes(want), color)).toBe(true);
 });
+
+test('P9-05: a marching army is one banner on the map, with its size', async ({ page }) => {
+  const want = await game(page, (CL) => {
+    const c = CL.campaign; // test setup: Valedorn's army marching beside you
+    CL.realm.setRelation(c, 'valedorn', 'aurelian', 'war', 'test');
+    for (const t of Object.values(CL.content.table('party_templates'))) if (t.kind === 'lord') c.partySpawns[t.id] = 0;
+    CL.lords.ensure(c, c.day, true);
+    const a = CL.armies.plan(c, 'valedorn');
+    Object.assign(a, { phase: 'march', objective: 'defend', target: a.rally, set: c.day });
+    for (const p of CL.armies.parties(c, a)) {
+      Object.assign(p, { x: c.world.x + 3, y: c.world.y, tx: null, ty: null, ignoreUntil: 1e9 });
+      CL.sight.look(c, c.day);
+    }
+    // Every word and number drawn on the canvas.
+    window.__texts = [];
+    const text = CanvasRenderingContext2D.prototype.fillText;
+    CanvasRenderingContext2D.prototype.fillText = function (s, x, y) {
+      window.__texts.push(String(s));
+      return text.call(this, s, x, y);
+    };
+    return { n: CL.armies.soldiers(c, a), lords: a.members.map((pid) => CL.realm.titled(pid, c)) };
+  });
+  await press(page, '#centreBtn');
+  await expect.poll(() => game(page, (_CL, w) => window.__texts.some((t) => t === String(w.n) || t === `Valedorn army ${w.n}`), want)).toBe(true);
+  // Its lords ride under the banner: none of them is drawn alone.
+  const alone = await game(page, (_CL, w) => w.lords.filter((name) => window.__texts.some((t) => t.startsWith(name))).length, want);
+  expect(alone).toBe(0);
+});
