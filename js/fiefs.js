@@ -126,7 +126,7 @@
   function startGarrison(sid, c) {
     const s = place(sid);
     if (s?.type !== 'fort') return null;
-    const base = R().owner(sid, c) === s.ownerFaction ? s.garrison : CL.content.table('factions')[R().owner(sid, c)]?.garrison || s.garrison || {};
+    const base = R().owner(sid, c) === s.ownerFaction ? s.garrison : CL.realm.faction(R().owner(sid, c))?.garrison || s.garrison || {};
     const k = garrisonScale();
     return Object.fromEntries(Object.entries(base).map(([id, n]) => [id, Math.max(1, Math.round(n * k))]));
   }
@@ -227,7 +227,7 @@
   function refillGarrison(c, sid) {
     const h = R().holding(sid, c);
     const target = garrisonTarget(h);
-    const mix = CL.content.table('factions')[h.controller]?.garrison || {};
+    const mix = CL.realm.faction(h.controller)?.garrison || {};
     let spent = 0;
     for (let i = 0; i < refillPerWeek() && count(h.garrison) < target; i++) {
       const pick = Object.keys(mix).sort((a, b) => (h.garrison[a] || 0) / mix[a] - (h.garrison[b] || 0) / mix[b])[0];
@@ -249,12 +249,14 @@
   /** The payday (js/upkeep.js): every holding's week, and your fiefs' one line. */
   function payday(c, day = c.day) {
     ensureAll(c);
+    CL.founding?.stewardWeek(c); // P9-03: your steward's policy sets the tax on your own land
     const weekNo = Math.floor(day / 7);
     const mineNow = fiefs(c);
     CL.crowns?.ensure(c); // the realms' treasuries before the week's due (P9-01)
     for (const sid of Object.keys(c.holdings)) week(c, sid, weekNo);
     CL.crowns?.week(c); // a free city's trade, the offices' wages
     CL.diplomacy?.weekly(c, day); // tribute, treaties kept and run out, the realms' offers (P9-02)
+    CL.founding?.weekly(c); // founded realms: the old crown's answer, recognition, AI lords declaring (P9-03)
     weeklyGrants(c, day);
     if (mineNow.length) {
       const parts = mineNow.map((sid) => {

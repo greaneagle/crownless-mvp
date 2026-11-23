@@ -136,7 +136,7 @@
   /** Fill an event's text. `n` and `gold` are the choice's amounts when given. */
   function fill(text, e, c, extra = {}) {
     const d = def(e.kind);
-    const f = CL.content.table('factions')[owner(c, e.place)];
+    const f = CL.realm.faction(owner(c, e.place));
     const vars = {
       place: settlement(e.place)?.name || 'the town',
       dest: settlement(e.dest)?.name || 'the next town',
@@ -389,7 +389,7 @@
       case 'courier':
         if (e.taken) {
           CL.realm.adjust(c, f, -d.late, 'letter late');
-          CL.ui.message(`The letter for ${settlement(e.dest).name} is too late now. The ${CL.content.table('factions')[f]?.name || 'sender'} will not forget it.`);
+          CL.ui.message(`The letter for ${settlement(e.dest).name} is too late now. The ${CL.realm.faction(f)?.name || 'sender'} will not forget it.`);
           return resolve(c, e, 'late');
         }
         return resolve(c, e, 'ignored');

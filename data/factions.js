@@ -21,4 +21,6 @@
     merrow:   {id:'merrow',name:'Free City of Merrow',short:'Merrow',emblem:'M',order:5,freeCity:true,culture:'border',color:'#6b5aa5',description:'A free port that answers to no crown: neutral, rich, and full of swords for hire.',initialReputation:0,recruits:['mercenary']},
     neutral:  {id:'neutral',name:'Road Reavers',short:'Reaver',emblem:'R',order:9,lineName:'Sell-swords and road bands',culture:'border',color:'#8a6d3b',description:'Bandits, looters and hireable mercenaries of the frontier.',initialReputation:0,recruits:[]}
   };
+  // P9-03: banner colours for realms founded in play, in the order they are given.
+  C.realm_palette = { banners: { id: 'banners', colors: ['#2f8f8f', '#9a4f8a', '#5f7f2f', '#b0603a', '#3f4f9a', '#8a8a3a', '#7a3f3f', '#3a7a6a'] } };
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -46,7 +46,7 @@
 
   const R = () => CL.realm;
   const K = () => CL.crowns;
-  const short = (f) => CL.content.table('factions')[f]?.short || f;
+  const short = (f) => CL.realm.faction(f)?.short || f;
   const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
   const key = (a, b) => [a, b].sort().join('|');
   const realms = () => R().realms().map((f) => f.id);
@@ -210,6 +210,7 @@
    * and its interests (kind: truce, peace, alliance, trade, join). Returns { ok, score, why }.
    */
   function answer(c, kind, from, to, terms = {}, bonus = 0) {
+    if (CL.founding && to === CL.founding.mine(c)) return kind === 'join' ? { ok: false, score: -1, why: 'you decide your own wars' } : CL.founding.chancellorAnswers(c, { kind, from, to, terms }); // P9-03: your chancellor, by your policy
     const t = trust(c, to, from);
     if (t < TRUST.refuse) return { ok: false, score: -100, why: `${short(to)} does not trust ${short(from)}'s word` };
     let score = regard(c, to, from) + t / 2 + bonus + (K().holder(c, from, 'chancellor') ? RULES.chancellor : 0);
@@ -248,6 +249,7 @@
 
   /** What a realm would offer this week, if anything: { kind, from, to, terms }. */
   function nextOffer(c, f) {
+    if (CL.founding && f === CL.founding.mine(c)) return null; // P9-03: your realm's own offers are yours to make (later)
     const again = (g, kind) => (c.offers?.[`${f}|${g}|${kind}`] ?? -Infinity) > c.day - RULES.again;
     const ok = (g) => R().isRealm(g) && g !== f && !R().storyHeld(c, f, g) && trust(c, f, g) >= TRUST.refuse;
     const enemies = realms().filter((g) => ok(g) && R().relation(c, f, g) === 'war');
@@ -288,6 +290,7 @@
       R().setRelation(c, o.from, o.to, 'peace', 'peace treaty');
       for (const x of between(c, o.from, o.to, 'truce')) list(c).splice(list(c).indexOf(x), 1); // peace is more than a truce
       t = sign(c, 'peace', o.from, o.to);
+      CL.founding?.onPeace(c, o.from, o.to); // P9-03: peace with a founded realm recognises it
       if (o.terms.amount) sign(c, 'tribute', o.from, o.to, { from: o.terms.from, to: o.terms.to, amount: o.terms.amount });
     } else t = sign(c, o.kind, o.from, o.to, o.kind === 'alliance' ? { against: o.terms.against } : {});
     return { ...ans, treaty: t };

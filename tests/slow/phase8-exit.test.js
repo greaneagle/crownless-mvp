@@ -165,6 +165,9 @@ test('the Phase 8 exit: acquire, lose, go landless, change allegiance, retake, i
   assert.equal(R().owner(FORT, c), 'hrothmark');
   R().setRelation(c, 'valedorn', 'hrothmark', 'peace', 'test'); // that war ends: Hrothmark keeps it
 
+  // From 3.7.0 (P9-01's offices and treasuries) the crown also grants you two of Greywall's villages on
+  // the way: hand them back, so this step starts landless as before.
+  for (const sid of R().fiefsOf('player', c).filter((x) => x !== FORT)) assert.ok(CL.claims.handBack(c, sid).ok, `hand back ${sid}`);
   // 5. Landless: the Claims view, no chores; defect, serve Aurelia, swear.
   assert.deepEqual(JSON.parse(JSON.stringify(R().fiefsOf('player', c))), []);
   assert.ok(CL.claims.mine(c).some((x) => x.sid === FORT), 'a claim kept');

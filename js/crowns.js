@@ -40,7 +40,7 @@
   const R = () => CL.realm;
   const A = () => CL.accounts;
   const F = () => CL.fiefs;
-  const faction = (id) => CL.content.table('factions')[id] || null;
+  const faction = (id) => CL.realm.faction(id) || null;
   const realmOf = (side) => (typeof side === 'string' && side.startsWith(PREFIX) ? side.slice(PREFIX.length) : null);
   const side = (f) => `${PREFIX}${f}`;
   const weekOf = (day) => Math.floor(day / 7);

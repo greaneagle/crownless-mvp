@@ -104,3 +104,34 @@ test('P9-02: the Diplomacy tab shows each pair of realms, their treaties with en
   await expect(page.locator('#realmScreen .diplomacyCard[data-pair="aurelian|vessaro"]')).toContainText('Trust: Aurelian in Vessaro -15, Vessaro in Aurelian 0.');
   await expectLayoutSound(page, ['#realmScreen [data-tab="holdings"]', '#realmScreen [data-tab="diplomacy"]', '#primaryBtn']);
 });
+
+test('P9-03: the Your realm tab: declare a realm from a fort you hold, then set the marshal’s policy', async ({ page }) => {
+  await open(page);
+  await newGame(page);
+  await game(page, (CL) => {
+    const c = CL.campaign; // test setup: Westholt is yours, the story is over, with the renown and soldiers to rule
+    CL.realm.transfer(c, 'westholt_castle', { holder: 'player', willing: true, reason: 'test' });
+    CL.story.state(c).flags.ending = 'valedorn';
+    c.renown = 600;
+    for (let i = 0; i < 40; i++) CL.save.addSoldier(c, 'levy');
+  });
+  await toMap(page);
+  await press(page, '#journalBtn');
+  await waitMode(page, 'journal');
+  await press(page, '#journalRealmBtn');
+  await waitMode(page, 'realm');
+  await press(page, '#realmScreen [data-tab="rule"]');
+  const card = page.locator('#realmScreen .ruleCard[data-declare="westholt_castle"]');
+  await expect(card).toContainText('Your holdings leave the Valedorn Crown and become a realm of your own.');
+  await press(page, card.locator('button', { hasText: 'Declare' }));
+  const head = page.locator('#realmScreen .ruleCard[data-realm="r1"]');
+  await expect(head.locator('h3')).toHaveText('The Realm of Westholt Castle');
+  await expect(head).toContainText('You rule The Realm of Westholt Castle, from Westholt Castle.');
+  await expect(head).toContainText('Offices: Marshal: vacant');
+  const marshal = page.locator('#realmScreen select[data-policy="marshal"]');
+  await marshal.selectOption('expand:hrothmark');
+  expect(await game(page, (CL) => CL.campaign.rule.marshal)).toBe('expand:hrothmark');
+  await expect(page.locator('#realmScreen select[data-policy="marshal"]')).toHaveValue('expand:hrothmark');
+  await page.locator('#realmScreen select[data-policy="chancellor"]').scrollIntoViewIfNeeded(); // the screen scrolls
+  await expectLayoutSound(page, ['#realmScreen select[data-policy="chancellor"]', '#primaryBtn']);
+});

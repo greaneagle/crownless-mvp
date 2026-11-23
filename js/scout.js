@@ -114,7 +114,7 @@
   /** What to call a party: "Reavers", "Valedorn soldiers". */
   function callThem(p) {
     const t = tpl(p);
-    return t.kind === 'bandit' ? t.name.replace(/^Road /, '') : `${CL.content.get('factions', t.faction).short} soldiers`;
+    return t.kind === 'bandit' ? t.name.replace(/^Road /, '') : `${CL.realm.faction(t.faction)?.short} soldiers`;
   }
 
   /** Is this party a threat worth a word (it would fight the company)? @param {Campaign} c */

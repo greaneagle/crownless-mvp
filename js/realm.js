@@ -35,11 +35,45 @@
   const settlement = (id) => CL.content.get('settlements', id);
   /** A settlement, or null when this world has none of that id (the people's data may name places of a bigger world). */
   const place = (id) => (typeof id === 'string' && CL.content.table('settlements')[id]) || null;
-  /** This world's kingdoms (W-04: the world package's `factions`, in order). */
-  const kingdoms = () => (CL.world.map().factions || []).map((id) => CL.content.get('factions', id));
+  /**
+   * P9-03: the campaign being read. Loading a save (js/save.js) reads it here, so a realm founded in
+   * play is a realm while its save is repaired; otherwise the campaign in play.
+   */
+  let active = null;
+  const ctx = () => active || CL.campaign;
+  /** Run `fn` with `s` as the campaign whose realms count (a save being loaded). */
+  function during(s, fn) {
+    const was = active;
+    active = s;
+    try {
+      return fn();
+    } finally {
+      active = was;
+    }
+  }
+  /** The content's factions (data/factions.js), for what only the data knows: troop lines, cultures. */
+  const factionTable = () => CL.content.table('factions');
+  /**
+   * A realm or faction by id: the data's, or (P9-03) one founded in play (`c.realms[id] = { id, name,
+   * short, emblem, color, culture, troops, laws, founded, by }`). A founded realm's troops, garrison
+   * and ruler's titles are those of the data realm whose land its capital lies in (`troops`).
+   */
+  function faction(id, c = ctx()) {
+    if (id === 'player') return OWN; // P9-03: land you hold of no realm
+    const r = c?.realms?.[id];
+    if (!r) return factionTable()[id] || null;
+    const base = factionTable()[r.troops] || {};
+    return { recruits: base.recruits || [], garrison: base.garrison, ruler: base.ruler, description: 'A realm founded in play.', initialReputation: 0, order: 8, ...r, freeCity: false };
+  }
+  /** P9-03: what land you hold of no realm flies (it is no kingdom: `isKingdom('player')` is false). */
+  const OWN = Object.freeze({ id: 'player', name: 'your own banner', short: 'Yours', emblem: '★', color: '#c9a24a', recruits: [], freeCity: false, own: true });
+  /** Realms founded in play (P9-03), in their order. */
+  const founded = (c = ctx()) => Object.keys(c?.realms || {}).map((id) => faction(id, c));
+  /** This world's kingdoms (W-04: the world package's `factions`, in order), then those founded in play. */
+  const kingdoms = (c = ctx()) => [...(CL.world.map().factions || []).map((id) => factionTable()[id]), ...founded(c)];
   /** The faction of road bands and sell-swords (the world's `outlaws`): never a kingdom. */
   const outlaws = () => CL.world.map().outlaws;
-  const isKingdom = (id) => kingdoms().some((f) => f.id === id);
+  const isKingdom = (id, c = ctx()) => kingdoms(c).some((f) => f.id === id);
   const forts = () => Object.values(CL.content.table('settlements')).filter((s) => s.type === 'fort');
 
   const STATES = ['peace', 'tension', 'war'];
@@ -74,6 +108,7 @@
   /** 'friendly' | 'neutral' | 'hostile'; null for the Road Reavers (always hostile, never diplomatic). */
   function standing(c, f) {
     if (!isKingdom(f)) return null;
+    if (rulerOf(f, c) === PLAYER) return 'friendly'; // P9-03: your own realm
     const s = score(c, f);
     if (s < REP.hostileBelow) return 'hostile';
     if (s > REP.friendlyAbove) return 'friendly';
@@ -88,7 +123,7 @@
     const before = standing(c, f);
     c.reputation[f] = clamp(score(c, f) + delta, REP.min, REP.max);
     const after = standing(c, f);
-    const name = CL.content.get('factions', f).name;
+    const name = faction(f)?.name;
     CL.diag.log('info', 'Reputation', { faction: f, delta, score: c.reputation[f], reason });
     if (after !== before) {
       const text = {
@@ -126,13 +161,16 @@
   };
 
   /** Kingdoms with land and lords: every kingdom but a free city (Merrow). */
-  const realms = () => kingdoms().filter((f) => !f.freeCity);
-  const isRealm = (id) => realms().some((f) => f.id === id);
+  const realms = (c = ctx()) => kingdoms(c).filter((f) => !f.freeCity);
+  const isRealm = (id, c = ctx()) => realms(c).some((f) => f.id === id);
   /** The world's nobles (data/world_map.js `nobles`), of this world's realms. */
   const nobles = () => (CL.world.map().nobles || []).filter((n) => isRealm(n.realm));
   const realmSettlements = (f) => Object.values(CL.content.table('settlements')).filter((s) => s.ownerFaction === f);
   /** A realm's capital: its town (else its first fort). */
-  const capitalOf = (f) => {
+  const capitalOf = (f, c = ctx()) => {
+    // P9-03: a realm founded in play has its seat (`capital`), else the first fort or town it holds.
+    const r = c?.realms?.[f];
+    if (r) return (c.holdings?.[r.capital]?.controller === f ? r.capital : Object.keys(c.holdings || {}).find((sid) => c.holdings[sid].controller === f && c.holdings[sid].kind !== 'village')) || null;
     const own = realmSettlements(f);
     return (own.find((s) => s.type === 'town') || own.find((s) => s.type === 'fort') || own[0] || null)?.id || null;
   };
@@ -182,7 +220,7 @@
   /** The hero as a person of the realms: no realm yet (allegiance comes in P8-04). @param {Campaign} c */
   const playerPerson = (c) => ({ id: PLAYER, name: c?.character?.name || 'You', gender: ['woman', 'female'].includes(c?.character?.gender) ? 'female' : 'male', realm: null, home: null, kin: [], traits: '', status: 'free', heldBy: null });
   /** Who holds a realm's ruler's office now. @param {string} f @param {Campaign} [c] */
-  const rulerOf = (f, c = CL.campaign) => c?.rulers?.[f] || null;
+  const rulerOf = (f, c = CL.campaign) => (f === PLAYER ? PLAYER : c?.rulers?.[f] || null); // P9-03: you rule what you hold of no realm
   /** The realm a person rules, or null. @param {string} id @param {Campaign} [c] */
   const rules = (id, c = CL.campaign) => Object.keys(c?.rulers || {}).find((f) => c.rulers[f] === id) || null;
   /** "lord" or "lady", "son" or "daughter"… @param {string} tie @param {any} p */
@@ -194,7 +232,7 @@
     if (id === PLAYER) return p.name;
     const f = p.gender === 'female';
     const realm = rules(id, c);
-    if (realm) return `${CL.content.table('factions')[realm]?.ruler?.[p.gender] || (f ? 'Queen' : 'King')} ${p.name}`;
+    if (realm) return `${faction(realm)?.ruler?.[p.gender] || (f ? 'Queen' : 'King')} ${p.name}`;
     return `${f ? 'Lady' : 'Lord'} ${p.name}`;
   }
 
@@ -266,11 +304,13 @@
     const h = holding(sid, c);
     if (!h) return false;
     const toController = controller ?? h.controller;
-    if (!isKingdom(toController)) return false;
+    if (!isKingdom(toController) && toController !== PLAYER) return false; // P9-03: or yours, of no realm
     if (toController !== h.controller && (h.seat || isCapital(sid))) return false; // villages follow their seat; capitals hold (P9-05)
-    const toSovereign = sovereign ?? (toController !== h.controller && isRealm(toController) ? toController : h.sovereign);
-    if (!isRealm(toSovereign)) return false;
+    const toSovereign = sovereign ?? (toController !== h.controller && (isRealm(toController) || toController === PLAYER) ? toController : h.sovereign);
+    if (!isRealm(toSovereign) && toSovereign !== PLAYER) return false;
+    if ((toSovereign === PLAYER) !== (toController === PLAYER)) return false; // your own land is yours to hold and to keep
     const toHolder = holder ?? (toSovereign !== h.sovereign ? rulerOf(toSovereign, c) : h.holder);
+    if (toSovereign === PLAYER && toHolder !== PLAYER) return false;
     const p = person(toHolder, c);
     if (!p || (toHolder !== PLAYER && p.realm !== toSovereign)) return false; // sworn to its sovereign, or its ruler
     if (toHolder !== rulerOf(toSovereign, c) && toHolder !== h.holder && fiefsOf(toHolder, c).length >= fiefCap(toSovereign, c)) return false;
@@ -288,7 +328,7 @@
     const s = place(sid);
     CL.diag.log('info', 'Holding changed', { holding: sid, ...before, to: { controller: toController, sovereign: toSovereign, holder: toHolder }, reason });
     if (toController !== before.controller) {
-      CL.ui.message(`${s.name} now flies the banner of the ${CL.content.get('factions', toController).name}.`);
+      CL.ui.message(`${s.name} now flies the banner of the ${faction(toController)?.name}.`);
       CL.news?.record(c, 'fort_taken', { fort: sid, owner: toController, place: sid });
     } else if (toHolder !== before.holder && !quiet) {
       CL.news?.record(c, 'fief_granted', { place: sid, text: `${s.name} has passed to ${titled(toHolder, c)}.` });
@@ -328,7 +368,7 @@
     const tracked = c?.holdings?.[sid]?.garrison; // P8-05: the garrison as it stands
     if (tracked) return tracked;
     const f = owner(sid, c);
-    return f === s.ownerFaction ? s.garrison : CL.content.get('factions', f).garrison || s.garrison;
+    return f === s.ownerFaction ? s.garrison : faction(f)?.garrison || s.garrison;
   }
 
   /** Settlements a kingdom controls now (named `holdings` before P8-02; kept as an alias). */
@@ -411,6 +451,19 @@
     return true;
   }
 
+  /**
+   * P9-03: may realm `f` besiege a fort held by `g`? At war; or `g` is you, holding land of no realm
+   * (recognised by nobody); or one of them is a realm founded in play the other does not recognise
+   * (that counts as war for sieges, not for battles on the road).
+   */
+  function siegeWar(c, f, g) {
+    if (!f || !g || f === g) return false;
+    if (relation(c, f, g) === 'war') return true;
+    if (g === PLAYER) return f !== PLAYER && isRealm(f, c);
+    const F = CL.founding;
+    return Boolean(F && ((c.realms?.[g] && isRealm(f, c) && !F.recognises(c, f, g)) || (c.realms?.[f] && isRealm(g, c) && !F.recognises(c, g, f))));
+  }
+
   /** Patrols of two kingdoms at peace met (js/parties.js): a border incident may sour it. */
   function incident(c, a, b, at, day = c.day) {
     if (relation(c, a, b) !== 'peace' || storyHeld(c, a, b)) return false;
@@ -456,6 +509,58 @@
   }
 
   // ---- Save ----
+
+  /**
+   * P9-03: a lord of a realm founded in play rides under its banner: a lords' template for it (in the
+   * content's table, made in play), from the lords' template of the realm whose land it holds.
+   */
+  function ensureTemplates(c) {
+    const T = CL.content.table('party_templates');
+    for (const r of Object.values(c?.realms || {})) {
+      const id = `lord_${r.id}`;
+      if (T[id]?.faction === r.id) continue;
+      const base = Object.values(T).find((t) => t.kind === 'lord' && t.faction === r.troops);
+      if (base) T[id] = { ...base, id, name: `${r.short} Lord`, faction: r.id, founded: true };
+    }
+  }
+
+  /** P9-03: an id for a realm founded in play. */
+  const FOUNDED_ID = /^r\d{1,4}$/;
+  /** Realms founded in play, repaired onto `s` (before anything else reads them). */
+  function sanitizeRealms(s, d) {
+    s.realms = {};
+    const text = (v, n) => (typeof v === 'string' && v.trim() ? v.trim().slice(0, n) : null);
+    for (const [id, r] of Object.entries(d?.realms && typeof d.realms === 'object' ? d.realms : {})) {
+      if (!FOUNDED_ID.test(id) || !r || typeof r !== 'object' || !factionTable()[r.troops] || factionTable()[r.troops].freeCity) continue;
+      const name = text(r.name, 40);
+      if (!name) continue;
+      const laws = {};
+      for (const [k, v] of Object.entries(r.laws && typeof r.laws === 'object' ? r.laws : {})) if (CL.content.LAWS[k]?.(v)) laws[k] = v;
+      s.realms[id] = {
+        id,
+        name,
+        short: text(r.short, 20) || name,
+        emblem: text(r.emblem, 1) || name[0].toUpperCase(),
+        color: typeof r.color === 'string' && /^#[0-9a-f]{6}$/i.test(r.color) ? r.color : '#888888',
+        culture: CL.content.table('cultures')[r.culture] ? r.culture : factionTable()[r.troops].culture,
+        troops: r.troops,
+        capital: CL.content.table('settlements')[r.capital] ? r.capital : null,
+        recognised: [],
+        pending: null,
+        laws,
+        founded: typeof r.founded === 'number' && Number.isFinite(r.founded) ? r.founded : 0,
+        by: typeof r.by === 'string' ? r.by : PLAYER,
+      };
+    }
+    for (const [id, r] of Object.entries(d?.realms && typeof d.realms === 'object' ? d.realms : {})) {
+      const k = s.realms[id];
+      if (!k) continue;
+      k.recognised = [...new Set((Array.isArray(r.recognised) ? r.recognised : []).filter((f) => typeof f === 'string' && (factionTable()[f] || s.realms[f]) && f !== id))];
+      if (r.pending && (factionTable()[r.pending.realm] || s.realms[r.pending.realm]) && typeof r.pending.day === 'number' && Number.isFinite(r.pending.day)) k.pending = { realm: r.pending.realm, day: r.pending.day };
+    }
+    ensureTemplates(s);
+    s.nextRealmId = Math.max(Number.isInteger(d?.nextRealmId) ? d.nextRealmId : 0, ...Object.keys(s.realms).map((id) => Number(id.slice(1))), 0);
+  }
 
   function sanitize(s, d) {
     s.reputation = defaultReputation();
@@ -532,6 +637,11 @@
     s.rulers = {};
     for (const f of realms()) {
       const r = d?.rulers?.[f.id];
+      if (s.realms?.[f.id]) {
+        // P9-03: a realm founded in play keeps its ruler (you, or a lord of it), else its founder.
+        s.rulers[f.id] = r === PLAYER || s.people[r]?.realm === f.id ? r : s.realms[f.id].by;
+        continue;
+      }
       s.rulers[f.id] = s.people[r]?.realm === f.id ? r : s.people[start.rulers[f.id]] ? start.rulers[f.id] : Object.keys(s.people).find((id) => s.people[id].realm === f.id) || null;
       if (!s.rulers[f.id]) {
         // A realm with nobody at all: its data ruler comes back.
@@ -557,6 +667,7 @@
       if (e && typeof e === 'object' && (e.kind || b.kind === 'fort')) {
         if (isRealm(e.sovereign)) h.sovereign = e.sovereign;
         if (isKingdom(e.controller)) h.controller = e.controller;
+        if (e.sovereign === PLAYER && e.controller === PLAYER && e.holder === PLAYER) Object.assign(h, { sovereign: PLAYER, controller: PLAYER }); // P9-03: your own land
         if (typeof e.holder === 'string' && legal(e.holder, h.sovereign)) h.holder = e.holder;
         else if (h.sovereign !== b.sovereign) {
           h.holder = s.rulers[h.sovereign]; // a partial record: taken by a realm, held by its ruler
@@ -608,7 +719,8 @@
     const out = new Set();
     for (const [sid, h] of Object.entries(d?.holdings && typeof d.holdings === 'object' ? d.holdings : {})) {
       if (!h || typeof h !== 'object') continue;
-      for (const f of [h.sovereign, h.controller]) if (typeof f === 'string' && !isKingdom(f)) out.add(`${f} (at ${place(sid)?.name || sid})`);
+      // P9-03: the save's own founded realms count, and land you hold of no realm.
+      for (const f of [h.sovereign, h.controller]) if (typeof f === 'string' && f !== PLAYER && !isKingdom(f, d && typeof d.realms === 'object' && d.realms ? d : { realms: {} })) out.add(`${f} (at ${place(sid)?.name || sid})`);
     }
     return [...out];
   }
@@ -616,7 +728,7 @@
   // ---- Words for the Realm screen and the map (P8-02) ----
 
   const placeNameOf = (sid) => place(sid)?.name || sid;
-  const factionShort = (f) => CL.content.table('factions')[f]?.short || f;
+  const factionShort = (f) => faction(f)?.short || f;
   const KIND = { town: 'town', fort: 'fort', village: 'village' };
 
   /** "Greywall Fort (fort): Lord Hamon Greymantle · gates Valedorn · claimed by …". @param {string} sid @param {Campaign} [c] */
@@ -641,7 +753,7 @@
     if (kin.length) parts.push(`kin: ${kin.join(', ')}`);
     if (p.home) parts.push(`home ${place(p.home)?.placeName || placeNameOf(p.home)}`);
     // P8-01: where they are now.
-    if (p.status === 'captive') parts.push(p.heldBy === PLAYER ? 'your prisoner' : `a prisoner of the ${CL.content.table('factions')[p.heldBy]?.name || 'enemy'}`);
+    if (p.status === 'captive') parts.push(p.heldBy === PLAYER ? 'your prisoner' : `a prisoner of the ${faction(p.heldBy)?.name || 'enemy'}`);
     else if (rules(id, c)) parts.push('keeps to their hall');
     else {
       const q = CL.lords?.partyOf(c, id);
@@ -670,9 +782,10 @@
       const p = person(h.holder, c);
       if (!p) out.push(`${sid}: no holder`);
       else if (h.holder !== PLAYER && p.realm !== h.sovereign && rules(h.holder, c) !== h.sovereign) out.push(`${sid}: its holder is not sworn to ${h.sovereign}`);
-      else if (h.holder === PLAYER && CL.allegiance && CL.allegiance.sworn(c) !== h.sovereign) out.push(`${sid}: you hold it but are not sworn to ${h.sovereign}`); // P8-04
-      if (!isRealm(h.sovereign)) out.push(`${sid}: no sovereign`);
-      if (!isKingdom(h.controller)) out.push(`${sid}: no controller`);
+      else if (h.holder === PLAYER && CL.allegiance && CL.allegiance.sworn(c) !== h.sovereign && rulerOf(h.sovereign, c) !== PLAYER) out.push(`${sid}: you hold it but are not sworn to ${h.sovereign}`); // P8-04
+      const own = h.sovereign === PLAYER && h.controller === PLAYER && h.holder === PLAYER; // P9-03: yours, of no realm
+      if (!isRealm(h.sovereign) && !own) out.push(`${sid}: no sovereign`);
+      if (!isKingdom(h.controller) && !own) out.push(`${sid}: no controller`);
       if (h.seat && h.controller !== c.holdings[h.seat]?.controller) out.push(`${sid}: not controlled with its seat`);
       if (h.claims.some((k) => k.by === h.holder)) out.push(`${sid}: its holder also claims it`);
       if (new Set(h.claims.map((k) => k.by)).size !== h.claims.length) out.push(`${sid}: a claim recorded twice`);
@@ -680,7 +793,7 @@
     const seen = new Set();
     for (const f of realms()) {
       const r = c.rulers?.[f.id];
-      if (!r || c.people?.[r]?.realm !== f.id) out.push(`${f.id}: no ruler`);
+      if (!r || (r !== PLAYER && c.people?.[r]?.realm !== f.id)) out.push(`${f.id}: no ruler`); // P9-03: or you
       else if (seen.has(r)) out.push(`${r} holds two rulers' offices`);
       seen.add(r);
     }
@@ -699,7 +812,7 @@
   function chronicleText(e) {
     const at = place(e.place)?.name || 'a holding';
     if (e.event === 'gained') return `Granted ${at}.`;
-    if (e.event === 'lost') return `Lost ${at} to the ${CL.content.get('factions', e.by)?.name || 'enemy'}.`;
+    if (e.event === 'lost') return `Lost ${at} to the ${faction(e.by)?.name || 'enemy'}.`;
     return `${at} changed hands.`;
   }
 
@@ -755,6 +868,10 @@
     FRIENDLY_CAP_BONUS,
     STANDING_LABEL,
     kingdoms,
+    faction,
+    factionTable,
+    founded,
+    during,
     outlaws,
     isKingdom,
     forts,
@@ -792,6 +909,9 @@
     personLine,
     tapLine,
     sanitizeHoldings,
+    sanitizeRealms,
+    ensureTemplates,
+    FOUNDED_ID,
     chronicleText,
     validate,
     score,
@@ -813,6 +933,7 @@
     relation,
     atOdds,
     storyHeld,
+    siegeWar,
     setRelation,
     incident,
     clashed,

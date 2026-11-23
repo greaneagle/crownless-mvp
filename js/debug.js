@@ -574,7 +574,7 @@
           const rival = CL.realm.realms().map((f) => f.id).find((f) => f !== realm);
           CL.lords.beaten(c(), near, rival);
           log('lord held off-screen', { lord: near.lordId, by: rival });
-          CL.ui.message(`${name} is held by the ${CL.content.get('factions', rival).name}`);
+          CL.ui.message(`${name} is held by the ${CL.realm.faction(rival)?.name}`);
         }
         break;
       }
@@ -585,7 +585,7 @@
         const a = CL.allegiance.state(c());
         Object.assign(a, act === 'serveHere' ? { kind: 'mercenary', realm: f, since: c().day, until: c().day + 30, serviceDays: 0, summonsMissed: 0, window: null, nextPay: c().day + 7, served: Math.floor(c().day), lastOath: c().day } : { kind: 'vassal', realm: f, since: c().day, until: null, serviceDays: 0, summonsMissed: 0, window: { start: c().day, days: 0 }, nextPay: null, served: null, lastOath: c().day });
         log('allegiance', { kind: a.kind, realm: f });
-        CL.ui.message(`You are now ${a.kind === 'vassal' ? 'a vassal' : 'a mercenary'} of the ${CL.content.get('factions', f).name}`);
+        CL.ui.message(`You are now ${a.kind === 'vassal' ? 'a vassal' : 'a mercenary'} of the ${CL.realm.faction(f)?.name}`);
         break;
       }
       case 'grantMe': {
@@ -629,7 +629,7 @@
         for (const q of c().parties.filter((p) => p.lordId && c().people[p.lordId].realm === f).slice(0, 3)) Object.assign(q, { x: fort.mapX + 3, y: fort.mapY + 3 });
         const s = CL.sieges.plan(c(), f);
         log('siege planned', { fort: s?.sid, by: f });
-        CL.ui.message(s ? `The ${CL.content.get('factions', f).name} gather against ${CL.content.get('settlements', s.sid).name}` : 'No siege could be planned');
+        CL.ui.message(s ? `The ${CL.realm.faction(f)?.name} gather against ${CL.content.get('settlements', s.sid).name}` : 'No siege could be planned');
         break;
       }
       case 'nobleFriend':
@@ -662,7 +662,7 @@
           N.changeRealm(c(), pid, to);
           CL.lords.ensure(c(), c().day, true);
           log('noble leaves', { lord: pid, to });
-          CL.ui.message(`${CL.realm.titled(pid, c())} leaves for ${CL.content.get('factions', to).name}`);
+          CL.ui.message(`${CL.realm.titled(pid, c())} leaves for ${CL.realm.faction(to)?.name}`);
         }
         break;
       }
@@ -713,12 +713,24 @@
         log('fiefs week', { line });
         break;
       }
+      case 'declareHere': {
+        // P9-03: a realm of your own at the chosen fort, without the thresholds (made yours first if need be).
+        const sid = $('#cheatHolding').value;
+        const h = CL.realm.holding(sid, c());
+        if (h?.kind !== 'fort') return CL.ui.message('Choose a fort under Holdings');
+        if (h.holder !== 'player') CL.realm.transfer(c(), sid, { controller: 'player', sovereign: 'player', holder: 'player', willing: true, reason: 'debug' }) || CL.realm.transfer(c(), sid, { holder: 'player', willing: true, reason: 'debug' });
+        CL.story.state(c()).flags.ending ||= CL.realm.realms()[0].id;
+        const id = CL.founding.declare(c(), 'player', sid, { free: true });
+        log('declare my realm', { realm: id, at: sid, why: id ? '' : CL.rights.may(c(), 'player', 'declareFree', sid).why });
+        if (!id) CL.ui.message(CL.rights.may(c(), 'player', 'declareFree', sid).why);
+        break;
+      }
       case 'treatyNow': {
         // P9-02: the chosen holding's realm makes its next offer now (if it has a reason to).
         const f = CL.realm.sovereignOf($('#cheatHolding').value, c());
         const r = f && CL.diplomacy.offerNow(c(), f);
         log('treaty offer now', { realm: f, offer: r?.offer || null, result: r?.result || null });
-        if (!r) CL.ui.message(`${f ? CL.content.get('factions', f).short : 'That realm'} has no offer to make now.`);
+        if (!r) CL.ui.message(`${f ? CL.realm.faction(f)?.short : 'That realm'} has no offer to make now.`);
         break;
       }
       case 'realmTreasury': {

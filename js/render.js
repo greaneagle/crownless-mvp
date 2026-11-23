@@ -538,7 +538,7 @@
   // ---- Strategic map ----
 
   /** A faction's banner letter (W-04: data/factions.js `emblem`). */
-  const emblem = (f) => CL.content.table('factions')[f]?.emblem || '?';
+  const emblem = (f) => CL.realm.faction(f)?.emblem || '?';
 
   /** A path through map points, in world pixels (the terrain layer is drawn in them; W-02). */
   function polyPath(points) {
@@ -581,7 +581,7 @@
     if (!CL.mapView.inView(s.mapX, s.mapY, 60)) return; // culled: off the screen (W-02)
     const [x, y] = CL.mapView.toScreen(s.mapX, s.mapY);
     const holder = CL.realm.owner(s.id);
-    const color = CL.content.get('factions', holder).color;
+    const color = CL.realm.faction(holder)?.color;
     ctx.save();
     // P8-06a: a fort under siege: a red ring of the besiegers' camp around it, and the words.
     const siege = CL.sieges?.at(CL.campaign, s.id);
@@ -687,7 +687,7 @@
       ctx.stroke();
       ctx.restore();
     }
-    const color = t.kind === 'bandit' ? '#7a1e16' : t.kind === 'detachment' ? '#c9a24a' : CL.content.get('factions', t.faction).color; // your patrols: gold (P7-05)
+    const color = t.kind === 'bandit' ? '#7a1e16' : t.kind === 'detachment' ? '#c9a24a' : CL.realm.faction(t.faction)?.color; // your patrols: gold (P7-05)
     const n = CL.parties.troopCount(p);
     const hostile = CL.parties.hostileTo(CL.campaign, t);
     ctx.save();
@@ -1020,7 +1020,7 @@
     const t = CL.content.get('party_templates', p.template);
     ctx.save();
     ctx.globalAlpha = 0.45;
-    ctx.fillStyle = t.kind === 'bandit' ? '#7a1e16' : CL.content.get('factions', t.faction).color;
+    ctx.fillStyle = t.kind === 'bandit' ? '#7a1e16' : CL.realm.faction(t.faction)?.color;
     ctx.strokeStyle = '#1b1208';
     ctx.lineWidth = 2;
     ctx.beginPath();

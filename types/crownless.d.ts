@@ -244,6 +244,11 @@ declare global {
     trust: Record<ContentId, Record<ContentId, number>>;
     /** v26 (P9-02): "from|to|kind" → the day a realm last made that offer. */
     offers: Record<string, number>;
+    /** v27 (P9-03): realms founded in play, by id (`r1`…): what the data's factions say of a realm, and its seat, recognition and the old crown's pending answer. */
+    realms: Record<string, { id: string; name: string; short: string; emblem: string; color: string; culture: ContentId; troops: ContentId; capital: ContentId | null; laws: Record<string, any>; founded: number; by: string; recognised: string[]; pending: { realm: string; day: number } | null }>;
+    nextRealmId: number;
+    /** v27 (P9-03): your rule: the officers' policies and the lords asking to swear to you. */
+    rule: { steward: 'hold' | 'grow' | 'hoard'; marshal: string; chancellor: 'peace' | 'allies' | 'none'; asks: { lord: string; day: number }[] };
     nextSiegeId?: number;
     siegePlanned?: number | null;
     /** v22 (P8-05): the crown's grants waiting to be made. */

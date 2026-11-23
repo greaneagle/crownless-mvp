@@ -212,7 +212,7 @@ test('saves: v25 → v26 (a truce becomes a treaty), a round trip, junk repaired
   delete v25.offers;
   delete v25.nextTreatyId;
   const m = CL.save.migrate(v25);
-  assert.equal(m.version, 26);
+  assert.equal(m.version, CL.save.VERSION); // and on through the later steps
   assert.deepEqual(plain(m.treaties.map((t) => [t.kind, t.between, t.until])), [['truce', ['hrothmark', 'valedorn'], c.relations['hrothmark|valedorn'].truceUntil]]);
   assert.deepEqual(plain(m.trust), {});
   const index = JSON.parse(fs.readFileSync(path.join(FIX, 'index.json'), 'utf8'));

@@ -24,7 +24,7 @@ function run(seed, days = 180) {
     for (const f of CL.realm.realms()) out[f.id] = Object.values(c.holdings).filter((h) => h.kind === 'fort' && h.controller === f.id).length;
     return out;
   };
-  const tally = { treaties: { made: {}, kept: 0, broken: 0, declined: 0, warDays: {}, peaceAll: {} }, loose: { ransomed: 0, letGo: 0, menAsked: 0, menLent: 0, pressed: 0, joined: 0 }, wars: 0, begun: 0, lifted: 0, surrendered: 0, stormed: 0, relieved: 0, abandoned: 0, grants: 0, fell: 0, problems: [], left: {}, joined: {}, grumbled: 0, refused: 0, revoked: 0, gained: 0, lost: 0 };
+  const tally = { founded: [], recognised: 0, treaties: { made: {}, kept: 0, broken: 0, declined: 0, warDays: {}, peaceAll: {} }, loose: { ransomed: 0, letGo: 0, menAsked: 0, menLent: 0, pressed: 0, joined: 0 }, wars: 0, begun: 0, lifted: 0, surrendered: 0, stormed: 0, relieved: 0, abandoned: 0, grants: 0, fell: 0, problems: [], left: {}, joined: {}, grumbled: 0, refused: 0, revoked: 0, gained: 0, lost: 0 };
   // Counted as they happen (the diagnostic log keeps only the latest lines).
   const log = CL.diag.log;
   CL.diag.log = (level, msg, data) => {
@@ -43,6 +43,9 @@ function run(seed, days = 180) {
     if (msg === 'Treaty ended') tally.treaties.kept++;
     if (msg === 'Treaty broken') tally.treaties.broken++;
     if (msg === 'Ally declines') tally.treaties.declined++;
+    // P9-03: realms founded in play, by whom and where, and who recognised them.
+    if (msg === 'Realm founded') tally.founded.push(`${data.realm} by ${c.people[data.by]?.name || data.by} at ${data.at} (day ${Math.floor(c.day)})`);
+    if (msg === 'Realm recognised') tally.recognised++;
     if (msg === 'Lord changes realm') {
       tally.left[data.from] = (tally.left[data.from] || 0) + 1;
       tally.joined[data.to] = (tally.joined[data.to] || 0) + 1;
@@ -129,6 +132,7 @@ if (require.main === module) {
     console.log(`  treasuries (start/lowest/end): ${Object.entries(r.crowns).map(([f, t]) => `${f} ${t.start}/${t.low}/${t.end}`).join(', ')}`);
     const T = r.treaties;
     console.log(`  treaties: made ${per(T.made)}; kept to their end ${T.kept}; broken ${T.broken}; allies declining ${T.declined}; days at war per pair: ${per(T.warDays)}; days at peace with all: ${per(T.peaceAll)}`);
+    console.log(`  realms founded: ${r.founded.length ? r.founded.join('; ') : 'none'}; recognitions ${r.recognised}`);
     console.log(`  loose ends: ${L.ransomed} ransomed by their own, ${L.letGo} let go unpaid; men asked ${L.menAsked}, lent ${L.menLent}; claims pressed ${L.pressed}; sieges joined unsummoned ${L.joined}`);
   }
 }

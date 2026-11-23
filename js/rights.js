@@ -21,8 +21,8 @@
   const yes = () => ({ ok: true, why: '' });
   const no = (why) => ({ ok: false, why });
   const place = (id) => (typeof id === 'string' && CL.content.table('settlements')[id]) || null;
-  const factionName = (f) => CL.content.table('factions')[f]?.name || 'the lords here';
-  const short = (f) => CL.content.table('factions')[f]?.short || factionName(f);
+  const factionName = (f) => CL.realm.faction(f)?.name || 'the lords here';
+  const short = (f) => CL.realm.faction(f)?.short || factionName(f);
 
   /** The realm a person is sworn to: a lord's own; the player's as their vassal's oath says (P8-04). */
   const allegiance = (c, who) => (who === PLAYER ? CL.allegiance?.sworn(c) || null : R().person(who, c)?.realm || null);
@@ -136,16 +136,43 @@
         if (R().isCapital(target)) return no('A capital never falls in this age');
         if (CL.sieges?.at(c, target)) return no(`${s.name} is already besieged`);
         // P8-06a: the player serves a realm at war with it, or (independent) at the cost of attacking it.
-        const mine = who === PLAYER ? CL.allegiance?.serves(c) || null : allegiance(c, who);
+        const mine = who === PLAYER ? R().rules(PLAYER, c) || CL.allegiance?.serves(c) || null : allegiance(c, who); // P9-03: your own realm first
         if (who === PLAYER && !mine) {
+          if (h.controller === PLAYER) return no(`${s.name} is yours`);
           if (!R().isRealm(h.controller)) return no('There is no realm to besiege here');
           if (CL.sieges?.list(c).some((x) => x.by === PLAYER)) return no('You are besieging another fort');
           return yes();
         }
         if (!mine) return no('No realm stands behind you: swear to one first');
         if (mine === h.controller) return no(`${s.name} is already your realm's`);
-        if (R().relation(c, mine, h.controller) !== 'war') return no(`${short(mine)} is not at war with ${short(h.controller)}`);
+        if (!R().siegeWar(c, mine, h.controller)) return no(`${short(mine)} is not at war with ${short(h.controller)}`); // P9-03: or it holds land nobody recognises
         if (CL.sieges?.list(c).some((x) => x.realm === mine)) return no(`${short(mine)} is besieging another fort already`);
+        return yes();
+      }
+      case 'declare':
+      case 'declareFree': {
+        // P9-03: found a realm at a fort or town you hold (with renown and a company; a lord, with men and a grudge).
+        const s = place(target);
+        const h = R().holding(target, c);
+        if (!s || !h || s.type === 'village') return no('A realm is founded from a fort or a town');
+        if (h.holder !== who) return no(`${s.name} is not ${who === PLAYER ? 'yours' : 'theirs'}`);
+        if (R().rules(who, c)) return no(who === PLAYER ? 'You rule a realm already' : 'They rule already');
+        if (!CL.story?.state(c).flags.ending) return no('Not while the March waits on the story');
+        if (R().locked(c, target) || (R().isCapital(target) && h.sovereign !== PLAYER)) return no(`${s.name} is the seat of a crown`);
+        if (!CL.founding?.landOf(target)) return no(`${s.name} lies in no realm's land`);
+        if (CL.sieges?.at(c, target)) return no(`${s.name} is besieged`);
+        if (action === 'declareFree') return yes();
+        const F = CL.founding.RULES;
+        if (who === PLAYER) {
+          if (c.renown < F.renown) return no(`You need ${F.renown} renown (you have ${c.renown})`);
+          if (c.roster.length < F.soldiers) return no(`You need ${F.soldiers} soldiers (you have ${c.roster.length})`);
+          return yes();
+        }
+        const q = CL.lords?.partyOf(c, who);
+        const men = q ? Object.values(q.troops).reduce((a, b) => a + b, 0) : 0;
+        if (men < F.lordTroops) return no('Too few men');
+        const ruler = R().rulerOf(R().person(who, c)?.realm, c);
+        if (!CL.nobles || CL.nobles.opinion(c, who, ruler) > F.lordGrudge) return no('No grudge against their ruler');
         return yes();
       }
       case 'serve': {
@@ -215,7 +242,7 @@
   /** The reason as a plain string ('' when allowed): for the places that only need the words. */
   const why = (c, who, action, target) => may(c, who, action, target).why;
 
-  const ACTIONS = [...Object.keys(DOING), 'appoint', 'setPolicy', 'drawTreasury', 'grant', 'seize', 'besiege', 'serve', 'swear', 'askRelease', 'defect', 'leave', 'askHelp', 'ransom', 'release'];
+  const ACTIONS = [...Object.keys(DOING), 'appoint', 'setPolicy', 'drawTreasury', 'grant', 'seize', 'besiege', 'serve', 'swear', 'askRelease', 'defect', 'leave', 'askHelp', 'ransom', 'release', 'declare', 'declareFree'];
 
   CL.rights = { PLAYER, ACTIONS, may, why, allegiance, enemyOf };
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -20,7 +20,7 @@
   const LEVELS = ['seen', 'owned'];
   /** Factions in troop-tree order (W-04: data/factions.js `order`, then by id). */
   const factionOrder = () =>
-    Object.values(CL.content.table('factions'))
+    Object.values(CL.realm.factionTable())
       .sort((a, b) => (a.order ?? 99) - (b.order ?? 99) || (a.id < b.id ? -1 : 1))
       .map((f) => f.id);
 
@@ -107,7 +107,7 @@
         .filter((id) => troops()[id].faction === f)
         .map(node)
         .filter(Boolean);
-      const fd = CL.content.table('factions')[f];
+      const fd = CL.realm.faction(f);
       if (nodes.length) lines.push({ faction: f, name: fd?.lineName || fd?.name || f, nodes });
     }
     return lines;

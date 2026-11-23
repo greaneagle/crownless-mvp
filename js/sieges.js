@@ -60,7 +60,7 @@
   const A = () => CL.autoresolve;
   const place = (id) => CL.content.table('settlements')[id] || null;
   const placeName = (id) => place(id)?.name || id;
-  const factionName = (f) => CL.content.table('factions')[f]?.name || 'a realm';
+  const factionName = (f) => CL.realm.faction(f)?.name || 'a realm';
   const troopsPower = (t) => A().troopsPower(t || {});
   const PLAYER = 'player';
 
@@ -147,15 +147,18 @@
   }
 
   /** A realm at war plans a siege: the nearest enemy fort it may besiege (or `prefer`, if it may), and its free lords near it. */
-  function plan(c, f, prefer = null) {
+  function plan(c, f, prefer = null, { force = false } = {}) {
     if (list(c).some((s) => s.realm === f)) return null;
+    // P9-03: your realm's sieges by your marshal's policy (or your own summons, `force`).
+    if (!force && CL.founding && f === CL.founding.mine(c) && !R().realms().some((k) => CL.founding.mayPlan(c, f, k.id))) return null;
     // A realm holds what it took before it reaches for more: no new siege while a fort it took is weak (§20.7).
     if (Object.values(c.holdings).some((x) => x.controller === f && x.weakUntil > c.day)) return null;
-    const enemies = R().realms().map((k) => k.id).filter((e) => e !== f && R().relation(c, f, e) === 'war');
+    // P9-03: and land held of no realm, or of a realm founded in play that it does not recognise.
+    const enemies = [...R().realms().map((k) => k.id), R().PLAYER].filter((e) => e !== f && R().siegeWar(c, f, e));
     if (!enemies.length) return null;
     const ruler = R().rulerOf(f, c);
     const home = place(R().capitalOf(f));
-    const forts = Object.keys(c.holdings).filter((sid) => c.holdings[sid].kind === 'fort' && enemies.includes(c.holdings[sid].controller) && !at(c, sid) && CL.rights.may(c, someLord(c, f) || ruler, 'besiege', sid).ok);
+    const forts = Object.keys(c.holdings).filter((sid) => c.holdings[sid].kind === 'fort' && enemies.includes(c.holdings[sid].controller) && (force || !CL.founding || CL.founding.mayPlan(c, f, c.holdings[sid].controller)) && (!force || !prefer || sid === prefer) && !at(c, sid) && CL.rights.may(c, someLord(c, f) || ruler, 'besiege', sid).ok);
     if (!forts.length) return null;
     const d = (sid) => CL.world.mapDist(home.mapX, home.mapY, place(sid).mapX, place(sid).mapY);
     // P8-07: a feud's claim is pressed in war: a fort one of the realm's lords claims comes first.
@@ -183,6 +186,7 @@
     for (const q of lords) Object.assign(q, { intent: 'gather', siegeId: s.id });
     log(s, c.day, `The ${factionName(f)} gather their lords against ${placeName(sid)}.`);
     CL.nobles?.summonPlayer(c, f, s); // a vassal of the realm is summoned too
+    CL.founding?.onSiege(c, s); // P9-03: your seat besieged is an alert
     CL.diag.log('info', 'Siege planned', { realm: f, fort: sid, lords: s.lords });
     return s;
   }
@@ -210,7 +214,7 @@
   /** The fort falls (stormed or surrendered): control passes, and everything that follows from it. */
   function take(c, s, how) {
     const h = R().holding(s.sid, c);
-    const taker = s.by === PLAYER ? CL.allegiance.serves(c) || null : s.realm;
+    const taker = s.by === PLAYER ? R().rules(PLAYER, c) || CL.allegiance.serves(c) || null : s.realm; // P9-03: your own realm first
     const commander = s.by === PLAYER ? PLAYER : s.lords.find((pid) => CL.lords.partyOf(c, pid)) || s.lords[0];
     const was = { holder: h.holder, controller: h.controller };
     const castellan = h.castellan;
@@ -237,6 +241,8 @@
     CL.news?.record(c, 'fort_fell', { place: s.sid, faction: taker, text: words });
     if (s.by === PLAYER || was.holder === PLAYER) CL.chronicle?.add(c, { day: c.day, kind: 'holding', place: s.sid, event: was.holder === PLAYER ? 'lost' : s.by === PLAYER ? 'changed' : 'changed', by: taker || was.controller });
     if (castellan && was.holder === PLAYER) CL.ui.message(how === 'surrendered' ? `${castellan.name} walks out with the garrison and rejoins you.` : `${castellan.name} is taken prisoner as ${placeName(s.sid)} falls. Retake it to free them.`);
+    // P9-03: with no realm behind you, a fort you claim is yours again, held of no realm.
+    if (!taker && s.by === PLAYER) CL.claims?.onRetakeAlone(c, s.sid);
     // The conqueror's choice (D-P8f, P8-05): AI lords ask; you choose. P8-08: a claim your liege backs is yours again at once.
     if (taker) {
       if (s.by === PLAYER && CL.claims?.onRetake(c, s.sid)) return how;
@@ -412,7 +418,7 @@
   function stepOne(c, s) {
     const h = R().holding(s.sid, c);
     const defender = h.controller;
-    if (s.realm && R().relation(c, s.realm, defender) !== 'war' && s.by !== PLAYER) return end(c, s, 'lifted'); // the war is over
+    if (s.realm && !R().siegeWar(c, s.realm, defender) && s.by !== PLAYER) return end(c, s, 'lifted'); // the war is over (P9-03: or the land is recognised)
     if (s.realm === defender) return end(c, s, 'lifted'); // it changed hands some other way
     if (s.by === PLAYER && (c.world.location !== s.sid || CL.allegiance.serves(c) !== s.realm)) return end(c, s, 'lifted'); // you rode off
     if (s.phase === 'gathering') {

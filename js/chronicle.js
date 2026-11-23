@@ -192,7 +192,7 @@
       case 'holding':
         return CL.realm.chronicleText(e);
       case 'allegiance': {
-        const f = CL.content.table('factions')[e.by]?.name || 'a realm';
+        const f = CL.realm.faction(e.by)?.name || 'a realm';
         const as = e.as === 'vassal' ? 'vassal' : 'mercenary';
         return {
           term: `Served out a contract as a mercenary of the ${f}.`,
@@ -285,16 +285,16 @@
       if (e.kind === 'business') {
         if (!settlements[e.place] || !['bought', 'sold', 'seized'].includes(e.event)) continue;
         Object.assign(out, { event: e.event, place: e.place });
-        if (e.event === 'seized' && CL.content.table('factions')[e.by]) out.by = e.by;
+        if (e.event === 'seized' && CL.realm.faction(e.by)) out.by = e.by;
       }
       if (e.kind === 'allegiance') {
-        if (!['term', 'early', 'release', 'switched', 'defect', 'expelled', 'breach'].includes(e.event) || !CL.content.table('factions')[e.by]) continue;
+        if (!['term', 'early', 'release', 'switched', 'defect', 'expelled', 'breach'].includes(e.event) || !CL.realm.faction(e.by)) continue;
         Object.assign(out, { event: e.event, as: e.as === 'vassal' ? 'vassal' : 'mercenary', by: e.by });
       }
       if (e.kind === 'holding') {
         if (!settlements[e.place] || !['gained', 'lost', 'changed'].includes(e.event)) continue;
         Object.assign(out, { event: e.event, place: e.place });
-        if (CL.content.table('factions')[e.by]) out.by = e.by;
+        if (CL.realm.faction(e.by)) out.by = e.by;
       }
       if (e.kind === 'happening') {
         if (!CL.content.table('world_events')[e.event]?.chronicle?.[e.result] || !settlements[e.place]) continue;

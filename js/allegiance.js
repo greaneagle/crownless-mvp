@@ -43,8 +43,8 @@
   const ENDS = ['term', 'breach', 'release', 'early', 'defect', 'expelled', 'switched'];
 
   const R = () => CL.realm;
-  const factionName = (f) => CL.content.table('factions')[f]?.name || 'the realm';
-  const short = (f) => CL.content.table('factions')[f]?.short || factionName(f);
+  const factionName = (f) => CL.realm.faction(f)?.name || 'the realm';
+  const short = (f) => CL.realm.faction(f)?.short || factionName(f);
   const placeName = (sid) => CL.content.table('settlements')[sid]?.name || sid;
 
   /** @returns {any} */
@@ -211,6 +211,18 @@
     }
     CL.diag.log('info', 'Allegiance', { action, realm, kind: a.kind });
     return p;
+  }
+
+  /**
+   * P9-03: you founded a realm. Your service ends; breaking with a liege that way is a defection
+   * (their standing of you falls), but your land goes with you to your realm.
+   */
+  function crowned(c, old) {
+    const a = state(c);
+    if (a.kind === 'independent') return;
+    const was = a.realm;
+    if (a.kind === 'vassal' && was === old) R().adjust(c, was, RULES.defect, 'founded a realm');
+    close(c, a.kind === 'vassal' && was === old ? 'defect' : 'switched');
   }
 
   /** Thrown out: as defection, without the hunt (no preview: it happens to you). */
@@ -402,5 +414,5 @@
     }
   }
 
-  CL.allegiance = { RULES, KINDS, blank, state, serves, sworn, weeklyPay, mercenaryDays, favour, capital, owed, atWar, preview, act, expel, onAttack, afterBattle, missed, standingWarning, serve, hunted, tick, offerWhy, summary, sanitize };
+  CL.allegiance = { crowned, RULES, KINDS, blank, state, serves, sworn, weeklyPay, mercenaryDays, favour, capital, owed, atWar, preview, act, expel, onAttack, afterBattle, missed, standingWarning, serve, hunted, tick, offerWhy, summary, sanitize };
 })(typeof window !== 'undefined' ? window : globalThis);

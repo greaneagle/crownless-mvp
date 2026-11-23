@@ -2852,7 +2852,7 @@ The phase opens with five battle-scale tasks (owner, 2026-11-22; decisions D-P9a
 - **Measured** (`node scripts/landed.js 180 3`, a new treaties line): 10–12 treaties made a seed (mostly trade; a truce or four; one to three alliances; on seed 1 a peace with tribute), 4–6 kept to their end, 0–1 broken; days at war per pair at most 27 of 180; no realm at peace with all for more than 44 days; every invariant held. **Open for P9-T:** pacts rarely break (rulers seldom think ill of each other); fewer wars on seed 3 (one).
 - **Not built:** trade and access have no effect beyond trust (no tolls or borders for them to lift); the player's own offers wait for P9-03. **Checks:** `npm test` (861, with the new `diplomacy` file of 8; the Gate D template count leaves out the board-less envoy), lint; browser `realm` (one new case), and `settlement` and `allegiance` (the board's text): the allegiance spec still expected 3.6.0's "from their purse", broken since 3.7.0 and fixed here; slow `landed`, `world-sim`. Played at 812×375: the envoy taken from Stonebridge's board by taps (the ride to Hrothgard skipped in the console), and the Diplomacy tab with its tip; playing it found and fixed the board showing `{treaty}` raw.
 
-### P9-03 · Founding or taking a kingdom (L) — Specified
+### P9-03 · Founding or taking a kingdom (L) — ✅ Done in 3.9.0
 
 **Problem.** The player can be independent, a mercenary or a vassal (P8-04), never a ruler; land is held only of a realm (P8-08 left holding land as an independent to here). Design §18.2: a ruler's powers are a lord's, with a wider reach; there is no separate "kingdom game".
 
@@ -2905,6 +2905,16 @@ The phase opens with five battle-scale tasks (owner, 2026-11-22; decisions D-P9a
 - **Play:** declare a realm from a held fort, set the marshal's policy, accept a vassal.
 - **Explain:** a "Your realm" topic in `data/help.js`, and a first-time tip for the tab; Debug: "Declare my realm here" (without the thresholds).
 - **Not here:** rebellion and deposition (P9-04), armies and the capital's fall (P9-05), houses (P9-06).
+
+**Done (3.9.0).**
+- **Realms in play:** `realm.faction(id)` (a data faction, a founded realm, or `player` for land of no realm), `factionTable()`, and `kingdoms(c)`/`realms(c)`/`isRealm(id, c)` with the realms of `c.realms`; every faction lookup in `js/` goes through them (52 replaced; the grep test in `tests/rights.test.js`). A save is read with its own realms (`realm.during`, wrapping `save.sanitize`). A founded realm's lords ride under a template made in play (`lord_r1`, from its land's). Palette: `realm_palette` in `data/factions.js`.
+- **Independent land:** `sovereign`, `controller` and `holder` all `player`; `rulerOf('player')` is you; a claim retaken with no crown (`claims.onRetakeAlone`, from `sieges.take`). `realm.siegeWar(c, f, g)`: at war, or `g` is you of no realm, or a founded realm unrecognised either way; used by `sieges.plan`, the besiege right and the lifting of sieges.
+- **`js/founding.js`:** `declare` (the `declare` right: a fort or town of yours, not a seat, the story ended, 600 renown and 40 soldiers; an AI lord 30 men and −15 of their ruler, both P9-T's); the old crown's claim on each holding, its grievance and its answer in 7 days (accepts if its ruler thinks 0 or better of the founder, else war); recognition at once and weekly; AI declaring at most once in 180 days.
+- **Vassals:** asked from `nobles.tick`'s week (−30 or worse of their ruler, +20 or better of you); answered on the Your realm tab (`changeRealm`); `founding.grant` and `founding.summon` (`sieges.plan` with `force`).
+- **Delegation:** `c.rule` (steward grow/hold/hoard sets your land's tax weekly; marshal defend/peace/expand:<realm> gates your realm's sieges; chancellor peace/allies/none answers offers made to your realm, with a message). SC-41 in `tests/founding.test.js`: ten days riding while ruling, no screen opened.
+- **Save v27** (`realms`, `nextRealmId`, `rule`); Your realm tab with its tip; a Your realm help topic; Debug "Declare my realm here"; news `realm_founded`, `realm_accepted`.
+- **Measured** (`node scripts/landed.js 180 3`, a new realms line): every invariant held; **no AI realm was founded** on any seed, after two tries (the AI's grudge −30 → −20 → −15 and its men 40 → 30): grudges that deep are rare and their lords ride thin. **Open for P9-T.** Also open: your own treaty offers; SC-25 (your alliance broken) waits for them.
+- **Checks:** `npm test` (870, with the new `founding` file of 8 and the grep test), lint; browser `realm` (the Your realm tab: declare, a policy) and `world-map` (the new banner); slow `landed`, `campaign-bots`, `test-world`, `phase8-exit`, passing. `phase8-exit` had failed since 3.7.0, when P9-01's changes made the crown grant you two of Greywall's villages on the way; its run list didn't name the file. The test now hands them back before its landless step. Played at 812×375: declared at Westholt, set the marshal to expand, accepted Lady Astrid as a vassal, all by taps (her grudge set up in the console).
 
 ### P9-04 · Rebellion and deposition (L) — Specified
 

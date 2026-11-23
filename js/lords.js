@@ -57,7 +57,7 @@
   const A = () => CL.autoresolve;
   const place = (id) => (typeof id === 'string' && CL.content.table('settlements')[id]) || null;
   const placeName = (id) => place(id)?.name || 'home';
-  const factionName = (f) => CL.content.table('factions')[f]?.name || 'their realm';
+  const factionName = (f) => CL.realm.faction(f)?.name || 'their realm';
   const troopCount = (troops) => Object.values(troops || {}).reduce((a, b) => a + b, 0);
   const isLordParty = (p) => typeof p?.lordId === 'string';
 

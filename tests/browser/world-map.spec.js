@@ -70,3 +70,24 @@ test('Party and Journal open from the map and come back', async ({ page }) => {
   await press(page, '#primaryBtn');
   await waitMode(page, 'map');
 });
+
+test('P9-03: a realm founded in play flies its own banner on the map', async ({ page }) => {
+  const color = await game(page, (CL) => {
+    const c = CL.campaign; // test setup: a realm of your own at Westholt
+    CL.realm.transfer(c, 'westholt_castle', { holder: 'player', willing: true, reason: 'test' });
+    CL.story.state(c).flags.ending = 'valedorn';
+    const id = CL.founding.declare(c, 'player', 'westholt_castle', { free: true });
+    const s = CL.content.get('settlements', 'westholt_castle');
+    Object.assign(c.world, { x: s.mapX, y: s.mapY - 3 });
+    // Every banner-sized rectangle drawn, with its colour.
+    window.__banners = [];
+    const fill = CanvasRenderingContext2D.prototype.fillRect;
+    CanvasRenderingContext2D.prototype.fillRect = function (x, y, w, h) {
+      if (w === 11 && h === 9) window.__banners.push(String(this.fillStyle).toLowerCase());
+      return fill.call(this, x, y, w, h);
+    };
+    return CL.realm.faction(id).color.toLowerCase();
+  });
+  await press(page, '#centreBtn');
+  await expect.poll(() => game(page, (_CL, want) => window.__banners.includes(want), color)).toBe(true);
+});

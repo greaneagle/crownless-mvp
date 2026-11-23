@@ -26,7 +26,7 @@
   'use strict';
   const CL = root.Crownless;
 
-  const VERSION = 26;
+  const VERSION = 27;
   const KEY = 'crownless_save';
   const BACKUP_KEY = 'crownless_save_backup';
   const LEGACY_KEY = 'crownless_v03_party';
@@ -100,6 +100,9 @@
       rulers: {}, // realm → the person holding its ruler's office (P8-02)
       nextPersonId: 1,
       holdings: {}, // settlement → { kind, sovereign, holder, controller, seat, administrator, claims } (P8-02)
+      realms: {}, // realms founded in play, by id (`r1`…) (P9-03)
+      nextRealmId: 0,
+      rule: CL.founding.blank(), // your rule's policies and the lords asking to swear to you (P9-03)
       prisoners: [], // lords held captive: by you, or off-screen by a realm (P8-01)
       allegiance: CL.allegiance.blank(), // independent, a realm's mercenary, or its vassal (P8-04)
       grants: [], // the crown's grants waiting to be made (P8-05)
@@ -224,6 +227,7 @@
     24: [...V3_FIELDS.filter(([f]) => f !== 'owners'), ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object'], ['accounts', 'object'], ['ledger', 'array'], ['followers', 'object'], ['relations', 'object'], ['medicine', 'number'], ['detachments', 'array'], ['retinue', 'array'], ['happenings', 'object'], ['tourney', 'object'], ['businesses', 'object'], ['people', 'object'], ['rulers', 'object'], ['nextPersonId', 'number'], ['holdings', 'object'], ['prisoners', 'array'], ['allegiance', 'object'], ['grants', 'array'], ['influence', 'object'], ['sieges', 'array'], ['nobles', 'object']],
     25: [...V3_FIELDS.filter(([f]) => f !== 'owners'), ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object'], ['accounts', 'object'], ['ledger', 'array'], ['followers', 'object'], ['relations', 'object'], ['medicine', 'number'], ['detachments', 'array'], ['retinue', 'array'], ['happenings', 'object'], ['tourney', 'object'], ['businesses', 'object'], ['people', 'object'], ['rulers', 'object'], ['nextPersonId', 'number'], ['holdings', 'object'], ['prisoners', 'array'], ['allegiance', 'object'], ['grants', 'array'], ['influence', 'object'], ['sieges', 'array'], ['nobles', 'object'], ['crowns', 'object']],
     26: [...V3_FIELDS.filter(([f]) => f !== 'owners'), ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object'], ['accounts', 'object'], ['ledger', 'array'], ['followers', 'object'], ['relations', 'object'], ['medicine', 'number'], ['detachments', 'array'], ['retinue', 'array'], ['happenings', 'object'], ['tourney', 'object'], ['businesses', 'object'], ['people', 'object'], ['rulers', 'object'], ['nextPersonId', 'number'], ['holdings', 'object'], ['prisoners', 'array'], ['allegiance', 'object'], ['grants', 'array'], ['influence', 'object'], ['sieges', 'array'], ['nobles', 'object'], ['crowns', 'object'], ['treaties', 'array'], ['trust', 'object']],
+    27: [...V3_FIELDS.filter(([f]) => f !== 'owners'), ['rng', 'object'], ['nextResultId', 'number'], ['nextEventId', 'number'], ['troopKnowledge', 'object'], ['chronicle', 'array'], ['honour', 'object'], ['accounts', 'object'], ['ledger', 'array'], ['followers', 'object'], ['relations', 'object'], ['medicine', 'number'], ['detachments', 'array'], ['retinue', 'array'], ['happenings', 'object'], ['tourney', 'object'], ['businesses', 'object'], ['people', 'object'], ['rulers', 'object'], ['nextPersonId', 'number'], ['holdings', 'object'], ['prisoners', 'array'], ['allegiance', 'object'], ['grants', 'array'], ['influence', 'object'], ['sieges', 'array'], ['nobles', 'object'], ['crowns', 'object'], ['treaties', 'array'], ['trust', 'object'], ['realms', 'object'], ['rule', 'object']],
   };
 
   /** @param {unknown} v @param {string} kind */
@@ -434,6 +438,8 @@
     24: (d) => CL.crowns.migrate(d),
     // 25 → 26 (build 3.8.0, P9-02): treaties and trust; today's truces become truce treaties.
     25: (d) => CL.diplomacy.migrate(d),
+    // 26 → 27 (build 3.9.0, P9-03): no realm founded in play yet; your rule's defaults.
+    26: (d) => CL.founding.migrate(d),
     20: (d) => ({ ...d, version: 21, allegiance: { kind: 'independent', realm: null, since: typeof d.day === 'number' ? d.day : 0, until: null, serviceDays: 0, summonsMissed: 0, history: [], window: null, lastOath: null, nextPay: null, served: null, hunt: null } }),
   };
 
@@ -462,6 +468,13 @@
     d = migrate(d);
     if (!d) return null;
     const s = starter();
+    // P9-03: realms founded in play first, and read from this save (not the game in play) throughout.
+    CL.realm.sanitizeRealms(s, d);
+    return CL.realm.during(s, () => repair(s, d));
+  }
+
+  /** The rest of `sanitize`, field by field, onto `s`. @param {any} s @param {any} d */
+  function repair(s, d) {
     if (knownWorld(d.worldId)) s.worldId = d.worldId; // its own world (W-04), when this build has it
     for (const k of /** @type {const} */ (['gold', 'renown', 'battles', 'victories', 'lastResolvedBattle'])) s[k] = count(d[k], s[k]);
     s.day = isCount(d.day) ? Math.min(MAX_VALUE, d.day) : 0;
@@ -507,6 +520,7 @@
     CL.nobles.sanitize(s, d); // the lords' opinions, debts, promises and petitions (P8-07), after the sieges
     CL.crowns.sanitize(s, d); // the realms' treasuries, books and offices (P9-01), after the holdings and opinions
     CL.diplomacy.sanitize(s, d); // treaties, trust and recent offers (P9-02), after the relations and crowns
+    CL.founding.sanitize(s, d); // your rule: policies and lords asking to swear (P9-03); founded realms came first
     CL.surgeon.sanitize(s, d); // the surgeon and the medicine (P7-01)
     CL.blacksmith.sanitize(s, d); // the blacksmith, and fine kit within its cap (P7-03)
     CL.scout.sanitize(s, d); // the scout (P7-02)

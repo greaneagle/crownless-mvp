@@ -69,6 +69,16 @@
       priority: 7,
       lines: ['{faction} has broken its word to {other}.']
     },
+    realm_founded: {
+      id: 'realm_founded',
+      priority: 8,
+      lines: ['A new realm is declared near {place}.']
+    },
+    realm_accepted: {
+      id: 'realm_accepted',
+      priority: 5,
+      lines: ['{faction} accepts {other}.']
+    },
     ally_joins: {
       id: 'ally_joins',
       priority: 6,

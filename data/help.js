@@ -177,6 +177,16 @@
         'Character and world sprites were made with AI using Sprite Studio, the developer’s own sprite tool. Sound effects and music are synthesized live in your browser; the map and interface are drawn in code.',
         'No third-party art, music, fonts or libraries are used, and the game loads nothing from other sites.'
       ]
+    },
+    rule: {
+      id: 'rule',
+      order: 11,
+      title: 'Your realm',
+      body: [
+        'Hold a fort of your own and you may found a realm there. A fort comes as a grant from your liege, or, with no crown behind you, by retaking one you claim: then it is yours, held of no realm, recognised by nobody, and any realm may besiege it. With 600 renown and 40 soldiers, declare a realm from it on the Realms screen, Your realm tab. Your holdings go with you; the crown you held them of keeps a claim on each, and has 7 days to accept your realm or go to war. Other realms recognise it or not, by their trust and what their rulers think of you; one that doesn’t may besiege your forts as if at war.',
+        'You rule as you ride. Your three officers run the realm by a policy each, set in a line: the steward the taxes on your land (grow, hold or hoard), the marshal its sieges (defend, peace, or expand toward a realm), the chancellor its treaties (accept peace, alliances too, or nothing). Only what needs you comes as a message: a treaty offer and what your chancellor did with it, a lord asking to swear to you, your seat besieged.',
+        'Lords who think ill of their own ruler and well of you ask to swear to you: accept and they are your vassals, with their fiefs left behind. You grant them land and summon them to a siege as any ruler does, and they answer by what they think of you. Lords of other realms may found realms of their own too: one with land, men and a grudge against their ruler.'
+      ]
     }
   };
 
@@ -199,6 +209,7 @@
     petition: { id: 'petition', on: 'realm', when: 'petition', help: 'lands', title: 'A petition', text: 'A lord asks you a favour, with a reward and a day to answer by. Accept or decline it at the top of the Lords tab: either way they will remember.' },
     realm: { id: 'realm', on: 'realm', help: 'lands', title: 'The Realms', text: 'Who holds every town, fort and village, and the lords of each kingdom. When a fort falls its villages go with it, and the old lord keeps a claim. Each realm’s card also shows its treasury, its laws and its officers: a realm with an empty treasury can’t hire you.' },
     diplomacy: { id: 'diplomacy', on: 'realm', when: 'diplomacyTab', help: 'lands', title: 'Diplomacy', text: 'Each pair of realms: at peace, in tension or at war, the treaties between them with their end days, and how far each trusts the other’s word. Realms that break treaties find fewer partners. As a vassal you are bound by your realm’s treaties.' },
+    rule: { id: 'rule', on: 'realm', when: 'ruleTab', help: 'rule', title: 'Your realm', text: 'Hold a fort, win 600 renown and gather 40 soldiers, and you may declare a realm there. Once you rule, your officers run it by a policy each: set them here and keep riding. Lords who ask to swear to you wait here too.' },
     journal: { id: 'journal', on: 'journal', help: 'story', title: 'The Journal', text: 'Your quests, with the next step in gold, your company’s chronicle, and the regional news.' },
     saves: { id: 'saves', on: 'saves', help: 'saving', title: 'Keep a copy', text: 'The game saves itself in this browser, but browsers can clear it. Export a copy now and then — it also moves your game to another device.' },
     points: { id: 'points', on: 'map', when: 'points', help: 'party', title: 'Points to spend', text: 'You have skill or attribute points to spend. Open Party: Leadership lets you lead more soldiers, One-Handed hits harder.' },

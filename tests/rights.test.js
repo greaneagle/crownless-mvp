@@ -144,3 +144,18 @@ test('every existing check goes through CL.rights: no right is decided anywhere 
   }
   assert.deepEqual(problems, []);
 });
+
+test('P9-03: every realm is looked up through CL.realm: no faction table read anywhere else in js/', () => {
+  // A realm founded in play (`c.realms`) is a realm everywhere a data realm is only if nobody reads
+  // the content's factions directly: realm.faction, realm.kingdoms and realm.realms know both.
+  const dir = path.join(__dirname, '..', 'js');
+  const problems = [];
+  for (const f of fs.readdirSync(dir).filter((x) => x.endsWith('.js') && !['content.js', 'realm.js'].includes(x))) {
+    fs.readFileSync(path.join(dir, f), 'utf8')
+      .split('\n')
+      .forEach((line, i) => {
+        if (/table\('factions'\)|get\('factions'/.test(line.replace(/\/\/.*$/, ''))) problems.push(`${f}:${i + 1}: ${line.trim().slice(0, 100)}`);
+      });
+  }
+  assert.deepEqual(problems, []);
+});

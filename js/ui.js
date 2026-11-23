@@ -31,7 +31,7 @@
       const s = CL.party.currentSettlement();
       const c = CL.campaign;
       const holder = CL.realm.owner(s.id, c);
-      const owner = CL.content.get('factions', holder);
+      const owner = CL.realm.faction(holder);
       const st = CL.realm.standing(c, holder);
       const mood = st ? ` They are ${CL.realm.STANDING_LABEL[st].toLowerCase()} to you.` : '';
       // GDD §8: forts show their garrison (the holder's troops).
@@ -86,11 +86,11 @@
     if (mode === 'siegeAlarm') {
       const sid = CL.game.siegeAlarm;
       const s = sid ? CL.sieges.at(CL.campaign, sid) : null;
-      return { title: 'UNDER SIEGE', text: sid ? `${CL.content.get('settlements', sid).name} is besieged${s ? ` by the ${CL.content.get('factions', s.realm).name}` : ''}. It has food for ${Math.ceil(CL.realm.holding(sid, CL.campaign).food)} days.` : '', button: null };
+      return { title: 'UNDER SIEGE', text: sid ? `${CL.content.get('settlements', sid).name} is besieged${s ? ` by the ${CL.realm.faction(s.realm)?.name}` : ''}. It has food for ${Math.ceil(CL.realm.holding(sid, CL.campaign).food)} days.` : '', button: null };
     }
     if (mode === 'conquest') {
       const sid = CL.game.conquest;
-      return { title: 'THE CONQUEROR’S CHOICE', text: sid ? `${CL.content.get('settlements', sid).name} is taken for the ${CL.content.get('factions', CL.realm.sovereignOf(sid, CL.campaign)).name}. What becomes of it is yours to ask.` : '', button: null };
+      return { title: 'THE CONQUEROR’S CHOICE', text: sid ? `${CL.content.get('settlements', sid).name} is taken for the ${CL.realm.faction(CL.realm.sovereignOf(sid, CL.campaign)).name}. What becomes of it is yours to ask.` : '', button: null };
     }
     if (mode === 'ransom') {
       const x = CL.lords.offerDue(CL.campaign);
@@ -624,6 +624,70 @@
   }
 
   /**
+   * P9-03: the Realms screen's Your realm tab. Not ruling: a realm to declare from a fort you hold (or
+   * why not). Ruling: its treasury, laws, offices, vassals and treaties; lords asking to swear to you;
+   * your three officers' policies, a line each; a grant and a summons.
+   */
+  function ruleCards(c, redo) {
+    const F = CL.founding;
+    const R = CL.realm;
+    const name = (sid) => CL.content.get('settlements', sid).name;
+    const el = (tag, cls, text) => Object.assign(document.createElement(tag), { className: cls || '', textContent: text || '' });
+    const act = (fn) => () => {
+      if (fn()) CL.save.write();
+      redo();
+    };
+    const f = F.mine(c);
+    if (!f) {
+      const forts = R.fiefsOf('player', c).filter((sid) => c.holdings[sid].kind !== 'village');
+      if (!forts.length) return [contractCard('Your realm', ['You rule nothing yet. Hold a fort (granted, or a claim taken back with no crown behind you), win 600 renown and gather 40 soldiers, and you may declare a realm of your own there.'], [])];
+      return forts.map((sid) => {
+        const r = CL.rights.may(c, 'player', 'declare', sid);
+        const card = contractCard(`Declare a realm at ${name(sid)}`, r.ok ? [`Your holdings leave the ${R.faction(c.holdings[sid].sovereign)?.name || 'realm they were held of'} and become a realm of your own. The old crown keeps a claim on each, and has ${F.RULES.acceptDays} days to accept it or go to war.`] : [r.why], [['Declare', act(() => F.declare(c, 'player', sid)), !r.ok]]);
+        card.classList.add('ruleCard');
+        card.dataset.declare = sid;
+        return card;
+      });
+    }
+    const cards = [];
+    const head = contractCard(R.faction(f).name, F.lines(c), []);
+    head.classList.add('ruleCard');
+    head.dataset.realm = f;
+    cards.push(head);
+    for (const a of F.rule(c).asks) {
+      const card = contractCard(`${R.titled(a.lord, c)} asks to swear to you`, [CL.nobles.opinionLine(c, a.lord)], [
+        ['Accept', act(() => F.answerAsk(c, a.lord, true))],
+        ['Decline', act(() => F.answerAsk(c, a.lord, false))],
+      ]);
+      card.classList.add('ruleCard');
+      card.dataset.ask = a.lord;
+      cards.push(card);
+    }
+    // The policies: a line each.
+    const pol = el('div', 'contractCard ruleCard');
+    pol.dataset.policies = '1';
+    pol.append(el('h3', '', 'Your officers’ policies'));
+    const others = R.realms().filter((k) => k.id !== f);
+    const rows = [
+      ['steward', 'Steward', [['grow', 'Grow: light taxes on your land'], ['hold', 'Hold: normal taxes'], ['hoard', 'Hoard: heavy taxes']]],
+      ['marshal', 'Marshal', [['defend', 'Defend: no sieges of your own'], ['peace', 'Peace: no sieges'], ...others.map((k) => [`expand:${k.id}`, `Expand toward ${k.short}`])]],
+      ['chancellor', 'Chancellor', [['peace', 'Peace: accept truces, peace and trade'], ['allies', 'Allies: alliances too'], ['none', 'None: decline every offer']]],
+    ];
+    for (const [office, label, options] of rows) {
+      const row = el('label', 'setRow ruleRow', `${label} `);
+      const sel = el('select', '');
+      sel.dataset.policy = office;
+      sel.setAttribute('aria-label', `${label}'s policy`);
+      for (const [v, t] of options) sel.append(Object.assign(el('option', '', t), { value: v, selected: F.rule(c)[office] === v }));
+      sel.onchange = act(() => F.setPolicy(c, office, sel.value));
+      row.append(sel);
+      pol.append(row);
+    }
+    cards.push(pol);
+    return cards;
+  }
+
+  /**
    * P8-05: the Realm screen's Fief tab: each of your holdings with who runs it, its garrison or militia,
    * policies, money and last week; policies change in place, money and the castellan at the holding.
    */
@@ -792,7 +856,7 @@
     if (s) {
       card.dataset.siege = 'theirs';
       card.append(el('h3', '', `${CL.content.get('settlements', sid).name} is ${s.phase === 'gathering' ? 'about to be besieged' : 'under siege'}`));
-      card.append(el('p', '', `By the ${CL.content.get('factions', s.realm).name}: ${s.lords.map((id) => CL.realm.titled(id, c)).join(', ')}.`));
+      card.append(el('p', '', `By the ${CL.realm.faction(s.realm)?.name}: ${s.lords.map((id) => CL.realm.titled(id, c)).join(', ')}.`));
       return [card];
     }
     const p = S.preview(c, sid);
@@ -834,7 +898,7 @@
     const f = R.owner(sid, c);
     if (!R.isRealm(f) || R.capitalOf(f) !== sid) return [];
     const a = CL.allegiance.state(c);
-    const name = CL.content.get('factions', f).name;
+    const name = CL.realm.faction(f)?.name;
     const out = [];
     if (a.kind === 'mercenary' && a.realm === f) out.push(allegianceCard(c, 'renew', f, `Renew your service with the ${name}`, 'Renew for 30 days', redo));
     else if (!(a.kind === 'vassal' && a.realm === f)) out.push(allegianceCard(c, 'serve', f, `Service with the ${name}`, 'Take service', redo));
@@ -872,7 +936,7 @@
       else buttons.push(choice('Leave', 'Come back another time', () => changeMode('map')));
     } else {
       // A kingdom's patrol or caravan: you may still fall on them, at a price (GDD §10).
-      const f = e.kind === 'party' && e.t.faction && e.t.kind !== 'bandit' && !e.party.escortTo ? CL.content.get('factions', e.t.faction) : null;
+      const f = e.kind === 'party' && e.t.faction && e.t.kind !== 'bandit' && !e.party.escortTo ? CL.realm.faction(e.t.faction) : null;
       buttons.push(choice('Leave', 'Go on your way', () => changeMode('map')));
       if (f) {
         const odds = oddsNow();
@@ -2468,7 +2532,7 @@
     const money = B.cash(c);
     card.append(el('b', '', `Your mill at ${CL.soldiers.placeName(b.place)} · its money ${money} crowns`));
     card.append(el('p', '', `Run by ${m.name} (${m.wage} a week). ${b.weeks ? `${b.weeks} week${b.weeks === 1 ? '' : 's'} run, ${signed(b.profit)} crowns in all. ` : ''}Each payday it runs a week on its own.`));
-    if (b.seizeOn !== null) card.append(el('p', 'warn', `${CL.content.table('factions')[b.owner]?.name || 'The owner'} will seize it on day ${CL.party.dayNumber(b.seizeOn)} unless you sell it or mend relations first.`));
+    if (b.seizeOn !== null) card.append(el('p', 'warn', `${CL.realm.faction(b.owner)?.name || 'The owner'} will seize it on day ${CL.party.dayNumber(b.seizeOn)} unless you sell it or mend relations first.`));
     if (here) card.append(el('p', 'estimate', `At today's prices: ${guess(b.place, b.manager)}.`));
     if (b.log.length) {
       const ul = el('ul', 'soldierNotes millLog');
@@ -2745,7 +2809,7 @@
     const R = CL.realm;
     const el = (tag, cls, text) => Object.assign(document.createElement(tag), { className: cls || '', textContent: text || '' });
     const S = (id) => CL.content.get('settlements', id);
-    const tab = ['lords', 'allegiance', 'fief', 'diplomacy'].includes(CL.game.realmTab) ? CL.game.realmTab : 'holdings';
+    const tab = ['lords', 'allegiance', 'fief', 'diplomacy', 'rule'].includes(CL.game.realmTab) ? CL.game.realmTab : 'holdings';
     const tabs = el('div', 'row realmTabs');
     for (const [id, label] of [
       ['holdings', 'Holdings'],
@@ -2753,6 +2817,7 @@
       ['allegiance', 'Allegiance'],
       ['fief', CL.realm.fiefsOf('player', c).length || !CL.claims?.mine(c).length ? 'Fief' : 'Claims'], // P8-08: landless with claims
       ['diplomacy', 'Diplomacy'], // P9-02
+      ['rule', 'Your realm'], // P9-03
     ]) {
       const b = el('button', id === tab ? 'on' : '', label);
       b.type = 'button';
@@ -2768,6 +2833,10 @@
     const cards = [];
     if (tab === 'fief') {
       $('#realmScreen').replaceChildren(tabs, ...fiefCards(c));
+      return;
+    }
+    if (tab === 'rule') {
+      $('#realmScreen').replaceChildren(tabs, ...ruleCards(c, () => renderRealm()));
       return;
     }
     if (tab === 'diplomacy') {

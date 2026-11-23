@@ -103,8 +103,8 @@
   const A = () => CL.autoresolve;
   const place = (id) => (typeof id === 'string' && CL.content.table('settlements')[id]) || null;
   const placeName = (id) => place(id)?.name || 'their lands';
-  const factionName = (f) => CL.content.table('factions')[f]?.name || 'the realm';
-  const short = (f) => CL.content.table('factions')[f]?.short || factionName(f);
+  const factionName = (f) => CL.realm.faction(f)?.name || 'the realm';
+  const short = (f) => CL.realm.faction(f)?.short || factionName(f);
   const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
   const num = (n) => typeof n === 'number' && Number.isFinite(n);
   const isPerson = (c, id) => id === PLAYER || Boolean(c.people?.[id]);
@@ -1119,6 +1119,7 @@
         }
       }
       for (const pid of Object.keys(c.people)) weekly(c, pid);
+      for (const pid of Object.keys(c.people)) CL.founding?.askToSwear(c, pid); // P9-03: lords asking to swear to you
     }
   }
 

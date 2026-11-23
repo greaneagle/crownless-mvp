@@ -35,8 +35,8 @@
   const R = () => CL.realm;
   const place = (id) => (typeof id === 'string' && CL.content.table('settlements')[id]) || null;
   const placeName = (id) => place(id)?.name || id;
-  const factionName = (f) => CL.content.table('factions')[f]?.name || 'the realm';
-  const short = (f) => CL.content.table('factions')[f]?.short || factionName(f);
+  const factionName = (f) => CL.realm.faction(f)?.name || 'the realm';
+  const short = (f) => CL.realm.faction(f)?.short || factionName(f);
   const opinion = (c, from) => (CL.nobles ? CL.nobles.opinion(c, from, PLAYER) : 0);
 
   /** Your claims, newest first, a seat before its villages: [{ sid, claim }]. @param {Campaign} c */
@@ -231,6 +231,19 @@
     return true;
   }
 
+  /**
+   * P9-03: you took a fort you claim with no realm behind you: it is yours, held of no realm
+   * (`controller: 'player'`), unrecognised by anyone, and any realm may besiege it. Its villages you
+   * claimed come with it.
+   */
+  function onRetakeAlone(c, sid) {
+    if (!claimOf(c, sid) || liege(c) || R().rules(PLAYER, c)) return false;
+    if (!R().transfer(c, sid, { controller: PLAYER, sovereign: PLAYER, holder: PLAYER, willing: true, reason: 'claim made good' })) return false;
+    CL.ui.message(`${placeName(sid)} is yours again, held of no crown. No realm recognises it, and any may come for it.`);
+    CL.diag.log('info', 'Independent land', { holding: sid });
+    return true;
+  }
+
   /** Hand a fief back to the crown yourself: no claim kept. */
   function handBack(c, sid) {
     const h = R().holding(sid, c);
@@ -317,5 +330,5 @@
     return { fort, village, enemy, siege: s?.sid || null, mill: CL.business.get(c)?.place || null };
   }
 
-  CL.claims = { RULES, LOSSES, prototypeD, mine, claimOf, howWords, backing, canAskLiege, askLiege, pressedFor, canBuyBack, buyBack, canServeBack, serveBack, endService, afterBattle, onAttack, restoreVillages, onRetake, handBack, card, tick };
+  CL.claims = { onRetakeAlone, RULES, LOSSES, prototypeD, mine, claimOf, howWords, backing, canAskLiege, askLiege, pressedFor, canBuyBack, buyBack, canServeBack, serveBack, endService, afterBattle, onAttack, restoreVillages, onRetake, handBack, card, tick };
 })(typeof window !== 'undefined' ? window : globalThis);

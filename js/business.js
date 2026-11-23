@@ -40,7 +40,7 @@
   const A = () => CL.accounts;
   const T = () => CL.trade;
   const goodName = (id) => CL.content.get('markets', id).name.toLowerCase();
-  const factionName = (f) => CL.content.table('factions')[f]?.name || 'its new lord';
+  const factionName = (f) => CL.realm.faction(f)?.name || 'its new lord';
 
   /** @returns {Businesses} */
   const blank = () => ({ owned: [], past: [] });
@@ -385,7 +385,7 @@
         place: mill.place,
         bought: num(mill.bought) ? mill.bought : 0,
         paid: count(mill.paid) || R.price[settlement(mill.place).type],
-        owner: CL.content.table('factions')[mill.owner] ? mill.owner : CL.realm.owner(mill.place, s),
+        owner: CL.realm.faction(mill.owner) ? mill.owner : CL.realm.owner(mill.place, s),
         manager: mill.manager in R.managers ? mill.manager : 'miller',
         rules: {
           maxInput: R.rules.maxInput.includes(mill.rules?.maxInput) ? mill.rules.maxInput : null,
@@ -407,7 +407,7 @@
     } else delete s.accounts.budgets.mill;
     for (const p of Array.isArray(raw?.past) ? raw.past.slice(-PAST_MAX) : []) {
       if (!p || p.kind !== KIND || !settlement(p.place) || !ENDS.includes(p.end) || !num(p.day)) continue;
-      out.past.push({ kind: KIND, place: p.place, day: p.day, end: p.end, ...(CL.content.table('factions')[p.by] ? { by: p.by } : {}) });
+      out.past.push({ kind: KIND, place: p.place, day: p.day, end: p.end, ...(CL.realm.faction(p.by) ? { by: p.by } : {}) });
     }
     s.businesses = out;
   }

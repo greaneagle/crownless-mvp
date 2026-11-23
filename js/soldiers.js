@@ -54,7 +54,7 @@
     const s = settlement(origin);
     if (s?.culture && K[s.culture]) return s.culture;
     const faction = s ? (CL.realm?.owner(s.id, /** @type {any} */ (c)) ?? s.ownerFaction) : t?.faction;
-    const f = CL.content.table('factions')[faction];
+    const f = CL.realm.faction(faction);
     if (f?.culture && K[f.culture]) return f.culture;
     return Object.keys(K)[0];
   }

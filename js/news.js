@@ -21,8 +21,8 @@
 
   const kinds = () => CL.content.table('news');
   const settlement = (id) => CL.content.table('settlements')[id];
-  const factionName = (f) => CL.content.table('factions')[f]?.name || 'unknown';
-  const factionShort = (f) => CL.content.table('factions')[f]?.short || factionName(f);
+  const factionName = (f) => CL.realm.faction(f)?.name || 'unknown';
+  const factionShort = (f) => CL.realm.faction(f)?.short || factionName(f);
   const num = (n) => typeof n === 'number' && Number.isFinite(n);
 
   function blank(day = 0) {

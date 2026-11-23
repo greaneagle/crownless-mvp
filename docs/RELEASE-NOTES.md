@@ -1,5 +1,25 @@
 # Crownless — Release Notes
 
+## v3.9.0 — Founding a kingdom (P9-03) · 2026-11-23
+
+### New
+- **Found a realm of your own.** Hold a fort, win 600 renown and gather 40 soldiers, and declare a realm there from the Realms screen's new **Your realm** tab. It flies its own banner, with its land's troops and culture and a crown's laws. Your holdings go with you; the crown you held them of keeps a claim on each, and has 7 days to accept your realm or go to war.
+- **Land of your own.** With no crown behind you, a fort you claim and retake is yours, held of no realm. Nobody recognises it, and any realm may besiege it.
+- **Recognition.** Other realms recognise a new realm or not, by their trust and what their rulers think of its founder; one that doesn't may besiege its forts as if at war (but not fight it on the road). Peace counts as recognition.
+- **Vassals.** Lords who think ill of their own ruler and well of you ask to swear to you; accept or decline on the Your realm tab. Grant them land and summon them to a siege: they answer by what they think of you.
+- **Rule as you ride.** Your steward, marshal and chancellor each follow a policy you set in a line: taxes on your land, which sieges your realm plans, which treaty offers it accepts. Only a treaty offer, a lord asking to swear, or your seat besieged come to you, as a message.
+- **Lords found realms too:** one with land, men and a grudge against their ruler. At most one new realm in the world in 180 days.
+- A **Your realm** help topic and a first-time tip; Debug: **Declare my realm here**.
+
+### Known
+- In 180-day runs of the world alone, no lord founded a realm: the grudge they need is still rare. For P9-T.
+- You can't make treaty offers of your own yet, and your officers' offices stay vacant until a vassal holds land.
+
+### Under the hood
+- Every realm is looked up through `CL.realm` (a grep test), so a realm founded in play is one everywhere a data realm is.
+- Save version 27: `realms`, `nextRealmId` and `rule`. A save is read with its own founded realms.
+- **Tests:** 870 fast Node tests, all passing. Slow `landed`, `campaign-bots`, `test-world` and `phase8-exit`, passing (the Phase 8 exit, failing since 3.7.0 when the crown began granting two villages on the way, hands them back first); the others not run. Browser `realm` and `world-map`, passing at both sizes; the full suite not run.
+
 ## v3.8.0 — Diplomacy and treaties (P9-02) · 2026-11-23
 
 ### New
