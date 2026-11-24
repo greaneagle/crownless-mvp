@@ -938,7 +938,7 @@
       if (t.kind === 'bandit') q.lair = t.lairs.includes(p.lair) ? p.lair : t.lairs[0];
       if (Number.isInteger(p.contractId)) q.contractId = p.contractId;
       if (Number.isInteger(p.eventId)) q.eventId = p.eventId; // a world event's band (P7-08): checked against its event later
-      if (typeof p.questTag === 'string' && /^[a-z0-9_]{1,40}$/.test(p.questTag)) q.questTag = p.questTag;
+      if (typeof p.questTag === 'string' && /^[a-z0-9_:]{1,81}$/.test(p.questTag)) q.questTag = p.questTag;
       if (q.questTag && p.camp === true) q.camp = true;
       if (p.ambush === true) q.ambush = true;
       if (t.kind === 'caravan' && CL.content.table('settlements')[p.escortTo]) q.escortTo = p.escortTo;

@@ -216,6 +216,11 @@
 .setRow select{font:inherit;padding:calc(6px * var(--ui-scale)) calc(8px * var(--ui-scale));min-height:calc(44px * var(--ui-grow));background:#0c1823;color:#f7e8c5;border:1px solid #b89b64;border-radius:6px}
 .setCheck{display:flex;align-items:center;gap:10px;margin:8px 0;min-height:calc(40px * var(--ui-grow))}
 .setCheck input{width:22px;height:22px;accent-color:#c9a977}
+.setH{margin:12px 0 2px;font:bold calc(16px * var(--ui-scale)) Georgia;color:#ecd6a4}
+.packRow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0;padding:4px 0;border-top:1px solid #b89b6455}
+.packRow .packName{flex:1;min-width:10em}
+.packRow small{color:#d9c8a2}
+#packResult:empty{display:none}
 #topRight #settingsBtn{font-size:calc(clamp(20px,2.4vw,28px) * var(--ui-scale));line-height:1;padding:calc(2px * var(--ui-scale)) calc(10px * var(--ui-scale))}
 #stage:not([data-mode="map"]):not([data-mode="town"]):not([data-mode="battle"]) #settingsBtn{display:none}
 

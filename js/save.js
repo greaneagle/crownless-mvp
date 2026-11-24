@@ -66,6 +66,7 @@
       version: VERSION,
       worldId: worldId(), // the world (content package) this campaign belongs to
       contentVersion: CL.BUILD, // the build that last wrote it
+      packs: CL.packs.forSave(), // P9-07: the content packs it was begun with (none for most)
       gold: 0,
       renown: 0,
       battles: 0,
@@ -493,6 +494,7 @@
   /** The rest of `sanitize`, field by field, onto `s`. @param {any} s @param {any} d */
   function repair(s, d) {
     if (knownWorld(d.worldId)) s.worldId = d.worldId; // its own world (W-04), when this build has it
+    s.packs = CL.packs.sanitize(d.packs); // P9-07: optional; fromRaw has already refused a save whose pack is missing
     for (const k of /** @type {const} */ (['gold', 'renown', 'battles', 'victories', 'lastResolvedBattle'])) s[k] = count(d[k], s[k]);
     s.day = isCount(d.day) ? Math.min(MAX_VALUE, d.day) : 0;
     const seen = new Set(); // soldier IDs: unique across the company and its detachments (P7-05)
@@ -611,16 +613,22 @@
     return c;
   }
 
+  /** "This save needs the pack sample (version 1.0.0)". @param {{ id: string, version: string }} p */
+  const packNeeded = (p) => `This save needs the pack ${p.id} (version ${p.version})`;
+
   /**
    * The load path for any saved campaign (storage, a file, the pre-import slot): check its structure
    * and world, migrate it, repair it. Never touches storage.
    * @param {unknown} d parsed JSON
-   * @returns {{ campaign: Campaign | null, problems: string[], from?: number, newer?: boolean, otherWorld?: boolean, incompatible?: boolean }}
+   * @returns {{ campaign: Campaign | null, problems: string[], from?: number, newer?: boolean, otherWorld?: boolean, incompatible?: boolean, packs?: { id: string, version: string }[] }}
    */
   function fromRaw(d) {
     const r = check(d);
     if (r.problems.length) return { campaign: null, ...r };
     const raw = /** @type {Record<string, any>} */ (d);
+    // P9-07 (SC-33): a save begun with a pack that is not on is refused, untouched, naming the pack.
+    const gone = CL.packs.missing(raw.packs);
+    if (gone.length) return { campaign: null, problems: gone.map((p) => packNeeded(p)), incompatible: true, packs: gone };
     // SC-33: named soldiers of troops this build doesn't know (a removed or modded troop) are never
     // dropped quietly: the save is refused, saying who and what.
     if (raw.version >= 2 && Array.isArray(raw.roster)) {
@@ -661,7 +669,7 @@
       if (r.incompatible && key === KEY) {
         // Kept exactly as it was, so a later version (or the right mod) can still open it (SC-33).
         if (CL.storage.get(INCOMPATIBLE_KEY) == null) CL.storage.set(INCOMPATIBLE_KEY, text);
-        CL.save.notice = `Your save could not be opened: ${r.problems[0]}. It has been kept safe and nothing will overwrite it.`;
+        CL.save.notice = r.packs ? `${r.problems.join('. ')}. Turn it on in Settings (or import it there) and reload: your save is kept as it was.` : `Your save could not be opened: ${r.problems[0]}. It has been kept safe and nothing will overwrite it.`;
       }
       if (r.otherWorld && key === KEY) {
         if (CL.storage.get(OTHER_WORLD_KEY) == null) CL.storage.set(OTHER_WORLD_KEY, text);
@@ -781,6 +789,7 @@
     BACKUP_KEY,
     LEGACY_KEY,
     INCOMPATIBLE_KEY,
+    packNeeded,
     OTHER_WORLD_KEY,
     WOUND_DAYS,
     AUTOSAVE_DAYS,

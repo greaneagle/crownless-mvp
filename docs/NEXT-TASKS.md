@@ -3098,7 +3098,7 @@ The phase opens with five battle-scale tasks (owner, 2026-11-22; decisions D-P9a
 - **Checks:** 896 fast tests; lint clean but the 2 old warnings; nobles and realm specs 20 of 20 (a new marriage case). Checkpoint: browser 227 passed, 9 skipped; slow 15 of 19. The Phase 8 exit and Prototypes D and F fail at 3.11.0 too (armies). New here: `landed` seed 3, Valedorn has no fort from day 90; with the houses' rules off the seed keeps them, and Aurelian armies take the forts.
 - **Played at 812×375:** a v30 load with 17 houses; Brackenfield by Debug founded House Wanderer with Rename; Tancred refused a proposal with reasons (one wrong reason fixed); Lord dies killed him, in the news. **Open for P9-T:** few marriages; no heir seen in play; Valedorn's forts on seed 3; the three slow tests failing since 3.11.0.
 
-### P9-07 · Modding: a declarative content format (M–L) — Specified
+### P9-07 · Modding: a declarative content format (M–L) — ✅ Done in 3.13.0
 
 **Problem.** The world is a package of `data/*.js` files (W-04), loaded with the code. Design §23: a declarative, validated format; stable namespaced ids; safe import; saves tied to their packs.
 
@@ -3131,6 +3131,16 @@ The phase opens with five battle-scale tasks (owner, 2026-11-22; decisions D-P9a
 - **Play:** import the sample pack, turn it on, start a new game and find its settlement.
 - **Explain:** a short note in Settings; no help topic.
 - **Not here:** the checker command and the preview page (P9-08); packs with code (never).
+
+**Done (3.13.0).**
+- **The format:** `docs/WORLD-FORMAT.md` (manifest `id`, `title`, `author`, `version`, `engine`, `requires`, `kind`; tables by name; `merge`; the checks). `scripts/export-world.js` writes the official world; `packs.test.js` compares it with `data/*.js` table by table and plays three days on it, the same.
+- **Ids:** `world:id`; `content.get` reads `sundered_realm:x` as `x` (`packs.resolve`); a pack's entries are `<pack>:<name>`. The id regexes for budgets, story flags, band and quest tags take `:`.
+- **`js/packs.js`:** `parse` (2 MB, JSON only), `check` (plain data only, no prototype keys, no code or links or `..`, the manifest and engine range, tables, namespaced ids, text fields, `merge` types; then the game's `content.validate(C)` on a copy, keeping only the pack's new problems), `apply`, `use`; `satisfies` for ranges.
+- **Browser:** IndexedDB `crownless`/`packs`, the ids turned on in `crownless_packs_on`; `main.js` waits for `packs.boot()` only when some are on. Settings → Content packs: import, on/off, remove, a short note; results name the file, entry and fault.
+- **Saves:** `packs: [{ id, version }]` (optional, no schema step); `fromRaw` and the file import refuse a save whose pack is off with "This save needs the pack … (version …)", untouched (kept as an incompatible save, SC-33).
+- **Engine:** a settlement may list its own `recruits` (validated; it needs the recruit service). The sample pack `packs/sample/sample.json`: Highcairn and the Cairn line of three.
+- **Checks:** 902 fast tests; lint clean but the 2 old warnings; browser 231 passed, 9 skipped (packs.spec 4 of 4); slow `test-world` passes. Story and quest ids unchanged, so `gate-d-campaigns` was not needed.
+- **Played at 812×375:** imported the sample in Settings, turned it on, reloaded (your save still opened), new game recorded the pack, reached Highcairn (Debug Go there after two Reaver bands), hired a Cairn Herder; pack off and reload named the pack and left the save unchanged; on again, it opened. Your save restored. **Open for P9-T:** packs on a phone; a refused save has no way back once a new game is played; the game still loads `data/*.js`, not the JSON world.
 
 ### P9-08 · Creator tools and a second world (L) — Specified
 

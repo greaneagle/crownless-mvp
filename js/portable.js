@@ -191,6 +191,8 @@
     if (check.newer) return { ok: false, reason: 'This save was made by a newer version of Crownless. Update the game first.' };
     if (check.otherWorld) return { ok: false, reason: 'This save belongs to a world this version no longer has: campaigns begun before the world grew cannot continue in it.', problems: check.problems };
     if (check.problems.length) return { ok: false, reason: 'The save is incomplete or damaged, so it was not loaded.', problems: check.problems };
+    const gone = CL.packs.missing(raw.packs); // P9-07: a pack it was begun with is not on
+    if (gone.length) return { ok: false, reason: `${gone.map(CL.save.packNeeded).join('. ')}. Turn it on in Settings, reload, and import again.`, problems: [] };
 
     if (raw.version === 1) {
       const migrated = CL.save.migrateV1(raw);

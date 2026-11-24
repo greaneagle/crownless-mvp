@@ -1,5 +1,27 @@
 # Crownless — Release Notes
 
+## v3.13.0 — Content packs (P9-07) · 2026-11-24
+
+### New
+- **Content packs.** A pack adds to the world: places, troops and more. It is a JSON file and holds data only: nothing in it is ever run. Import one in Settings → Content packs, turn it on, and start a new game or reload.
+- **Precise errors.** A pack with a problem is refused, and each problem says which file, which entry and what is wrong ("bad.json › sample:cairn_spear: … unknown upgrade sample:nobody"). A pack is checked for size (2 MB at most), code, paths, references and the game's own rules before it is kept.
+- **Saves and packs.** A new save records the packs it began with. Opened with one of them off, it is refused and left as it was: "This save needs the pack sample (version 1.0.0)". Turn the pack on and reload, and it opens.
+- **The sample pack** (`packs/sample/sample.json`): Highcairn, a village of Valedorn west of Westholt, which recruits a new line of three (Cairn Herder, Cairn Spear, Cairn Warden).
+- A village or town may now recruit troops of its own, beside its realm's (`recruits` on a settlement).
+
+### Known
+- Packs were tried in the desktop pane at phone size, not on a phone.
+- A save refused for a missing pack is kept as it was, but if you start a new game before turning the pack back on, the old save is only in the incompatible slot, with no button to bring it back.
+- The official world still loads from `data/*.js`; the JSON export is checked against it, not used in its place.
+
+### Under the hood
+- `docs/WORLD-FORMAT.md`: the manifest, the tables, `merge` and the checks. `node scripts/export-world.js` writes the official world in the format; a test loads it and compares it with `data/*.js` table by table.
+- Ids are namespaced: `sundered_realm:stonebridge` reads as `stonebridge`; a pack's entries are `<pack>:<name>`. The id checks for budgets, story flags and quest tags take a colon.
+- `js/packs.js`; packs in IndexedDB (database `crownless`, store `packs`), the ones turned on in `crownless_packs_on`. With none on, the game starts as before, without waiting.
+- No save schema step: `packs` is optional.
+- **Tests:** 902 fast tests (6 new in `packs.test.js`, with a table of 27 bad packs); the full browser suite 231 passed, 9 skipped (4 new in `packs.spec.js`); slow `test-world` passes.
+
+
 ## v3.12.0 — Houses, marriage and claims (P9-06) · 2026-11-23
 
 ### New

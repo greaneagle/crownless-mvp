@@ -39,7 +39,7 @@
     else if (acct.startsWith('budget:')) c.accounts.budgets[acct.slice(7)] = n;
   }
 
-  const known = (acct) => acct === WORLD || acct === 'purse' || acct === 'chest' || /^budget:[a-z_]+$/.test(acct);
+  const known = (acct) => acct === WORLD || acct === 'purse' || acct === 'chest' || /^budget:[a-z0-9_:]+$/.test(acct);
 
   /**
    * Move `amount` crowns from one account to another, with a reason. Refused (false) if the amount
@@ -113,7 +113,7 @@
   function sanitize(s, d) {
     s.accounts = blank();
     s.accounts.chest = count(d?.accounts?.chest);
-    for (const [k, v] of Object.entries(d?.accounts?.budgets || {})) if (/^[a-z_]+$/.test(k)) s.accounts.budgets[k] = count(v);
+    for (const [k, v] of Object.entries(d?.accounts?.budgets || {})) if (/^[a-z0-9_:]+$/.test(k)) s.accounts.budgets[k] = count(v);
     s.ledger = [];
     for (const e of Array.isArray(d?.ledger) ? d.ledger.slice(-LEDGER_MAX) : []) {
       if (!e || !known(e.from) || !known(e.to) || !Number.isInteger(e.amount) || e.amount <= 0 || typeof e.day !== 'number' || !Number.isFinite(e.day)) continue;

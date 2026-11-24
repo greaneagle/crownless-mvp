@@ -366,7 +366,7 @@
       .replace(/\{renown\}/g, String(c.renown))
       .replace(/\{settlement\}/g, here)
       .replace(/\{veteran\}/g, veteranHere(c)?.name || 'your veteran')
-      .replace(/\{flag:([a-z0-9_]+)\}/g, (_, f) => String(state(c).flags[f] ?? 0));
+      .replace(/\{flag:([a-z0-9_:]+)\}/g, (_, f) => String(state(c).flags[f] ?? 0));
   }
 
   /**
@@ -582,7 +582,7 @@
           const known = (x) => Boolean(C.settlements?.[x] || map?.sites?.[x]);
           if (!['bandit', 'patrol'].includes(C.party_templates?.[b.template]?.kind)) err(`${w}.${st.id}: band needs a bandit or patrol template`);
           if (b.map && !C.battle_maps?.[b.map]) err(`${w}.${st.id}: unknown battle map ${b.map}`);
-          if (!/^[a-z0-9_]{1,40}$/.test(b.tag || '')) err(`${w}.${st.id}: band needs a tag`);
+          if (!/^[a-z0-9_:]{1,81}$/.test(b.tag || '')) err(`${w}.${st.id}: band needs a tag`);
           if (b.between ? !(b.between.length === 2 && b.between.every(known)) : !known(b.near)) err(`${w}.${st.id}: band needs a known place`);
           if (b.along != null && !(b.between && typeof b.along === 'number' && b.along >= 0 && b.along <= 1)) err(`${w}.${st.id}: along must be 0–1, between two places`);
           for (const [tid, n] of Object.entries(b.troops || {})) {

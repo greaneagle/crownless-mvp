@@ -13,7 +13,7 @@ All save keys are read and written through the storage layer (`CL.storage`, `js/
 | `crownless_save_v2` … `crownless_save_v5` | From 1.2.0: a save of that older schema exactly as it was when a later build first migrated it (`crownless_save_v<n>`). Written once, never replaced (a further way back if a migration ever goes wrong) |
 | `crownless_v03_party` | A 0.3.x save (schema v1), migrated on first load and left as a further backup |
 
-These live in their own keys and are **not part of a save**: `crownless_settings` (device settings), `crownless_tips_seen` (tips already shown), `crownless_last_export` (export reminders), `crownless_dev` (developer tools).
+These live in their own keys and are **not part of a save**: `crownless_packs_on` (the content packs turned on, from 3.13.0; the packs themselves are in IndexedDB, docs/WORLD-FORMAT.md), `crownless_settings` (device settings), `crownless_tips_seen` (tips already shown), `crownless_last_export` (export reminders), `crownless_dev` (developer tools).
 
 ## Exported file
 `Save & export` writes JSON:
@@ -125,6 +125,7 @@ Schema v30 is schema v2 (below) plus these fields, less `owners` (v19 replaced i
 | `medicine` | integer 0–99 | surgeon | v11 (P7-01). The company's medicine: one saves one soldier the surgeon tends after a battle. Bought at markets; captors take half |
 | `worldId` | string | save | The world (content package) the campaign belongs to: `"sundered_realm"` from 2.7.0 (`"border_march"` before). A save from another world is refused (and, on load, kept in `crownless_save_other_world`) |
 | `contentVersion` | string | save | The build that last wrote the save, for example `"1.2.0"`; `"unknown"` right after migrating a v2 save. Later content migrations can key off it |
+| `packs` | `[{ id, version }]` (optional) | save | From 3.13.0 (P9-07), with no schema step: the content packs the campaign was begun with (docs/WORLD-FORMAT.md). Missing in older saves, which read as none. A save whose pack is not on is refused untouched with "This save needs the pack … (version …)", from storage (kept, as an incompatible save is, SC-33) and on import |
 | `rng` | `{ casualties, loot, upkeep, names }`, integers | autoresolve | v4. The named random streams' states (mulberry32). `casualties`: who dies or is wounded after a fought battle (auto-resolve rolls its whole outcome, casualties included, on the world stream, as before); `loot`: battle loot and the item taken on capture; `upkeep`: desertion; `names` (v5): soldiers' names. The world stream stays in `rngSeed` (world parties, contract offers, auto-resolve, retreat). Moment-to-moment rolls inside a fought battle are not seeded |
 | `nextResultId` | integer ≥ 1 | encounter | v4. The ID the next encounter result commits under. Each encounter takes it when it opens; the commit goes through only for that ID and then moves it on, so a result is applied exactly once |
 | `nextEventId` | integer ≥ 1 | events | v4. The next domain event's ID; event IDs never repeat within a campaign |

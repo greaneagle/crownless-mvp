@@ -301,7 +301,7 @@ Every Phase 9 task is **Specified** (2026-11-22; NEXT-TASKS has each in full). T
 | **P9-05** | ✅ **Done in 3.11.0** (armies often go home with nothing to do; no capital fell in five worlds of 180 days; to P9-T). **Armies and campaigns:** armies of several parties under a commander, raised by summons, with objectives (besiege, relieve, raid, pursue, defend) and supply; battles of armies; capitals that can fall (D-P9h) | L | P8-06a, P8-06b, P9-B4, P9-01 |
 | **P9-06** | ✅ **Done in 3.12.0** (open for P9-T: few marriages; Valedorn lost every fort on one landed seed; Phase 8 exit, Prototypes D and F fail since 3.11.0). **Houses, marriage and claims:** houses as entities, marriage with agency (the player too), deaths (D-P9g), succession by the realm's law, claims that outlive their holder; no generations by default | M–L | P8-07, P9-01, P9-04 |
 | **P9-L1** | ✅ **Done in 3.6.0.** **The living lords' loose ends** (from P8-07 and P8-08): lords ransoming each other's kin, asking each other for men, the land-hungry seeking sieges beyond the summons, the "escort my caravan" petition, and getting a lost fort back for service as well as for a price | M | P8-07, P8-08 |
-| **P9-07** | **Modding:** the world package as a documented JSON format, namespaced ids, data-only packs in IndexedDB with precise errors, saves tied to their packs (SC-33) | M–L | W-04 |
+| **P9-07** | ✅ **Done in 3.13.0** (open for P9-T: packs tried in the desktop pane only; the official world stays in data/*.js). **Modding:** the world package as a documented JSON format, namespaced ids, data-only packs in IndexedDB with precise errors, saves tied to their packs (SC-33) | M–L | W-04 |
 | **P9-08** | **Creator tools and a second world:** a pack checker, a map preview, a smaller second official world the bots play | L | P9-07 |
 | **P9-T** | **Tuning and acceptance:** long runs (20 years in the slow suite, 100 overnight: SC-29, D-P9i), a ruler style in Prototype G, design §18.9 as a scripted campaign, SC-01–44 accounted for, `docs/PHASE-9-VALIDATION.md` | M | all above |
 
@@ -355,7 +355,7 @@ All of Phase 10 is **Provisional**: the owner adds to it after in-depth testing 
 | v28 | P9-04 | Factions, demands, rebellions |
 | v29 | P9-05 | Armies, raids' effects |
 | v30 | P9-06 | Houses, marriages, deaths, heirs |
-| (v31) | P9-07 | A save's packs (if the manifest needs more than optional fields) |
+| (none) | P9-07 | A save's packs: an optional `packs` field, so no schema step (3.13.0) |
 | later | Phase 9 | Re-specified at its start |
 
 **Device settings** (text size, zoom levels) need no schema step. They live in `crownless_settings`, whose loader already fills missing keys with defaults.

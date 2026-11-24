@@ -165,6 +165,8 @@ declare global {
     worldId: string;
     /** The build that last wrote this save ("unknown" right after migrating a v2 save). */
     contentVersion: string;
+    /** P9-07: the content packs the campaign was begun with (optional; none for most). */
+    packs?: { id: string; version: string }[];
     gold: number;
     renown: number;
     battles: number;
@@ -648,6 +650,8 @@ declare global {
     LEGACY_KEY: string;
     /** Where an incompatible save is kept untouched (SC-33). */
     INCOMPATIBLE_KEY: string;
+    /** P9-07: "This save needs the pack … (version …)". */
+    packNeeded(p: { id: string; version: string }): string;
     /** Where a save of a world this build no longer has is kept untouched (W-05b). */
     OTHER_WORLD_KEY: string;
     WOUND_DAYS: number;

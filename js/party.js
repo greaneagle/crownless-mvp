@@ -40,10 +40,10 @@
   function troopsOffered(camp = c()) {
     const s = currentSettlement(camp);
     if (!offers(s, 'recruit')) return [];
-    const own = CL.realm.faction(CL.realm.owner(s.id, camp)).recruits || [];
+    const own = [...(CL.realm.faction(CL.realm.owner(s.id, camp)).recruits || []), ...(s.recruits || [])]; // and the place's own (P9-07)
     // Towns also have sell-swords for hire: the neutral Mercenary (the 15th troop type). Listed once,
     // where the town's own recruits are sell-swords already (W-05b: the Free City of Merrow).
-    return s.type === 'town' ? [...new Set([...own, 'mercenary'])] : own;
+    return s.type === 'town' ? [...new Set([...own, 'mercenary'])] : [...new Set(own)];
   }
 
   const canRest = (camp = c()) => offers(currentSettlement(camp), 'rest');

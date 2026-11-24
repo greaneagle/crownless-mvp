@@ -3287,6 +3287,8 @@
     $('#setHealthBars').checked = s.healthBars;
     $('#setReduced').checked = s.reducedEffects;
     $('#setTips').checked = s.tips;
+    $('#packResult').textContent = '';
+    renderPacks();
     refreshFullscreen();
     showVolumes();
     // A battle waits while you change settings.
@@ -3344,6 +3346,59 @@
     $('#setPrepSkip').onchange = () => CL.settings.set('prepSkip', $('#setPrepSkip').value === 'skip');
     $('#setHealthBars').onchange = () => CL.settings.set('healthBars', $('#setHealthBars').checked);
     $('#setReduced').onchange = () => CL.settings.set('reducedEffects', $('#setReduced').checked);
+    // P9-07: content packs (js/packs.js), kept in this browser.
+    $('#packImportBtn').onclick = () => $('#packFile').click();
+    $('#packFile').onchange = async () => {
+      const f = $('#packFile').files?.[0];
+      $('#packFile').value = '';
+      if (!f) return;
+      if (f.size > CL.packs.LIMIT) return packResult([`${f.name}: ${Math.ceil(f.size / 1024)} KB is over the 2 MB a pack may be`]);
+      const r = await CL.packs.importText(await f.text(), f.name);
+      packResult(r.ok ? [] : r.errors, r.ok ? `${f.name} is kept in this browser. Turn it on below; it takes effect on a new game or a reload.` : '');
+      renderPacks();
+    };
+  }
+
+  /** What an import said: the first problems, each naming the file, the entry and what is wrong. */
+  function packResult(errors, ok = '') {
+    const box = $('#packResult');
+    box.textContent = '';
+    if (ok) box.textContent = ok;
+    else {
+      box.append(el('b', { textContent: 'Not imported:' }), el('ul', {}, ...errors.slice(0, 8).map((e) => el('li', { textContent: e }))));
+      if (errors.length > 8) box.append(`and ${errors.length - 8} more.`);
+    }
+  }
+
+  /** The packs kept in this browser, each with on and off, and Remove. */
+  async function renderPacks() {
+    const box = $('#packList');
+    let rows = [];
+    try {
+      rows = await CL.packs.list();
+    } catch (e) {
+      box.textContent = `Packs can't be kept in this browser (${String(e.message || e)}).`;
+      return;
+    }
+    const playing = CL.packs.applied().map((p) => p.id);
+    box.textContent = rows.length ? '' : 'No packs yet. A pack is a .json file in the world format.';
+    for (const r of rows) {
+      const on = el('input', { type: 'checkbox', checked: r.on });
+      on.setAttribute('aria-label', `${r.title} on`);
+      on.onchange = () => {
+        CL.packs.setOn(r.id, on.checked);
+        renderPacks();
+      };
+      const now = playing.includes(r.id) ? 'in this game' : r.on ? 'on from the next new game or reload' : 'off';
+      const remove = el('button', { textContent: 'Remove' });
+      remove.onclick = async () => {
+        await CL.packs.remove(r.id);
+        renderPacks();
+      };
+      const row = el('div', { className: 'packRow' }, el('label', { className: 'setCheck' }, on), el('span', { className: 'packName' }, el('b', { textContent: r.title }), ' ', el('small', { textContent: `${r.version} · ${r.author} · ${now}` })), remove);
+      row.dataset.pack = r.id;
+      box.append(row);
+    }
   }
 
   // ---- First-time tips and How to play (Gate E tutorial; data/help.js) ----

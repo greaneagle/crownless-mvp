@@ -66,7 +66,7 @@
 
   /** Look up a record; throws on unknown IDs so bad references fail loudly. */
   function get(name, id) {
-    const rec = table(name)[id];
+    const rec = table(name)[id] ?? (typeof id === 'string' && id.includes(':') ? table(name)[CL.packs?.resolve(id)] : undefined); // P9-07: `world:id`
     if (!rec) throw new Error(`Unknown ${name} id: ${id}`);
     return rec;
   }
@@ -138,10 +138,10 @@
     if (cap != null && !(Number.isInteger(cap) && cap >= 1)) err(`${w}: simulation.partiesPerRegion must be a whole number of at least 1`);
   }
 
-  /** Return a list of human-readable problems; empty means the content is consistent. */
-  function validate() {
+  /** Return a list of human-readable problems; empty means the content is consistent. `C` is the
+   * content to check (P9-07: a pack is checked on a copy); by default the game's own. */
+  function validate(C = raw()) {
     const errors = [];
-    const C = raw();
     const err = (msg) => errors.push(msg);
     for (const t of TABLES) if (!C[t] || !Object.keys(C[t]).length) err(`missing table: ${t}`);
 
@@ -226,6 +226,9 @@
       for (const [id, n] of Object.entries(s.garrison || {})) {
         if (!C.troops?.[id] || !(Number.isInteger(n) && n > 0)) err(`settlement ${s.id}: bad garrison entry ${id}`);
       }
+      // P9-07: a place's own recruits, offered beside its owner's (a pack's troop line needs no realm).
+      if (s.recruits != null && !(Array.isArray(s.recruits) && s.recruits.every((t) => C.troops?.[t]))) err(`settlement ${s.id}: recruits must be a list of known troops`);
+      else if (s.recruits?.length && !s.services?.includes('recruit')) err(`settlement ${s.id}: has recruits but no recruit service`);
     }
     const tradeGoods = Object.values(C.markets || {}).filter((g) => g.tradeGood);
     if (!tradeGoods.length) err('markets: needs trade goods');
