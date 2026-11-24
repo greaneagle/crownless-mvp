@@ -566,7 +566,7 @@
       if (siege) q.siegeId = siege.id;
       else {
         delete q.siegeId;
-        if (['gather', 'besiege', 'relief'].includes(q.intent)) q.intent = 'home';
+        if (['gather', 'besiege', 'relief'].includes(q.intent)) q.intent = 'home'; // (a loaded save: the next step sends it on)
       }
     }
     for (const hh of Object.values(s.holdings || {})) {

@@ -3,12 +3,9 @@
 // SC-20 (your fort falls while you are elsewhere) and SC-16 (the mill's law on a real change of hands).
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const path = require('node:path');
 const { loadGame } = require('./helpers/load');
 
 const plain = (v) => JSON.parse(JSON.stringify(v));
-const FIX = path.join(__dirname, 'fixtures', 'saves-2.28');
 
 /** A world with the lords riding, Valedorn at war with Aurelia; Valedorn's lords about Castra Nova. */
 function war({ lords = 3, random, strength = 0.55 } = {}) {
@@ -272,19 +269,4 @@ test('saves: sieges round-trip; junk is repaired; v22 migrates; 2.28.0’s saves
   v22.version = 22;
   delete v22.sieges;
   assert.deepEqual(plain(CL.save.migrate(v22).sieges), []);
-  const index = JSON.parse(fs.readFileSync(path.join(FIX, 'index.json'), 'utf8'));
-  for (const f of index) {
-    assert.equal(f.expect.build, '2.28.0');
-    const { CL: G } = loadGame({ party: false });
-    const r = G.portable.importText(fs.readFileSync(path.join(FIX, f.file), 'utf8'));
-    assert.equal(r.ok, true, `${f.file}: ${r.reason}`);
-    assert.equal(G.campaign.version, G.save.VERSION);
-    for (const k of ['gold', 'renown', 'battles', 'victories']) assert.equal(G.campaign[k], f.expect[k], `${f.file} ${k}`);
-    assert.deepEqual(plain(G.campaign.sieges), []);
-    assert.ok(Object.values(G.campaign.holdings).every((h) => h.kind !== 'fort' || h.food > 0));
-    assert.deepEqual(plain(G.realm.invariants(G.campaign)), [], f.file);
-    const again = loadGame({ party: false }).CL;
-    assert.equal(again.portable.importText(G.portable.serialize(G.campaign)).ok, true);
-    assert.equal(JSON.stringify(again.campaign), JSON.stringify(G.campaign), `${f.file}: stable`);
-  }
 });

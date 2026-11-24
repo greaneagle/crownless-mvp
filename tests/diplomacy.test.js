@@ -3,12 +3,9 @@
 // treasuries, the AI's offers, the envoy, and the save step (v25 → v26, 2.30.0's fixtures).
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const path = require('node:path');
 const { loadGame } = require('./helpers/load');
 
 const plain = (v) => JSON.parse(JSON.stringify(v));
-const FIX = path.join(__dirname, 'fixtures', 'saves-2.30');
 
 function world() {
   const env = loadGame({ party: true });
@@ -215,16 +212,4 @@ test('saves: v25 → v26 (a truce becomes a treaty), a round trip, junk repaired
   assert.equal(m.version, CL.save.VERSION); // and on through the later steps
   assert.deepEqual(plain(m.treaties.map((t) => [t.kind, t.between, t.until])), [['truce', ['hrothmark', 'valedorn'], c.relations['hrothmark|valedorn'].truceUntil]]);
   assert.deepEqual(plain(m.trust), {});
-  const index = JSON.parse(fs.readFileSync(path.join(FIX, 'index.json'), 'utf8'));
-  for (const f of index) {
-    const { CL: G } = loadGame({ party: false });
-    const r = G.portable.importText(fs.readFileSync(path.join(FIX, f.file), 'utf8'));
-    assert.equal(r.ok, true, `${f.file}: ${r.reason}`);
-    assert.equal(G.campaign.version, G.save.VERSION);
-    assert.ok(Array.isArray(G.campaign.treaties));
-    assert.deepEqual(plain(G.realm.invariants(G.campaign)), [], f.file);
-    const again = loadGame({ party: false }).CL;
-    assert.equal(again.portable.importText(G.portable.serialize(G.campaign)).ok, true);
-    assert.equal(JSON.stringify(again.campaign.treaties), JSON.stringify(G.campaign.treaties), `${f.file}: stable`);
-  }
 });

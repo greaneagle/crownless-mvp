@@ -27,7 +27,7 @@ test('a new world has its bands, patrols by holdings and caravans (W-05b)', () =
   assert.equal(count(k, 'bandit'), want('bandit'));
   assert.equal(count(k, 'patrol'), want('patrol'));
   assert.equal(count(k, 'caravan'), want('caravan'));
-  assert.deepEqual([want('bandit'), want('patrol'), want('caravan')], [11, 13, 5]);
+  assert.deepEqual([want('bandit'), want('patrol'), want('caravan')], [18, 18, 8]); // P10-02: the coast's and the fells'
   for (const p of CL.campaign.parties) {
     const t = CL.content.get('party_templates', p.template);
     if (t.kind === 'lord') continue; // sized by what the lord holds (P8-01, tests/lords.test.js)
@@ -292,8 +292,8 @@ test('saved parties are validated; older saves get a populated world', () => {
     parties: [
       { id: 3, template: 'bandits', x: 50, y: 60, troops: { looter: 4, dragon: 2 }, lair: 'nowhere' },
       { id: 4, template: 'ghosts', x: 1, y: 1, troops: { looter: 1 } },
-      { id: 5, template: 'valedorn_caravan', x: 300, y: 10, troops: { levy: 0 } },
-      { id: 6, template: 'aurelian_caravan', x: 300, y: -10, troops: { recruit: 2 }, routeIndex: 9, good: 'gold' },
+      { id: 5, template: 'valedorn_caravan', x: 400, y: 10, troops: { levy: 0 } },
+      { id: 6, template: 'aurelian_caravan', x: 400, y: -10, troops: { recruit: 2 }, routeIndex: 9, good: 'gold' },
     ],
   });
   assert.equal(s.rngSeed, 42);
@@ -306,13 +306,13 @@ test('saved parties are validated; older saves get a populated world', () => {
   );
   assert.deepEqual({ ...regular[0].troops }, { looter: 4 });
   assert.equal(regular[0].lair, 'looter_camp');
-  assert.deepEqual([regular[1].x, regular[1].y, regular[1].routeIndex, regular[1].good], [200, 0, 3, 'salt']);
-  assert.equal(lords.length, 22);
+  assert.deepEqual([regular[1].x, regular[1].y, regular[1].routeIndex, regular[1].good], [350, 0, 3, 'salt']);
+  assert.equal(lords.length, 32); // P10-02: the coast's ten lords too
   assert.equal(lords[0].id, 7);
   assert.equal(s.nextPartyId, 7 + lords.length);
   const old = CL.save.sanitize({ version: 2, roster: [] });
-  assert.equal(old.parties.filter((p) => !p.lordId).length, 29); // W-05b: 11 bands, 13 patrols, 5 caravans
-  assert.equal(old.parties.filter((p) => p.lordId).length, 22); // P8-01: every lord but the rulers
+  assert.equal(old.parties.filter((p) => !p.lordId).length, 44); // 18 bands, 18 patrols, 8 caravans (P10-02)
+  assert.equal(old.parties.filter((p) => p.lordId).length, 32); // P8-01: every lord but the rulers
 });
 
 test('waiting on the map passes time', () => {

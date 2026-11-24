@@ -4,12 +4,9 @@
 // petitions, your summons, SC-24 and the saves (v24, 2.30.0's fixtures).
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const path = require('node:path');
 const { loadGame } = require('./helpers/load');
 
 const plain = (v) => JSON.parse(JSON.stringify(v));
-const FIX = path.join(__dirname, 'fixtures', 'saves-2.30');
 
 /** The world with only the lords riding, everyone in their halls; the company at Stonebridge. */
 function world() {
@@ -477,20 +474,6 @@ test('saves: the nobles round-trip; junk is repaired; v23 migrates the deeds; 2.
   const m = CL.save.migrate(v23);
   assert.equal(m.version, CL.save.VERSION); // and on through the later steps
   assert.deepEqual(plain(m.nobles.opinions[tancred].player), { rel: 20, log: [['freed', 2]] });
-  const index = JSON.parse(fs.readFileSync(path.join(FIX, 'index.json'), 'utf8'));
-  for (const f of index) {
-    assert.equal(f.expect.build, '2.30.0');
-    const { CL: G } = loadGame({ party: false });
-    const r = G.portable.importText(fs.readFileSync(path.join(FIX, f.file), 'utf8'));
-    assert.equal(r.ok, true, `${f.file}: ${r.reason}`);
-    assert.equal(G.campaign.version, G.save.VERSION);
-    for (const k of ['gold', 'renown', 'battles', 'victories']) assert.equal(G.campaign[k], f.expect[k], `${f.file} ${k}`);
-    assert.equal(typeof G.campaign.nobles.opinions, 'object');
-    assert.deepEqual(plain(G.realm.invariants(G.campaign)), [], f.file);
-    const again = loadGame({ party: false }).CL;
-    assert.equal(again.portable.importText(G.portable.serialize(G.campaign)).ok, true);
-    assert.equal(JSON.stringify(again.campaign), JSON.stringify(G.campaign), `${f.file}: stable`);
-  }
 });
 
 // ---- P9-L1: the lords' loose ends ----

@@ -163,6 +163,7 @@ declare global {
     divisions?: { names: Record<string, string>; troops: Record<string, string>; soldiers: Record<string, string> };
     /** The world (content package) this campaign belongs to, e.g. "border_march". */
     worldId: string;
+    worldEdition?: number; // P10-02: the edition of its world (1 when the world has none)
     /** The build that last wrote this save ("unknown" right after migrating a v2 save). */
     contentVersion: string;
     /** P9-07: the content packs the campaign was begun with (optional; none for most). */

@@ -84,7 +84,6 @@ test('every check rejects a bad pack with a precise message (which file, which e
     ['no manifest', (p) => delete p.manifest, /bad\.json › manifest: missing/],
     ['bad pack id', (p) => (p.manifest.id = 'Sample Pack'), /manifest: id must be 1–40 of a–z/],
     ['the official id', (p) => (p.manifest.id = 'sundered_realm'), /id sundered_realm is an official world's/],
-    ['the id of the second world', (p) => (p.manifest.id = 'sundered_coast'), /id sundered_coast is an official world's/],
     ['no version', (p) => (p.manifest.version = 'one'), /manifest: version must look like 1\.0\.0/],
     ['bad engine range', (p) => (p.manifest.engine = 'soon'), /manifest: engine must be a version range/],
     ['engine too new', (p) => (p.manifest.engine = '>=9.0.0'), /needs the game at >=9\.0\.0; this is \d+\.\d+\.\d+$/],
@@ -193,14 +192,12 @@ test('the pack checker: good packs and worlds pass; a bad one fails with the gam
   const { execFileSync } = require('node:child_process');
   const { checkPaths: check } = require('../scripts/check-pack');
   const checkPaths = (paths) => JSON.parse(JSON.stringify(check(paths))); // plain arrays, out of the game's sandbox
-  const { exportPackage } = require('../scripts/export-world');
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'crownless-packs-'));
   try {
-    // Good: the sample pack, the second world's package and the official world in the format.
-    fs.writeFileSync(path.join(dir, 'coast.json'), JSON.stringify(exportPackage('sundered_coast')));
+    // Good: the sample pack and the official world in the format (P10-02: one world, the coast in it).
     fs.writeFileSync(path.join(dir, 'realm.json'), JSON.stringify(exportWorld()));
     const good = checkPaths([path.join(ROOT, 'packs', 'sample'), dir]);
-    assert.deepEqual(good.map((r) => [path.basename(r.file), r.ok, r.kind]), [['sample.json', true, 'pack'], ['coast.json', true, 'world'], ['realm.json', true, 'world']]);
+    assert.deepEqual(good.map((r) => [path.basename(r.file), r.ok, r.kind]), [['sample.json', true, 'pack'], ['realm.json', true, 'world']]);
     // A pack that requires another is checked after it: given in order, it passes.
     const child = { manifest: { id: 'child', title: 'Child', author: 'T', version: '1.0.0', engine: '>=3.13.0', requires: ['sample'] }, merge: { troops: { 'sample:cairn_herder': { wage: 2 } } } };
     fs.writeFileSync(path.join(dir, 'z_child.json'), JSON.stringify(child));
@@ -215,16 +212,16 @@ test('the pack checker: good packs and worlds pass; a bad one fails with the gam
     assert.deepEqual(checkPaths([path.join(dir, 'bad.json')])[0].errors, [...inGame]);
     assert.deepEqual([...inGame], ['bad.json › sample:cairn_spear: troop sample:cairn_spear: unknown upgrade sample:nobody']);
     // A bad world: a place off its map, a village seated in the other realm, a table it gives whole changed by merge.
-    const w = exportPackage('sundered_coast');
+    const w = exportWorld();
     w.settlements.brindle.mapX = 400;
     w.settlements.fenwick.seat = 'calder';
     fs.writeFileSync(path.join(dir, 'w_bad.json'), JSON.stringify(w));
-    assert.deepEqual(checkPaths([path.join(dir, 'w_bad.json')])[0].errors, ['w_bad.json › world_map sundered_coast: settlement brindle outside the map', 'w_bad.json › settlement fenwick: seat calder is not a fort or town of ostrand']);
-    w.settlements.brindle.mapX = 22;
+    assert.deepEqual(checkPaths([path.join(dir, 'w_bad.json')])[0].errors, ['w_bad.json › world_map sundered_realm: settlement brindle outside the map', 'w_bad.json › settlement fenwick: seat calder is not a fort or town of ostrand']);
+    w.settlements.brindle.mapX = 222;
     w.settlements.fenwick.seat = 'coldkeep';
-    w.merge.troops = { looter: { wage: 1 } };
-    w.world_map.elsewhere = w.world_map.sundered_coast;
-    assert.deepEqual([...CL.packs.checkWorld(w, { file: 'w.json' })], ['w.json › world_map: needs one world, under the manifest\'s id sundered_coast (got sundered_coast, elsewhere)', 'w.json › merge › troops: the world gives this table whole; change it there']);
+    w.merge = { troops: { looter: { wage: 1 } } };
+    w.world_map.elsewhere = w.world_map.sundered_realm;
+    assert.deepEqual([...CL.packs.checkWorld(w, { file: 'w.json' })], ['w.json › world_map: needs one world, under the manifest\'s id sundered_realm (got sundered_realm, elsewhere)', 'w.json › merge › troops: the world gives this table whole; change it there']);
     // The command: exit code 0 when all pass, 1 with the problems listed.
     const run = (...args) => {
       try {
@@ -252,5 +249,4 @@ test('P9-T: the sample pack and every official world work with this build (a ver
     const { engine } = CL.worlds.package(id).manifest;
     assert.ok(CL.packs.satisfies(CL.BUILD, engine), `${id}: ${engine} for ${CL.BUILD}`);
   }
-  assert.ok(CL.worlds.installed().length >= 2, 'the second world is there');
 });

@@ -84,15 +84,12 @@ test('rejected: unknown IDs, listed — and the current save is untouched', () =
   assert.equal('crownless_save_pre_import' in storage.data, false);
 });
 
-test('a raw save object (no envelope) and an old 0.3 save are accepted', () => {
+test('a raw save object (no envelope) is accepted; an old 0.3 save is refused (P10-02: no old saves)', () => {
   const { CL, c } = exported();
   const raw = CL.portable.parse(JSON.stringify(c));
   assert.equal(raw.ok, true);
   const old = CL.portable.parse(JSON.stringify({ version: 1, gold: 70, infantry: 2, archer: 1 }));
-  assert.equal(old.ok, true);
-  assert.equal(old.migrated, true);
-  assert.equal(old.campaign.gold, 70);
-  assert.equal(old.campaign.roster.length, 3);
+  assert.equal(old.ok, false);
 });
 
 test('importing sets the current save aside; it can be restored once', () => {

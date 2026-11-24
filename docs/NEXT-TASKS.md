@@ -3294,7 +3294,7 @@ Moved here from P9-T (owner, 2026-11-24). It runs when the owner asks for the ni
 - **Played** at 812×375 by taps: the ▶ button, Wait 3 days, the dark screen with the clock, "3 days have passed." **Seen:** the first-time map tip card covers the ▶ button (and the − button, as before) until it is closed. Left for P10-08.
 - **Slow files:** none run. The bots ride at Fast exactly as before, and nothing else in time changed. No long run needed.
 
-### P10-02 · One world: the Sundered Coast joins the map (M–L)
+### P10-02 · One world: the Sundered Coast joins the map (M–L) — ✅ Done in 4.2.0
 
 **Problem.** The game has two worlds, and the second is a sandbox with no story. The owner (2026-11-24): there is no need for two split games. The whole game is a sandbox with a minor story.
 
@@ -3308,6 +3308,16 @@ Moved here from P9-T (owner, 2026-11-24). It runs when the owner asks for the ni
 **Tests.** The merged world passes the pack checks; every realm has a capital, lords and troops; parties reach the coast and back; the world-sim and landed short runs hold their invariants; `test-world` still plays.
 
 **Version.** 4.2.0.
+
+**Done (4.2.0).**
+- **The coast in the east:** its 13 places, two realms, troops, cultures, lords, bands, patrols and caravans moved into `data/*.js`, at its old map + (200, 80). The map is 350 × 200. Roads Castra Nova–Brindle and Merrow–Marlow; Gullhaven's caravan runs on to Merrow. The Gullspine fells above it, with a mountain, hills and two lairs. Ids the realm had were renamed (three lairs, the band).
+- **Fitted to the realm's rules:** two lords more for each coast realm (a lord of one village, a landless kinsman), so every realm has a ruler and five lords; the coast's forts hold 22, as every fort. Ostrand and Saltreach begin at war, at peace with the rest.
+- **One world:** `data/worlds/sundered_coast.js` is gone; the folder and `js/worlds.js` stay for packs, so the creator never asks which world. Help: The lands has the coast; "Getting started" says the realm is one sandbox.
+- **Old saves refused (D-P10g):** the world's `edition` is 2 and saves record `worldEdition`; every save from before 4.2.0 (v1 and v2 too) is kept safe and refused, as another world's is. The old-save tests are gone, one `tests/old-saves.test.js` checks the refusal; `tests/fixtures/saves-4.2` holds two saves of this build for the browser cases (`make-save-fixtures.js --current`).
+- **A fault the coast's war showed:** a lord let go by an army, or formed again thin after captivity, at home was "riding home" until its next step. `CL.lords.sendHome` now refills and rests it at once.
+- **Checks:** 876 fast pass; lint clean but the 2 old warnings; typecheck clean. Browser full suite 239 passed, 9 skipped, 2 failed under load (`lords` Hold, the wait cut short, phone) and passed alone. Slow: `world-sim`, `test-world`, `campaign-bots`, `second-world` (now a company starting at Gullhaven) pass.
+- **Open, for P10-T:** `landed` fails on a new count: on seed 1 an AI lord founds a realm with one riding lord (the test wants three a realm). The Phase 9 exit fails (passes at 4.1.0): the bigger world's history has the rising's two lords beaten on its first day, so Westholt never falls. No code fault found; scenario drift, like the Phase 8 exit and Prototypes D and F.
+- **Played** at 812×375: a new game asks no world; zoomed out, the whole realm with the coast; a tap on Harrowgate sets off ("held by King Hakon Vargr for Ostrand", about a day and a half). Not run: `gate-d-campaigns` (about 27 minutes; the March itself is unchanged).
 
 ### P10-03 · Walkable towns: every capital and free city (L)
 

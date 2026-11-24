@@ -4,12 +4,9 @@
 // forced), an AI lord declaring, and the save step (v26 → v27).
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const path = require('node:path');
 const { loadGame } = require('./helpers/load');
 
 const plain = (v) => JSON.parse(JSON.stringify(v));
-const FIX = path.join(__dirname, 'fixtures', 'saves-2.30');
 const FORT = 'westholt_castle'; // a Valedorn fort of the wider world, not the story's
 
 function world() {
@@ -243,15 +240,6 @@ test('saves: v26 → v27, a founded realm round-trips with its holdings, ruler a
   assert.equal(m.version, CL.save.VERSION); // and on through the later steps
   assert.deepEqual(plain(m.realms), {});
   assert.deepEqual(plain(m.rule), plain(F.blank()));
-  const index = JSON.parse(fs.readFileSync(path.join(FIX, 'index.json'), 'utf8'));
-  for (const f of index) {
-    const { CL: G } = loadGame({ party: false });
-    const r = G.portable.importText(fs.readFileSync(path.join(FIX, f.file), 'utf8'));
-    assert.equal(r.ok, true, `${f.file}: ${r.reason}`);
-    assert.equal(G.campaign.version, G.save.VERSION);
-    assert.deepEqual(plain(G.campaign.realms), {});
-    assert.deepEqual(plain(G.realm.invariants(G.campaign)), [], f.file);
-  }
 });
 
 test('P9-T, SC-25: a ruler offers treaties, each answered by the other ruler, and a broken alliance is heard in every court', () => {

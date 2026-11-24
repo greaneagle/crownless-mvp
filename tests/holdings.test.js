@@ -10,7 +10,6 @@ const { makeBot } = require('./helpers/campaign-bot');
 
 const plain = (v) => JSON.parse(JSON.stringify(v));
 const FIX = path.join(__dirname, 'fixtures', 'saves-2.23');
-const index = JSON.parse(fs.readFileSync(path.join(FIX, 'index.json'), 'utf8'));
 const fixture = (file) => fs.readFileSync(path.join(FIX, file), 'utf8');
 const byKey = (c, key) => Object.keys(c.people).find((id) => c.people[id].key === key);
 const events = (CL, type) => CL.events.recent.filter((e) => e.type === type);
@@ -20,9 +19,11 @@ test('people: a ruler and about six lords per kingdom, landless, one place and s
   const c = CL.campaign;
   const R = CL.realm;
   assert.deepEqual(plain(R.invariants(c)), []);
-  assert.deepEqual(Object.keys(c.rulers).sort(), ['aurelian', 'hrothmark', 'valedorn', 'vessaro'], 'every realm but the free city');
-  assert.equal(Object.values(c.people).some((p) => p.realm === 'merrow'), false, 'Merrow has no persons');
-  assert.equal(R.holding('merrow', c), null, 'nor holdings');
+  assert.deepEqual(Object.keys(c.rulers).sort(), ['aurelian', 'hrothmark', 'ostrand', 'saltreach', 'valedorn', 'vessaro'], 'every realm but the free cities');
+  for (const free of ['merrow', 'gullhaven']) {
+    assert.equal(Object.values(c.people).some((p) => p.realm === free), false, `${free} has no persons`);
+    assert.equal(R.holding(free, c), null, 'nor holdings');
+  }
   for (const f of Object.keys(c.rulers)) {
     const lords = Object.values(c.people).filter((p) => p.realm === f && p.id !== c.rulers[f]);
     assert.ok(lords.length >= 5 && lords.length <= 7, `${f}: ${lords.length} lords`);
@@ -59,7 +60,7 @@ test('holdings: every settlement of a kingdom, each with a holder, a controller 
   const R = CL.realm;
   const all = Object.values(CL.content.table('settlements')).filter((s) => R.isRealm(s.ownerFaction));
   assert.equal(Object.keys(c.holdings).length, all.length);
-  assert.equal(all.length, 30, '31 settlements, less the free city');
+  assert.equal(all.length, 42, '44 settlements, less the free cities (P10-02: the coast too)');
   for (const s of all) {
     const h = c.holdings[s.id];
     assert.equal(h.kind, s.type);
@@ -296,77 +297,6 @@ test('saves: people, rulers and holdings round-trip; junk is repaired; a kingdom
   assert.equal(r.campaign, null);
   assert.equal(r.incompatible, true);
   assert.match(r.problems[0], /kingdoms this version of the game does not have: atlantis \(at Greywall Fort\)/);
-});
-
-test('2.23.0 saves (fixtures from 9826a3e) load with the same world, and the story reads the same', () => {
-  assert.deepEqual(index.map((f) => f.expect.build), index.map(() => '2.23.0'));
-  assert.ok(index.length >= 4);
-  for (const f of index) {
-    const text = fixture(f.file);
-    const { CL } = loadGame({ party: false });
-    const r = CL.portable.importText(text);
-    assert.equal(r.ok, true, `${f.file}: ${r.reason}`);
-    assert.equal(r.migrated, true);
-    const c = CL.campaign;
-    assert.equal(c.version, CL.save.VERSION);
-    assert.equal(c.character.name, f.expect.name);
-    for (const k of ['gold', 'renown', 'battles', 'victories']) assert.equal(c[k], f.expect[k], `${f.file} ${k}`);
-    assert.deepEqual(plain(c.roster.map((s) => s.id)), f.expect.soldierIds);
-    assert.deepEqual(plain(c.roster.map((s) => s.name)), JSON.parse(text).campaign.roster.map((s) => s.name), 'soldiers keep their names');
-    assert.equal(c.world.location, f.expect.location);
-    for (const [q, st] of Object.entries(f.expect.quests || {})) assert.equal(c.story.quests[q]?.status, st, q);
-    // Every fort's owner, and every story `owner` condition, read as before.
-    for (const [fort, o] of Object.entries(f.expect.owners)) {
-      assert.equal(CL.realm.owner(fort, c), o, `${f.file}: ${fort}`);
-      for (const k of CL.realm.kingdoms()) assert.equal(CL.story.test({ owner: fort, is: k.id }, c), o === k.id);
-    }
-    assert.deepEqual(plain(CL.realm.invariants(c)), [], f.file);
-    // The people as 2.24.0 begins them; a lord whose home another realm holds now (Q4's Greywall) has made
-    // the capital, or a seat of their own, their home (P8-01).
-    const homeless = (p) => ({ ...p, home: null });
-    assert.equal(JSON.stringify(Object.values(c.people).map(homeless)), JSON.stringify(Object.values(CL.realm.startingPeople().people).map(homeless)), 'the people as 2.24.0 begins them');
-    for (const p of Object.values(c.people)) assert.equal(CL.realm.owner(p.home, c), p.realm, `${p.id}'s home is their realm's`);
-    assert.deepEqual(plain(c.followers ? Object.keys(c.followers).filter((k) => c.followers[k]).sort() : []), f.expect.followers);
-    assert.deepEqual(plain(c.retinue.map((m) => m.id)), f.expect.retinue);
-    assert.deepEqual(plain(c.businesses.owned.map((b) => ({ place: b.place, owner: b.owner, seizeOn: b.seizeOn }))), f.expect.mills);
-    // Stable: export and import again changes nothing.
-    const again = loadGame({ party: false }).CL;
-    assert.equal(again.portable.importText(CL.portable.serialize(c)).ok, true);
-    assert.equal(JSON.stringify(again.campaign), JSON.stringify(c));
-    CL.party.advanceDays(2);
-    assert.equal(CL.save.write(), true);
-  }
-});
-
-test('the Q4 fixture: Aurelia’s ruler holds Greywall and its villages, with Valedorn claims; the mill’s law is told', () => {
-  const { CL, uiCalls } = loadGame({ party: false });
-  assert.equal(CL.portable.importText(fixture('q4-aurelia.json')).ok, true);
-  const c = CL.campaign;
-  const R = CL.realm;
-  assert.equal(CL.story.state(c).flags.ending, 'aurelian');
-  for (const sid of ['greywall_fort', 'highmere', 'brackenfield']) {
-    const h = c.holdings[sid];
-    assert.equal(h.sovereign, 'aurelian', sid);
-    assert.equal(h.controller, 'aurelian', sid);
-    assert.equal(h.holder, c.rulers.aurelian, sid);
-    assert.deepEqual(plain(h.claims.map((k) => [c.people[k.by].key, k.realm, k.kind])), [[sid === 'brackenfield' ? 'hawise_greymantle' : 'hamon_greymantle', 'valedorn', 'old']], sid);
-  }
-  assert.equal(R.locked(c, 'greywall_fort'), false, 'the story has ended');
-  // The same as the ending would give in this build: play Q4 to the end here and compare.
-  const fresh = loadGame({ party: false }).CL;
-  fresh.realm.setOwner(fresh.campaign, 'greywall_fort', 'aurelian', 'story');
-  for (const sid of ['greywall_fort', 'highmere', 'brackenfield']) {
-    const a = plain(c.holdings[sid]);
-    const b = plain(fresh.campaign.holdings[sid]);
-    for (const k of a.claims.concat(b.claims)) delete k.since;
-    assert.deepEqual(a, b, sid);
-  }
-  // Brackenfield followed its seat, so the mill there now answers to Aurelia's law, and you are told.
-  const mill = c.businesses.owned[0];
-  assert.equal(mill.owner, 'valedorn', 'as the old build left it');
-  CL.business.tick(c);
-  assert.equal(mill.owner, 'aurelian');
-  assert.ok(uiCalls.some((u) => u[0] === 'message' && /^Your mill: Brackenfield is now held by Aurel/.test(u[1])));
 });
 
 test('the migration is pure, and a save of another world keeps just its owner overrides', () => {

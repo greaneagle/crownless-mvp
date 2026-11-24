@@ -139,8 +139,8 @@ test('clicking hit-tests settlements and sites before open ground', () => {
 
 test('saved world state is sanitized', () => {
   const { CL } = loadGame();
-  const w = CL.world.sanitize({ x: 240, y: -5, location: 'atlantis', sites: { reaver_hideout: { clearedUntil: 7 }, nowhere: {} } });
-  assert.deepEqual([w.x, w.y], [200, 0]);
+  const w = CL.world.sanitize({ x: 390, y: -5, location: 'atlantis', sites: { reaver_hideout: { clearedUntil: 7 }, nowhere: {} } });
+  assert.deepEqual([w.x, w.y], [350, 0]);
   assert.equal(w.location, null);
   assert.equal(w.sites.reaver_hideout.clearedUntil, 7);
   assert.equal('nowhere' in w.sites, false);

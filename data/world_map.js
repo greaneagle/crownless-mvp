@@ -12,18 +12,21 @@
     sundered_realm: {
       id: 'sundered_realm',
       name: 'The Sundered Realm',
+      // P10-02: the world's edition. 2: the Sundered Coast joined in the east (4.2.0). Saves of an
+      // earlier edition are refused and kept safe, never migrated (the owner, D-P10g).
+      edition: 2,
       start: 'stonebridge',
       // W-05b (decision D-W1): about four times the Border March's area. The March sits whole in the
       // middle (its old coordinates + 50, + 50), so its layout, roads, story distances and lairs are as
       // they were; the kingdoms around it fill the rest. Old saves (the 100 × 100 March) are refused
       // (decision D-W2, owner 2026-11-19): this is a different world.
-      bounds: { w: 200, h: 200 }, // map units; every place, road and party stays inside
-      factions: ['valedorn', 'aurelian', 'hrothmark', 'vessaro', 'merrow'], // this world's kingdoms (data/factions.js)
+      bounds: { w: 350, h: 200 }, // map units; every place, road and party stays inside (P10-02: the coast added east, 200 → 350)
+      factions: ['valedorn', 'aurelian', 'hrothmark', 'vessaro', 'merrow', 'ostrand', 'saltreach', 'gullhaven'], // this world's kingdoms (data/factions.js)
       outlaws: 'neutral', // the faction of road bands and sell-swords: not a kingdom, never diplomatic
       // Relations between kingdoms at the start (W-07); any pair not listed is at peace. `story`: the
       // story holds it until its ending, which sets it (decision D-W5: the March pair stays in
       // tension, its frontier clashes going on, until Q4 ends).
-      relations: [{ between: ['valedorn', 'aurelian'], state: 'tension', story: true }],
+      relations: [{ between: ['valedorn', 'aurelian'], state: 'tension', story: true }, { between: ['ostrand', 'saltreach'], state: 'war' }], // P10-02: the coast's realms begin at war
       // The world simulation's budget (W-07): no more than this many regular parties spawn in one region.
       simulation: { partiesPerRegion: 16 },
       // P9-B3 (D-P9b): the size of the world's armies, to match a company of up to 200. `households`:
@@ -45,7 +48,12 @@
         north: { name: 'the northern highlands', x: 0, y: 0, w: 200, h: 50 },
         south: { name: 'the southern coast', x: 0, y: 150, w: 200, h: 50 },
         west: { name: 'the western shires', x: 0, y: 50, w: 50, h: 100 },
-        east: { name: 'the eastern provinces', x: 150, y: 50, w: 50, h: 100 }
+        east: { name: 'the eastern provinces', x: 150, y: 50, w: 50, h: 100 },
+        // P10-02: the coast and the fells above it.
+        fells: { name: 'the Gullspine fells', x: 200, y: 0, w: 150, h: 80 },
+        cliffs: { name: 'the northern cliffs', x: 200, y: 80, w: 132, h: 58 },
+        flats: { name: 'the salt flats', x: 200, y: 138, w: 132, h: 62 },
+        gull_shore: { name: 'the Gullhaven shore', x: 332, y: 80, w: 18, h: 120 }
       },
       view: { zoom: 1 }, // the map's opening zoom until the player picks their own: the March's scale
       baseSpeed: 4,
@@ -66,7 +74,13 @@
         { kind: 'mountain', poly: [[56, 38], [80, 41], [100, 36], [125, 40], [148, 36], [150, 46], [125, 49], [100, 47], [80, 49], [58, 47]] },
         { kind: 'hills', poly: [[8, 4], [44, 4], [48, 28], [22, 34], [6, 26]] },
         { kind: 'hills', poly: [[186, 36], [198, 36], [198, 72], [186, 72]] },
-        { kind: 'marsh', poly: [[4, 148], [44, 150], [40, 166], [18, 172], [4, 166]] }
+        { kind: 'marsh', poly: [[4, 148], [44, 150], [40, 166], [18, 172], [4, 166]] },
+        // P10-02: the coast's mountain, hills and marsh, and the Gullspine fells above it.
+        { kind: 'mountain', poly: [[282, 84], [300, 84], [304, 96], [296, 106], [284, 102]] },
+        { kind: 'hills', poly: [[204, 110], [230, 112], [228, 128], [206, 126]] },
+        { kind: 'marsh', poly: [[250, 184], [280, 182], [284, 196], [252, 198]] },
+        { kind: 'mountain', poly: [[214, 18], [252, 10], [292, 16], [330, 8], [344, 30], [318, 48], [282, 40], [246, 50], [218, 42]] },
+        { kind: 'hills', poly: [[204, 54], [240, 56], [262, 66], [236, 76], [206, 72]] }
       ],
       waters: [
         {
@@ -77,9 +91,11 @@
             { kind: 'ford', x: 106, y: 164, r: 2 },
             { kind: 'bridge', x: 101.8, y: 181.9, r: 2.5 } // the coast road
           ]
-        }
+        },
+        // P10-02: the river between Ostrand and Saltreach.
+        { line: [[200, 140], [240, 137], [274, 139], [304, 140], [332, 143]], width: 1.2, crossings: [{ kind: 'bridge', x: 273.6, y: 139, r: 2.5 }, { kind: 'ford', x: 230, y: 137.6, r: 2 }, { kind: 'ford', x: 318, y: 141.5, r: 2 }] }
       ],
-      coast: ['south'],
+      coast: ['south', 'east'],
       roadWidth: 1.6, // map units either side of a road's centre line
       // Gameplay distance (W-02): a unit north–south counts this much of one east–west, so a journey
       // takes as long as it looks on 2.0's map. Part of the world, not the view: zoom never changes it.
@@ -98,7 +114,14 @@
         ['eldmoor', 'hrothgard'],
         ['thornvik', 'skarnwall'],
         ['ulfstead_hold', 'westholt_castle', 'ashby', 'fernley', 'torre_salina'],
-        ['skarnwall', 'calvinum', 'castra_nova', 'tessaro', 'merrow']
+        ['skarnwall', 'calvinum', 'castra_nova', 'tessaro', 'merrow'],
+        // P10-02: the coast's roads, and the two that join it to the realm (Castra Nova–Brindle, Merrow–Marlow).
+        ['brindle', 'harrowgate', 'fenwick', 'coldkeep', 'whitecliff', 'thornby', 'gullhaven'],
+        ['marlow', 'calder', 'rookmoor', 'pennick', 'seagate', 'tidewell', 'gullhaven'],
+        ['coldkeep', 'rookmoor'],
+        ['harrowgate', 'calder'],
+        ['castra_nova', 'brindle'],
+        ['merrow', 'marlow']
       ],
       river: [[105, 50], [108, 68], [111, 88], [110, 102], [108, 116], [111, 132], [108, 150]],
       forests: [
@@ -106,9 +129,12 @@
         [[114, 128], [132, 134], [128, 148], [112, 149], [108, 140]],
         [[56, 4], [70, 2], [72, 20], [58, 24]],
         [[4, 60], [30, 56], [34, 68], [14, 72]],
-        [[182, 100], [196, 104], [194, 140], [184, 136]]
+        [[182, 100], [196, 104], [194, 140], [184, 136]],
+        [[250, 88], [266, 86], [270, 98], [254, 100]],
+        [[292, 150], [308, 148], [310, 164], [294, 166]],
+        [[208, 150], [226, 148], [228, 164], [210, 166]]
       ],
-      hills: [[94, 72], [99, 68], [88, 78], [136, 80], [140, 88]],
+      hills: [[94, 72], [99, 68], [88, 78], [136, 80], [140, 88], [216, 118], [224, 122]],
       // Non-settlement points of interest that start a battle: two lairs in each region.
       // The people of the realms (P8-02, decision D-P8c, owner 2026-11-20): per kingdom a ruler and
       // about six lords. Rank is never stored: a "great", "lesser" or "landless" lord is only what
@@ -147,6 +173,21 @@
         { id: 'ruggero_canale', name: 'Ruggero Canale', gender: 'male', realm: 'vessaro', home: 'castel_verro', holds: ['castel_verro', 'sorra'], kin: [], traits: 'careful, a builder of walls' },
         { id: 'chiara_morosco', name: 'Chiara Morosco', gender: 'female', realm: 'vessaro', home: 'marenna', holds: ['marenna'], kin: [{ id: 'ottavio_morosco', tie: 'sibling' }], traits: 'quiet, clever, pays her brother’s debts' },
         { id: 'matteo_salviati', name: 'Matteo Salviati', gender: 'male', realm: 'vessaro', home: 'vessara', holds: [], kin: [{ id: 'lucrezia_salviati', tie: 'parent' }], traits: 'charming, idle, a gambler' },
+        // P10-02: the coast. Ostrand: King Hakon at Harrowgate; Saltreach: the Doge Piero at Calder.
+        { id: 'hakon_vargr', name: 'Hakon Vargr', gender: 'male', realm: 'ostrand', ruler: true, home: 'harrowgate', holds: ['harrowgate', 'brindle'], kin: [{ id: 'sigrid_vargr', tie: 'child' }], traits: 'stern, proud, slow to forgive' },
+        { id: 'sigrid_vargr', name: 'Sigrid Vargr', gender: 'female', realm: 'ostrand', home: 'harrowgate', holds: [], kin: [{ id: 'hakon_vargr', tie: 'parent' }], traits: 'bold, restless, quick to anger' },
+        { id: 'torvald_hask', name: 'Torvald Hask', gender: 'male', realm: 'ostrand', home: 'coldkeep', holds: ['coldkeep', 'fenwick'], kin: [{ id: 'leif_hask', tie: 'child' }], traits: 'watchful, patient, a hard border lord' },
+        { id: 'ingrid_skarde', name: 'Ingrid Skarde', gender: 'female', realm: 'ostrand', home: 'whitecliff', holds: ['whitecliff'], kin: [{ id: 'arne_skarde', tie: 'sibling' }], traits: 'shrewd, generous, keeps her word' },
+        // P10-02: two more Ostrand lords, as D-P8c's realms have: a lord of one village and a landless son.
+        { id: 'arne_skarde', name: 'Arne Skarde', gender: 'male', realm: 'ostrand', home: 'thornby', holds: ['thornby'], kin: [{ id: 'ingrid_skarde', tie: 'sibling' }], traits: 'easygoing, a fisherman at heart' },
+        { id: 'leif_hask', name: 'Leif Hask', gender: 'male', realm: 'ostrand', home: 'coldkeep', holds: [], kin: [{ id: 'torvald_hask', tie: 'parent' }], traits: 'eager, hot-headed, hungry for a name' },
+        { id: 'piero_salaro', name: 'Piero Salaro', gender: 'male', realm: 'saltreach', ruler: true, home: 'calder', holds: ['calder', 'marlow'], kin: [{ id: 'lucia_salaro', tie: 'sibling' }], traits: 'careful, greedy, a born trader' },
+        { id: 'lucia_salaro', name: 'Lucia Salaro', gender: 'female', realm: 'saltreach', home: 'calder', holds: [], kin: [{ id: 'piero_salaro', tie: 'sibling' }], traits: 'clever, ambitious, smiles too easily' },
+        { id: 'guido_ferro', name: 'Guido Ferro', gender: 'male', realm: 'saltreach', home: 'rookmoor', holds: ['rookmoor', 'pennick'], kin: [{ id: 'dario_ferro', tie: 'cousin' }], traits: 'brave, blunt, loyal to the Council' },
+        { id: 'chiara_vento', name: 'Chiara Vento', gender: 'female', realm: 'saltreach', home: 'seagate', holds: ['seagate'], kin: [{ id: 'nella_vento', tie: 'child' }], traits: 'cold, capable, trusts nobody' },
+        // P10-02: two more Saltreach lords: a lady of one village and a landless cousin.
+        { id: 'nella_vento', name: 'Nella Vento', gender: 'female', realm: 'saltreach', home: 'tidewell', holds: ['tidewell'], kin: [{ id: 'chiara_vento', tie: 'parent' }], traits: 'quiet, careful, her mother’s eyes' },
+        { id: 'dario_ferro', name: 'Dario Ferro', gender: 'male', realm: 'saltreach', home: 'rookmoor', holds: [], kin: [{ id: 'guido_ferro', tie: 'cousin' }], traits: 'a gambler, charming, always owed money' },
         { id: 'bastiano_lanza', name: 'Bastiano Lanza', gender: 'male', realm: 'vessaro', home: 'vessara', holds: [], kin: [], traits: 'the Queen’s household knight; steady, sworn' }
       ],
       sites: {
@@ -239,7 +280,14 @@
           encounter: 'deserter_band',
           respawnDays: 3,
           text: 'Stilt huts deep in the reeds, where the League’s deserters hide from its magistrates.'
-        }
+        },
+        // P10-02: the coast's lairs (renamed where the realm had the id) and the fells'.
+        strand_camp: { id: 'strand_camp', name: 'Strand Camp', mapX: 328, mapY: 130, encounter: 'looter_band', respawnDays: 2, text: 'A handful of ragged looters squat by the coast road, waiting for easy prey. A fair first test for a lone sword.' },
+        false_light_cove: { id: 'false_light_cove', name: 'False Light Cove', mapX: 329, mapY: 104, encounter: 'wrecker_crew', respawnDays: 3, text: 'False lights on the rocks and a beach full of other people’s cargo.' },
+        turncoat_camp: { id: 'turncoat_camp', name: 'Turncoats’ Camp', mapX: 250, mapY: 146, encounter: 'deserter_band', respawnDays: 3, text: 'Men of both banners who walked away from the river war, and kept their swords.' },
+        drowned_chapel: { id: 'drowned_chapel', name: 'Drowned Chapel', mapX: 266, mapY: 190, encounter: 'wrecker_crew', respawnDays: 3, text: 'A chapel the marsh took back, and the wreckers took after it.' },
+        gull_tor: { id: 'gull_tor', name: 'Gull Tor', mapX: 262, mapY: 60, encounter: 'wrecker_crew', respawnDays: 3, text: 'A crag above the coast road where fell raiders watch for carts.' },
+        fells_hollow: { id: 'fells_hollow', name: 'Fells Hollow', mapX: 312, mapY: 58, encounter: 'looter_band', respawnDays: 2, text: 'Shielings in a sheltered hollow, taken over by men who never paid for the sheep.' }
       }
     }
   };

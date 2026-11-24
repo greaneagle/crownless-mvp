@@ -334,7 +334,7 @@
     const leaving = a.members.filter((pid) => c.people[pid]?.status !== 'free' || c.people[pid].realm !== a.realm || !L().partyOf(c, pid));
     for (const pid of leaving) {
       const q = L().partyOf(c, pid);
-      if (q) release(q);
+      if (q) release(c, q);
     }
     a.members = a.members.filter((pid) => !leaving.includes(pid));
     if (a.commander === PLAYER) {
@@ -352,11 +352,11 @@
     }
     return true;
   }
-  const release = (q) => {
+  const release = (c, q) => {
     delete q.armyId;
     delete q.pace;
-    if (q.intent === 'army') q.intent = 'home';
     q.tx = q.ty = null;
+    if (q.intent === 'army' && q.lordId) CL.lords.sendHome(c, q); // P10-02: home, or rest if already there
   };
 
   /** P9-T: a lord who changes realm (or declares one) leaves their army at once, not at its next muster. */
@@ -365,7 +365,7 @@
       if (!a.members.includes(pid)) continue;
       a.members = a.members.filter((x) => x !== pid);
       const q = L().partyOf(c, pid);
-      if (q) release(q);
+      if (q) release(c, q);
       if (a.commander === pid && a.members.length) a.commander = a.members[0];
       if (!a.members.length && a.commander !== PLAYER) disband(c, a, 'broken');
     }
@@ -638,7 +638,7 @@
       for (const q of parties(c, foe)) {
         if (q === fq) continue; // yours: js/parties.js takes them prisoner
         if (A().next(c) < RULES.capture) L().beaten(c, q, ours?.realm || 'player');
-        else release(q);
+        else release(c, q);
       }
       foe.members = foe.members.filter((pid) => pid === foe.commander);
       disband(c, foe, 'broken');
@@ -677,7 +677,7 @@
     if (broken) {
       for (const q of parties(c, l)) {
         if (A().next(c) < RULES.capture) L().beaten(c, q, w.realm);
-        else release(q);
+        else release(c, q);
       }
       l.members = [];
       disband(c, l, 'broken');
@@ -692,7 +692,7 @@
     const i = list(c).indexOf(a);
     if (i < 0) return true;
     list(c).splice(i, 1);
-    for (const q of parties(c, a)) release(q);
+    for (const q of parties(c, a)) release(c, q);
     if (a.siegeId) {
       const s = CL.sieges.list(c).find((x) => x.id === a.siegeId);
       if (s) s.army = null;

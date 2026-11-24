@@ -29,7 +29,6 @@
 <script src="../data/businesses.js"></script>
 <script src="../data/help.js"></script>
 <script src="../data/names.js"></script>
-<script src="../data/worlds/sundered_coast.js"></script>
 <script src="../js/core.js"></script>
 <script src="../js/content.js"></script>
 <script src="../js/packs.js"></script>
@@ -65,7 +64,6 @@ canvas { width: 100%; height: auto; display: block; border-radius: 4px; }
   <div class="row">
     <label class="file">Open a .json file<input id="file" type="file" accept=".json,application/json"></label>
     <button id="official" type="button">The official world</button>
-    <button id="coast" type="button">The Sundered Coast</button>
   </div>
 </header>
 <main>
@@ -236,7 +234,6 @@ canvas { width: 100%; height: auto; display: block; border-radius: 4px; }
     const world = { manifest: { id: Object.keys(BASE.world_map)[0], title: 'The official world', author: 'Crownless', version: CL.BUILD, engine: `>=${CL.BUILD}`, kind: 'world' }, ...BASE };
     show('official.json', JSON.stringify(world));
   });
-  $('#coast').addEventListener('click', () => show('sundered_coast.json', JSON.stringify(window.CROWNLESS_WORLDS.sundered_coast)));
 })();
 </script>
 </body>

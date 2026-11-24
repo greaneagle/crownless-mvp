@@ -121,6 +121,7 @@
     const home = place(homeOf(c, pid));
     // In the order a loaded save keeps them (js/parties.js sanitize), so a round trip changes nothing.
     const p = { id: c.nextPartyId++, template: t.id, x: home.mapX, y: home.mapY, troops: troopsFor(c, pid, share), tx: null, ty: null, ignoreUntil: 0, alerted: false, lordId: pid, intent: share < 1 ? 'home' : 'rest' };
+    if (p.intent === 'home') [p.tx, p.ty] = [home.mapX, home.mapY]; // P10-02: thin, it refills here on its first step
     c.parties.push(p);
     CL.diag.log('info', 'Lord rides out', { lord: pid, party: p.id, troops: troopCount(p.troops) });
     return p;
@@ -161,6 +162,23 @@
     }
     const share = (troopCount(p.troops) + afford) / troopCount(full);
     p.troops = afford >= need ? full : troopsFor(c, p.lordId, Math.max(share, troopCount(p.troops) / troopCount(full)));
+  }
+
+  /**
+   * P10-02: done with an army or a siege, a household rides home; one that is already there refills and
+   * rests at once (as js/parties.js does on arrival), never "riding home" from home.
+   */
+  function sendHome(c, p) {
+    const home = place(homeOf(c, p.lordId));
+    if (home && CL.world.mapDist(p.x, p.y, home.mapX, home.mapY) <= 0.9) {
+      refill(c, p);
+      p.intent = 'rest';
+      p.restUntil = c.day + 0.5;
+      p.tx = p.ty = null;
+      return;
+    }
+    p.intent = 'home';
+    if (home) [p.tx, p.ty] = [home.mapX, home.mapY];
   }
 
   /** Too few to ride on with: below half of full strength. */
@@ -490,6 +508,7 @@
     spawn,
     ensure,
     refill,
+    sendHome,
     thin,
     whoLine,
     doingLine,

@@ -1,5 +1,28 @@
 # Crownless — Release Notes
 
+## v4.2.0 — One world: the coast joins the realm (P10-02) · 2026-11-24
+
+### New
+- **The coast is part of the realm.** The Sundered Coast, a separate world since 3.14.0, now lies in the far east, past Castra Nova and Merrow. The Kingdom of Ostrand holds the northern cliffs and the Saltreach League the salt flats, and they start at war with each other. The Free Port of Gullhaven trades between them. Two roads lead there: Castra Nova to Brindle, and Merrow to Marlow.
+- **The Gullspine fells:** wild hills and mountains above the coast, with two raider lairs of their own.
+- Each coast realm has two more lords than before: Arne Skarde and Leif Hask in Ostrand, Nella Vento and Dario Ferro in Saltreach. Each realm now has a ruler and five lords, as the others do.
+- Gullhaven's traders ride on to Merrow. Gullhaven, Harrowgate and Calder hold tournaments.
+
+### Changed
+- One world: a new game no longer asks which world to play.
+- The map is 350 by 200 (was 200 by 200). From the far west to Gullhaven is about three and a half days' ride.
+- The coast's forts hold 22 men, as every fort does (was 20).
+- **Old saves are refused.** A save from before 4.2.0 is kept safe and untouched, and a new campaign begins (the owner's rule: no old saves).
+
+### Fixed
+- A lord let go by an army, or forming up again after captivity, at home with thin ranks, now refills and rests at once. Before, it was marked "riding home" until its next step.
+
+### Under the hood
+- The world has an `edition` (2). Saves record `worldEdition`, and a save of another edition is refused and kept, as a save of another world is. Schema v1 and v2 saves are refused too.
+- `CL.lords.sendHome`. `data/worlds/` keeps the loader for packs and later worlds, with a note and no world in it.
+- The old-save tests are gone (D-P10g), and `tests/old-saves.test.js` checks that every old fixture save is refused and kept. `tests/fixtures/saves-4.2/` holds two saves of this build, test data for the browser's Continue and import cases (`node scripts/make-save-fixtures.js --current`).
+- No schema step.
+
 ## v4.1.0 — Map speed and the Wait screen (P10-01) · 2026-11-24
 
 ### New

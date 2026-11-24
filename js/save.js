@@ -53,6 +53,13 @@
   const worldId = () => CL.world.defaultId();
   /** Does this build have the world a save belongs to? */
   const knownWorld = (id) => typeof id === 'string' && Boolean(CL.content.table('world_map')[id]);
+  /**
+   * P10-02: a world's edition (its data's `edition`, 1 when it has none). A world that changes shape
+   * (the coast joined in 4.2.0) raises it, and a save of an older edition is refused and kept safe,
+   * as a save of another world is: no migration (the owner, D-P10g).
+   * @param {string} id
+   */
+  const editionOf = (id) => CL.content.table('world_map')[id]?.edition || 1;
 
   /**
    * A brand-new campaign (GDD §5): the background's kit — 60 crowns, worn sword, clothing,
@@ -65,6 +72,7 @@
     const c = {
       version: VERSION,
       worldId: worldId(), // the world (content package) this campaign belongs to
+      worldEdition: editionOf(worldId()), // P10-02: and the edition of it, refused when the world has changed since
       contentVersion: CL.BUILD, // the build that last wrote it
       packs: CL.packs.forSave(), // P9-07: the content packs it was begun with (none for most)
       gold: 0,
@@ -273,6 +281,9 @@
       if (CL.worlds?.known(d.worldId)) return { problems: [`it belongs to the world ${CL.worlds.name(d.worldId)}`], elsewhere: d.worldId };
       return { problems: [`it belongs to another world ("${d.worldId}")`], otherWorld: true };
     }
+    // P10-02: a save of an older edition of its world (every save before 4.2.0, schema v1 and v2 too) is
+    // refused and kept safe, never migrated (the owner, D-P10g).
+    if (v < 3 || (d.worldEdition ?? 1) !== editionOf(d.worldId)) return { problems: ['it was begun before the world changed'], otherWorld: true };
     return { problems: [] };
   }
 
@@ -498,6 +509,7 @@
   /** The rest of `sanitize`, field by field, onto `s`. @param {any} s @param {any} d */
   function repair(s, d) {
     if (knownWorld(d.worldId)) s.worldId = d.worldId; // its own world (W-04), when this build has it
+    s.worldEdition = editionOf(s.worldId); // P10-02: check has refused any other edition
     s.packs = CL.packs.sanitize(d.packs); // P9-07: optional; fromRaw has already refused a save whose pack is missing
     for (const k of /** @type {const} */ (['gold', 'renown', 'battles', 'victories', 'lastResolvedBattle'])) s[k] = count(d[k], s[k]);
     s.day = isCount(d.day) ? Math.min(MAX_VALUE, d.day) : 0;

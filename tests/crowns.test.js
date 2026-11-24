@@ -3,12 +3,9 @@
 // save step (v24 → v25, 2.30.0's fixtures).
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const path = require('node:path');
 const { loadGame } = require('./helpers/load');
 
 const plain = (v) => JSON.parse(JSON.stringify(v));
-const FIX = path.join(__dirname, 'fixtures', 'saves-2.30');
 
 /** The world with only the lords riding; the company has money and food. */
 function world() {
@@ -227,16 +224,4 @@ test('saves: v24 → v25 (four weeks of income), a round trip, junk repaired, an
   const loaded = CL.save.fromRaw(v24).campaign;
   for (const f of ['valedorn', 'merrow']) assert.equal(loaded.crowns[f].treasury, K.RULES.startWeeks * K.income(loaded, f));
   // 2.30.0's saves (the latest fixtures) load through the new step.
-  const index = JSON.parse(fs.readFileSync(path.join(FIX, 'index.json'), 'utf8'));
-  for (const f of index) {
-    const { CL: G } = loadGame({ party: false });
-    const r = G.portable.importText(fs.readFileSync(path.join(FIX, f.file), 'utf8'));
-    assert.equal(r.ok, true, `${f.file}: ${r.reason}`);
-    assert.equal(G.campaign.version, G.save.VERSION);
-    for (const k of Object.keys(G.campaign.crowns)) assert.ok(G.campaign.crowns[k].treasury >= 0);
-    assert.deepEqual(plain(G.realm.invariants(G.campaign)), [], f.file);
-    const again = loadGame({ party: false }).CL;
-    assert.equal(again.portable.importText(G.portable.serialize(G.campaign)).ok, true);
-    assert.equal(JSON.stringify(again.campaign.crowns), JSON.stringify(G.campaign.crowns), `${f.file}: stable`);
-  }
 });

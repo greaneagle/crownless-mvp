@@ -5,7 +5,7 @@
 const fs = require('node:fs');
 const { test, expect, open, waitMode, game, press, newGame, fixtureText, fixtureExpect } = require('./helpers');
 
-const FIXTURE = ['saves-2.7', 'story-played.json']; // the first saves of the bigger world (W-05b)
+const FIXTURE = ['saves-4.2', 'story-played.json']; // a save of this world's edition (P10-02)
 
 async function openSaves(page) {
   await press(page, '#savesBtn');
@@ -65,7 +65,7 @@ test('Import from pasted text loads that game', async ({ page }) => {
   await press(page, '#titleSavesBtn');
   await waitMode(page, 'saves');
   await press(page, '#pasteBox summary');
-  await page.locator('#importText').fill(fixtureText(...FIXTURE));
+  await page.locator('#importText').fill(JSON.stringify(JSON.parse(fixtureText(...FIXTURE)))); // compact: a 4.2 save is 130 KB pretty-printed
   await press(page, '#importTextBtn');
   await waitMode(page, 'settlement');
   expect(await game(page, (CL) => CL.campaign.character.name)).toBe(expected.name);

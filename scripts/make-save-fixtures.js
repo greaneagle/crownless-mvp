@@ -102,17 +102,51 @@ const FIXTURES = [
   },
 ];
 
+// P10-02: saves of the current build, for the browser tests' Continue, import and restore flows (test
+// data, not compatibility: saves of older editions are refused, tests/old-saves.test.js).
+//   node scripts/make-save-fixtures.js --current   → tests/fixtures/saves-<major.minor>/
+const CURRENT = [
+  {
+    file: 'campaign-day20.json',
+    about: '20 days of mercenary life by the campaign bot.',
+    make() {
+      const { CL } = newCampaign(3);
+      makeBot(CL).play(20);
+      return CL;
+    },
+  },
+  {
+    file: 'story-played.json',
+    about: 'A funded company playing the story with the story bot until a middle quest is under way.',
+    make() {
+      const { CL } = newCampaign(4);
+      funded(CL);
+      const bot = makeStoryBot(CL, mulberry(4 * 31 + 7));
+      for (let steps = 2; steps <= 300; steps += 2) {
+        bot.play(steps);
+        const q = CL.story.state(CL.campaign).quests;
+        if (q.q2?.status === 'active' || q.q3?.status === 'active') break;
+      }
+      return CL;
+    },
+  },
+];
+
 if (require.main === module) {
-  fs.mkdirSync(OUT, { recursive: true });
+  const current = process.argv.includes('--current');
+  const list = current ? CURRENT : FIXTURES;
+  const BUILD = /CL\.BUILD = '(\d+\.\d+)/.exec(fs.readFileSync(path.join(__dirname, '..', 'js', 'core.js'), 'utf8'))[1];
+  const out = current ? path.join(__dirname, '..', 'tests', 'fixtures', `saves-${BUILD}`) : OUT;
+  fs.mkdirSync(out, { recursive: true });
   const index = [];
-  for (const f of FIXTURES) {
+  for (const f of list) {
     const CL = f.make();
     const text = CL.portable.serialize(CL.campaign);
-    fs.writeFileSync(path.join(OUT, f.file), text);
-    index.push({ file: f.file, about: f.about, build: CL.BUILD, expect: summary(CL.campaign, CL) });
+    fs.writeFileSync(path.join(out, f.file), text);
+    index.push({ file: f.file, about: f.about, build: CL.BUILD, expect: { build: CL.BUILD, ...summary(CL.campaign, CL) } });
     console.log(`${f.file}: ${(text.length / 1024).toFixed(1)} KB`);
   }
-  fs.writeFileSync(path.join(OUT, 'index.json'), `${JSON.stringify(index, null, 1)}\n`);
+  fs.writeFileSync(path.join(out, 'index.json'), `${JSON.stringify(index, null, 1)}\n`);
 }
 
 module.exports = { summary, FIXTURES };

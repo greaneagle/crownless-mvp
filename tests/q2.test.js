@@ -125,7 +125,7 @@ test('choice A: show it to Captain Aldric — Valedorn +25, Aurelian −10', () 
   v = say(CL, v, /Show the packet to the Crown/);
   assert.equal(v.node, 'q2_thanks');
   assert.equal(CL.story.questStatus(c, 'q2'), 'done');
-  assert.deepEqual({ ...c.reputation }, { valedorn: 25, aurelian: -10, hrothmark: 0, vessaro: 0, merrow: 0 });
+  assert.deepEqual({ ...c.reputation }, { valedorn: 25, aurelian: -10, hrothmark: 0, vessaro: 0, merrow: 0, ostrand: 0, saltreach: 0, gullhaven: 0 });
   assert.equal(c.gold, gold + 80);
   assert.equal('courier_packet' in c.inventory, false);
   assert.equal(CL.realm.standing(c, 'valedorn'), 'friendly');
@@ -143,7 +143,7 @@ test('choice B: show it to Magistrate Vell — Aurelian +25, Valedorn −10', ()
   const c = CL.campaign;
   withPacket(CL);
   say(CL, CL.story.talk('aurelian_agent'), /Show the packet to the magistrate/);
-  assert.deepEqual({ ...c.reputation }, { valedorn: -10, aurelian: 25, hrothmark: 0, vessaro: 0, merrow: 0 });
+  assert.deepEqual({ ...c.reputation }, { valedorn: -10, aurelian: 25, hrothmark: 0, vessaro: 0, merrow: 0, ostrand: 0, saltreach: 0, gullhaven: 0 });
   assert.equal(CL.story.state(c).flags.q2_choice, 'aurelian');
   assert.match(CL.story.talk('caravan_master').text, /Aurelian claim/);
 });
@@ -157,7 +157,7 @@ test('choice C: keep it — no reputation change, the evidence flag for the Q4 c
   assert.match(v.text, /two charters/i);
   say(CL, v, /keep it/);
   assert.equal(CL.story.questStatus(c, 'q2'), 'done');
-  assert.deepEqual({ ...c.reputation }, { valedorn: 0, aurelian: 0, hrothmark: 0, vessaro: 0, merrow: 0 });
+  assert.deepEqual({ ...c.reputation }, { valedorn: 0, aurelian: 0, hrothmark: 0, vessaro: 0, merrow: 0, ostrand: 0, saltreach: 0, gullhaven: 0 });
   assert.equal(c.inventory.courier_packet, 1, 'still carried, protected from sale');
   assert.equal(CL.story.state(c).flags.has_evidence, true);
   assert.equal(CL.trade.sellGear(c, 'eastwatch', 'courier_packet').ok, false);

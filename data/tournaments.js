@@ -21,7 +21,7 @@
     lists: {
       id: 'lists',
       name: 'Tournament',
-      hosts: ['stonebridge', 'eastwatch', 'hrothgard', 'vessara', 'merrow'],
+      hosts: ['stonebridge', 'eastwatch', 'hrothgard', 'vessara', 'merrow', 'gullhaven', 'harrowgate', 'calder'],
       every: 14,
       first: 4,
       stagger: 3,

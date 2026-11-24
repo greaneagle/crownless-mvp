@@ -10,10 +10,10 @@ const state = (page) =>
   });
 
 // The campaign is loaded at boot (checked on the title screen); Continue then opens where the party
-// stands: a settlement's menu when it stands on one, else the map (2.7: the first saves of the bigger world).
+// stands: a settlement's menu when it stands on one, else the map (4.2: saves of this world's edition, P10-02).
 for (const [set, file, place] of [
-  ['saves-2.7', 'campaign-day20.json', null],
-  ['saves-2.7', 'story-played.json', 'greywall_fort'],
+  ['saves-4.2', 'campaign-day20.json', null],
+  ['saves-4.2', 'story-played.json', 'dunmarsh'],
 ]) {
   test(`Continue loads the ${set} ${file} save into the right day, gold, soldiers and place`, async ({ page }) => {
     const expected = fixtureExpect(set, file);
@@ -37,16 +37,16 @@ for (const [set, file, place] of [
 }
 
 test('a damaged latest save falls back to the backup and says so', async ({ page }) => {
-  const good = fixtureCampaign('saves-2.7', 'campaign-day20.json');
+  const good = fixtureCampaign('saves-4.2', 'campaign-day20.json');
   await open(page, { storage: { crownless_save: good.slice(0, 500), crownless_save_backup: good } });
   // The notice is the message line's text (shown for a few seconds, so read from the game's state).
   expect(await game(page, (CL) => CL.game.message)).toContain('could not be read, so the one before it was loaded');
-  expect((await state(page)).gold).toBe(fixtureExpect('saves-2.7', 'campaign-day20.json').gold);
+  expect((await state(page)).gold).toBe(fixtureExpect('saves-4.2', 'campaign-day20.json').gold);
   await expect(page.locator('#primaryBtn')).toHaveText('Continue');
 });
 
 test('a save needing troops this build lacks (SC-33) is refused, kept safe, and says so', async ({ page }) => {
-  const modded = JSON.parse(fixtureCampaign('saves-2.7', 'campaign-day20.json'));
+  const modded = JSON.parse(fixtureCampaign('saves-4.2', 'campaign-day20.json'));
   modded.roster[0].troop = 'griffin_rider';
   const text = JSON.stringify(modded);
   await open(page, { storage: { crownless_save: text } });
@@ -55,8 +55,9 @@ test('a save needing troops this build lacks (SC-33) is refused, kept safe, and 
   expect(await game(page, () => localStorage.getItem('crownless_save_incompatible'))).toBe(text);
 });
 
-test('a save from before the world grew is refused, kept safe, and the title says why', async ({ page }) => {
-  const old = fixtureCampaign('saves-2.0', 'campaign-day20.json');
+// P10-02: so is a save of the world before the coast joined it (2.7 to 4.1).
+for (const set of ['saves-2.0', 'saves-2.30']) test(`a save from before the world grew (${set}) is refused, kept safe, and the title says why`, async ({ page }) => {
+  const old = fixtureCampaign(set, 'campaign-day20.json');
   await open(page, { storage: { crownless_save: old } });
   await expect(page.locator('#overlayText')).toContainText('The world has grown: new kingdoms lie beyond the March');
   await expect(page.locator('#overlayText')).toContainText('Your old save has been kept safe');

@@ -4,9 +4,7 @@ const { loadGame, memoryStorage } = require('./helpers/load');
 
 const KEY = 'crownless_save';
 const BACKUP = 'crownless_save_backup';
-const LEGACY = 'crownless_v03_party';
 
-const troops = (c) => Array.from(c.roster, (s) => s.troop);
 
 test('a new game follows GDD §5: 60 crowns, sword, clothing, shield, food, no soldiers', () => {
   const { CL } = loadGame({ party: false });
@@ -62,21 +60,6 @@ test('a corrupt main save falls back to the backup', () => {
   const { CL: CL2 } = loadGame({ storage });
   assert.equal(CL2.campaign.gold, 444);
   assert.ok(CL2.diag.events.some((e) => e.msg === 'Main save unreadable; restored backup'));
-});
-
-test('a 0.3 save migrates: infantry → levy, archers → hunter, wounded heal on day 3', () => {
-  const v1 = { version: 1, gold: 210, infantry: 4, archer: 1, woundedInfantry: 1, woundedArcher: 2, battles: 5, victories: 3, renown: 12 };
-  const { CL, storage } = loadGame({ storage: memoryStorage({ [LEGACY]: JSON.stringify(v1) }) });
-  const c = CL.campaign;
-  assert.equal(c.gold, 210);
-  assert.equal(c.renown, 12);
-  assert.equal(c.battles, 5);
-  assert.equal(c.lastResolvedBattle, 5);
-  assert.deepEqual(troops(c), ['levy', 'levy', 'levy', 'levy', 'hunter', 'levy', 'hunter', 'hunter']);
-  assert.equal(c.roster.filter((s) => s.woundedUntil === 2).length, 3);
-  assert.ok(CL.diag.events.some((e) => e.msg === 'Migrated 0.3 save'));
-  CL.save.write();
-  assert.equal(storage.data[LEGACY], JSON.stringify(v1), 'legacy save left untouched');
 });
 
 test('sanitize drops unknown troops, duplicate ids, unknown items and bad numbers', () => {

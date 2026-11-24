@@ -54,6 +54,8 @@
       ],
       reward: { goldBase: 55, goldPerKill: 4, renown: 4 },
       loot: 'mid'
-    }
+    },
+    // P10-02: the coast's wreckers.
+    wrecker_crew: { id: 'wrecker_crew', name: 'Wrecker Crew', enemyFaction: 'neutral', map: 'forest_wilds', waves: [{ looter: 4, reaver: 2 }, { looter: 5, reaver: 3 }], reward: { goldBase: 52, goldPerKill: 3, renown: 4 }, loot: 'mid' }
   };
 })(typeof window !== 'undefined' ? window : globalThis);

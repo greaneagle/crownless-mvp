@@ -7,7 +7,7 @@ test('three visible states from a hidden score: hostile below −25, friendly ab
   const { CL } = loadGame();
   const c = CL.campaign;
   const R = CL.realm;
-  assert.deepEqual({ ...c.reputation }, { valedorn: 0, aurelian: 0, hrothmark: 0, vessaro: 0, merrow: 0 });
+  assert.deepEqual({ ...c.reputation }, { valedorn: 0, aurelian: 0, hrothmark: 0, vessaro: 0, merrow: 0, ostrand: 0, saltreach: 0, gullhaven: 0 });
   for (const [score, st] of [
     [-26, 'hostile'],
     [-25, 'neutral'],
@@ -145,7 +145,7 @@ test('reputation and holdings persist through save and reload, and bad values ar
   c.reputation = { valedorn: 33, aurelian: -60 };
   CL.realm.setOwner(c, 'greywall_fort', 'aurelian');
   const s = CL.save.sanitize(JSON.parse(JSON.stringify(c)));
-  assert.deepEqual({ ...s.reputation }, { valedorn: 33, aurelian: -60, hrothmark: 0, vessaro: 0, merrow: 0 });
+  assert.deepEqual({ ...s.reputation }, { valedorn: 33, aurelian: -60, hrothmark: 0, vessaro: 0, merrow: 0, ostrand: 0, saltreach: 0, gullhaven: 0 });
   assert.equal(s.owners, undefined, 'owners became holdings (P8-02)');
   assert.deepEqual(JSON.parse(JSON.stringify(s.holdings)), JSON.parse(JSON.stringify(c.holdings)));
   assert.equal(CL.realm.owner('greywall_fort', s), 'aurelian');
@@ -157,7 +157,7 @@ test('reputation and holdings persist through save and reload, and bad values ar
     reputation: { valedorn: 'lots', aurelian: 900, neutral: 50, dragons: 5 },
     owners: { greywall_fort: 'neutral', ashgate_fort: 'dragons', stonebridge: 'aurelian' },
   });
-  assert.deepEqual({ ...junk.reputation }, { valedorn: 0, aurelian: 100, hrothmark: 0, vessaro: 0, merrow: 0 });
+  assert.deepEqual({ ...junk.reputation }, { valedorn: 0, aurelian: 100, hrothmark: 0, vessaro: 0, merrow: 0, ostrand: 0, saltreach: 0, gullhaven: 0 });
   // Bad owners fall back to each settlement's own, and only a fort ever moved (W-05b, P8-02).
   for (const st of Object.values(CL.content.table('settlements'))) if (junk.holdings[st.id]) assert.equal(junk.holdings[st.id].controller, st.ownerFaction, st.id);
   const v19 = JSON.parse(JSON.stringify(c));
@@ -174,7 +174,7 @@ test('reputation and holdings persist through save and reload, and bad values ar
   assert.ok(fixed.holdings.greywall_fort.claims.every((k) => fixed.people[k.by]));
 
   const old = CL.save.sanitize({ version: 2, roster: [] });
-  assert.deepEqual({ ...old.reputation }, { valedorn: 0, aurelian: 0, hrothmark: 0, vessaro: 0, merrow: 0 }, 'older saves start neutral');
+  assert.deepEqual({ ...old.reputation }, { valedorn: 0, aurelian: 0, hrothmark: 0, vessaro: 0, merrow: 0, ostrand: 0, saltreach: 0, gullhaven: 0 }, 'older saves start neutral');
 });
 
 test('captured heroes are released at a settlement that will have them', () => {

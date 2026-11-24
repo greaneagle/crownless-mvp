@@ -2,12 +2,9 @@
 // expulsion; the preview of every change; save v21 and 2.26.0's saves.
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const path = require('node:path');
 const { loadGame } = require('./helpers/load');
 
 const plain = (v) => JSON.parse(JSON.stringify(v));
-const FIX = path.join(__dirname, 'fixtures', 'saves-2.26');
 
 function camp(opts = {}) {
   const env = loadGame({ party: true, ...opts });
@@ -265,18 +262,4 @@ test('saves: allegiance round-trips; junk is repaired; v20 saves migrate; 2.26.0
   v20.version = 20;
   delete v20.allegiance;
   assert.equal(CL.save.migrate(v20).allegiance.kind, 'independent');
-  const index = JSON.parse(fs.readFileSync(path.join(FIX, 'index.json'), 'utf8'));
-  for (const f of index) {
-    assert.equal(f.expect.build, '2.26.0');
-    const { CL: G } = loadGame({ party: false });
-    const r = G.portable.importText(fs.readFileSync(path.join(FIX, f.file), 'utf8'));
-    assert.equal(r.ok, true, `${f.file}: ${r.reason}`);
-    assert.equal(G.campaign.version, G.save.VERSION);
-    assert.equal(G.campaign.allegiance.kind, 'independent');
-    for (const k of ['gold', 'renown', 'battles', 'victories']) assert.equal(G.campaign[k], f.expect[k], `${f.file} ${k}`);
-    assert.deepEqual(plain(G.realm.invariants(G.campaign)), [], f.file);
-    const again = loadGame({ party: false }).CL;
-    assert.equal(again.portable.importText(G.portable.serialize(G.campaign)).ok, true);
-    assert.equal(JSON.stringify(again.campaign), JSON.stringify(G.campaign), `${f.file}: stable`);
-  }
 });

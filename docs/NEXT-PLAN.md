@@ -315,7 +315,7 @@ Every Phase 9 task is **Specified** (2026-11-22; NEXT-TASKS has each in full). T
 |---|---|---|---|
 | **P10-00** | **Phase 9's long runs and checkpoint** (moved from P9-T): the 20- and 100-year tools, built on short slices the evening of the night run; then the night run (the long runs, the whole slow suite, the full browser suite, `docs/PENDING-CHECKS.md`). Runs only when the owner asks for the night run; the next task fixes what it found | M | — |
 | **P10-01** | ✅ **Done in 4.1.0.** **Map speed and the Wait screen:** Normal (1 game hour a second, the new default) and Fast (4, today's), a HUD button and a setting, and a hint; a Wait screen of days and hours that fades out and back, runs the world on, and stops for an encounter | M | P9-T |
-| **P10-02** | **One world:** the Sundered Coast joins the map as a region; the world chooser and the second official world go; older saves refused | M–L | P10-01 |
+| **P10-02** | ✅ **Done in 4.2.0.** **One world:** the Sundered Coast joins the map as a region; the world chooser and the second official world go; older saves refused | M–L | P10-01 |
 | **P10-03** | **Walkable towns:** every capital and free city, each with its own layout and people | L | P10-02 |
 | **P10-04** | **Choose your kingdom, and the main story from anywhere:** a start town per realm; the story's people and places by role; Q1 becomes the common quest | L | P10-03 |
 | **P10-05** | **Origins, the frame and the first three:** the unhorsed traveller, the impoverished noble, the farmhand; every origin ends in about the same state, with one small edge | L | P10-04 |

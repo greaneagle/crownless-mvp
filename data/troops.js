@@ -39,6 +39,14 @@
     // Not for hire; only trained. A little dearer than a kingdom's tier 3 (it is paid to stay).
     sellsword: {id:'sellsword',name:'Sellsword',shield:true,faction:'neutral',culture:'border',role:'infantry',tier:'T3',hp:80,damage:15,armor:5,speed:92,reach:48,wage:14,recruitCost:60,upgradeTo:null,upgradeCost:0},
 
+    // P10-02: the coast's realms, Ostrand (shieldmen, cliff bowmen) and Saltreach (pikes, crossbows).
+    ostrand_levy: { id: 'ostrand_levy', name: 'Ostrand Levy', faction: 'ostrand', role: 'infantry', tier: 'T1', hp: 45, damage: 7, armor: 1, speed: 90, reach: 48, wage: 3, recruitCost: 15, upgradeTo: 'ostrand_shieldman', upgradeCost: 25, altUpgradeTo: 'ostrand_bowman', altUpgradeCost: 25 },
+    ostrand_shieldman: { id: 'ostrand_shieldman', name: 'Shieldman', shield: true, faction: 'ostrand', role: 'infantry', tier: 'T2', hp: 62, damage: 10, armor: 4, speed: 88, reach: 48, wage: 6, recruitCost: 25, upgradeTo: null, upgradeCost: 0 },
+    ostrand_bowman: { id: 'ostrand_bowman', name: 'Cliff Bowman', faction: 'ostrand', role: 'archer', tier: 'T2', hp: 58, damage: 10, armor: 2, speed: 84, reach: 48, wage: 6, recruitCost: 25, upgradeTo: null, upgradeCost: 0, ranged: { projectileSpeed: 240, range: 230, cooldown: 1.6, accuracy: 0.6 } },
+    saltreach_militia: { id: 'saltreach_militia', name: 'Salt Militia', faction: 'saltreach', role: 'infantry', tier: 'T1', hp: 44, damage: 7, armor: 1, speed: 92, reach: 48, wage: 3, recruitCost: 15, upgradeTo: 'saltreach_pikeman', upgradeCost: 25, altUpgradeTo: 'saltreach_crossbow', altUpgradeCost: 25 },
+    saltreach_pikeman: { id: 'saltreach_pikeman', name: 'Flats Pikeman', brace: true, faction: 'saltreach', role: 'infantry', tier: 'T2', hp: 58, damage: 11, armor: 3, speed: 88, reach: 72, wage: 6, recruitCost: 25, upgradeTo: null, upgradeCost: 0 },
+    saltreach_crossbow: { id: 'saltreach_crossbow', name: 'League Crossbow', faction: 'saltreach', role: 'archer', tier: 'T2', hp: 58, damage: 13, armor: 2, speed: 84, reach: 48, wage: 6, recruitCost: 25, upgradeTo: null, upgradeCost: 0, ranged: { projectileSpeed: 300, range: 240, cooldown: 2.2, accuracy: 0.7 } },
+
     hero: {id:'hero',name:'Hero',faction:'neutral',role:'hero',tier:'T1',hp:85,damage:18,armor:0,speed:142,reach:67,wage:0,recruitCost:0,upgradeTo:null,upgradeCost:0},
   };
 })(typeof window !== 'undefined' ? window : globalThis);

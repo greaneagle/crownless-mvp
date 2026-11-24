@@ -1,0 +1,143 @@
+[
+ {
+  "file": "campaign-day20.json",
+  "about": "20 days of mercenary life by the campaign bot.",
+  "build": "4.2.0",
+  "expect": {
+   "build": "4.2.0",
+   "name": "Bot3",
+   "day": 20.011,
+   "gold": 65,
+   "renown": 94,
+   "soldiers": 17,
+   "soldierIds": [
+    3,
+    5,
+    6,
+    7,
+    8,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25
+   ],
+   "troops": [
+    "legionary",
+    "guard",
+    "longbowman",
+    "guard",
+    "guard",
+    "marksman",
+    "guard",
+    "legionary",
+    "marksman",
+    "sellsword",
+    "legionary",
+    "skirmisher",
+    "spearman",
+    "marksman",
+    "footman",
+    "hunter",
+    "mercenary"
+   ],
+   "location": null,
+   "quests": {},
+   "ending": null,
+   "companion": null,
+   "contract": null,
+   "owners": {
+    "greywall_fort": "valedorn",
+    "ashgate_fort": "aurelian",
+    "westholt_castle": "valedorn",
+    "castra_nova": "aurelian",
+    "ulfstead_hold": "hrothmark",
+    "skarnwall": "hrothmark",
+    "torre_salina": "vessaro",
+    "castel_verro": "vessaro",
+    "coldkeep": "ostrand",
+    "whitecliff": "ostrand",
+    "rookmoor": "saltreach",
+    "seagate": "saltreach"
+   },
+   "reputation": {
+    "valedorn": 96,
+    "aurelian": 36,
+    "hrothmark": 0,
+    "vessaro": 0,
+    "merrow": 0,
+    "ostrand": 0,
+    "saltreach": 0,
+    "gullhaven": 0
+   },
+   "parties": 35,
+   "newsLines": 8
+  }
+ },
+ {
+  "file": "story-played.json",
+  "about": "A funded company playing the story with the story bot until a middle quest is under way.",
+  "build": "4.2.0",
+  "expect": {
+   "build": "4.2.0",
+   "name": "Bot4",
+   "day": 14.165,
+   "gold": 3117,
+   "renown": 20,
+   "soldiers": 4,
+   "soldierIds": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "troops": [
+    "footman",
+    "footman",
+    "hunter",
+    "levy"
+   ],
+   "location": "dunmarsh",
+   "quests": {
+    "q1": "done",
+    "q2": "active"
+   },
+   "ending": null,
+   "companion": null,
+   "contract": null,
+   "owners": {
+    "greywall_fort": "valedorn",
+    "ashgate_fort": "aurelian",
+    "westholt_castle": "valedorn",
+    "castra_nova": "aurelian",
+    "ulfstead_hold": "hrothmark",
+    "skarnwall": "hrothmark",
+    "torre_salina": "vessaro",
+    "castel_verro": "vessaro",
+    "coldkeep": "saltreach",
+    "whitecliff": "ostrand",
+    "rookmoor": "saltreach",
+    "seagate": "saltreach"
+   },
+   "reputation": {
+    "valedorn": 12,
+    "aurelian": 2,
+    "hrothmark": 0,
+    "vessaro": 0,
+    "merrow": 0,
+    "ostrand": 0,
+    "saltreach": 0,
+    "gullhaven": 0
+   },
+   "parties": 35,
+   "newsLines": 7
+  }
+ }
+]

@@ -1,0 +1,8829 @@
+{
+ "format": "crownless-save",
+ "version": 30,
+ "game": "4.2.0",
+ "exportedAt": "2026-11-24T20:28:46.442Z",
+ "checksum": "ff11e37c",
+ "campaign": {
+  "version": 30,
+  "worldId": "sundered_realm",
+  "worldEdition": 2,
+  "contentVersion": "4.2.0",
+  "packs": [],
+  "gold": 65,
+  "renown": 94,
+  "battles": 23,
+  "victories": 21,
+  "day": 20.011111781540965,
+  "nextSoldierId": 26,
+  "roster": [
+   {
+    "id": 3,
+    "troop": "legionary",
+    "xp": 170,
+    "woundedUntil": null,
+    "name": "Quintil Rufo",
+    "culture": "aurelian",
+    "origin": "eastwatch",
+    "joined": 3.6323167621570702,
+    "portrait": null,
+    "record": {
+     "battles": 16,
+     "victories": 16,
+     "kills": 0,
+     "assists": 0,
+     "wounds": 1,
+     "captures": 0,
+     "wagesPaid": 18
+    },
+    "notes": [
+     {
+      "day": 3.6323167621570702,
+      "kind": "joined",
+      "place": "eastwatch"
+     },
+     {
+      "day": 6.5719192471672105,
+      "kind": "promoted",
+      "to": "spearman"
+     },
+     {
+      "day": 10.729931826717792,
+      "kind": "promoted",
+      "to": "legionary"
+     },
+     {
+      "day": 11.01326516005113,
+      "kind": "trait",
+      "trait": "steadfast"
+     },
+     {
+      "day": 12.658053347771508,
+      "kind": "wounded",
+      "foe": "Road Reavers"
+     }
+    ],
+    "trait": "steadfast"
+   },
+   {
+    "id": 5,
+    "troop": "guard",
+    "xp": 130,
+    "woundedUntil": null,
+    "name": "Wymar Stonejaw",
+    "culture": "valedorn",
+    "origin": "stonebridge",
+    "joined": 6.5719192471672105,
+    "portrait": null,
+    "record": {
+     "battles": 14,
+     "victories": 14,
+     "kills": 0,
+     "assists": 0,
+     "wounds": 1,
+     "captures": 0,
+     "wagesPaid": 15
+    },
+    "notes": [
+     {
+      "day": 6.5719192471672105,
+      "kind": "joined",
+      "place": "stonebridge"
+     },
+     {
+      "day": 9.80636446731204,
+      "kind": "promoted",
+      "to": "footman"
+     },
+     {
+      "day": 11.643510924998859,
+      "kind": "promoted",
+      "to": "guard"
+     },
+     {
+      "day": 12.658053347771508,
+      "kind": "trait",
+      "trait": "steadfast"
+     },
+     {
+      "day": 17.00956829818795,
+      "kind": "wounded",
+      "foe": "The Captain's Trial"
+     }
+    ],
+    "trait": "steadfast"
+   },
+   {
+    "id": 6,
+    "troop": "longbowman",
+    "xp": 70,
+    "woundedUntil": null,
+    "name": "Alard Stonejaw",
+    "culture": "valedorn",
+    "origin": "stonebridge",
+    "joined": 6.5719192471672105,
+    "portrait": null,
+    "record": {
+     "battles": 10,
+     "victories": 10,
+     "kills": 0,
+     "assists": 0,
+     "wounds": 3,
+     "captures": 0,
+     "wagesPaid": 12
+    },
+    "notes": [
+     {
+      "day": 6.5719192471672105,
+      "kind": "joined",
+      "place": "stonebridge"
+     },
+     {
+      "day": 10.085445068926665,
+      "kind": "wounded",
+      "foe": "The Captain's Trial"
+     },
+     {
+      "day": 13.530375335173838,
+      "kind": "wounded",
+      "foe": "The Captain's Trial"
+     },
+     {
+      "day": 13.530375335173838,
+      "kind": "trait",
+      "trait": "cautious"
+     },
+     {
+      "day": 15.55157750763403,
+      "kind": "promoted",
+      "to": "longbowman"
+     },
+     {
+      "day": 17.339966963270694,
+      "kind": "wounded",
+      "foe": "Looter Band"
+     }
+    ],
+    "trait": "cautious"
+   },
+   {
+    "id": 7,
+    "troop": "guard",
+    "xp": 90,
+    "woundedUntil": null,
+    "name": "Rannulf of Stonebridge",
+    "culture": "valedorn",
+    "origin": "stonebridge",
+    "joined": 9.367475578423138,
+    "portrait": null,
+    "record": {
+     "battles": 12,
+     "victories": 12,
+     "kills": 0,
+     "assists": 0,
+     "wounds": 1,
+     "captures": 0,
+     "wagesPaid": 6
+    },
+    "notes": [
+     {
+      "day": 9.367475578423138,
+      "kind": "joined",
+      "place": "stonebridge"
+     },
+     {
+      "day": 10.085445068926665,
+      "kind": "wounded",
+      "foe": "The Captain's Trial"
+     },
+     {
+      "day": 12.741386681104846,
+      "kind": "promoted",
+      "to": "footman"
+     },
+     {
+      "day": 17.00956829818795,
+      "kind": "trait",
+      "trait": "steadfast"
+     },
+     {
+      "day": 17.45185576379445,
+      "kind": "promoted",
+      "to": "guard"
+     }
+    ],
+    "trait": "steadfast"
+   },
+   {
+    "id": 8,
+    "troop": "guard",
+    "xp": 90,
+    "woundedUntil": null,
+    "name": "Edric Halfpenny",
+    "culture": "valedorn",
+    "origin": "stonebridge",
+    "joined": 9.80636446731204,
+    "portrait": null,
+    "record": {
+     "battles": 12,
+     "victories": 12,
+     "kills": 0,
+     "assists": 0,
+     "wounds": 1,
+     "captures": 0,
+     "wagesPaid": 6
+    },
+    "notes": [
+     {
+      "day": 9.80636446731204,
+      "kind": "joined",
+      "place": "stonebridge"
+     },
+     {
+      "day": 10.729931826717792,
+      "kind": "promoted",
+      "to": "footman"
+     },
+     {
+      "day": 11.531622124475094,
+      "kind": "wounded",
+      "foe": "Looter Band"
+     },
+     {
+      "day": 17.00956829818795,
+      "kind": "trait",
+      "trait": "steadfast"
+     },
+     {
+      "day": 17.45185576379445,
+      "kind": "promoted",
+      "to": "guard"
+     }
+    ],
+    "trait": "steadfast"
+   },
+   {
+    "id": 14,
+    "troop": "marksman",
+    "xp": 0,
+    "woundedUntil": null,
+    "name": "Marcel of Eastwatch",
+    "culture": "aurelian",
+    "origin": "eastwatch",
+    "joined": 11.129931826717803,
+    "portrait": null,
+    "record": {
+     "battles": 6,
+     "victories": 6,
+     "kills": 0,
+     "assists": 0,
+     "wounds": 2,
+     "captures": 0,
+     "wagesPaid": 6
+    },
+    "notes": [
+     {
+      "day": 11.129931826717803,
+      "kind": "joined",
+      "place": "eastwatch"
+     },
+     {
+      "day": 13.530375335173838,
+      "kind": "wounded",
+      "foe": "The Captain's Trial"
+     },
+     {
+      "day": 15.854557616046995,
+      "kind": "wounded",
+      "foe": "Road Reavers"
+     },
+     {
+      "day": 15.854557616046995,
+      "kind": "trait",
+      "trait": "cautious"
+     },
+     {
+      "day": 19.85035471107887,
+      "kind": "promoted",
+      "to": "marksman"
+     }
+    ],
+    "trait": "cautious"
+   },
+   {
+    "id": 15,
+    "troop": "guard",
+    "xp": 70,
+    "woundedUntil": 21.738465910555117,
+    "name": "Ivo of Stonebridge",
+    "culture": "valedorn",
+    "origin": "stonebridge",
+    "joined": 11.257355563846577,
+    "portrait": null,
+    "record": {
+     "battles": 11,
+     "victories": 11,
+     "kills": 0,
+     "assists": 0,
+     "wounds": 1,
+     "captures": 0,
+     "wagesPaid": 6
+    },
+    "notes": [
+     {
+      "day": 11.257355563846577,
+      "kind": "joined",
+      "place": "stonebridge"
+     },
+     {
+      "day": 12.741386681104846,
+      "kind": "promoted",
+      "to": "footman"
+     },
+     {
+      "day": 17.339966963270694,
+      "kind": "trait",
+      "trait": "steadfast"
+     },
+     {
+      "day": 17.45185576379445,
+      "kind": "promoted",
+      "to": "guard"
+     },
+     {
+      "day": 19.738465910555117,
+      "kind": "wounded",
+      "foe": "Looter Band"
+     }
+    ],
+    "trait": "steadfast"
+   },
+   {
+    "id": 16,
+    "troop": "legionary",
+    "xp": 20,
+    "woundedUntil": null,
+    "name": "Tullio Stellan",
+    "culture": "aurelian",
+    "origin": "eastwatch",
+    "joined": 13.774862092964954,
+    "portrait": null,
+    "record": {
+     "battles": 8,
+     "victories": 8,
+     "kills": 0,
+     "assists": 0,
+     "wounds": 0,
+     "captures": 0,
+     "wagesPaid": 3
+    },
+    "notes": [
+     {
+      "day": 13.774862092964954,
+      "kind": "joined",
+      "place": "eastwatch"
+     },
+     {
+      "day": 14.787035084861385,
+      "kind": "promoted",
+      "to": "spearman"
+     },
+     {
+      "day": 19.209351875669086,
+      "kind": "promoted",
+      "to": "legionary"
+     },
+     {
+      "day": 19.738465910555117,
+      "kind": "trait",
+      "trait": "steadfast"
+     }
+    ],
+    "trait": "steadfast"
+   },
+   {
+    "id": 17,
+    "troop": "marksman",
+    "xp": 60,
+    "woundedUntil": null,
+    "name": "Drusian Lupo",
+    "culture": "aurelian",
+    "origin": "eastwatch",
+    "joined": 13.774862092964954,
+    "portrait": null,
+    "record": {
+     "battles": 8,
+     "victories": 8,
+     "kills": 0,
+     "assists": 0,
+     "wounds": 0,
+     "captures": 0,
+     "wagesPaid": 6
+    },
+    "notes": [
+     {
+      "day": 13.774862092964954,
+      "kind": "joined",
+      "place": "eastwatch"
+     },
+     {
+      "day": 18.101450912003237,
+      "kind": "promoted",
+      "to": "marksman"
+     },
+     {
+      "day": 19.738465910555117,
+      "kind": "trait",
+      "trait": "steadfast"
+     }
+    ],
+    "trait": "steadfast"
+   },
+   {
+    "id": 18,
+    "troop": "sellsword",
+    "xp": 60,
+    "woundedUntil": null,
+    "name": "Hob of Eastwatch",
+    "culture": "border",
+    "origin": "eastwatch",
+    "joined": 13.774862092964954,
+    "portrait": null,
+    "record": {
+     "battles": 8,
+     "victories": 8,
+     "kills": 0,
+     "assists": 0,
+     "wounds": 0,
+     "captures": 0,
+     "wagesPaid": 6
+    },
+    "notes": [
+     {
+      "day": 13.774862092964954,
+      "kind": "joined",
+      "place": "eastwatch"
+     },
+     {
+      "day": 19.209351875669086,
+      "kind": "promoted",
+      "to": "sellsword"
+     },
+     {
+      "day": 19.738465910555117,
+      "kind": "trait",
+      "trait": "steadfast"
+     }
+    ],
+    "trait": "steadfast"
+   },
+   {
+    "id": 19,
+    "troop": "legionary",
+    "xp": 20,
+    "woundedUntil": null,
+    "name": "Varo Vatro",
+    "culture": "aurelian",
+    "origin": "eastwatch",
+    "joined": 13.774862092964954,
+    "portrait": null,
+    "record": {
+     "battles": 8,
+     "victories": 8,
+     "kills": 0,
+     "assists": 0,
+     "wounds": 0,
+     "captures": 0,
+     "wagesPaid": 3
+    },
+    "notes": [
+     {
+      "day": 13.774862092964954,
+      "kind": "joined",
+      "place": "eastwatch"
+     },
+     {
+      "day": 14.787035084861385,
+      "kind": "promoted",
+      "to": "spearman"
+     },
+     {
+      "day": 19.209351875669086,
+      "kind": "promoted",
+      "to": "legionary"
+     },
+     {
+      "day": 19.738465910555117,
+      "kind": "trait",
+      "trait": "steadfast"
+     }
+    ],
+    "trait": "steadfast"
+   },
+   {
+    "id": 20,
+    "troop": "skirmisher",
+    "xp": 110,
+    "woundedUntil": null,
+    "name": "Drusian Sabo",
+    "culture": "aurelian",
+    "origin": "eastwatch",
+    "joined": 13.774862092964954,
+    "portrait": null,
+    "record": {
+     "battles": 6,
+     "victories": 6,
+     "kills": 0,
+     "assists": 0,
+     "wounds": 1,
+     "captures": 0,
+     "wagesPaid": 6
+    },
+    "notes": [
+     {
+      "day": 13.774862092964954,
+      "kind": "joined",
+      "place": "eastwatch"
+     },
+     {
+      "day": 14.124862092964962,
+      "kind": "wounded",
+      "foe": "Road Reavers"
+     }
+    ]
+   },
+   {
+    "id": 21,
+    "troop": "spearman",
+    "xp": 50,
+    "woundedUntil": null,
+    "name": "Corvin of Eastwatch",
+    "culture": "aurelian",
+    "origin": "eastwatch",
+    "joined": 14.288990171689296,
+    "portrait": null,
+    "record": {
+     "battles": 5,
+     "victories": 5,
+     "kills": 0,
+     "assists": 0,
+     "wounds": 1,
+     "captures": 0,
+     "wagesPaid": 0
+    },
+    "notes": [
+     {
+      "day": 14.288990171689296,
+      "kind": "joined",
+      "place": "eastwatch"
+     },
+     {
+      "day": 15.965732169861493,
+      "kind": "promoted",
+      "to": "spearman"
+     },
+     {
+      "day": 17.998156784562703,
+      "kind": "wounded",
+      "foe": "Road Reavers"
+     }
+    ]
+   },
+   {
+    "id": 22,
+    "troop": "marksman",
+    "xp": 40,
+    "woundedUntil": null,
+    "name": "Decimo Rufo",
+    "culture": "aurelian",
+    "origin": "eastwatch",
+    "joined": 14.288990171689296,
+    "portrait": null,
+    "record": {
+     "battles": 7,
+     "victories": 7,
+     "kills": 0,
+     "assists": 0,
+     "wounds": 0,
+     "captures": 0,
+     "wagesPaid": 0
+    },
+    "notes": [
+     {
+      "day": 14.288990171689296,
+      "kind": "joined",
+      "place": "eastwatch"
+     },
+     {
+      "day": 18.101450912003237,
+      "kind": "promoted",
+      "to": "marksman"
+     }
+    ]
+   },
+   {
+    "id": 23,
+    "troop": "footman",
+    "xp": 60,
+    "woundedUntil": null,
+    "name": "Wymar",
+    "culture": "valedorn",
+    "origin": "stonebridge",
+    "joined": 15.965732169861493,
+    "portrait": null,
+    "record": {
+     "battles": 5,
+     "victories": 5,
+     "kills": 0,
+     "assists": 0,
+     "wounds": 0,
+     "captures": 0,
+     "wagesPaid": 0
+    },
+    "notes": [
+     {
+      "day": 15.965732169861493,
+      "kind": "joined",
+      "place": "stonebridge"
+     },
+     {
+      "day": 17.45185576379445,
+      "kind": "promoted",
+      "to": "footman"
+     }
+    ]
+   },
+   {
+    "id": 24,
+    "troop": "hunter",
+    "xp": 100,
+    "woundedUntil": null,
+    "name": "Thurstan of Stonebridge",
+    "culture": "valedorn",
+    "origin": "stonebridge",
+    "joined": 15.965732169861493,
+    "portrait": null,
+    "record": {
+     "battles": 5,
+     "victories": 5,
+     "kills": 0,
+     "assists": 0,
+     "wounds": 0,
+     "captures": 0,
+     "wagesPaid": 0
+    },
+    "notes": [
+     {
+      "day": 15.965732169861493,
+      "kind": "joined",
+      "place": "stonebridge"
+     }
+    ]
+   },
+   {
+    "id": 25,
+    "troop": "mercenary",
+    "xp": 100,
+    "woundedUntil": null,
+    "name": "Wat",
+    "culture": "border",
+    "origin": "stonebridge",
+    "joined": 15.965732169861493,
+    "portrait": null,
+    "record": {
+     "battles": 5,
+     "victories": 5,
+     "kills": 0,
+     "assists": 0,
+     "wounds": 0,
+     "captures": 0,
+     "wagesPaid": 0
+    },
+    "notes": [
+     {
+      "day": 15.965732169861493,
+      "kind": "joined",
+      "place": "stonebridge"
+     }
+    ]
+   }
+  ],
+  "inventory": {
+   "boots": 4,
+   "worn_sword": 9,
+   "clothing": 4,
+   "iron_helm": 3,
+   "arming_sword": 2,
+   "leather_chest": 5,
+   "leather_cap": 2,
+   "oak_shield": 1,
+   "mail_mittens": 3,
+   "mail_hauberk": 1,
+   "war_mace": 4,
+   "heater_shield": 3,
+   "kite_shield": 2,
+   "nag": 1,
+   "gambeson": 2,
+   "gloves": 2
+  },
+  "lastResolvedBattle": 23,
+  "world": {
+   "x": 108.86086745677707,
+   "y": 93.92391567902868,
+   "location": null,
+   "sites": {
+    "looter_camp": {
+     "clearedUntil": 21.738465910555117
+    },
+    "reaver_hideout": {
+     "clearedUntil": 20.00956829818795
+    },
+    "raider_steading": {
+     "clearedUntil": 0
+    },
+    "broken_tower": {
+     "clearedUntil": 0
+    },
+    "outlaw_glade": {
+     "clearedUntil": 0
+    },
+    "burnt_mill": {
+     "clearedUntil": 0
+    },
+    "deserter_camp": {
+     "clearedUntil": 0
+    },
+    "old_watchtower": {
+     "clearedUntil": 0
+    },
+    "wreckers_cove": {
+     "clearedUntil": 0
+    },
+    "marsh_hideout": {
+     "clearedUntil": 0
+    },
+    "strand_camp": {
+     "clearedUntil": 0
+    },
+    "false_light_cove": {
+     "clearedUntil": 0
+    },
+    "turncoat_camp": {
+     "clearedUntil": 0
+    },
+    "drowned_chapel": {
+     "clearedUntil": 0
+    },
+    "gull_tor": {
+     "clearedUntil": 0
+    },
+    "fells_hollow": {
+     "clearedUntil": 0
+    }
+   }
+  },
+  "character": {
+   "name": "Bot3",
+   "gender": "unspecified",
+   "cloak": "crimson",
+   "background": "farmhand",
+   "attributes": {
+    "str": 9,
+    "agi": 5,
+    "int": 5,
+    "cha": 5
+   },
+   "skills": {
+    "one_handed": 1,
+    "shield": 0,
+    "archery": 0,
+    "riding": 0,
+    "leadership": 5,
+    "tactics": 0,
+    "pathfinding": 0,
+    "trade": 0
+   },
+   "level": 6,
+   "xp": 981,
+   "skillPoints": 0,
+   "attributePoints": 0
+  },
+  "equipment": {
+   "weapon": "hand_axe",
+   "offhand": "oak_shield",
+   "head": "leather_cap",
+   "body": "gambeson",
+   "hands": "gloves",
+   "feet": "boots",
+   "horse": null,
+   "ring": null
+  },
+  "food": 28.70325338113377,
+  "morale": 100,
+  "nextWagesDay": 21,
+  "starving": false,
+  "markets": {
+   "stonebridge": {
+    "grain": 0.876883,
+    "salt": 1.1,
+    "wool": 0.807776,
+    "iron": 1.1,
+    "cloth": 1.008164,
+    "tools": 1,
+    "timber": 1.1,
+    "wine": 1.02515,
+    "flour": 1.07
+   },
+   "eastwatch": {
+    "grain": 1.15,
+    "salt": 0.822331,
+    "wool": 1.1,
+    "iron": 1,
+    "cloth": 0.805656,
+    "tools": 0.827112,
+    "timber": 1.15,
+    "wine": 1.020794,
+    "flour": 1.18
+   },
+   "oakford": {
+    "grain": 0.8,
+    "salt": 1.3,
+    "wool": 0.906533,
+    "iron": 1.3,
+    "cloth": 1.2,
+    "tools": 1.25,
+    "timber": 1,
+    "wine": 1.25,
+    "flour": 0.9
+   },
+   "highmere": {
+    "grain": 0.93937,
+    "salt": 1.25,
+    "wool": 0.8,
+    "iron": 0.85,
+    "cloth": 1.2,
+    "tools": 1.1,
+    "timber": 0.95,
+    "wine": 1.3,
+    "flour": 1.05
+   },
+   "brackenfield": {
+    "grain": 0.809459,
+    "salt": 1.3,
+    "wool": 0.878396,
+    "iron": 1.2,
+    "cloth": 1.25,
+    "tools": 1.3,
+    "timber": 1,
+    "wine": 1.3,
+    "flour": 0.95
+   },
+   "dunmarsh": {
+    "grain": 1.25,
+    "salt": 0.802489,
+    "wool": 1.2,
+    "iron": 1.3,
+    "cloth": 0.845775,
+    "tools": 1.2,
+    "timber": 1.2,
+    "wine": 1.1,
+    "flour": 1.12
+   },
+   "redfield": {
+    "grain": 0.85,
+    "salt": 0.817644,
+    "wool": 1.05,
+    "iron": 1.25,
+    "cloth": 0.927937,
+    "tools": 1.2,
+    "timber": 1.2,
+    "wine": 1,
+    "flour": 0.93
+   },
+   "saltmere": {
+    "grain": 1.2,
+    "salt": 0.8,
+    "wool": 1.2,
+    "iron": 1.3,
+    "cloth": 0.836161,
+    "tools": 1.15,
+    "timber": 1.25,
+    "wine": 0.95,
+    "flour": 1.1
+   },
+   "ashby": {
+    "grain": 0.85,
+    "salt": 1.3,
+    "wool": 0.85,
+    "iron": 1.25,
+    "cloth": 1.2,
+    "tools": 1.2,
+    "timber": 0.95,
+    "wine": 1.35,
+    "flour": 0.93
+   },
+   "fernley": {
+    "grain": 0.8,
+    "salt": 1.25,
+    "wool": 0.95,
+    "iron": 1.3,
+    "cloth": 1.15,
+    "tools": 1.25,
+    "timber": 1,
+    "wine": 1.3,
+    "flour": 0.9
+   },
+   "calvinum": {
+    "grain": 1.15,
+    "salt": 1,
+    "wool": 0.9,
+    "iron": 0.843272,
+    "cloth": 1.1,
+    "tools": 1,
+    "timber": 0.853918,
+    "wine": 1.25,
+    "flour": 1.07
+   },
+   "tessaro": {
+    "grain": 0.9,
+    "salt": 0.95,
+    "wool": 1.15,
+    "iron": 1.214267,
+    "cloth": 0.95,
+    "tools": 1.009966,
+    "timber": 1.091178,
+    "wine": 0.833234,
+    "flour": 0.95
+   },
+   "hrothgard": {
+    "grain": 1.2,
+    "salt": 1.2,
+    "wool": 0.9,
+    "iron": 0.92855,
+    "cloth": 1.2,
+    "tools": 0.95,
+    "timber": 0.8,
+    "wine": 1.35,
+    "flour": 1.2
+   },
+   "birkholm": {
+    "grain": 1.25,
+    "salt": 1.3,
+    "wool": 0.85,
+    "iron": 1,
+    "cloth": 1.25,
+    "tools": 1.1,
+    "timber": 0.8,
+    "wine": 1.4,
+    "flour": 1.12
+   },
+   "eldmoor": {
+    "grain": 1.3,
+    "salt": 1.25,
+    "wool": 0.8,
+    "iron": 0.9,
+    "cloth": 1.2,
+    "tools": 1.15,
+    "timber": 0.85,
+    "wine": 1.4,
+    "flour": 1.15
+   },
+   "thornvik": {
+    "grain": 1.2,
+    "salt": 1.1,
+    "wool": 0.9,
+    "iron": 0.8,
+    "cloth": 1.25,
+    "tools": 1,
+    "timber": 0.85,
+    "wine": 1.35,
+    "flour": 1.1
+   },
+   "kettleby": {
+    "grain": 1.15,
+    "salt": 1.2,
+    "wool": 0.95,
+    "iron": 0.95,
+    "cloth": 1.2,
+    "tools": 1.05,
+    "timber": 0.9,
+    "wine": 1.3,
+    "flour": 1.07
+   },
+   "vessara": {
+    "grain": 1,
+    "salt": 0.802937,
+    "wool": 1.2,
+    "iron": 1.2,
+    "cloth": 0.82065,
+    "tools": 1.027515,
+    "timber": 1.3,
+    "wine": 0.8,
+    "flour": 1.1
+   },
+   "lucco": {
+    "grain": 1.05,
+    "salt": 0.8,
+    "wool": 1.25,
+    "iron": 1.35,
+    "cloth": 1.05,
+    "tools": 1.25,
+    "timber": 1.35,
+    "wine": 0.85,
+    "flour": 1.02
+   },
+   "marenna": {
+    "grain": 0.95,
+    "salt": 0.85,
+    "wool": 1.2,
+    "iron": 1.3,
+    "cloth": 1,
+    "tools": 1.2,
+    "timber": 1.3,
+    "wine": 0.8,
+    "flour": 0.97
+   },
+   "pellio": {
+    "grain": 0.9,
+    "salt": 0.82647,
+    "wool": 1.15,
+    "iron": 1.3,
+    "cloth": 0.95,
+    "tools": 1.2,
+    "timber": 1.25,
+    "wine": 0.800987,
+    "flour": 0.95
+   },
+   "sorra": {
+    "grain": 1,
+    "salt": 0.8,
+    "wool": 1.2,
+    "iron": 1.25,
+    "cloth": 1,
+    "tools": 1.15,
+    "timber": 1.3,
+    "wine": 0.84182,
+    "flour": 1
+   },
+   "merrow": {
+    "grain": 1,
+    "salt": 0.854954,
+    "wool": 1,
+    "iron": 0.854838,
+    "cloth": 0.809142,
+    "tools": 0.853918,
+    "timber": 1.032154,
+    "wine": 0.818828,
+    "flour": 1.1
+   },
+   "gullhaven": {
+    "grain": 0.941683,
+    "salt": 0.832992,
+    "wool": 0.859249,
+    "iron": 1,
+    "cloth": 0.886077,
+    "tools": 0.846216,
+    "timber": 1.133125,
+    "wine": 0.804932,
+    "flour": 1.1
+   },
+   "harrowgate": {
+    "grain": 1,
+    "salt": 1.2,
+    "wool": 0.804731,
+    "iron": 0.95,
+    "cloth": 1.05,
+    "tools": 0.922112,
+    "timber": 0.86125,
+    "wine": 1.184017,
+    "flour": 1.05
+   },
+   "brindle": {
+    "grain": 0.85,
+    "salt": 1.3,
+    "wool": 0.8,
+    "iron": 1.2,
+    "cloth": 1.2,
+    "tools": 1.25,
+    "timber": 0.807615,
+    "wine": 1.3,
+    "flour": 0.95
+   },
+   "fenwick": {
+    "grain": 0.838821,
+    "salt": 1.25,
+    "wool": 0.802489,
+    "iron": 1.3,
+    "cloth": 1.2,
+    "tools": 1.2,
+    "timber": 0.932678,
+    "wine": 1.25,
+    "flour": 0.9
+   },
+   "thornby": {
+    "grain": 0.9,
+    "salt": 1.1,
+    "wool": 0.817446,
+    "iron": 1.25,
+    "cloth": 1.15,
+    "tools": 1.2,
+    "timber": 0.836283,
+    "wine": 1.2,
+    "flour": 1
+   },
+   "calder": {
+    "grain": 0.925587,
+    "salt": 0.8215,
+    "wool": 1.1,
+    "iron": 1.15,
+    "cloth": 0.933137,
+    "tools": 1,
+    "timber": 1.2,
+    "wine": 0.880132,
+    "flour": 1.1
+   },
+   "marlow": {
+    "grain": 0.840111,
+    "salt": 0.8,
+    "wool": 1.2,
+    "iron": 1.3,
+    "cloth": 1.069001,
+    "tools": 1.25,
+    "timber": 1.25,
+    "wine": 0.928026,
+    "flour": 0.95
+   },
+   "pennick": {
+    "grain": 0.882538,
+    "salt": 0.8,
+    "wool": 1.15,
+    "iron": 1.25,
+    "cloth": 1.1,
+    "tools": 1.2,
+    "timber": 1.2,
+    "wine": 1.05,
+    "flour": 1
+   },
+   "tidewell": {
+    "grain": 0.8819,
+    "salt": 0.8,
+    "wool": 1.1,
+    "iron": 1.3,
+    "cloth": 1,
+    "tools": 1.25,
+    "timber": 1.3,
+    "wine": 0.9,
+    "flour": 1.05
+   }
+  },
+  "cargo": {},
+  "rngSeed": 2327217363,
+  "rng": {
+   "casualties": 3380477456,
+   "loot": 412502315,
+   "upkeep": 1921980796,
+   "names": 3271810285
+  },
+  "nextResultId": 27,
+  "nextEventId": 136,
+  "parties": [
+   {
+    "id": 4,
+    "template": "valedorn_patrol",
+    "x": 104.14680116029163,
+    "y": 89.60654693924727,
+    "troops": {
+     "footman": 3,
+     "hunter": 1,
+     "levy": 2
+    },
+    "tx": 109.8917349986732,
+    "ty": 90.43850583583117,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "chasing": null,
+    "seenAt": {
+     "x": 104.14680116029163,
+     "y": 89.60654693924727,
+     "day": 20.011111781540965
+    }
+   },
+   {
+    "id": 5,
+    "template": "valedorn_patrol",
+    "x": 45.78454794442302,
+    "y": 126.10820110110771,
+    "troops": {
+     "footman": 1,
+     "hunter": 2,
+     "levy": 3
+    },
+    "tx": 36,
+    "ty": 132,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "chasing": null,
+    "seenAt": {
+     "x": 79.51158524609848,
+     "y": 105.79935061914215,
+     "day": 19.60304924388845
+    }
+   },
+   {
+    "id": 7,
+    "template": "aurelian_patrol",
+    "x": 174.71546654082232,
+    "y": 126.25690669183554,
+    "troops": {
+     "spearman": 3,
+     "skirmisher": 3,
+     "recruit": 2
+    },
+    "tx": 176,
+    "ty": 126,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "chasing": null,
+    "seenAt": {
+     "x": 112.96267181001811,
+     "y": 100.2313950597239,
+     "day": 15.896224282713662
+    }
+   },
+   {
+    "id": 8,
+    "template": "aurelian_patrol",
+    "x": 154.67355057382503,
+    "y": 116.73593370015384,
+    "troops": {
+     "spearman": 2,
+     "skirmisher": 3,
+     "recruit": 2
+    },
+    "tx": 176,
+    "ty": 126,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "chasing": null,
+    "seenAt": {
+     "x": 107.69655793119563,
+     "y": 96.32944381935047,
+     "day": 19.49753268325994
+    }
+   },
+   {
+    "id": 11,
+    "template": "aurelian_caravan",
+    "x": 113.83004224527826,
+    "y": 110.91268101625974,
+    "troops": {
+     "recruit": 2
+    },
+    "tx": 112,
+    "ty": 90,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "routeIndex": 3,
+    "good": "cloth",
+    "chasing": null,
+    "seenAt": {
+     "x": 113.23490647648379,
+     "y": 104.81887771780504,
+     "day": 18.71114586051828
+    }
+   },
+   {
+    "id": 16,
+    "template": "eastern_deserters",
+    "x": 261.06841784716886,
+    "y": 2.006354111191062,
+    "troops": {
+     "mercenary": 4,
+     "looter": 3
+    },
+    "tx": 266.98507746681616,
+    "ty": 2,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lair": "deserter_camp",
+    "chasing": "fleeing"
+   },
+   {
+    "id": 20,
+    "template": "hrothmark_patrol",
+    "x": 110.84758772127597,
+    "y": 27.68874601266927,
+    "troops": {
+     "axeman": 10,
+     "fell_archer": 8,
+     "clansman": 7
+    },
+    "tx": 60,
+    "ty": 30,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "chasing": null
+   },
+   {
+    "id": 21,
+    "template": "hrothmark_patrol",
+    "x": 62.18854750291166,
+    "y": 11.726431562136042,
+    "troops": {
+     "axeman": 10,
+     "fell_archer": 8,
+     "clansman": 7
+    },
+    "tx": 28,
+    "ty": 16,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "chasing": null
+   },
+   {
+    "id": 23,
+    "template": "vessaro_patrol",
+    "x": 84.55219607796701,
+    "y": 182.5783736385119,
+    "troops": {
+     "pikeman": 10,
+     "crossbowman": 5,
+     "militia": 8
+    },
+    "tx": 64,
+    "ty": 190,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "chasing": null
+   },
+   {
+    "id": 24,
+    "template": "vessaro_patrol",
+    "x": 106.24956868484485,
+    "y": 171.43743168878535,
+    "troops": {
+     "pikeman": 8,
+     "crossbowman": 5,
+     "militia": 8
+    },
+    "tx": 88,
+    "ty": 176,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "chasing": null,
+    "seenAt": {
+     "x": 99.30172911489147,
+     "y": 108.09795598093075,
+     "day": 11.046598493384465
+    }
+   },
+   {
+    "id": 25,
+    "template": "vessaro_patrol",
+    "x": 70.92052899561254,
+    "y": 178.5116869124099,
+    "troops": {
+     "pikeman": 10,
+     "crossbowman": 5,
+     "militia": 7
+    },
+    "tx": 20,
+    "ty": 186,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "chasing": null
+   },
+   {
+    "id": 26,
+    "template": "merrow_watch",
+    "x": 180,
+    "y": 170,
+    "troops": {
+     "mercenary": 8
+    },
+    "tx": 180,
+    "ty": 170,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "chasing": null
+   },
+   {
+    "id": 28,
+    "template": "vessaro_caravan",
+    "x": 129.05612311802489,
+    "y": 186.5493196535528,
+    "troops": {
+     "militia": 10
+    },
+    "tx": 152,
+    "ty": 184,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "routeIndex": 1,
+    "good": "salt",
+    "chasing": null
+   },
+   {
+    "id": 35,
+    "template": "fell_raiders",
+    "x": 311.8671021180979,
+    "y": 57.54953615157625,
+    "troops": {
+     "looter": 13,
+     "reaver": 3
+    },
+    "tx": 311.11875964235514,
+    "ty": 56.47409570030868,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lair": "fells_hollow",
+    "chasing": null
+   },
+   {
+    "id": 36,
+    "template": "fell_raiders",
+    "x": 264.7440771874312,
+    "y": 60.68041151599739,
+    "troops": {
+     "looter": 8,
+     "reaver": 8
+    },
+    "tx": 262.4603854576126,
+    "ty": 48.77377015259117,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lair": "gull_tor",
+    "chasing": null
+   },
+   {
+    "id": 37,
+    "template": "ostrand_patrol",
+    "x": 295.27919468186803,
+    "y": 101.0514860941523,
+    "troops": {
+     "ostrand_shieldman": 8,
+     "ostrand_bowman": 8,
+     "ostrand_levy": 5
+    },
+    "tx": 310,
+    "ty": 100,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "chasing": null
+   },
+   {
+    "id": 38,
+    "template": "ostrand_patrol",
+    "x": 311.9348939116213,
+    "y": 114.18946598015988,
+    "troops": {
+     "ostrand_shieldman": 10,
+     "ostrand_bowman": 5,
+     "ostrand_levy": 5
+    },
+    "tx": 222,
+    "ty": 94,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "chasing": null
+   },
+   {
+    "id": 39,
+    "template": "saltreach_patrol",
+    "x": 230.47895564240912,
+    "y": 179.2517848402509,
+    "troops": {
+     "saltreach_pikeman": 10,
+     "saltreach_crossbow": 7,
+     "saltreach_militia": 5
+    },
+    "tx": 272,
+    "ty": 156,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "chasing": null
+   },
+   {
+    "id": 40,
+    "template": "saltreach_patrol",
+    "x": 242.57121793414507,
+    "y": 172.48011795687873,
+    "troops": {
+     "saltreach_pikeman": 7,
+     "saltreach_crossbow": 5,
+     "saltreach_militia": 8
+    },
+    "tx": 222,
+    "ty": 184,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "chasing": null
+   },
+   {
+    "id": 45,
+    "template": "lord_valedorn",
+    "x": 92.41845259062269,
+    "y": 82.14713345115668,
+    "troops": {
+     "guard": 6,
+     "longbowman": 6,
+     "rider": 6,
+     "footman": 18,
+     "hunter": 18,
+     "levy": 18
+    },
+    "tx": 104.02046730788425,
+    "ty": 74.57138122105971,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lordId": "person:2",
+    "intent": "patrol",
+    "chasing": null,
+    "seenAt": {
+     "x": 94.82558498278841,
+     "y": 77.69812359863057,
+     "day": 19.65513257722178
+    }
+   },
+   {
+    "id": 46,
+    "template": "lord_valedorn",
+    "x": 7.326799313149875,
+    "y": 157.92754923596627,
+    "troops": {
+     "guard": 5,
+     "longbowman": 5,
+     "rider": 5,
+     "footman": 16,
+     "hunter": 17,
+     "levy": 13
+    },
+    "tx": 13.741050482261926,
+    "ty": 112.17502241116017,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lordId": "person:3",
+    "intent": "patrol",
+    "chasing": null
+   },
+   {
+    "id": 47,
+    "template": "lord_valedorn",
+    "x": 82.63846713664311,
+    "y": 98.88439016722437,
+    "troops": {
+     "guard": 3,
+     "longbowman": 2,
+     "rider": 2,
+     "footman": 11,
+     "hunter": 11,
+     "levy": 19
+    },
+    "tx": 84.48588051508507,
+    "ty": 103.44951049747003,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lordId": "person:4",
+    "intent": "hunt",
+    "chasing": 164,
+    "seenAt": {
+     "x": 79.24232532829046,
+     "y": 93.85435813711956,
+     "day": 19.738465910555117
+    },
+    "restUntil": 17.819133629937358
+   },
+   {
+    "id": 49,
+    "template": "lord_valedorn",
+    "x": 86.91711598768327,
+    "y": 96.66146286347919,
+    "troops": {
+     "guard": 1,
+     "longbowman": 1,
+     "rider": 1,
+     "footman": 5,
+     "hunter": 7,
+     "levy": 16
+    },
+    "tx": 84.48588051508507,
+    "ty": 103.44951049747003,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lordId": "person:6",
+    "intent": "hunt",
+    "chasing": 164,
+    "kin": null,
+    "seenAt": {
+     "x": 101.20555556670794,
+     "y": 92.24271183270449,
+     "day": 19.62388257722178
+    }
+   },
+   {
+    "id": 50,
+    "template": "lord_valedorn",
+    "x": 88.31410719256053,
+    "y": 99.16384329428418,
+    "troops": {
+     "guard": 2,
+     "longbowman": 1,
+     "rider": 1,
+     "footman": 7,
+     "hunter": 7,
+     "levy": 18
+    },
+    "tx": 84.48588051508507,
+    "ty": 103.44951049747003,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lordId": "person:7",
+    "intent": "hunt",
+    "chasing": 164,
+    "kin": null,
+    "seenAt": {
+     "x": 97.49242300355495,
+     "y": 101.13414785627901,
+     "day": 19.883688044412203
+    },
+    "restUntil": 0.6524237371287682
+   },
+   {
+    "id": 51,
+    "template": "lord_aurelian",
+    "x": 115.07667777845774,
+    "y": 137.38955003682582,
+    "troops": {
+     "legionary": 6,
+     "marksman": 6,
+     "horse_scout": 6,
+     "spearman": 18,
+     "skirmisher": 18,
+     "recruit": 18
+    },
+    "tx": 114.40658378554508,
+    "ty": 139.50183311663568,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lordId": "person:9",
+    "intent": "patrol",
+    "chasing": null,
+    "seenAt": {
+     "x": 118.92743782289484,
+     "y": 119.85154385559522,
+     "day": 10.561181826717787
+    }
+   },
+   {
+    "id": 53,
+    "template": "lord_aurelian",
+    "x": 136.8614301951602,
+    "y": 128.76397991972044,
+    "troops": {
+     "legionary": 3,
+     "marksman": 2,
+     "horse_scout": 2,
+     "spearman": 11,
+     "skirmisher": 10,
+     "recruit": 18
+    },
+    "tx": 136.8614301951602,
+    "ty": 128.76397991972044,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lordId": "person:11",
+    "intent": "patrol",
+    "chasing": null
+   },
+   {
+    "id": 54,
+    "template": "lord_aurelian",
+    "x": 173.7655221852474,
+    "y": 123.34717738302425,
+    "troops": {
+     "legionary": 2,
+     "marksman": 2,
+     "horse_scout": 1,
+     "spearman": 8,
+     "skirmisher": 11,
+     "recruit": 18
+    },
+    "tx": 173.7655221852474,
+    "ty": 123.34717738302425,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lordId": "person:12",
+    "intent": "patrol",
+    "chasing": null
+   },
+   {
+    "id": 55,
+    "template": "lord_aurelian",
+    "x": 120.92222266989424,
+    "y": 118.40321348312014,
+    "troops": {
+     "legionary": 2,
+     "marksman": 1,
+     "horse_scout": 1,
+     "spearman": 7,
+     "skirmisher": 7,
+     "recruit": 18
+    },
+    "tx": 132.535137148574,
+    "ty": 128.9875656669028,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lordId": "person:13",
+    "intent": "campaign",
+    "chasing": null,
+    "kin": null,
+    "seenAt": {
+     "x": 118.74742624743068,
+     "y": 102.8085934237933,
+     "day": 18.55872212338952
+    }
+   },
+   {
+    "id": 56,
+    "template": "lord_aurelian",
+    "x": 116.7919124942222,
+    "y": 110.59465949599738,
+    "troops": {
+     "legionary": 2,
+     "marksman": 1,
+     "horse_scout": 1,
+     "spearman": 7,
+     "skirmisher": 7,
+     "recruit": 18
+    },
+    "tx": 118.94481648690999,
+    "ty": 123.99366590660065,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lordId": "person:14",
+    "intent": "campaign",
+    "chasing": null,
+    "kin": null,
+    "seenAt": {
+     "x": 115.10994502962441,
+     "y": 100.12661590598285,
+     "day": 19.942021377745533
+    }
+   },
+   {
+    "id": 57,
+    "template": "lord_hrothmark",
+    "x": 59.411003476940095,
+    "y": 31.213088798336685,
+    "troops": {
+     "huscarl": 4,
+     "fell_warden": 5,
+     "hill_rider": 6,
+     "axeman": 15,
+     "fell_archer": 15,
+     "clansman": 15
+    },
+    "tx": 59.411003476940095,
+    "ty": 31.213088798336685,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lordId": "person:16",
+    "intent": "patrol",
+    "chasing": null
+   },
+   {
+    "id": 58,
+    "template": "lord_hrothmark",
+    "x": 134.88959854882637,
+    "y": 13.483585124989165,
+    "troops": {
+     "huscarl": 6,
+     "fell_warden": 6,
+     "hill_rider": 6,
+     "axeman": 18,
+     "fell_archer": 18,
+     "clansman": 18
+    },
+    "tx": 128.81554900528863,
+    "ty": 7.983819603919983,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lordId": "person:17",
+    "intent": "patrol",
+    "chasing": null
+   },
+   {
+    "id": 59,
+    "template": "lord_hrothmark",
+    "x": 180.2115775179118,
+    "y": 20.404790298081934,
+    "troops": {
+     "huscarl": 3,
+     "fell_warden": 2,
+     "hill_rider": 2,
+     "axeman": 11,
+     "fell_archer": 11,
+     "clansman": 19
+    },
+    "tx": 180.2115775179118,
+    "ty": 20.404790298081934,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lordId": "person:18",
+    "intent": "patrol",
+    "chasing": null
+   },
+   {
+    "id": 60,
+    "template": "lord_hrothmark",
+    "x": 116.09309715176012,
+    "y": 18.327525652492458,
+    "troops": {
+     "huscarl": 2,
+     "fell_warden": 1,
+     "hill_rider": 1,
+     "axeman": 7,
+     "fell_archer": 7,
+     "clansman": 17
+    },
+    "tx": 99.55721050268039,
+    "ty": 17.669334053527564,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lordId": "person:19",
+    "intent": "campaign",
+    "chasing": null,
+    "kin": null
+   },
+   {
+    "id": 61,
+    "template": "lord_hrothmark",
+    "x": 135.34168864442043,
+    "y": 19.29157754935669,
+    "troops": {
+     "huscarl": 2,
+     "fell_warden": 1,
+     "hill_rider": 1,
+     "axeman": 7,
+     "fell_archer": 7,
+     "clansman": 18
+    },
+    "tx": 96.55929462518543,
+    "ty": 22.402503062505275,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lordId": "person:20",
+    "intent": "campaign",
+    "chasing": null,
+    "kin": null
+   },
+   {
+    "id": 63,
+    "template": "lord_vessaro",
+    "x": 142.1324119417578,
+    "y": 169.71663209097815,
+    "troops": {
+     "pavisier": 6,
+     "arbalester": 6,
+     "light_horse": 6,
+     "pikeman": 15,
+     "crossbowman": 17,
+     "militia": 18
+    },
+    "tx": 138.14295878261328,
+    "ty": 163.15260394616053,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lordId": "person:23",
+    "intent": "patrol",
+    "chasing": null
+   },
+   {
+    "id": 64,
+    "template": "lord_vessaro",
+    "x": 61.921782824964176,
+    "y": 191.31705691868098,
+    "troops": {
+     "pavisier": 3,
+     "arbalester": 2,
+     "light_horse": 2,
+     "pikeman": 11,
+     "crossbowman": 11,
+     "militia": 19
+    },
+    "tx": 61.310782325454056,
+    "ty": 191.91833932325244,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lordId": "person:24",
+    "intent": "patrol",
+    "chasing": null
+   },
+   {
+    "id": 65,
+    "template": "lord_vessaro",
+    "x": 85.90729556079395,
+    "y": 164.20355105859474,
+    "troops": {
+     "pavisier": 2,
+     "arbalester": 1,
+     "light_horse": 1,
+     "pikeman": 7,
+     "crossbowman": 7,
+     "militia": 18
+    },
+    "tx": 133.28766134241596,
+    "ty": 160.51656326605007,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lordId": "person:25",
+    "intent": "campaign",
+    "chasing": null,
+    "kin": null
+   },
+   {
+    "id": 71,
+    "template": "lord_saltreach",
+    "x": 291.45501788078474,
+    "y": 167.42183567374644,
+    "troops": {
+     "saltreach_militia": 22,
+     "saltreach_pikeman": 7,
+     "saltreach_crossbow": 7
+    },
+    "tx": 271.60010674083605,
+    "ty": 157.7168227978982,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lordId": "person:33",
+    "intent": "campaign",
+    "chasing": null,
+    "siegeId": null,
+    "restUntil": 3.1233298949400203,
+    "kin": null
+   },
+   {
+    "id": 72,
+    "template": "lord_saltreach",
+    "x": 280.4290378393241,
+    "y": 162.00603776693856,
+    "troops": {
+     "saltreach_militia": 35,
+     "saltreach_pikeman": 12,
+     "saltreach_crossbow": 16
+    },
+    "tx": 287.0651749391109,
+    "ty": 167.7367632407695,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lordId": "person:34",
+    "intent": "patrol",
+    "chasing": null,
+    "siegeId": null,
+    "restUntil": 2.7410586835537174
+   },
+   {
+    "id": 73,
+    "template": "lord_saltreach",
+    "x": 309.7815343150869,
+    "y": 179.30422207619995,
+    "troops": {
+     "saltreach_militia": 31,
+     "saltreach_pikeman": 16,
+     "saltreach_crossbow": 16
+    },
+    "tx": 309.7815343150869,
+    "ty": 179.30422207619995,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lordId": "person:35",
+    "intent": "patrol",
+    "chasing": null,
+    "siegeId": null,
+    "restUntil": 3.2090869654021215
+   },
+   {
+    "id": 74,
+    "template": "lord_saltreach",
+    "x": 327.657373810187,
+    "y": 192.1103766625747,
+    "troops": {
+     "saltreach_militia": 24,
+     "saltreach_pikeman": 11,
+     "saltreach_crossbow": 11
+    },
+    "tx": 327.657373810187,
+    "ty": 192.1103766625747,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lordId": "person:36",
+    "intent": "patrol",
+    "chasing": null,
+    "siegeId": null,
+    "restUntil": 3.4222677729929902
+   },
+   {
+    "id": 75,
+    "template": "lord_saltreach",
+    "x": 284.606671051268,
+    "y": 161.8187340390623,
+    "troops": {
+     "saltreach_militia": 22,
+     "saltreach_pikeman": 7,
+     "saltreach_crossbow": 7
+    },
+    "tx": 310.04432582343,
+    "ty": 183.41018930543214,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lordId": "person:37",
+    "intent": "campaign",
+    "chasing": null,
+    "siegeId": null,
+    "restUntil": 2.8268157540158185,
+    "kin": null
+   },
+   {
+    "id": 76,
+    "template": "lord_vessaro",
+    "x": 125.16205276294609,
+    "y": 174.77265894552275,
+    "troops": {
+     "pavisier": 2,
+     "arbalester": 1,
+     "light_horse": 1,
+     "pikeman": 7,
+     "crossbowman": 7,
+     "militia": 18
+    },
+    "tx": 133.66097082057968,
+    "ty": 163.47393518639728,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lordId": "person:38",
+    "intent": "campaign",
+    "chasing": null,
+    "kin": null
+   },
+   {
+    "id": 79,
+    "template": "merrow_caravan",
+    "x": 128.69779677665704,
+    "y": 99.39251068686963,
+    "troops": {
+     "mercenary": 6
+    },
+    "tx": 112,
+    "ty": 90,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "routeIndex": 1,
+    "good": "cloth",
+    "chasing": null,
+    "seenAt": {
+     "x": 104.14918002986363,
+     "y": 99.81352496267047,
+     "day": 13.791528759631621
+    }
+   },
+   {
+    "id": 90,
+    "template": "gullhaven_caravan",
+    "x": 304.1795960278906,
+    "y": 129.23107196971372,
+    "troops": {
+     "mercenary": 5
+    },
+    "tx": 240,
+    "ty": 105,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "routeIndex": 0,
+    "good": "tools",
+    "chasing": null
+   },
+   {
+    "id": 101,
+    "template": "valedorn_patrol",
+    "x": 31.971176283644812,
+    "y": 80.83186525866329,
+    "troops": {
+     "footman": 2,
+     "hunter": 3,
+     "levy": 2
+    },
+    "tx": 100,
+    "ty": 105,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "chasing": null,
+    "seenAt": {
+     "x": 92.04923227695981,
+     "y": 94.1495613639445,
+     "day": 18.50038879005619
+    }
+   },
+   {
+    "id": 106,
+    "template": "lord_aurelian",
+    "x": 254.37174317895196,
+    "y": 2.0749624173097474,
+    "troops": {
+     "legionary": 6,
+     "marksman": 5,
+     "horse_scout": 6,
+     "spearman": 18,
+     "skirmisher": 17,
+     "recruit": 17
+    },
+    "tx": 260.3084179864005,
+    "ty": 2.0071703020708753,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lordId": "person:10",
+    "intent": "hunt",
+    "chasing": 16,
+    "restUntil": 8.120193293963325
+   },
+   {
+    "id": 131,
+    "template": "coast_wreckers",
+    "x": 262.71599746514113,
+    "y": 2.0000027762122117,
+    "troops": {
+     "looter": 8,
+     "reaver": 8
+    },
+    "tx": 270.2802364242974,
+    "ty": 2,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lair": "false_light_cove",
+    "chasing": "fleeing"
+   },
+   {
+    "id": 134,
+    "template": "southern_wreckers",
+    "x": 14.519089719419137,
+    "y": 72.8372588623686,
+    "troops": {
+     "reaver": 2,
+     "looter": 4
+    },
+    "tx": 28.21149142831564,
+    "ty": 150.3135152067989,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lair": "marsh_hideout",
+    "chasing": null
+   },
+   {
+    "id": 140,
+    "template": "lord_valedorn",
+    "x": 37.6679613715969,
+    "y": 129.57804926019162,
+    "troops": {
+     "guard": 3,
+     "longbowman": 2,
+     "rider": 2,
+     "footman": 10,
+     "hunter": 10,
+     "levy": 17
+    },
+    "tx": 37.6679613715969,
+    "ty": 129.57804926019162,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lordId": "person:5",
+    "intent": "patrol",
+    "chasing": null,
+    "restUntil": 16.28164094938033
+   },
+   {
+    "id": 145,
+    "template": "saltreach_caravan",
+    "x": 227.0155435958246,
+    "y": 181.8193288713806,
+    "troops": {
+     "saltreach_militia": 8
+    },
+    "tx": 222,
+    "ty": 184,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "routeIndex": 0,
+    "good": "grain",
+    "chasing": null
+   },
+   {
+    "id": 147,
+    "template": "southern_wreckers",
+    "x": 7.41488307332806,
+    "y": 79.11070714072736,
+    "troops": {
+     "reaver": 5,
+     "looter": 8
+    },
+    "tx": 13.163187860511243,
+    "ty": 160.96951018366963,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lair": "marsh_hideout",
+    "chasing": null
+   },
+   {
+    "id": 148,
+    "template": "valedorn_caravan",
+    "x": 91.51014596396132,
+    "y": 85.79580693797898,
+    "troops": {
+     "levy": 3
+    },
+    "tx": 80,
+    "ty": 95,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "routeIndex": 2,
+    "good": "wool",
+    "chasing": null,
+    "seenAt": {
+     "x": 99.61160492716773,
+     "y": 85.03427236758746,
+     "day": 19.69679924388845
+    }
+   },
+   {
+    "id": 149,
+    "template": "hrothmark_caravan",
+    "x": 135.46503533163354,
+    "y": 87.61031536352226,
+    "troops": {
+     "clansman": 10
+    },
+    "tx": 100,
+    "ty": 22,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "routeIndex": 4,
+    "good": "iron",
+    "chasing": null
+   },
+   {
+    "id": 150,
+    "template": "ostrand_caravan",
+    "x": 276.6552666955944,
+    "y": 111.66552666955943,
+    "troops": {
+     "ostrand_levy": 4
+    },
+    "tx": 320,
+    "ty": 116,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "routeIndex": 2,
+    "good": "wool",
+    "chasing": null
+   },
+   {
+    "id": 151,
+    "template": "lord_ostrand",
+    "x": 261.18391507095845,
+    "y": 21.560459561603334,
+    "troops": {
+     "ostrand_levy": 16,
+     "ostrand_shieldman": 7,
+     "ostrand_bowman": 7
+    },
+    "tx": 318.6501692328602,
+    "ty": 113.12152123870328,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lordId": "person:30",
+    "intent": "patrol",
+    "chasing": null,
+    "restUntil": 17.88996696327069
+   },
+   {
+    "id": 155,
+    "template": "gullhaven_watch",
+    "x": 338,
+    "y": 142,
+    "troops": {
+     "mercenary": 13
+    },
+    "tx": 338,
+    "ty": 142,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "chasing": null
+   },
+   {
+    "id": 160,
+    "template": "eastern_deserters",
+    "x": 178.51252098754048,
+    "y": 96.36085476726294,
+    "troops": {
+     "mercenary": 5,
+     "looter": 5
+    },
+    "tx": 178.51252098754048,
+    "ty": 96.36085476726294,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lair": "deserter_camp",
+    "chasing": null
+   },
+   {
+    "id": 161,
+    "template": "lord_vessaro",
+    "x": 52,
+    "y": 170,
+    "troops": {
+     "pavisier": 6,
+     "arbalester": 6,
+     "light_horse": 6,
+     "pikeman": 18,
+     "crossbowman": 18,
+     "militia": 18
+    },
+    "tx": null,
+    "ty": null,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lordId": "person:22",
+    "intent": "rest",
+    "chasing": null,
+    "restUntil": 20.047532683259938
+   },
+   {
+    "id": 162,
+    "template": "aurelian_patrol",
+    "x": 154.09594837827484,
+    "y": 105.38745069502507,
+    "troops": {
+     "spearman": 3,
+     "skirmisher": 2,
+     "recruit": 2
+    },
+    "tx": 176,
+    "ty": 96,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "chasing": null
+   },
+   {
+    "id": 163,
+    "template": "moor_deserters",
+    "x": 261.5191716775274,
+    "y": 196.56316095058733,
+    "troops": {
+     "mercenary": 8,
+     "looter": 5
+    },
+    "tx": 260.5382069936022,
+    "ty": 198,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lair": "drowned_chapel",
+    "chasing": null
+   },
+   {
+    "id": 164,
+    "template": "bandits",
+    "x": 83.84313697295445,
+    "y": 104.16905642581752,
+    "troops": {
+     "looter": 5,
+     "reaver": 2
+    },
+    "tx": 80.03182459921928,
+    "ty": 108.43578820983633,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lair": "looter_camp",
+    "chasing": "fleeing"
+   },
+   {
+    "id": 165,
+    "template": "bandits",
+    "x": 257.0679602106584,
+    "y": 102.62848303769046,
+    "troops": {
+     "looter": 4,
+     "reaver": 4
+    },
+    "tx": null,
+    "ty": null,
+    "ignoreUntil": 0,
+    "alerted": false,
+    "lair": "reaver_hideout",
+    "anchor": {
+     "x": 257.0679602106584,
+     "y": 102.62848303769046
+    },
+    "eventId": 8
+   }
+  ],
+  "partySpawns": {
+   "valedorn_caravan": 17.836184188838626,
+   "western_outlaws": 21.707215910555117,
+   "gullhaven_watch": 20.245541315798665,
+   "ostrand_caravan": 18.256633629937358,
+   "bandits": 21.4336880444122,
+   "merrow_caravan": 2.3380415330701867,
+   "eastern_deserters": 20.994979212062475,
+   "southern_wreckers": 18.694517522171967,
+   "saltreach_caravan": 17.45633671458111,
+   "gullhaven_caravan": 4.366698580583859,
+   "highland_raiders": 20.830236264313708,
+   "moor_deserters": 21.883688044412203,
+   "coast_wreckers": 21.15513257722178,
+   "valedorn_patrol": 9.237922082577022,
+   "hrothmark_caravan": 18.214966963270694,
+   "aurelian_patrol": 21.62388257722178,
+   "hrothmark_patrol": 20.0481567845627
+  },
+  "nextPartyId": 166,
+  "contract": null,
+  "contractOffers": {
+   "stonebridge": {
+    "bandit_hunt": null,
+    "escort": {
+     "id": 38,
+     "template": "escort",
+     "giver": "stonebridge",
+     "days": 4,
+     "offeredUntil": 21.738569597647047,
+     "to": "redfield",
+     "troops": {
+      "looter": 7,
+      "reaver": 3
+     },
+     "x": 114.23630636055023,
+     "y": 103.47468146136961,
+     "reward": {
+      "gold": 114,
+      "renown": 4,
+      "xp": 86
+     }
+    },
+    "delivery": {
+     "id": 39,
+     "template": "delivery",
+     "giver": "stonebridge",
+     "days": 5,
+     "offeredUntil": 21.738569597647047,
+     "to": "oakford",
+     "good": "wine",
+     "qty": 4,
+     "deposit": 144,
+     "reward": {
+      "gold": 196,
+      "renown": 2,
+      "xp": 36
+     }
+    },
+    "bandit_hunt_until": 21.738569597647047
+   },
+   "eastwatch": {
+    "bandit_hunt": null,
+    "escort": {
+     "id": 35,
+     "template": "escort",
+     "giver": "eastwatch",
+     "days": 4,
+     "offeredUntil": 20.57927950092321,
+     "to": "oakford",
+     "troops": {
+      "reaver": 4,
+      "looter": 6
+     },
+     "x": 93.2180595719954,
+     "y": 105.30380331170745,
+     "reward": {
+      "gold": 120,
+      "renown": 4,
+      "xp": 90
+     }
+    },
+    "delivery": {
+     "id": 36,
+     "template": "delivery",
+     "giver": "eastwatch",
+     "days": 5,
+     "offeredUntil": 20.57927950092321,
+     "to": "saltmere",
+     "good": "tools",
+     "qty": 3,
+     "deposit": 120,
+     "reward": {
+      "gold": 204,
+      "renown": 2,
+      "xp": 52
+     }
+    },
+    "bandit_hunt_until": 20.57927950092321
+   }
+  },
+  "nextContractId": 40,
+  "contractsDone": 9,
+  "reputation": {
+   "valedorn": 96,
+   "aurelian": 36,
+   "hrothmark": 0,
+   "vessaro": 0,
+   "merrow": 0,
+   "ostrand": 0,
+   "saltreach": 0,
+   "gullhaven": 0
+  },
+  "people": {
+   "person:1": {
+    "id": "person:1",
+    "key": "godric_ardane",
+    "name": "Godric Ardane",
+    "gender": "male",
+    "realm": "valedorn",
+    "home": "stonebridge",
+    "kin": [
+     {
+      "person": "person:7",
+      "tie": "child"
+     }
+    ],
+    "traits": "stern, pious, slow to forgive",
+    "status": "free",
+    "heldBy": null
+   },
+   "person:2": {
+    "id": "person:2",
+    "key": "hamon_greymantle",
+    "name": "Hamon Greymantle",
+    "gender": "male",
+    "realm": "valedorn",
+    "home": "greywall_fort",
+    "kin": [
+     {
+      "person": "person:4",
+      "tie": "sibling"
+     },
+     {
+      "person": "person:6",
+      "tie": "child"
+     }
+    ],
+    "traits": "proud, watchful, a hard border lord",
+    "status": "free",
+    "heldBy": null
+   },
+   "person:3": {
+    "id": "person:3",
+    "key": "avice_westmere",
+    "name": "Avice Westmere",
+    "gender": "female",
+    "realm": "valedorn",
+    "home": "westholt_castle",
+    "kin": [
+     {
+      "person": "person:5",
+      "tie": "cousin"
+     }
+    ],
+    "traits": "shrewd, patient, keeps her word",
+    "status": "free",
+    "heldBy": null
+   },
+   "person:4": {
+    "id": "person:4",
+    "key": "hawise_greymantle",
+    "name": "Hawise Greymantle",
+    "gender": "female",
+    "realm": "valedorn",
+    "home": "brackenfield",
+    "kin": [
+     {
+      "person": "person:2",
+      "tie": "sibling"
+     }
+    ],
+    "traits": "blunt, generous, quick to anger",
+    "status": "free",
+    "heldBy": null
+   },
+   "person:5": {
+    "id": "person:5",
+    "key": "serlo_fernby",
+    "name": "Serlo Fernby",
+    "gender": "male",
+    "realm": "valedorn",
+    "home": "fernley",
+    "kin": [
+     {
+      "person": "person:3",
+      "tie": "cousin"
+     }
+    ],
+    "traits": "cautious, thrifty",
+    "status": "free",
+    "heldBy": null
+   },
+   "person:6": {
+    "id": "person:6",
+    "key": "tancred_greymantle",
+    "name": "Tancred Greymantle",
+    "gender": "male",
+    "realm": "valedorn",
+    "home": "greywall_fort",
+    "kin": [
+     {
+      "person": "person:2",
+      "tie": "parent"
+     }
+    ],
+    "traits": "eager, reckless, hungry for land",
+    "status": "free",
+    "heldBy": null
+   },
+   "person:7": {
+    "id": "person:7",
+    "key": "alys_ardane",
+    "name": "Alys Ardane",
+    "gender": "female",
+    "realm": "valedorn",
+    "home": "stonebridge",
+    "kin": [
+     {
+      "person": "person:1",
+      "tie": "parent"
+     }
+    ],
+    "traits": "clever, restless, her father’s favourite",
+    "status": "free",
+    "heldBy": null
+   },
+   "person:8": {
+    "id": "person:8",
+    "key": "severin_aquila",
+    "name": "Severin Aquila",
+    "gender": "male",
+    "realm": "aurelian",
+    "home": "eastwatch",
+    "kin": [
+     {
+      "person": "person:14",
+      "tie": "child"
+     }
+    ],
+    "traits": "learned, cold, bound by the law",
+    "status": "free",
+    "heldBy": null
+   },
+   "person:9": {
+    "id": "person:9",
+    "key": "cassian_vatro",
+    "name": "Cassian Vatro",
+    "gender": "male",
+    "realm": "aurelian",
+    "home": "ashgate_fort",
+    "kin": [
+     {
+      "person": "person:13",
+      "tie": "child"
+     }
+    ],
+    "traits": "ambitious, a veteran of the frontier",
+    "status": "free",
+    "heldBy": null
+   },
+   "person:10": {
+    "id": "person:10",
+    "key": "domitia_celer",
+    "name": "Domitia Celer",
+    "gender": "female",
+    "realm": "aurelian",
+    "home": "castra_nova",
+    "kin": [
+     {
+      "person": "person:12",
+      "tie": "sibling"
+     }
+    ],
+    "traits": "proud, exacting, old imperial blood",
+    "status": "free",
+    "heldBy": null
+   },
+   "person:11": {
+    "id": "person:11",
+    "key": "marcia_corvo",
+    "name": "Marcia Corvo",
+    "gender": "female",
+    "realm": "aurelian",
+    "home": "saltmere",
+    "kin": [],
+    "traits": "practical, a trader at heart",
+    "status": "free",
+    "heldBy": null
+   },
+   "person:12": {
+    "id": "person:12",
+    "key": "faustin_celer",
+    "name": "Faustin Celer",
+    "gender": "male",
+    "realm": "aurelian",
+    "home": "tessaro",
+    "kin": [
+     {
+      "person": "person:10",
+      "tie": "sibling"
+     }
+    ],
+    "traits": "easygoing, fond of wine",
+    "status": "free",
+    "heldBy": null
+   },
+   "person:13": {
+    "id": "person:13",
+    "key": "decimo_vatro",
+    "name": "Decimo Vatro",
+    "gender": "male",
+    "realm": "aurelian",
+    "home": "ashgate_fort",
+    "kin": [
+     {
+      "person": "person:9",
+      "tie": "parent"
+     }
+    ],
+    "traits": "dutiful, in his father’s shadow",
+    "status": "free",
+    "heldBy": null
+   },
+   "person:14": {
+    "id": "person:14",
+    "key": "junia_aquila",
+    "name": "Junia Aquila",
+    "gender": "female",
+    "realm": "aurelian",
+    "home": "eastwatch",
+    "kin": [
+     {
+      "person": "person:8",
+      "tie": "parent"
+     }
+    ],
+    "traits": "sharp-tongued, a rider of note",
+    "status": "free",
+    "heldBy": null
+   },
+   "person:15": {
+    "id": "person:15",
+    "key": "hakon_ulfring",
+    "name": "Hakon Ulfring",
+    "gender": "male",
+    "realm": "hrothmark",
+    "home": "hrothgard",
+    "kin": [
+     {
+      "person": "person:19",
+      "tie": "spouse"
+     }
+    ],
+    "traits": "bold, open-handed, loves a feast",
+    "status": "free",
+    "heldBy": null
+   },
+   "person:16": {
+    "id": "person:16",
+    "key": "astrid_hallsdottir",
+    "name": "Astrid Hallsdottir",
+    "gender": "female",
+    "realm": "hrothmark",
+    "home": "ulfstead_hold",
+    "kin": [
+     {
+      "person": "person:18",
+      "tie": "cousin"
+     }
+    ],
+    "traits": "fierce, honest, holds a grudge",
+    "status": "free",
+    "heldBy": null
+   },
+   "person:17": {
+    "id": "person:17",
+    "key": "torvald_skarn",
+    "name": "Torvald Skarn",
+    "gender": "male",
+    "realm": "hrothmark",
+    "home": "skarnwall",
+    "kin": [
+     {
+      "person": "person:20",
+      "tie": "child"
+     }
+    ],
+    "traits": "grim, careful, old and wary",
+    "status": "free",
+    "heldBy": null
+   },
+   "person:18": {
+    "id": "person:18",
+    "key": "kettil_brandsson",
+    "name": "Kettil Brandsson",
+    "gender": "male",
+    "realm": "hrothmark",
+    "home": "kettleby",
+    "kin": [
+     {
+      "person": "person:16",
+      "tie": "cousin"
+     }
+    ],
+    "traits": "loyal, plain-spoken",
+    "status": "free",
+    "heldBy": null
+   },
+   "person:19": {
+    "id": "person:19",
+    "key": "ingrid_ulfring",
+    "name": "Ingrid Ulfring",
+    "gender": "female",
+    "realm": "hrothmark",
+    "home": "hrothgard",
+    "kin": [
+     {
+      "person": "person:15",
+      "tie": "spouse"
+     }
+    ],
+    "traits": "wise, watchful, the hall’s true voice",
+    "status": "free",
+    "heldBy": null
+   },
+   "person:20": {
+    "id": "person:20",
+    "key": "ragna_skarn",
+    "name": "Ragna Skarn",
+    "gender": "female",
+    "realm": "hrothmark",
+    "home": "skarnwall",
+    "kin": [
+     {
+      "person": "person:17",
+      "tie": "parent"
+     }
+    ],
+    "traits": "restless, a shieldmaiden of the hills",
+    "status": "free",
+    "heldBy": null
+   },
+   "person:21": {
+    "id": "person:21",
+    "key": "lucrezia_salviati",
+    "name": "Lucrezia Salviati",
+    "gender": "female",
+    "realm": "vessaro",
+    "home": "vessara",
+    "kin": [
+     {
+      "person": "person:25",
+      "tie": "child"
+     }
+    ],
+    "traits": "cunning, rich, never in a hurry",
+    "status": "free",
+    "heldBy": null
+   },
+   "person:22": {
+    "id": "person:22",
+    "key": "ottavio_morosco",
+    "name": "Ottavio Morosco",
+    "gender": "male",
+    "realm": "vessaro",
+    "home": "torre_salina",
+    "kin": [
+     {
+      "person": "person:24",
+      "tie": "sibling"
+     }
+    ],
+    "traits": "vain, brave, deep in debt",
+    "status": "free",
+    "heldBy": null
+   },
+   "person:23": {
+    "id": "person:23",
+    "key": "ruggero_canale",
+    "name": "Ruggero Canale",
+    "gender": "male",
+    "realm": "vessaro",
+    "home": "castel_verro",
+    "kin": [],
+    "traits": "careful, a builder of walls",
+    "status": "free",
+    "heldBy": null
+   },
+   "person:24": {
+    "id": "person:24",
+    "key": "chiara_morosco",
+    "name": "Chiara Morosco",
+    "gender": "female",
+    "realm": "vessaro",
+    "home": "marenna",
+    "kin": [
+     {
+      "person": "person:22",
+      "tie": "sibling"
+     }
+    ],
+    "traits": "quiet, clever, pays her brother’s debts",
+    "status": "free",
+    "heldBy": null
+   },
+   "person:25": {
+    "id": "person:25",
+    "key": "matteo_salviati",
+    "name": "Matteo Salviati",
+    "gender": "male",
+    "realm": "vessaro",
+    "home": "vessara",
+    "kin": [
+     {
+      "person": "person:21",
+      "tie": "parent"
+     }
+    ],
+    "traits": "charming, idle, a gambler",
+    "status": "free",
+    "heldBy": null
+   },
+   "person:26": {
+    "id": "person:26",
+    "key": "hakon_vargr",
+    "name": "Hakon Vargr",
+    "gender": "male",
+    "realm": "ostrand",
+    "home": "harrowgate",
+    "kin": [
+     {
+      "person": "person:27",
+      "tie": "child"
+     }
+    ],
+    "traits": "stern, proud, slow to forgive",
+    "status": "free",
+    "heldBy": null
+   },
+   "person:27": {
+    "id": "person:27",
+    "key": "sigrid_vargr",
+    "name": "Sigrid Vargr",
+    "gender": "female",
+    "realm": "ostrand",
+    "home": "harrowgate",
+    "kin": [
+     {
+      "person": "person:26",
+      "tie": "parent"
+     }
+    ],
+    "traits": "bold, restless, quick to anger",
+    "status": "captive",
+    "heldBy": "saltreach"
+   },
+   "person:28": {
+    "id": "person:28",
+    "key": "torvald_hask",
+    "name": "Torvald Hask",
+    "gender": "male",
+    "realm": "ostrand",
+    "home": "coldkeep",
+    "kin": [
+     {
+      "person": "person:31",
+      "tie": "child"
+     }
+    ],
+    "traits": "watchful, patient, a hard border lord",
+    "status": "captive",
+    "heldBy": "saltreach"
+   },
+   "person:29": {
+    "id": "person:29",
+    "key": "ingrid_skarde",
+    "name": "Ingrid Skarde",
+    "gender": "female",
+    "realm": "ostrand",
+    "home": "whitecliff",
+    "kin": [
+     {
+      "person": "person:30",
+      "tie": "sibling"
+     }
+    ],
+    "traits": "shrewd, generous, keeps her word",
+    "status": "captive",
+    "heldBy": "saltreach"
+   },
+   "person:30": {
+    "id": "person:30",
+    "key": "arne_skarde",
+    "name": "Arne Skarde",
+    "gender": "male",
+    "realm": "ostrand",
+    "home": "thornby",
+    "kin": [
+     {
+      "person": "person:29",
+      "tie": "sibling"
+     }
+    ],
+    "traits": "easygoing, a fisherman at heart",
+    "status": "free",
+    "heldBy": null
+   },
+   "person:31": {
+    "id": "person:31",
+    "key": "leif_hask",
+    "name": "Leif Hask",
+    "gender": "male",
+    "realm": "ostrand",
+    "home": "coldkeep",
+    "kin": [
+     {
+      "person": "person:28",
+      "tie": "parent"
+     }
+    ],
+    "traits": "eager, hot-headed, hungry for a name",
+    "status": "captive",
+    "heldBy": "saltreach"
+   },
+   "person:32": {
+    "id": "person:32",
+    "key": "piero_salaro",
+    "name": "Piero Salaro",
+    "gender": "male",
+    "realm": "saltreach",
+    "home": "calder",
+    "kin": [
+     {
+      "person": "person:33",
+      "tie": "sibling"
+     }
+    ],
+    "traits": "careful, greedy, a born trader",
+    "status": "free",
+    "heldBy": null
+   },
+   "person:33": {
+    "id": "person:33",
+    "key": "lucia_salaro",
+    "name": "Lucia Salaro",
+    "gender": "female",
+    "realm": "saltreach",
+    "home": "calder",
+    "kin": [
+     {
+      "person": "person:32",
+      "tie": "sibling"
+     }
+    ],
+    "traits": "clever, ambitious, smiles too easily",
+    "status": "free",
+    "heldBy": null
+   },
+   "person:34": {
+    "id": "person:34",
+    "key": "guido_ferro",
+    "name": "Guido Ferro",
+    "gender": "male",
+    "realm": "saltreach",
+    "home": "rookmoor",
+    "kin": [
+     {
+      "person": "person:37",
+      "tie": "cousin"
+     }
+    ],
+    "traits": "brave, blunt, loyal to the Council",
+    "status": "free",
+    "heldBy": null
+   },
+   "person:35": {
+    "id": "person:35",
+    "key": "chiara_vento",
+    "name": "Chiara Vento",
+    "gender": "female",
+    "realm": "saltreach",
+    "home": "seagate",
+    "kin": [
+     {
+      "person": "person:36",
+      "tie": "child"
+     }
+    ],
+    "traits": "cold, capable, trusts nobody",
+    "status": "free",
+    "heldBy": null
+   },
+   "person:36": {
+    "id": "person:36",
+    "key": "nella_vento",
+    "name": "Nella Vento",
+    "gender": "female",
+    "realm": "saltreach",
+    "home": "tidewell",
+    "kin": [
+     {
+      "person": "person:35",
+      "tie": "parent"
+     }
+    ],
+    "traits": "quiet, careful, her mother’s eyes",
+    "status": "free",
+    "heldBy": null
+   },
+   "person:37": {
+    "id": "person:37",
+    "key": "dario_ferro",
+    "name": "Dario Ferro",
+    "gender": "male",
+    "realm": "saltreach",
+    "home": "rookmoor",
+    "kin": [
+     {
+      "person": "person:34",
+      "tie": "cousin"
+     }
+    ],
+    "traits": "a gambler, charming, always owed money",
+    "status": "free",
+    "heldBy": null
+   },
+   "person:38": {
+    "id": "person:38",
+    "key": "bastiano_lanza",
+    "name": "Bastiano Lanza",
+    "gender": "male",
+    "realm": "vessaro",
+    "home": "vessara",
+    "kin": [],
+    "traits": "the Queen’s household knight; steady, sworn",
+    "status": "free",
+    "heldBy": null
+   }
+  },
+  "rulers": {
+   "valedorn": "person:1",
+   "aurelian": "person:8",
+   "hrothmark": "person:15",
+   "vessaro": "person:21",
+   "ostrand": "person:26",
+   "saltreach": "person:32"
+  },
+  "nextPersonId": 39,
+  "holdings": {
+   "stonebridge": {
+    "kind": "town",
+    "sovereign": "valedorn",
+    "holder": "person:1",
+    "controller": "valedorn",
+    "seat": null,
+    "administrator": null,
+    "claims": [],
+    "prosperity": 60,
+    "unrest": 20,
+    "garrison": null,
+    "militia": null,
+    "policies": {
+     "garrison": "normal",
+     "tax": "normal",
+     "food": 14,
+     "repairs": true
+    },
+    "walls": null,
+    "food": null,
+    "treasury": 480,
+    "unpaid": 0,
+    "deserting": false,
+    "dueWeek": null,
+    "report": {
+     "day": 14.124862092964962,
+     "tax": 144,
+     "wages": 0,
+     "due": 0,
+     "repairs": 0,
+     "steward": 0,
+     "refill": 0,
+     "unpaid": 0,
+     "deserted": 0,
+     "cash": 1119
+    },
+    "reports": [
+     {
+      "day": 7.008074608319484,
+      "tax": 144,
+      "wages": 0,
+      "due": 0,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 952
+     },
+     {
+      "day": 14.124862092964962,
+      "tax": 144,
+      "wages": 0,
+      "due": 0,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 1119
+     }
+    ],
+    "book": [],
+    "castellan": null,
+    "crownLand": true
+   },
+   "greywall_fort": {
+    "kind": "fort",
+    "sovereign": "valedorn",
+    "holder": "person:2",
+    "controller": "valedorn",
+    "seat": null,
+    "administrator": null,
+    "claims": [],
+    "prosperity": 50,
+    "unrest": 20,
+    "garrison": {
+     "footman": 30,
+     "guard": 12,
+     "hunter": 18,
+     "longbowman": 6
+    },
+    "militia": null,
+    "policies": {
+     "garrison": "normal",
+     "tax": "normal",
+     "food": 14,
+     "repairs": true
+    },
+    "walls": 100,
+    "food": 14,
+    "treasury": 372,
+    "unpaid": 0,
+    "deserting": false,
+    "dueWeek": 2,
+    "report": {
+     "day": 14.124862092964962,
+     "tax": 80,
+     "wages": 56,
+     "due": 8,
+     "repairs": 0,
+     "steward": 0,
+     "refill": 0,
+     "unpaid": 0,
+     "deserted": 0,
+     "cash": 362
+    },
+    "reports": [
+     {
+      "day": 7.008074608319484,
+      "tax": 80,
+      "wages": 56,
+      "due": 8,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 336
+     },
+     {
+      "day": 14.124862092964962,
+      "tax": 80,
+      "wages": 56,
+      "due": 8,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 362
+     }
+    ],
+    "book": [],
+    "castellan": null,
+    "crownLand": false,
+    "fedTo": 20.011111781540965
+   },
+   "oakford": {
+    "kind": "village",
+    "sovereign": "valedorn",
+    "holder": "person:1",
+    "controller": "valedorn",
+    "seat": "stonebridge",
+    "administrator": null,
+    "claims": [],
+    "prosperity": 50,
+    "unrest": 20,
+    "garrison": null,
+    "militia": 6,
+    "policies": {
+     "garrison": "normal",
+     "tax": "normal",
+     "food": 14,
+     "repairs": true
+    },
+    "walls": null,
+    "food": null,
+    "treasury": 120,
+    "unpaid": 0,
+    "deserting": false,
+    "dueWeek": null,
+    "report": {
+     "day": 14.124862092964962,
+     "tax": 30,
+     "wages": 5,
+     "due": 0,
+     "repairs": 0,
+     "steward": 0,
+     "refill": 0,
+     "unpaid": 0,
+     "deserted": 0,
+     "cash": 1152
+    },
+    "reports": [
+     {
+      "day": 7.008074608319484,
+      "tax": 30,
+      "wages": 5,
+      "due": 0,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 985
+     },
+     {
+      "day": 14.124862092964962,
+      "tax": 30,
+      "wages": 5,
+      "due": 0,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 1152
+     }
+    ],
+    "book": [],
+    "castellan": null,
+    "crownLand": true
+   },
+   "highmere": {
+    "kind": "village",
+    "sovereign": "valedorn",
+    "holder": "person:2",
+    "controller": "valedorn",
+    "seat": "greywall_fort",
+    "administrator": null,
+    "claims": [],
+    "prosperity": 50,
+    "unrest": 20,
+    "garrison": null,
+    "militia": 6,
+    "policies": {
+     "garrison": "normal",
+     "tax": "normal",
+     "food": 14,
+     "repairs": true
+    },
+    "walls": null,
+    "food": null,
+    "treasury": 164,
+    "unpaid": 0,
+    "deserting": false,
+    "dueWeek": 2,
+    "report": {
+     "day": 14.124862092964962,
+     "tax": 30,
+     "wages": 5,
+     "due": 3,
+     "repairs": 0,
+     "steward": 0,
+     "refill": 0,
+     "unpaid": 0,
+     "deserted": 0,
+     "cash": 164
+    },
+    "reports": [
+     {
+      "day": 7.008074608319484,
+      "tax": 30,
+      "wages": 5,
+      "due": 3,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 142
+     },
+     {
+      "day": 14.124862092964962,
+      "tax": 30,
+      "wages": 5,
+      "due": 3,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 164
+     }
+    ],
+    "book": [],
+    "castellan": null,
+    "crownLand": false
+   },
+   "brackenfield": {
+    "kind": "village",
+    "sovereign": "valedorn",
+    "holder": "person:4",
+    "controller": "valedorn",
+    "seat": "greywall_fort",
+    "administrator": null,
+    "claims": [],
+    "prosperity": 50,
+    "unrest": 20,
+    "garrison": null,
+    "militia": 6,
+    "policies": {
+     "garrison": "normal",
+     "tax": "normal",
+     "food": 14,
+     "repairs": true
+    },
+    "walls": null,
+    "food": null,
+    "treasury": 151,
+    "unpaid": 0,
+    "deserting": false,
+    "dueWeek": 2,
+    "report": {
+     "day": 14.124862092964962,
+     "tax": 30,
+     "wages": 5,
+     "due": 3,
+     "repairs": 0,
+     "steward": 0,
+     "refill": 0,
+     "unpaid": 0,
+     "deserted": 0,
+     "cash": 174
+    },
+    "reports": [
+     {
+      "day": 7.008074608319484,
+      "tax": 30,
+      "wages": 5,
+      "due": 3,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 142
+     },
+     {
+      "day": 14.124862092964962,
+      "tax": 30,
+      "wages": 5,
+      "due": 3,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 174
+     }
+    ],
+    "book": [],
+    "castellan": null,
+    "crownLand": false
+   },
+   "westholt_castle": {
+    "kind": "fort",
+    "sovereign": "valedorn",
+    "holder": "person:3",
+    "controller": "valedorn",
+    "seat": null,
+    "administrator": null,
+    "claims": [],
+    "prosperity": 50,
+    "unrest": 20,
+    "garrison": {
+     "footman": 30,
+     "guard": 12,
+     "hunter": 18,
+     "longbowman": 6
+    },
+    "militia": null,
+    "policies": {
+     "garrison": "normal",
+     "tax": "normal",
+     "food": 14,
+     "repairs": true
+    },
+    "walls": 100,
+    "food": 14,
+    "treasury": 372,
+    "unpaid": 0,
+    "deserting": false,
+    "dueWeek": 2,
+    "report": {
+     "day": 14.124862092964962,
+     "tax": 80,
+     "wages": 56,
+     "due": 8,
+     "repairs": 0,
+     "steward": 0,
+     "refill": 0,
+     "unpaid": 0,
+     "deserted": 0,
+     "cash": 362
+    },
+    "reports": [
+     {
+      "day": 7.008074608319484,
+      "tax": 80,
+      "wages": 56,
+      "due": 8,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 336
+     },
+     {
+      "day": 14.124862092964962,
+      "tax": 80,
+      "wages": 56,
+      "due": 8,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 362
+     }
+    ],
+    "book": [],
+    "castellan": null,
+    "crownLand": false,
+    "fedTo": 20.011111781540965
+   },
+   "ashby": {
+    "kind": "village",
+    "sovereign": "valedorn",
+    "holder": "person:3",
+    "controller": "valedorn",
+    "seat": "westholt_castle",
+    "administrator": null,
+    "claims": [],
+    "prosperity": 50,
+    "unrest": 20,
+    "garrison": null,
+    "militia": 6,
+    "policies": {
+     "garrison": "normal",
+     "tax": "normal",
+     "food": 14,
+     "repairs": true
+    },
+    "walls": null,
+    "food": null,
+    "treasury": 164,
+    "unpaid": 0,
+    "deserting": false,
+    "dueWeek": 2,
+    "report": {
+     "day": 14.124862092964962,
+     "tax": 30,
+     "wages": 5,
+     "due": 3,
+     "repairs": 0,
+     "steward": 0,
+     "refill": 0,
+     "unpaid": 0,
+     "deserted": 0,
+     "cash": 164
+    },
+    "reports": [
+     {
+      "day": 7.008074608319484,
+      "tax": 30,
+      "wages": 5,
+      "due": 3,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 142
+     },
+     {
+      "day": 14.124862092964962,
+      "tax": 30,
+      "wages": 5,
+      "due": 3,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 164
+     }
+    ],
+    "book": [],
+    "castellan": null,
+    "crownLand": false
+   },
+   "fernley": {
+    "kind": "village",
+    "sovereign": "valedorn",
+    "holder": "person:5",
+    "controller": "valedorn",
+    "seat": "westholt_castle",
+    "administrator": null,
+    "claims": [],
+    "prosperity": 50,
+    "unrest": 20,
+    "garrison": null,
+    "militia": 6,
+    "policies": {
+     "garrison": "normal",
+     "tax": "normal",
+     "food": 14,
+     "repairs": true
+    },
+    "walls": null,
+    "food": null,
+    "treasury": 2,
+    "unpaid": 0,
+    "deserting": false,
+    "dueWeek": 2,
+    "report": {
+     "day": 14.124862092964962,
+     "tax": 30,
+     "wages": 5,
+     "due": 3,
+     "repairs": 0,
+     "steward": 0,
+     "refill": 0,
+     "unpaid": 0,
+     "deserted": 0,
+     "cash": 164
+    },
+    "reports": [
+     {
+      "day": 7.008074608319484,
+      "tax": 30,
+      "wages": 5,
+      "due": 3,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 142
+     },
+     {
+      "day": 14.124862092964962,
+      "tax": 30,
+      "wages": 5,
+      "due": 3,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 164
+     }
+    ],
+    "book": [],
+    "castellan": null,
+    "crownLand": false
+   },
+   "eastwatch": {
+    "kind": "town",
+    "sovereign": "aurelian",
+    "holder": "person:8",
+    "controller": "aurelian",
+    "seat": null,
+    "administrator": null,
+    "claims": [],
+    "prosperity": 60,
+    "unrest": 20,
+    "garrison": null,
+    "militia": null,
+    "policies": {
+     "garrison": "normal",
+     "tax": "normal",
+     "food": 14,
+     "repairs": true
+    },
+    "walls": null,
+    "food": null,
+    "treasury": 480,
+    "unpaid": 0,
+    "deserting": false,
+    "dueWeek": null,
+    "report": {
+     "day": 14.124862092964962,
+     "tax": 144,
+     "wages": 0,
+     "due": 0,
+     "repairs": 0,
+     "steward": 0,
+     "refill": 0,
+     "unpaid": 0,
+     "deserted": 0,
+     "cash": 1119
+    },
+    "reports": [
+     {
+      "day": 7.008074608319484,
+      "tax": 144,
+      "wages": 0,
+      "due": 0,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 952
+     },
+     {
+      "day": 14.124862092964962,
+      "tax": 144,
+      "wages": 0,
+      "due": 0,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 1119
+     }
+    ],
+    "book": [],
+    "castellan": null,
+    "crownLand": true
+   },
+   "ashgate_fort": {
+    "kind": "fort",
+    "sovereign": "aurelian",
+    "holder": "person:9",
+    "controller": "aurelian",
+    "seat": null,
+    "administrator": null,
+    "claims": [],
+    "prosperity": 50,
+    "unrest": 20,
+    "garrison": {
+     "spearman": 30,
+     "legionary": 12,
+     "skirmisher": 18,
+     "marksman": 6
+    },
+    "militia": null,
+    "policies": {
+     "garrison": "normal",
+     "tax": "normal",
+     "food": 14,
+     "repairs": true
+    },
+    "walls": 100,
+    "food": 14,
+    "treasury": 372,
+    "unpaid": 0,
+    "deserting": false,
+    "dueWeek": 2,
+    "report": {
+     "day": 14.124862092964962,
+     "tax": 80,
+     "wages": 56,
+     "due": 8,
+     "repairs": 0,
+     "steward": 0,
+     "refill": 0,
+     "unpaid": 0,
+     "deserted": 0,
+     "cash": 362
+    },
+    "reports": [
+     {
+      "day": 7.008074608319484,
+      "tax": 80,
+      "wages": 56,
+      "due": 8,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 336
+     },
+     {
+      "day": 14.124862092964962,
+      "tax": 80,
+      "wages": 56,
+      "due": 8,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 362
+     }
+    ],
+    "book": [],
+    "castellan": null,
+    "crownLand": false,
+    "fedTo": 20.011111781540965
+   },
+   "dunmarsh": {
+    "kind": "village",
+    "sovereign": "aurelian",
+    "holder": "person:9",
+    "controller": "aurelian",
+    "seat": "ashgate_fort",
+    "administrator": null,
+    "claims": [],
+    "prosperity": 50,
+    "unrest": 20,
+    "garrison": null,
+    "militia": 6,
+    "policies": {
+     "garrison": "normal",
+     "tax": "normal",
+     "food": 14,
+     "repairs": true
+    },
+    "walls": null,
+    "food": null,
+    "treasury": 164,
+    "unpaid": 0,
+    "deserting": false,
+    "dueWeek": 2,
+    "report": {
+     "day": 14.124862092964962,
+     "tax": 30,
+     "wages": 5,
+     "due": 3,
+     "repairs": 0,
+     "steward": 0,
+     "refill": 0,
+     "unpaid": 0,
+     "deserted": 0,
+     "cash": 164
+    },
+    "reports": [
+     {
+      "day": 7.008074608319484,
+      "tax": 30,
+      "wages": 5,
+      "due": 3,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 142
+     },
+     {
+      "day": 14.124862092964962,
+      "tax": 30,
+      "wages": 5,
+      "due": 3,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 164
+     }
+    ],
+    "book": [],
+    "castellan": null,
+    "crownLand": false
+   },
+   "redfield": {
+    "kind": "village",
+    "sovereign": "aurelian",
+    "holder": "person:8",
+    "controller": "aurelian",
+    "seat": "eastwatch",
+    "administrator": null,
+    "claims": [],
+    "prosperity": 50,
+    "unrest": 20,
+    "garrison": null,
+    "militia": 6,
+    "policies": {
+     "garrison": "normal",
+     "tax": "normal",
+     "food": 14,
+     "repairs": true
+    },
+    "walls": null,
+    "food": null,
+    "treasury": 120,
+    "unpaid": 0,
+    "deserting": false,
+    "dueWeek": null,
+    "report": {
+     "day": 14.124862092964962,
+     "tax": 30,
+     "wages": 5,
+     "due": 0,
+     "repairs": 0,
+     "steward": 0,
+     "refill": 0,
+     "unpaid": 0,
+     "deserted": 0,
+     "cash": 1155
+    },
+    "reports": [
+     {
+      "day": 7.008074608319484,
+      "tax": 30,
+      "wages": 5,
+      "due": 0,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 988
+     },
+     {
+      "day": 14.124862092964962,
+      "tax": 30,
+      "wages": 5,
+      "due": 0,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 1155
+     }
+    ],
+    "book": [],
+    "castellan": null,
+    "crownLand": true
+   },
+   "saltmere": {
+    "kind": "village",
+    "sovereign": "aurelian",
+    "holder": "person:11",
+    "controller": "aurelian",
+    "seat": "ashgate_fort",
+    "administrator": null,
+    "claims": [],
+    "prosperity": 50,
+    "unrest": 20,
+    "garrison": null,
+    "militia": 6,
+    "policies": {
+     "garrison": "normal",
+     "tax": "normal",
+     "food": 14,
+     "repairs": true
+    },
+    "walls": null,
+    "food": null,
+    "treasury": 184,
+    "unpaid": 0,
+    "deserting": false,
+    "dueWeek": 2,
+    "report": {
+     "day": 14.124862092964962,
+     "tax": 30,
+     "wages": 5,
+     "due": 3,
+     "repairs": 0,
+     "steward": 0,
+     "refill": 0,
+     "unpaid": 0,
+     "deserted": 0,
+     "cash": 174
+    },
+    "reports": [
+     {
+      "day": 7.008074608319484,
+      "tax": 30,
+      "wages": 5,
+      "due": 3,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 142
+     },
+     {
+      "day": 14.124862092964962,
+      "tax": 30,
+      "wages": 5,
+      "due": 3,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 174
+     }
+    ],
+    "book": [],
+    "castellan": null,
+    "crownLand": false
+   },
+   "castra_nova": {
+    "kind": "fort",
+    "sovereign": "aurelian",
+    "holder": "person:10",
+    "controller": "aurelian",
+    "seat": null,
+    "administrator": null,
+    "claims": [],
+    "prosperity": 50,
+    "unrest": 20,
+    "garrison": {
+     "spearman": 30,
+     "legionary": 12,
+     "skirmisher": 18,
+     "marksman": 6
+    },
+    "militia": null,
+    "policies": {
+     "garrison": "normal",
+     "tax": "normal",
+     "food": 14,
+     "repairs": true
+    },
+    "walls": 100,
+    "food": 14,
+    "treasury": 243,
+    "unpaid": 0,
+    "deserting": false,
+    "dueWeek": 2,
+    "report": {
+     "day": 14.124862092964962,
+     "tax": 80,
+     "wages": 56,
+     "due": 8,
+     "repairs": 0,
+     "steward": 0,
+     "refill": 0,
+     "unpaid": 0,
+     "deserted": 0,
+     "cash": 233
+    },
+    "reports": [
+     {
+      "day": 7.008074608319484,
+      "tax": 80,
+      "wages": 56,
+      "due": 8,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 336
+     },
+     {
+      "day": 14.124862092964962,
+      "tax": 80,
+      "wages": 56,
+      "due": 8,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 233
+     }
+    ],
+    "book": [],
+    "castellan": null,
+    "crownLand": false,
+    "fedTo": 20.011111781540965
+   },
+   "calvinum": {
+    "kind": "village",
+    "sovereign": "aurelian",
+    "holder": "person:10",
+    "controller": "aurelian",
+    "seat": "castra_nova",
+    "administrator": null,
+    "claims": [],
+    "prosperity": 50,
+    "unrest": 20,
+    "garrison": null,
+    "militia": 6,
+    "policies": {
+     "garrison": "normal",
+     "tax": "normal",
+     "food": 14,
+     "repairs": true
+    },
+    "walls": null,
+    "food": null,
+    "treasury": 164,
+    "unpaid": 0,
+    "deserting": false,
+    "dueWeek": 2,
+    "report": {
+     "day": 14.124862092964962,
+     "tax": 30,
+     "wages": 5,
+     "due": 3,
+     "repairs": 0,
+     "steward": 0,
+     "refill": 0,
+     "unpaid": 0,
+     "deserted": 0,
+     "cash": 164
+    },
+    "reports": [
+     {
+      "day": 7.008074608319484,
+      "tax": 30,
+      "wages": 5,
+      "due": 3,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 142
+     },
+     {
+      "day": 14.124862092964962,
+      "tax": 30,
+      "wages": 5,
+      "due": 3,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 164
+     }
+    ],
+    "book": [],
+    "castellan": null,
+    "crownLand": false
+   },
+   "tessaro": {
+    "kind": "village",
+    "sovereign": "aurelian",
+    "holder": "person:12",
+    "controller": "aurelian",
+    "seat": "castra_nova",
+    "administrator": null,
+    "claims": [],
+    "prosperity": 50,
+    "unrest": 20,
+    "garrison": null,
+    "militia": 6,
+    "policies": {
+     "garrison": "normal",
+     "tax": "normal",
+     "food": 14,
+     "repairs": true
+    },
+    "walls": null,
+    "food": null,
+    "treasury": 164,
+    "unpaid": 0,
+    "deserting": false,
+    "dueWeek": 2,
+    "report": {
+     "day": 14.124862092964962,
+     "tax": 30,
+     "wages": 5,
+     "due": 3,
+     "repairs": 0,
+     "steward": 0,
+     "refill": 0,
+     "unpaid": 0,
+     "deserted": 0,
+     "cash": 164
+    },
+    "reports": [
+     {
+      "day": 7.008074608319484,
+      "tax": 30,
+      "wages": 5,
+      "due": 3,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 142
+     },
+     {
+      "day": 14.124862092964962,
+      "tax": 30,
+      "wages": 5,
+      "due": 3,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 164
+     }
+    ],
+    "book": [],
+    "castellan": null,
+    "crownLand": false
+   },
+   "hrothgard": {
+    "kind": "town",
+    "sovereign": "hrothmark",
+    "holder": "person:15",
+    "controller": "hrothmark",
+    "seat": null,
+    "administrator": null,
+    "claims": [],
+    "prosperity": 60,
+    "unrest": 20,
+    "garrison": null,
+    "militia": null,
+    "policies": {
+     "garrison": "normal",
+     "tax": "normal",
+     "food": 14,
+     "repairs": true
+    },
+    "walls": null,
+    "food": null,
+    "treasury": 480,
+    "unpaid": 0,
+    "deserting": false,
+    "dueWeek": null,
+    "report": {
+     "day": 14.124862092964962,
+     "tax": 144,
+     "wages": 0,
+     "due": 0,
+     "repairs": 0,
+     "steward": 0,
+     "refill": 0,
+     "unpaid": 0,
+     "deserted": 0,
+     "cash": 1104
+    },
+    "reports": [
+     {
+      "day": 7.008074608319484,
+      "tax": 144,
+      "wages": 0,
+      "due": 0,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 940
+     },
+     {
+      "day": 14.124862092964962,
+      "tax": 144,
+      "wages": 0,
+      "due": 0,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 1104
+     }
+    ],
+    "book": [],
+    "castellan": null,
+    "crownLand": true
+   },
+   "ulfstead_hold": {
+    "kind": "fort",
+    "sovereign": "hrothmark",
+    "holder": "person:16",
+    "controller": "hrothmark",
+    "seat": null,
+    "administrator": null,
+    "claims": [],
+    "prosperity": 50,
+    "unrest": 20,
+    "garrison": {
+     "axeman": 30,
+     "huscarl": 12,
+     "fell_archer": 18,
+     "fell_warden": 6
+    },
+    "militia": null,
+    "policies": {
+     "garrison": "normal",
+     "tax": "normal",
+     "food": 14,
+     "repairs": true
+    },
+    "walls": 100,
+    "food": 14,
+    "treasury": 370,
+    "unpaid": 0,
+    "deserting": false,
+    "dueWeek": 2,
+    "report": {
+     "day": 14.124862092964962,
+     "tax": 80,
+     "wages": 57,
+     "due": 8,
+     "repairs": 0,
+     "steward": 0,
+     "refill": 0,
+     "unpaid": 0,
+     "deserted": 0,
+     "cash": 360
+    },
+    "reports": [
+     {
+      "day": 7.008074608319484,
+      "tax": 80,
+      "wages": 57,
+      "due": 8,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 335
+     },
+     {
+      "day": 14.124862092964962,
+      "tax": 80,
+      "wages": 57,
+      "due": 8,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 360
+     }
+    ],
+    "book": [],
+    "castellan": null,
+    "crownLand": false,
+    "fedTo": 20.011111781540965
+   },
+   "skarnwall": {
+    "kind": "fort",
+    "sovereign": "hrothmark",
+    "holder": "person:17",
+    "controller": "hrothmark",
+    "seat": null,
+    "administrator": null,
+    "claims": [],
+    "prosperity": 50,
+    "unrest": 20,
+    "garrison": {
+     "axeman": 30,
+     "huscarl": 12,
+     "fell_archer": 18,
+     "fell_warden": 6
+    },
+    "militia": null,
+    "policies": {
+     "garrison": "normal",
+     "tax": "normal",
+     "food": 14,
+     "repairs": true
+    },
+    "walls": 100,
+    "food": 14,
+    "treasury": 370,
+    "unpaid": 0,
+    "deserting": false,
+    "dueWeek": 2,
+    "report": {
+     "day": 14.124862092964962,
+     "tax": 80,
+     "wages": 57,
+     "due": 8,
+     "repairs": 0,
+     "steward": 0,
+     "refill": 0,
+     "unpaid": 0,
+     "deserted": 0,
+     "cash": 360
+    },
+    "reports": [
+     {
+      "day": 7.008074608319484,
+      "tax": 80,
+      "wages": 57,
+      "due": 8,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 335
+     },
+     {
+      "day": 14.124862092964962,
+      "tax": 80,
+      "wages": 57,
+      "due": 8,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 360
+     }
+    ],
+    "book": [],
+    "castellan": null,
+    "crownLand": false,
+    "fedTo": 20.011111781540965
+   },
+   "birkholm": {
+    "kind": "village",
+    "sovereign": "hrothmark",
+    "holder": "person:16",
+    "controller": "hrothmark",
+    "seat": "ulfstead_hold",
+    "administrator": null,
+    "claims": [],
+    "prosperity": 50,
+    "unrest": 20,
+    "garrison": null,
+    "militia": 6,
+    "policies": {
+     "garrison": "normal",
+     "tax": "normal",
+     "food": 14,
+     "repairs": true
+    },
+    "walls": null,
+    "food": null,
+    "treasury": 164,
+    "unpaid": 0,
+    "deserting": false,
+    "dueWeek": 2,
+    "report": {
+     "day": 14.124862092964962,
+     "tax": 30,
+     "wages": 5,
+     "due": 3,
+     "repairs": 0,
+     "steward": 0,
+     "refill": 0,
+     "unpaid": 0,
+     "deserted": 0,
+     "cash": 164
+    },
+    "reports": [
+     {
+      "day": 7.008074608319484,
+      "tax": 30,
+      "wages": 5,
+      "due": 3,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 142
+     },
+     {
+      "day": 14.124862092964962,
+      "tax": 30,
+      "wages": 5,
+      "due": 3,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 164
+     }
+    ],
+    "book": [],
+    "castellan": null,
+    "crownLand": false
+   },
+   "eldmoor": {
+    "kind": "village",
+    "sovereign": "hrothmark",
+    "holder": "person:15",
+    "controller": "hrothmark",
+    "seat": "hrothgard",
+    "administrator": null,
+    "claims": [],
+    "prosperity": 50,
+    "unrest": 20,
+    "garrison": null,
+    "militia": 6,
+    "policies": {
+     "garrison": "normal",
+     "tax": "normal",
+     "food": 14,
+     "repairs": true
+    },
+    "walls": null,
+    "food": null,
+    "treasury": 120,
+    "unpaid": 0,
+    "deserting": false,
+    "dueWeek": null,
+    "report": {
+     "day": 14.124862092964962,
+     "tax": 30,
+     "wages": 5,
+     "due": 0,
+     "repairs": 0,
+     "steward": 0,
+     "refill": 0,
+     "unpaid": 0,
+     "deserted": 0,
+     "cash": 1148
+    },
+    "reports": [
+     {
+      "day": 7.008074608319484,
+      "tax": 30,
+      "wages": 5,
+      "due": 0,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 984
+     },
+     {
+      "day": 14.124862092964962,
+      "tax": 30,
+      "wages": 5,
+      "due": 0,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 1148
+     }
+    ],
+    "book": [],
+    "castellan": null,
+    "crownLand": true
+   },
+   "thornvik": {
+    "kind": "village",
+    "sovereign": "hrothmark",
+    "holder": "person:17",
+    "controller": "hrothmark",
+    "seat": "skarnwall",
+    "administrator": null,
+    "claims": [],
+    "prosperity": 50,
+    "unrest": 20,
+    "garrison": null,
+    "militia": 6,
+    "policies": {
+     "garrison": "normal",
+     "tax": "normal",
+     "food": 14,
+     "repairs": true
+    },
+    "walls": null,
+    "food": null,
+    "treasury": 164,
+    "unpaid": 0,
+    "deserting": false,
+    "dueWeek": 2,
+    "report": {
+     "day": 14.124862092964962,
+     "tax": 30,
+     "wages": 5,
+     "due": 3,
+     "repairs": 0,
+     "steward": 0,
+     "refill": 0,
+     "unpaid": 0,
+     "deserted": 0,
+     "cash": 164
+    },
+    "reports": [
+     {
+      "day": 7.008074608319484,
+      "tax": 30,
+      "wages": 5,
+      "due": 3,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 142
+     },
+     {
+      "day": 14.124862092964962,
+      "tax": 30,
+      "wages": 5,
+      "due": 3,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 164
+     }
+    ],
+    "book": [],
+    "castellan": null,
+    "crownLand": false
+   },
+   "kettleby": {
+    "kind": "village",
+    "sovereign": "hrothmark",
+    "holder": "person:18",
+    "controller": "hrothmark",
+    "seat": "skarnwall",
+    "administrator": null,
+    "claims": [],
+    "prosperity": 50,
+    "unrest": 20,
+    "garrison": null,
+    "militia": 6,
+    "policies": {
+     "garrison": "normal",
+     "tax": "normal",
+     "food": 14,
+     "repairs": true
+    },
+    "walls": null,
+    "food": null,
+    "treasury": 184,
+    "unpaid": 0,
+    "deserting": false,
+    "dueWeek": 2,
+    "report": {
+     "day": 14.124862092964962,
+     "tax": 30,
+     "wages": 5,
+     "due": 3,
+     "repairs": 0,
+     "steward": 0,
+     "refill": 0,
+     "unpaid": 0,
+     "deserted": 0,
+     "cash": 174
+    },
+    "reports": [
+     {
+      "day": 7.008074608319484,
+      "tax": 30,
+      "wages": 5,
+      "due": 3,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 142
+     },
+     {
+      "day": 14.124862092964962,
+      "tax": 30,
+      "wages": 5,
+      "due": 3,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 174
+     }
+    ],
+    "book": [],
+    "castellan": null,
+    "crownLand": false
+   },
+   "vessara": {
+    "kind": "town",
+    "sovereign": "vessaro",
+    "holder": "person:21",
+    "controller": "vessaro",
+    "seat": null,
+    "administrator": null,
+    "claims": [],
+    "prosperity": 60,
+    "unrest": 20,
+    "garrison": null,
+    "militia": null,
+    "policies": {
+     "garrison": "normal",
+     "tax": "normal",
+     "food": 14,
+     "repairs": true
+    },
+    "walls": null,
+    "food": null,
+    "treasury": 480,
+    "unpaid": 0,
+    "deserting": false,
+    "dueWeek": null,
+    "report": {
+     "day": 14.124862092964962,
+     "tax": 144,
+     "wages": 0,
+     "due": 0,
+     "repairs": 0,
+     "steward": 0,
+     "refill": 0,
+     "unpaid": 0,
+     "deserted": 0,
+     "cash": 1104
+    },
+    "reports": [
+     {
+      "day": 7.008074608319484,
+      "tax": 144,
+      "wages": 0,
+      "due": 0,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 940
+     },
+     {
+      "day": 14.124862092964962,
+      "tax": 144,
+      "wages": 0,
+      "due": 0,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 1104
+     }
+    ],
+    "book": [],
+    "castellan": null,
+    "crownLand": true
+   },
+   "torre_salina": {
+    "kind": "fort",
+    "sovereign": "vessaro",
+    "holder": "person:22",
+    "controller": "vessaro",
+    "seat": null,
+    "administrator": null,
+    "claims": [],
+    "prosperity": 50,
+    "unrest": 20,
+    "garrison": {
+     "pikeman": 30,
+     "pavisier": 12,
+     "crossbowman": 18,
+     "arbalester": 6
+    },
+    "militia": null,
+    "policies": {
+     "garrison": "normal",
+     "tax": "normal",
+     "food": 14,
+     "repairs": true
+    },
+    "walls": 100,
+    "food": 14,
+    "treasury": 243,
+    "unpaid": 0,
+    "deserting": false,
+    "dueWeek": 2,
+    "report": {
+     "day": 14.124862092964962,
+     "tax": 80,
+     "wages": 56,
+     "due": 8,
+     "repairs": 0,
+     "steward": 0,
+     "refill": 0,
+     "unpaid": 0,
+     "deserted": 0,
+     "cash": 362
+    },
+    "reports": [
+     {
+      "day": 7.008074608319484,
+      "tax": 80,
+      "wages": 56,
+      "due": 8,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 336
+     },
+     {
+      "day": 14.124862092964962,
+      "tax": 80,
+      "wages": 56,
+      "due": 8,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 362
+     }
+    ],
+    "book": [],
+    "castellan": null,
+    "crownLand": false,
+    "fedTo": 20.011111781540965
+   },
+   "castel_verro": {
+    "kind": "fort",
+    "sovereign": "vessaro",
+    "holder": "person:23",
+    "controller": "vessaro",
+    "seat": null,
+    "administrator": null,
+    "claims": [],
+    "prosperity": 50,
+    "unrest": 20,
+    "garrison": {
+     "pikeman": 30,
+     "pavisier": 12,
+     "crossbowman": 18,
+     "arbalester": 6
+    },
+    "militia": null,
+    "policies": {
+     "garrison": "normal",
+     "tax": "normal",
+     "food": 14,
+     "repairs": true
+    },
+    "walls": 100,
+    "food": 14,
+    "treasury": 372,
+    "unpaid": 0,
+    "deserting": false,
+    "dueWeek": 2,
+    "report": {
+     "day": 14.124862092964962,
+     "tax": 80,
+     "wages": 56,
+     "due": 8,
+     "repairs": 0,
+     "steward": 0,
+     "refill": 0,
+     "unpaid": 0,
+     "deserted": 0,
+     "cash": 362
+    },
+    "reports": [
+     {
+      "day": 7.008074608319484,
+      "tax": 80,
+      "wages": 56,
+      "due": 8,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 336
+     },
+     {
+      "day": 14.124862092964962,
+      "tax": 80,
+      "wages": 56,
+      "due": 8,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 362
+     }
+    ],
+    "book": [],
+    "castellan": null,
+    "crownLand": false,
+    "fedTo": 20.011111781540965
+   },
+   "lucco": {
+    "kind": "village",
+    "sovereign": "vessaro",
+    "holder": "person:22",
+    "controller": "vessaro",
+    "seat": "torre_salina",
+    "administrator": null,
+    "claims": [],
+    "prosperity": 50,
+    "unrest": 20,
+    "garrison": null,
+    "militia": 6,
+    "policies": {
+     "garrison": "normal",
+     "tax": "normal",
+     "food": 14,
+     "repairs": true
+    },
+    "walls": null,
+    "food": null,
+    "treasury": 164,
+    "unpaid": 0,
+    "deserting": false,
+    "dueWeek": 2,
+    "report": {
+     "day": 14.124862092964962,
+     "tax": 30,
+     "wages": 5,
+     "due": 3,
+     "repairs": 0,
+     "steward": 0,
+     "refill": 0,
+     "unpaid": 0,
+     "deserted": 0,
+     "cash": 164
+    },
+    "reports": [
+     {
+      "day": 7.008074608319484,
+      "tax": 30,
+      "wages": 5,
+      "due": 3,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 142
+     },
+     {
+      "day": 14.124862092964962,
+      "tax": 30,
+      "wages": 5,
+      "due": 3,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 164
+     }
+    ],
+    "book": [],
+    "castellan": null,
+    "crownLand": false
+   },
+   "marenna": {
+    "kind": "village",
+    "sovereign": "vessaro",
+    "holder": "person:24",
+    "controller": "vessaro",
+    "seat": "torre_salina",
+    "administrator": null,
+    "claims": [],
+    "prosperity": 50,
+    "unrest": 20,
+    "garrison": null,
+    "militia": 6,
+    "policies": {
+     "garrison": "normal",
+     "tax": "normal",
+     "food": 14,
+     "repairs": true
+    },
+    "walls": null,
+    "food": null,
+    "treasury": 184,
+    "unpaid": 0,
+    "deserting": false,
+    "dueWeek": 2,
+    "report": {
+     "day": 14.124862092964962,
+     "tax": 30,
+     "wages": 5,
+     "due": 3,
+     "repairs": 0,
+     "steward": 0,
+     "refill": 0,
+     "unpaid": 0,
+     "deserted": 0,
+     "cash": 174
+    },
+    "reports": [
+     {
+      "day": 7.008074608319484,
+      "tax": 30,
+      "wages": 5,
+      "due": 3,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 142
+     },
+     {
+      "day": 14.124862092964962,
+      "tax": 30,
+      "wages": 5,
+      "due": 3,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 174
+     }
+    ],
+    "book": [],
+    "castellan": null,
+    "crownLand": false
+   },
+   "pellio": {
+    "kind": "village",
+    "sovereign": "vessaro",
+    "holder": "person:21",
+    "controller": "vessaro",
+    "seat": "vessara",
+    "administrator": null,
+    "claims": [],
+    "prosperity": 50,
+    "unrest": 20,
+    "garrison": null,
+    "militia": 6,
+    "policies": {
+     "garrison": "normal",
+     "tax": "normal",
+     "food": 14,
+     "repairs": true
+    },
+    "walls": null,
+    "food": null,
+    "treasury": 120,
+    "unpaid": 0,
+    "deserting": false,
+    "dueWeek": null,
+    "report": {
+     "day": 14.124862092964962,
+     "tax": 30,
+     "wages": 5,
+     "due": 0,
+     "repairs": 0,
+     "steward": 0,
+     "refill": 0,
+     "unpaid": 0,
+     "deserted": 0,
+     "cash": 1151
+    },
+    "reports": [
+     {
+      "day": 7.008074608319484,
+      "tax": 30,
+      "wages": 5,
+      "due": 0,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 987
+     },
+     {
+      "day": 14.124862092964962,
+      "tax": 30,
+      "wages": 5,
+      "due": 0,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 1151
+     }
+    ],
+    "book": [],
+    "castellan": null,
+    "crownLand": true
+   },
+   "sorra": {
+    "kind": "village",
+    "sovereign": "vessaro",
+    "holder": "person:23",
+    "controller": "vessaro",
+    "seat": "castel_verro",
+    "administrator": null,
+    "claims": [],
+    "prosperity": 50,
+    "unrest": 20,
+    "garrison": null,
+    "militia": 6,
+    "policies": {
+     "garrison": "normal",
+     "tax": "normal",
+     "food": 14,
+     "repairs": true
+    },
+    "walls": null,
+    "food": null,
+    "treasury": 164,
+    "unpaid": 0,
+    "deserting": false,
+    "dueWeek": 2,
+    "report": {
+     "day": 14.124862092964962,
+     "tax": 30,
+     "wages": 5,
+     "due": 3,
+     "repairs": 0,
+     "steward": 0,
+     "refill": 0,
+     "unpaid": 0,
+     "deserted": 0,
+     "cash": 164
+    },
+    "reports": [
+     {
+      "day": 7.008074608319484,
+      "tax": 30,
+      "wages": 5,
+      "due": 3,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 142
+     },
+     {
+      "day": 14.124862092964962,
+      "tax": 30,
+      "wages": 5,
+      "due": 3,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 164
+     }
+    ],
+    "book": [],
+    "castellan": null,
+    "crownLand": false
+   },
+   "harrowgate": {
+    "kind": "town",
+    "sovereign": "ostrand",
+    "holder": "person:26",
+    "controller": "ostrand",
+    "seat": null,
+    "administrator": null,
+    "claims": [],
+    "prosperity": 60,
+    "unrest": 20,
+    "garrison": null,
+    "militia": null,
+    "policies": {
+     "garrison": "normal",
+     "tax": "normal",
+     "food": 14,
+     "repairs": true
+    },
+    "walls": null,
+    "food": null,
+    "treasury": 480,
+    "unpaid": 0,
+    "deserting": false,
+    "dueWeek": null,
+    "report": {
+     "day": 14.124862092964962,
+     "tax": 144,
+     "wages": 0,
+     "due": 0,
+     "repairs": 0,
+     "steward": 0,
+     "refill": 0,
+     "unpaid": 0,
+     "deserted": 0,
+     "cash": 559
+    },
+    "reports": [
+     {
+      "day": 7.008074608319484,
+      "tax": 144,
+      "wages": 0,
+      "due": 0,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 378
+     },
+     {
+      "day": 14.124862092964962,
+      "tax": 144,
+      "wages": 0,
+      "due": 0,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 559
+     }
+    ],
+    "book": [],
+    "castellan": null,
+    "crownLand": true
+   },
+   "coldkeep": {
+    "kind": "fort",
+    "sovereign": "ostrand",
+    "holder": "person:28",
+    "controller": "ostrand",
+    "seat": null,
+    "administrator": null,
+    "claims": [],
+    "prosperity": 50,
+    "unrest": 20,
+    "garrison": {
+     "ostrand_shieldman": 29,
+     "ostrand_levy": 18,
+     "ostrand_bowman": 17
+    },
+    "militia": null,
+    "policies": {
+     "garrison": "normal",
+     "tax": "normal",
+     "food": 14,
+     "repairs": true
+    },
+    "walls": 100,
+    "food": 14,
+    "treasury": 201,
+    "unpaid": 0,
+    "deserting": false,
+    "dueWeek": 2,
+    "report": {
+     "day": 14.124862092964962,
+     "tax": 80,
+     "wages": 32,
+     "due": 8,
+     "repairs": 0,
+     "steward": 0,
+     "refill": 102,
+     "unpaid": 0,
+     "deserted": 0,
+     "cash": 201
+    },
+    "reports": [
+     {
+      "day": 7.008074608319484,
+      "tax": 80,
+      "wages": 27,
+      "due": 8,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 102,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 263
+     },
+     {
+      "day": 14.124862092964962,
+      "tax": 80,
+      "wages": 32,
+      "due": 8,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 102,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 201
+     }
+    ],
+    "book": [],
+    "castellan": null,
+    "crownLand": false,
+    "fedTo": 20.011111781540965
+   },
+   "whitecliff": {
+    "kind": "fort",
+    "sovereign": "ostrand",
+    "holder": "person:29",
+    "controller": "ostrand",
+    "seat": null,
+    "administrator": null,
+    "claims": [],
+    "prosperity": 50,
+    "unrest": 20,
+    "garrison": {
+     "ostrand_shieldman": 30,
+     "ostrand_levy": 18,
+     "ostrand_bowman": 18
+    },
+    "militia": null,
+    "policies": {
+     "garrison": "normal",
+     "tax": "normal",
+     "food": 14,
+     "repairs": true
+    },
+    "walls": 100,
+    "food": 14,
+    "treasury": 388,
+    "unpaid": 0,
+    "deserting": false,
+    "dueWeek": 2,
+    "report": {
+     "day": 14.124862092964962,
+     "tax": 80,
+     "wages": 38,
+     "due": 8,
+     "repairs": 0,
+     "steward": 0,
+     "refill": 0,
+     "unpaid": 0,
+     "deserted": 0,
+     "cash": 388
+    },
+    "reports": [
+     {
+      "day": 7.008074608319484,
+      "tax": 80,
+      "wages": 38,
+      "due": 8,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 354
+     },
+     {
+      "day": 14.124862092964962,
+      "tax": 80,
+      "wages": 38,
+      "due": 8,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 388
+     }
+    ],
+    "book": [],
+    "castellan": null,
+    "crownLand": false,
+    "fedTo": 20.011111781540965
+   },
+   "brindle": {
+    "kind": "village",
+    "sovereign": "ostrand",
+    "holder": "person:26",
+    "controller": "ostrand",
+    "seat": "harrowgate",
+    "administrator": null,
+    "claims": [],
+    "prosperity": 50,
+    "unrest": 20,
+    "garrison": null,
+    "militia": 6,
+    "policies": {
+     "garrison": "normal",
+     "tax": "normal",
+     "food": 14,
+     "repairs": true
+    },
+    "walls": null,
+    "food": null,
+    "treasury": 120,
+    "unpaid": 0,
+    "deserting": false,
+    "dueWeek": null,
+    "report": {
+     "day": 14.124862092964962,
+     "tax": 30,
+     "wages": 5,
+     "due": 0,
+     "repairs": 0,
+     "steward": 0,
+     "refill": 0,
+     "unpaid": 0,
+     "deserted": 0,
+     "cash": 600
+    },
+    "reports": [
+     {
+      "day": 7.008074608319484,
+      "tax": 30,
+      "wages": 5,
+      "due": 0,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 419
+     },
+     {
+      "day": 14.124862092964962,
+      "tax": 30,
+      "wages": 5,
+      "due": 0,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 600
+     }
+    ],
+    "book": [],
+    "castellan": null,
+    "crownLand": true
+   },
+   "fenwick": {
+    "kind": "village",
+    "sovereign": "ostrand",
+    "holder": "person:28",
+    "controller": "ostrand",
+    "seat": "coldkeep",
+    "administrator": null,
+    "claims": [],
+    "prosperity": 50,
+    "unrest": 20,
+    "garrison": null,
+    "militia": 6,
+    "policies": {
+     "garrison": "normal",
+     "tax": "normal",
+     "food": 14,
+     "repairs": true
+    },
+    "walls": null,
+    "food": null,
+    "treasury": 164,
+    "unpaid": 0,
+    "deserting": false,
+    "dueWeek": 2,
+    "report": {
+     "day": 14.124862092964962,
+     "tax": 30,
+     "wages": 5,
+     "due": 3,
+     "repairs": 0,
+     "steward": 0,
+     "refill": 0,
+     "unpaid": 0,
+     "deserted": 0,
+     "cash": 164
+    },
+    "reports": [
+     {
+      "day": 7.008074608319484,
+      "tax": 30,
+      "wages": 5,
+      "due": 3,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 142
+     },
+     {
+      "day": 14.124862092964962,
+      "tax": 30,
+      "wages": 5,
+      "due": 3,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 164
+     }
+    ],
+    "book": [],
+    "castellan": null,
+    "crownLand": false
+   },
+   "thornby": {
+    "kind": "village",
+    "sovereign": "ostrand",
+    "holder": "person:30",
+    "controller": "ostrand",
+    "seat": "whitecliff",
+    "administrator": null,
+    "claims": [],
+    "prosperity": 50,
+    "unrest": 20,
+    "garrison": null,
+    "militia": 6,
+    "policies": {
+     "garrison": "normal",
+     "tax": "normal",
+     "food": 14,
+     "repairs": true
+    },
+    "walls": null,
+    "food": null,
+    "treasury": 1,
+    "unpaid": 0,
+    "deserting": false,
+    "dueWeek": 2,
+    "report": {
+     "day": 14.124862092964962,
+     "tax": 30,
+     "wages": 5,
+     "due": 3,
+     "repairs": 0,
+     "steward": 0,
+     "refill": 0,
+     "unpaid": 0,
+     "deserted": 0,
+     "cash": 24
+    },
+    "reports": [
+     {
+      "day": 7.008074608319484,
+      "tax": 30,
+      "wages": 5,
+      "due": 3,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 55
+     },
+     {
+      "day": 14.124862092964962,
+      "tax": 30,
+      "wages": 5,
+      "due": 3,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 24
+     }
+    ],
+    "book": [],
+    "castellan": null,
+    "crownLand": false
+   },
+   "calder": {
+    "kind": "town",
+    "sovereign": "saltreach",
+    "holder": "person:32",
+    "controller": "saltreach",
+    "seat": null,
+    "administrator": null,
+    "claims": [],
+    "prosperity": 60,
+    "unrest": 20,
+    "garrison": null,
+    "militia": null,
+    "policies": {
+     "garrison": "normal",
+     "tax": "normal",
+     "food": 14,
+     "repairs": true
+    },
+    "walls": null,
+    "food": null,
+    "treasury": 480,
+    "unpaid": 0,
+    "deserting": false,
+    "dueWeek": null,
+    "report": {
+     "day": 14.124862092964962,
+     "tax": 144,
+     "wages": 0,
+     "due": 0,
+     "repairs": 0,
+     "steward": 0,
+     "refill": 0,
+     "unpaid": 0,
+     "deserted": 0,
+     "cash": 1639
+    },
+    "reports": [
+     {
+      "day": 7.008074608319484,
+      "tax": 144,
+      "wages": 0,
+      "due": 0,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 1478
+     },
+     {
+      "day": 14.124862092964962,
+      "tax": 144,
+      "wages": 0,
+      "due": 0,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 1639
+     }
+    ],
+    "book": [],
+    "castellan": null,
+    "crownLand": true
+   },
+   "rookmoor": {
+    "kind": "fort",
+    "sovereign": "saltreach",
+    "holder": "person:34",
+    "controller": "saltreach",
+    "seat": null,
+    "administrator": null,
+    "claims": [],
+    "prosperity": 50,
+    "unrest": 20,
+    "garrison": {
+     "saltreach_pikeman": 30,
+     "saltreach_militia": 18,
+     "saltreach_crossbow": 18
+    },
+    "militia": null,
+    "policies": {
+     "garrison": "normal",
+     "tax": "normal",
+     "food": 14,
+     "repairs": true
+    },
+    "walls": 100,
+    "food": 14,
+    "treasury": 288,
+    "unpaid": 0,
+    "deserting": false,
+    "dueWeek": 2,
+    "report": {
+     "day": 14.124862092964962,
+     "tax": 80,
+     "wages": 38,
+     "due": 8,
+     "repairs": 0,
+     "steward": 0,
+     "refill": 0,
+     "unpaid": 0,
+     "deserted": 0,
+     "cash": 278
+    },
+    "reports": [
+     {
+      "day": 7.008074608319484,
+      "tax": 80,
+      "wages": 38,
+      "due": 8,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 234
+     },
+     {
+      "day": 14.124862092964962,
+      "tax": 80,
+      "wages": 38,
+      "due": 8,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 278
+     }
+    ],
+    "book": [],
+    "castellan": null,
+    "crownLand": false,
+    "fedTo": 20.011111781540965
+   },
+   "seagate": {
+    "kind": "fort",
+    "sovereign": "saltreach",
+    "holder": "person:35",
+    "controller": "saltreach",
+    "seat": null,
+    "administrator": null,
+    "claims": [],
+    "prosperity": 50,
+    "unrest": 20,
+    "garrison": {
+     "saltreach_pikeman": 30,
+     "saltreach_militia": 18,
+     "saltreach_crossbow": 18
+    },
+    "militia": null,
+    "policies": {
+     "garrison": "normal",
+     "tax": "normal",
+     "food": 14,
+     "repairs": true
+    },
+    "walls": 100,
+    "food": 14,
+    "treasury": 288,
+    "unpaid": 0,
+    "deserting": false,
+    "dueWeek": 2,
+    "report": {
+     "day": 14.124862092964962,
+     "tax": 80,
+     "wages": 38,
+     "due": 8,
+     "repairs": 0,
+     "steward": 0,
+     "refill": 0,
+     "unpaid": 0,
+     "deserted": 0,
+     "cash": 278
+    },
+    "reports": [
+     {
+      "day": 7.008074608319484,
+      "tax": 80,
+      "wages": 38,
+      "due": 8,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 234
+     },
+     {
+      "day": 14.124862092964962,
+      "tax": 80,
+      "wages": 38,
+      "due": 8,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 278
+     }
+    ],
+    "book": [],
+    "castellan": null,
+    "crownLand": false,
+    "fedTo": 20.011111781540965
+   },
+   "marlow": {
+    "kind": "village",
+    "sovereign": "saltreach",
+    "holder": "person:32",
+    "controller": "saltreach",
+    "seat": "calder",
+    "administrator": null,
+    "claims": [],
+    "prosperity": 50,
+    "unrest": 20,
+    "garrison": null,
+    "militia": 6,
+    "policies": {
+     "garrison": "normal",
+     "tax": "normal",
+     "food": 14,
+     "repairs": true
+    },
+    "walls": null,
+    "food": null,
+    "treasury": 120,
+    "unpaid": 0,
+    "deserting": false,
+    "dueWeek": null,
+    "report": {
+     "day": 14.124862092964962,
+     "tax": 30,
+     "wages": 5,
+     "due": 0,
+     "repairs": 0,
+     "steward": 0,
+     "refill": 0,
+     "unpaid": 0,
+     "deserted": 0,
+     "cash": 1680
+    },
+    "reports": [
+     {
+      "day": 7.008074608319484,
+      "tax": 30,
+      "wages": 5,
+      "due": 0,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 1519
+     },
+     {
+      "day": 14.124862092964962,
+      "tax": 30,
+      "wages": 5,
+      "due": 0,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 1680
+     }
+    ],
+    "book": [],
+    "castellan": null,
+    "crownLand": true
+   },
+   "pennick": {
+    "kind": "village",
+    "sovereign": "saltreach",
+    "holder": "person:34",
+    "controller": "saltreach",
+    "seat": "rookmoor",
+    "administrator": null,
+    "claims": [],
+    "prosperity": 50,
+    "unrest": 20,
+    "garrison": null,
+    "militia": 6,
+    "policies": {
+     "garrison": "normal",
+     "tax": "normal",
+     "food": 14,
+     "repairs": true
+    },
+    "walls": null,
+    "food": null,
+    "treasury": 164,
+    "unpaid": 0,
+    "deserting": false,
+    "dueWeek": 2,
+    "report": {
+     "day": 14.124862092964962,
+     "tax": 30,
+     "wages": 5,
+     "due": 3,
+     "repairs": 0,
+     "steward": 0,
+     "refill": 0,
+     "unpaid": 0,
+     "deserted": 0,
+     "cash": 164
+    },
+    "reports": [
+     {
+      "day": 7.008074608319484,
+      "tax": 30,
+      "wages": 5,
+      "due": 3,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 142
+     },
+     {
+      "day": 14.124862092964962,
+      "tax": 30,
+      "wages": 5,
+      "due": 3,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 164
+     }
+    ],
+    "book": [],
+    "castellan": null,
+    "crownLand": false
+   },
+   "tidewell": {
+    "kind": "village",
+    "sovereign": "saltreach",
+    "holder": "person:36",
+    "controller": "saltreach",
+    "seat": "seagate",
+    "administrator": null,
+    "claims": [],
+    "prosperity": 50,
+    "unrest": 20,
+    "garrison": null,
+    "militia": 6,
+    "policies": {
+     "garrison": "normal",
+     "tax": "normal",
+     "food": 14,
+     "repairs": true
+    },
+    "walls": null,
+    "food": null,
+    "treasury": 94,
+    "unpaid": 0,
+    "deserting": false,
+    "dueWeek": 2,
+    "report": {
+     "day": 14.124862092964962,
+     "tax": 30,
+     "wages": 5,
+     "due": 3,
+     "repairs": 0,
+     "steward": 0,
+     "refill": 0,
+     "unpaid": 0,
+     "deserted": 0,
+     "cash": 84
+    },
+    "reports": [
+     {
+      "day": 7.008074608319484,
+      "tax": 30,
+      "wages": 5,
+      "due": 3,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 52
+     },
+     {
+      "day": 14.124862092964962,
+      "tax": 30,
+      "wages": 5,
+      "due": 3,
+      "repairs": 0,
+      "steward": 0,
+      "refill": 0,
+      "unpaid": 0,
+      "deserted": 0,
+      "cash": 84
+     }
+    ],
+    "book": [],
+    "castellan": null,
+    "crownLand": false
+   }
+  },
+  "realms": {},
+  "nextRealmId": 0,
+  "rule": {
+   "steward": "grow",
+   "marshal": "defend",
+   "chancellor": "peace",
+   "asks": []
+  },
+  "rebellions": {
+   "list": [],
+   "quiet": {},
+   "nextId": 0,
+   "summons": null,
+   "refuge": null,
+   "deposed": null
+  },
+  "armies": [],
+  "nextArmyId": 2,
+  "armyRest": {
+   "ostrand": 7.5135798497770825,
+   "saltreach": 9.166058683553718
+  },
+  "armyCall": null,
+  "houses": {
+   "house:1": {
+    "id": "house:1",
+    "name": "Ardane",
+    "colors": [
+     "#7a2e2e",
+     "#c9a24a"
+    ],
+    "head": "person:1",
+    "members": [
+     "person:1",
+     "person:7"
+    ],
+    "alliances": [],
+    "rivals": [],
+    "rel": {}
+   },
+   "house:2": {
+    "id": "house:2",
+    "name": "Greymantle",
+    "colors": [
+     "#2e5a7a",
+     "#c9a24a"
+    ],
+    "head": "person:2",
+    "members": [
+     "person:2",
+     "person:4",
+     "person:6"
+    ],
+    "alliances": [],
+    "rivals": [],
+    "rel": {}
+   },
+   "house:3": {
+    "id": "house:3",
+    "name": "Westmere",
+    "colors": [
+     "#5a7a2e",
+     "#c9a24a"
+    ],
+    "head": "person:3",
+    "members": [
+     "person:3"
+    ],
+    "alliances": [],
+    "rivals": [],
+    "rel": {}
+   },
+   "house:4": {
+    "id": "house:4",
+    "name": "Fernby",
+    "colors": [
+     "#7a6a2e",
+     "#c9a24a"
+    ],
+    "head": "person:5",
+    "members": [
+     "person:5"
+    ],
+    "alliances": [],
+    "rivals": [],
+    "rel": {}
+   },
+   "house:5": {
+    "id": "house:5",
+    "name": "Aquila",
+    "colors": [
+     "#5a2e7a",
+     "#c9a24a"
+    ],
+    "head": "person:8",
+    "members": [
+     "person:8",
+     "person:14"
+    ],
+    "alliances": [],
+    "rivals": [],
+    "rel": {}
+   },
+   "house:6": {
+    "id": "house:6",
+    "name": "Vatro",
+    "colors": [
+     "#2e7a6a",
+     "#c9a24a"
+    ],
+    "head": "person:9",
+    "members": [
+     "person:9",
+     "person:13"
+    ],
+    "alliances": [],
+    "rivals": [],
+    "rel": {}
+   },
+   "house:7": {
+    "id": "house:7",
+    "name": "Celer",
+    "colors": [
+     "#7a4a2e",
+     "#c9a24a"
+    ],
+    "head": "person:10",
+    "members": [
+     "person:10",
+     "person:12"
+    ],
+    "alliances": [],
+    "rivals": [],
+    "rel": {}
+   },
+   "house:8": {
+    "id": "house:8",
+    "name": "Corvo",
+    "colors": [
+     "#3a3a6a",
+     "#c9a24a"
+    ],
+    "head": "person:11",
+    "members": [
+     "person:11"
+    ],
+    "alliances": [],
+    "rivals": [],
+    "rel": {}
+   },
+   "house:9": {
+    "id": "house:9",
+    "name": "Ulfring",
+    "colors": [
+     "#6a3a4a",
+     "#c9a24a"
+    ],
+    "head": "person:15",
+    "members": [
+     "person:15",
+     "person:19"
+    ],
+    "alliances": [],
+    "rivals": [],
+    "rel": {}
+   },
+   "house:10": {
+    "id": "house:10",
+    "name": "Hallsdottir",
+    "colors": [
+     "#3a6a3a",
+     "#c9a24a"
+    ],
+    "head": "person:16",
+    "members": [
+     "person:16"
+    ],
+    "alliances": [],
+    "rivals": [],
+    "rel": {}
+   },
+   "house:11": {
+    "id": "house:11",
+    "name": "Skarn",
+    "colors": [
+     "#7a2e2e",
+     "#c9a24a"
+    ],
+    "head": "person:17",
+    "members": [
+     "person:17",
+     "person:20"
+    ],
+    "alliances": [],
+    "rivals": [],
+    "rel": {}
+   },
+   "house:12": {
+    "id": "house:12",
+    "name": "Brandsson",
+    "colors": [
+     "#2e5a7a",
+     "#c9a24a"
+    ],
+    "head": "person:18",
+    "members": [
+     "person:18"
+    ],
+    "alliances": [],
+    "rivals": [],
+    "rel": {}
+   },
+   "house:13": {
+    "id": "house:13",
+    "name": "Salviati",
+    "colors": [
+     "#5a7a2e",
+     "#c9a24a"
+    ],
+    "head": "person:21",
+    "members": [
+     "person:21",
+     "person:25"
+    ],
+    "alliances": [],
+    "rivals": [],
+    "rel": {}
+   },
+   "house:14": {
+    "id": "house:14",
+    "name": "Morosco",
+    "colors": [
+     "#7a6a2e",
+     "#c9a24a"
+    ],
+    "head": "person:22",
+    "members": [
+     "person:22",
+     "person:24"
+    ],
+    "alliances": [],
+    "rivals": [],
+    "rel": {}
+   },
+   "house:15": {
+    "id": "house:15",
+    "name": "Canale",
+    "colors": [
+     "#5a2e7a",
+     "#c9a24a"
+    ],
+    "head": "person:23",
+    "members": [
+     "person:23"
+    ],
+    "alliances": [],
+    "rivals": [],
+    "rel": {}
+   },
+   "house:16": {
+    "id": "house:16",
+    "name": "Vargr",
+    "colors": [
+     "#2e7a6a",
+     "#c9a24a"
+    ],
+    "head": "person:26",
+    "members": [
+     "person:26",
+     "person:27"
+    ],
+    "alliances": [],
+    "rivals": [],
+    "rel": {}
+   },
+   "house:17": {
+    "id": "house:17",
+    "name": "Hask",
+    "colors": [
+     "#7a4a2e",
+     "#c9a24a"
+    ],
+    "head": "person:28",
+    "members": [
+     "person:28",
+     "person:31"
+    ],
+    "alliances": [],
+    "rivals": [],
+    "rel": {}
+   },
+   "house:18": {
+    "id": "house:18",
+    "name": "Skarde",
+    "colors": [
+     "#3a3a6a",
+     "#c9a24a"
+    ],
+    "head": "person:29",
+    "members": [
+     "person:29",
+     "person:30"
+    ],
+    "alliances": [],
+    "rivals": [],
+    "rel": {}
+   },
+   "house:19": {
+    "id": "house:19",
+    "name": "Salaro",
+    "colors": [
+     "#6a3a4a",
+     "#c9a24a"
+    ],
+    "head": "person:32",
+    "members": [
+     "person:32",
+     "person:33"
+    ],
+    "alliances": [],
+    "rivals": [],
+    "rel": {}
+   },
+   "house:20": {
+    "id": "house:20",
+    "name": "Ferro",
+    "colors": [
+     "#3a6a3a",
+     "#c9a24a"
+    ],
+    "head": "person:34",
+    "members": [
+     "person:34",
+     "person:37"
+    ],
+    "alliances": [],
+    "rivals": [],
+    "rel": {}
+   },
+   "house:21": {
+    "id": "house:21",
+    "name": "Vento",
+    "colors": [
+     "#7a2e2e",
+     "#c9a24a"
+    ],
+    "head": "person:35",
+    "members": [
+     "person:35",
+     "person:36"
+    ],
+    "alliances": [],
+    "rivals": [],
+    "rel": {}
+   },
+   "house:22": {
+    "id": "house:22",
+    "name": "Lanza",
+    "colors": [
+     "#2e5a7a",
+     "#c9a24a"
+    ],
+    "head": "person:38",
+    "members": [
+     "person:38"
+    ],
+    "alliances": [],
+    "rivals": [],
+    "rel": {}
+   }
+  },
+  "nextHouseId": 22,
+  "prisoners": [
+   {
+    "lord": "person:28",
+    "by": "saltreach",
+    "since": 0.5135798497770825,
+    "led": 33,
+    "offerDay": null,
+    "offered": false,
+    "checked": 0,
+    "release": 21.3889901716893
+   },
+   {
+    "lord": "person:27",
+    "by": "saltreach",
+    "since": 0.5135798497770825,
+    "led": 14,
+    "offerDay": null,
+    "offered": false,
+    "checked": 0,
+    "release": 20.94152875963163
+   },
+   {
+    "lord": "person:29",
+    "by": "saltreach",
+    "since": 0.5135798497770825,
+    "led": 23,
+    "offerDay": null,
+    "offered": false,
+    "checked": 0,
+    "release": 22.296730033376484
+   },
+   {
+    "lord": "person:31",
+    "by": "saltreach",
+    "since": 1.030246516443749,
+    "led": 36,
+    "offerDay": null,
+    "offered": false,
+    "checked": 1,
+    "release": 24.629279500923207
+   }
+  ],
+  "allegiance": {
+   "kind": "independent",
+   "realm": null,
+   "since": 0,
+   "until": null,
+   "serviceDays": 0,
+   "summonsMissed": 0,
+   "history": [],
+   "window": null,
+   "lastOath": null,
+   "nextPay": null,
+   "served": null,
+   "hunt": null
+  },
+  "grants": [],
+  "influence": {},
+  "sieges": [],
+  "nobles": {
+   "opinions": {
+    "person:30": {
+     "person:26": {
+      "rel": 8,
+      "log": [
+       [
+        "helped",
+        6
+       ]
+      ]
+     },
+     "person:32": {
+      "rel": -4,
+      "log": [
+       [
+        "held",
+        6
+       ]
+      ]
+     }
+    },
+    "person:29": {
+     "person:32": {
+      "rel": -1,
+      "log": [
+       [
+        "held",
+        6,
+        1
+       ]
+      ]
+     }
+    },
+    "person:6": {
+     "person:1": {
+      "rel": -3,
+      "log": [
+       [
+        "neglected",
+        7
+       ],
+       [
+        "neglected",
+        14
+       ]
+      ]
+     }
+    },
+    "person:7": {
+     "person:1": {
+      "rel": -3,
+      "log": [
+       [
+        "neglected",
+        7
+       ],
+       [
+        "neglected",
+        14
+       ]
+      ]
+     }
+    },
+    "person:13": {
+     "person:8": {
+      "rel": -3,
+      "log": [
+       [
+        "neglected",
+        7
+       ],
+       [
+        "neglected",
+        14
+       ]
+      ]
+     }
+    },
+    "person:14": {
+     "person:8": {
+      "rel": -3,
+      "log": [
+       [
+        "neglected",
+        7
+       ],
+       [
+        "neglected",
+        14
+       ]
+      ]
+     }
+    },
+    "person:19": {
+     "person:15": {
+      "rel": -3,
+      "log": [
+       [
+        "neglected",
+        7
+       ],
+       [
+        "neglected",
+        14
+       ]
+      ]
+     }
+    },
+    "person:20": {
+     "person:15": {
+      "rel": -3,
+      "log": [
+       [
+        "neglected",
+        7
+       ],
+       [
+        "neglected",
+        14
+       ]
+      ]
+     }
+    },
+    "person:25": {
+     "person:21": {
+      "rel": -3,
+      "log": [
+       [
+        "neglected",
+        7
+       ],
+       [
+        "neglected",
+        14
+       ]
+      ]
+     }
+    },
+    "person:33": {
+     "person:32": {
+      "rel": -3,
+      "log": [
+       [
+        "neglected",
+        7
+       ],
+       [
+        "neglected",
+        14
+       ]
+      ]
+     }
+    },
+    "person:37": {
+     "person:32": {
+      "rel": -3,
+      "log": [
+       [
+        "neglected",
+        7
+       ],
+       [
+        "neglected",
+        14
+       ]
+      ]
+     }
+    },
+    "person:38": {
+     "person:21": {
+      "rel": -3,
+      "log": [
+       [
+        "neglected",
+        7
+       ],
+       [
+        "neglected",
+        14
+       ]
+      ]
+     }
+    }
+   },
+   "debts": [],
+   "petitions": [],
+   "asks": {},
+   "pledges": [],
+   "moved": {},
+   "warned": {},
+   "lent": {},
+   "pressed": {},
+   "summons": null,
+   "nextPetition": 1,
+   "petitionAfter": 0,
+   "week": 2,
+   "lastPetitionCheck": 20
+  },
+  "crowns": {
+   "valedorn": {
+    "treasury": 1142,
+    "book": [
+     {
+      "week": 0,
+      "start": 808,
+      "in": {},
+      "out": {}
+     },
+     {
+      "week": 1,
+      "start": 808,
+      "in": {
+       "tax": 174,
+       "due": 28
+      },
+      "out": {
+       "wages": 5,
+       "office": 30
+      }
+     },
+     {
+      "week": 2,
+      "start": 975,
+      "in": {
+       "tax": 174,
+       "due": 28
+      },
+      "out": {
+       "wages": 5,
+       "office": 30
+      }
+     }
+    ],
+    "offices": {
+     "marshal": "person:2",
+     "steward": "person:3",
+     "chancellor": "person:4"
+    },
+    "vacant": {}
+   },
+   "aurelian": {
+    "treasury": 1142,
+    "book": [
+     {
+      "week": 0,
+      "start": 808,
+      "in": {},
+      "out": {}
+     },
+     {
+      "week": 1,
+      "start": 808,
+      "in": {
+       "tax": 174,
+       "due": 28
+      },
+      "out": {
+       "wages": 5,
+       "office": 30
+      }
+     },
+     {
+      "week": 2,
+      "start": 975,
+      "in": {
+       "tax": 174,
+       "due": 28
+      },
+      "out": {
+       "wages": 5,
+       "office": 30
+      }
+     }
+    ],
+    "offices": {
+     "marshal": "person:10",
+     "steward": "person:9",
+     "chancellor": "person:11"
+    },
+    "vacant": {}
+   },
+   "hrothmark": {
+    "treasury": 1124,
+    "book": [
+     {
+      "week": 0,
+      "start": 796,
+      "in": {},
+      "out": {}
+     },
+     {
+      "week": 1,
+      "start": 796,
+      "in": {
+       "tax": 174,
+       "due": 25
+      },
+      "out": {
+       "wages": 5,
+       "office": 30
+      }
+     },
+     {
+      "week": 2,
+      "start": 960,
+      "in": {
+       "tax": 174,
+       "due": 25
+      },
+      "out": {
+       "wages": 5,
+       "office": 30
+      }
+     }
+    ],
+    "offices": {
+     "marshal": "person:16",
+     "steward": "person:17",
+     "chancellor": "person:18"
+    },
+    "vacant": {}
+   },
+   "vessaro": {
+    "treasury": 1124,
+    "book": [
+     {
+      "week": 0,
+      "start": 796,
+      "in": {},
+      "out": {}
+     },
+     {
+      "week": 1,
+      "start": 796,
+      "in": {
+       "tax": 174,
+       "due": 25
+      },
+      "out": {
+       "wages": 5,
+       "office": 30
+      }
+     },
+     {
+      "week": 2,
+      "start": 960,
+      "in": {
+       "tax": 174,
+       "due": 25
+      },
+      "out": {
+       "wages": 5,
+       "office": 30
+      }
+     }
+    ],
+    "offices": {
+     "marshal": "person:22",
+     "steward": "person:23",
+     "chancellor": "person:24"
+    },
+    "vacant": {}
+   },
+   "merrow": {
+    "treasury": 720,
+    "book": [
+     {
+      "week": 0,
+      "start": 480,
+      "in": {},
+      "out": {}
+     },
+     {
+      "week": 1,
+      "start": 480,
+      "in": {
+       "trade": 120
+      },
+      "out": {}
+     },
+     {
+      "week": 2,
+      "start": 600,
+      "in": {
+       "trade": 120
+      },
+      "out": {}
+     }
+    ],
+    "offices": {},
+    "vacant": {}
+   },
+   "ostrand": {
+    "treasury": 596,
+    "book": [
+     {
+      "week": 0,
+      "start": 784,
+      "in": {},
+      "out": {
+       "ransom": 550
+      }
+     },
+     {
+      "week": 1,
+      "start": 234,
+      "in": {
+       "tax": 174,
+       "due": 22
+      },
+      "out": {
+       "wages": 5,
+       "office": 10
+      }
+     },
+     {
+      "week": 2,
+      "start": 415,
+      "in": {
+       "tax": 174,
+       "due": 22
+      },
+      "out": {
+       "wages": 5,
+       "office": 10
+      }
+     }
+    ],
+    "offices": {
+     "marshal": "person:30",
+     "steward": null,
+     "chancellor": null
+    },
+    "vacant": {
+     "steward": 0,
+     "chancellor": 0
+    }
+   },
+   "saltreach": {
+    "treasury": 1656,
+    "book": [
+     {
+      "week": 0,
+      "start": 784,
+      "in": {
+       "ransom": 550
+      },
+      "out": {}
+     },
+     {
+      "week": 1,
+      "start": 1334,
+      "in": {
+       "tax": 174,
+       "due": 22
+      },
+      "out": {
+       "wages": 5,
+       "office": 30
+      }
+     },
+     {
+      "week": 2,
+      "start": 1495,
+      "in": {
+       "tax": 174,
+       "due": 22
+      },
+      "out": {
+       "wages": 5,
+       "office": 30
+      }
+     }
+    ],
+    "offices": {
+     "marshal": "person:34",
+     "steward": "person:35",
+     "chancellor": "person:36"
+    },
+    "vacant": {}
+   },
+   "gullhaven": {
+    "treasury": 720,
+    "book": [
+     {
+      "week": 0,
+      "start": 480,
+      "in": {},
+      "out": {}
+     },
+     {
+      "week": 1,
+      "start": 480,
+      "in": {
+       "trade": 120
+      },
+      "out": {}
+     },
+     {
+      "week": 2,
+      "start": 600,
+      "in": {
+       "trade": 120
+      },
+      "out": {}
+     }
+    ],
+    "offices": {},
+    "vacant": {}
+   }
+  },
+  "treaties": [
+   {
+    "id": 1,
+    "kind": "truce",
+    "between": [
+     "ostrand",
+     "saltreach"
+    ],
+    "since": 7.008074608319484,
+    "until": 37.00807460831948,
+    "terms": {},
+    "kept": 0,
+    "broken": null
+   },
+   {
+    "id": 2,
+    "kind": "trade",
+    "between": [
+     "valedorn",
+     "ostrand"
+    ],
+    "since": 14.124862092964962,
+    "until": 134.12486209296497,
+    "terms": {},
+    "kept": 0,
+    "broken": null
+   },
+   {
+    "id": 3,
+    "kind": "trade",
+    "between": [
+     "aurelian",
+     "hrothmark"
+    ],
+    "since": 14.124862092964962,
+    "until": 134.12486209296497,
+    "terms": {},
+    "kept": 0,
+    "broken": null
+   },
+   {
+    "id": 4,
+    "kind": "trade",
+    "between": [
+     "hrothmark",
+     "vessaro"
+    ],
+    "since": 14.124862092964962,
+    "until": 134.12486209296497,
+    "terms": {},
+    "kept": 0,
+    "broken": null
+   },
+   {
+    "id": 5,
+    "kind": "trade",
+    "between": [
+     "vessaro",
+     "aurelian"
+    ],
+    "since": 14.124862092964962,
+    "until": 134.12486209296497,
+    "terms": {},
+    "kept": 0,
+    "broken": null
+   },
+   {
+    "id": 6,
+    "kind": "alliance",
+    "between": [
+     "ostrand",
+     "aurelian"
+    ],
+    "since": 14.124862092964962,
+    "until": 194.12486209296497,
+    "terms": {
+     "against": "valedorn"
+    },
+    "kept": 0,
+    "broken": null
+   },
+   {
+    "id": 7,
+    "kind": "trade",
+    "between": [
+     "saltreach",
+     "valedorn"
+    ],
+    "since": 14.124862092964962,
+    "until": 134.12486209296497,
+    "terms": {},
+    "kept": 0,
+    "broken": null
+   }
+  ],
+  "nextTreatyId": 7,
+  "trust": {},
+  "offers": {
+   "ostrand|saltreach|truce": 7,
+   "valedorn|ostrand|trade": 14,
+   "aurelian|hrothmark|trade": 14,
+   "hrothmark|vessaro|trade": 14,
+   "vessaro|aurelian|trade": 14,
+   "ostrand|aurelian|alliance": 14,
+   "saltreach|valedorn|trade": 14
+  },
+  "relations": {
+   "aurelian|valedorn": {
+    "state": "tension",
+    "since": 0,
+    "heat": 2,
+    "losses": 0,
+    "lastClash": 12.605970014438176,
+    "incidentUntil": 0
+   },
+   "hrothmark|valedorn": {
+    "state": "tension",
+    "since": 4.089587973543374,
+    "heat": 0,
+    "losses": 0,
+    "lastClash": 12.092448803051852,
+    "incidentUntil": 5.089587973543374
+   },
+   "valedorn|vessaro": {
+    "state": "tension",
+    "since": 4.13125464021004,
+    "heat": 1,
+    "losses": 0,
+    "lastClash": 17.256633629937358,
+    "incidentUntil": 5.13125464021004
+   },
+   "merrow|valedorn": {
+    "state": "peace",
+    "since": 0,
+    "heat": 0,
+    "losses": 0,
+    "lastClash": null,
+    "incidentUntil": 0
+   },
+   "ostrand|valedorn": {
+    "state": "peace",
+    "since": 0,
+    "heat": 0,
+    "losses": 0,
+    "lastClash": null,
+    "incidentUntil": 0
+   },
+   "saltreach|valedorn": {
+    "state": "peace",
+    "since": 0,
+    "heat": 0,
+    "losses": 0,
+    "lastClash": null,
+    "incidentUntil": 0
+   },
+   "gullhaven|valedorn": {
+    "state": "peace",
+    "since": 0,
+    "heat": 0,
+    "losses": 0,
+    "lastClash": null,
+    "incidentUntil": 0
+   },
+   "aurelian|hrothmark": {
+    "state": "tension",
+    "since": 18.771902930980378,
+    "heat": 0,
+    "losses": 0,
+    "lastClash": null,
+    "incidentUntil": 19.771902930980378
+   },
+   "aurelian|vessaro": {
+    "state": "tension",
+    "since": 16.22057964411902,
+    "heat": 0,
+    "losses": 0,
+    "lastClash": null,
+    "incidentUntil": 17.22057964411902
+   },
+   "aurelian|merrow": {
+    "state": "peace",
+    "since": 0,
+    "heat": 0,
+    "losses": 0,
+    "lastClash": null,
+    "incidentUntil": 0
+   },
+   "aurelian|ostrand": {
+    "state": "peace",
+    "since": 0,
+    "heat": 0,
+    "losses": 0,
+    "lastClash": null,
+    "incidentUntil": 0
+   },
+   "aurelian|saltreach": {
+    "state": "tension",
+    "since": 15.965732169861493,
+    "heat": 0,
+    "losses": 0,
+    "lastClash": null,
+    "incidentUntil": 16.965732169861493
+   },
+   "aurelian|gullhaven": {
+    "state": "peace",
+    "since": 0,
+    "heat": 0,
+    "losses": 0,
+    "lastClash": null,
+    "incidentUntil": 0
+   },
+   "hrothmark|vessaro": {
+    "state": "peace",
+    "since": 0,
+    "heat": 0,
+    "losses": 0,
+    "lastClash": null,
+    "incidentUntil": 0
+   },
+   "hrothmark|merrow": {
+    "state": "peace",
+    "since": 0,
+    "heat": 0,
+    "losses": 0,
+    "lastClash": null,
+    "incidentUntil": 0
+   },
+   "hrothmark|ostrand": {
+    "state": "peace",
+    "since": 0,
+    "heat": 0,
+    "losses": 0,
+    "lastClash": null,
+    "incidentUntil": 0
+   },
+   "hrothmark|saltreach": {
+    "state": "peace",
+    "since": 0,
+    "heat": 0,
+    "losses": 0,
+    "lastClash": null,
+    "incidentUntil": 0
+   },
+   "gullhaven|hrothmark": {
+    "state": "peace",
+    "since": 0,
+    "heat": 0,
+    "losses": 0,
+    "lastClash": null,
+    "incidentUntil": 0
+   },
+   "merrow|vessaro": {
+    "state": "peace",
+    "since": 0,
+    "heat": 0,
+    "losses": 0,
+    "lastClash": null,
+    "incidentUntil": 0
+   },
+   "ostrand|vessaro": {
+    "state": "peace",
+    "since": 0,
+    "heat": 0,
+    "losses": 0,
+    "lastClash": null,
+    "incidentUntil": 0
+   },
+   "saltreach|vessaro": {
+    "state": "peace",
+    "since": 0,
+    "heat": 0,
+    "losses": 0,
+    "lastClash": null,
+    "incidentUntil": 0
+   },
+   "gullhaven|vessaro": {
+    "state": "peace",
+    "since": 0,
+    "heat": 0,
+    "losses": 0,
+    "lastClash": null,
+    "incidentUntil": 0
+   },
+   "merrow|ostrand": {
+    "state": "peace",
+    "since": 0,
+    "heat": 0,
+    "losses": 0,
+    "lastClash": null,
+    "incidentUntil": 0
+   },
+   "merrow|saltreach": {
+    "state": "peace",
+    "since": 0,
+    "heat": 0,
+    "losses": 0,
+    "lastClash": null,
+    "incidentUntil": 0
+   },
+   "gullhaven|merrow": {
+    "state": "peace",
+    "since": 0,
+    "heat": 0,
+    "losses": 0,
+    "lastClash": null,
+    "incidentUntil": 0
+   },
+   "ostrand|saltreach": {
+    "state": "tension",
+    "since": 7.008074608319484,
+    "heat": 0,
+    "losses": 0,
+    "lastClash": 2.0375032163632905,
+    "incidentUntil": 0,
+    "truceUntil": 37.00807460831948
+   },
+   "gullhaven|ostrand": {
+    "state": "peace",
+    "since": 0,
+    "heat": 0,
+    "losses": 0,
+    "lastClash": null,
+    "incidentUntil": 0
+   },
+   "gullhaven|saltreach": {
+    "state": "peace",
+    "since": 0,
+    "heat": 0,
+    "losses": 0,
+    "lastClash": null,
+    "incidentUntil": 0
+   }
+  },
+  "story": {
+   "flags": {},
+   "quests": {},
+   "visits": {}
+  },
+  "companion": null,
+  "news": {
+   "events": [
+    {
+     "day": 18.953312545395807,
+     "kind": "caravan_arrived",
+     "dest": "harrowgate",
+     "good": "wool",
+     "faction": "ostrand"
+    },
+    {
+     "day": 19.067895878729143,
+     "kind": "tourney",
+     "place": "gullhaven",
+     "text": "A tournament at Gullhaven: eight fighters on foot. Entries close on day 23."
+    },
+    {
+     "day": 19.067895878729143,
+     "kind": "player_deed",
+     "place": "oakford"
+    },
+    {
+     "day": 19.08456254539581,
+     "kind": "caravan_arrived",
+     "dest": "merrow",
+     "good": "iron",
+     "faction": "hrothmark"
+    },
+    {
+     "day": 19.09289587872914,
+     "kind": "caravan_arrived",
+     "dest": "merrow",
+     "good": "cloth",
+     "faction": "merrow"
+    },
+    {
+     "day": 19.126229212062473,
+     "kind": "caravan_arrived",
+     "dest": "redfield",
+     "good": "salt",
+     "faction": "aurelian"
+    },
+    {
+     "day": 19.234351875669084,
+     "kind": "caravan_arrived",
+     "dest": "stonebridge",
+     "good": "wool",
+     "faction": "valedorn"
+    },
+    {
+     "day": 19.259351875669083,
+     "kind": "caravan_arrived",
+     "dest": "brindle",
+     "good": "timber",
+     "faction": "ostrand"
+    },
+    {
+     "day": 19.420108946131176,
+     "kind": "caravan_arrived",
+     "dest": "oakford",
+     "good": "grain",
+     "faction": "valedorn"
+    },
+    {
+     "day": 19.42844227946451,
+     "kind": "caravan_arrived",
+     "dest": "saltmere",
+     "good": "salt",
+     "faction": "aurelian"
+    },
+    {
+     "day": 19.43677561279784,
+     "kind": "caravan_arrived",
+     "dest": "vessara",
+     "good": "salt",
+     "faction": "vessaro"
+    },
+    {
+     "day": 19.43677561279784,
+     "kind": "caravan_arrived",
+     "dest": "tessaro",
+     "good": "tools",
+     "faction": "merrow"
+    },
+    {
+     "day": 19.480866016593275,
+     "kind": "caravan_arrived",
+     "dest": "gullhaven",
+     "good": "wine",
+     "faction": "gullhaven"
+    },
+    {
+     "day": 19.505866016593274,
+     "kind": "lord_beaten",
+     "place": "birkholm",
+     "faction": "vessaro",
+     "text": "Reavers have broken Lord Ottavio Morosco’s household on the road."
+    },
+    {
+     "day": 19.52253268325994,
+     "kind": "caravan_arrived",
+     "dest": "gullhaven",
+     "good": "wine",
+     "faction": "gullhaven"
+    },
+    {
+     "day": 19.65513257722178,
+     "kind": "reavers_broken",
+     "place": "gullhaven",
+     "faction": "gullhaven"
+    },
+    {
+     "day": 19.707215910555117,
+     "kind": "reavers_broken",
+     "place": "lucco",
+     "faction": "valedorn"
+    },
+    {
+     "day": 19.738465910555117,
+     "kind": "player_deed",
+     "place": "greywall_fort"
+    },
+    {
+     "day": 19.77179924388845,
+     "kind": "caravan_arrived",
+     "dest": "dunmarsh",
+     "good": "salt",
+     "faction": "aurelian"
+    },
+    {
+     "day": 19.77179924388845,
+     "kind": "caravan_arrived",
+     "dest": "fenwick",
+     "good": "wool",
+     "faction": "ostrand"
+    },
+    {
+     "day": 19.78013257722178,
+     "kind": "caravan_arrived",
+     "dest": "calder",
+     "good": "grain",
+     "faction": "saltreach"
+    },
+    {
+     "day": 19.813465910555113,
+     "kind": "caravan_arrived",
+     "dest": "highmere",
+     "good": "wool",
+     "faction": "valedorn"
+    },
+    {
+     "day": 19.821799243888446,
+     "kind": "caravan_arrived",
+     "dest": "pellio",
+     "good": "wine",
+     "faction": "vessaro"
+    },
+    {
+     "day": 20.011111781540965,
+     "kind": "happening",
+     "place": "fenwick",
+     "text": "Reavers are loose in the fields around Fenwick. The villagers have put up a bounty.",
+     "told": true
+    }
+   ],
+   "lines": [
+    {
+     "day": 6,
+     "kind": "patrol_beaten",
+     "text": "Road Reavers cut up Valedorn soldiers near Oakford. The roads there are not safe."
+    },
+    {
+     "day": 8,
+     "kind": "happening",
+     "text": "Reavers are loose in the fields around Ashby. The villagers have put up a bounty."
+    },
+    {
+     "day": 10,
+     "kind": "tourney",
+     "text": "A tournament at Hrothgard: eight fighters on foot. Entries close on day 14."
+    },
+    {
+     "day": 12,
+     "kind": "happening",
+     "text": "The militia of Marenna is calling for veterans to drill them, fearing the border."
+    },
+    {
+     "day": 14,
+     "kind": "treaty_signed",
+     "text": "Saltreach and Valedorn have made a treaty of trade, until day 135."
+    },
+    {
+     "day": 16,
+     "kind": "happening",
+     "text": "The militia of Saltmere is calling for veterans to drill them, fearing the border."
+    },
+    {
+     "day": 18,
+     "kind": "tourney",
+     "text": "A tournament at Stonebridge: eight fighters on foot. Entries close on day 22."
+    },
+    {
+     "day": 20,
+     "kind": "happening",
+     "text": "Reavers are loose in the fields around Fenwick. The villagers have put up a bounty."
+    }
+   ],
+   "next": 22,
+   "clashUntil": 21.256633629937358,
+   "turns": {
+    "siege_begun": 1,
+    "happening": 5,
+    "patrol_beaten": 1,
+    "tourney": 2,
+    "treaty_signed": 1
+   }
+  },
+  "troopKnowledge": {
+   "levy": "owned",
+   "hunter": "owned",
+   "mercenary": "owned",
+   "recruit": "owned",
+   "skirmisher": "owned",
+   "looter": "seen",
+   "reaver": "seen",
+   "footman": "owned",
+   "longbowman": "owned",
+   "spearman": "owned",
+   "legionary": "owned",
+   "horse_scout": "seen",
+   "guard": "owned",
+   "rider": "seen",
+   "marksman": "owned",
+   "sellsword": "owned"
+  },
+  "chronicle": [
+   {
+    "day": 0,
+    "kind": "founded"
+   },
+   {
+    "day": 1.0135798497770825,
+    "kind": "battle",
+    "foe": "Looter Band",
+    "win": false,
+    "kills": 3,
+    "fallen": [],
+    "lost": 0,
+    "auto": true
+   },
+   {
+    "day": 1.7755415330701865,
+    "kind": "battle",
+    "foe": "Looter Band",
+    "win": false,
+    "kills": 2,
+    "fallen": [],
+    "lost": 0,
+    "auto": true
+   },
+   {
+    "day": 3.5048930250283026,
+    "kind": "recruited",
+    "place": "stonebridge",
+    "names": [
+     "Hamon Miller",
+     "Thurstan Mason"
+    ],
+    "n": 2
+   },
+   {
+    "day": 3.6323167621570702,
+    "kind": "recruited",
+    "place": "eastwatch",
+    "names": [
+     "Quintil Rufo"
+    ],
+    "n": 1
+   },
+   {
+    "day": 4.640056623844216,
+    "kind": "recruited",
+    "place": "stonebridge",
+    "names": [
+     "Baldric the Elder"
+    ],
+    "n": 1
+   },
+   {
+    "day": 6.452474802722766,
+    "kind": "battle",
+    "foe": "Road Reavers",
+    "win": true,
+    "kills": 8,
+    "fallen": [],
+    "lost": 0,
+    "auto": true
+   },
+   {
+    "day": 6.5719192471672105,
+    "kind": "promoted",
+    "names": [
+     "Quintil Rufo"
+    ],
+    "n": 1,
+    "to": "spearman"
+   },
+   {
+    "day": 6.5719192471672105,
+    "kind": "recruited",
+    "place": "stonebridge",
+    "names": [
+     "Wymar Stonejaw",
+     "Alard Stonejaw"
+    ],
+    "n": 2
+   },
+   {
+    "day": 6.846185807795724,
+    "kind": "battle",
+    "foe": "Looter Band",
+    "win": true,
+    "kills": 7,
+    "fallen": [
+     "Baldric the Elder"
+    ],
+    "lost": 1,
+    "auto": true
+   },
+   {
+    "day": 9.255586777899373,
+    "kind": "battle",
+    "foe": "Looter Band",
+    "win": true,
+    "kills": 11,
+    "fallen": [
+     "Hamon Miller"
+    ],
+    "lost": 1,
+    "auto": true
+   },
+   {
+    "day": 9.367475578423138,
+    "kind": "recruited",
+    "place": "stonebridge",
+    "names": [
+     "Rannulf of Stonebridge"
+    ],
+    "n": 1
+   },
+   {
+    "day": 9.667475578423144,
+    "kind": "battle",
+    "foe": "Road Reavers",
+    "win": true,
+    "kills": 14,
+    "fallen": [],
+    "lost": 0,
+    "auto": false
+   },
+   {
+    "day": 9.80636446731204,
+    "kind": "promoted",
+    "names": [
+     "Wymar Stonejaw"
+    ],
+    "n": 1,
+    "to": "footman"
+   },
+   {
+    "day": 9.80636446731204,
+    "kind": "recruited",
+    "place": "stonebridge",
+    "names": [
+     "Edric Halfpenny",
+     "Hamon"
+    ],
+    "n": 2
+   },
+   {
+    "day": 10.085445068926665,
+    "kind": "battle",
+    "foe": "The Captain's Trial",
+    "win": true,
+    "kills": 14,
+    "fallen": [],
+    "lost": 0,
+    "auto": true
+   },
+   {
+    "day": 10.32993182671778,
+    "kind": "recruited",
+    "place": "eastwatch",
+    "names": [
+     "Lucan Pertinax",
+     "Varo the Cartographer",
+     "Dell of Eastwatch"
+    ],
+    "n": 3
+   },
+   {
+    "day": 10.61326516005112,
+    "kind": "battle",
+    "foe": "Road Reavers",
+    "win": true,
+    "kills": 14,
+    "fallen": [],
+    "lost": 0,
+    "auto": true
+   },
+   {
+    "day": 10.729931826717792,
+    "kind": "promoted",
+    "names": [
+     "Thurstan Mason"
+    ],
+    "n": 1,
+    "to": "longbowman"
+   },
+   {
+    "day": 10.729931826717792,
+    "kind": "promoted",
+    "names": [
+     "Quintil Rufo"
+    ],
+    "n": 1,
+    "to": "legionary"
+   },
+   {
+    "day": 10.729931826717792,
+    "kind": "promoted",
+    "names": [
+     "Edric Halfpenny"
+    ],
+    "n": 1,
+    "to": "footman"
+   },
+   {
+    "day": 11.01326516005113,
+    "kind": "battle",
+    "foe": "Western Outlaws",
+    "win": true,
+    "kills": 13,
+    "fallen": [],
+    "lost": 0,
+    "auto": true
+   },
+   {
+    "day": 11.129931826717803,
+    "kind": "recruited",
+    "place": "eastwatch",
+    "names": [
+     "Drusian of Eastwatch",
+     "Marcel of Eastwatch"
+    ],
+    "n": 2
+   },
+   {
+    "day": 11.257355563846577,
+    "kind": "recruited",
+    "place": "stonebridge",
+    "names": [
+     "Ivo of Stonebridge"
+    ],
+    "n": 1
+   },
+   {
+    "day": 11.643510924998859,
+    "kind": "promoted",
+    "names": [
+     "Wymar Stonejaw"
+    ],
+    "n": 1,
+    "to": "guard"
+   },
+   {
+    "day": 12.658053347771508,
+    "kind": "battle",
+    "foe": "Road Reavers",
+    "win": true,
+    "kills": 14,
+    "fallen": [],
+    "lost": 0,
+    "auto": true
+   },
+   {
+    "day": 12.741386681104846,
+    "kind": "promoted",
+    "names": [
+     "Hamon"
+    ],
+    "n": 1,
+    "to": "longbowman"
+   },
+   {
+    "day": 12.741386681104846,
+    "kind": "promoted",
+    "names": [
+     "Rannulf of Stonebridge",
+     "Ivo of Stonebridge"
+    ],
+    "n": 2,
+    "to": "footman"
+   },
+   {
+    "day": 12.741386681104846,
+    "kind": "promoted",
+    "names": [
+     "Drusian of Eastwatch"
+    ],
+    "n": 1,
+    "to": "spearman"
+   },
+   {
+    "day": 13.530375335173838,
+    "kind": "battle",
+    "foe": "The Captain's Trial",
+    "win": true,
+    "kills": 22,
+    "fallen": [
+     "Lucan Pertinax",
+     "Dell of Eastwatch"
+    ],
+    "lost": 2,
+    "auto": true
+   },
+   {
+    "day": 13.774862092964954,
+    "kind": "recruited",
+    "place": "eastwatch",
+    "names": [
+     "Tullio Stellan",
+     "Drusian Lupo",
+     "Hob of Eastwatch",
+     "Varo Vatro",
+     "Drusian Sabo"
+    ],
+    "n": 5
+   },
+   {
+    "day": 14.124862092964962,
+    "kind": "battle",
+    "foe": "Road Reavers",
+    "win": true,
+    "kills": 14,
+    "fallen": [],
+    "lost": 0,
+    "auto": true
+   },
+   {
+    "day": 14.288990171689296,
+    "kind": "recruited",
+    "place": "eastwatch",
+    "names": [
+     "Corvin of Eastwatch",
+     "Decimo Rufo"
+    ],
+    "n": 2
+   },
+   {
+    "day": 14.787035084861385,
+    "kind": "promoted",
+    "names": [
+     "Tullio Stellan",
+     "Varo Vatro"
+    ],
+    "n": 2,
+    "to": "spearman"
+   },
+   {
+    "day": 15.55157750763403,
+    "kind": "promoted",
+    "names": [
+     "Alard Stonejaw"
+    ],
+    "n": 1,
+    "to": "longbowman"
+   },
+   {
+    "day": 15.854557616046995,
+    "kind": "battle",
+    "foe": "Road Reavers",
+    "win": true,
+    "kills": 12,
+    "fallen": [
+     "Thurstan Mason"
+    ],
+    "lost": 1,
+    "auto": true
+   },
+   {
+    "day": 15.965732169861493,
+    "kind": "promoted",
+    "names": [
+     "Corvin of Eastwatch"
+    ],
+    "n": 1,
+    "to": "spearman"
+   },
+   {
+    "day": 15.965732169861493,
+    "kind": "recruited",
+    "place": "stonebridge",
+    "names": [
+     "Wymar",
+     "Thurstan of Stonebridge",
+     "Wat"
+    ],
+    "n": 3
+   },
+   {
+    "day": 17.00956829818795,
+    "kind": "battle",
+    "foe": "The Captain's Trial",
+    "win": true,
+    "kills": 14,
+    "fallen": [],
+    "lost": 0,
+    "auto": true
+   },
+   {
+    "day": 17.339966963270694,
+    "kind": "battle",
+    "foe": "Looter Band",
+    "win": true,
+    "kills": 7,
+    "fallen": [
+     "Varo the Cartographer"
+    ],
+    "lost": 1,
+    "auto": true
+   },
+   {
+    "day": 17.45185576379445,
+    "kind": "promoted",
+    "names": [
+     "Rannulf of Stonebridge",
+     "Edric Halfpenny",
+     "Ivo of Stonebridge"
+    ],
+    "n": 3,
+    "to": "guard"
+   },
+   {
+    "day": 17.45185576379445,
+    "kind": "promoted",
+    "names": [
+     "Wymar"
+    ],
+    "n": 1,
+    "to": "footman"
+   },
+   {
+    "day": 17.998156784562703,
+    "kind": "battle",
+    "foe": "Road Reavers",
+    "win": true,
+    "kills": 13,
+    "fallen": [],
+    "lost": 0,
+    "auto": true
+   },
+   {
+    "day": 18.101450912003237,
+    "kind": "promoted",
+    "names": [
+     "Drusian of Eastwatch"
+    ],
+    "n": 1,
+    "to": "legionary"
+   },
+   {
+    "day": 18.101450912003237,
+    "kind": "promoted",
+    "names": [
+     "Drusian Lupo",
+     "Decimo Rufo"
+    ],
+    "n": 2,
+    "to": "marksman"
+   },
+   {
+    "day": 19.067895878729143,
+    "kind": "battle",
+    "foe": "Road Reavers",
+    "win": true,
+    "kills": 14,
+    "fallen": [
+     "Hamon",
+     "Drusian of Eastwatch"
+    ],
+    "lost": 2,
+    "auto": true
+   },
+   {
+    "day": 19.209351875669086,
+    "kind": "promoted",
+    "names": [
+     "Tullio Stellan",
+     "Varo Vatro"
+    ],
+    "n": 2,
+    "to": "legionary"
+   },
+   {
+    "day": 19.209351875669086,
+    "kind": "promoted",
+    "names": [
+     "Hob of Eastwatch"
+    ],
+    "n": 1,
+    "to": "sellsword"
+   },
+   {
+    "day": 19.85035471107887,
+    "kind": "promoted",
+    "names": [
+     "Marcel of Eastwatch"
+    ],
+    "n": 1,
+    "to": "marksman"
+   }
+  ],
+  "honour": {
+   "list": [
+    {
+     "id": 4,
+     "name": "Baldric the Elder",
+     "troop": "levy",
+     "culture": "valedorn",
+     "origin": "stonebridge",
+     "joined": 4.640056623844216,
+     "left": 6.846185807795724,
+     "how": "fell",
+     "foe": "Looter Band",
+     "battles": 2,
+     "victories": 2,
+     "kills": 0,
+     "wounds": 0,
+     "wagesPaid": 0
+    },
+    {
+     "id": 1,
+     "name": "Hamon Miller",
+     "troop": "levy",
+     "culture": "valedorn",
+     "origin": "stonebridge",
+     "joined": 3.5048930250283026,
+     "left": 9.255586777899373,
+     "how": "fell",
+     "foe": "Looter Band",
+     "battles": 3,
+     "victories": 3,
+     "kills": 0,
+     "wounds": 1,
+     "wagesPaid": 3
+    },
+    {
+     "id": 10,
+     "name": "Lucan Pertinax",
+     "troop": "recruit",
+     "culture": "aurelian",
+     "origin": "eastwatch",
+     "joined": 10.32993182671778,
+     "left": 13.530375335173838,
+     "how": "fell",
+     "foe": "The Captain's Trial",
+     "battles": 2,
+     "victories": 2,
+     "kills": 0,
+     "wounds": 1,
+     "wagesPaid": 0
+    },
+    {
+     "id": 12,
+     "name": "Dell of Eastwatch",
+     "troop": "mercenary",
+     "culture": "border",
+     "origin": "eastwatch",
+     "joined": 10.32993182671778,
+     "left": 13.530375335173838,
+     "how": "fell",
+     "foe": "The Captain's Trial",
+     "battles": 5,
+     "victories": 5,
+     "kills": 0,
+     "wounds": 0,
+     "wagesPaid": 0
+    },
+    {
+     "id": 2,
+     "name": "Thurstan Mason",
+     "troop": "longbowman",
+     "culture": "valedorn",
+     "origin": "stonebridge",
+     "joined": 3.5048930250283026,
+     "left": 15.854557616046995,
+     "how": "fell",
+     "foe": "Road Reavers",
+     "battles": 11,
+     "victories": 11,
+     "kills": 0,
+     "wounds": 2,
+     "wagesPaid": 18,
+     "trait": "steadfast"
+    },
+    {
+     "id": 11,
+     "name": "Varo the Cartographer",
+     "troop": "skirmisher",
+     "culture": "aurelian",
+     "origin": "eastwatch",
+     "joined": 10.32993182671778,
+     "left": 17.339966963270694,
+     "how": "fell",
+     "foe": "Looter Band",
+     "battles": 7,
+     "victories": 7,
+     "kills": 0,
+     "wounds": 2,
+     "wagesPaid": 6,
+     "trait": "cautious"
+    },
+    {
+     "id": 9,
+     "name": "Hamon",
+     "troop": "longbowman",
+     "culture": "valedorn",
+     "origin": "stonebridge",
+     "joined": 9.80636446731204,
+     "left": 19.067895878729143,
+     "how": "fell",
+     "foe": "Road Reavers",
+     "battles": 11,
+     "victories": 11,
+     "kills": 0,
+     "wounds": 1,
+     "wagesPaid": 12,
+     "trait": "steadfast"
+    },
+    {
+     "id": 13,
+     "name": "Drusian of Eastwatch",
+     "troop": "legionary",
+     "culture": "aurelian",
+     "origin": "eastwatch",
+     "joined": 11.129931826717803,
+     "left": 19.067895878729143,
+     "how": "fell",
+     "foe": "Road Reavers",
+     "battles": 10,
+     "victories": 10,
+     "kills": 0,
+     "wounds": 0,
+     "wagesPaid": 6,
+     "trait": "steadfast"
+    }
+   ],
+   "earlier": {
+    "fell": 0,
+    "deserted": 0,
+    "retired": 0
+   }
+  },
+  "accounts": {
+   "chest": 0,
+   "budgets": {}
+  },
+  "ledger": [
+   {
+    "day": 10.729931826717792,
+    "from": "purse",
+    "to": "world",
+    "amount": 18,
+    "why": "2 rations"
+   },
+   {
+    "day": 10.729931826717792,
+    "from": "purse",
+    "to": "world",
+    "amount": 20,
+    "why": "armoury: Boots"
+   },
+   {
+    "day": 10.729931826717792,
+    "from": "purse",
+    "to": "world",
+    "amount": 60,
+    "why": "training"
+   },
+   {
+    "day": 10.729931826717792,
+    "from": "purse",
+    "to": "world",
+    "amount": 60,
+    "why": "training"
+   },
+   {
+    "day": 10.729931826717792,
+    "from": "purse",
+    "to": "world",
+    "amount": 25,
+    "why": "training"
+   },
+   {
+    "day": 11.01326516005113,
+    "from": "world",
+    "to": "purse",
+    "amount": 72,
+    "why": "spoils: Western Outlaws"
+   },
+   {
+    "day": 11.129931826717803,
+    "from": "purse",
+    "to": "world",
+    "amount": 15,
+    "why": "hiring a Recruit"
+   },
+   {
+    "day": 11.129931826717803,
+    "from": "purse",
+    "to": "world",
+    "amount": 25,
+    "why": "hiring a Skirmisher"
+   },
+   {
+    "day": 11.257355563846577,
+    "from": "purse",
+    "to": "world",
+    "amount": 15,
+    "why": "hiring a Levy"
+   },
+   {
+    "day": 11.531622124475094,
+    "from": "world",
+    "to": "purse",
+    "amount": 41,
+    "why": "spoils: Looter Band"
+   },
+   {
+    "day": 11.643510924998859,
+    "from": "purse",
+    "to": "world",
+    "amount": 60,
+    "why": "training"
+   },
+   {
+    "day": 12.658053347771508,
+    "from": "world",
+    "to": "purse",
+    "amount": 57,
+    "why": "spoils: Road Reavers"
+   },
+   {
+    "day": 12.741386681104846,
+    "from": "world",
+    "to": "purse",
+    "amount": 124,
+    "why": "contract reward"
+   },
+   {
+    "day": 12.741386681104846,
+    "from": "purse",
+    "to": "world",
+    "amount": 60,
+    "why": "training"
+   },
+   {
+    "day": 12.741386681104846,
+    "from": "purse",
+    "to": "world",
+    "amount": 25,
+    "why": "training"
+   },
+   {
+    "day": 12.741386681104846,
+    "from": "purse",
+    "to": "world",
+    "amount": 25,
+    "why": "training"
+   },
+   {
+    "day": 12.741386681104846,
+    "from": "purse",
+    "to": "world",
+    "amount": 25,
+    "why": "training"
+   },
+   {
+    "day": 13.530375335173838,
+    "from": "world",
+    "to": "purse",
+    "amount": 118,
+    "why": "spoils: The Captain's Trial"
+   },
+   {
+    "day": 13.774862092964954,
+    "from": "purse",
+    "to": "world",
+    "amount": 15,
+    "why": "hiring a Recruit"
+   },
+   {
+    "day": 13.774862092964954,
+    "from": "purse",
+    "to": "world",
+    "amount": 25,
+    "why": "hiring a Skirmisher"
+   },
+   {
+    "day": 13.774862092964954,
+    "from": "purse",
+    "to": "world",
+    "amount": 25,
+    "why": "hiring a Mercenary"
+   },
+   {
+    "day": 13.774862092964954,
+    "from": "purse",
+    "to": "world",
+    "amount": 15,
+    "why": "hiring a Recruit"
+   },
+   {
+    "day": 13.774862092964954,
+    "from": "purse",
+    "to": "world",
+    "amount": 25,
+    "why": "hiring a Skirmisher"
+   },
+   {
+    "day": 14.124862092964962,
+    "from": "purse",
+    "to": "world",
+    "amount": 114,
+    "why": "weekly wages"
+   },
+   {
+    "day": 14.124862092964962,
+    "from": "world",
+    "to": "purse",
+    "amount": 57,
+    "why": "spoils: Road Reavers"
+   },
+   {
+    "day": 14.288990171689296,
+    "from": "world",
+    "to": "purse",
+    "amount": 124,
+    "why": "contract reward"
+   },
+   {
+    "day": 14.288990171689296,
+    "from": "purse",
+    "to": "world",
+    "amount": 15,
+    "why": "hiring a Recruit"
+   },
+   {
+    "day": 14.288990171689296,
+    "from": "purse",
+    "to": "world",
+    "amount": 25,
+    "why": "hiring a Skirmisher"
+   },
+   {
+    "day": 14.67514628433762,
+    "from": "world",
+    "to": "purse",
+    "amount": 41,
+    "why": "spoils: Looter Band"
+   },
+   {
+    "day": 14.787035084861385,
+    "from": "purse",
+    "to": "world",
+    "amount": 25,
+    "why": "training"
+   },
+   {
+    "day": 14.787035084861385,
+    "from": "purse",
+    "to": "world",
+    "amount": 25,
+    "why": "training"
+   },
+   {
+    "day": 15.55157750763403,
+    "from": "purse",
+    "to": "world",
+    "amount": 60,
+    "why": "training"
+   },
+   {
+    "day": 15.854557616046995,
+    "from": "world",
+    "to": "purse",
+    "amount": 51,
+    "why": "spoils: Road Reavers"
+   },
+   {
+    "day": 15.965732169861493,
+    "from": "world",
+    "to": "purse",
+    "amount": 124,
+    "why": "contract reward"
+   },
+   {
+    "day": 15.965732169861493,
+    "from": "purse",
+    "to": "world",
+    "amount": 25,
+    "why": "training"
+   },
+   {
+    "day": 15.965732169861493,
+    "from": "purse",
+    "to": "world",
+    "amount": 15,
+    "why": "hiring a Levy"
+   },
+   {
+    "day": 15.965732169861493,
+    "from": "purse",
+    "to": "world",
+    "amount": 25,
+    "why": "hiring a Hunter"
+   },
+   {
+    "day": 15.965732169861493,
+    "from": "purse",
+    "to": "world",
+    "amount": 25,
+    "why": "hiring a Mercenary"
+   },
+   {
+    "day": 16.09315590699026,
+    "from": "purse",
+    "to": "world",
+    "amount": 27,
+    "why": "3 rations"
+   },
+   {
+    "day": 16.22057964411902,
+    "from": "purse",
+    "to": "world",
+    "amount": 7,
+    "why": "1 rations"
+   },
+   {
+    "day": 16.475427118376544,
+    "from": "purse",
+    "to": "world",
+    "amount": 7,
+    "why": "1 rations"
+   },
+   {
+    "day": 16.602850855505306,
+    "from": "purse",
+    "to": "world",
+    "amount": 9,
+    "why": "1 rations"
+   },
+   {
+    "day": 17.00956829818795,
+    "from": "world",
+    "to": "purse",
+    "amount": 94,
+    "why": "spoils: The Captain's Trial"
+   },
+   {
+    "day": 17.339966963270694,
+    "from": "world",
+    "to": "purse",
+    "amount": 41,
+    "why": "spoils: Looter Band"
+   },
+   {
+    "day": 17.45185576379445,
+    "from": "purse",
+    "to": "world",
+    "amount": 60,
+    "why": "training"
+   },
+   {
+    "day": 17.45185576379445,
+    "from": "purse",
+    "to": "world",
+    "amount": 60,
+    "why": "training"
+   },
+   {
+    "day": 17.45185576379445,
+    "from": "purse",
+    "to": "world",
+    "amount": 60,
+    "why": "training"
+   },
+   {
+    "day": 17.45185576379445,
+    "from": "purse",
+    "to": "world",
+    "amount": 25,
+    "why": "training"
+   },
+   {
+    "day": 17.998156784562703,
+    "from": "world",
+    "to": "purse",
+    "amount": 54,
+    "why": "spoils: Road Reavers"
+   },
+   {
+    "day": 18.101450912003237,
+    "from": "world",
+    "to": "purse",
+    "amount": 124,
+    "why": "contract reward"
+   },
+   {
+    "day": 18.101450912003237,
+    "from": "purse",
+    "to": "world",
+    "amount": 60,
+    "why": "training"
+   },
+   {
+    "day": 18.101450912003237,
+    "from": "purse",
+    "to": "world",
+    "amount": 60,
+    "why": "training"
+   },
+   {
+    "day": 18.101450912003237,
+    "from": "purse",
+    "to": "world",
+    "amount": 60,
+    "why": "training"
+   },
+   {
+    "day": 19.067895878729143,
+    "from": "world",
+    "to": "purse",
+    "amount": 57,
+    "why": "spoils: Road Reavers"
+   },
+   {
+    "day": 19.209351875669086,
+    "from": "world",
+    "to": "purse",
+    "amount": 124,
+    "why": "contract reward"
+   },
+   {
+    "day": 19.209351875669086,
+    "from": "purse",
+    "to": "world",
+    "amount": 60,
+    "why": "training"
+   },
+   {
+    "day": 19.209351875669086,
+    "from": "purse",
+    "to": "world",
+    "amount": 60,
+    "why": "training"
+   },
+   {
+    "day": 19.209351875669086,
+    "from": "purse",
+    "to": "world",
+    "amount": 60,
+    "why": "training"
+   },
+   {
+    "day": 19.738465910555117,
+    "from": "world",
+    "to": "purse",
+    "amount": 41,
+    "why": "spoils: Looter Band"
+   },
+   {
+    "day": 19.85035471107887,
+    "from": "purse",
+    "to": "world",
+    "amount": 60,
+    "why": "training"
+   }
+  ],
+  "followers": {
+   "quartermaster": null,
+   "merchant": null,
+   "surgeon": null,
+   "blacksmith": null,
+   "scout": null
+  },
+  "medicine": 0,
+  "detachments": [],
+  "retinue": [],
+  "happenings": {
+   "open": [
+    {
+     "id": 6,
+     "kind": "militia_request",
+     "place": "saltmere",
+     "start": 16.015732169861494,
+     "until": 21.015732169861494,
+     "seen": false,
+     "taken": false
+    },
+    {
+     "id": 8,
+     "kind": "infestation",
+     "place": "fenwick",
+     "start": 20.011111781540965,
+     "until": 28.011111781540965,
+     "seen": false,
+     "taken": false,
+     "partyId": 165,
+     "gold": 78
+    }
+   ],
+   "past": [
+    {
+     "id": 3,
+     "kind": "infestation",
+     "place": "ashby",
+     "day": 8.044131172016298,
+     "result": "others"
+    },
+    {
+     "id": 1,
+     "kind": "courier",
+     "place": "eastwatch",
+     "day": 10.085445068926665,
+     "result": "ignored",
+     "dest": "oakford"
+    },
+    {
+     "id": 2,
+     "kind": "refugees",
+     "place": "fenwick",
+     "day": 11.029931826717798,
+     "result": "ignored"
+    },
+    {
+     "id": 4,
+     "kind": "militia_request",
+     "place": "marenna",
+     "day": 16.015732169861494,
+     "result": "ignored"
+    },
+    {
+     "id": 5,
+     "kind": "militia_request",
+     "place": "harrowgate",
+     "day": 18.01482345122937,
+     "result": "ignored"
+    },
+    {
+     "id": 7,
+     "kind": "infestation",
+     "place": "kettleby",
+     "day": 18.031490117896034,
+     "result": "others"
+    }
+   ],
+   "cool": {
+    "courier|east_march": 16.003830903081273,
+    "refugees|cliffs": 22.014293995131897,
+    "infestation|west": 24.01079783868296,
+    "militia_request|south": 29.01326516005113,
+    "militia_request|cliffs": 31.01290082202906,
+    "militia_request|east_march": 34.015732169861494,
+    "infestation|north": 34.01482345122937,
+    "infestation|cliffs": 36.01111178154096
+   },
+   "next": 21,
+   "nextId": 9
+  },
+  "tourney": {
+   "hosts": {
+    "stonebridge": {
+     "next": 32,
+     "wins": 0,
+     "entered": null
+    },
+    "eastwatch": {
+     "next": 21,
+     "wins": 0,
+     "entered": null
+    },
+    "hrothgard": {
+     "next": 24,
+     "wins": 0,
+     "entered": null
+    },
+    "vessara": {
+     "next": 27,
+     "wins": 0,
+     "entered": null
+    },
+    "merrow": {
+     "next": 30,
+     "wins": 0,
+     "entered": null
+    },
+    "gullhaven": {
+     "next": 33,
+     "wins": 0,
+     "entered": null
+    },
+    "harrowgate": {
+     "next": 22,
+     "wins": 0,
+     "entered": null
+    },
+    "calder": {
+     "next": 25,
+     "wins": 0,
+     "entered": null
+    }
+   },
+   "open": [
+    {
+     "host": "stonebridge",
+     "start": 18,
+     "until": 21,
+     "fighters": [
+      {
+       "name": "Ivo",
+       "culture": "valedorn",
+       "skill": 0.98
+      },
+      {
+       "name": "Osmer Cooper",
+       "culture": "valedorn",
+       "skill": 0.88
+      },
+      {
+       "name": "Aldwin Fletcher",
+       "culture": "valedorn",
+       "skill": 1.19
+      },
+      {
+       "name": "Herve Carter",
+       "culture": "valedorn",
+       "skill": 0.94
+      },
+      {
+       "name": "Hamon of Stonebridge",
+       "culture": "valedorn",
+       "skill": 0.96
+      },
+      {
+       "name": "Walter",
+       "culture": "valedorn",
+       "skill": 0.97
+      },
+      {
+       "name": "Odo of Stonebridge",
+       "culture": "valedorn",
+       "skill": 1.19
+      }
+     ]
+    },
+    {
+     "host": "gullhaven",
+     "start": 19,
+     "until": 22,
+     "fighters": [
+      {
+       "name": "Bran",
+       "culture": "border",
+       "skill": 1.19
+      },
+      {
+       "name": "Gwen of Gullhaven",
+       "culture": "border",
+       "skill": 0.9
+      },
+      {
+       "name": "Hob",
+       "culture": "border",
+       "skill": 0.96
+      },
+      {
+       "name": "Abe Fenrunner",
+       "culture": "border",
+       "skill": 1.03
+      },
+      {
+       "name": "Pell Owl",
+       "culture": "border",
+       "skill": 1.11
+      },
+      {
+       "name": "Moll Ferryman",
+       "culture": "border",
+       "skill": 0.9
+      },
+      {
+       "name": "Wat No-Thumbs",
+       "culture": "border",
+       "skill": 1.18
+      }
+     ]
+    }
+   ],
+   "bracket": null,
+   "rival": null
+  },
+  "businesses": {
+   "owned": [],
+   "past": []
+  },
+  "siegePlanned": 20,
+  "nextSiegeId": 1
+ }
+}

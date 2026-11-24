@@ -2,8 +2,6 @@
 // capture and ransom both ways, off-screen captivity; save v20 and 2.25.0's saves.
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const path = require('node:path');
 const { loadGame } = require('./helpers/load');
 const { newCampaign } = require('../scripts/simulate-campaign');
 const { makeBot } = require('./helpers/campaign-bot');
@@ -11,7 +9,6 @@ const { makeBot } = require('./helpers/campaign-bot');
 const plain = (v) => JSON.parse(JSON.stringify(v));
 const byKey = (c, key) => Object.keys(c.people).find((id) => c.people[id].key === key);
 const count = (troops) => Object.values(troops).reduce((a, b) => a + b, 0);
-const FIX = path.join(__dirname, 'fixtures', 'saves-2.25');
 
 /** A world with the lords riding (and the other parties too, unless `only`). */
 function world({ only = true, ...opts } = {}) {
@@ -27,7 +24,7 @@ function world({ only = true, ...opts } = {}) {
 test('every free lord rides with their household, formed at home; rulers keep to their halls', () => {
   const { CL, c, L } = world();
   const lords = c.parties.filter((p) => p.lordId);
-  assert.equal(lords.length, 22, 'about 24: every lord but the four rulers');
+  assert.equal(lords.length, 32, 'every lord but the six rulers (P10-02: the coast’s ten too)');
   for (const id of Object.values(c.rulers)) assert.equal(L.partyOf(c, id), null);
   for (const p of lords) {
     const home = CL.content.table('settlements')[c.people[p.lordId].home];
@@ -37,7 +34,7 @@ test('every free lord rides with their household, formed at home; rulers keep to
   assert.deepEqual(plain(CL.realm.invariants(c)), []);
   // Idempotent: nobody rides twice.
   L.ensure(c, c.day, true);
-  assert.equal(c.parties.filter((p) => p.lordId).length, 22);
+  assert.equal(c.parties.filter((p) => p.lordId).length, 32);
 });
 
 test('party sizes follow what a lord holds, and change as land is granted and lost', () => {
@@ -287,30 +284,6 @@ test('saves: prisoners and lords’ parties round-trip; a captive on the map, or
   v19.version = 19;
   delete v19.prisoners;
   assert.deepEqual(plain(CL.save.migrate(v19).prisoners), []);
-});
-
-test('2.25.0 saves (fixtures from 00d28aa) load: the lords ride out from their homes; the world is as it was', () => {
-  const index = JSON.parse(fs.readFileSync(path.join(FIX, 'index.json'), 'utf8'));
-  assert.deepEqual(index.map((f) => f.expect.build), index.map(() => '2.25.0'));
-  for (const f of index) {
-    const text = fs.readFileSync(path.join(FIX, f.file), 'utf8');
-    const { CL } = loadGame({ party: false });
-    const r = CL.portable.importText(text);
-    assert.equal(r.ok, true, `${f.file}: ${r.reason}`);
-    const c = CL.campaign;
-    assert.equal(c.version, CL.save.VERSION);
-    for (const k of ['gold', 'renown', 'battles', 'victories']) assert.equal(c[k], f.expect[k], `${f.file} ${k}`);
-    assert.deepEqual(plain(c.roster.map((s) => s.id)), f.expect.soldierIds);
-    assert.equal(c.world.location, f.expect.location);
-    const old = JSON.parse(text).campaign;
-    assert.deepEqual(plain(c.parties.filter((p) => !p.lordId).map((p) => p.id)), old.parties.map((p) => p.id), 'every party as it was');
-    assert.equal(c.parties.filter((p) => p.lordId).length, 22, 'and the lords');
-    assert.deepEqual(plain(c.prisoners), []);
-    assert.deepEqual(plain(CL.realm.invariants(c)), [], f.file);
-    const again = loadGame({ party: false }).CL;
-    assert.equal(again.portable.importText(CL.portable.serialize(c)).ok, true);
-    assert.equal(JSON.stringify(again.campaign), JSON.stringify(c), `${f.file}: stable`);
-  }
 });
 
 test('90 days of a bot company with the lords: the invariants hold every day', () => {

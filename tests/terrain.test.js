@@ -100,7 +100,7 @@ test('the bigger world has every kind of ground: the Hrothmark range and its pas
   const { CL } = loadGame();
   const at = { mountain: [120, 42], road: [96, 43], hills: [190, 50], marsh: [20, 158], river: [104, 172], ford: [106, 164], bridge: [101.8, 181.9], forest: [64, 12] };
   for (const [kind, [x, y]] of Object.entries(at)) assert.equal(CL.world.terrainAt(x, y), kind, `${kind} at ${x},${y}`);
-  assert.deepEqual(Array.from(CL.world.map().coast), ['south']);
+  assert.deepEqual(Array.from(CL.world.map().coast), ['south', 'east']); // P10-02: the coast's sea on the east
 });
 
 test('the river ford battle map: the river between the armies, its shallows at half speed', () => {

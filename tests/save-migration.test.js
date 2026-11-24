@@ -1,106 +1,17 @@
 // Save schema v3 and migrations (V2-01; design §24.7, SC-30–32; docs/SAVE-FORMAT.md).
-// Saves written by real old builds (0.3, 0.14, 0.28, 1.2, 1.3, 1.4, 1.13, 1.14, 1.15, 2.0; the 1.0 set is in save-fixtures.test.js) must
-// load, partial or damaged saves are rejected instead of being filled in, and nothing reports success
-// until it is really stored.
+// Partial or damaged saves are rejected instead of being filled in, and nothing reports success until
+// it is really stored. (P10-02: saves of real old builds are refused, not migrated: tests/old-saves.test.js.)
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const path = require('node:path');
 const { loadGame: loadAny, memoryStorage } = require('./helpers/load');
 const { oldMarch } = require('./helpers/old-march');
 // Saves from before W-05b belong to the Border March as it was; the real build refuses them
 // (tests/world-grown.test.js). Their migrations are proved on the March as it was.
 const loadGame = (o = {}) => loadAny({ content: oldMarch, ...o });
 
-const FIX = path.join(__dirname, 'fixtures');
 const KEY = 'crownless_save';
 const BACKUP = 'crownless_save_backup';
-const LEGACY = 'crownless_v03_party';
 
-/** What the old build recorded about each of its saves, checked against what this build loaded. */
-function same(c, expect) {
-  assert.equal(c.character?.name ?? null, expect.name);
-  assert.ok(Math.abs(c.day - expect.day) < 0.001, `day ${c.day} vs ${expect.day}`);
-  for (const k of ['gold', 'renown', 'battles', 'victories']) assert.equal(c[k], expect[k], k);
-  // Through JSON: the game's arrays come from the test sandbox's realm.
-  const list = (key) => JSON.parse(JSON.stringify(c.roster.map((s) => s[key])));
-  assert.deepEqual(list('id'), expect.soldierIds);
-  assert.deepEqual(list('troop'), expect.troops);
-  assert.deepEqual(list('xp'), expect.xp);
-  assert.equal(c.world.location, expect.location);
-  for (const [q, status] of Object.entries(expect.quests || {})) assert.equal(c.story.quests[q]?.status, status, q);
-}
-
-for (const label of ['0.14', '0.28', '1.2', '1.3', '1.4', '1.13', '1.14', '1.15', '2.0']) {
-  const dir = path.join(FIX, `saves-${label}`);
-  const index = JSON.parse(fs.readFileSync(path.join(dir, 'index.json'), 'utf8'));
-  for (const f of index) {
-    const text = fs.readFileSync(path.join(dir, f.file), 'utf8');
-
-    test(`a ${label} export (${f.file}) imports into the current schema and keeps everything`, () => {
-      assert.equal(f.expect.build, `${label}.0`, 'made by that build');
-      const { CL } = loadGame({ party: false });
-      const r = CL.portable.importText(text);
-      assert.equal(r.ok, true, `${r.reason} ${r.problems || ''}`);
-      // A save from a build at the current schema (2.0, v9) loads as it is; older ones migrate.
-      const fromVersion = JSON.parse(text).campaign.version;
-      assert.equal(r.migrated, fromVersion < CL.save.VERSION);
-      const c = CL.campaign;
-      assert.equal(c.version, CL.save.VERSION);
-      assert.equal(c.worldId, 'border_march');
-      assert.equal(c.contentVersion, CL.BUILD, 'stamped by the build that saved it');
-      same(c, f.expect);
-      // Stable from here: export and import again changes nothing.
-      const again = loadGame({ party: false });
-      assert.equal(again.CL.portable.importText(CL.portable.serialize(c)).ok, true);
-      assert.equal(JSON.stringify(again.CL.campaign), JSON.stringify(c));
-    });
-
-    test(`a ${label} save left in the browser (${f.file}) migrates on load, keeps a pre-migration copy, and plays on`, () => {
-      const old = JSON.stringify(JSON.parse(text).campaign);
-      const storage = memoryStorage({ [KEY]: old });
-      const { CL } = loadGame({ storage, party: false });
-      assert.equal(CL.save.existed, true);
-      same(CL.campaign, f.expect);
-      const from = JSON.parse(old).version; // 2 for 0.14 and 0.28, 3 for 1.2, 4 for 1.3, 5 for 1.4, 6 for 1.13, 7 for 1.14, 8 for 1.15, 9 for 2.0
-      const migrates = from < CL.save.VERSION;
-      const keptAs = CL.save.preMigrationKey(from);
-      if (migrates) {
-        assert.equal(storage.data[keptAs], old, 'the old save is kept exactly as it was');
-        assert.ok(CL.diag.events.some((e) => e.msg === 'Save migrated' && e.data.from === from));
-      } else {
-        assert.equal(storage.data[keptAs], undefined, 'a save at the current schema needs no pre-migration copy');
-        assert.ok(!CL.diag.events.some((e) => e.msg === 'Save migrated'));
-      }
-      CL.party.advanceDays(3);
-      assert.equal(CL.save.write(), true);
-      assert.equal(JSON.parse(storage.data[KEY]).version, CL.save.VERSION);
-      assert.equal(storage.data[BACKUP], old, 'the old save is the backup, and it still loads');
-      if (migrates) assert.equal(storage.data[keptAs], old, 'the pre-migration copy is written once, never replaced');
-      const back = loadGame({ storage, party: false });
-      assert.ok(back.CL.campaign.day >= f.expect.day + 3 - 0.001);
-    });
-  }
-}
-
-test('the 0.3 save (schema v1) still migrates: troops become soldiers, and its key is left alone', () => {
-  const v1 = fs.readFileSync(path.join(FIX, 'saves-0.3', 'crownless_v03_party.json'), 'utf8').trim();
-  const storage = memoryStorage({ [LEGACY]: v1 });
-  const { CL } = loadGame({ storage, party: false });
-  const c = CL.campaign;
-  assert.equal(c.version, CL.save.VERSION);
-  assert.equal(c.gold, 185);
-  assert.equal(c.roster.length, 10); // 5 + 3 fit, 1 + 1 wounded
-  assert.equal(c.roster.filter((s) => s.troop === 'levy').length, 6);
-  assert.equal(c.roster.filter((s) => s.woundedUntil !== null).length, 2);
-  CL.save.write();
-  assert.equal(storage.data[LEGACY], v1);
-  // And the same file imported through Save & export.
-  const other = loadGame({ party: false });
-  const r = other.CL.portable.importText(v1);
-  assert.equal(r.ok, true, r.reason);
-  assert.equal(other.CL.campaign.roster.length, 10);
-});
 
 test('migrations are pure steps, one schema version at a time', () => {
   const { CL } = loadGame();

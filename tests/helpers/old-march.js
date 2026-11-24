@@ -62,7 +62,9 @@ function oldMarch(content) {
       roads: world.roads.map((r) => r.filter((id) => settlements[id])).filter((r) => r.length > 1),
       river: world.river.map(back),
       forests: world.forests.filter(inside).map((f) => f.map(back)),
-      hills: world.hills.map(back),
+      hills: world.hills.filter(([x, y]) => inMarch(x, y)).map(back), // P10-02: not the coast's
+      // P10-02: only relations between the March's own kingdoms (the coast's realms begin at war).
+      relations: (world.relations || []).filter((r) => r.between.every((f) => KINGDOMS.includes(f))),
       sites,
       // The people of the realms (P8-02): only those of these kingdoms whose home lies in the March,
       // holding what lies in it, with kin among themselves.

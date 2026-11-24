@@ -12,12 +12,12 @@ const { loadGame, memoryStorage } = require('./helpers/load');
 const NEW_KINGDOMS = ['hrothmark', 'vessaro'];
 const plain = (v) => JSON.parse(JSON.stringify(v));
 
-test('four kingdoms, a free city and the Reavers; each kingdom a capital, two forts and three to five villages', () => {
+test('six kingdoms, two free cities and the Reavers; each kingdom a capital, two forts and three to five villages', () => {
   const { CL } = loadGame();
   assert.deepEqual(Array.from(CL.content.validate()), []);
   const all = Object.values(CL.content.table('settlements'));
-  assert.equal(all.length, 31);
-  for (const k of ['valedorn', 'aurelian', ...NEW_KINGDOMS]) {
+  assert.equal(all.length, 44); // P10-02: the coast's 13 too
+  for (const k of ['valedorn', 'aurelian', ...NEW_KINGDOMS, 'ostrand', 'saltreach']) {
     const own = all.filter((s) => s.ownerFaction === k);
     const n = (type) => own.filter((s) => s.type === type).length;
     assert.equal(n('town'), 1, `${k}: one capital`);
@@ -27,14 +27,16 @@ test('four kingdoms, a free city and the Reavers; each kingdom a capital, two fo
   const city = all.filter((s) => s.ownerFaction === 'merrow');
   assert.deepEqual(plain(city.map((s) => [s.id, s.type])), [['merrow', 'town']]);
   assert.deepEqual(plain(CL.content.get('factions', 'merrow').recruits), ['mercenary'], 'the free city hires sell-swords');
+  assert.deepEqual(plain(all.filter((s) => s.ownerFaction === 'gullhaven').map((s) => [s.id, s.type])), [['gullhaven', 'town']]);
   // Every region has two lairs.
   const lairs = {};
   for (const st of Object.values(CL.world.map().sites)) {
     const r = CL.world.regionAt(st.mapX, st.mapY).id.replace(/^(west|east)_march$/, 'march');
     lairs[r] = (lairs[r] || 0) + 1;
   }
-  for (const r of ['march', 'north', 'south', 'west', 'east']) assert.equal(lairs[r], 2, r);
+  for (const r of ['march', 'north', 'south', 'west', 'east', 'fells', 'cliffs', 'flats']) assert.equal(lairs[r], 2, r);
   assert.equal(lairs.merrow_coast, undefined);
+  assert.equal(lairs.gull_shore, undefined, 'the free ports keep their shores clear');
 });
 
 test('every settlement has a market or a reason not to; the free city has the best market and armoury; boards in every capital', () => {
@@ -116,14 +118,16 @@ test('the world fills with bands, patrols and caravans, and nothing ever leaves 
   const c = CL.campaign;
   const tpl = (p) => CL.content.get('party_templates', p.template);
   for (const k of NEW_KINGDOMS) assert.ok(c.parties.some((p) => tpl(p).faction === k && tpl(p).kind === 'patrol'), `${k} patrols`);
-  // Caravans run between each capital and the free city.
+  // Caravans run between each capital and a free city (P10-02: Merrow, or the coast's Gullhaven).
   const routes = Object.values(CL.content.table('party_templates')).filter((t) => t.kind === 'caravan');
-  for (const town of Object.values(CL.content.table('settlements')).filter((s) => s.type === 'town' && s.id !== 'merrow')) {
+  const free = Object.values(CL.content.table('settlements')).filter((s) => CL.content.get('factions', s.ownerFaction).freeCity).map((s) => s.id);
+  for (const town of Object.values(CL.content.table('settlements')).filter((s) => s.type === 'town' && !free.includes(s.id))) {
     assert.ok(
-      routes.some((t) => t.route.includes(town.id) && t.route.includes('merrow')),
-      `a caravan between ${town.id} and Merrow`,
+      routes.some((t) => t.route.includes(town.id) && t.route.some((id) => free.includes(id))),
+      `a caravan between ${town.id} and a free city`,
     );
   }
+  assert.ok(routes.some((t) => t.route.includes('gullhaven') && t.route.includes('merrow')), 'Gullhaven trades with Merrow');
   c.food = 9999;
   c.gold = 9999;
   const b = CL.world.bounds();
@@ -176,21 +180,3 @@ test('an exported save from before the world grew is refused by name', () => {
   assert.match(r.reason, /world this version no longer has/);
 });
 
-test('the first saves of the bigger world (fixtures from 2.7.0) import, keep everything, and play on', () => {
-  const dir = path.join(__dirname, 'fixtures', 'saves-2.7');
-  const index = JSON.parse(fs.readFileSync(path.join(dir, 'index.json'), 'utf8'));
-  for (const f of index) {
-    const { CL } = loadGame({ party: false });
-    const r = CL.portable.importText(fs.readFileSync(path.join(dir, f.file), 'utf8'));
-    assert.equal(r.ok, true, `${f.file}: ${r.reason}`);
-    const c = CL.campaign;
-    assert.equal(c.worldId, CL.world.id());
-    assert.equal(c.character.name, f.expect.name);
-    assert.ok(Math.abs(c.day - f.expect.day) < 0.001);
-    for (const k of ['gold', 'renown', 'battles', 'victories']) assert.equal(c[k], f.expect[k], `${f.file} ${k}`);
-    assert.deepEqual(plain(c.roster.map((s) => s.troop)), f.expect.troops);
-    assert.equal(c.world.location, f.expect.location);
-    CL.party.advanceDays(2);
-    assert.equal(CL.save.write(), true);
-  }
-});

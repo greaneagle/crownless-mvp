@@ -13,13 +13,13 @@ test('Realm: Holdings and Lords tabs from the map’s Journal, every realm, and 
   await waitMode(page, 'realm');
   await expect(page.locator('#overlayTitle')).toHaveText('THE REALMS');
   const screen = page.locator('#realmScreen');
-  await expect(screen.locator('.realmCard')).toHaveCount(4);
+  await expect(screen.locator('.realmCard')).toHaveCount(6); // P10-02: with the coast's two realms
   const vale = screen.locator('.realmCard[data-realm="valedorn"]');
   await expect(vale.locator('h3')).toHaveText('Valedorn Crown · King Godric Ardane');
   await expect(vale).toContainText('Greywall Fort (fort): Lord Hamon Greymantle · the story decides it');
   await expect(vale).toContainText('Brackenfield (village, under Greywall): Lady Hawise Greymantle');
   await expect(screen.locator('.realmCard[data-realm="vessaro"] h3')).toHaveText('Vessaro League · Queen Lucrezia Salviati');
-  await expect(screen.locator('.realmNote')).toContainText('Free City of Merrow: a free city');
+  await expect(screen.locator('.realmNote')).toContainText('Free City of Merrow, Free Port of Gullhaven: free cities'); // P10-02
   await expectLayoutSound(page, ['#realmScreen [data-tab="holdings"]', '#realmScreen [data-tab="lords"]', '#primaryBtn']);
   // The Lords tab: what each holds (or landless), their kin, need and where they are (P8-07's lines).
   await press(page, '#realmScreen [data-tab="lords"]');
@@ -97,7 +97,7 @@ test('P9-02: the Diplomacy tab shows each pair of realms, their treaties with en
   await press(page, '#realmScreen [data-tab="diplomacy"]');
   await expect(page.locator('#realmScreen [data-tab="diplomacy"]')).toHaveAttribute('aria-pressed', 'true');
   const cards = page.locator('#realmScreen .diplomacyCard');
-  await expect(cards).toHaveCount(6);
+  await expect(cards).toHaveCount(15); // every pair of six realms (P10-02)
   const vh = page.locator('#realmScreen .diplomacyCard[data-pair="hrothmark|valedorn"]');
   await expect(vh.locator('h3')).toHaveText(/^Valedorn and Hrothmark: at peace/);
   await expect(vh).toContainText('Treaties: trade until day 121.');

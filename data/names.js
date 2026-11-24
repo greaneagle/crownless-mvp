@@ -90,5 +90,8 @@
         { pattern: '{given}', weight: 2 },
       ],
     },
+    // P10-02: the coast's two peoples.
+    ostrand: { id: 'ostrand', name: 'Ostrand', about: 'Cliff folk of the cold north coast: hard, short names.', given: ['Hakon', 'Eirik', 'Torvald', 'Ulf', 'Ragnar', 'Sten', 'Arne', 'Brand', 'Gunnar', 'Leif', 'Orm', 'Vidar'], givenFemale: ['Astrid', 'Sigrid', 'Ingrid', 'Thora', 'Ragna', 'Gudrun', 'Helga', 'Liv'], trades: ['Netter', 'Cooper', 'Smith', 'Salter', 'Fowler', 'Wright'], epithets: ['Cliffborn', 'the Grim', 'Saltbeard', 'Gull-Eye', 'Ironhand', 'the Quiet'], forms: [{ pattern: '{given} of {origin}', weight: 3 }, { pattern: '{given} {epithet}', weight: 3 }, { pattern: '{given} {trade}', weight: 2 }, { pattern: '{given}', weight: 1 }] },
+    saltreach: { id: 'saltreach', name: 'Saltreach', about: 'Salt-pan towns of the southern flats: long, lilting names.', given: ['Aurelio', 'Benedetto', 'Cosimo', 'Dario', 'Emilio', 'Fausto', 'Guido', 'Lorenzo', 'Marco', 'Nero', 'Piero', 'Tullio'], givenFemale: ['Bianca', 'Chiara', 'Donata', 'Fiora', 'Giulia', 'Lucia', 'Nella', 'Serena'], trades: ['Salaro', 'Fabbro', 'Mercante', 'Barcaiolo', 'Tessitore'], epithets: ['il Rosso', 'the Salt', 'Quickhand', 'il Vecchio', 'the Thrifty'], forms: [{ pattern: '{given} of {origin}', weight: 4 }, { pattern: '{given} {epithet}', weight: 2 }, { pattern: '{given} {trade}', weight: 2 }, { pattern: '{given}', weight: 1 }] },
   };
 })(typeof window !== 'undefined' ? window : globalThis);

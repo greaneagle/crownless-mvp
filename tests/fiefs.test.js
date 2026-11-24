@@ -2,8 +2,6 @@
 // policies, desertion, castellans, the crown's grants, the conqueror's choice, SC-19 and SC-44.
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const path = require('node:path');
 const { loadGame } = require('./helpers/load');
 
 // P9-B3: the world's garrisons are this many times the data's (data/world_map.js `armies`).
@@ -13,7 +11,6 @@ const { makeBot } = require('./helpers/campaign-bot');
 
 const plain = (v) => JSON.parse(JSON.stringify(v));
 const byKey = (c, key) => Object.keys(c.people).find((id) => c.people[id].key === key);
-const FIX = path.join(__dirname, 'fixtures', 'saves-2.27');
 
 function vassal(realm = 'valedorn', opts = {}) {
   const env = loadGame({ party: true, ...opts });
@@ -398,18 +395,4 @@ test('saves: the holdings’ state, grants and influence round-trip; v21 migrate
   delete v21.influence;
   const m = CL.save.migrate(v21);
   assert.deepEqual([plain(m.grants), plain(m.influence)], [[], {}]);
-  const index = JSON.parse(fs.readFileSync(path.join(FIX, 'index.json'), 'utf8'));
-  for (const f of index) {
-    assert.equal(f.expect.build, '2.27.0');
-    const { CL: G } = loadGame({ party: false });
-    const r = G.portable.importText(fs.readFileSync(path.join(FIX, f.file), 'utf8'));
-    assert.equal(r.ok, true, `${f.file}: ${r.reason}`);
-    assert.equal(G.campaign.version, G.save.VERSION);
-    for (const k of ['gold', 'renown', 'battles', 'victories']) assert.equal(G.campaign[k], f.expect[k], `${f.file} ${k}`);
-    assert.ok(Object.values(G.campaign.holdings).every((h) => h.policies && h.prosperity != null));
-    assert.deepEqual(plain(G.realm.invariants(G.campaign)), [], f.file);
-    const again = loadGame({ party: false }).CL;
-    assert.equal(again.portable.importText(G.portable.serialize(G.campaign)).ok, true);
-    assert.equal(JSON.stringify(again.campaign), JSON.stringify(G.campaign), `${f.file}: stable`);
-  }
 });

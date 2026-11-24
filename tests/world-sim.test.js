@@ -6,8 +6,6 @@
 // tests/slow/world-sim.test.js.
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const path = require('node:path');
 const { loadGame, memoryStorage } = require('./helpers/load');
 
 const plain = (v) => JSON.parse(JSON.stringify(v));
@@ -111,7 +109,7 @@ test('the per-region budget: no more regular parties spawn into a region that is
 
 // ---- War and peace (W-07, D-W5) ----
 
-test('at the start: the March kingdoms in tension (held by the story), every other pair at peace', () => {
+test('at the start: the March kingdoms in tension (held by the story), the coast’s at war (P10-02), every other pair at peace', () => {
   const { CL } = loadGame();
   const c = CL.campaign;
   const R = CL.realm;
@@ -119,7 +117,9 @@ test('at the start: the March kingdoms in tension (held by the story), every oth
   assert.equal(R.relation(c, 'aurelian', 'valedorn'), 'tension', 'either way round');
   assert.equal(R.storyHeld(c, 'valedorn', 'aurelian'), true);
   const ks = R.kingdoms().map((k) => k.id);
-  for (const a of ks) for (const b of ks) if (a < b && R.pairKey(a, b) !== R.pairKey('valedorn', 'aurelian')) assert.equal(R.relation(c, a, b), 'peace', `${a}–${b}`);
+  for (const a of ks) for (const b of ks) if (a < b && ![R.pairKey('valedorn', 'aurelian'), R.pairKey('ostrand', 'saltreach')].includes(R.pairKey(a, b))) assert.equal(R.relation(c, a, b), 'peace', `${a}–${b}`);
+  assert.equal(R.relation(c, 'ostrand', 'saltreach'), 'war');
+  assert.equal(R.storyHeld(c, 'ostrand', 'saltreach'), false);
   assert.equal(R.relation(c, 'valedorn', 'valedorn'), null);
   assert.equal(R.relation(c, 'valedorn', 'neutral'), null, 'the Reavers have no relations');
 });
@@ -213,7 +213,7 @@ test('patrols of kingdoms at peace meet without a fight; at odds they clash', ()
 
 // ---- Saves (schema v10) ----
 
-test('relations are saved; junk is repaired; a v9 save of the bigger world migrates on (v10: relations)', () => {
+test('relations are saved; junk is repaired', () => {
   const storage = memoryStorage();
   const { CL } = loadGame({ storage });
   const c = CL.campaign;
@@ -228,16 +228,6 @@ test('relations are saved; junk is repaired; a v9 save of the bigger world migra
   assert.equal(junk.relations['aurelian|valedorn'].state, 'war');
   assert.equal(junk.relations['aurelian|valedorn'].heat, 0);
   assert.equal(junk.relations['x|y'], undefined);
-  // A 2.7 save (schema v9) left in the browser: migrated, kept as it was, relations from the world.
-  const file = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures', 'saves-2.7', 'story-played.json'), 'utf8'));
-  const old = JSON.stringify(file.campaign);
-  const s2 = memoryStorage({ crownless_save: old });
-  const g = loadGame({ storage: s2, party: false }).CL;
-  assert.equal(g.campaign.version, CL.save.VERSION); // on through v10 (relations), v11–v13 (followers), v14 (detachments), v15 (companions), v16 (world events), v17 (tournaments) and v18 (businesses)
-  assert.equal(s2.data[g.save.preMigrationKey(9)], old);
-  assert.equal(g.realm.relation(g.campaign, 'valedorn', 'aurelian'), 'tension');
-  assert.equal(g.realm.relation(g.campaign, 'hrothmark', 'merrow'), 'peace');
-  assert.equal(g.campaign.character.name, file.campaign.character.name);
 });
 
 test('the Debug map stress test: 80 parties and fast time, reported apart, then the campaign put back as it was', () => {

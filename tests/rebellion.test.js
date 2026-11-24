@@ -4,12 +4,9 @@
 // summons by both sides, and the save step (v27 → v28).
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const path = require('node:path');
 const { loadGame } = require('./helpers/load');
 
 const plain = (v) => JSON.parse(JSON.stringify(v));
-const FIX = path.join(__dirname, 'fixtures', 'saves-2.30');
 
 function world() {
   const env = loadGame({ party: true });
@@ -294,15 +291,6 @@ test('saves: v27 → v28, a faction and a rising round-trip, junk repaired, and 
   const m = CL.save.migrate(v27);
   assert.equal(m.version, CL.save.VERSION);
   assert.deepEqual(plain(m.rebellions.list), []);
-  const index = JSON.parse(fs.readFileSync(path.join(FIX, 'index.json'), 'utf8'));
-  for (const f of index) {
-    const { CL: G } = loadGame({ party: false });
-    const r = G.portable.importText(fs.readFileSync(path.join(FIX, f.file), 'utf8'));
-    assert.equal(r.ok, true, `${f.file}: ${r.reason}`);
-    assert.equal(G.campaign.version, G.save.VERSION);
-    assert.deepEqual(plain(G.campaign.rebellions.list), []);
-    assert.deepEqual(plain(G.realm.invariants(G.campaign)), [], f.file);
-  }
 });
 
 test('P9-T: a rising fights its crown first: its army besieges and raids the crown’s land before anyone else’s', () => {
