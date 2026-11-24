@@ -253,3 +253,82 @@ test('saves: v26 → v27, a founded realm round-trips with its holdings, ruler a
     assert.deepEqual(plain(G.realm.invariants(G.campaign)), [], f.file);
   }
 });
+
+test('P9-T, SC-25: a ruler offers treaties, each answered by the other ruler, and a broken alliance is heard in every court', () => {
+  const { CL, c, F, R, D, messages } = world();
+  holdFort(CL, c);
+  const me = F.declare(c, 'player', FORT, { name: 'the Westmark' });
+  assert.ok(me);
+  // The old crown answers in 7 days; here it accepts at once (the claim stays), so the realm is at peace.
+  R.setRelation(c, me, 'valedorn', 'peace', 'test');
+  R.setRelation(c, 'valedorn', 'hrothmark', 'war', 'test');
+  R.setRelation(c, me, 'hrothmark', 'war', 'test');
+  const kinds = F.offers(c, 'valedorn').map((o) => o.kind);
+  assert.ok(kinds.includes('alliance') && kinds.includes('trade') && kinds.includes('nonaggression'), kinds.join());
+  assert.deepEqual(plain(F.offers(c, 'hrothmark').map((o) => o.kind)), ['truce', 'peace'], 'at war: a truce or peace');
+  assert.equal(F.offers(c, me).length, 0, 'not to yourself');
+  // Valedorn and you share an enemy: they think well enough of it.
+  D.addTrust(c, 'valedorn', me, 40);
+  const r = F.propose(c, 'alliance', 'valedorn', 'hrothmark');
+  assert.ok(r.ok, r.why);
+  assert.ok(D.has(c, me, 'valedorn', 'alliance'));
+  assert.match(messages.at(-1), /Valedorn accepts your offer of an alliance/);
+  assert.ok(!F.offers(c, 'valedorn').some((o) => o.kind === 'alliance'), 'not offered twice');
+  // The same offer again within a month is refused before it is made.
+  F.propose(c, 'trade', 'aurelian'); // answered either way
+  const again = F.propose(c, 'trade', 'aurelian');
+  assert.equal(again.ok, false);
+  // Breaking it: Valedorn trusts you less, and so does every other court.
+  const t = D.between(c, me, 'valedorn', 'alliance')[0];
+  const before = { injured: D.trust(c, 'valedorn', me), other: D.trust(c, 'aurelian', me) };
+  assert.ok(F.renounce(c, t.id));
+  assert.ok(!D.has(c, me, 'valedorn', 'alliance'));
+  assert.ok(D.trust(c, 'valedorn', me) < before.injured, 'the injured realm');
+  assert.ok(D.trust(c, 'aurelian', me) < before.other, 'every court has heard');
+  assert.match(messages.at(-1), /You break your alliance with Valedorn/);
+  assert.deepEqual(plain(R.invariants(c)), []);
+});
+
+test('P9-T: a reload gives a realm you founded no stand-in ruler (its people as they were, every lord with a home)', () => {
+  const { CL, c, F } = world();
+  holdFort(CL, c);
+  const me = F.declare(c, 'player', FORT);
+  assert.ok(me);
+  const people = Object.keys(c.people).length;
+  const back = CL.save.fromRaw(plain(c)).campaign;
+  assert.equal(back.rulers[me], 'player');
+  assert.equal(Object.keys(back.people).length, people, 'nobody new');
+  assert.deepEqual(Object.values(back.people).filter((p) => p.realm === me).map((p) => p.id), [], 'no lord of your realm made up');
+  for (const p of Object.values(back.people)) assert.ok(CL.content.table('settlements')[p.home], `${p.name} has a home`);
+});
+
+test('P9-T: your court never grants away your land or your seat (a realm founded at a fort keeps its capital)', () => {
+  const { CL, c, F, R } = world();
+  holdFort(CL, c);
+  const me = F.declare(c, 'player', FORT);
+  const lord = Object.keys(c.people).find((p) => c.people[p].realm === 'hrothmark' && !R.rules(p, c) && !R.fiefsOf(p, c).length) || Object.keys(c.people).find((p) => c.people[p].realm === 'hrothmark' && !R.rules(p, c));
+  CL.nobles.changeRealm(c, lord, me); // a landless vassal waits for land
+  assert.equal(CL.fiefs.givable(c, FORT), false, 'your seat');
+  for (const v of R.villagesOf(FORT, c)) assert.equal(CL.fiefs.givable(c, v), false, 'your villages: yours to grant');
+  for (let w = 0; w < 6; w++) {
+    CL.fiefs.weeklyGrants(c);
+    c.day += 7;
+    CL.fiefs.decideGrants(c);
+  }
+  assert.equal(R.holderOf(FORT, c), 'player');
+  // An AI lord's realm founded at a fort: its seat is not the crown's to give either.
+  const other = Object.keys(c.holdings).find((s) => c.holdings[s].kind === 'fort' && c.holdings[s].sovereign === 'aurelian' && R.capitalOf('aurelian', c) !== s);
+  assert.equal(CL.fiefs.givable(c, R.capitalOf('aurelian', c)), false);
+  assert.ok(other);
+});
+
+test('P9-T: the old crown answers before it besieges: no siege of the new realm while its answer is pending', () => {
+  const { CL, c, F, R } = world();
+  holdFort(CL, c);
+  const me = F.declare(c, 'player', FORT);
+  assert.equal(c.realms[me].pending.realm, 'valedorn');
+  assert.equal(R.siegeWar(c, 'valedorn', me), false, 'pending');
+  assert.equal(R.siegeWar(c, 'hrothmark', me), !F.recognises(c, 'hrothmark', me), 'another realm, by its recognition');
+  R.setRelation(c, 'valedorn', me, 'war', 'test');
+  assert.equal(R.siegeWar(c, 'valedorn', me), true, 'at war');
+});

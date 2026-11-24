@@ -3,7 +3,8 @@
 // only picks presets, and (c) an expert who chooses setups, rallies, and keeps a quartermaster and a
 // merchant (from 2.23.0, P7-T, also a surgeon, a scout and a blacksmith, a detachment out hunting, a
 // mill, and the world's events, which run in every style), and (d, from 3.0.0, P8-T) a landed player who
-// serves a crown, swears fealty and takes the land it is granted, leaving the steward and the defaults. Each run also saves at the halfway mark, reloads from that save and plays on (resuming after
+// serves a crown, swears fealty and takes the land it is granted, leaving the steward and the defaults, and (e, from
+// 4.0.0, P9-T) a ruler who founds a realm at a fort of its own and leaves it to its officers. Each run also saves at the halfway mark, reloads from that save and plays on (resuming after
 // time away). Reports outcomes, forced screens and warnings per style.
 //   node scripts/prototype-g.js [days=30] [seeds=6] [style…]
 const path = require('node:path');
@@ -24,6 +25,28 @@ function mulberry(seed) {
 
 const WARN = /Wages short|run out of food|deserted|^Quartermaster .*: (food|wages)|went unpaid|leaves the company/;
 
+/**
+ * P9-T, the ruler style: test values for a captain who may found a realm at once (what a long
+ * campaign earns): the story over, a fort of the wider world held of its realm, 600 renown and 40
+ * soldiers. The bot declares there, and its officers rule by their default policies from then on.
+ */
+function ruleSetup(CL, c) {
+  const R = CL.realm;
+  CL.story.state(c).flags.ending ||= R.realms()[0].id;
+  const sid = Object.keys(c.holdings).find((id) => {
+    const h = c.holdings[id];
+    return h.kind === 'fort' && R.isRealm(h.sovereign) && R.capitalOf(h.sovereign, c) !== id && !CL.content.get('settlements', id).story && !R.rules(h.holder, c);
+  });
+  R.transfer(c, sid, { holder: 'player', willing: true, reason: 'test' });
+  c.renown = Math.max(c.renown, CL.founding.RULES.renown);
+  const troop = c.roster[0]?.troop || Object.values(CL.content.table('troops')).find((t) => t.tier === 'T1')?.id;
+  while (c.roster.length < CL.founding.RULES.soldiers) CL.save.addSoldier(c, troop);
+  Object.assign(c, { gold: Math.max(c.gold, 1500), food: Math.max(c.food, 200) });
+  const s = CL.content.get('settlements', sid);
+  Object.assign(c.world, { x: s.mapX, y: s.mapY, location: sid });
+  CL.ui.changeMode('settlement');
+}
+
 /** One campaign in one style: play half, save, reload from storage, play the rest. */
 // P9-08: `world` plays another official world (data/worlds/*.js), as `--world <id>` does.
 function run(seed, style, days, { world } = {}) {
@@ -43,6 +66,7 @@ function run(seed, style, days, { world } = {}) {
       c.partySpawns = {};
       c.nextPartyId = 1;
       CL.parties.ensure(c, true);
+      if (style === 'ruler') ruleSetup(CL, c);
     }
     return CL;
   };
@@ -90,6 +114,11 @@ function run(seed, style, days, { world } = {}) {
     swornDay: CL.allegiance.state(c).kind === 'vassal' ? Math.floor(CL.allegiance.state(c).since) : null,
     landedDay: (Array.isArray(c.chronicle) ? c.chronicle : []).find((e) => e.kind === 'holding' && e.event === 'gained')?.day ?? null,
     allegiance: CL.allegiance.state(c).kind,
+    // P9-T: the ruler: the realm founded, on what day, its vassals and treasury at the end.
+    ruled: Boolean(CL.founding.mine(c)),
+    foundedDay: first.founded ?? second.founded ?? null,
+    vassals: CL.founding.vassals(c).length,
+    treasury: CL.founding.mine(c) ? Math.round(CL.crowns.treasury(c, CL.founding.mine(c))) : null,
     invariants: [...(first.invariants || []), ...(second.invariants || [])].length,
     resumed,
     day: c.day,
@@ -133,6 +162,7 @@ function main() {
       'land on day': all.map((r) => (r.landedDay == null ? '-' : Math.floor(r.landedDay))).join('/'),
       'forced /10 days': (sum('decisions') / (seeds * days / 10)).toFixed(2),
       invariants: sum('invariants'),
+      ruled: all.filter((r) => r.ruled).length, // P9-T
     });
   }
   console.log(`Prototype G: ${seeds} campaigns × ${days} days, each style on the same seeds`);

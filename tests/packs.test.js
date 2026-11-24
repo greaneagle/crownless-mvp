@@ -243,3 +243,14 @@ test('the pack checker: good packs and worlds pass; a bad one fails with the gam
     fs.rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test('P9-T: the sample pack and every official world work with this build (a version bump cut them off once)', () => {
+  const { CL } = loadGame({ party: false });
+  const sample = JSON.parse(require('node:fs').readFileSync(require('node:path').join(__dirname, '..', 'packs', 'sample', 'sample.json'), 'utf8'));
+  assert.ok(CL.packs.satisfies(CL.BUILD, sample.manifest.engine), `sample: ${sample.manifest.engine} for ${CL.BUILD}`);
+  for (const { id } of CL.worlds.installed().filter((x) => x.id !== CL.worlds.BUILTIN)) {
+    const { engine } = CL.worlds.package(id).manifest;
+    assert.ok(CL.packs.satisfies(CL.BUILD, engine), `${id}: ${engine} for ${CL.BUILD}`);
+  }
+  assert.ok(CL.worlds.installed().length >= 2, 'the second world is there');
+});

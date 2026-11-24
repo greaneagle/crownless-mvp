@@ -134,11 +134,12 @@ test('a contested succession: the second keeps claims, and three lords behind th
   }
 });
 
-test('a lord beaten in battle dies of wounds now and then (3%); you never die', () => {
+test('a lord beaten in battle dies of wounds now and then (6% from 4.0.0); you never die', () => {
   const { CL, c, H, key } = world();
   const pid = key('serlo_fernby');
   const q = CL.lords.partyOf(c, pid);
-  CL.autoresolve.next = () => 0.01; // under 3%
+  assert.equal(H.RULES.woundDeath, 0.06);
+  CL.autoresolve.next = () => 0.01; // under 6%
   assert.equal(CL.lords.beaten(c, q, 'aurelian'), null);
   assert.equal(c.people[pid].status, 'dead');
   assert.equal(c.people[pid].cause, 'wounds');
@@ -207,4 +208,17 @@ test('save v30: houses, marriages and the dead round-trip; junk repaired; v29 mi
   assert.equal(m.version, CL.save.VERSION);
   const built = CL.save.sanitize(m);
   assert.ok(Object.keys(built.houses).length >= 5, 'built from kin on load');
+});
+
+test('P9-T: a married lord who dies is married no more, and their widow is free to marry (the invariants hold)', () => {
+  const { CL, c, H, key } = world();
+  const a = key('serlo_fernby');
+  const b = Object.keys(c.people).find((p) => p !== a && c.people[p].realm !== c.people[a].realm && !c.people[p].spouse && c.people[p].gender !== c.people[a].gender && !CL.realm.rules(p, c));
+  Object.assign(c.people[a], { spouse: b, married: 0 });
+  Object.assign(c.people[b], { spouse: a, married: 0 });
+  assert.deepEqual(H.invariants(c).filter((x) => /marri/.test(x)).length, 0);
+  H.die(c, a, 'wounds');
+  assert.equal(c.people[a].spouse, undefined);
+  assert.equal(c.people[b].spouse, undefined);
+  assert.deepEqual(H.invariants(c).filter((x) => /marri/.test(x)).length, 0);
 });

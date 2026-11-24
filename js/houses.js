@@ -24,7 +24,7 @@
   const CL = root.Crownless;
 
   const RULES = {
-    woundDeath: 0.03,
+    woundDeath: 0.06, // P9-T: 0.03 gave 0–2 deaths in a year of the world alone (the target 2–6)
     oldAge: false, // a setting, off by default (D-P9g)
     oldAgeWeekly: 0.002,
     contested: 10,
@@ -180,6 +180,8 @@
     if (spouse) {
       if (spouse === PLAYER) CL.ui.message(`Your spouse ${p.name} has died.`);
       else if (c.people[spouse]) delete c.people[spouse].spouse;
+      delete p.spouse; // P9-T: the dead are married no more (the invariant caught a widow's spouse kept)
+      delete p.married;
     }
     const h = houseOf(c, pid);
     if (h) {

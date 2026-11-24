@@ -304,3 +304,21 @@ test('saves: v27 → v28, a faction and a rising round-trip, junk repaired, and 
     assert.deepEqual(plain(G.realm.invariants(G.campaign)), [], f.file);
   }
 });
+
+test('P9-T: a rising fights its crown first: its army besieges and raids the crown’s land before anyone else’s', () => {
+  const env = world();
+  const { c, RB, CL } = env;
+  aggrieve(env);
+  const x = RB.form(c, 'valedorn');
+  x.stage = 'demands';
+  x.demand = { kind: 'land', until: c.day + 14 };
+  RB.refuse(c, x.id);
+  const r = x.rising;
+  assert.ok(c.realms[r], 'risen');
+  const forts = CL.armies.targets(c, r);
+  assert.ok(forts.length > 0);
+  assert.equal(c.holdings[forts[0]].controller, 'valedorn', `first a fort of its crown (${forts[0]})`);
+  const lead = CL.lords.partyOf(c, x.claimant) || { x: 0, y: 0 };
+  const villages = CL.armies.raidable(c, { realm: r }, lead);
+  if (villages.length) assert.equal(c.holdings[villages[0]].controller, 'valedorn', 'and its villages first');
+});

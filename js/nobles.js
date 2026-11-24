@@ -83,7 +83,7 @@
     abandoned: -20,
     paid: 6,
     conceded: 15, // P9-04: the ruler gave the faction what it asked
-    mediated: 10,
+    mediated: 5, // P9-T: 10 eased every faction back below its grudge, and none rose in a year
     pardoned: 10,
     kept_peace: 10, // a ruler who conceded rather than fought
     marriage_ended: -40, // P9-06: they ended the marriage
@@ -785,6 +785,7 @@
     for (const sid of R().fiefsOf(pid, c)) R().transfer(c, sid, { holder: ruler, willing: !war, claimKind: 'granted', reason: war ? 'defection' : 'released', quiet: true });
     // Fiefs that didn't move (a story lock) stay with the old crown all the same.
     for (const sid of R().fiefsOf(pid, c)) c.holdings[sid].holder = ruler;
+    CL.armies?.leave(c, pid); // P9-T: out of the old realm's army at once
     const q = CL.lords?.partyOf(c, pid);
     if (q) c.parties.splice(c.parties.indexOf(q), 1);
     p.realm = to;

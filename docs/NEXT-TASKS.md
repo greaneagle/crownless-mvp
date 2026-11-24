@@ -1331,7 +1331,7 @@ The battle tasks took long and spent most of their effort around the task: readi
 
 **The save step** (P9-01 to P9-06 each add one: v25 to v30). In `js/save.js`: `VERSION`; a `MIGRATIONS[n]` entry (defaults, or the owning module's `migrate`, as `nobles.migrate` does for v24); the required-fields row for the new version (the table at the top, one row a version); the field in `sanitize` through the owning module's `sanitize`. Then `types/crownless.d.ts`, a SAVE-FORMAT entry, and in the module's test file: v(n−1) → v(n), a round trip, junk repaired, and the latest fixture folder (`tests/fixtures/saves-2.30`) loading through the new step. No new fixture folder is needed until the owner plays on a build with the new state.
 
-**Checkpoints** stay: the whole slow suite and the full browser suite after P9-04, P9-06 and P9-T, run in the background in one go.
+**Checkpoints** stay: the whole slow suite and the full browser suite after P9-04 and P9-06, run in the background in one go. **Owner, 2026-11-24:** from P9-T on, no run longer than 20 minutes and no overnight runs; the long runs and the Phase 9 checkpoint move to P10-00, the start of Phase 10.
 - **Art:** lord banners, siege camps and wall pieces go to the asset request list (`docs/ASSETS.md`) and ship as placeholders.
 
 ### P8-02 · Holdings model (L) — ✅ Done in 2.24.0
@@ -2482,7 +2482,7 @@ The phase opens with five battle-scale tasks (owner, 2026-11-22; decisions D-P9a
   | P9-06 houses, marriage and claims | `landed`, `campaign-bots` | **Whole suite** |
   | P9-07 modding | `test-world` | |
   | P9-08 creator tools and a second world | all (a second world for the bots) | |
-  | P9-T tuning and acceptance | all, with the long runs | **Whole suite** |
+  | P9-T tuning and acceptance | its own new files, and the ones its tuning reaches (each under 20 minutes) | (moved to P10-00) |
 
   A task that turns out to reach more than its row runs those files too, and says so.
 
@@ -3179,11 +3179,11 @@ The phase opens with five battle-scale tasks (owner, 2026-11-22; decisions D-P9a
 - **Checks:** 905 fast tests; lint clean but the 2 old warnings; browser startup and packs specs 16 of 16; slow suite 18 of 22. The 3 coast tests pass; the 4 failures are the same as at the P9-06 checkpoint (landed seed 3, Phase 8 exit, Prototypes D and F).
 - **Played at 812×375:** chose the coast at a new game, began at Gullhaven, hired a Mercenary, rode to the Looter Camp and won (the pane was hidden, so the fight and the rides were stepped by script), and found Ostrand's lords Hask, Vargr and Skarde besieging Rookmoor. Your save was restored (from its pre-migration copy, same day). **Open for P9-T:** the coast's war ends in a truce within days and seldom returns; not tried on a phone.
 
-### P9-T · Phase 9 tuning and acceptance (M) — Specified
+### P9-T · Phase 9 tuning and acceptance (M) — ✅ Done in 4.0.0
 
 **Build.**
 - **Tuning:** treasuries and the crown's share; treaty frequency; rebellion frequency; army sizes, assembly and supply; deaths and successions; the company's limit and the world's sizes (P9-B3) at play.
-- **Long runs** (SC-29): the world alone with delegated rulers for 20 years in the slow suite, and 100 years in an overnight script (`npm run long-run`): no negative-money exploit, no repeated ownership collision, no endless event loop, no realm wiped out by a runaway, every invariant every day.
+- **Long runs:** moved to P10-00 (owner, 2026-11-24).
 - **The bots:** Prototype G gains a ruler style (founds or takes a realm and delegates); forced screens counted for a ruler (SC-41).
 - **The exit as a scripted campaign:** design §18.9: a player ruler commands a vassal army, negotiates a treaty, appoints a castellan and issues a land grant; a disloyal noble declines an order, forms a faction and rebels; the player loses the war and is deposed, and the same save goes on with the player as a free claimant (in one save with a reload).
 - **The scenario matrix:** SC-01 to SC-44 each accounted for (a test, a slow test, or the owner's play), listed in the validation document.
@@ -3197,19 +3197,40 @@ The phase opens with five battle-scale tasks (owner, 2026-11-22; decisions D-P9a
 - **Start from:** every Phase 9 Done paragraph's open items (big battles' parity; the walls at a battle size of 40; whatever the kingdom tasks leave), `scripts/landed.js`, `scripts/prototype-g.js`, `scripts/parity.js`, and `tests/slow/phase8-exit.test.js` (the pattern for an exit as a scripted campaign).
 - **Decided:**
   - **What is tuned, and the targets:** treasuries (no realm broke at peace over 360 days; one at long war may be); treaties (each pair signs at least one in 360 days; wars 20–50% of days); rebellions (one to three in the world a year); armies (two to six campaigns a year; a capital falls on at most one seed in three over 360 days); deaths (two to six lords a year); P9-B2's big battles (fought at most 25 points over the odds at 40 and 100); the walls at 40 (between −5 and +25).
-  - **Long runs:** 20 years in a new slow file (`tests/slow/long-run.test.js`), 100 in `npm run long-run` (`scripts/long-run.js`, overnight, in no suite): every invariant every day; no negative money; no runaway realm (one holding more than half the land).
+  - **No long runs here** (owner, 2026-11-24): no run longer than 20 minutes, nothing overnight. Measurements stay at `landed.js 360 3` or shorter. The 20-year and 100-year runs and the whole-suite checkpoint are P10-00's.
   - **Prototype G's ruler style:** founds a realm when it can (P9-03's thresholds), delegates everything, and counts forced screens (none).
   - **The exit** (`tests/slow/phase9-exit.test.js`): §18.9 as a scripted campaign with one reload. You rule, command a vassal army, make a treaty, appoint a castellan and grant land; a disloyal lord declines an order, forms a faction and rebels; you lose and are deposed; the same save goes on with you as a free claimant.
   - **The scenario matrix** and `docs/PHASE-9-VALIDATION.md` (as Phase 8's), with the owner's phone checks.
-- **Run:** the whole slow suite and the full browser suite once at the end (the checkpoint); the long run once overnight, and its report.
+- **Run:** the task's own new slow files (the exit, Prototype G's ruler style) and the slow files its tuning reaches, each under 20 minutes; the full browser suite once at the end. Not the whole slow suite (about 44 minutes) and no long run: both are P10-00's.
 - **Version:** 4.0.0.
 - **Not here:** Phase 10.
+
+**Done (4.0.0).** The evidence is in `docs/PHASE-9-VALIDATION.md`.
+- **The exit** (`tests/slow/phase9-exit.test.js`, about 2 minutes, two reloads): found at Westholt; four lords ask to swear; a village and a fort granted, a castellan, a treaty with Aurelia, your army raised; a wronged vassal declines your summons; a faction warns, demands and rises; its army takes Westholt; deposed, you play on as a free claimant. Every invariant every day.
+- **Your treaties (SC-25):** the Your realm tab offers each realm a truce or peace (at war), an alliance against a common enemy, trade or a pact (`founding.offers`, `propose`), answered at once by trust and regard; `renounce` breaks one, heard in every court.
+- **Prototype G's ruler style:** founds at a fort (test values), leaves the rest to the officers: 3 seeds × 12 days, 0 forced screens, 0 stuck, 0 invariants, resumed (`slow/campaign-bots`).
+- **Faults fixed:** a stand-in ruler for your realm after a reload; your court granting your land and seat; the old crown besieging before its answer; a rising's army raiding others first; civil wars ending by exhaustion; an army keeping a lord who changed realm; the dead staying married; the test loader dropping a loaded save's parties.
+- **Tuned:** Simulate's odds sharpen with a battle's size (the square law to 20, power 4.2 by 80; walls keep the square law): big battles close ×8 +37 → +24, veterans ×6 +29 → +13, small fights as before. Deaths of wounds 3% → 6%. Wars at least 20 days, exhaustion 12 → 40 fallen. Rebellions: prisoners stay in their faction; a mediator +10 → +5.
+- **Measured** (`landed.js 360 --seed n`, new): treasuries, treaties per pair, capitals and armies on target. **Open:** wars on 9–18% of days (target 20–50; 22–26% before the odds change; a second try changed nothing), risings 1 in 3 years (target 1–3 a year), deaths 0–5, the coast's one war a year.
+- **Checks:** 913 fast (911 of 912 together; cross-device export passed alone); lint clean but the 2 old warnings; typecheck; slow `phase9-exit`, `campaign-bots`, `second-world`, `world-sim`, `test-world` pass, `landed` fails (Aurelia's last fort, seed 2, the old seed-3 kind); browser full suite 231 passed, 21 skipped, `packs.spec` 4 failed then 4 of 4 (engine ranges to <5.0.0). Played the treaties card at 812×375.
+- **Not run (owner, 2026-11-24):** the long runs, `battle-parity` and the whole slow suite: P10-00. Prototypes D and F and the Phase 8 exit, failing since 3.11.0, are for P10-00 too.
 
 ---
 
 ## Phase 10 — Ways In (Provisional)
 
 The owner adds to this phase after in-depth testing and players' feedback (2026-11-22). Its aim: a diverse, welcoming way into the world, and a world that feels lived in from the first hour.
+
+### P10-00 · Phase 9's long runs and checkpoint (M)
+
+Moved here from P9-T (owner, 2026-11-24): the big runs open Phase 10, so Phase 9 has none longer than 20 minutes.
+
+**Build.**
+- **Long runs** (SC-29, D-P9i): the world alone with delegated rulers for 20 years in a new slow file (`tests/slow/long-run.test.js`), and 100 years in `npm run long-run` (`scripts/long-run.js`, overnight, in no suite): every invariant every day; no negative money; no repeated ownership collision; no endless event loop; no runaway realm (one holding more than half the land).
+- **The checkpoint:** the whole slow suite and the full browser suite, in the background in one go. The old failures (landed seed 3, the Phase 8 exit, Prototypes D and F) are fixed or written down as known.
+- **What they find** is fixed here, or listed for the owner, before the rest of Phase 10.
+
+**Version.** 4.0.x (a patch on 4.0.0).
 
 ### P10-01 · Onboarding (M)
 

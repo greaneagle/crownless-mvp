@@ -684,6 +684,18 @@
       pol.append(row);
     }
     cards.push(pol);
+    // P9-T (SC-25): your own treaties: an offer to each realm, answered at once, and a treaty to break.
+    const WORD = { truce: 'a truce', peace: 'peace', alliance: 'an alliance', trade: 'trade', nonaggression: 'a pact' };
+    const tell = (fn) => act(() => fn().ok);
+    for (const k of others) {
+      const buttons = F.offers(c, k.id).slice(0, 3).map((o) => [o.kind === 'alliance' ? `Ally against ${R.faction(o.against).short}` : `Offer ${WORD[o.kind]}`, tell(() => F.propose(c, o.kind, k.id, o.against || null))]);
+      for (const t of (c.treaties || []).filter((x) => x.between.includes(f) && x.between.includes(k.id) && x.kind !== 'peace')) buttons.push([`Break the ${t.kind}`, act(() => F.renounce(c, t.id))]);
+      if (!buttons.length) continue;
+      const card = contractCard(`Treaties with ${k.short}`, [`You are ${({ war: 'at war', tension: 'in tension', peace: 'at peace' })[R.relation(c, f, k.id)]}. Their ruler answers by their trust in you and what they think of you. A broken treaty is heard in every court.`], buttons);
+      card.classList.add('ruleCard');
+      card.dataset.treaties = k.id;
+      cards.push(card);
+    }
     // P9-04: a faction in your realm: answer it, then its demands.
     const RB = CL.rebellion;
     const x = RB?.active(c, f);

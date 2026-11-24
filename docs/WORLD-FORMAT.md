@@ -8,7 +8,7 @@ _From build 3.13.0 (P9-07, design §23); the checker, the preview and the second
 
 ```json
 {
-  "manifest": { "id": "sample", "title": "Highcairn (sample pack)", "author": "Crownless", "version": "1.0.0", "engine": ">=3.13.0 <4.0.0", "requires": [] },
+  "manifest": { "id": "sample", "title": "Highcairn (sample pack)", "author": "Crownless", "version": "1.0.0", "engine": ">=3.13.0 <5.0.0", "requires": [] },
   "troops": { "sample:cairn_herder": { "id": "sample:cairn_herder", "name": "Cairn Herder", "...": "..." } },
   "settlements": { "sample:highcairn": { "id": "sample:highcairn", "name": "Highcairn", "...": "..." } },
   "merge": { "factions": { "valedorn": { "recruits": ["levy", "hunter", "sample:cairn_herder"] } } }

@@ -5,6 +5,8 @@
 // style (V2-13, Prototype G: the same campaign played three ways):
 //   'hands-off'  auto-resolves every fight and never changes a setting (the default)
 //   'presets'    fights in person, choosing only a preset: Defensive when the odds are close, else Balanced
+//   'ruler'      (P9-T) auto-resolves as 'hands-off', founds a realm at a fort of its own when it may, and
+//                leaves its rule to the officers' default policies
 //   'expert'     fights in person with Aggressive, Defensive or Balanced as the odds suggest, rallies its
 //                soldiers, and keeps a quartermaster and a merchant; from 2.23.0 (P7-T) also a surgeon, a
 //                scout and a blacksmith, sends a detachment out hunting when the company is big enough,
@@ -19,6 +21,7 @@ const LAIR_REACH = 30; // map units: about a day's ride; further lairs aren't wo
 const ROAM_REACH = 60;
 
 function makeBot(CL, { log = () => {}, style = 'hands-off', roam = false } = {}) {
+  const auto = style === 'hands-off' || style === 'ruler'; // P9-T: the ruler auto-resolves too
   const recentBoards = []; // roam: the boards visited lately, so it moves on round the realm
   const c = () => CL.campaign;
   const g = CL.game;
@@ -72,6 +75,12 @@ function makeBot(CL, { log = () => {}, style = 'hands-off', roam = false } = {})
     spendPoints();
     // The "landed" style (P8-05): it serves the kingdom whose capital it is in, swears when it may,
     // takes the grants it is offered, and leaves the steward and the policies as they are.
+    // The "ruler" style (P9-T): founds a realm at a fort of its own as soon as it may (P9-03's thresholds),
+    // then leaves everything to its officers' default policies and answers no screen but the forced ones.
+    if (style === 'ruler' && !CL.founding.mine(camp)) {
+      const sid = CL.realm.fiefsOf('player', camp).find((x) => CL.rights.may(camp, 'player', 'declare', x).ok);
+      if (sid && CL.founding.declare(camp, 'player', sid)) stats.founded = Math.floor(camp.day);
+    }
     if (style === 'landed') {
       const f = CL.realm.owner(sid, camp);
       const AL = CL.allegiance;
@@ -222,7 +231,7 @@ function makeBot(CL, { log = () => {}, style = 'hands-off', roam = false } = {})
       stats.retreats++;
       if (!CL.parties.retreat()) {
         // Failed retreat → a real battle started; settle it.
-        if (style === 'hands-off') CL.debugTools.endBattleNow(CL.autoresolve.next(camp) < p);
+        if (auto) CL.debugTools.endBattleNow(CL.autoresolve.next(camp) < p);
         else drive();
         tally();
       }
@@ -232,7 +241,7 @@ function makeBot(CL, { log = () => {}, style = 'hands-off', roam = false } = {})
   }
 
   function resolve() {
-    if (style === 'hands-off') CL.parties.autoResolve();
+    if (auto) CL.parties.autoResolve();
     else fightInPerson();
     tally();
   }
@@ -370,7 +379,7 @@ function makeBot(CL, { log = () => {}, style = 'hands-off', roam = false } = {})
         CL.world.update(0.1);
       } else if (m === 'battle') {
         // A failed retreat: the battle has begun.
-        if (style === 'hands-off') CL.debugTools.endBattleNow(true);
+        if (auto) CL.debugTools.endBattleNow(true);
         else drive();
         tally();
       } else CL.ui.changeMode('map');

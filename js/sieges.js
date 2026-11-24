@@ -107,7 +107,7 @@
   /** The odds of an assault now (0 with no ladders yet). */
   function odds(c, s) {
     if (s.phase !== 'encircled' || c.day - s.began < RULES.ladders) return 0;
-    return A().winChance(attack(c, s), defence(c, s).power);
+    return A().winChance(attack(c, s), defence(c, s).power, true);
   }
   /** How many days of food the fort has, and so how long starving it out would take. */
   const foodDays = (c, sid) => Math.max(0, R().holding(sid, c)?.food ?? 0);
@@ -120,7 +120,7 @@
     const h = R().holding(sid, c);
     const s = { sid, phase: 'encircled', began: c.day - RULES.ladders, lords: [], relief: [], by: PLAYER };
     const d = defence(c, s);
-    const now = A().winChance(A().playerPower(c), d.power);
+    const now = A().winChance(A().playerPower(c), d.power, true);
     const lines = [`The garrison: ${CL.fiefs.count(h.garrison)} soldiers (power ${d.raw.toFixed(1)}), ×${d.wall.toFixed(2)} behind walls at ${h.walls}%.`];
     lines.push(`Storming it with ladders (from tomorrow): about ${Math.round(now * 100)}% against your company's ${A().playerPower(c).toFixed(1)}; a ram after ${RULES.ram} days makes it easier.`);
     lines.push(`Starving it out: about ${Math.ceil(foodDays(c, sid))} days, if no relief comes.`);
@@ -295,7 +295,7 @@
   function assault(c, s) {
     const pa = attack(c, s);
     const d = defence(c, s);
-    const win = A().next(c) < A().winChance(pa, d.power);
+    const win = A().next(c) < A().winChance(pa, d.power, true);
     const loss = win ? RULES.assaultLoss.win : RULES.assaultLoss.lose;
     let lost = 0;
     for (const pid of s.lords) {
@@ -325,7 +325,7 @@
     const healthy = CL.party.healthySoldiers().map((x) => x.id);
     const pa = attack(c, s);
     const d = defence(c, s);
-    const win = A().next(c) < A().winChance(pa, d.power);
+    const win = A().next(c) < A().winChance(pa, d.power, true);
     const fallen = A().rollFallen(c, healthy, A().lossChance(win ? A().WINNER_LOSS : A().LOSER_LOSS, pa, d.power), win);
     const { killed, wounded } = CL.surgeon.triage(c, fallen.map((id) => ({ id, roll: A().next(c) })));
     c.roster = c.roster.filter((x) => !killed.includes(x.id));
@@ -485,7 +485,7 @@
     s.lastDay = today;
     // The day's choice. P8-T: a realm's last fort holds out longer: no surrender for hopeless odds
     // (only hunger), and its besiegers wait for the ram and better odds, so the relief can come.
-    const o = A().winChance(attack(c, s), defence(c, s).power);
+    const o = A().winChance(attack(c, s), defence(c, s).power, true);
     const lastFort = lastHeld(c, s.sid);
     if (h.food <= 0 || (!lastFort && c.day - s.began >= RULES.ladders && o >= RULES.hopeless)) {
       log(s, c.day, `${placeName(s.sid)} surrenders.`);

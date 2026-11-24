@@ -34,3 +34,17 @@ test('Prototype G (short): hands-off, presets-only, expert and landed players al
     assert.ok(r.money >= 0 && r.soldiers >= 0);
   }
 });
+
+test('P9-T: Prototype G as a ruler: founds a realm at a fort of its own, leaves it to its officers, and no screen is forced (SC-41)', () => {
+  const { run } = require('../../scripts/prototype-g');
+  for (const seed of [1, 2, 3]) {
+    const r = run(seed, 'ruler', 12);
+    assert.ok(r.ruled, `seed ${seed}: rules a realm`);
+    assert.equal(r.foundedDay, 0, `seed ${seed}: founded at once`);
+    assert.equal(r.decisions, 0, `seed ${seed}: no forced screen while ruling`);
+    assert.equal(r.stuck, 0, `seed ${seed}: never stuck`);
+    assert.equal(r.invariants, 0, `seed ${seed}: the invariants held`);
+    assert.ok(r.resumed && r.day >= 12 - 0.01, `seed ${seed}: the reload picked up where it left off`);
+    assert.ok(r.treasury >= 0, `seed ${seed}: the realm's treasury is not in debt`);
+  }
+});

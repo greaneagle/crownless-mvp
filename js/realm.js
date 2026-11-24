@@ -84,8 +84,8 @@
     warHeat: 4, // clashes in tension that tip it into war
     coolDays: 8, // quiet days that take one clash off the heat
     calmDays: 30, // a quiet tension this long, with no heat, eases to peace
-    minWar: 12, // a war lasts at least this many days…
-    exhaustion: 12, // …and ends once this many soldiers have fallen in its clashes
+    minWar: 20, // a war lasts at least this many days… (P9-T: 12, before armies; wars were on 15% of days)
+    exhaustion: 40, // …and ends once this many soldiers have fallen in its clashes (P9-T: 12 ended a war at one clash of armies)
     maxWar: 45, // or after this long, whatever the losses
     truce: 30, // P8-06a: days after a war ends before the next can begin
   };
@@ -188,7 +188,9 @@
    */
   function startingPeople() {
     const list = nobles().map((n) => ({ ...n }));
-    for (const f of realms()) {
+    // P9-T: the world's own realms only. A realm founded in play has its ruler already (a reload
+    // gave it a stand-in, homeless, besides you).
+    for (const f of realms().filter((x) => !ctx()?.realms?.[x.id])) {
       if (list.some((n) => n.realm === f.id && n.ruler)) continue;
       const k = CL.content.table('cultures')[f.culture] || Object.values(CL.content.table('cultures'))[0];
       list.push({ id: `${f.id}_ruler`, name: `${k.given[0]} of ${place(capitalOf(f))?.placeName || f.short || f.name}`, gender: 'male', realm: f.id, ruler: true, home: capitalOf(f), holds: [], kin: [], traits: '' });
@@ -467,6 +469,10 @@
     if (relation(c, f, g) === 'war') return true;
     if (g === PLAYER) return f !== PLAYER && isRealm(f, c);
     const F = CL.founding;
+    // P9-T: the old crown, while its answer is pending (P9-03's 7 days), answers first: it accepts, or
+    // goes to war. (It besieged the new realm's seat in those days, and took it before answering.)
+    const pending = (x, y) => c.realms?.[y]?.pending?.realm === x;
+    if (pending(f, g) || pending(g, f)) return false;
     return Boolean(F && ((c.realms?.[g] && isRealm(f, c) && !F.recognises(c, f, g)) || (c.realms?.[f] && isRealm(g, c) && !F.recognises(c, g, f))));
   }
 
@@ -508,6 +514,9 @@
           setRelation(c, a, b, 'peace', 'quiet border', null, day);
         }
       } else if (r.state === 'war') {
+        // P9-T: a civil war ends by the rebellion's own outcome (js/rebellion.js), never by exhaustion.
+        const civil = CL.rebellion && (CL.rebellion.ofRising(c, a)?.realm === b || CL.rebellion.ofRising(c, b)?.realm === a);
+        if (civil) continue;
         const long = day - r.since;
         if ((long >= RELATIONS.minWar && r.losses >= RELATIONS.exhaustion) || long >= RELATIONS.maxWar) setRelation(c, a, b, 'tension', 'exhaustion', null, day);
       }

@@ -80,6 +80,7 @@
     R().ensureTemplates(c);
     c.rulers[id] = who;
     const was = who === PLAYER ? null : c.people[who].realm;
+    if (who !== PLAYER) CL.armies?.leave(c, who); // P9-T: a lord who declares leaves the old realm's army
     if (who !== PLAYER) c.people[who].realm = id; // sworn to their own realm before their land moves to it
     // Every holding of the founder leaves its realm, with a claim for the old crown on each.
     const held = R().fiefsOf(who, c);
@@ -211,6 +212,43 @@
     return CL.sieges.plan(c, f, sid, { force: true });
   }
 
+  // ---- Your treaties (P9-T, SC-25) ----
+
+  /** The treaties you may offer a realm now: a truce or peace at war; an alliance against a common enemy; trade or a pact at peace. */
+  function offers(c, to) {
+    const f = mine(c);
+    if (!f || !R().isRealm(to) || to === f) return [];
+    const D = CL.diplomacy;
+    const out = [];
+    if (R().relation(c, f, to) === 'war') out.push({ kind: 'truce' }, { kind: 'peace' });
+    else {
+      for (const g of R().realms().map((x) => x.id)) if (g !== f && g !== to && R().atOdds(c, f, g) && !D.has(c, f, to, 'alliance')) out.push({ kind: 'alliance', against: g });
+      if (!D.has(c, f, to, 'nonaggression')) out.push({ kind: 'nonaggression' });
+      if (R().relation(c, f, to) === 'peace' && !D.has(c, f, to, 'trade')) out.push({ kind: 'trade' });
+    }
+    return out.filter((o) => (c.offers?.[`${f}|${to}|${o.kind}`] ?? -Infinity) <= c.day - D.RULES.again);
+  }
+  /** Offer a treaty: their ruler answers as realms answer each other (trust, regard, the war's course). */
+  function propose(c, kind, to, against = null) {
+    const f = mine(c);
+    if (!f) return { ok: false, why: 'You rule no realm' };
+    const o = offers(c, to).find((x) => x.kind === kind && (kind !== 'alliance' || x.against === against));
+    if (!o) return { ok: false, why: `You cannot offer ${short(to)} that now` };
+    const r = CL.diplomacy.resolve(c, { kind, from: f, to, terms: kind === 'alliance' ? { against } : {} });
+    const text = r.ok ? `${short(to)} accepts your offer of ${kind === 'truce' ? 'a truce' : kind === 'peace' ? 'peace' : kind === 'alliance' ? 'an alliance' : kind === 'trade' ? 'a treaty of trade' : 'a pact of nonaggression'}.` : `${short(to)} declines: ${r.why}.`;
+    CL.ui.message(text);
+    return { ok: Boolean(r.ok), why: r.ok ? '' : r.why, text, treaty: r.treaty || null };
+  }
+  /** Break one of your realm's treaties: every court hears of it, and the injured realm trusts you less. */
+  function renounce(c, id) {
+    const f = mine(c);
+    const t = (c.treaties || []).find((x) => x.id === id && x.between.includes(f));
+    if (!f || !t || t.kind === 'peace') return false;
+    CL.diplomacy.breach(c, t, f, 'renounced');
+    CL.ui.message(`You break your ${t.kind} with ${short(t.between.find((x) => x !== f))}. Every court has heard of it.`);
+    return true;
+  }
+
   // ---- Delegation ----
 
   /** Set one officer's policy: steward hold|grow|hoard, marshal defend|expand:<realm>|peace, chancellor peace|allies|none. */
@@ -283,5 +321,5 @@
     for (const a of Array.isArray(o.asks) ? o.asks.slice(0, RULES.asksMax) : []) if (s.people?.[a?.lord] && Number.isInteger(a.day) && !s.rule.asks.some((x) => x.lord === a.lord)) s.rule.asks.push({ lord: a.lord, day: a.day });
   }
 
-  CL.founding = { RULES, landOf, STEWARD, CHANCELLOR, blank, rule, mine, declare, recognises, answerRecognition, weekly, onPeace, aiDeclares, askToSwear, answerAsk, vassals, grant, summon, setPolicy, mayPlan, chancellorAnswers, stewardWeek, onSiege, lines, migrate, sanitize };
+  CL.founding = { RULES, landOf, STEWARD, CHANCELLOR, blank, rule, mine, declare, recognises, answerRecognition, weekly, onPeace, aiDeclares, askToSwear, answerAsk, vassals, grant, summon, offers, propose, renounce, setPolicy, mayPlan, chancellorAnswers, stewardWeek, onSiege, lines, migrate, sanitize };
 })(typeof window !== 'undefined' ? window : globalThis);

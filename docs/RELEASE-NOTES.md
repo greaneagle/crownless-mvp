@@ -1,5 +1,42 @@
 # Crownless — Release Notes
 
+## v4.0.0 — Kingdoms and Houses: tuning and acceptance (P9-T) · 2026-11-24
+
+Phase 9 is complete in code. Its evidence, the tuning and the checks waiting on the phone are in `docs/PHASE-9-VALIDATION.md`.
+
+### New
+- **Your own treaties.** When you rule, the Your realm tab has a card for each realm: offer a truce or peace when at war, an alliance against a common enemy, or trade or a pact at peace. Their ruler answers at once, by their trust in you and what they think of you. You may break a treaty, but every court hears of it.
+- **Simulate in big battles.** Its odds now sharpen with a battle's size: in a battle of 40 or more a side, a steady edge decides more surely than in a skirmish. Small fights are as before. The same rule for every field battle, yours and the lords'; assaults on the walls are unchanged.
+
+### Changed
+- A lord beaten in battle dies of wounds 6% of the time (was 3%).
+- A war lasts at least 20 days, and ends by exhaustion after 40 fallen (was 12 days and 12 fallen, which one clash of armies reached).
+- A faction keeps a member taken prisoner. A mediator calms it less (+5, was +10).
+- A rising fights the crown it rose against first.
+- The sample pack and the Sundered Coast accept every build before 5.0.0.
+
+### Fixed
+- After a reload, a realm you founded got a made-up second ruler with no home, which could crash the game when a lord rode out.
+- Your court granted your own land away, your seat included. It no longer grants yours, nor any realm's seat.
+- The old crown besieged your new realm while its 7 days to answer ran, and could take your seat before answering.
+- A civil war could end in a truce by exhaustion, whatever the rebellion's state.
+- A lord who changed realm stayed one day in his old realm's army.
+- A lord who died stayed married.
+
+### Known
+- Wars are on 9–18% of days in a year of the world alone (the aim is 20–50%). Risings are rarer than aimed (one in three years), and deaths of lords vary from 0 to 5 a year.
+- A realm can lose its last fort (Aurelia on one seed of three).
+- The Sundered Coast has one war a year.
+- Not tried on a phone: ruling, your treaties, the bigger battles' odds (`docs/PHASE-9-VALIDATION.md`, "Waiting on the owner's play").
+- The 20-year and 100-year runs and the whole slow suite are for P10-00.
+
+### Under the hood
+- `CL.founding.offers`, `propose` and `renounce`; `CL.armies.leave`; `CL.autoresolve.BIG` and `oddsPower` (`winChance(pa, pb, walls)`).
+- `tests/slow/phase9-exit.test.js`, design §18.9 as a scripted campaign with two reloads. Prototype G's `ruler` style (`node scripts/prototype-g.js 12 3 ruler`). `node scripts/landed.js 360 --seed <n>` plays one seed, so seeds run side by side; it now counts the days at war and the treaties per pair.
+- The test loader keeps a loaded save's parties (a reload in a test used to drop them).
+- No save schema step.
+- **Tests:** 913 fast tests (911 of 912 together, the cross-device export passing alone; new cases in `founding`, `houses`, `armies`, `rebellion` and `packs`); lint clean but the 2 old warnings; typecheck clean. Browser: the full suite 231 passed, 21 skipped, and 4 failed in `packs.spec.js` (the engine ranges, fixed: then 4 of 4); `realm.spec.js` 12 of 12 with a new treaties case. Slow: `phase9-exit`, `campaign-bots`, `second-world`, `world-sim` and `test-world` pass; `landed` fails (Aurelia's last fort, seed 2). Not run: `battle-parity` and the whole slow suite (P10-00).
+
 ## v3.14.0 — Creator tools and a second world (P9-08) · 2026-11-24
 
 ### New

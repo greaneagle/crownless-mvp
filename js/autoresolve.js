@@ -27,6 +27,10 @@
   const TACTICS = 0.03;
   const WIN_CLAMP = [0.1, 0.9];
   const ODDS_POWER = 2; // B-01: the square law
+  // P9-T: in a big battle a steady edge tells more surely: the power grows with the weaker side's strength,
+  // from the square law at a skirmish (20 and less) to BIG.power at a battle (BIG.at and more). The fought big
+  // battles ran 29–37 points over the square law's odds (P9-B2's open item).
+  const BIG = { from: 20, at: 80, power: 4.2 };
   // V2-T2: soldiers of the company count this much more (ranks, shields and cover: fought battles
   // since 1.11.0 are far kinder to a company than auto-resolve was, SC-37).
   const COMPANY = { factor: 1.5 }; // read as COMPANY_FACTOR; an object so a measurement can try another (scripts/parity.js)
@@ -136,12 +140,15 @@
     const lines = [`Your side ${pp.toFixed(1)}: ${own.join(', ')}${tactics ? `, then +${Math.round(TACTICS * tactics * 100)}% for Tactics` : ''}. Soldiers count half as much again for fighting in ranks.`];
     if (wounded) lines.push(`${wounded} wounded soldier${wounded === 1 ? '' : 's'} sat it out.`);
     lines.push(`Their side ${pe.toFixed(1)}: ${foes.join(', ')}.`);
-    lines.push(`Odds ${Math.round(winChance(pp, pe) * 100)}%: in a melee numbers count twice over, so the stronger side wins more often than its share of the strength (kept between 10% and 90%).`);
+    lines.push(`Odds ${Math.round(winChance(pp, pe) * 100)}%: in a melee numbers count twice over, so the stronger side wins more often than its share of the strength, and more surely still in a big battle (kept between 10% and 90%).`);
     return lines;
   }
 
-  const winChance = (pa, pb) => {
-    const [a, b] = [pa ** ODDS_POWER, pb ** ODDS_POWER];
+  const oddsPower = (pa, pb) => ODDS_POWER + (BIG.power - ODDS_POWER) * clamp((Math.min(pa, pb) - BIG.from) / (BIG.at - BIG.from), 0, 1);
+  /** `walls`: an assault on a stretch of wall (js/sieges.js) keeps the square law it was tuned on (P9-B5). */
+  const winChance = (pa, pb, walls = false) => {
+    const k = walls ? ODDS_POWER : oddsPower(pa, pb);
+    const [a, b] = [pa ** k, pb ** k];
     return clamp(a / Math.max(1e-9, a + b), WIN_CLAMP[0], WIN_CLAMP[1]);
   };
 
@@ -206,6 +213,8 @@
     explain,
     winChance,
     ODDS_POWER,
+    BIG,
+    oddsPower,
     lossChance,
     rollFallen,
     expand,

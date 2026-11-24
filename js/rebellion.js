@@ -446,7 +446,9 @@
     const f = x.realm;
     const ruler = R().rulerOf(f, c);
     if (x.stage === 'rising') return outcome(c, x);
-    x.members = x.members.filter((pid) => c.people[pid]?.realm === f && c.people[pid].status === 'free' && !R().rules(pid, c));
+    // P9-T: a member taken prisoner or wounded stays one (the faction waits for them); only the dead and
+    // those who left the realm go. (Captures in battle broke up every faction in a year of the world alone.)
+    x.members = x.members.filter((pid) => c.people[pid]?.realm === f && c.people[pid].status !== 'dead' && !R().rules(pid, c));
     if (!x.members.includes(x.claimant)) x.claimant = claimantOf(c, f, x.members);
     if (x.members.length < RULES.least || !x.claimant) return end(c, x, 'dispersed');
     if (x.pausedUntil != null && c.day < x.pausedUntil) return null;

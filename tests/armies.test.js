@@ -331,3 +331,26 @@ test('you, a ruler: raise your own army, give it orders, and it rides with you a
   assert.equal(A.mine(c), null, 'sent home');
   assert.deepEqual(plain(R.invariants(c)), []);
 });
+
+test('P9-T: a lord who changes realm leaves their army at once, and its records stay true the same day', () => {
+  const env = require('./helpers/load').loadGame({ party: true });
+  const { CL } = env;
+  const c = CL.campaign;
+  c.partySpawns = {};
+  for (const t of Object.values(CL.content.table('party_templates'))) if (t.kind !== 'lord') c.partySpawns[t.id] = 1e9;
+  CL.lords.ensure(c, c.day, true);
+  CL.story.state(c).flags.ending = 'valedorn';
+  CL.realm.setRelation(c, 'valedorn', 'hrothmark', 'war', 'test');
+  const lords = CL.lords.riders(c).filter((p) => c.people[p].realm === 'valedorn' && CL.lords.partyOf(c, p)).slice(0, 3);
+  c.nextArmyId = 1;
+  const a = { id: 1, realm: 'valedorn', commander: lords[0], members: [...lords], objective: 'regroup', target: CL.realm.capitalOf('valedorn'), rally: CL.realm.capitalOf('valedorn'), since: c.day, food: 10, phase: 'march', strength: 0, fedDay: 0, log: [] };
+  c.armies ||= [];
+  c.armies.push(a);
+  for (const p of lords) Object.assign(CL.lords.partyOf(c, p), { armyId: 1, intent: 'army' });
+  assert.equal(CL.armies.invariants(c).length, 0);
+  CL.nobles.changeRealm(c, lords[0], 'aurelian');
+  CL.lords.ensure(c, c.day, true);
+  assert.ok(!a.members.includes(lords[0]), 'gone from the army');
+  assert.notEqual(a.commander, lords[0], 'the next commands');
+  assert.equal(CL.armies.invariants(c).length, 0, CL.armies.invariants(c).join('; '));
+});

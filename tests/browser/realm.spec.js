@@ -135,3 +135,34 @@ test('P9-03: the Your realm tab: declare a realm from a fort you hold, then set 
   await page.locator('#realmScreen select[data-policy="chancellor"]').scrollIntoViewIfNeeded(); // the screen scrolls
   await expectLayoutSound(page, ['#realmScreen select[data-policy="chancellor"]', '#primaryBtn']);
 });
+
+test('P9-T: the Your realm tab: offer a treaty to a realm, answered at once by its ruler', async ({ page }) => {
+  await open(page);
+  await newGame(page);
+  await game(page, (CL) => {
+    const c = CL.campaign; // test setup: your realm at Westholt, and Aurelia thinks well of it
+    CL.realm.transfer(c, 'westholt_castle', { holder: 'player', willing: true, reason: 'test' });
+    CL.story.state(c).flags.ending = 'valedorn';
+    c.renown = 600;
+    for (let i = 0; i < 40; i++) CL.save.addSoldier(c, 'levy');
+    const id = CL.founding.declare(c, 'player', 'westholt_castle');
+    CL.diplomacy.addTrust(c, 'aurelian', id, 40);
+  });
+  await toMap(page);
+  await press(page, '#journalBtn');
+  await waitMode(page, 'journal');
+  await press(page, '#journalRealmBtn');
+  await waitMode(page, 'realm');
+  await press(page, '#realmScreen [data-tab="rule"]');
+  const card = page.locator('#realmScreen .ruleCard[data-treaties="aurelian"]');
+  await expect(card.locator('h3')).toHaveText('Treaties with Aurelian');
+  await expect(card).toContainText('Their ruler answers by their trust in you');
+  const offer = card.locator('button', { hasText: 'Offer trade' });
+  await offer.scrollIntoViewIfNeeded();
+  await press(page, offer);
+  expect(await game(page, (CL) => CL.diplomacy.has(CL.campaign, 'r1', 'aurelian', 'trade'))).toBe(true);
+  await expect(page.locator('#realmScreen .ruleCard[data-treaties="aurelian"]')).toContainText('Break the trade');
+  const broken = '#realmScreen .ruleCard[data-treaties="aurelian"] button:has-text("Break the trade")';
+  await page.locator(broken).scrollIntoViewIfNeeded();
+  await expectLayoutSound(page, [broken, '#primaryBtn']);
+});

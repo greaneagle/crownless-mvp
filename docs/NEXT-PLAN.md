@@ -303,7 +303,7 @@ Every Phase 9 task is **Specified** (2026-11-22; NEXT-TASKS has each in full). T
 | **P9-L1** | ✅ **Done in 3.6.0.** **The living lords' loose ends** (from P8-07 and P8-08): lords ransoming each other's kin, asking each other for men, the land-hungry seeking sieges beyond the summons, the "escort my caravan" petition, and getting a lost fort back for service as well as for a price | M | P8-07, P8-08 |
 | **P9-07** | ✅ **Done in 3.13.0** (open for P9-T: packs tried in the desktop pane only; the official world stays in data/*.js). **Modding:** the world package as a documented JSON format, namespaced ids, data-only packs in IndexedDB with precise errors, saves tied to their packs (SC-33) | M–L | W-04 |
 | **P9-08** | ✅ **Done in 3.14.0** (open for P9-T: the coast's wars end in a truce within days and seldom return; played in the desktop pane only). **Creator tools and a second world:** a pack checker, a map preview, a smaller second official world the bots play | L | P9-07 |
-| **P9-T** | **Tuning and acceptance:** long runs (20 years in the slow suite, 100 overnight: SC-29, D-P9i), a ruler style in Prototype G, design §18.9 as a scripted campaign, SC-01–44 accounted for, `docs/PHASE-9-VALIDATION.md` | M | all above |
+| **P9-T** | ✅ **Done in 4.0.0** (open for P10-00: wars on 9–18% of days, few risings, a realm can lose its last fort). **Tuning and acceptance:** (no run over 20 minutes; the long runs and the checkpoint moved to P10-00, owner 2026-11-24) a ruler style in Prototype G, design §18.9 as a scripted campaign, SC-01–44 accounted for, `docs/PHASE-9-VALIDATION.md` | M | all above |
 
 ## 6b. Phase 10 — "Ways In"
 
@@ -311,6 +311,7 @@ All of Phase 10 is **Provisional**: the owner adds to it after in-depth testing 
 
 | ID | Task | Size | Needs |
 |---|---|---|---|
+| **P10-00** | **Phase 9's long runs and checkpoint** (moved from P9-T, owner 2026-11-24): 20 years in the slow suite and 100 overnight (SC-29, D-P9i), the whole slow suite and the full browser suite, and fixes for what they find | M | P9-T |
 | **P10-01** | **Onboarding:** a first-time guide through the systems as you meet them (the map, a battle, a town, the Realms screen), and How to Play arranged by stage (captain, vassal, lord, ruler), every hint skippable | M | Phase 9 |
 | **P10-02** | **Origin stories with their own opening quests:** each origin begins in its own situation, its first quest leading into the world (for one: thrown from your horse, its thief gone into the woods, at a town's gate where the innkeeper offers rest and work; for an impoverished noble, a family matter) | L | P10-01 |
 | **P10-03** | **More origins, and other ways to begin:** more backgrounds (a noble house's younger child, a soldier left after a war, a merchant's heir, a pilgrim…), each with its standing, kin, money and first contacts; perhaps a start inside a realm's politics | M–L | P10-02, P9-06 |
@@ -329,7 +330,7 @@ All of Phase 10 is **Provisional**: the owner adds to it after in-depth testing 
 6. **W-07,** then **W-08.** **W-09** if the owner chooses impassable terrain (D-W4), or before P7-04's "Avoid danger" routes.
 7. **B-01** early in Phase 7, then Phase 7 roughly in table order (P7-04 before P7-02; P7-05 before P7-06).
 8. **Phase 8** in the build order of §5 (re-specified 2026-11-20): P8-02, P8-03, P8-01, P8-04, P8-05, P8-06a, P8-06b, P8-07, P8-08, P8-T. W-09 is not needed: sieges and lords move on passable terrain.
-9. **Phase 9** (specified 2026-11-22): **P9-B1, P9-B2, P9-B3, P9-B4, P9-B5**, then **P9-L1**, **P9-01, P9-02, P9-03, P9-04, P9-05, P9-06, P9-07, P9-08**, **P9-T**. P9-B1's phone measurement decides how far P9-B2 and P9-B3 can go. Each task is a minor version from 3.1.0; P9-T ships 4.0.0. Whole-suite checkpoints after P9-B2, P9-B4, P9-04, P9-06 and P9-T.
+9. **Phase 9** (specified 2026-11-22): **P9-B1, P9-B2, P9-B3, P9-B4, P9-B5**, then **P9-L1**, **P9-01, P9-02, P9-03, P9-04, P9-05, P9-06, P9-07, P9-08**, **P9-T**. P9-B1's phone measurement decides how far P9-B2 and P9-B3 can go. Each task is a minor version from 3.1.0; P9-T ships 4.0.0. Whole-suite checkpoints after P9-B2, P9-B4, P9-04 and P9-06; P9-T's moved to P10-00 (owner, 2026-11-24).
 10. **Phase 10,** after Phase 9 ships 4.0.0, specified then with the owner's points from testing and players' feedback.
 
 ### Versions (owner decision D-V1)
@@ -430,7 +431,7 @@ Decisions marked **blocking** must be made before the named task starts. The oth
 | **D-P9f** | Can realms that aren't in the data appear in play? | **Owner, 2026-11-22: the default. Yes.** A realm founded by the player or an AI lord (P9-03) or by rebels (P9-04) is a realm like the data's, with a name its founder chooses, a banner colour from a palette, its capital's culture and troops, and P9-01's laws; every "is this a realm?" asks `realm.realms(c)` | P9-03 |
 | **D-P9g** | Do people die? | **Owner, 2026-11-22: the default.** Lords may die rarely, of wounds after a lost battle; of old age only with a setting on (off by default); the player never dies unless a later setting says so (permadeath is in the backlog). No births or ageing (the founding-house model, design §19.3) | P9-06 |
 | **D-P9h** | Can capitals fall, and realms end? | **Owner, 2026-11-22: the default. Yes, from P9-05.** A capital besieged by an army is the hardest siege; taken, its ruler moves the seat; a realm with no holdings left is gone, and its lords seek service elsewhere | P9-05 |
-| **D-P9i** | How long are the long runs? | **Owner, 2026-11-22: the default.** 20 simulated years in the slow suite, 100 years in an overnight script (`npm run long-run`), both with delegated rulers and no player | P9-T |
+| **D-P9i** | How long are the long runs? | **Owner, 2026-11-22: the default.** 20 simulated years in the slow suite, 100 years in an overnight script (`npm run long-run`), both with delegated rulers and no player. **Owner, 2026-11-24:** moved to P10-00 | P10-00 |
 
 ### D-P8b and D-P8c in full (owner, 2026-11-20: the defaults, accepted)
 

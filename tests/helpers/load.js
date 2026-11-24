@@ -133,11 +133,15 @@ function loadGame({ storage = memoryStorage(), random, party = true, worldPartie
   // Deterministic world: fixed seed, and (unless asked for) no moving parties to interfere.
   CL.campaign.rngSeed = seed;
   CL.campaign.rng = CL.autoresolve.streamSeeds(seed); // the named streams follow the fixed seed too
-  CL.campaign.parties = [];
-  CL.campaign.partySpawns = {};
-  CL.campaign.nextPartyId = 1;
-  if (worldParties) CL.parties.ensure(CL.campaign, true);
-  else for (const id of Object.keys(CL.content.table('party_templates'))) CL.campaign.partySpawns[id] = 1e9;
+  // P9-T: a game loaded from a save keeps its parties, as the browser's does (a reload in a test lost
+  // every army's lords, and the invariants caught it). A new game gets the test's own world.
+  if (!CL.save.existed) {
+    CL.campaign.parties = [];
+    CL.campaign.partySpawns = {};
+    CL.campaign.nextPartyId = 1;
+    if (worldParties) CL.parties.ensure(CL.campaign, true);
+    else for (const id of Object.keys(CL.content.table('party_templates'))) CL.campaign.partySpawns[id] = 1e9;
+  }
   // World events (P7-08) and tournaments (P7-09) are off too unless asked for, like the world parties: tests that pass days
   // see only what they set up.
   if (!worldEvents) {

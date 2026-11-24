@@ -24,7 +24,7 @@
   var LOOT = [[99, 'mid']];
 
   root.CROWNLESS_WORLDS.sundered_coast = {
-    manifest: { id: 'sundered_coast', title: 'The Sundered Coast', author: 'Crownless', version: '1.0.0', engine: '>=3.14.0 <4.0.0', kind: 'world', requires: [] },
+    manifest: { id: 'sundered_coast', title: 'The Sundered Coast', author: 'Crownless', version: '1.0.0', engine: '>=3.14.0 <5.0.0', kind: 'world', requires: [] },
 
     factions: {
       ostrand: { id: 'ostrand', name: 'Kingdom of Ostrand', short: 'Ostrand', emblem: 'O', order: 1, culture: 'ostrand', ruler: { male: 'King', female: 'Queen' }, color: '#3f6f9a', description: 'Cold-water lords of the northern cliffs: shieldmen and bowmen.', initialReputation: 0, recruits: ['ostrand_levy'], garrison: O_GARRISON },

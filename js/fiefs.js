@@ -410,6 +410,9 @@
     const h = R().holding(sid, c);
     if (!h || h.holder !== R().rulerOf(h.sovereign, c) || h.controller !== h.sovereign) return false;
     if (h.kind === 'town' || h.crownLand) return false;
+    // P9-T: a realm's seat is never given away (a realm founded at a fort has it for its capital), and when
+    // you rule, your land is yours to grant (js/founding.js grant), not your court's.
+    if (h.holder === PLAYER || R().capitalOf(h.sovereign, c) === sid) return false;
     if (R().locked(c, sid) || (h.seat && R().locked(c, h.seat))) return false;
     return true;
   }

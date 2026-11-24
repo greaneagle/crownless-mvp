@@ -147,7 +147,10 @@
     return raise(c, f, target);
   }
 
-  /** The forts (then capitals) an army of `f` might besiege, best first: claimed, then forts, then nearest. */
+  /** P9-T: a rising's crown (the realm it rose against), or null: a civil war is fought against it first. */
+  const risenAgainst = (c, f) => CL.rebellion?.ofRising(c, f)?.realm || null;
+
+  /** The forts (then capitals) an army of `f` might besiege, best first: a rising's crown's, claimed, then forts, then nearest. */
   function targets(c, f, from = null) {
     const ruler = R().rulerOf(f, c);
     const home = from || at(R().capitalOf(f, c)) || at(c.people?.[ruler]?.home);
@@ -162,7 +165,9 @@
     const ours = (k) => c.people[k.by]?.realm === f && c.people[k.by].status === 'free';
     const claimed = (sid) => (CL.claims?.pressedFor?.(c, sid, f) ? 0 : R().claimsOn(sid, c).some(ours) ? 0.5 : 1);
     const town = (sid) => (c.holdings[sid].kind === 'town' ? 1 : 0);
-    return sids.sort((a, b) => claimed(a) - claimed(b) || town(a) - town(b) || dist(home, at(a)) - dist(home, at(b)));
+    const crown = risenAgainst(c, f);
+    const civil = (sid) => (crown && c.holdings[sid].controller === crown ? 0 : 1);
+    return sids.sort((a, b) => civil(a) - civil(b) || claimed(a) - claimed(b) || town(a) - town(b) || dist(home, at(a)) - dist(home, at(b)));
   }
 
   /** Call the lords: the marshal first, then the nearest; each answers by the model. */
@@ -354,6 +359,18 @@
     q.tx = q.ty = null;
   };
 
+  /** P9-T: a lord who changes realm (or declares one) leaves their army at once, not at its next muster. */
+  function leave(c, pid) {
+    for (const a of list(c)) {
+      if (!a.members.includes(pid)) continue;
+      a.members = a.members.filter((x) => x !== pid);
+      const q = L().partyOf(c, pid);
+      if (q) release(q);
+      if (a.commander === pid && a.members.length) a.commander = a.members[0];
+      if (!a.members.length && a.commander !== PLAYER) disband(c, a, 'broken');
+    }
+  }
+
   /** Gathering at the rally: it marches when half have come, or after 7 days. */
   function rally(c, a) {
     const pt = at(a.rally);
@@ -469,7 +486,11 @@
         const h = c.holdings[sid];
         return h.kind === 'village' && place(sid) && enemies(c, a.realm, h.controller) && (!CL.founding || CL.founding.mayPlan(c, a.realm, h.controller)) && !R().locked(c, sid) && !(h.raided > c.day - RULES.raid.days);
       })
-      .sort((x, y) => dist(from, at(x)) - dist(from, at(y)));
+      .sort((x, y) => {
+        const crown = risenAgainst(c, a.realm);
+        const civil = (sid) => (crown && c.holdings[sid].controller === crown ? 0 : 1);
+        return civil(x) - civil(y) || dist(from, at(x)) - dist(from, at(y));
+      });
   }
   function regroup(c, a, why) {
     const cq = lead(c, a);
@@ -888,5 +909,5 @@
     }
   }
 
-  CL.armies = { RULES, OBJECTIVES, bannerOf, doing, testArmies, list, byId, of, ofRealm, mine, raiseMine, order, engage, fighting, afterBattle, youIn, parties, lead, powerOf, soldiers, landAt, readyTown, needed, plan, targets, raise, pace, summonPlayer, riding, postFor, step, weekly, choose, valid, raidable, raid, battle, disband, onSiegeEnd, onTaken, gone, isGone, line, invariants, migrate, sanitize };
+  CL.armies = { RULES, OBJECTIVES, bannerOf, doing, testArmies, list, byId, of, ofRealm, mine, raiseMine, order, leave, engage, fighting, afterBattle, youIn, parties, lead, powerOf, soldiers, landAt, readyTown, needed, plan, targets, raise, pace, summonPlayer, riding, postFor, step, weekly, choose, valid, raidable, raid, battle, disband, onSiegeEnd, onTaken, gone, isGone, line, invariants, migrate, sanitize };
 })(typeof window !== 'undefined' ? window : globalThis);
