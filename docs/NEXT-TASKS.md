@@ -3217,41 +3217,190 @@ The phase opens with five battle-scale tasks (owner, 2026-11-22; decisions D-P9a
 
 ---
 
-## Phase 10 — Ways In (Provisional)
+## Phase 10 — Ways In (Specified 2026-11-24)
 
-The owner adds to this phase after in-depth testing and players' feedback (2026-11-22). Its aim: a diverse, welcoming way into the world, and a world that feels lived in from the first hour.
+The aim: a welcoming way into the world. You pick a kingdom and an origin. A short opening quest of your own leads you to the same place as every other start, and from there the main story can be followed at will, or the world played as a sandbox. The owner may add tasks from play during the phase.
+
+**Owner's rules for the phase (2026-11-24):**
+- **Long runs:** a run over 20 minutes or overnight is only suggested, with its length. It runs only after the owner's explicit yes.
+- **On request:** the owner can ask for a full overnight run at any time. That run then does every check still pending (the long runs, the whole slow suite, the full browser suite, `battle-parity`).
+- **Tuning** of the world (wars, risings, deaths) waits until after the origins (P10-T).
+- **The world at the start** stays basic: no new "lived-in" systems at the start of the phase.
+- **Versions:** each task is a minor version from 4.1.0; P10-T ships 5.0.0.
+
+**Order:** P10-00 → P10-01 → P10-02 → P10-03 → P10-04 → P10-05 → P10-06 → P10-07 → P10-08 → P10-T. P10-06 needs only P10-00 and may move earlier if the owner wants. P10-07 and P10-08 may also be taken in part.
 
 ### P10-00 · Phase 9's long runs and checkpoint (M)
 
-Moved here from P9-T (owner, 2026-11-24): the big runs open Phase 10, so Phase 9 has none longer than 20 minutes.
+Moved here from P9-T (owner, 2026-11-24).
 
 **Build.**
-- **Long runs** (SC-29, D-P9i): the world alone with delegated rulers for 20 years in a new slow file (`tests/slow/long-run.test.js`), and 100 years in `npm run long-run` (`scripts/long-run.js`, overnight, in no suite): every invariant every day; no negative money; no repeated ownership collision; no endless event loop; no runaway realm (one holding more than half the land).
-- **The checkpoint:** the whole slow suite and the full browser suite, in the background in one go. The old failures (landed seed 3, the Phase 8 exit, Prototypes D and F) are fixed or written down as known.
-- **What they find** is fixed here, or listed for the owner, before the rest of Phase 10.
+- **The long-run tools** (SC-29, D-P9i): the world alone with delegated rulers, checking every invariant every day. There is no negative money, no repeated ownership collision, no endless event loop, and no runaway realm (one holding more than half the land).
+  - `tests/slow/long-run.test.js`: 20 years.
+  - `scripts/long-run.js` (`npm run long-run`): 100 years, in no suite.
+- **The checkpoint:** the whole slow suite (about 44 minutes) and the full browser suite, in the background in one go.
+- **The old failures** are fixed or written down as known: `landed` (seeds 2 and 3), the Phase 8 exit, Prototypes D and F.
+- **Faults** the runs find are fixed here. Tuning numbers (wars, risings, deaths) are not changed: they wait for P10-T.
 
-**Version.** 4.0.x (a patch on 4.0.0).
+**Runs.**
+- Each long run is timed on a short slice first.
+- A run over 20 minutes is suggested with its estimate, and runs only on the owner's yes.
+- A run the owner declines stays pending for the next full overnight run.
 
-### P10-01 · Onboarding (M)
+**Version.** 4.0.1.
 
-**Build.**
-- A first-time guide through each system as you first meet it: the map and travel, a battle, a town, a contract, the Realms screen, a siege. One step at a time, each skippable, never repeated (P7's tips grow into it).
-- How to Play arranged by stage: a captain, a vassal, a lord, a ruler. What matters now first, the rest a tap away.
+### P10-01 · Map speed (S)
 
-### P10-02 · Origin stories with their own opening quests (L)
-
-**Build.**
-- Each origin begins in its own situation, with an opening quest that leads into the world and its people. For example:
-  - **thrown from your horse:** bandits ride off with it, and you stand at a town's gate; the innkeeper offers rest, and work that leads after the thieves;
-  - **an impoverished noble:** a family matter (a debt, a lost seat, a sibling held for ransom) that leads into a realm's politics.
-- The story's first quest (Q1) is then one way in among several, not the only one.
-
-### P10-03 · More origins, and other ways to begin (M–L)
+**Problem.** The map runs at 4 game hours a second, too fast for a new player. That speed is still good when wanted.
 
 **Build.**
-- More backgrounds, each with its standing, kin, money and first contacts: a noble house's younger child, a soldier left after a war, a merchant's heir, a pilgrim, and others from the owner's list.
-- Perhaps a start inside a realm's politics (sworn already, or a household knight), once houses exist (P9-06).
+- **Two speeds** on the map:
+  - **Normal:** 1 game hour a second. This is the default for a new game and a new device.
+  - **Fast:** 4 hours a second, today's speed.
+- **A speed button** on the map HUD (one tap toggles, its icon shows the speed), and the same choice in Settings. The choice is a setting, kept per device, not in the save.
+- `js/world.js`'s `HOURS_PER_SECOND` becomes a rate read from the setting. Debug's stress test keeps its own rate.
+- **A hint card** (`speed`) teaches the toggle. P10-03 shows it at the end of every origin quest, and until then it shows after the first contract.
 
-### P10-04 · Women soldiers (M)
+**Tests.** The rate follows the setting; days passed per real second at each speed; old settings load as Normal; the button in a browser case.
 
-**Build.** Troop types and lines of their own where they fit the realms (promised in D-P8g, P8-02), with their own names and portraits.
+**Version.** 4.1.0.
+
+### P10-02 · Choose your kingdom, and the main story from anywhere (L)
+
+**Problem.** Every game starts at Stonebridge, and the main story (Q1–Q4) is tied to Stonebridge, Eastwatch and Greywall Fort, between Valedorn and the Aurelians.
+
+**Build.**
+- **Choose your kingdom** at a new game: any of the world's realms (Valedorn, the Aurelians, Hrothmark, the Vessaro League; not Merrow, a free city). Each realm names a start town in data (`start` per faction in the world map). The Sundered Coast offers its own two realms. Your choice is kept in the save (`c.startRealm`).
+- **The main story from any kingdom.** It keeps its shape and its beats, but its people and places are given by role, not by name:
+  - your start town's elder and captain;
+  - a rival realm next to yours, and its magistrate's town;
+  - the contested fort between the two.
+  
+  The story reads the roles from the start (`c.story.cast`), chosen by the map's neighbours. Starting in Valedorn gives today's story unchanged.
+- **The common quest.** Q1's tutorial steps (the first work, a fight, recruits, drill) become the quest every origin leads into (P10-03). For now the plain start leads into it directly.
+- **The story stays optional.** Its journal says it can be left and picked up again; the world goes on without it.
+
+**Tests.** Every realm's cast resolves on both worlds; `npm run simulate:story` and `gate-d-campaigns` reach an ending from every realm; a 2.x save (Valedorn) keeps its story and ids.
+
+**Explain.** "Getting started": choosing a kingdom; the story from anywhere.
+
+**Version.** 4.2.0.
+
+### P10-03 · Origins: the frame and the first three (L)
+
+**Build.**
+- **An origin** replaces the background at a new game. Each has:
+  - a situation at the start, in the chosen kingdom's lands;
+  - an opening quest of 3 to 5 steps, which teaches the basics on the way;
+  - its people;
+  - a hand-off into the common quest (P10-02).
+- **The first three:**
+  - **The unhorsed traveller:** thrown from your horse, bandits ride off with it, and you stand at a town's gate. The innkeeper offers rest, and work that leads after the thieves.
+  - **The impoverished noble:** a family matter, such as a debt, a lost seat or a sibling held for ransom, settled with your first few soldiers.
+  - **The farmhand** (today's background, rewritten as an origin): a village raided; you lead its few willing men.
+- **The same place at the end** (the owner's rule): every origin ends at about the same gold, soldiers, gear, level and renown, within a small band set in data. Each keeps one small edge of its own: a better weapon, +1 strength, a little more money, a contact. The edges are balanced, not equal in kind.
+- **Data, not code:** origins live in `data/origins.js`, with the quests in `data/quests.js` and the dialogue in `data/dialogue.js`, through the story's own conditions and effects. A new effect only where one is missing.
+- **No politics at the start** (the owner's rule): nobody starts sworn, landed or at court.
+- **The speed hint** (P10-01) shows at each origin quest's end.
+
+**Tests.**
+- Every origin from every realm on both worlds, played by a bot to the common quest.
+- The end state of each within the band.
+- Saves: an old save keeps its background as its origin.
+
+**Version.** 4.3.0.
+
+### P10-04 · Origins: the scout and the peddler (M)
+
+**Build.**
+- **The scout** and **the peddler**, today's last two backgrounds, rewritten as origins on P10-03's frame. Five origins in all.
+- **The balance check over all five:** one table of the end state (gold, soldiers, gear, level, renown, the edge), from every realm. Any origin outside the band is retuned, at most two tries a number.
+
+**Tests.** As P10-03, for all five.
+
+**Version.** 4.4.0.
+
+### P10-05 · Onboarding and hints (M)
+
+**Build.**
+- **A guide for the main beginner steps,** whatever the origin: moving on the map, entering a town and talking, hiring, buying food, the first battle's controls, auto-resolve, saving.
+  - Each step is shown once, at the moment it is needed.
+  - Each can be skipped, or the whole guide at once.
+- **Everything deeper gets a hint card only** (P7's tips): the market, contracts, the Realm screen, fiefs, sieges, armies, houses, rule. Each shows once.
+- **One setting** turns the guide and the hints off or on, and "Show hints again" resets them. Today's tips setting becomes this.
+- **How to Play by stage:** captain, vassal, lord, ruler. Your current stage opens first; the rest are a tap away.
+
+**Tests.** The guide's steps with each origin; skip one, skip all; off in Settings; the browser startup flow with the guide on and off.
+
+**Version.** 4.5.0.
+
+### P10-06 · Women soldiers and soldiers' portraits (M)
+
+**Build.**
+- **Women soldiers** (D-P8g's promise): lines of their own in two realms, plus one bandit type. The realms and lines are set in data and chosen by fit; no more than that (the owner: "don't overdo it").
+- **Recruiting:** they come mixed into a place's normal recruits, at 15% to 85% for men (in data). The draw uses the game's own random rolls, so the same seed gives the same recruits.
+- **Their own progression:** a woman recruit upgrades along her own line, not into the men's.
+- **Women's names** come from each culture's list, as the lords' do.
+- **Portraits:**
+  - A few generic portraits for soldiers, men and women: base faces with hair colour and beard style changed, not one portrait per soldier.
+  - The choice is made once per soldier from its id and kept in the save (the `portrait` slot).
+  - The roster shows them, in the frame the references use.
+  - Made with the `crownless-art` skill.
+- **Battle sprites:** use the role's sprites until P10-07.
+
+**Tests.** The 85/15 rate over many recruits; a woman upgrades in her own line; the same seed gives the same recruits; portraits stay the same over a save and load; a pack's troop may say `gender`.
+
+**Version.** 4.6.0.
+
+### P10-07 · Art pass: battles (L)
+
+The owner, 2026-11-24: an art pass, or at least partial updates, toward the references in `art-reference/` (battles and town scenes, not the overworld).
+
+**Build.**
+- **Soldiers and the hero in battle** toward the references:
+  - about 32×48, 3 heads tall, 4 directions with a 4-frame walk;
+  - a dark-brown outline, 2–4 steps of shading, light from the upper left;
+  - kit by role and realm.
+- **Women soldiers' battle sprites** (P10-06).
+- **The battle ground:** props and tiles where they fit.
+- **Renderer changes** to draw the new frames are allowed here (an exception to the art rule, for this task only). The old frames stay as a fallback until each set is complete.
+- **Partial is fine:** each set (infantry, archers, cavalry, the hero, props) can land on its own. What is not done is listed as open.
+
+**Tests.** Every role and troop has frames, or the fallback; the battle's frame time on the phone-sized browser case is no worse than before; screenshots of a battle.
+
+**Version.** 4.7.0.
+
+### P10-08 · Art pass: towns and the UI (L)
+
+**Build.**
+- **Stonebridge's town scene** toward reference 03: the buildings, walls and gate, props, and townsfolk in the new character style. Then the other town hubs, if any.
+- **The UI toward references 04–06:**
+  - deep navy panels with thin gold borders;
+  - cream serif headings;
+  - framed portraits;
+  - pixel stat icons;
+  - tabs with a raised active state.
+  
+  Done screen by screen, starting with the party screen and the dialogue box.
+- **Renderer changes allowed** for this task only, as in P10-07. **Partial is fine**, as in P10-07.
+
+**Tests.** Browser screenshots of the reworked screens at 812×375 and on desktop; text size and the reduced-effects setting still work.
+
+**Version.** 4.8.0.
+
+### P10-T · Phase 10 tuning and acceptance (M)
+
+**Build.**
+- **The world's tuning,** moved here (the owner's rule), with P9-T's targets:
+  - wars on 20–50% of days;
+  - one to three risings a year;
+  - two to six lords' deaths a year;
+  - the coast's wars;
+  - a realm keeping its last fort.
+- **The origins' balance** confirmed over all five and every realm.
+- **The scenario matrix** brought up to date, with the new start scenarios.
+- **`docs/PHASE-10-VALIDATION.md`,** with the checks waiting on the owner's phone play.
+
+**Runs.** Each run over 20 minutes, and the whole checkpoint, is suggested and run only on the owner's yes, unless a full overnight run was asked for.
+
+**Version.** 5.0.0.
