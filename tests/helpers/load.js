@@ -76,7 +76,7 @@ function memoryStorage(initial = {}) {
  * name. The test world (tests/helpers/test-world.js) is one.
  * `world` (P9-08): play another official world (data/worlds/*.js), as choosing it at a new game does.
  */
-function loadGame({ storage = memoryStorage(), random, party = true, worldParties = false, worldEvents = false, seed = 12345, content, packs = [], world } = {}) {
+function loadGame({ storage = memoryStorage(), random, party = true, worldParties = false, worldEvents = false, seed = 12345, content, packs = [], world, mapSpeed = 'fast' } = {}) {
   const uiCalls = [];
   // No `Math` here: the game gets the context's own, so nothing one game does to Math (or that a
   // script does to the host's Math.random) reaches another game in the same process (H-01: the host
@@ -128,6 +128,19 @@ function loadGame({ storage = memoryStorage(), random, party = true, worldPartie
   if (packs.length) {
     const problems = CL.packs.use(packs);
     if (problems.length) throw new Error(`packs: ${problems.join('; ')}`);
+  }
+  // P10-01: the map runs Fast in tests, as it did before 4.1.0's Normal default, so the bots and the
+  // tests that ride in fixed steps keep their results. Pinned without touching the stored settings
+  // (tests check those); the first set('mapSpeed') releases it. `mapSpeed: null` keeps the default.
+  if (mapSpeed) {
+    let pinned = mapSpeed;
+    const { get, set } = CL.settings;
+    CL.settings.get = (k) => (k === 'mapSpeed' && pinned ? pinned : get(k));
+    CL.settings.set = (k, v) => {
+      const ok = set(k, v);
+      if (ok && k === 'mapSpeed') pinned = null;
+      return ok;
+    };
   }
   CL.campaign = CL.save.load();
   // Deterministic world: fixed seed, and (unless asked for) no moving parties to interfere.

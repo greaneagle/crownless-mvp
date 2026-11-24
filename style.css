@@ -360,3 +360,14 @@
 #ordersPanel.onMap{top:calc(2% + 52px * var(--ui-grow));bottom:auto;right:1%;max-width:60%;max-height:calc(100% - 2% - 52px * var(--ui-grow) - 5% - clamp(83px,12vw,136px) - 16px);overflow-x:hidden}
 #ordersPanel.onMap .ordersRow{display:flex;flex-wrap:wrap}
 #ordersPanel.onMap button{margin:2px;font-size:calc(11px * var(--ui-scale));padding:calc(4px * var(--ui-scale)) calc(7px * var(--ui-scale))}
+/* P10-01: map speed, the Wait screen and the fade while time passes */
+#fade{position:absolute;inset:0;z-index:10;background:#000;opacity:0;pointer-events:auto;display:flex;align-items:center;justify-content:center}
+#fadeText{color:#ecd6a4;font:700 calc(clamp(14px,1.8vw,22px) * var(--ui-scale)) Georgia;text-shadow:2px 2px #000}
+#mapZoom #speedBtn.fast{border-color:#ffe7a8}
+#waitScreen{margin:8px 0}
+.waitRow{display:flex;align-items:center;justify-content:center;gap:10px;margin:6px 0;font-size:calc(clamp(13px,1.4vw,17px) * var(--ui-scale))}
+.waitRow span{min-width:4em;text-align:right}
+.waitRow b{min-width:2.5em;font-size:1.3em;color:#ecd6a4}
+.waitRow button{min-width:calc(44px * var(--ui-grow));min-height:calc(44px * var(--ui-grow));font-size:1.2em;line-height:1;padding:0}
+.waitQuick{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin-top:8px}
+.waitQuick button{min-height:calc(44px * var(--ui-grow))}

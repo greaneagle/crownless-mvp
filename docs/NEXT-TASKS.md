@@ -3263,7 +3263,7 @@ Moved here from P9-T (owner, 2026-11-24). It runs when the owner asks for the ni
 
 **Version.** A patch on the build it runs on.
 
-### P10-01 · Map speed and the Wait screen (M)
+### P10-01 · Map speed and the Wait screen (M) — ✅ Done in 4.1.0
 
 **Problem.** The map runs at 4 game hours a second, too fast for a new player. That speed is still good when wanted. Waiting is a held button that runs the map at that speed.
 
@@ -3283,6 +3283,16 @@ Moved here from P9-T (owner, 2026-11-24). It runs when the owner asks for the ni
 **Tests.** The rate follows the setting; days passed per real second at each speed; a wait of N hours moves the clock N hours and runs what time drives; a wait cut short by contact opens the encounter with the time passed so far; the button and the Wait screen in a browser case (`world-map.spec.js`).
 
 **Version.** 4.1.0.
+
+**Done (4.1.0).**
+- **Map speed:** `CL.settings.MAP_SPEEDS` (`normal` 1, `fast` 4), the device setting `mapSpeed` (Normal for a new device), and `CL.world.rate()` in place of `HOURS_PER_SECOND`. A ▶ / ▶▶ button beside the map's zoom, and Settings → Map speed. Debug's stress test keeps its own 24.
+- **The Wait screen** (`mode: 'wait'`): days and hours with − and +, quick picks (6 h to 7 days), 1 hour to 30 days. `CL.world.beginWait` runs it: a 0.6 s fade out, the world on in half-hour steps through `CL.clock.advance` (at most 12 ms a frame; 3 days took about 2 s in the pane), a 0.6 s fade back with the clock shown, then "3 days have passed."
+- **Cut short:** a band or lord that reaches you stops the wait at that step. The screen clears and the encounter opens with "Your wait is cut short after …". Another screen that calls you away (a ransom, a siege) breaks it off too.
+- `CL.world.waitNow(hours)` runs a whole wait at once for tests and bots. `toggleWait` stays as the bots' open-ended watch; the Wait button and Space open the screen.
+- **The `speed` hint** shows on the map after the first contract done (`contractDone`). How to Play → The map has the speed button and the Wait screen.
+- **Tests:** the Node loader and the browser helper pin Fast, so every bot and fixed-step test keeps its results; a new `tests/map-speed.test.js` (7 cases) tests Normal. 920 fast pass; lint clean but the 2 old warnings; typecheck clean; browser full suite 239 passed, 9 skipped, with three new `world-map` cases (the button and Settings, a wait by taps, a wait cut short).
+- **Played** at 812×375 by taps: the ▶ button, Wait 3 days, the dark screen with the clock, "3 days have passed." **Seen:** the first-time map tip card covers the ▶ button (and the − button, as before) until it is closed. Left for P10-08.
+- **Slow files:** none run. The bots ride at Fast exactly as before, and nothing else in time changed. No long run needed.
 
 ### P10-02 · One world: the Sundered Coast joins the map (M–L)
 

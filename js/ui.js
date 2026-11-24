@@ -55,7 +55,7 @@
       const them = e.hostile ? ` They number ${count}.` : '';
       return {
         title: e.name.toUpperCase(),
-        text: `${e.text}${them} You have ${ready} soldier${ready === 1 ? '' : 's'} fit to fight.${e.hostile ? CL.reinforce.note(CL.campaign, e) : ''}`,
+        text: `${g.waitCut ? `${g.waitCut} ` : ''}${e.text}${them} You have ${ready} soldier${ready === 1 ? '' : 's'} fit to fight.${e.hostile ? CL.reinforce.note(CL.campaign, e) : ''}`,
         button: null,
       };
     }
@@ -75,6 +75,9 @@
     }
     if (mode === 'journal') {
       return { title: 'JOURNAL', text: '', button: 'Back' };
+    }
+    if (mode === 'wait') {
+      return { title: 'WAIT', text: 'How long should the company wait here? The world goes on meanwhile, and anyone who comes for you will find you.', button: 'Wait', secondary: 'Back' };
     }
     if (mode === 'realm') {
       return { title: 'THE REALMS', text: '', button: 'Back' };
@@ -190,6 +193,7 @@
     const g = CL.game;
     g.mode = mode;
     $('#stage').dataset.mode = mode;
+    if (mode !== 'encounter') g.waitCut = null; // P10-01: the note belongs to the encounter it led to
     requestAnimationFrame(fitHud); // the top-right buttons change with the mode
     CL.audio?.onMode(mode);
     // A tip belongs to the screen it explains: a new screen closes it, then may bring its own.
@@ -224,6 +228,7 @@
     $('#talkOptions').classList.toggle('hidden', mode !== 'talk');
     $('#ransomOptions').classList.toggle('hidden', !['ransom', 'grant', 'conquest', 'siegeAlarm'].includes(mode)); // the decisions that interrupt the map
     $('#titleExtras').classList.toggle('hidden', mode !== 'title');
+    $('#waitScreen').classList.toggle('hidden', mode !== 'wait');
     $('#overlayText').classList.toggle('hidden', mode === 'saves' || mode === 'journal' || mode === 'realm');
     const screen = screenFor(mode);
     if (mode === 'result') {
@@ -247,6 +252,7 @@
     if (mode === 'saves') renderSaves();
     if (mode === 'talk') renderTalk();
     if (mode === 'journal') renderJournal();
+    if (mode === 'wait') renderWait();
     if (mode === 'realm') renderRealm();
     if (mode === 'ransom') renderRansom();
     if (mode === 'grant') renderGrant();
@@ -276,6 +282,84 @@
     b.append(Object.assign(document.createElement('b'), { textContent: label }), Object.assign(document.createElement('small'), { textContent: note }));
     b.onclick = onClick;
     return b;
+  }
+
+  // ---- P10-01: the Wait screen, the fade while time passes, and the map's speed ----
+
+  const WAIT_MAX_DAYS = 30;
+
+  function openWait() {
+    const g = CL.game;
+    if (g.mode !== 'map' || g.waitPlan) return;
+    g.travel = null;
+    changeMode('wait');
+  }
+
+  /** The chosen days and hours, kept within 1 hour to 30 days. */
+  function setWaitPick(days, hours) {
+    let total = Math.round(days) * 24 + Math.round(hours);
+    total = Math.max(1, Math.min(WAIT_MAX_DAYS * 24, total));
+    CL.game.waitPick = { days: Math.floor(total / 24), hours: total % 24 };
+    renderWait();
+  }
+
+  function renderWait() {
+    const p = CL.game.waitPick;
+    $('#waitDays').textContent = String(p.days);
+    $('#waitHours').textContent = String(p.hours);
+    $('#waitDaysDown').disabled = p.days === 0 || p.days * 24 + p.hours <= 24;
+    $('#waitDaysUp').disabled = p.days >= WAIT_MAX_DAYS;
+    $('#waitHoursDown').disabled = p.days === 0 && p.hours <= 1;
+    $('#waitHoursUp').disabled = p.days >= WAIT_MAX_DAYS;
+    $('#primaryBtn').textContent = `Wait ${CL.world.span(p.days * 24 + p.hours)}`;
+  }
+
+  function confirmWait() {
+    const p = CL.game.waitPick;
+    changeMode('map');
+    CL.world.beginWait(p.days * 24 + p.hours);
+  }
+
+  function bindWait() {
+    const pick = (dd, dh) => () => {
+      const p = CL.game.waitPick;
+      setWaitPick(p.days + dd, p.hours + dh);
+    };
+    $('#waitDaysDown').onclick = pick(-1, 0);
+    $('#waitDaysUp').onclick = pick(1, 0);
+    $('#waitHoursDown').onclick = pick(0, -1);
+    $('#waitHoursUp').onclick = pick(0, 1);
+    for (const b of document.querySelectorAll('#waitScreen [data-wait]')) b.onclick = () => setWaitPick(0, Number(b.dataset.wait));
+    $('#speedBtn').onclick = toggleSpeed;
+    refreshSpeed();
+  }
+
+  /** The screen darkens while a wait passes (0 clear, 1 dark), with the clock in the middle. */
+  function setFade(opacity, text = '') {
+    const f = $('#fade');
+    if (!f) return;
+    f.classList.toggle('hidden', !(opacity > 0));
+    f.style.opacity = String(opacity);
+    $('#fadeText').textContent = opacity >= 1 ? text : '';
+  }
+
+  /** The speed button shows the map's speed: ▶ Normal, ▶▶ Fast. */
+  function refreshSpeed() {
+    const fast = CL.settings.get('mapSpeed') === 'fast';
+    const b = $('#speedBtn');
+    if (!b) return;
+    b.textContent = fast ? '▶▶' : '▶';
+    b.classList.toggle('fast', fast);
+    b.setAttribute('aria-label', `Map speed: ${fast ? 'Fast' : 'Normal'}`);
+    b.title = fast ? 'Map speed: Fast, four hours a second (tap for Normal)' : 'Map speed: Normal, an hour a second (tap for Fast)';
+    if ($('#setMapSpeed')) $('#setMapSpeed').value = fast ? 'fast' : 'normal';
+  }
+
+  function toggleSpeed() {
+    const fast = CL.settings.get('mapSpeed') !== 'fast';
+    CL.settings.set('mapSpeed', fast ? 'fast' : 'normal');
+    refreshSpeed();
+    message(fast ? 'Map speed: Fast, four hours a second.' : 'Map speed: Normal, an hour a second.');
   }
 
   // ---- A grant of land (P8-05): Accept or Decline ----
@@ -3310,6 +3394,7 @@
     $('#setHealthBars').checked = s.healthBars;
     $('#setReduced').checked = s.reducedEffects;
     $('#setTips').checked = s.tips;
+    $('#setMapSpeed').value = s.mapSpeed;
     $('#packResult').textContent = '';
     renderPacks();
     refreshFullscreen();
@@ -3494,6 +3579,11 @@
     $('#closeHelp').onclick = closeHelp;
     $('#doneHelp').onclick = closeHelp;
     $('#setTips').onchange = () => CL.settings.set('tips', $('#setTips').checked);
+    $('#setMapSpeed').onchange = () => {
+      CL.settings.set('mapSpeed', $('#setMapSpeed').value);
+      refreshSpeed();
+    };
+    bindWait();
     $('#resetTips').onclick = () => {
       CL.tips.reset();
       CL.settings.set('tips', true);
@@ -3533,6 +3623,12 @@
     openGrant,
     openConquest,
     openSiegeAlarm,
+    openWait,
+    confirmWait,
+    setWaitPick,
+    setFade,
+    toggleSpeed,
+    refreshSpeed,
     $,
     message,
     changeMode,

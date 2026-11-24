@@ -274,7 +274,7 @@
 
   /** Clear per-session state that belonged to the previous campaign. */
   function resetTransient() {
-    Object.assign(CL.game, { travel: null, siteId: null, partyId: null, contactParty: null, waiting: false, godMode: false, newGame: false });
+    Object.assign(CL.game, { travel: null, siteId: null, partyId: null, contactParty: null, waiting: false, waitPlan: null, waitCut: null, godMode: false, newGame: false });
   }
 
   CL.portable = {

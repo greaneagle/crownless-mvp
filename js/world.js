@@ -10,7 +10,10 @@
   // Map units → world pixels: the 2.0 projection, which the map camera (js/mapview.js, W-02) pans
   // and zooms. 1 map unit = 8.8 px across and 4.96 px down, inside a margin of 40 × 22 px.
   const VIEW = { x0: 40, y0: 22, sx: 8.8, sy: 4.96 };
-  const HOURS_PER_SECOND = 4; // game hours that pass per real second of travel
+  // P10-01: the Wait screen. The map fades out over `fade` real seconds, the world runs on in steps of
+  // `step` game hours (the calls travel makes, so nothing is skipped), and it fades back in. At most
+  // `budgetMs` of real time a frame, so the page never stalls; at most 30 days at once.
+  const WAIT = { maxHours: 30 * 24, step: 0.5, fade: 0.6, budgetMs: 12 };
   const HIT_RADIUS_PX = 28; // ≈ 38 CSS px wide on a small landscape phone
   const ARRIVE_EPSILON = 0.05;
 
@@ -24,6 +27,11 @@
     return w && CL.content.table('world_map')[w] ? w : defaultId();
   }
   const map = () => CL.content.get('world_map', id());
+  /** P10-01: game hours a real second on the map: the device's map speed (Normal 1, Fast 4). */
+  function rate() {
+    const S = CL.settings;
+    return S?.MAP_SPEEDS[S.get('mapSpeed')] || 1;
+  }
   /** P9-B3: the world's army sizes (data/world_map.js `armies`), each 1 where the world doesn't say. */
   const armies = () => ({ households: 1, garrisons: 1, beyondHome: 1, ...(map().armies || {}) });
   /** The map's size in map units: { w, h } (100 × 100 for the Border March). */
@@ -216,7 +224,7 @@
   }
 
   function click(px, py) {
-    if (CL.game.mode !== 'map') return;
+    if (CL.game.mode !== 'map' || CL.game.waitPlan) return;
     travelTo(targetAt(px, py));
   }
 
@@ -241,10 +249,11 @@
 
   function update(dt) {
     const g = CL.game;
+    if (g.waitPlan) return waitUpdate(dt);
     if (g.mode !== 'map') return 0;
     if (!g.travel) {
       if (!g.waiting) return 0;
-      const hours = Math.min(dt, 0.1) * HOURS_PER_SECOND;
+      const hours = Math.min(dt, 0.1) * rate();
       CL.clock.advance(CL.campaign, hours, 'wait');
       CL.save.autosave(); // once per game day on the map
       checkContact();
@@ -263,7 +272,7 @@
       }
       [t.x, t.y] = CL.world.clampToMap(q.x + 1.2, q.y + 1.2, 2);
       if (mapDist(w.x, w.y, t.x, t.y) <= 0.3) {
-        const hours = Math.min(dt, 0.1) * HOURS_PER_SECOND;
+        const hours = Math.min(dt, 0.1) * rate();
         CL.clock.advance(CL.campaign, hours, 'travel');
         CL.save.autosave();
         checkContact();
@@ -286,7 +295,7 @@
     }
     const remaining = mapDist(w.x, w.y, t.x, t.y);
     const speed = speedAt(w.x, w.y);
-    let hours = Math.min(dt, 0.1) * HOURS_PER_SECOND;
+    let hours = Math.min(dt, 0.1) * rate();
     const step = speed * hours;
     if (step >= remaining) {
       hours = remaining / speed;
@@ -374,18 +383,117 @@
 
   /** P7-04: take or break the Hide stance (in a forest, standing still). */
   function toggleHide() {
+    if (CL.game.waitPlan) return CL.sight.hidden(CL.campaign);
     const c = CL.campaign;
     const on = CL.sight.setHidden(c, !CL.sight.hidden(c));
     CL.ui.message(on ? 'Your company hides among the trees: much harder to spot until you set off.' : CL.sight.canHide(c) ? 'You come out of hiding.' : 'Hide in a forest, standing still.');
     return on;
   }
 
+  /**
+   * Open-ended waiting, until toggled off: the bots' way to watch for a party (players use the Wait
+   * screen, P10-01).
+   */
   function toggleWait() {
     const g = CL.game;
-    if (g.mode !== 'map') return;
+    if (g.mode !== 'map' || g.waitPlan) return;
     g.travel = null;
     g.waiting = !g.waiting;
     CL.ui.message(g.waiting ? 'Waiting… time passes.' : 'You break camp.');
+  }
+
+  // ---- P10-01: the Wait screen's wait ----
+
+  /** "1 hour", "3 days and 5 hours", "less than an hour". */
+  function span(hours) {
+    const h = Math.round(hours);
+    if (h < 1) return 'less than an hour';
+    const d = Math.floor(h / 24);
+    const r = h % 24;
+    const part = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
+    return [d ? part(d, 'day') : '', r ? part(r, 'hour') : ''].filter(Boolean).join(' and ');
+  }
+
+  /** Begin a wait of `hours` (whole hours, 1 to 30 days) on the map. Returns false if it can't. */
+  function beginWait(hours) {
+    const g = CL.game;
+    if (g.mode !== 'map' || g.waitPlan || !Number.isFinite(hours)) return false;
+    g.travel = null;
+    g.waiting = false;
+    g.waitCut = null;
+    g.waitPlan = { hours: clamp(Math.round(hours), 1, WAIT.maxHours), done: 0, phase: 'dusk', t: 0, cut: false };
+    CL.diag.log('info', 'Wait begun', { hours: g.waitPlan.hours, day: CL.campaign.day });
+    return true;
+  }
+
+  /**
+   * Run a wait on, a step at a time, for at most `budgetMs` of real time. Returns 'cut' when a party
+   * reached you (CL.game.contactParty), 'done' when the time is up, 'more' when the budget ran out.
+   */
+  function runWait(p, budgetMs = Number.POSITIVE_INFINITY) {
+    const now = () => root.performance?.now?.() ?? Date.now();
+    const t0 = now();
+    while (p.done < p.hours - 1e-9) {
+      const h = Math.min(WAIT.step, p.hours - p.done);
+      CL.clock.advance(CL.campaign, h, 'wait');
+      p.done += h;
+      CL.save.autosave(); // once per game day, as on the road
+      if (CL.game.contactParty != null) return 'cut';
+      if (CL.game.mode !== 'map') return 'cut'; // something called you away (a ransom, a siege)
+      if (now() - t0 >= budgetMs) return 'more';
+    }
+    return 'done';
+  }
+
+  /** How dark the screen is: fading out, dark while the time passes, fading back. */
+  function fadeOf(p) {
+    if (p.phase === 'dusk') return Math.min(1, p.t / WAIT.fade);
+    if (p.phase === 'run') return 1;
+    return Math.max(0, 1 - p.t / WAIT.fade);
+  }
+
+  /** The end of a wait: the time passed, or the party that cut it short. */
+  function finishWait() {
+    const g = CL.game;
+    const p = g.waitPlan;
+    if (!p) return null;
+    g.waitPlan = null;
+    CL.ui.setFade?.(0);
+    const passed = span(p.done);
+    CL.diag.log('info', 'Wait ended', { hours: p.done, of: p.hours, cut: p.cut });
+    if (p.cut && g.contactParty != null) {
+      g.waitCut = `Your wait is cut short after ${passed}.`;
+      checkContact(); // the encounter opens for you to act
+    } else if (p.cut) CL.ui.message(`Your wait is broken off after ${passed}.`);
+    else CL.ui.message(`${passed.charAt(0).toUpperCase()}${passed.slice(1)} ${Math.round(p.done) === 1 ? 'has' : 'have'} passed.`);
+    return p;
+  }
+
+  /** From update(): the wait's phases, a frame at a time. Returns the game hours spent. */
+  function waitUpdate(dt) {
+    const p = CL.game.waitPlan;
+    const before = p.done;
+    if (p.phase === 'run') {
+      const r = runWait(p, WAIT.budgetMs);
+      if (r !== 'more') Object.assign(p, { phase: 'dawn', t: 0, cut: r === 'cut' });
+    } else {
+      p.t += Math.min(dt, 0.1);
+      if (p.phase === 'dusk' && p.t >= WAIT.fade) Object.assign(p, { phase: 'run', t: 0 });
+      else if (p.phase === 'dawn' && p.t >= WAIT.fade) {
+        finishWait();
+        return p.done - before;
+      }
+    }
+    CL.ui.setFade?.(fadeOf(p), clockLabel());
+    return p.done - before;
+  }
+
+  /** A whole wait at once, without the fades (tests and bots). Returns the finished plan. */
+  function waitNow(hours) {
+    if (!beginWait(hours)) return null;
+    const p = CL.game.waitPlan;
+    p.cut = runWait(p) === 'cut';
+    return finishWait();
   }
 
   function nearestSettlement(x, y, predicate = () => true) {
@@ -473,7 +581,8 @@
     armies,
     VIEW,
     HIT_RADIUS_PX,
-    HOURS_PER_SECOND,
+    rate,
+    WAIT,
     map,
     toPx,
     fromPx,
@@ -497,6 +606,9 @@
     leaveSettlement,
     attackSite,
     toggleWait,
+    beginWait,
+    waitNow,
+    span,
     toggleHide,
     checkContact,
     nearestSettlement,

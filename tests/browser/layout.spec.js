@@ -27,8 +27,8 @@ test('world map, with the message line showing', async ({ page }) => {
   // open an encounter over the map (it did, now and then).
   await debug(page, '[data-cheat="clearParties"]');
   await toMap(page);
-  await press(page, '#waitBtn'); // "Waiting… time passes." on the message line
-  await expectLayoutSound(page, [...TOP_RIGHT_MAP, '#zoomOutBtn', '#zoomInBtn', '#centreBtn'], { info: ['#topLeft', '#message'] });
+  await press(page, '#speedBtn'); // "Map speed: …" on the message line (P10-01)
+  await expectLayoutSound(page, [...TOP_RIGHT_MAP, '#speedBtn', '#zoomOutBtn', '#zoomInBtn', '#centreBtn'], { info: ['#topLeft', '#message'] });
 });
 
 test('battle on a large field', async ({ page }) => {

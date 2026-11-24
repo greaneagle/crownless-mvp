@@ -27,7 +27,7 @@ async function zoomRightIn(page) {
 test('the map buttons: the map opens at 1×, − steps out to "fit" and is then off, + steps to 2.4×, and they sit clear of everything', async ({ page }) => {
   // W-05b: the bigger world opens at 1× (the March at 2.0's scale); "fit" shows all of it, below 1×.
   expect((await view(page)).zoom).toBe(1);
-  await expectLayoutSound(page, ['#zoomOutBtn', '#zoomInBtn', '#centreBtn', '#waitBtn', '#partyBtn', '#journalBtn', '#settingsBtn'], { info: ['#topLeft'] });
+  await expectLayoutSound(page, ['#speedBtn', '#zoomOutBtn', '#zoomInBtn', '#centreBtn', '#waitBtn', '#partyBtn', '#journalBtn', '#settingsBtn'], { info: ['#topLeft'] });
   await press(page, '#zoomOutBtn');
   const fit = await game(page, (CL) => CL.mapView.fitZoom());
   expect(fit).toBeLessThan(1);

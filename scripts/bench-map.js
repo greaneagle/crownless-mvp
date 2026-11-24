@@ -109,7 +109,7 @@ if (require.main === module && process.argv.includes('--season')) {
   const sizes = i >= 0 ? args[i + 1].split(',').map(Number) : [10, 25, 50, 100, 200];
   const hours = Number(args.find((a, j) => /^\d+$/.test(a) && args[j - 1] !== '--parties') ?? 240);
   const rows = sizes.map((n) => bench(n, hours));
-  const perSecond = setup(1).world.HOURS_PER_SECOND; // game hours per real second of travel
+  const perSecond = setup(1).settings.MAP_SPEEDS.fast; // game hours per real second of travel, at Fast (P10-01)
   if (args.includes('--json')) console.log(JSON.stringify({ hours, hoursPerSecond: perSecond, rows }, null, 2));
   else {
     console.log(`World simulation per game hour, ${hours} hours after a day's warm-up (ms; median and worst hour)${ARMIES ? ', with four armies in the field' : ''}`);

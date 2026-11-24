@@ -10,7 +10,7 @@ const { expect } = base;
 const FIXTURES = path.join(__dirname, '..', 'fixtures');
 
 /** Device settings for tests: no tips over the controls, no full-screen request on touch, no sound. */
-const TEST_SETTINGS = { music: 0, sfx: 0, battleSize: 30, battleSizeChosen: true, battlefield: 'large', prepPreset: 'balanced', prepSkip: false, prepCustom: null, reducedEffects: false, healthBars: true, tips: false, fullscreen: false };
+const TEST_SETTINGS = { music: 0, sfx: 0, battleSize: 30, battleSizeChosen: true, battlefield: 'large', prepPreset: 'balanced', prepSkip: false, prepCustom: null, reducedEffects: false, healthBars: true, tips: false, fullscreen: false, mapSpeed: 'fast' }; // P10-01: Fast, as before 4.1.0's Normal default
 
 /** A fixed moment for Date.now and timers (Playwright's clock), so dates and animations repeat. */
 const START_TIME = new Date('2026-11-18T10:00:00Z');

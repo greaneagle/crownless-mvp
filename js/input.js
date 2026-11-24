@@ -57,6 +57,7 @@
         else CL.town.backToPlace();
       } else if (game.mode === 'talk') CL.town.backToPlace();
       else if (game.mode === 'journal') ui.closeJournal();
+      else if (game.mode === 'wait') ui.confirmWait();
       else if (game.mode === 'realm') ui.closeRealm();
       else if (game.mode === 'ending') ui.closeEnding();
       else if (game.mode === 'settlement') world.leaveSettlement();
@@ -65,7 +66,7 @@
       else if (game.mode === 'result') world.returnToMap();
     };
     $('#secondaryBtn').onclick = () => {
-      if (game.mode === 'encounter') ui.changeMode('map');
+      if (game.mode === 'encounter' || game.mode === 'wait') ui.changeMode('map');
       else if (game.mode === 'settlement') CL.town.enter(); // "Walk the streets"
       else if (game.mode === 'create') {
         game.newGame = false;
@@ -89,7 +90,7 @@
       CL.game.placeMode = 'town';
       ui.changeMode('settlement'); // the classic list, for anyone who prefers menus
     };
-    $('#waitBtn').onclick = () => CL.world.toggleWait();
+    $('#waitBtn').onclick = () => (CL.game.waiting ? CL.world.toggleWait() : ui.openWait()); // P10-01: the Wait screen
     $('#hideBtn').onclick = () => CL.world.toggleHide(); // P7-04
     $('#tradeBtn').onclick = () => ui.changeMode('trade');
     $('#contractsBtn').onclick = () => ui.changeMode('contracts');
@@ -246,7 +247,7 @@
       if (e.code === 'Space' && !e.repeat) {
         if (g.mode === 'map') {
           if (g.travel) CL.world.stop();
-          else CL.world.toggleWait();
+          else if (!g.waitPlan) CL.ui.openWait(); // P10-01
         }
         else CL.combat.queueAttack();
       }

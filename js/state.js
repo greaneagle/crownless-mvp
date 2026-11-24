@@ -33,6 +33,9 @@
     partyId: null, // world party whose encounter is open or being fought
     contactParty: null, // set by the world sim when a band catches the player
     waiting: false, // map: time passes without travelling
+    waitPlan: null, // P10-01: a wait from the Wait screen: { hours, done, phase, t, cut }
+    waitCut: null, // P10-01: "Your wait is cut short after …", shown on the encounter it led to
+    waitPick: { days: 0, hours: 6 }, // P10-01: the Wait screen's last choice
     town: null, // walkable town scene state while in Stonebridge's streets
     talk: null, // { npc, line } while talking to someone in town
     placeMode: 'settlement', // 'town' or 'settlement': where sub-screens return to

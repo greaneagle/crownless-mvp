@@ -122,7 +122,7 @@ test('travel and waiting move the clock at the map rate; towns and menus do not'
   CL.game.mode = 'map';
   CL.game.waiting = true;
   for (let i = 0; i < 10; i++) CL.world.update(0.1); // one real second
-  assert.ok(near(c.day - start, CL.world.HOURS_PER_SECOND * H));
+  assert.ok(near(c.day - start, CL.world.rate() * H));
 });
 
 test('a battle abandoned by a reload costs nothing, and the next one costs its 4 hours once', () => {

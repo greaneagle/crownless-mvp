@@ -322,7 +322,7 @@ test('waiting on the map passes time', () => {
   CL.world.leaveSettlement();
   CL.world.toggleWait();
   for (let i = 0; i < 60; i++) CL.world.update(0.05);
-  assert.ok(Math.abs(c.day * 24 - 60 * 0.05 * CL.world.HOURS_PER_SECOND) < 1e-6);
+  assert.ok(Math.abs(c.day * 24 - 60 * 0.05 * CL.world.rate()) < 1e-6);
   CL.world.toggleWait();
   CL.world.update(0.05);
   assert.ok(Math.abs(c.day * 24 - 12) < 1e-6, 'stopped');

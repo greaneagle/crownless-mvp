@@ -48,6 +48,8 @@
 
   // Situations a tip can wait for.
   const WHEN = {
+    // P10-01: the speed hint, after the first contract done (P10-05 adds the origin quests' end).
+    contractDone: (c) => (c.contractsDone || 0) > 0,
     lowFood: (c) => c.roster.length > 0 && CL.upkeep.foodDays(c) < 2,
     points: (c) => Boolean(c.character?.skillPoints || c.character?.attributePoints),
     wounded: () => CL.party.woundedSoldiers().length > 0,

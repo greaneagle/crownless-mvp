@@ -31,7 +31,7 @@
       body: [
         'Tap a town, village, fort, camp or band to travel there. Time passes as you ride: your soldiers eat, wages come due, wounds heal, and the world moves.',
         'Roads are fastest. Hills, forests and marsh slow you, mountains most of all (a road through them is a pass), and a river is slow to wade except at a ford or a bridge; heavy cargo slows you too. Patrols and caravans keep the peace and the trade going; Road Reavers prey on both, and on you if you look weak.',
-        'Wait lets time pass where you stand. The panel at the top left shows the day, your crowns, soldiers, food, morale and current quest.',
+        'Time runs at Normal speed, an hour a second; the ▶ button beside the zoom switches to Fast (▶▶), four hours a second, and back (also in Settings). Wait lets time pass where you stand: choose days and hours, the screen darkens while the world goes on, and lightens when the time is up. Anyone who reaches you meanwhile cuts the wait short, and you face them. The panel at the top left shows the day, your crowns, soldiers, food, morale and current quest.',
         'You see only so far, and so do they: less at night, further from hills, hardly into a forest. You see the parties near you; where you last saw one, a faded mark with a ? stays for a day (a contract target’s stays until you find it). A small company is harder to spot than a big one, and in a forest you can Hide (H) until you set off. A band that loses sight of you rides to where it last saw you, searches there for a few hours, then gives up.',
         'Drag the map to look around and pinch (or + and −) to zoom; zoom all the way out to see the whole realm, with the March in its middle. Only a tap sets off, so dragging or pinching never sends you anywhere. While zoomed in, the view follows your company; Centre brings it back after you have looked away, and arrows at the edge point to you and to your contract or quest targets. Zoom changes only what you see: journeys take the same time and bands find you the same way at any zoom. The game remembers your zoom on this device.'
       ],
@@ -40,7 +40,8 @@
         ['Drag the map', 'Drag, or arrow keys', 'Look around'],
         ['Pinch, or + −', 'Mouse wheel, or + −', 'Zoom in and out'],
         ['Centre button', 'C', 'Back to your company'],
-        ['Wait button', 'Space', 'Wait / stop travelling'],
+        ['Wait button', 'Space', 'Wait for a while / stop travelling'],
+        ['▶ button', '▶ button', 'Map speed: Normal or Fast'],
         ['Hide button (in a forest)', 'H', 'Hide until you set off'],
         ['⚙ button', '⚙ button', 'Settings']
       ]
@@ -236,6 +237,7 @@
     rule: { id: 'rule', on: 'realm', when: 'ruleTab', help: 'rule', title: 'Your realm', text: 'Hold a fort, win 600 renown and gather 40 soldiers, and you may declare a realm there. Once you rule, your officers run it by a policy each: set them here and keep riding. Lords who ask to swear to you wait here too.' },
     journal: { id: 'journal', on: 'journal', help: 'story', title: 'The Journal', text: 'Your quests, with the next step in gold, your company’s chronicle, and the regional news.' },
     saves: { id: 'saves', on: 'saves', help: 'saving', title: 'Keep a copy', text: 'The game saves itself in this browser, but browsers can clear it. Export a copy now and then — it also moves your game to another device.' },
+    speed: { id: 'speed', on: 'map', when: 'contractDone', help: 'map', title: 'Map speed', text: 'Time on the map runs at Normal speed, an hour a second. The ▶ button beside the zoom makes it Fast, four hours a second, and tapping it again slows it back. Wait lets whole days pass at once.' },
     points: { id: 'points', on: 'map', when: 'points', help: 'party', title: 'Points to spend', text: 'You have skill or attribute points to spend. Open Party: Leadership lets you lead more soldiers, One-Handed hits harder.' },
     lowFood: { id: 'lowFood', on: 'map', when: 'lowFood', help: 'party', title: 'Food is running low', text: 'Buy food in any town or village. Hungry soldiers lose morale and may desert.' },
     beyond: { id: 'beyond', on: 'map', when: 'awayFromHome', help: 'lands', title: 'Beyond the March', text: 'A new land, with its own kingdom, troops and prices. Its capital posts contracts and someone there has work for you. Zoom out to see the whole realm; Centre brings you back.' },

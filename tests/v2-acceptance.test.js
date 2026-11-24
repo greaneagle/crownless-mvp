@@ -81,6 +81,6 @@ test('SC-35: a long gap (a backgrounded app) is one short step: no strategic cat
   const s = CL.content.table('settlements').eastwatch;
   CL.world.travelTo({ type: 'settlement', id: 'eastwatch', x: s.mapX, y: s.mapY });
   CL.world.update(3600);
-  assert.ok((c.day - day) * 24 <= 0.1 * CL.world.HOURS_PER_SECOND + 1e-9, 'at most a tenth of a second of map time');
+  assert.ok((c.day - day) * 24 <= 0.1 * CL.world.rate() + 1e-9, 'at most a tenth of a second of map time');
 });
 

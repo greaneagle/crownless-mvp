@@ -7,7 +7,7 @@ const { test, expect, open, waitMode, game, press, pressAt, canvasToPage, newGam
 
 const SIZES = { small: 0.9, normal: 1, large: 1.15, larger: 1.3 };
 const TOP_RIGHT_MAP = ['#waitBtn', '#partyBtn', '#journalBtn', '#settingsBtn'];
-const MAP_VIEW = ['#zoomOutBtn', '#zoomInBtn', '#centreBtn']; // W-02
+const MAP_VIEW = ['#speedBtn', '#zoomOutBtn', '#zoomInBtn', '#centreBtn']; // W-02; P10-01 the speed button
 const BATTLE_CONTROLS = ['#joystick', '#mapBtn', '#ordersBtn', '#blockBtn', '#attackBtn', '#pauseBtn', '#settingsBtn'];
 // Realistic landscape phones besides 812×375 (W-01 layout rules), checked at the largest size.
 const PHONES = [
@@ -110,9 +110,9 @@ async function walkScreens(page, size) {
   await debug(page, '[data-cheat="clearParties"]');
   await watchCanvasFonts(page);
   await toMap(page);
-  await press(page, '#waitBtn');
+  await press(page, '#speedBtn'); // a message on the line (P10-01; Wait opens its own screen now)
   await expectLayoutSound(page, [...TOP_RIGHT_MAP, ...MAP_VIEW], { info: ['#topLeft', '#message'] });
-  await press(page, '#waitBtn');
+  await press(page, '#speedBtn');
   const label = `bold ${Math.round(14 * SIZES[size])}px Georgia`;
   await page.waitForFunction((f) => window.crownlessFonts.has(f), label);
   if (size !== 'normal') expect(await page.evaluate(() => window.crownlessFonts.has('bold 14px Georgia')), 'no unscaled labels').toBe(false);

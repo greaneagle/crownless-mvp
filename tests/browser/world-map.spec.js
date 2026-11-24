@@ -1,5 +1,6 @@
 // Flows 4 and 6: the strategic map with mouse clicks (desktop) and touch taps (phone): a tap on a
-// settlement travels there and arrives, a tap on a party opens the encounter, Wait passes time (W-00).
+// settlement travels there and arrives, a tap on a party opens the encounter, Wait passes time (W-00);
+// P10-01: the speed button and the Wait screen.
 const { test, expect, open, waitMode, game, press, pressAt, mapToPage, settlementOnPage, newGame, toMap, debug } = require('./helpers');
 
 test.beforeEach(async ({ page }) => {
@@ -50,13 +51,60 @@ test('a tap on a band opens the encounter with its choices', async ({ page }) =>
   await expect(page.locator('#encounterOptions button', { hasText: 'Auto-resolve' })).toBeVisible();
 });
 
-test('Wait passes time on the map until pressed again', async ({ page }) => {
+test('the speed button switches the map between Normal and Fast, and Settings shows it', async ({ page }) => {
+  // The test settings run the map Fast (as before 4.1.0); a new device starts at Normal.
+  await expect(page.locator('#speedBtn')).toHaveText('▶▶');
+  await press(page, '#speedBtn');
+  expect(await game(page, (CL) => [CL.settings.get('mapSpeed'), CL.world.rate()])).toEqual(['normal', 1]);
+  await expect(page.locator('#speedBtn')).toHaveText('▶');
+  await expect(page.locator('#message')).toHaveText('Map speed: Normal, an hour a second.');
+  await press(page, '#settingsBtn');
+  await expect(page.locator('#setMapSpeed')).toHaveValue('normal');
+  await page.locator('#setMapSpeed').selectOption('fast');
+  await press(page, '#doneSettings');
+  await expect(page.locator('#speedBtn')).toHaveText('▶▶');
+  expect(await game(page, (CL) => CL.world.rate())).toBe(4);
+});
+
+test('the Wait screen: choose a day, the screen darkens, the day passes, it says so', async ({ page }) => {
   const day0 = await game(page, (CL) => CL.campaign.day);
   await press(page, '#waitBtn');
-  expect(await game(page, (CL) => CL.game.waiting)).toBe(true);
-  await page.waitForFunction((d) => window.Crownless.campaign.day > d + 0.05, day0);
+  await waitMode(page, 'wait');
+  await press(page, '#waitScreen [data-wait="24"]');
+  await expect(page.locator('#waitDays')).toHaveText('1');
+  await expect(page.locator('#waitHours')).toHaveText('0');
+  await press(page, '#waitHoursUp');
+  await expect(page.locator('#primaryBtn')).toHaveText('Wait 1 day and 1 hour');
+  await press(page, '#primaryBtn');
+  await waitMode(page, 'map');
+  await expect(page.locator('#fade')).toBeVisible();
+  await page.waitForFunction(() => !window.Crownless.game.waitPlan, null, { timeout: 15_000 });
+  await expect(page.locator('#fade')).toBeHidden();
+  expect(await game(page, (CL) => CL.campaign.day)).toBeCloseTo(day0 + 25 / 24, 6);
+  await expect(page.locator('#message')).toHaveText('1 day and 1 hour have passed.');
+  // Back leaves without waiting.
   await press(page, '#waitBtn');
-  expect(await game(page, (CL) => CL.game.waiting)).toBe(false);
+  await waitMode(page, 'wait');
+  await press(page, '#secondaryBtn');
+  await waitMode(page, 'map');
+  expect(await game(page, (CL) => CL.campaign.day)).toBeCloseTo(day0 + 25 / 24, 6);
+});
+
+test('a band that reaches you cuts the wait short and opens the encounter', async ({ page }) => {
+  // Setup: a band of Reavers camped just beside the company, which is alone.
+  await game(page, (CL) => {
+    const c = CL.campaign;
+    c.roster = [];
+    const p = CL.parties.spawn(c, Object.keys(CL.content.table('party_templates')).find((t) => CL.content.get('party_templates', t).kind === 'bandit'));
+    Object.assign(p, { x: c.world.x + 2, y: c.world.y, tx: null, ty: null });
+  });
+  await press(page, '#waitBtn');
+  await waitMode(page, 'wait');
+  await press(page, '#waitScreen [data-wait="72"]');
+  await press(page, '#primaryBtn');
+  await waitMode(page, 'encounter', 15_000);
+  await expect(page.locator('#overlayText')).toContainText('Your wait is cut short after');
+  await expect(page.locator('#fade')).toBeHidden();
 });
 
 test('Party and Journal open from the map and come back', async ({ page }) => {

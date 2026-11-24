@@ -1,5 +1,25 @@
 # Crownless — Release Notes
 
+## v4.1.0 — Map speed and the Wait screen (P10-01) · 2026-11-24
+
+### New
+- **Map speed.** The map now runs at Normal speed, an hour a second, so a new player can follow what happens. The ▶ button beside the map's zoom switches to Fast (▶▶), four hours a second, as before, and back. Settings has the same choice. It is kept on the device, not in the save.
+- **The Wait screen.** Wait (or Space) asks how long: days and hours, or a quick pick from 6 hours to 7 days, up to 30 days. The screen darkens, the world goes on as it would (parties, armies, sieges, markets, food, wages, wounds, news), and it lightens again: "3 days have passed."
+- **A wait cut short.** A band or lord that reaches you stops the wait there. The screen clears and the encounter opens, saying how long you had waited.
+- **A hint** about map speed after your first contract.
+
+### Changed
+- The Wait button no longer toggles open-ended waiting; it opens the Wait screen.
+
+### Known
+- The first-time map tip covers the ▶ button (and the − button) until it is closed.
+
+### Under the hood
+- `CL.settings.MAP_SPEEDS` and the `mapSpeed` setting; `CL.world.rate()` replaces `HOURS_PER_SECOND`; `CL.world.beginWait`, `waitNow`, `span` and `WAIT`; `CL.ui.openWait`, `setFade`, `toggleSpeed`.
+- The Node test loader (`loadGame({ mapSpeed })`) and the browser helper run the map Fast, so the bots and the fixed-step tests are unchanged.
+- No save schema step.
+- **Tests:** 920 fast tests (new `map-speed`, 7 cases); lint clean but the 2 old warnings; typecheck clean. Browser full suite: 239 passed, 9 skipped (new `world-map` cases for the speed button, a wait and a wait cut short). Slow: none run (nothing they exercise changed).
+
 ## v4.0.0 — Kingdoms and Houses: tuning and acceptance (P9-T) · 2026-11-24
 
 Phase 9 is complete in code. Its evidence, the tuning and the checks waiting on the phone are in `docs/PHASE-9-VALIDATION.md`.
