@@ -40,6 +40,8 @@ function oldMarch(content) {
     settlements[id] = t;
   }
   C.settlements = settlements;
+  // P10-03: only the walkable towns that lie in the March.
+  C.town_hubs = Object.fromEntries(Object.entries(C.town_hubs || {}).filter(([, h]) => settlements[h.settlement]));
   const [world] = Object.values(C.world_map);
   const sites = {};
   for (const [id, st] of Object.entries(world.sites)) if (inMarch(st.mapX, st.mapY)) sites[id] = { ...st, mapX: st.mapX - OFFSET, mapY: st.mapY - OFFSET };

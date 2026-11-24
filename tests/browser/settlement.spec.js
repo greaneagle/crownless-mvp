@@ -70,3 +70,42 @@ test('Town menu returns from the streets to the settlement menu', async ({ page 
   await press(page, '#townMenuBtn');
   await waitMode(page, 'settlement');
 });
+
+// P10-03: every capital and free city has streets of its own. Two of them, by real taps: arrive,
+// walk the streets, tap the innkeeper, talk, say goodbye, and leave by that town's own gate.
+for (const id of ['hrothgard', 'gullhaven']) {
+  test(`P10-03: walk ${id}'s streets, talk to the innkeeper, and leave by its gate`, async ({ page }) => {
+    await game(page, (CL, sid) => {
+      CL.campaign.world.location = sid;
+      CL.town.enterPlace();
+    }, id);
+    await waitMode(page, 'settlement');
+    await press(page, page.locator('#secondaryBtn', { hasText: 'Walk the streets' }));
+    await waitMode(page, 'town');
+    const inn = await game(page, (CL) => {
+      const n = CL.game.town.npcs.find((x) => x.role === 'innkeeper');
+      return { id: n.id, name: n.name, x: n.x, y: n.y - 16, hub: CL.game.town.hub.id };
+    });
+    expect(inn.hub).toBe(id);
+    const p = await canvasToPage(page, inn.x, inn.y);
+    await pressAt(page, p.x, p.y);
+    await waitMode(page, 'talk', 20_000);
+    expect(await game(page, (CL) => CL.game.talk.npc.id)).toBe(inn.id);
+    await expect(page.locator('#overlayTitle')).toHaveText(inn.name.toUpperCase());
+    await expect(page.locator('#talkOptions button', { hasText: 'Rest a day by the fire' })).toBeVisible();
+    await press(page, page.locator('#talkOptions button', { hasText: 'Goodbye' }));
+    await waitMode(page, 'town');
+    // Back to where you came in, then through the gate.
+    const way = await game(page, (CL) => {
+      const h = CL.game.town.hub;
+      return [h.spawn, { x: h.exitZone.x + h.exitZone.w / 2, y: h.exitZone.y + h.exitZone.h / 2 }];
+    });
+    for (const pt of way) {
+      const q = await canvasToPage(page, pt.x, pt.y);
+      await pressAt(page, q.x, q.y);
+      await page.waitForFunction(() => window.Crownless.game.mode !== 'town' || !window.Crownless.game.town.walkTo, null, { timeout: 20_000 });
+    }
+    await waitMode(page, 'map', 20_000);
+    expect(await game(page, (CL) => CL.campaign.world.location)).toBeNull();
+  });
+}

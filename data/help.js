@@ -75,7 +75,7 @@
       order: 4,
       title: 'Towns and villages',
       body: [
-        'Every place opens on its menu: hire, buy food, rest, trade, take contracts and talk to people. Stonebridge also has streets: Walk the streets to stroll around, tap a person to walk over and talk (or use the joystick and TALK), Town menu to get back, and the road on the left to leave.',
+        'Every place opens on its menu: hire, buy food, rest, trade, take contracts and talk to people. Every capital and free city also has streets of its own: Walk the streets to stroll around, tap a person to walk over and talk (or use the joystick and TALK), Town menu to get back, and walk to "To the road" to leave. In each you will find an innkeeper, a merchant, a recruiter and someone who speaks for the town.',
         'Every other place is a menu: hire soldiers, buy food, rest, trade, take contracts and talk to whoever is there. Forts show their garrison. A kingdom that is Hostile to you will not hire out soldiers, give you work, sell you a business, let you into its tournaments or world events, or take you in after a defeat; its markets and beds stay open. Whatever is refused is still shown, greyed out, with the reason on it and beneath.'
       ],
       controls: [
@@ -218,7 +218,7 @@
 
   C.tips = {
     map: { id: 'map', on: 'map', help: 'map', title: 'The map', text: 'Tap a place to travel there; time passes as you ride. Elder Maren in Stonebridge has work for a stranger.' },
-    town: { id: 'town', on: 'town', help: 'towns', title: 'Stonebridge', textTouch: 'Tap a person to walk over and talk. Town menu has hiring, food, the market and contracts. The road on the left leads out.', textKeys: 'Click a person to walk over and talk, or walk with WASD and press Space. Town menu has hiring, food, the market and contracts.' },
+    town: { id: 'town', on: 'town', help: 'towns', title: 'In the streets', textTouch: 'Tap a person to walk over and talk. Town menu has hiring, food, the market and contracts. Walk to "To the road" to leave.', textKeys: 'Click a person to walk over and talk, or walk with WASD and press Space. Town menu has hiring, food, the market and contracts.' },
     settlement: { id: 'settlement', on: 'settlement', help: 'party', title: 'In a settlement', text: 'Hire soldiers, buy food, rest or trade. Everyone you hire eats and draws a weekly wage, so keep a few days’ food.' },
     encounter: { id: 'encounter', on: 'encounter', help: 'battle', title: 'An encounter', text: 'Attack to fight it yourself, or Auto-resolve to roll it from your strength. You can also pay, threaten or try to slip away — each button shows the odds.' },
     prepare: { id: 'prepare', on: 'prepare', help: 'battle', title: 'Prepare for battle', text: 'Balanced suits most fights: just press Fight. Simulate settles it from your strength and shows why. Defensive and Aggressive set different starts, and Custom lets you drag each group’s flag inside the green zone.' },

@@ -16,7 +16,7 @@ const walk = (CL, keys, seconds) => {
   CL.game.hold = {};
 };
 
-test('Stonebridge is a walkable town that opens on its menu (F-3); other settlements are menus only', () => {
+test('Stonebridge is a walkable town that opens on its menu (F-3); villages are menus only', () => {
   const { CL, uiCalls } = loadGame();
   CL.world.leaveSettlement();
   CL.world.travelTo({ type: 'settlement', id: 'stonebridge', x: 100, y: 105 });
@@ -26,10 +26,10 @@ test('Stonebridge is a walkable town that opens on its menu (F-3); other settlem
   assert.equal(CL.game.mode, 'town');
   assert.equal(CL.game.placeMode, 'town');
   CL.world.leaveSettlement();
-  CL.world.travelTo({ type: 'settlement', id: 'eastwatch', x: 112, y: 90 });
+  CL.world.travelTo({ type: 'settlement', id: 'oakford', x: 85, y: 112 });
   for (let i = 0; i < 400 && CL.game.travel; i++) CL.world.update(0.05);
   assert.equal(CL.game.mode, 'settlement');
-  assert.equal(CL.town.hubFor('eastwatch'), null);
+  assert.equal(CL.town.hubFor('oakford'), null);
   assert.ok(uiCalls.some((x) => x[0] === 'changeMode' && x[1] === 'town'));
 });
 
@@ -151,7 +151,7 @@ test('F-3: the menu reaches the people in the streets; a place can still choose 
   const people = CL.town.streetPeople('stonebridge').map((p) => p.id);
   for (const id of ['stonebridge_elder', 'valedorn_agent', 'sergeant_brun']) assert.ok(people.includes(id), id);
   assert.equal(people.includes('mara'), false, 'Mara only once the story brings her');
-  assert.deepEqual(Array.from(CL.town.streetPeople('eastwatch')), [], 'no streets, no street people');
+  assert.deepEqual(Array.from(CL.town.streetPeople('oakford')), [], 'no streets, no street people');
   // Talking from the menu returns to the menu.
   CL.campaign.world.location = 'stonebridge';
   CL.town.enterPlace();

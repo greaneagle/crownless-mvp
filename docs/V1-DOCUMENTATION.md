@@ -407,7 +407,7 @@ Everything that is content lives in data files and is checked by `CL.content` at
 | `character.js` | Skills, backgrounds, the starting kit |
 | `world_parties.js` | Party templates: bandits, patrols and caravans of the kingdoms (from 2.7.0, all five powers and every region). From 2.9.0 (W-07) the world simulation (`js/parties.js`, `js/spatial.js`) looks only at nearby parties, acts far-off ones once an hour, sweeps contacts, and caps regular parties per region (`simulation.partiesPerRegion` in `world_map.js`); kingdoms' relations (`relations` in `world_map.js`, `c.relations` in the save) decide whose patrols fight |
 | `contracts.js` | The three contract templates and their reward formulas |
-| `town_hubs.js` | The Stonebridge street layout and townsfolk |
+| `town_hubs.js` | The street layouts and townsfolk of every capital and free city (Stonebridge alone until 4.3.0) |
 | `companions.js` | Mara |
 | `help.js` | How to Play topics and first-time tips. From 2.8.0 also The lands, and the Beyond the March tip (`when: 'awayFromHome'`: the party is in a region the world doesn't mark `home`) |
 | `news.js` | News line templates |

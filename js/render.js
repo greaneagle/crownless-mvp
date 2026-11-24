@@ -118,7 +118,7 @@
     }
     for (const r of gr.roads || []) {
       // Packed-earth streets.
-      ctx.fillStyle = '#a58c62';
+      ctx.fillStyle = gr.road || '#a58c62';
       ctx.fillRect(r.x, r.y, r.w, r.h);
       ctx.fillStyle = '#00000014';
       for (let i = 0; i < (r.w * r.h) / 900; i++) ctx.fillRect(r.x + ((i * 53) % r.w), r.y + ((i * 31) % r.h), 5, 3);
@@ -126,7 +126,7 @@
     if (gr.plaza) {
       // Cobbled market square.
       const p = gr.plaza;
-      ctx.fillStyle = '#9c9583';
+      ctx.fillStyle = p.color || '#9c9583';
       ctx.beginPath();
       ctx.ellipse(p.x, p.y, p.rx, p.ry, 0, 0, Math.PI * 2);
       ctx.fill();
@@ -172,7 +172,7 @@
   /** Where an obstacle sits in the depth order: its base line. */
   const obstacleBase = (o) => (o.shape === 'circle' ? o.y + o.r * 0.5 : o.y + o.h);
 
-  /** Town buildings: walls, a pitched roof, a door, and an optional sign. */
+  /** Town buildings: walls, a pitched roof, a door, and an optional sign. A town may colour its own (P10-03). */
   const BUILDING = {
     tavern: { wall: '#c9b48a', roof: '#7a3b2a', door: '#4a2e1c' },
     barracks: { wall: '#9a937f', roof: '#3b5a7a', door: '#2e2a22' },
@@ -180,7 +180,7 @@
   };
 
   function drawBuilding(o) {
-    const s = BUILDING[o.look];
+    const s = o.colors ? { ...BUILDING[o.look], ...o.colors } : BUILDING[o.look];
     const roofH = Math.min(46, o.h * 0.5);
     const wallTop = o.y + roofH - 6;
     ctx.fillStyle = '#00000033';
@@ -488,7 +488,7 @@
     if ($('#zoomBtn').textContent !== z) $('#zoomBtn').textContent = z;
   }
 
-  // ---- Walkable town (Stonebridge) ----
+  // ---- Walkable towns (P10-03: every capital and free city) ----
 
   const TALK_VERB = { trade: 'Trade', recruit: 'Hire troops', tavern: 'Inn', talk: 'Talk', leave: 'Leave town' };
 
@@ -530,8 +530,17 @@
         label(text, x, n.y - 52 - 6 * ts(), '#ffe7a8');
       }
     }
+    // "To the road" by the exit, pointing out of the town on whichever side the gate is.
     const z = t.hub.exitZone;
-    label('◀ To the road', z.x + 44, z.y + z.h + 16, '#ffe7a8');
+    const [cx, cy] = [z.x + z.w / 2, z.y + z.h / 2];
+    const side = Math.min(cx, W - cx) < Math.min(cy, H - cy) ? (cx < W / 2 ? 'left' : 'right') : cy < H / 2 ? 'up' : 'down';
+    const [text, lx, ly] = {
+      left: ['◀ To the road', z.x + 44, z.y + z.h + 16],
+      right: ['To the road ▶', z.x - 30, z.y + z.h + 16],
+      up: ['▲ To the road', cx, z.y + z.h + 18],
+      down: ['▼ To the road', cx, z.y - 8],
+    }[side];
+    label(text, Math.max(70, Math.min(W - 70, lx)), ly, '#ffe7a8');
     updateMapHud();
   }
 

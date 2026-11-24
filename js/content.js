@@ -316,6 +316,14 @@
         if (!n.dialogue && !n.lines?.length) err(`town_hub ${h.id}: ${n.id} has nothing to say`);
         if (n.dialogue && n.action === 'leave') err(`town_hub ${h.id}: ${n.id} leaves, so cannot hold a conversation`);
       }
+      // P10-03: every town has the people the story casts by role (CL.town.cast).
+      const roles = new Set((h.npcs || []).map((n) => n.role));
+      for (const n of h.npcs || []) if (n.role != null && !['innkeeper', 'merchant', 'recruiter', 'elder', 'official', 'guard'].includes(n.role)) err(`town_hub ${h.id}: ${n.id} has unknown role ${n.role}`);
+      for (const r of ['innkeeper', 'merchant', 'recruiter']) if (!roles.has(r)) err(`town_hub ${h.id}: needs a ${r}`);
+      if (!roles.has('elder') && !roles.has('official')) err(`town_hub ${h.id}: needs an elder or an official`);
+      const ACT = { innkeeper: 'tavern', merchant: 'trade', recruiter: 'recruit', guard: 'leave' };
+      for (const n of h.npcs || []) if (ACT[n.role] && n.action !== ACT[n.role]) err(`town_hub ${h.id}: the ${n.role} ${n.id} should ${ACT[n.role]}`);
+      for (const r of h.obstacles || []) if (r.colors && !['tavern', 'barracks', 'house'].includes(r.look)) err(`town_hub ${h.id}: only buildings take colours`);
     }
     for (const k of Object.values(C.contracts || {})) {
       if (!['hunt', 'escort', 'delivery'].includes(k.kind)) err(`contract ${k.id}: unknown kind ${k.kind}`);

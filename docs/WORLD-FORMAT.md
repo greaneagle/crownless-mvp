@@ -59,7 +59,7 @@ The official world has these (`js/content.js` `TABLES`, plus `forge` and `realm_
 | `skills`, `backgrounds` | The hero's skills; the backgrounds a new hero chooses from (`attribute`, `skill`, `kit`) |
 | `party_templates` | Map parties: `kind` (bandit, patrol, caravan, detachment, lord), `faction`, `count`, `speed`, `troops { troop: [min, max] }`, and by kind `lairs`, `home`, `route`, `goods`, `frontier`, `toll`, `reward`, `lootBySize` |
 | `contracts` | `kind` (hunt, escort, delivery), its band, troop pool, limits, distance, time limit and reward |
-| `town_hubs` | A walkable town: `settlement`, `spawn`, `exitZone`, `npcs` (each with an action, frames and words or a dialogue) |
+| `town_hubs` | A walkable town: `settlement` (an `explorable` one), `ground`, `obstacles`, `spawn`, `exitZone`, `npcs` (each with an action, frames and words or a dialogue, and a `role`: innkeeper, merchant, recruiter, elder, official or guard). Every hub needs an innkeeper, a merchant, a recruiter and an elder or official (P10-03) |
 | `companions` | Mara and the retinue: `frames`, `hp`, `weaponFactor`, `skills`, `gearSlots`, `startGear`, wages and loyalty |
 | `news` | News kinds: `priority`, `lines` (and by ending) |
 | `world_events` | Happenings in places: where, how often, choices and outcomes |

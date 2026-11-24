@@ -1,4 +1,4 @@
-/* Crownless walkable town hub (GDD §8: Stonebridge). Walk the hero around with the battle controls
+/* Crownless walkable towns (GDD §8; P10-03: every capital and free city, data/town_hubs.js). Walk the hero around with the battle controls
  * (or tap a spot / a person to walk there); talk to people to open their menus; leave by the gate.
  * Time does not pass in town. Buildings are battle-map obstacles, so collision is shared with battle.
  * State: CL.game.town (transient; you always re-enter at the gate). */
@@ -13,6 +13,8 @@
   const ARRIVE = 6;
 
   const g = () => CL.game;
+  // Who a town's people are (data/town_hubs.js `role`); each hub has the first three and an elder or official.
+  const ROLES = ['innkeeper', 'merchant', 'recruiter', 'elder', 'official', 'guard'];
   const hubFor = (sid) => (sid ? Object.values(CL.content.table('town_hubs')).find((h) => h.settlement === sid) || null : null);
 
   /** Enter a settlement's town scene (if it has one). Returns false for menu-only settlements. */
@@ -46,6 +48,17 @@
     if (hubFor(sid)?.entry === 'streets' && enter(sid)) return;
     g().placeMode = 'settlement';
     CL.ui.changeMode('settlement');
+  }
+
+  /**
+   * A town's person by role, for the story to cast (P10-04): the innkeeper, merchant, recruiter,
+   * elder or official, or guard of settlement sid. 'elder' falls back to the official and back.
+   * Returns the hub's NPC data, or null for a menu-only place.
+   */
+  function cast(sid, role) {
+    const people = hubFor(sid)?.npcs.filter((n) => !n.visible) || [];
+    const pick = (r) => people.find((n) => n.role === r);
+    return pick(role) || (role === 'elder' ? pick('official') : role === 'official' ? pick('elder') : null) || null;
   }
 
   /** People in a walkable place's streets who have a conversation, for its menu ("Talk to …"). */
@@ -178,5 +191,5 @@
     else CL.ui.changeMode('settlement');
   }
 
-  CL.town = { TALK_RANGE, hubFor, enter, enterPlace, streetPeople, tap, npcAt, update, interact, open, leave, backToPlace };
+  CL.town = { TALK_RANGE, ROLES, hubFor, cast, enter, enterPlace, streetPeople, tap, npcAt, update, interact, open, leave, backToPlace };
 })(typeof window !== 'undefined' ? window : globalThis);

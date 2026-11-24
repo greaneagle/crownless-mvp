@@ -3319,7 +3319,7 @@ Moved here from P9-T (owner, 2026-11-24). It runs when the owner asks for the ni
 - **Open, for P10-T:** `landed` fails on a new count: on seed 1 an AI lord founds a realm with one riding lord (the test wants three a realm). The Phase 9 exit fails (passes at 4.1.0): the bigger world's history has the rising's two lords beaten on its first day, so Westholt never falls. No code fault found; scenario drift, like the Phase 8 exit and Prototypes D and F.
 - **Played** at 812×375: a new game asks no world; zoomed out, the whole realm with the coast; a tap on Harrowgate sets off ("held by King Hakon Vargr for Ostrand", about a day and a half). Not run: `gate-d-campaigns` (about 27 minutes; the March itself is unchanged).
 
-### P10-03 · Walkable towns: every capital and free city (L)
+### P10-03 · Walkable towns: every capital and free city (L) — ✅ Done in 4.3.0
 
 **Problem.** Only Stonebridge can be walked. P10-04's story starts in every realm's start town, and the owner wants every major town walkable.
 
@@ -3335,6 +3335,15 @@ Moved here from P9-T (owner, 2026-11-24). It runs when the owner asks for the ni
 **Play.** Walk three of the new towns at 812×375.
 
 **Version.** 4.3.0.
+
+**Done (4.3.0).**
+- **Seven new towns with streets,** each its own: Eastwatch a walled white forum round a fountain (gate south); Hrothgard a snowy hill climbing to the jarl's hall (west); Vessara a harbour with a quay and jetties (east road); Merrow on both banks of a river, joined by a bridge (west); Gullhaven's road to the sea, the portwarden on the jetty (west); Harrowgate walled on a sea cliff (gate south); Calder one long street of salt stalls by the pans (east). Villages and forts stay menus.
+- **People by role:** an innkeeper, merchant, recruiter and an elder or official in every town, named from its culture, none a lord's name. `role` on each, `CL.town.cast(settlement, role)` for P10-04; the content checks demand the four.
+- **Small graphic adaptations** (owner): buildings in each town's colours (`colors`), street and square colours, unseen walls for the sea and river, plank tiles for Merrow's bridge, the cliff's ledge tiles; "To the road" points out on any side. Today's tiles only; no new sprites.
+- **Found while playing:** the joystick, TALK and the top bar cover the screen's bottom corners and top edge, so a gate or person there cannot be tapped. Hrothgard's and Harrowgate's gates, Vessara's land gate and a few people moved; a test keeps them clear. The streets tip and help no longer say "Stonebridge".
+- **Tests:** `tests/town-hubs.test.js`: every town reachable from the gate to every person and out again (a walk over the same collision), nobody under the controls, no scenery inside other scenery, buildings not in the same places as another town's, every town walked by tapping. Browser: Hrothgard and Gullhaven walked, talked and left by real taps.
+- **Checks:** 883 fast pass; lint clean but the 2 old warnings; typecheck clean. Browser full suite 244 passed, 9 skipped, 1 failed: `lords` Hold (phone), which fails about 1 run in 8 on 4.2.0 as well.
+- **Played** at 812×375: Hrothgard (tapped the alewife, her inn menu), Harrowgate (tapped the steward, talked, left through the wall's gate), Vessara; looked over Eastwatch, Merrow, Gullhaven and Calder. The preview's storage backed up and restored.
 
 ### P10-04 · Choose your kingdom, and the main story from anywhere (L)
 

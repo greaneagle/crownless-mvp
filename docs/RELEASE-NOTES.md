@@ -1,5 +1,23 @@
 # Crownless — Release Notes
 
+## v4.3.0 — Walkable towns: every capital and free city (P10-03) · 2026-11-25
+
+### New
+- **Every capital and free city has streets.** Walk the streets from the town menu in Eastwatch, Hrothgard, Vessara, Merrow, Gullhaven, Harrowgate and Calder, as in Stonebridge. Villages and forts keep their menu.
+- **No two are alike.** Eastwatch is a walled forum of white stone round a fountain. Hrothgard climbs a snowy hill to the jarl's hall. Vessara is a harbour with a quay and jetties. Merrow sits on both banks of a river, joined by a bridge. Gullhaven's road runs down to the sea, and its portwarden works on the jetty. Harrowgate stands walled on a sea cliff. Calder is one long street of salt stalls beside the pans.
+- **Each town's own people:** an innkeeper, a merchant, a recruiter and an elder or official, named in the town's own tongue, with their own words about the place.
+- Each town builds in its own colours: red tiles in the empire, turf roofs in the north, slate on the cliffs, pale salt walls on the flats.
+
+### Changed
+- The streets tip and the help speak of every town, not only Stonebridge.
+- The gate out of town can be on any side, and "To the road" points the way.
+
+### Under the hood
+- `data/town_hubs.js`: each townsperson has a `role`, and `CL.town.cast(settlement, role)` finds them, for the story to cast (P10-04). Content checks: every hub has an innkeeper, a merchant, a recruiter and an elder or official.
+- Scenes may colour their buildings (`colors`), streets (`ground.road`) and square (`plaza.color`). An obstacle with no look is an unseen wall, for the sea and the river.
+- `tests/town-hubs.test.js`: every town reachable from its gate to every person and back out, nobody under the joystick, TALK or the top bar, no scenery inside other scenery, the layouts different from each other, and every town walked by tapping.
+- No schema step.
+
 ## v4.2.0 — One world: the coast joins the realm (P10-02) · 2026-11-24
 
 ### New
