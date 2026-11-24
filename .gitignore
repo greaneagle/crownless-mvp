@@ -3,3 +3,21 @@ node_modules/
 playwright-report/
 test-results/
 blob-report/
+
+# Local AI art workflow (.claude/skills/crownless-art): draft recipes, contact sheets, generation
+# logs, approved-asset ZIPs and candidate batches stay on this machine. Approved sprites committed
+# to assets/ are never ignored (see the last rule).
+art-work/
+# The owner's art-direction reference images (local only, never committed or published with the site)
+art-reference/
+candidates/
+contact-sheets/
+comparison*.png
+contact-sheet*.png
+*-raw.png
+*.safetensors
+*.ckpt
+*.gguf
+ComfyUI/
+ComfyUI_windows_portable/
+!assets/**
