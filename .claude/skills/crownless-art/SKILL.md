@@ -1,315 +1,420 @@
 ---
 name: crownless-art
-description: Generate, inspect, validate and prepare Crownless pixel-art sprite candidates with the local Crownless Sprite Studio CLI (ComfyUI + LiliPixel V1). Approved toolchain for small native 16×16 / 32×32 sprites (props, wells, barrels, crates, sacks, signs, market and camp props, small ruins, shrubs, saplings, simple trees, terrain details, icons and markers). Use it, without asking first, whenever such sprites are needed for prototypes, updates or asset exploration, and whenever the user asks for new game art, sprite candidates or a contact sheet. 64×64 is experimental. Not for hero, cavalry or final character integration. Never approves, overwrites or integrates art without the user's explicit approval of specific candidates.
+description: Make Crownless sprites with the local Crownless Sprite Studio v0.7.2 CLI, through ComfyUI, using two backends. LiliPixel V1 makes native 16×16 / 32×32 sprites (small props, icons, terrain details, markers). The two-step FLUX.2 Klein pipeline (Stage 1 draws the subject, Stage 2 restyles it with a Crownless reference board) handles larger, complex or non-square sprites (about 48 px and up, buildings, fortifications, trees, characters, equipment) and is the fallback when LiliPixel can't make a small sprite readable. Every candidate gets a fixed camera prompt and a mandatory style-fit check against the owner's reference images. If both generation attempts fail, Claude hand-draws the sprite as pixel art (pixel_draw.py). Use it without asking whenever an active development task needs sprites, and whenever the user asks for game art, sprite candidates, export sizes or a contact sheet. The owner gave standing authority to approve, integrate and overwrite sprites, provided the repo is committed first so changes can be reverted.
 ---
 
-# Crownless art: operating Sprite Studio
+# Crownless art: operating Sprite Studio (LiliPixel + FLUX)
 
-Sprite Studio is a separate local tool. Call its CLI through the shell. Do not copy its code into this repo, wrap it in an MCP server, or install anything for it.
+Sprite Studio is a separate local tool. Call its CLI through the shell. Never copy its code into this repo, wrap it in an MCP server, install anything for it, or edit its files without the owner's permission. The Studio folder isn't a git repo, and its only backups are the ZIPs in `D:\Crownless Sprite generator\`.
 
 | What | Where |
 |---|---|
-| Sprite Studio (v0.5.3: palette REVIEW status) | `D:\Crownless Sprite generator\crownless-sprite-studio` |
-| CLI | `py "D:\Crownless Sprite generator\crownless-sprite-studio\cli.py" <command>` (Windows Python 3.10+, **not** ComfyUI's embedded Python) |
-| Its own guide | `D:\Crownless Sprite generator\crownless-sprite-studio\AGENT-CLI.md`. Re-read it if the version changes |
-| Validator rules | `D:\Crownless Sprite generator\crownless-sprite-studio\sprite-rules.json` |
-| Example recipe | `D:\Crownless Sprite generator\crownless-sprite-studio\recipes\stone-well.json` |
-| Candidate library (raw PNG + JSON per candidate) | `D:\Crownless Sprite generator\crownless-sprite-studio\library\` |
-| ComfyUI | `http://127.0.0.1:8188`, started by the user with `run_nvidia_gpu.bat`. Keep it on localhost |
-| Local workspace in this repo (git-ignored) | `art-work\` with `recipes\`, `sheets\`, `log\`, `exports\` |
+| Sprite Studio **v0.7.2** | `D:\Crownless Sprite generator\crownless-sprite-studio` |
+| CLI (`$CLI` below) | `py "D:\Crownless Sprite generator\crownless-sprite-studio\cli.py" <command>`, using Windows Python 3.11, **not** ComfyUI's embedded Python. Set `PYTHONIOENCODING=utf-8` |
+| Studio's own docs | `AGENT-CLI.md`, `FLUX-SETUP.md`, `README.md`, `REFERENCE-QUALITY.md` in the Studio folder. **Re-read them, and `cli.py`, whenever the version changes.** Never assume older commands still work |
+| FLUX graph (fixed, 36 nodes) | `workflows\crownless-flux-two-step-api.json`. Stage 1 text node `204` → subject save `213`; Stage 2 text node `409`, subject in via `411`, board via `LoadImage 398`/`385`, refined save `399` |
+| Style boards | `refs\boards\crownless-{props,buildings,characters,vegetation,fortifications,ui}-style-board.png`, built only from the owner's six images. Their crops are in `refs\crownless-v2\manifest.json` (74 crops) |
+| Candidate library | `library\`: `<ID>-raw.png` (LiliPixel output or FLUX Stage 2), `<ID>-stage1.png` (FLUX only), `<ID>.json`, and `prepare-flux` derivatives `<ID>-processed-WxH.png(.json)` |
+| Preview helper (this skill) | `.claude\skills\crownless-art\preview.py`: export-size previews, reference crops beside the candidate (`--ref`), and the game-scale sheet (see *Export sizes*). Takes `--id` (Studio candidate) or `--png` (any file) |
+| Hand-drawn fallback (this skill) | `.claude\skills\crownless-art\pixel_draw.py`: renders a pixel grid I write into a PNG (see *Escalation and the hand-drawn fallback*) |
+| ComfyUI | `http://127.0.0.1:8188`, started by the owner with `run_nvidia_gpu.bat`. Never start, restart or reconfigure it, and never download models |
+| Owner's target look | `art-reference\` (six images plus `README.md`). Git-ignored, local only |
+| Workspace (git-ignored) | `art-work\` with `recipes\`, `sheets\`, `log\`, `exports\` |
 
-Below, `$CLI` means `py "D:\Crownless Sprite generator\crownless-sprite-studio\cli.py"`. The CLI works from any folder because it resolves its library from its own location. Every command prints `{"ok": true, "data": ...}`, or `{"ok": false, "error": ...}` with exit code 1. Parse the JSON; don't guess.
+Every command prints `{"ok": true, "data": ...}`, or `{"ok": false, "error": ...}` with exit code 1. Parse the JSON; don't guess.
+
+## Authority (owner's standing grant, 2026-11-24)
+
+The owner said: *"you have free reign to overwrite and use whatever, just need to commit so i can revert if needed."*
+
+- **I may start generation myself** whenever an active development task needs sprites, provided ComfyUI is already running. I say in my message which asset, which backend and why.
+- **I may choose, integrate and overwrite sprites in `assets\`** and wire them into the game data (`js/assets.js`, `data/`), without asking first.
+- **Before any overwrite or integration:** the working tree must be committed. I commit the current state first and push it to GitHub, since the owner said "commit to github". The art change then goes in **its own commit**. Its message names the old and new file, the candidate ID, the backend and the export method, so a single `git revert` undoes it.
+- **Limits that stay in place:**
+  - `assets/w0200.png` stays untouched (the owner's approved crate).
+  - **No renderer change** (`js/render.js`, `js/ui.js` draw code) just to make a generated image fit, without the owner's permission. Pick an export size that works with the current draw boxes instead.
+  - **Never commit experimental outputs.** Candidates, previews, logs and sheets stay in `library\` or `art-work\`. Only the chosen final PNGs go into `assets\`.
+  - **The generation budget** below.
+- **The Studio's `approve --human-reviewed` flag asserts that a human reviewed the image.** I don't set it, because that would put a false statement in the record. Integration doesn't need it. My choice is recorded in the log, the commit and `assets/manifest.json` instead.
+- **Every batch is still reported to the owner** (*Presenting a batch*), with Stage 1, Stage 2 and the game-scale preview, even when I've already integrated it. The owner can revert.
 
 ## Hard rules
 
-1. **Generate only with LiliPixel through this CLI** (`generate --spec`). Don't call ComfyUI directly, and don't use the Studio's SDXL path.
-2. **Text only.** LiliPixel V1 generates from text. No reference image conditions it. `status` reports `adapter.ready: true`, but that is the SDXL IP-Adapter path, which LiliPixel doesn't use. Every candidate's metadata records `reference.used: false`. Never say a reference image shaped a result.
-3. **Prompts are short, editable free text**, written for the asset at hand. Don't make reusable per-object prompt templates, and don't add long art-bible text. The node allows about 96 tokens, and the CLI rejects more than 1000 characters.
-4. **Budget: at most 4 candidates per attempt (`batch_size` ≤ 4), and at most 2 attempts per asset.** Going over needs the user's explicit authorisation for that asset. Run one generation at a time.
-5. **Record everything** in `art-work\log\<asset-slug>.md` (see the log format below).
-6. **Look at the actual PNGs**, at native size and enlarged with nearest-neighbour. If you can't see an image, say so. Don't invent an assessment.
-7. **Technical validation is not artistic approval.** PASS means only that no deterministic check failed. It says nothing about style, camera angle, readability or fit with Crownless. **REVIEW is not PASS**: it is a technical exception the user must see and confirm. Always report it as REVIEW, never round it up to PASS. See *Validation statuses*.
-8. **No approval, overwrite or integration without the user's explicit approval of the specific candidate IDs.** Never run `approve --human-reviewed` on your own. Run it only after the user names the exact candidates in chat, and the browser Studio's approve button is preferred. Never write to `assets\`, `assets\manifest.json`, `js\assets.js`, `data\` or the renderer unless the user asks for integration. **Every batch is presented to the user for review** before anything else happens to it.
-9. **Leave existing game art and logic alone** until the user asks for integration. No `--dry-run` "quality tests": a dry run only checks the recipe format.
-10. **Never distort proportions.** Never stretch a square native image into a rectangular display box. Keep the aspect ratio and the pixel grid, scale uniformly (integer where possible), pad with transparency, and keep foot anchors consistent. See *Proportions and display boxes*.
-11. **32×32 is the default for first candidates. 64×64 is experimental.** In our tests, 32 px results were recognisable, while 64 px results came out blurry, opaque and poorly composed. A higher native resolution doesn't mean a better sprite. Use 64 only when an asset-specific test justifies it. See *64×64 is experimental*.
-12. **File safety.** Candidates, prepared exports, logs, contact sheets, previews, draft recipes and ZIPs stay in the Studio's `library\` or in this repo's git-ignored `art-work\`. **Never overwrite an existing file in `assets\`** (`u####.png`, `w####.png`, `manifest.json`), even with approval. Approved files go in under a new, unused name, and only when the user explicitly tells me to copy those specific files. Keep the `.gitignore` rules for `art-work/` and generated material in place, and check `git status` after a batch to confirm nothing generated shows up as untracked.
+1. **Two generation backends only, both through this CLI:** LiliPixel (`generate`) and FLUX (`flux-pipeline`). The only other source is my own hand-drawn pixel art, used as the fallback after attempt 2 (*Escalation*). Never call ComfyUI directly. Never use the SDXL/IP-Adapter path or the legacy `flux-generate` / `flux-generate-two-step` commands. Their recipes point at missing workflow files and excluded `crownless-v1` crops.
+2. **Be honest about conditioning.** LiliPixel is text only (`reference.used: false`). FLUX Stage 2 *is* conditioned on a style board (`reference.used: true`), but that doesn't guarantee pure style transfer. Check every Stage 2 result for objects copied from the board and for a changed silhouette, and report what I see.
+3. **References:** only the owner's six images, the bundled boards built from them, or single curated crops (`ref:<id>` from the manifest). Never use generated images or web images as references.
+4. **Budget:**
+   - At most **4 candidates per attempt** and **2 generation attempts per asset**, unless the owner authorises more for that asset.
+   - `flux-pipeline` makes **one candidate per call**, so an attempt is up to 4 calls with different seeds.
+   - **Re-exporting the same image at another size, crop, palette or background tolerance is not a new attempt.**
+   - One generation at a time.
+5. **Record everything** in `art-work\log\<slug>.md` (*Log format*).
+6. **Look at the actual PNGs**: Stage 1, Stage 2 and every export, at native size and enlarged with nearest-neighbour, plus the game-scale sheet. If I can't see an image, I say so.
+7. **Validation is technical only.** PASS/WARN/FAIL say nothing about style, camera or readability.
+8. **Never distort proportions.** Scale uniformly, never stretch. Pad with transparency, anchor at bottom centre, and keep the aspect ratio. See *Export sizes*.
+9. **Keep the originals.** Never edit or delete `-raw.png`, `-stage1.png` or the record JSON. All processing writes new files.
 
-## Approved toolchain and scope
+## Choosing the backend
 
-The user approved this pipeline (Sprite Studio CLI → ComfyUI → LiliPixel V1, at native 16×16 and 32×32) as a toolchain for Crownless development on 2026-11-24. **Within the scope below, I may generate candidate batches on my own initiative**, without asking first, whenever small native sprites would help a prototype, an update or asset exploration. The budget (rule 4) and every review and approval rule still apply. Generating is allowed; approving, copying or integrating is not.
+First work out the sprite's **on-screen size** from the code (the table below), then decide:
 
-Before using it on my own initiative:
-- ComfyUI must already be running (`status` → `connected` and `lilipixel.ready`). I never start, restart or reconfigure ComfyUI, and I never download models.
-- In my message, say that I'm starting a batch, for which asset, and at what resolution.
-- Every batch ends with a review that I present to the user (*Presenting a batch*). Batches are never left unreported.
-
-### In scope (16×16 / 32×32)
-
-| Allowed asset types | Category | Default size |
-|---|---|---|
-| Wells, barrels, crates, sacks, signs, small market props, camp props (tents' small gear, fire pits, bedrolls, racks) | `prop` | 32 |
-| Small stone ruins, standing stones, low walls in pieces | `prop` or `fortification` | 32 |
-| Shrubs, saplings, simple trees that read clearly at 32 px | `vegetation` | 32 (16 for tufts and flowers) |
-| Simple terrain details: pebbles, puddles, grass tufts, path stones, simple tiles | `terrain` (full tile) or `prop` (a detail with transparency) | 16 or 32 |
-| Icons, markers, simple UI-adjacent world symbols: map pins, quest marks, trade-good icons, small banners and emblems | `banner` or `prop` | 16 or 32 |
-| Other small square subjects that fit naturally into 16×16 or 32×32 | closest category | 32 |
-
-### Out of scope (don't use this workflow, or ask first)
-
-- **Hero sprites and cavalry**: not at all, at any size.
-- **Final character integration** (troops, NPCs, companions, walk cycles): not yet. These depend on non-square export handling and frame sets that Sprite Studio v0.5.2 lacks (see *Proportions and display boxes*). Character candidates only when the user explicitly asks for exploration, and labelled as such.
-- **Anything that needs non-square production or export handling**: tall trees or towers drawn into a portrait box, multi-tile buildings, wide or tall decor.
-- **Anything that clearly fails at 16 or 32 px**: if attempt 1 shows the subject can't read at 32 px, stop and report. Don't escalate to 64 on my own.
-- **64×64**: experimental only, never a default. Only on an asset-specific test the user agreed to (*64×64 is experimental*).
-
-### 16×16 or 32×32: decision logic
-
-1. **Out of scope?** (Hero, cavalry, final character art, non-square, or the subject clearly needs more than 32 px to read.) → Don't generate. Say why.
-2. **Is it tiny in the game?** Its display footprint is about 20 px or less on its longest side (a pebble, flower, coin, tuft, map pin or small marker), **and** its identity is one simple shape with 1–3 colour masses. → **16**.
-3. **Otherwise** (wells, barrels, crates, sacks, signs, market and camp props, ruins, shrubs, saplings, simple trees, emblems with a symbol, any icon that needs an inner detail to read) → **32**.
-4. **When unsure, pick 32.** Drop to 16 only for a subject that reads as a single blob at 32 or would be shown at 20 px or less anyway.
-5. **Never 64 by default.** If 32 fails because of size, report it. 64 is a separate, experimental test.
-6. **Keep the size from attempt 1 to attempt 2** unless the size itself was the reason attempt 1 failed (a tiny subject drawn with too much detail → try 16). That counts as attempt 2's one changed factor.
-
-## Commands
-
-| Command | Purpose |
+| Situation | Backend |
 |---|---|
-| `$CLI status` | Is ComfyUI up and LiliPixel ready? Check for `data.connected` and `data.lilipixel.ready` |
-| `$CLI generate --dry-run --spec <recipe.json>` | Check the recipe's format only. No GPU |
-| `$CLI generate --spec <recipe.json>` | **Blocking.** Generates `batch_size` unapproved candidates. Returns `ids`, plus each candidate's `source_png`, `metadata_json` and `sha256`. Can take minutes; use a long timeout (10 minutes) |
-| `$CLI list --limit N` | Newest candidates first |
-| `$CLI inspect --id <ID>` | Full record and `generation` provenance, `raw_png` and `export_png` paths |
-| `$CLI prepare-native --id <ID>` | Native-size RGBA export: no resizing, trimming, palette change or background removal. Validates it |
-| `$CLI validate --id <ID>` | Re-runs the validator on the prepared export (run `prepare-native` first). Read-only: it doesn't update the stored record |
-| `$CLI palette-preview --id <ID> --output <png> [--tolerance N] [--replace]` | Optional. Writes a **separate** PNG with near-duplicate colours merged into their representatives. Refuses paths inside `library\` and existing files unless `--replace`. Never touches the raw PNG, export, record or approval. Write it to `art-work\sheets\`. **Never an export or an approval candidate** |
-| `$CLI contact-sheet --ids <ID...> --output <png> [--tile 64..512]` | Nearest-neighbour comparison sheet: up to 4 per row, integer scale, checkerboard behind. Write it to `art-work\sheets\` |
-| `$CLI audit` | Checks every prepared library export |
-| `$CLI approve --id <ID> --human-reviewed` / `--unapprove` | **Only after the user's explicit approval of that ID** |
-| `$CLI export-approved --output <zip>` | ZIP of approved, technically valid sprites. Write it to `art-work\exports\`, never to `assets\` |
+| Shown at about ≤ 40 px, simple shape (pebble, tuft, flower, coin, map pin, marker, trade-good icon, crate, barrel, sack, sign, small shrub) | **LiliPixel 32** (16 for ≤ 20 px, one-blob subjects). Native pixels, cheapest |
+| Shown at about ≥ 48 px, **or** complex construction (well with crank, cart, stall, building, gate, tower, wall run, large tree, figure, weapon or equipment) | **FLUX** |
+| Non-square (tall tree, tower, character, wide wall or cart) | **FLUX** (LiliPixel only makes square canvases) |
+| Needs the Crownless look specifically (matching the reference sheet's outlines and palette) | **FLUX** with the matching board |
+| A LiliPixel attempt came out unreadable, distorted, sideways or wrong | **FLUX as the fallback.** That counts as attempt 2 for the asset unless budget is left |
+| UI art (frames, panels, icons in the navy/gold/crimson/cream language) | **FLUX** with `crownless-ui-style-board`. 16/32 icons can try LiliPixel first |
 
-## Validation statuses
+These thresholds are guides, not rules. What decides is how the sprite reads at its real draw size beside the art around it.
 
-`prepare-native` and `validate` print `technical_status`, `palette_status`, `raw_colors`, `effective_colors` and `palette_limit`. The full report is in `validation` (`errors`, `reviews`, `warnings`, `palette`, `metrics`).
+### Draw sizes in the current game (game units; the battle canvas is 960×540, scaled by CSS)
 
-| Overall `technical_status` | Meaning | How I report it |
+| Use | Drawn at (code) | Current source PNGs |
 |---|---|---|
-| `FAIL` | A check failed | Not technically valid. Ruled out |
-| `REVIEW` | Nothing failed, but there is a technical exception (today only `PALETTE_REVIEW`) | **Technically valid only pending review.** Listed separately and named as REVIEW. The user decides |
-| `WARN` | Nothing failed; warnings need judgment | Technically valid, with the warnings listed |
-| `PASS` | Nothing failed | Technically valid (technical only) |
+| Rock and crate obstacles | `look {w,h}` 40×30, 38×30 (`data/battle_maps.js`); canvas `crate` look 40×40, 44×38 | `w0001`–`w0012`, about 22–34 px |
+| Decor | `[tile,x,y,w,h]`: 34×25 … 65×72; fences 52×37 | `w0091` 42×70, `w0121` 86×61 |
+| Large tree obstacle | 92×97 | `w0132` 120×126 |
+| Ground tile | 65×65 | `w0000` |
+| Infantry, archers, NPCs | 37×43 (`js/render.js`, `sh = 43`) | about 26–36 × 33–50 |
+| Hero / mounted | 58×74 / 42×62 | about 50–66 × 55–74 |
+| Companion portrait | 56×80 (`js/ui.js`) | |
+| Town buildings and stalls | canvas looks: `tavern` 220×120, `stall` 110×60, `house` 150–190 × 95–110 (`data/town_hubs.js`) | none (drawn in code) |
 
-Palette status (`validation.palette.status`):
-- **PASS:** raw colours ≤ `max_colors` (64 for native profiles).
-- **REVIEW:** raw > 64, but effective ≤ 64. This applies only to `native_*` profiles, which set `palette_review: true`.
-- **FAIL:** effective > 64. Non-native profiles still FAIL on the raw count alone.
+`drawImage(img,x,y,w,h)` **stretches any PNG to its box**, with smoothing off. So a new PNG must be **exactly** the box size, or match the box's aspect ratio exactly, or it gets distorted. Otherwise the box in `data/` must change to the PNG's size. That's a data change I may make; a renderer change is not.
 
-**Effective colours** (`greedy-chebyshev-rgb/v1`, tolerance 8, from `sprite-rules.json` → `palette_analysis`): opaque pixels only (alpha 0 excluded). Distinct RGB colours are sorted by pixel count, descending, then by RGB. Each colour joins the first representative within `max(|dR|,|dG|,|dB|) ≤ 8`, or else becomes a representative. The effective count is the number of representatives. The PNG is never recoloured. Both counts and `max_member_deviation` and `pixels_off_representative_fraction` are in `validation.palette`. Put all of these in the log.
+## LiliPixel (native 16/32)
 
-LiliPixel 16/32 px output carries invisible ±1–8 RGB jitter, so palette REVIEW is the normal case for it. For a REVIEW candidate, a `palette-preview` beside the raw image on a contact sheet lets the user see that merging changes nothing visible. The noise and density warnings (`PIXEL_NOISE`, `PIXEL_DENSITY`) still count exact RGB equality, so the same jitter inflates them. Read them as weak evidence for LiliPixel output.
-
-## Recipe format (JSON object; unknown fields are rejected)
-
-```json
-{
-  "name": "Border March stone well",
-  "category": "prop",
-  "description": "small circular stone water well, grey stone rim, visible dark blue water, top-down pixel art",
-  "extra": "",
-  "profile": "default",
-  "facing": "none",
-  "resolution": 32,
-  "batch_size": 4,
-  "seed": 42,
-  "mode": "auto",
-  "steps": 30,
-  "cfg": 3.0,
-  "background": "gray",
-  "alpha_cutoff": 0.5
-}
+```powershell
+$CLI status                                   # data.connected and data.lilipixel.ready must be true
+$CLI generate --dry-run --spec <recipe.json>  # format check only
+$CLI generate --spec <recipe.json>            # blocking, 10-minute timeout; returns ids, source_png, metadata_json, sha256
+$CLI prepare-native --id <ID>                 # native-size RGBA export into library\, validated vs native_<category>_<res>
+$CLI validate --id <ID>                       # re-validate the prepared export (read-only)
+$CLI contact-sheet --ids <IDs> --output art-work\sheets\<slug>-a<N>.png --tile 256
 ```
+
+Recipe (`art-work\recipes\<slug>-a<N>.json`; unknown fields are rejected):
+- Fields: `name`, `category` (`character|building|prop|vegetation|fortification|terrain|banner`) and `description` (the prompt, under about 96 tokens), plus optional `extra`, `profile`, `facing` (metadata only), `resolution` (16|32|64), `batch_size` (≤ 4 for me), `seed`, `mode` (`auto|sprite|scene|realistic|raw`), `steps` (30 for 16/32, 50 for 64), `cfg` (3.0), `background` and `alpha_cutoff` (0.5).
+- Prompts are short free text, written fresh for each asset.
+
+**64 px is not LiliPixel territory.** Its 64 output is opaque and blurry. Use FLUX for anything that needs 64.
+
+**Palette check in v0.7.2:** the v0.5.3 effective-palette REVIEW status is **not installed** (see *Known Studio limitations*). LiliPixel output carries invisible ±1–8 RGB jitter, so 32 px candidates usually show 300+ raw colours and `prepare-native` reports **FAIL `PALETTE`**. I report that as "palette FAIL (raw count, probably jitter)", not as a broken sprite. To ship one, I make a palette-reduced derivative with `preview.py --method nearest --bg-tolerance 0 --colors 32 --sizes 32x32`. That's an exact-size copy with merged colours, so I compare it against the raw image before using it.
+
+## FLUX two-step pipeline
+
+```powershell
+$CLI status                                                    # ComfyUI connected
+py -c "import sys;sys.path.insert(0,r'D:\Crownless Sprite generator\crownless-sprite-studio');import flux_two_step,json;print(json.dumps(flux_two_step.status(True)))"   # FLUX ready: workflow_ready, missing_models == []
+$CLI flux-pipeline --dry-run --spec <recipe.json>              # validates graph, prompts, board and sizes; no GPU
+$CLI flux-pipeline --spec <recipe.json>                        # blocking (allow 30 min); ONE candidate
+$CLI inspect --id <ID>                                         # record.pipeline.stage1 / stage2, generation settings
+```
+
+Recipe (`art-work\recipes\<slug>-a<N>-s<k>.json`). The allowed fields are exactly these:
 
 | Field | Rules |
 |---|---|
-| `name` *(required)* | Short label. Candidate IDs become `<slug>-<8 hex>`, named "name · 1..4" |
-| `category` *(required)* | `character`, `building`, `prop`, `vegetation`, `fortification`, `terrain` or `banner`. Chooses validator rules. It is **not** added to the prompt |
-| `description` *(required)* | The prompt. The model receives exactly `description` (plus `. extra` if `extra` isn't empty) |
-| `extra` | Optional short addition to the prompt. Usually leave it empty |
-| `profile` | `default`, or a profile from `sprite-rules.json` whose `category` matches. `prepare-native` always validates against `native_<category>_<resolution>` |
-| `facing` | Stored as metadata only: `none`, `down`, `up`, `left` or `right`. It does not change the prompt, so put the direction in `description` |
-| `resolution` | `16`, `32` or `64` |
-| `batch_size` | The CLI allows 1–8. **This skill caps it at 4** |
-| `seed` | 0 to 2^64−1. The node says each image uses `seed + i`. The Studio records the base seed and batch position, not the separate per-image RNG state |
-| `mode` | `auto` (adds ", transparent background" at 16/32), `sprite`, `scene`, `realistic` (64 only) or `raw` (the prompt goes in untouched) |
-| `steps` | The CLI requires 1–80. Use 30 for 16/32 and 50 for 64 (the node's "auto" values; the CLI can't send 0) |
-| `cfg` | 1–10 in practice (the node's limit). 3.0 is the default; 3.5 or more for specific prompts |
-| `background` | `gray`, `white`, `black`, `magenta` or `green`. It flattens only the RGB preview output; the saved RGBA is unaffected |
-| `alpha_cutoff` | 0–1. 0.5 makes alpha binary for crisp edges; 0 keeps soft alpha |
+| `name`, `category` | Required. The category picks the validator defaults only |
+| `draw_prompt` | **Stage 1, WHAT to draw.** 5–2500 characters |
+| `style_prompt` | **Stage 2, HOW to draw it.** 5–2500 characters |
+| `style_board` | One of the six board IDs, `board:<id>`, or `ref:<crop id>` for a single curated crop. Default props |
+| `width`, `height` | Each of 384, 512, 640 or 768 (the **source** size, not the sprite size). Use 512×512 for square props. Portrait 512×768 for tall subjects (trees, towers, characters), landscape 768×512 for wide ones (walls, carts, stalls) |
+| `seed`, `style_seed` | 0 … 2^64−1. Independent. Default 42 |
+| `facing` | Metadata only |
 
-Write recipes to `art-work\recipes\<asset-slug>-a<attempt>.json` in this repo, and pass them by absolute path. Never edit `recipes\stone-well.json` in the Studio.
+**Stage 1 prompt (what).** Build it from three parts, in this order:
+1. **Subject:** one isolated object, unless a scene is asked for. Its silhouette, construction, materials, colours and any equipment.
+2. **The camera block for its shape**, copied word for word from *Camera prompt blocks*. Never improvise the angle.
+3. **The background block:** "Centered on a plain flat light-grey background, no ground, no grass base, no cast shadow, no other objects."
 
-## Choosing the resolution
+Stage 1 never uses a reference image.
 
-LiliPixel outputs a **square native canvas**. The game draws its sprites at fixed **display** sizes with smoothing off. The display size is not the source size. Use the decision logic in *Approved toolchain and scope*. The table shows how each game use relates to the workflow.
+**Stage 2 prompt (how).** Start from the base text below and adapt it per asset. Always keep the camera and light sentence. Name the colours the references use for its materials (see *Style-fit check*). For example, "weathered grey-brown timber, not uniform red-brown", "iron fittings dark grey, not black".
 
-| Game use | Display box (code) | Existing source PNGs | This workflow |
-|---|---|---|---|
-| Small obstacles: rocks, crates, flowers (`data/battle_maps.js`) | for example 40×30, 38×30 | `w0001`–`w0012`, about 22–34 × 24–25 | **In scope: 32** (16 for very small ones) |
-| Icons: trade goods, fief marks, map markers | UI-sized | none yet | **In scope: 16 or 32** |
-| Small vegetation, simple trees that read at 32 | for example 49×57–65×72 | `w0091` 42×70, `w0121` 86×61 | **In scope: 32**, shown at an integer scale. Integration needs a box that keeps the aspect |
-| Ground details and simple tiles (64 grid, drawn 65×65 at 24% opacity) | 65×65 | `w0000` 59×69 | **In scope: 16 or 32**, category `terrain` (opaque is expected here) |
-| Banners and emblems as small world symbols | canvas shapes today | none yet | **In scope: 32** |
-| Large trees and decor | for example 92×97 | `w0132` 120×126 | Out of scope (needs non-square or large export) |
-| Infantry, archers, town NPCs | 37×43 (`js/render.js`, `sh = 43`) | about 26–36 × 33–50, cropped | Out of scope for integration. Exploration only on explicit request, at 32 |
-| Hero | 58×74 | about 50–66 × 55–74 | **Out of scope** |
-| Mounted troops | 42×62 | about 50–60 × 55–70 | **Out of scope** |
-| World-map settlement icons | canvas shapes today | none yet | 32 if it reads as a simple icon; otherwise out of scope |
+> Image 1 is the only subject. Keep its exact silhouette, proportions, construction, position and camera angle: the raised game camera looking down at about 35 degrees, front face toward the viewer, top surfaces visible. Light comes from the upper left: top surfaces lightest, the front mid-tone, undersides and the right edge darkest. Image 2 is a Crownless pixel-art style reference only. Redraw image 1 as rugged Western medieval pixel art like image 2: chunky readable pixel clusters, a 1-pixel near-black dark-brown outline, two to four shading steps per material, muted earthy colours, no smooth photographic texture, no gradients. Keep the plain flat background. Do not copy, add or merge any object, label, frame or scenery from image 2.
 
-The art bible (GDD §12) asks for a top-down 3/4 GBA-era look, consistent proportions and four orientations. The open art requests are in `docs/ASSETS.md`, rows 1–20. Current sprites are a 16-bit fantasy style made with ChatGPT image generation and cropped from sheets. LiliPixel output will look different, so call out any mismatch in style.
+Add per-asset guards, for example "no barrels, no sacks, no signpost" when the props board holds them.
 
-## Target look: the owner's reference images
+**Picking the board:**
 
-**Read `D:\Crownless-MVP\crownless-mvp\art-reference\README.md` and look at the images in that folder before writing a prompt or reviewing a batch.** These are the owner's target look for **battles and scenes** (town hubs). They are **not yet for the overworld map**. The folder has six images: a sprite sheet (characters, buildings, props, vegetation, walls, ground, banners), NPC turnarounds, a Stonebridge town mock-up, and three UI screens. It's local only and git-ignored. Never copy the images into `assets\` or describe them as a model input (LiliPixel is text-only). In every batch review, add a line comparing the candidates with them (camera, proportions, outline, palette).
+| Asset | Board |
+|---|---|
+| Wells, troughs, barrels, crates, carts, rubble, camp and market props | `crownless-props-style-board` |
+| Houses, inns, smithies, stalls, roofs | `crownless-buildings-style-board` |
+| Walls, gates, towers, palisades | `crownless-fortifications-style-board` |
+| Trees, bushes, shrubs | `crownless-vegetation-style-board` |
+| Soldiers, NPCs, figures, equipment on a figure | `crownless-characters-style-board` |
+| UI frames, panels, buttons, portraits frames | `crownless-ui-style-board` |
+| A near match exists as one crop | `ref:<id>` (for example `ref:prop-stone-well`). Stronger guidance, higher copy risk |
 
-## Camera convention: front-dominant, at most a slight side
+**Seeds:** within one attempt, vary `seed` (for example 4101, 4102, …) and keep `style_seed` fixed, so the candidates differ in subject but not in styling. To restyle a good subject, a later attempt can keep `seed` and change only `style_seed` or the Stage 2 prompt. Since the graph runs both stages, that regenerates Stage 1 with the same seed. Check that its hash matches the earlier `pipeline.stage1.sha256`.
 
-In Crownless, "top-down 3/4" means the **classic GBA/JRPG oblique view** from a raised camera: the **front face dominates** and the **top surface is visible**. In the owner's reference sheet, buildings and a few props (the crate stack, the cart) show **a little of one side**; walls, gates, the well and banners are square to the screen. **A slight side face is acceptable. A corner pointing at the camera, with two equal side faces (an isometric diamond), is not.** When in doubt, prefer square-on. The existing art is square-on:
-- The `w0121` and `w0174` fences run left to right, with post tops showing as ovals.
-- The `w0132` tree faces front, and the `w0110` cliff shows its front face under a grass top.
-- Ground patches (`w0000`, `w0050`, `w0061`) are flat squares seen from above.
-- Units in `u####` face the camera directly.
+**Check each candidate separately, stage by stage:**
+- **Stage 1:** is it the right subject, silhouette and camera?
+- **Stage 2:** compared with Stage 1, is the geometry kept? Did it gain board content (objects, labels, navy panel background)? Is the style closer to `art-reference\`?
 
-The renderer is built the same way. Its canvas stand-ins draw "front face plus a lighter top edge" (the `crate`/`wall` looks in `js/render.js`); buildings and stalls are axis-aligned front faces with a roof or awning above. Obstacles are axis-aligned rectangles or circles.
+Diagnose by stage. A wrong subject or camera is a Stage 1 problem: fix `draw_prompt` or `seed`. Lost geometry, copied objects or wrong style is a Stage 2 problem: fix `style_prompt`, `style_board` or `style_seed`.
 
-- **Don't write "3/4", "three-quarter" or "isometric" in LiliPixel prompts.** LiliPixel reads them as an object turned to show its corner and two sides (this happened with the supply-crate attempt 1). Instead, say what the view is: for example "front view from slightly above, facing the camera, top visible".
-- A candidate turned so a corner points at the camera (two roughly equal side faces) is a **camera-angle mismatch**. Report it as such, even if the sprite is otherwise good. A small side face, as on the reference crate stack, is fine; note it as "slight side".
-- Round or symmetrical subjects (wells, barrels, sacks, shrubs, round trees) hide the angle, so they're less at risk. Box-shaped subjects (crates, chests, signs, stalls, walls, buildings) show it clearly.
+## Export sizes (FLUX, and LiliPixel derivatives)
 
-## 64×64 is experimental
+Never assume 32 or 64. Pick candidate sizes from where the sprite is drawn (*Draw sizes*) and what's around it, then compare them **from the same source image**:
 
-What we've seen: **32×32 candidates were recognisable; 64×64 candidates were blurry, opaque and poorly composed.** The node itself documents 64 as "opaque scenes (RGB)", while 16 and 32 are transparent RGBA. Its `auto` mode adds ", transparent background" only at 16 and 32.
+1. **Candidate sizes:**
+   - The real draw box, if a PNG of exactly that size fits it: 40×30 obstacle, 37×43 unit, 52×37 fence.
+   - The neighbouring source sizes (32, 40, 48, 64; trees 92×97 or about 120).
+   - For non-square subjects, a box with the subject's own aspect ratio.
+2. **Make the previews** (non-destructive; reads `library\`, writes only to `art-work\`):
+   ```powershell
+   py .claude\skills\crownless-art\preview.py --id <ID> --sizes 32x32 48x48 64x64 --out "D:\Crownless-MVP\crownless-mvp\art-work\sheets\<slug>"
+   ```
+   It removes the flat background (`--bg-tolerance 24`; 0 keeps it) and trims to the subject. It then scales **uniformly** with an area filter (`--method box`, much cleaner than nearest at 512 → 64), makes alpha binary, merges the palette (`--colors 32`; 0 keeps it) and places the sprite bottom-centre with `--padding 1`. Use `--crop L T R B` (0–1) to cut stray content first, and `--neighbors w0012:40x30 w0132:92x97` to choose the art compared on the game sheet. Output:
+   - `<ID>-WxH.png`: the candidate production files.
+   - `<ID>-compare.png`: Stage 1 | Stage 2 | each size at 1× and enlarged.
+   - `<ID>-game.png`: every size on the battle ground tile beside current art, at 1:1 game units, ×3.
+   - `<ID>-preview.json`: method, hashes, and a validation per size against a profile for **that** size.
+3. **The Studio's own derivative** (`$CLI prepare-flux --id <ID> --width W --height H --remove-background [--tolerance 12] [--padding N] [--colors N] [--crop L T R B]`) uses nearest-neighbour from 512 px. It gives speckled pixels and hundreds of colours unless `--colors` is set, and it **always FAILs `DIMENSIONS` unless the size equals the category default** (prop/building/vegetation/fortification/banner 96×96, character 48×64, terrain 32×32). Use it only to cross-check, and say why its FAIL is expected.
+4. **Compare and choose:**
+   - Is the critical detail still there (crank, door, weapon)?
+   - Are the pixel clusters clean?
+   - Does the size match its neighbours (not oversized next to `w0012` rocks or 37×43 units)?
+   - Is the outline weight consistent?
+   - Is the foot or contact line clear?
 
-- **Don't use 64 for first candidates**, and don't propose it on the assumption that it's "more detail".
-- **When 64 may be justified:** a 32 px attempt was reviewed and failed *because of size* (detail that 32 px can't hold, such as a building with a readable door and roof), the asset's display box is at least about 64 px tall, **and the user agreed to the 64 test for that asset**. That's not part of the standing approval. Write that reason in the log before you run it, and label the batch **experimental** in the log and the presentation.
-- **How to test 64:** run one bounded attempt that counts against the 2-attempt budget: `batch_size` ≤ 4, `steps` 50, the same prompt as the best 32 attempt, `mode` `sprite` or `auto`. Put both results on one contact sheet with the 32 candidates, at the same on-screen size, and compare.
-- **Check every 64 px candidate, and every candidate at any size, for:**
-  - **Unwanted background:** `inspect` → `record.diagnostics.has_transparency` / `opaque_fraction`. If `opaque_fraction` is 1.0 or `has_transparency` is false, there is no transparency. `prepare-native` also FAILs `NO_TRANSPARENCY` for non-terrain categories. Look for a flat grey, white or scenic backdrop in the image itself.
-  - **Blurred pixel clusters:** soft gradients, smeared edges and anti-aliased mush instead of deliberate single-colour pixel runs. The metrics `opaque_neighbor_color_transition_rate`, `isolated_interior_color_pixel_fraction` and `unique_opaque_colors` (near the 64-colour cap) are hints, not proof. Look at the enlarged sheet.
-  - **Wrong silhouette:** cropped at the canvas edge (`EDGE_CONTACT`), several objects or a whole scene instead of one asset, the wrong camera angle (side view, perspective, or turned to a corner instead of front-on from slightly above; see *Camera convention*), or a subject that doesn't read at its display box.
-- If 64 doesn't clearly beat 32 on the same sheet, stay at 32 and say so.
+   If 32 loses critical detail, try 40/48/64 **from the same source** before generating again. Don't go larger than the surroundings justify.
+5. **Non-square:**
+   - Pick W×H from the subject's trimmed aspect and its draw box.
+   - The sprite is scaled to fit inside, never stretched, with transparent padding on the short axis.
+   - For characters, keep the 37×43 box (or 58×74 hero) and the shared foot line.
+   - Several frames of one character need the **same** size, scale and anchor. Run `preview.py` with identical settings for each, and check the foot lines line up.
+6. **Background removal keys on flat, edge-connected colour.** Background *enclosed* by the subject (inside a frame or rack, between legs) stays as a solid panel. Add `--key-holes` to also clear pixels within tolerance of the corner colour anywhere, then check it didn't eat parts of the subject in a similar colour. It keeps cast shadows and textured or gradient backgrounds, and can eat parts of the object that match the background. If the shadow survives, either accept it (the reference sheet has none, so it's usually unwanted) or crop or regenerate with "no cast shadow" in Stage 1. A shadow is a background-removal problem, not a style problem.
 
-## Proportions and display boxes
+## Diagnosing problems: fix the cheapest layer first
 
-**Requirement:** never change a sprite's aspect ratio or pixel grid to make it fit a box. A game-ready frame is the native sprite, **trimmed to its opaque bounds**, **scaled by the same factor on both axes** (integer where possible: 1×, 2×, 3×), **placed on a transparent canvas** of the box size, **centred horizontally**, with its **foot or contact line at a fixed bottom offset** shared by every frame and every unit of that role.
+| Problem | Where it comes from | Fix (no new generation unless stated) |
+|---|---|---|
+| Wrong subject, extra objects, wrong camera in Stage 1 | Generation | New Stage 1 prompt or seed (an attempt) |
+| Stage 2 copied board objects or changed the silhouette | Style transfer | Stricter `style_prompt`, other board or `ref:`, new `style_seed` (an attempt) |
+| Style far from `art-reference\` | Style mismatch | Board choice or Stage 2 wording (an attempt) |
+| Background or shadow left, edges eaten | Background removal | `--bg-tolerance`, `--crop` (re-export) |
+| Speckle, hundreds of colours, palette FAIL | Palette / pixel clusters | `--method box`, `--colors 16–48` (re-export) |
+| Detail lost or too big beside neighbours | Scaling / export | Another size from the same source (re-export) |
+| Reads poorly in play (blends with ground, mistaken for another object, unclear footprint) | Gameplay readability | Size, palette contrast or crop first; a new generation only if the subject itself is wrong |
 
-What happens today:
-- **The game stretches every image to a fixed box.** `drawImage(img, x, y, w, h)` in `js/render.js` (units: hero 58×74, mounted 42×62, others 37×43; NPCs 37×43; obstacles and decor use `look.w/h` or decor `w, h`). `imageSmoothingEnabled` is false. Any PNG whose size isn't exactly the box gets non-uniform scaling, **including today's cropped sprites** (for example a 28×37 infantry frame drawn at 37×43 is about 14% wider, relative to its height, than its source).
-- **The only distortion-free option without renderer changes:** a PNG whose size is **exactly** the display box, with the art inside at an integer scale and padded with transparency. The renderer then draws it 1:1 in game units.
-- **Integer fit for 32 px native** (trimmed bounds of roughly 18–30 px): 37×43 → 1× only, so the figure looks smaller than today's frames, which fill the box. Hero 58×74 → 2× when the trimmed sprite is ≤ 29×37. Mounted 42×62 → 1× for a horse wider than 21 px, because the box is portrait while riders are usually landscape. The box shape itself is the problem; flag it rather than squeeze the art.
-- **The screen adds another scale:** the battle canvas is 960×540 game units, scaled by CSS (and by the camera on larger arenas), so on-screen pixels are uniform only at integer canvas scales. That's a renderer decision (see `backing`, decision D-R1). Don't treat it as a sprite problem.
+Don't reject a good FLUX result because its first downscale looks bad. Try the other sizes and settings first.
 
-What I may do now, before integration is requested:
-- Generate at native size and review the native PNG. In the review, give each candidate's trimmed bounds (the validator's `metrics.bounding_box`), the integer scale that fits its target box, and the leftover padding.
-- To *preview* a candidate in its box, I may write a throwaway nearest-neighbour composite into `art-work\sheets\` with a one-line Pillow command (trim to alpha bounds, integer scale, bottom-centre on a transparent box-sized canvas). Label it **preview, not an export**. Never feed it to `approve`, `export-approved` or `assets\`.
+## Camera convention
 
-**Changes needed in Sprite Studio v0.5.2's export pipeline** (code changes in the Studio; don't implement them from this repo):
-1. **A CLI export to a game box.** `prepare-native` hard-codes native size, `trim: false`, `padding: 0` and `remove_bg: false`. The CLI can't call `export_asset` with a width, height, trim or padding. Needed: something like `prepare-game --id <ID> --profile infantry`, which takes the box from `sprite-rules.json`.
-2. **Integer scale mode.** `engine.transform` uses `scale = min(iw/w, ih/h)`, which keeps the aspect ratio but is **fractional**, so nearest-neighbour gives uneven pixel widths. Needed: an `integer_scale` option (the largest integer k ≥ 1 that fits, and refuse when even 1× doesn't fit, instead of downscaling), with the chosen `k` recorded in `record.export`.
-3. **Separate foot anchor from padding.** `transform` uses one `padding` for all four sides, and `bottom_padding` exists only in the validator. Needed: a separate `bottom_offset` (the foot line) and side/top padding, and an anchor that is the same across a frame set rather than per-image bounds.
-4. **More than one export per candidate.** A record holds one `export`. `prepare-native` and a game-box export overwrite each other and reset `approved`. Needed: native and per-profile exports kept side by side.
-5. **Validator checks for proportion.** The validator checks only the final dimensions, palette, alpha, transparency, anchor and edge contact. It can't tell that art was stretched. Needed: record the source bounds and scale per axis, FAIL when x-scale ≠ y-scale, and WARN on a non-integer scale.
-6. **Contact sheets of exports.** `contact-sheet` always reads `-raw.png`. Needed: an option to show the prepared export, or the sprite in its game box, at the same scale as the raw image.
-7. **Background removal through the CLI.** `remove_flat_background` (keys on the corner colours, not semantic) exists in `transform` but isn't exposed by `prepare-native`. It only removes flat, edge-connected colours, so it won't fix 64 px scenic backgrounds.
-8. **Frame sets.** Nothing groups the frames of one animation (4-direction walk cycles) so they share a canvas size, scale and anchor. Needed before any troop sprite set can be integrated.
+The Crownless view is the classic GBA/JRPG oblique, measured from `art-reference\01-sprite-reference-sheet.webp`:
+- **The camera is raised about 35° above the ground and looks north.** The front face dominates, and **the top surface is always visible**.
+  - Box props (crates, the trough, the well roof) show a top band about **⅓ of the front face's height**.
+  - Round tops (barrels, the well, stumps) are ellipses about **⅓ as tall as they are wide**.
+  - Post and log ends show their cut tops.
+- **Square to the screen:** walls, gates, fences, the well, banners and signs. **A sliver of the right side** is allowed only on buildings, the crate stack and the cart.
+- **Never:**
+  - a corner pointing at the camera (isometric diamond)
+  - a flat side or front elevation with no top visible
+  - a view from straight above
+  - perspective convergence or a fisheye look
+- **Light from the upper left.** Outline near-black brown, not pure black.
+- **Props have no ground base.** Buildings stand on a small grassy footprint.
 
-**Changes the game renderer will eventually need** (document only; **don't change `js/render.js`, `js/assets.js` or data until the user asks for integration**):
-1. **Draw by natural size times an integer scale**, anchored at the feet (`u.x`, `u.y + offset`). The unit box (37×43 and the others) stays for layout, shadows and name plates, not as a stretch target. This applies to `drawUnit`, the hero cloak path (`drawHeroFrame`), town NPCs and the companion portrait in `js/ui.js` (56×80).
-2. **Per-sprite metadata** for scale and anchor (in `js/assets.js` beside `troopArt`/`allyArt`, or in `assets/manifest.json`), so old cropped frames and new native frames can coexist.
-3. **Obstacles and decor** (`look.w/h`, decor `w, h` in `data/battle_maps.js`): give an integer scale and a bottom-centre anchor instead of an arbitrary w×h.
-4. **Note that this also changes how today's sprites look**, because they're currently stretched to their boxes. It needs a side-by-side check and the user's decision, and possibly the visual tests updated.
-5. **Optional:** integer canvas scaling (the D-R1 backing store) so on-screen pixels stay uniform.
+The existing game art follows the same view: the `w0121`/`w0174` fences, the `w0132` tree, the `w0110` cliff, the `u####` units, and the renderer's "front face + lighter top" canvas looks.
 
-## Procedure
+**Known failures and their cause:**
 
-1. **Read the brief.** The asset (from `docs/ASSETS.md` if it's there), where it shows, its display box, and the category and resolution, with the reason (the 16/32 decision logic). Check it against *Out of scope* first. Tell the user what you plan if anything is unclear.
-2. **Check the service:** `$CLI status`. If `connected` or `lilipixel.ready` is false, stop and tell the user to start ComfyUI. Don't try to start it yourself.
-3. **Write the attempt-1 recipe** at `resolution: 32` (or 16 for tiny icons), never 64 for a first attempt: a short prompt naming the subject, its key colours and materials, and the view in plain words, front-on per *Camera convention* (for example "front view from slightly above, facing the camera, top visible"; never "3/4", "three-quarter" or "isometric"). Use `batch_size` ≤ 4. Run `generate --dry-run`, then `generate` (with a 10-minute timeout).
-4. **Verify the files:** for each candidate, check the SHA-256 of the raw PNG against `sha256` in the result:
-   `py -c "import hashlib,sys;print(hashlib.sha256(open(sys.argv[1],'rb').read()).hexdigest())" "<source_png>"`
-   Then `$CLI inspect --id <ID>` to get the full `generation` block.
-5. **Look at the images.**
-   - Native size: open each `...-raw.png` with the Read tool. It is 16, 32 or 64 px, so judge silhouette and readability at that size.
-   - Enlarged: `$CLI contact-sheet --ids <all IDs of the attempt> --output "D:\Crownless-MVP\crownless-mvp\art-work\sheets\<asset-slug>-a<N>.png" --tile 256`, then read the sheet. Make one for every batch of more than one candidate, and one across attempts when comparing them. Tile 256 gives 8× for 32 px and 16× for 16 px, both integer.
-   - Write down what you see in each: the subject, the camera angle (front-on from slightly above, or turned to a corner?), the silhouette, stray pixels, any unwanted background (also check `diagnostics.has_transparency` and `opaque_fraction`), blurred pixel clusters, how well it fits Crownless, and how it would read at its display box: trimmed bounds, the integer scale that fits, the padding left over, and whether the foot line can be anchored. Separate what you observed from what you guess.
-6. **Validate every candidate in the batch:** `$CLI prepare-native --id <ID>` (a native-size export: no resize, trim or palette change; it is written only to the Studio library), then read `technical_status`, `palette_status`, the raw and effective colours, and `validation` (errors, reviews, warnings, metrics). `validate --id <ID>` re-runs it. A FAIL rules a candidate out. A REVIEW goes to the user as REVIEW. A WARN needs judgment. A PASS is technical only. Afterwards, check that the export is still the native size (`metrics.width/height` = the resolution).
-7. **Attempt 2, only if needed:** change **one** thing (the wording, or cfg, or mode, or the seed, or 32 → 64 when the conditions in *64×64 is experimental* hold) and give the reason. Use a base seed that doesn't overlap attempt 1's `seed`…`seed+3` (for example seed + 100). After two attempts, stop and report, even if nothing is good. Ask before a third.
-8. **Present the batch to the user** (see *Presenting a batch*). Ask which IDs, if any, they approve. Generation may continue to attempt 2 within budget before presenting only when attempt 1 clearly failed (all FAIL, or none recognisable), and both attempts are then presented together.
-9. **Only after the user approves specific IDs:** run `approve --id <ID> --human-reviewed` for exactly those IDs (or have the user click approve in the browser Studio, at `start-windows.bat` → `http://127.0.0.1:8765`). Optionally run `export-approved` into `art-work\exports\`. **Approval in the Studio is not permission to copy into the game.** Copying into `assets\` needs a separate, explicit instruction naming the files. Then use a new filename, never overwrite, and follow `docs/ASSETS.md` (add the file, point `js/assets.js` at it, run `node scripts/asset-manifest.js`, run `tests/assets.test.js`). Wiring it into gameplay or rendering is a further request.
+| What happened | Prompt that caused it |
+|---|---|
+| Crate turned to a corner | "three-quarter top-down" |
+| Steep overhead well | "three-quarter overhead game camera" |
+| Flat elevation with no visible top (the weapon rack, 2026-11-24) | "seen from the front and slightly above": too weak |
+
+That's why prompts use the fixed blocks below and never the words "three-quarter", "3/4", "isometric", "overhead" or "top-down".
+
+### Camera prompt blocks (copy word for word)
+
+| Subject shape | FLUX Stage 1 camera block |
+|---|---|
+| **Box or frame** (crate, chest, rack, cart, stall, trough, sign, bench, table) | "Classic 16-bit role-playing game camera: viewed from the front and above, the camera raised about 35 degrees and looking down at the object. The front face points straight at the viewer and fills most of the image; the top surface is clearly visible as a band about one third of the front's height. The object is square to the viewer, not rotated; no corner points at the viewer. Orthographic, no perspective distortion." |
+| **Round** (barrel, well, stump, pot, haystack, tent) | "Classic 16-bit role-playing game camera: viewed from the front and above, the camera raised about 35 degrees and looking down. The round top is visible as a flattened ellipse about one third as tall as it is wide. Orthographic, no perspective distortion." |
+| **Tall** (tree, tower, post, banner on a pole, statue) | "Classic 16-bit role-playing game camera: viewed from the front and slightly above, the camera raised about 35 degrees. Upright and facing the viewer; any top surface (cut log ends, tower top) visible as a narrow band. Orthographic, no perspective distortion." |
+| **Long or wall** (wall run, fence, palisade, hedge) | "Classic 16-bit role-playing game camera: viewed from the front and above, the camera raised about 35 degrees. The run is parallel to the image, its front face toward the viewer and the top of the wall visible as a narrow band. Not angled away; orthographic, no perspective distortion." |
+| **Building** | "Classic 16-bit role-playing game camera: viewed from the front and above, the camera raised about 35 degrees. The front wall with the door faces the viewer, the roof slopes are clearly visible from above, and a small part of the right side wall is visible. Not a corner view; orthographic, no perspective distortion." |
+| **Flat on the ground** (rug, puddle, path stones, fire pit) | "Classic 16-bit role-playing game camera: the camera raised about 35 degrees looking down, so the flat object is seen mostly from above, foreshortened to about half its depth. Orthographic." |
+| **Figure** (soldier, NPC, animal) | "Classic 16-bit role-playing game character: standing upright, facing the viewer, full body from head to feet, about three heads tall (not chibi, not realistic), seen from the front and slightly above. Feet at the bottom of the figure; arms and equipment readable. Orthographic." For other directions, replace "facing the viewer" with "seen in true side profile facing left/right" or "seen from behind". |
+
+**LiliPixel (about 96 tokens, so keep it short):** add "front view from above, top surface visible, facing the camera" for box, round and flat shapes, or "front view, upright, facing the camera" for tall ones and figures.
+
+**After generating, always check the angle on Stage 1 *and* the final export.** Is the top visible in the right proportion, is the front square to the viewer, and is there no corner, overhead view or flat elevation? A camera mismatch is a **Stage 1 generation problem**. Stage 2 can't fix it, and no export fixes it.
+
+## Target look
+
+**Read `art-reference\README.md` and look at the images before writing prompts or reviewing.** They set the target for **battles, town scenes, buildings and props, characters and NPCs, and later UI**. They are **not** the overworld map's final style yet, so don't restyle world-map art toward them unasked.
+
+## Style-fit check (mandatory for every candidate)
+
+**No candidate is integrated, or called good, before this check passes.** It applies to every backend, including the hand-drawn fallback.
+
+1. **Put the owner's examples beside it.** Run `preview.py` with `--ref <crop ids>` (two or three crops from `refs\crownless-v2\manifest.json`) so the compare sheet shows them next to Stage 1, Stage 2 and the exports. Also look at `art-reference\01-sprite-reference-sheet.webp` itself (and `02`/`03` for characters and town art).
+
+   | Asset | `--ref` crops |
+   |---|---|
+   | Wooden props, racks, crates, carts | `prop-crate-stack prop-wood-fence prop-supply-cart` |
+   | Stone props, wells, troughs, rubble | `prop-stone-well prop-stone-trough prop-rubble-large` |
+   | Barrels, sacks, hay, logs | `prop-barrel-left prop-supply-sack prop-haystack` |
+   | Buildings | `building-cottage building-smithy building-market-stall` |
+   | Walls and fortifications | `wall-section-front fortification-gate fortification-tower` |
+   | Trees and bushes | `vegetation-medium-tree vegetation-berry-bush prop-shrub-a` |
+   | Soldiers | `character-soldier character-spearman character-archer` |
+   | Town NPCs | `npc-<role>-front npc-<role>-back` (the closest role) |
+   | Banners and signs | `banner-gold-lion prop-signpost` |
+   | Ground tiles | `tile-grass tile-earth tile-stone-paving` |
+2. **Check the game-scale sheet** (`<ID>-game.png`) beside the current art it will stand next to. Use `--neighbors` to pick that art: rocks `w0012:40x30`, fence `w0174:52x37`, tree `w0132:92x97`, and a unit frame at 37×43 for anything near people.
+3. **Score each item** as fits, minor or doesn't fit, and write the scores into the log and the presentation:
+
+   | # | Check | Matches the references when… |
+   |---|---|---|
+   | 1 | **Camera** | Raised about 35°, front square to the viewer, top visible in the proportions above (*Camera convention*) |
+   | 2 | **Proportions** | Props are believable sizes relative to the reference sheet and the neighbours. Figures are about 3 heads tall, not chibi |
+   | 3 | **Outline** | Near-black dark brown, about 1 px at the final size, closed around the silhouette |
+   | 4 | **Shading and light** | Light from the upper left. 2–4 steps per material. No gradients or photographic texture |
+   | 5 | **Palette** | Earthy, muted: brown and weathered wood, grey stone, olive and moss greens, terracotta roofs, cream walls. Heraldic navy, gold and crimson only as accents. No saturated or uniform single-hue blocks |
+   | 6 | **Pixel clusters** | Clean clusters that read at 1×. No speckle, no broken lines, no single-pixel noise in flat areas |
+   | 7 | **Silhouette and readability** | Identifiable at its draw size on the ground. It doesn't blend into the grass and can't be mistaken for another object |
+   | 8 | **Scale beside game art** | Not oversized next to `w0012` rocks, fences or 37×43 units. The foot or contact line is clear |
+   | 9 | **Content** | Nothing copied from the board, no ground base on props, no text, frames or panels |
+4. **Verdict:**
+   - **Fits:** all items fit, or at most one is minor.
+   - **Usable with fixes:** a minor that an export can fix (palette, crop, size). Re-export and re-check.
+   - **Doesn't fit:** any item doesn't fit, or two or more are minor. **It isn't integrated.** Fix by layer (*Diagnosing problems*), or move to the next step in the escalation.
+
+Being technically valid (PASS/WARN) never replaces this check, and this check never replaces looking at the images.
+
+## Escalation and the hand-drawn fallback
+
+The order for every asset:
+1. **Attempt 1** with the chosen backend.
+2. **Export fixes** (free).
+3. **Attempt 2** with the cheapest layer changed.
+4. **Export fixes** again.
+5. **Fallback: I hand-draw the sprite myself.**
+
+Step 5 applies when the best candidate after attempt 2 is still **Doesn't fit**, or when nothing is readable. A third generation still needs the owner's OK, but the fallback doesn't.
+
+**What the fallback is:** Claude Code has **no image-generation model**, and there is no "Claude image generation" tool in this environment. I never claim otherwise. So the fallback is **pixel art I author myself, pixel by pixel, at native size**:
+1. Choose the final size from *Draw sizes* (for example 34×40 for a camp prop). Pick a palette of **8–20 colours** taken from the reference crops, with the outline `#2a1a12`-ish dark brown and 2–4 steps per material lit from the upper left. Follow the *Camera convention* exactly. Hand-drawing makes the camera easy to get right, so get it right.
+2. Write the sprite as a text grid (one character per pixel plus a palette), or as a short drawing script in the scratchpad that emits that grid, into `art-work\recipes\<slug>-hand-v<N>.json`:
+   ```json
+   {"name": "...", "category": "prop", "palette": {"o": "#2a1a12", "w": "#7d5434"}, "rows": ["..oo..", ".owwo."]}
+   ```
+3. Render it, without overwriting: `py .claude\skills\crownless-art\pixel_draw.py --spec art-work\recipes\<slug>-hand-v<N>.json --out art-work\sheets\<slug>\hand\<slug>-hand-v<N>.png`. It writes the PNG at exactly the grid size, an 8× view and a JSON with hashes.
+4. Review it like any candidate: `py .claude\skills\crownless-art\preview.py --png <that png> --category <cat> --bg-tolerance 0 --method nearest --colors 0 --padding 0 --sizes <W>x<H> --ref <crops> --neighbors <...> --out art-work\sheets\<slug>\hand`. View the 8× image and both sheets, then run the **Style-fit check**.
+5. Revise up to **3 versions** (`-hand-v1`…`v3`). Each fixes what the check found. If v3 still doesn't fit, stop and report to the owner with the best version.
+6. Integrate as usual. The manifest source is `claude_hand_drawn`: "pixel art drawn by Claude (Anthropic) as a text grid in this repo's art workflow, rendered with `pixel_draw.py`; no image model". Rights: owned by the owner. Add the source to `docs/ASSETS.md` the first time.
+
+What hand-drawing is good at: camera, outline and palette discipline, exact sizes, clean clusters. What it's weak at: organic texture (foliage, cloth folds, faces), which reads flatter than the references, and detail above about 48 px. Say so in the presentation.
+- **World art:** rugged Western medieval; slightly raised, mostly front-facing camera; top surfaces visible; restrained side faces; earthy muted colours; clear pixel clusters; readable silhouettes; strong outlines; simple material shading; no chibi proportions; no smooth photographic texture.
+- **Characters:** keep the intended proportions and use the NPC turnarounds (front, side, back) for consistency.
+- **UI:** navy, gold, crimson and cream.
 
 ## Presenting a batch
 
-Every batch goes to the user in this shape, before anything else happens to it:
+After every batch, whether or not I integrated it:
 
 ```markdown
-**<asset> — attempt <N> — <resolution> px<, EXPERIMENTAL if 64>** · prompt: "<exact prompt>" · seed <base> · steps <s> · cfg <c> · mode <m>
-Contact sheet: <absolute path>
+**<asset> — attempt <N> — <backend>** · why this backend: <draw size, complexity>
+Stage 1 prompt: "<exact>" · Stage 2 prompt: "<exact>" · board <id> · seeds <seed>/<style_seed> · source <W×H>
+(LiliPixel: prompt, seed, steps, cfg, mode, resolution)
 
-| # | Candidate ID | Validation | Visual notes |
-|---|---|---|---|
-| 1 | <id> | PASS / WARN (codes) / REVIEW (palette raw R → effective E of 64) / FAIL (codes) | <what it shows, silhouette, readability> |
+| # | Candidate ID | Stage 1 (subject, camera) | Stage 2 (kept geometry? copied board content? style) | Best export | Validation |
+|---|---|---|---|---|---|
 
-- Technically valid (PASS or WARN): <IDs>, or none
-- REVIEW, needs your confirmation: <IDs with raw → effective colours>, or none
-- Technically failed: <IDs and codes>, or none
-- Strongest visually: <ID> because <reason>, or "none is usable" (validity and visual strength are judged separately; the strongest may carry a WARN)
-- Fit with the target look (art-reference\): <camera, proportions, outline, palette, shading against the owner's reference images>
-- Style mismatch vs current Crownless art: <palette, outline, shading, camera angle, detail level against the existing w#### tiles>
-- Gameplay readability: <reads at its display box? clashes with ground colours? mistakable for another object? foot or contact line clear?>
-- Status: nothing approved, nothing copied into the game. Log: art-work\log\<slug>.md
+- Sheets: <ID>-compare.png and <ID>-game.png (absolute paths), plus the contact sheet
+- Export sizes tried: <W×H list> → chosen <W×H> because <detail / neighbours / box>
+- Problems by layer: generation / style / background / palette / scaling / readability
+- Style-fit check (refs: <crop ids>): camera ✓/~/✗ · proportions · outline · shading and light · palette · clusters · silhouette · scale · content → **Fits / Usable with fixes / Doesn't fit**
+- Next step if it doesn't fit: <fix by layer | attempt 2 | hand-drawn fallback>
+- Fit with art-reference\: camera, proportions, outline, palette, shading
+- Readability in game: <against ground and neighbours, at 1:1>
+- Action taken: nothing integrated | integrated as assets\<file> in commit <hash> (revert with `git revert <hash>`)
+- Log: art-work\log\<slug>.md
 ```
 
-If I couldn't view an image, I say so in its row instead of describing it.
+I show the compare and game sheets in the reply (`SendUserFile` when available). If I couldn't view an image, I say so.
 
-## Log format (`art-work\log\<asset-slug>.md`)
+## Integrating a sprite
 
-Add one section per attempt. Copy values from the CLI's JSON output; never retype them from memory.
+1. `git status` must be clean. Otherwise commit the pending work first. Then push.
+2. Copy the chosen `art-work\sheets\<slug>\<ID>-WxH.png` into `assets\`:
+   - **New art:** the next free `w####` / `u####` name.
+   - **Replacement:** overwrite the existing file, since the owner allows it. Never `w0200.png`.
+3. Update the draw box in `data/` if needed so it equals the PNG size (data only, never the renderer). Point `js/assets.js` at a new file if needed.
+4. Run `node scripts/asset-manifest.js`, then set the file's `source` in `assets/manifest.json`:
+   - `sprite_studio_lilipixel` already exists.
+   - For FLUX, add a `sprite_studio_flux` source the first time: FLUX.2 Klein 4B (`flux-2-klein-4b-fp8`), run locally in ComfyUI in two stages, with Stage 2 conditioned on the owner's own Crownless reference board, and the candidate ID recorded. Rights: owned by the owner, but **check the FLUX.2 Klein licence before selling** (not verified yet).
+   - Add a row to `docs/ASSETS.md` for any new source.
+5. Run `npm test` (at least `tests/assets.test.js`) and look at it in the game if it's drawn.
+6. Commit with a message like "Art: replace w0012 rock with FLUX well (candidate <ID>, 40×30 box export)". Include the old and new hashes in the body.
+7. Report the commit hash and the revert command in the batch presentation.
+
+## Log format (`art-work\log\<slug>.md`)
+
+One section per attempt. Copy values from the CLI JSON; never retype them.
 
 ```markdown
-## <asset> — attempt <N> — <UTC timestamp>
-- Recipe: art-work\recipes\<slug>-a<N>.json (copy the full JSON below)
-- Exact prompt sent: "<generation.prompt from inspect>"
-- Settings: resolution, mode, steps, cfg, base seed, background, alpha_cutoff, batch_size
-- Resolution reason: 32 default / 16 tiny / 64 because <failed 32 attempt + reason> (experimental)
-- Target display box: <e.g. infantry 37×43>; per candidate: trimmed bounds, integer scale that fits, padding left
-- ComfyUI job: <generation job id>
-- Reference used: false (LiliPixel V1 is text-only)
-| Batch pos | Candidate ID | Seed (base + pos, per node) | Raw PNG path | Metadata JSON path | SHA-256 (verified y/n) | Prepared export path | Validation (technical status; palette status raw → effective at tolerance; errors, reviews, warnings) | Visual notes |
-|---|---|---|---|---|---|---|---|---|
-- Contact sheet: art-work\sheets\<slug>-a<N>.png
-- Outcome: shortlisted IDs / rejected / attempt 2 because <one changed factor>
-- User decision: <pending | approved IDs quoted from the user's message | rejected>
+## <asset> — attempt <N> — <backend> — <UTC timestamp>
+- Brief: use, draw box, category, backend reason
+- Recipe(s): paths, with the full JSON
+- LiliPixel: prompt, resolution, mode, steps, cfg, seed, batch positions, ComfyUI job
+- FLUX: draw_prompt, style_prompt, board id + path + sha256, width×height, seed, style_seed,
+  workflow + graph_sha256, model/encoder/VAE files, ComfyUI job
+| Candidate ID | Stage 1 png + sha256 (verified) | Stage 2/raw png + sha256 (verified) | Exports (size, method, settings, sha256, validation) | Notes by stage |
+- Sheets: compare / game / contact paths
+- Outcome: chosen ID + size, or the next step by layer; any integration commit hash
 ```
 
-The model revision and per-image RNG state are unknown. The metadata says so. Don't claim exact reproducibility.
+Verify hashes with `py -c "import hashlib,sys;print(hashlib.sha256(open(sys.argv[1],'rb').read()).hexdigest())" <png>` against `pipeline.stage1.sha256`, `pipeline.stage2.refined_sha256` or the LiliPixel `sha256`. The model revision and RNG state aren't recorded, so don't claim exact reproducibility.
 
-## Example: a small prop batch
+## Example: a 64×64 world prop (Stonebridge stone well) with FLUX
 
-The request is something like "a market crate for Stonebridge". It's in scope (a crate, small market prop), and the decision logic gives 32.
-
-1. `$CLI status`. Confirm `connected` and `lilipixel.ready`.
-2. Write `art-work\recipes\market-crate-a1.json`:
+1. Brief: decor beside the square, drawn at about 64×64. It has construction detail (rim and crank) → FLUX, props board.
+2. `$CLI status`, then the FLUX readiness one-liner. Stop if ComfyUI isn't connected.
+3. Write `art-work\recipes\stone-well-a1-s1.json`:
    ```json
-   {"name": "Stonebridge market crate", "category": "prop",
-    "description": "wooden market crate full of red apples, front view from slightly above, facing the camera, top visible",
-    "resolution": 32, "batch_size": 4, "seed": 1201, "mode": "auto",
-    "steps": 30, "cfg": 3.0, "background": "gray", "alpha_cutoff": 0.5}
+   {"name": "Stonebridge stone well", "category": "prop",
+    "draw_prompt": "A single isolated round medieval stone water well, low rim of grey fitted stones, dark water inside, a wooden hand-crank on two posts. Classic 16-bit role-playing game camera: viewed from the front and above, the camera raised about 35 degrees and looking down. The round top is visible as a flattened ellipse about one third as tall as it is wide. Orthographic, no perspective distortion. Centered on a plain flat light-grey background, no ground, no grass base, no cast shadow, no other objects.",
+    "style_prompt": "Image 1 is the only subject. Keep its exact silhouette, proportions, construction, position and camera angle: the raised game camera looking down at about 35 degrees, front face toward the viewer, top surfaces visible. Light comes from the upper left: top surfaces lightest, the front mid-tone, undersides and the right edge darkest. Image 2 is a Crownless pixel-art style reference only. Redraw image 1 as rugged Western medieval pixel art like image 2: chunky readable pixel clusters, a 1-pixel near-black dark-brown outline, two to four shading steps per material, muted earthy colours (cool grey stone, weathered grey-brown wood), no smooth photographic texture, no gradients. Keep the plain flat background. Do not copy, add or merge any object, label, frame or scenery from image 2; no barrels, crates, cart, trough or rubble.",
+    "style_board": "crownless-props-style-board", "width": 512, "height": 512, "seed": 4101, "style_seed": 42}
    ```
-3. Run these:
+4. Run:
    ```powershell
-   py "D:\Crownless Sprite generator\crownless-sprite-studio\cli.py" generate --dry-run --spec "D:\Crownless-MVP\crownless-mvp\art-work\recipes\market-crate-a1.json"
-   py "D:\Crownless Sprite generator\crownless-sprite-studio\cli.py" generate --spec "D:\Crownless-MVP\crownless-mvp\art-work\recipes\market-crate-a1.json"
+   $env:PYTHONIOENCODING='utf-8'
+   py "D:\Crownless Sprite generator\crownless-sprite-studio\cli.py" flux-pipeline --dry-run --spec "D:\Crownless-MVP\crownless-mvp\art-work\recipes\stone-well-a1-s1.json"
+   py "D:\Crownless Sprite generator\crownless-sprite-studio\cli.py" flux-pipeline --spec "D:\Crownless-MVP\crownless-mvp\art-work\recipes\stone-well-a1-s1.json"
+   py "D:\Crownless Sprite generator\crownless-sprite-studio\cli.py" inspect --id <candidate_id>
+   py .claude\skills\crownless-art\preview.py --id <candidate_id> --sizes 32x32 48x48 64x64 --ref prop-stone-well prop-stone-trough --out "D:\Crownless-MVP\crownless-mvp\art-work\sheets\stone-well"
    ```
-4. For each returned ID: check the hash, run `inspect --id`, run `prepare-native --id` (validation), and view the raw PNG at native size.
-5. Run `contact-sheet --ids <4 IDs> --output "D:\Crownless-MVP\crownless-mvp\art-work\sheets\market-crate-a1.png" --tile 256` and view the sheet.
-6. Write `art-work\log\market-crate.md`, run `git status` (no generated files listed), and present the batch. If needed, attempt 2 changes one factor (for example the wording, or seed 1301). Then stop.
+   For up to 3 more candidates, copy the recipe as `-s2`…`-s4` with `seed` 4102…4104.
+5. Verify both hashes, then view `-stage1.png`, `-raw.png`, `<ID>-compare.png` and `<ID>-game.png`. Run the **Style-fit check**, write the log and present the batch.
+6. If it fits: run *Integrating a sprite*. Otherwise fix the cheapest layer (*Diagnosing problems*); attempt 2 is only for generation or style problems. If it still doesn't fit after attempt 2, use the hand-drawn fallback (*Escalation*).
+
+## Known Studio limitations (v0.7.2, checked 2026-11-24)
+
+- **The v0.5.3 palette work is gone.** `validator.py` and `sprite-rules.json` are byte-identical to v0.5.2. There's no effective-palette analysis, no `REVIEW` status, no `palette-preview` command and no `tests/test_palette.py`. Restoring it means editing Studio code, which needs the owner's permission. The code survives only in the 2026-11-24 session transcript.
+- `prepare-flux` validates against the category default size, and nearest-downscales from the source (see *Export sizes*).
+- `validate --id` errors on FLUX candidates ("Prepare export before validating"): `prepare-flux` doesn't set the record's export. The v0.7.2 `AGENT-CLI.md` lists that command anyway. Use the validation in `prepare-flux`'s output or in `preview.py`'s JSON.
+- `status` reports LiliPixel and SDXL only. FLUX readiness comes from `flux_two_step.status(True)` (the one-liner above).
+- `contact-sheet` reads `-raw.png` only (Stage 2 for FLUX). Use `preview.py`'s compare sheet for Stage 1 next to Stage 2.
+- The library was replaced with v0.7.2. The earlier crate candidates (including `stonebridge-supply-crate-76ef81f5`) and their records are gone. `assets/w0200.png` is intact (sha256 `5a13d70e…`).
+- The Studio's `AGENT-CLI.md` still says never to approve or overwrite without human approval. For this repo, the owner's later standing grant (*Authority*) takes precedence. Its other rules (budget, checking stages, honesty about conditioning) agree with this skill.
+
+## Troubleshooting
+
+- `ok:false` "Width/height must be 384, 512, 640 or 768": a source size outside that set was used. The sprite size is set at export, not here.
+- "Choose a Crownless style board" / "Missing Crownless style image": use one of the six IDs or a valid `ref:<id>` (`$CLI references` lists them).
+- "ComfyUI rejected workflow" or missing models: report it to the owner. Don't edit the graph, and don't download anything.
+- `TimeoutError` (30 minutes): the job may still be running in ComfyUI and nothing was cancelled. Check the ComfyUI console or `http://127.0.0.1:8188/history` before trying again, so it doesn't run twice.
+- GPU out of memory: stay at 512×512 and one candidate per call. Tell the owner rather than changing ComfyUI flags.
+- UnicodeDecodeError on records: they're cp1252. Read with `encoding='cp1252'`, or set `PYTHONIOENCODING=utf-8` for CLI output.
