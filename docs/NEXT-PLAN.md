@@ -121,9 +121,10 @@ Phase 8   "The Landed World"    — lords, holdings, permissions, allegiance, ca
 Phase 9   "Kingdoms & Houses"   — battles and the company at a bigger scale with command in layers,
                                   realms, diplomacy, founding a kingdom, rebellion, armies, houses,
                                   the lords' loose ends, modding and a second world
-Phase 10  "Ways In"             — map speed, a kingdom to start in, five origins with their own opening
-                                  quests into one common quest, the main story from anywhere, onboarding,
-                                  women soldiers, an art pass toward the references
+Phase 10  "Ways In"             — map speed and a Wait screen, one world (the coast joins the map), walkable
+                                  capitals, a kingdom to start in, five origins with their own opening quests
+                                  into one common quest, the main story from anywhere, onboarding, the UI
+                                  toward the references, women soldiers; graphics when they fit
 ```
 
 Each phase ends playable, measured and documented. The order follows the design's dependency map (Part 2 §26.6) with one change: **the world grows first**, at the owner's request.
@@ -308,20 +309,23 @@ Every Phase 9 task is **Specified** (2026-11-22; NEXT-TASKS has each in full). T
 
 ## 6b. Phase 10 — "Ways In"
 
-**Specified 2026-11-24 with the owner.** You choose a kingdom and one of five origins. Each origin's opening quest leads to the same common quest, and from there the main story can be followed or the world played as a sandbox, as in Mount & Blade. The owner may add tasks from play. The full specifications are in NEXT-TASKS.
+**Specified 2026-11-24 with the owner, and re-ordered the same day.** You choose a kingdom and one of five origins. Each origin's opening quest is a small tutorial that leads to the same common quest. After it the world is open, as in Mount & Blade: the main story can be followed, or the world played as a sandbox. The owner may add tasks from play. The full specifications are in NEXT-TASKS.
 
 | ID | Task | Size | Needs |
 |---|---|---|---|
-| **P10-00** | **Phase 9's long runs and checkpoint** (moved from P9-T): the 20- and 100-year tools, the whole slow suite and the full browser suite, the old failures, and fixes for faults (tuning waits for P10-T). Runs over 20 minutes only on the owner's yes | M | P9-T |
-| **P10-01** | **Map speed:** Normal (1 game hour a second, the new default) and Fast (4, today's), a HUD button and a setting, and a hint | S | P10-00 |
-| **P10-02** | **Choose your kingdom, and the main story from anywhere:** a start town per realm; the story's people and places by role; Q1's tutorial becomes the common quest | L | P10-01 |
-| **P10-03** | **Origins, the frame and the first three:** the unhorsed traveller, the impoverished noble, the farmhand; every origin ends in about the same state, with one small edge | L | P10-02 |
-| **P10-04** | **Origins, the scout and the peddler,** and the balance check over all five | M | P10-03 |
-| **P10-05** | **Onboarding and hints:** a guide for the main beginner steps with any origin, hints for the rest, one setting to turn them off, How to Play by stage | M | P10-04 |
-| **P10-06** | **Women soldiers** in two realms and one bandit type (15% of recruits, their own lines), and a few generic soldiers' portraits with varied hair and beards | M | P10-00 |
-| **P10-07** | **Art pass, battles,** toward the references (renderer changes allowed; partial is fine) | L | P10-06 |
-| **P10-08** | **Art pass, towns and the UI,** toward the references (renderer changes allowed; partial is fine) | L | P10-07 |
-| **P10-T** | **Tuning and acceptance:** the world's open tuning (wars, risings, deaths), the origins' balance, `docs/PHASE-10-VALIDATION.md`; ships 5.0.0 | M | all above |
+| **P10-00** | **Phase 9's long runs and checkpoint** (moved from P9-T): the 20- and 100-year tools, built on short slices the evening of the night run; then the night run (the long runs, the whole slow suite, the full browser suite, `docs/PENDING-CHECKS.md`). Runs only when the owner asks for the night run; the next task fixes what it found | M | — |
+| **P10-01** | **Map speed and the Wait screen:** Normal (1 game hour a second, the new default) and Fast (4, today's), a HUD button and a setting, and a hint; a Wait screen of days and hours that fades out and back, runs the world on, and stops for an encounter | M | P9-T |
+| **P10-02** | **One world:** the Sundered Coast joins the map as a region; the world chooser and the second official world go; older saves refused | M–L | P10-01 |
+| **P10-03** | **Walkable towns:** every capital and free city, each with its own layout and people | L | P10-02 |
+| **P10-04** | **Choose your kingdom, and the main story from anywhere:** a start town per realm; the story's people and places by role; Q1 becomes the common quest | L | P10-03 |
+| **P10-05** | **Origins, the frame and the first three:** the unhorsed traveller, the impoverished noble, the farmhand; every origin ends in about the same state, with one small edge | L | P10-04 |
+| **P10-06** | **Origins, the scout and the peddler,** and the balance check over all five | M | P10-05 |
+| **P10-07** | **Onboarding and hints:** a guide for the main beginner steps with any origin, hints for the rest, one setting to turn them off, How to Play by stage | M | P10-06 |
+| **P10-08** | **UI and menus** toward the references (renderer changes allowed; partial is fine) | L | P10-07 |
+| **P10-09** | **Women soldiers** in two realms and one bandit type (15% of recruits, their own lines), and a few placeholder portraits | M | P9-T |
+| **P10-G1** | **Graphics, battles,** toward the references, whenever it fits (renderer changes allowed; partial is fine) | L | — |
+| **P10-G2** | **Graphics, towns,** toward the references, whenever it fits (renderer changes allowed; partial is fine) | L | P10-03 |
+| **P10-T** | **Tuning and acceptance:** the world's open tuning (wars, risings, deaths), the old failures, the origins' balance, `docs/PHASE-10-VALIDATION.md`; ships 5.0.0 | M | all above |
 
 ## 7. Order, versions, saves and the per-task contract
 
@@ -337,7 +341,7 @@ Every Phase 9 task is **Specified** (2026-11-22; NEXT-TASKS has each in full). T
 7. **B-01** early in Phase 7, then Phase 7 roughly in table order (P7-04 before P7-02; P7-05 before P7-06).
 8. **Phase 8** in the build order of §5 (re-specified 2026-11-20): P8-02, P8-03, P8-01, P8-04, P8-05, P8-06a, P8-06b, P8-07, P8-08, P8-T. W-09 is not needed: sieges and lords move on passable terrain.
 9. **Phase 9** (specified 2026-11-22): **P9-B1, P9-B2, P9-B3, P9-B4, P9-B5**, then **P9-L1**, **P9-01, P9-02, P9-03, P9-04, P9-05, P9-06, P9-07, P9-08**, **P9-T**. P9-B1's phone measurement decides how far P9-B2 and P9-B3 can go. Each task is a minor version from 3.1.0; P9-T ships 4.0.0. Whole-suite checkpoints after P9-B2, P9-B4, P9-04 and P9-06; P9-T's moved to P10-00 (owner, 2026-11-24).
-10. **Phase 10** (specified 2026-11-24): **P10-00** to **P10-08**, then **P10-T**. Each task is a minor version from 4.1.0 (P10-00 is 4.0.1); P10-T ships 5.0.0. No fixed whole-suite checkpoints: runs over 20 minutes or overnight are suggested and run only on the owner's yes, and a full overnight run, when asked for, does every pending check.
+10. **Phase 10** (specified 2026-11-24, re-ordered the same day): **P10-01** to **P10-09**, then **P10-T**. **P10-00** runs on the owner's night run, whenever asked. The graphics tasks **P10-G1** and **P10-G2** go in whenever they fit. Each task is a minor version in build order from 4.1.0; P10-00 is a patch; P10-T ships 5.0.0. No fixed whole-suite checkpoints: a task that needs a long run asks "now, or the next run?", and deferred checks go in `docs/PENDING-CHECKS.md`.
 
 ### Versions (owner decision D-V1)
 - Proposed: each finished task bumps the minor version (2.1.0, 2.2.0, …); fixes bump the patch.
@@ -439,10 +443,15 @@ Decisions marked **blocking** must be made before the named task starts. The oth
 | **D-P9h** | Can capitals fall, and realms end? | **Owner, 2026-11-22: the default. Yes, from P9-05.** A capital besieged by an army is the hardest siege; taken, its ruler moves the seat; a realm with no holdings left is gone, and its lords seek service elsewhere | P9-05 |
 | **D-P9i** | How long are the long runs? | **Owner, 2026-11-22: the default.** 20 simulated years in the slow suite, 100 years in an overnight script (`npm run long-run`), both with delegated rulers and no player. **Owner, 2026-11-24:** moved to P10-00 | P10-00 |
 | **D-P10a** | Long runs in Phase 10 | **Owner, 2026-11-24: decided.** A run over 20 minutes or overnight is suggested with its length, and runs only on the owner's explicit yes. The owner may ask for a full overnight run at any time; it then does every pending check | all of Phase 10 |
-| **D-P10b** | How does a game begin? | **Owner, 2026-11-24: decided.** There is no default start. You choose a kingdom and an origin (five: today's three backgrounds rewritten, the unhorsed traveller and the impoverished noble). Each origin's opening quest ends in the same common quest and about the same state (one small, balanced edge each). The main story is playable from any kingdom and origin, and optional. No start inside politics | P10-02 to P10-04 |
-| **D-P10c** | Onboarding | **Owner, 2026-11-24: decided.** A guide for the main beginner steps only, with any origin; hints for everything deeper; one setting turns them off | P10-05 |
-| **D-P10d** | Women soldiers | **Owner, 2026-11-24: decided.** In a couple of realms and one bandit type, not more. Mixed into the normal recruits at 15% (85% men), with their own progression. A few generic portraits with varied hair and beards, not one each | P10-06 |
-| **D-P10e** | Map speed and art | **Owner, 2026-11-24: decided.** The map starts slow, and today's speed stays available with a toggle and a hint. An art pass toward the references, partial updates allowed | P10-01, P10-07, P10-08 |
+| **D-P10b** | How does a game begin? | **Owner, 2026-11-24: decided.** There is no default start. You choose a kingdom and an origin (five: today's three backgrounds rewritten, the unhorsed traveller and the impoverished noble). Each origin's opening quest ends in the same common quest and about the same state (one small, balanced edge each). The main story is playable from any kingdom and origin, and optional. No start inside politics | P10-04 to P10-06 |
+| **D-P10c** | Onboarding | **Owner, 2026-11-24: decided.** A guide for the main beginner steps only, with any origin; hints for everything deeper; one setting turns them off | P10-07 |
+| **D-P10d** | Women soldiers | **Owner, 2026-11-24: decided.** In a couple of realms and one bandit type, not more. Mixed into the normal recruits at 15% (85% men), with their own progression. A few generic portraits with varied hair and beards, not one each | P10-09 |
+| **D-P10e** | Map speed and art | **Owner, 2026-11-24: decided.** The map starts slow, and today's speed stays available with a toggle and a hint. An art pass toward the references, partial updates allowed. **Later the same day:** split into the UI and menus (P10-08, the priority) and graphics (P10-G1, P10-G2, whenever they fit) | P10-01, P10-08, P10-G1, P10-G2 |
+| **D-P10f** | Long runs, step by step | **Owner, 2026-11-24: decided.** No environment-variable gates. After a task that needs a long or night run, ask: now, or the next run? Deferred checks are written in `docs/PENDING-CHECKS.md`. The night run does them all, with P10-00; the next task fixes what it found | all of Phase 10 |
+| **D-P10g** | Old saves | **Owner, 2026-11-24: decided.** Ignored completely: no migrations, fixtures or old-save tests. New state gets defaults; a changed world refuses older saves | all of Phase 10 |
+| **D-P10h** | One world | **Owner, 2026-11-24: decided.** No separate sandbox world: the whole game is a sandbox with a minor story. The coast joins the main map; its realms may be reworked. The world-package loader stays for packs | P10-02 |
+| **D-P10i** | Wait | **Owner, 2026-11-24: decided.** A Wait screen with days and hours: the screen fades out, the world moves on as it would, it fades back and says how long passed. A band or lord reaching you stops the wait, says so, and opens the encounter | P10-01 |
+| **D-P10j** | Towns and the story | **Owner, 2026-11-24: decided.** Every capital and free city is walkable, none alike, before the story task. The story is cast to fit each kingdom, with characters added as needed; every origin's tutorial leads into the common quest (Q1, which keeps its ending), then the open world; the end is the same for every start. `gate-d-campaigns` splits and reduces its seeds | P10-03, P10-04 |
 
 ### D-P8b and D-P8c in full (owner, 2026-11-20: the defaults, accepted)
 
@@ -572,3 +581,4 @@ Decisions marked **blocking** must be made before the named task starts. The oth
 46. **P9-B4 (3.4.0): command in layers.** Six division slots over the roles (a company that never changes them fights as before), formations per division with line, column and square, Auto as layer 1 (and the enemy's plan by the same rules, for armies of more than 20 only: given to every band, it took the small fights to 100% fought), captains and plans of your own as layer 3, and live, timed orders on the tactical map as layer 4. **Open for P9-05 and P9-T:** fought big battles stay far over Simulate's odds (+29 to +37 at 40 and at 100); a company wins every fair big fight with no orders. **Found at the checkpoint, from P9-B3:** the slow siege test fails since 3.3.0. The garrisons grew three times and the test's company did not, so the odds of storming fell to 10%, while the fight still wins 58%: the walls' garrison comes in waves of 8. Scaled to the world (a company of 48), the odds are Phase 8's again (41%) but the fight wins every time; as one army sharing the field it wins none and some fights never end. The assault needs re-fitting for armies: **owner, 2026-11-22: a task of its own before P9-L1, P9-B5.**
 47. **P9-B5 (3.5.0): the walls at the world's scale.** The assault fights as one army a side, against the part of the garrison on the stretch of wall under attack (58% storming, 90% beside you defending); a ladder takes two at a time, slowly, and nobody strikes from one; a stalled shared battle now ends, its reserves withdrawing too. At a battle size of 150 storming is +19 over the odds and defending +1. **Open for P9-T:** at 40 storming is far easier and defending harder, as big battles are there; and the balance is steep (one defender more or less on the wall moves storming by 20 points).
 48. **Owner, 2026-11-23: the tasks take too long.** Most of each battle task's effort went around it: reading the whole plan, running suites again, tuning loops (P9-B5's third to fifth tries). From P9-L1 every task has a Brief in NEXT-TASKS with the code to start from, decided defaults, the save step, the build order and its exact checks, and a lean way of working: each check once, tuning time-boxed to two tries, failures outside the task noted rather than fixed, play only where there is a screen. No task was split; P9-03 and P9-05 got a build order in steps instead (P9-05 in two halves).
+49. **Owner, 2026-11-24: Phase 10 re-ordered** (after the orientation check). P10-00 leaves the order and runs on the night run. The Wait screen joins map speed (P10-01). Two tasks are new: one world, the coast joining the map (P10-02), and walkable capitals and free cities (P10-03), before the story. The art pass is split into the UI and menus (P10-08) and graphics (P10-G1, P10-G2, whenever they fit). Old saves are ignored. Tasks renumbered in build order (D-P10f to D-P10j).

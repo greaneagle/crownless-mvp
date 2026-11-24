@@ -3217,110 +3217,154 @@ The phase opens with five battle-scale tasks (owner, 2026-11-22; decisions D-P9a
 
 ---
 
-## Phase 10 — Ways In (Specified 2026-11-24)
+## Phase 10 — Ways In (Specified 2026-11-24; re-ordered with the owner the same day)
 
-The aim: a welcoming way into the world. You pick a kingdom and an origin. A short opening quest of your own leads you to the same place as every other start, and from there the main story can be followed at will, or the world played as a sandbox. The owner may add tasks from play during the phase.
+The aim: a welcoming way into the world. You pick a kingdom and an origin. A short opening quest of your own teaches the basics and leads you to the same common quest as every other start. After it, the world is open: the main story can be followed at will, or ignored. The whole game is a sandbox with a minor story and minor quests. The owner may add tasks from play during the phase.
 
 **Owner's rules for the phase (2026-11-24):**
-- **Long runs:** a run over 20 minutes or overnight is only suggested, with its length. It runs only after the owner's explicit yes.
-- **On request:** the owner can ask for a full overnight run at any time. That run then does every check still pending (the long runs, the whole slow suite, the full browser suite, `battle-parity`).
-- **Tuning** of the world (wars, risings, deaths) waits until after the origins (P10-T).
+- **Long runs:** no run over 20 minutes, and nothing overnight, without the owner's yes. Each task runs its short checks. A task that needs a long run ends by asking: run it now, or add it to the next run? "Add it" means the exact checks go into `docs/PENDING-CHECKS.md`.
+- **The night run:** the owner asks for it before going to sleep. It runs P10-00 and every check in `docs/PENDING-CHECKS.md`. The next task first fixes what it found.
+- **No old saves (owner, 2026-11-24):** this is development, so compatibility is ignored. No migrations, no fixture folders, no old-save tests. New saved state gets defaults through `sanitize`; a changed world simply refuses older saves.
+- **Tuning** of the world (wars, risings, deaths) and the old failures (`landed`, the Phase 8 exit, Prototypes D and F) are only recorded until P10-T.
 - **The world at the start** stays basic: no new "lived-in" systems at the start of the phase.
-- **Versions:** each task is a minor version from 4.1.0; P10-T ships 5.0.0.
+- **Versions:** each task is a minor version in build order, from 4.1.0. P10-00 is a patch on the build it runs on. P10-T ships 5.0.0.
 
-**Order:** P10-00 → P10-01 → P10-02 → P10-03 → P10-04 → P10-05 → P10-06 → P10-07 → P10-08 → P10-T. P10-06 needs only P10-00 and may move earlier if the owner wants. P10-07 and P10-08 may also be taken in part.
+**Order:** P10-01 → P10-02 → P10-03 → P10-04 → P10-05 → P10-06 → P10-07 → P10-08 → P10-09 → P10-T. P10-00 runs on the owner's night run, whenever asked. The graphics tasks P10-G1 and P10-G2 have no fixed place: they go in "whenever it fits", in part if need be, before P10-T.
+
+| ID | Task | Size | Version |
+|---|---|---|---|
+| P10-00 | Phase 9's long runs and checkpoint (on the night run) | M | patch |
+| P10-01 | Map speed and the Wait screen | M | 4.1.0 |
+| P10-02 | One world: the Sundered Coast joins the map | M–L | 4.2.0 |
+| P10-03 | Walkable towns: every capital and free city | L | 4.3.0 |
+| P10-04 | Choose your kingdom, and the main story from anywhere | L | 4.4.0 |
+| P10-05 | Origins: the frame and the first three | L | 4.5.0 |
+| P10-06 | Origins: the scout and the peddler | M | 4.6.0 |
+| P10-07 | Onboarding and hints | M | 4.7.0 |
+| P10-08 | UI and menus toward the references | L | 4.8.0 |
+| P10-09 | Women soldiers and soldiers' portraits | M | 4.9.0 |
+| P10-G1 | Graphics: battles | L | next minor when it lands |
+| P10-G2 | Graphics: towns | L | next minor when it lands |
+| P10-T | Tuning and acceptance | M | 5.0.0 |
 
 ### P10-00 · Phase 9's long runs and checkpoint (M)
 
-Moved here from P9-T (owner, 2026-11-24).
+Moved here from P9-T (owner, 2026-11-24). It runs when the owner asks for the night run, not in the task order.
 
-**Build.**
+**Build** (on the evening of the night run, before it starts).
 - **The long-run tools** (SC-29, D-P9i): the world alone with delegated rulers, checking every invariant every day. There is no negative money, no repeated ownership collision, no endless event loop, and no runaway realm (one holding more than half the land).
   - `tests/slow/long-run.test.js`: 20 years.
   - `scripts/long-run.js` (`npm run long-run`): 100 years, in no suite.
-- **The checkpoint:** the whole slow suite (about 44 minutes) and the full browser suite, in the background in one go.
-- **The old failures** are fixed or written down as known: `landed` (seeds 2 and 3), the Phase 8 exit, Prototypes D and F.
-- **Faults** the runs find are fixed here. Tuning numbers (wars, risings, deaths) are not changed: they wait for P10-T.
+- Both are built and tested on short slices first (a year or two, one seed), about 20–30 minutes in all. Then the night run starts.
 
-**Runs.**
-- Each long run is timed on a short slice first.
-- A run over 20 minutes is suggested with its estimate, and runs only on the owner's yes.
-- A run the owner declines stays pending for the next full overnight run.
+**The night run.** In the background, in one go: the 20-year and 100-year runs, the whole slow suite, the full browser suite, and every check in `docs/PENDING-CHECKS.md`.
 
-**Version.** 4.0.1.
+**After.** The results go in the validation notes and `docs/PENDING-CHECKS.md` is cleared of what ran. Faults found are fixed by the next task, first. The old failures and tuning numbers are only recorded, for P10-T.
 
-### P10-01 · Map speed (S)
+**Version.** A patch on the build it runs on.
 
-**Problem.** The map runs at 4 game hours a second, too fast for a new player. That speed is still good when wanted.
+### P10-01 · Map speed and the Wait screen (M)
+
+**Problem.** The map runs at 4 game hours a second, too fast for a new player. That speed is still good when wanted. Waiting is a held button that runs the map at that speed.
 
 **Build.**
 - **Two speeds** on the map:
-  - **Normal:** 1 game hour a second. This is the default for a new game and a new device.
+  - **Normal:** 1 game hour a second. The default for a new device.
   - **Fast:** 4 hours a second, today's speed.
-- **A speed button** on the map HUD (one tap toggles, its icon shows the speed), and the same choice in Settings. The choice is a setting, kept per device, not in the save.
+- **A speed button** on the map HUD (one tap toggles, its icon shows the speed), and the same choice in Settings. The choice is a device setting, not in the save.
 - `js/world.js`'s `HOURS_PER_SECOND` becomes a rate read from the setting. Debug's stress test keeps its own rate.
-- **A hint card** (`speed`) teaches the toggle. P10-03 shows it at the end of every origin quest, and until then it shows after the first contract.
+- **The Wait screen** replaces the held wait:
+  - Pick how long: days and hours, up to 30 days.
+  - The screen darkens smoothly, the time passes, then it brightens again and says how long has passed.
+  - The world moves on as it would have: parties, armies, sieges, markets, upkeep, wounds, news. It is one call into the clock in steps, as travel does, so nothing is skipped.
+  - **Interrupted:** a band or lord that reaches you ends the wait at that moment. The screen brightens, says the wait was cut short and how long passed, and opens the encounter for you to act.
+- **A hint card** (`speed`) teaches the toggle. The origin quests (P10-05) show it at their end; until then it shows after the first contract.
 
-**Tests.** The rate follows the setting; days passed per real second at each speed; old settings load as Normal; the button in a browser case.
+**Tests.** The rate follows the setting; days passed per real second at each speed; a wait of N hours moves the clock N hours and runs what time drives; a wait cut short by contact opens the encounter with the time passed so far; the button and the Wait screen in a browser case (`world-map.spec.js`).
 
 **Version.** 4.1.0.
 
-### P10-02 · Choose your kingdom, and the main story from anywhere (L)
+### P10-02 · One world: the Sundered Coast joins the map (M–L)
 
-**Problem.** Every game starts at Stonebridge, and the main story (Q1–Q4) is tied to Stonebridge, Eastwatch and Greywall Fort, between Valedorn and the Aurelians.
+**Problem.** The game has two worlds, and the second is a sandbox with no story. The owner (2026-11-24): there is no need for two split games. The whole game is a sandbox with a minor story.
 
 **Build.**
-- **Choose your kingdom** at a new game: any of the world's realms (Valedorn, the Aurelians, Hrothmark, the Vessaro League; not Merrow, a free city). Each realm names a start town in data (`start` per faction in the world map). The Sundered Coast offers its own two realms. Your choice is kept in the save (`c.startRealm`).
-- **The main story from any kingdom.** It keeps its shape and its beats, but its people and places are given by role, not by name:
-  - your start town's elder and captain;
-  - a rival realm next to yours, and its magistrate's town;
-  - the contested fort between the two.
-  
-  The story reads the roles from the start (`c.story.cast`), chosen by the map's neighbours. Starting in Valedorn gives today's story unchanged.
-- **The common quest.** Q1's tutorial steps (the first work, a fight, recruits, drill) become the quest every origin leads into (P10-03). For now the plain start leads into it directly.
-- **The story stays optional.** Its journal says it can be left and picked up again; the world goes on without it.
+- **The coast joins the Sundered Realm** as a new region on one edge of today's map, with a road joining it. The map grows; the March stays in the middle. Its realms (Ostrand, Saltreach), its free port (Gullhaven), cultures, troops, lords, lairs and parties come along, adjusted to fit (free to rework, owner).
+- **Relations:** the two coast realms start at war with each other and at peace with the rest.
+- **One official world:** the world chooser at a new game and the second official world go. The world-package loader stays, for content packs and modding (P9-07). `check-pack` and `tools/preview.html` keep working on the one world and on packs.
+- **Saves:** older saves are refused (the world changed). No migration (owner).
+- **The bots and tests** that ran the coast as its own world (`second-world`, the world option in `landed` and `prototype-g`) now run the one world.
 
-**Tests.** Every realm's cast resolves on both worlds; `npm run simulate:story` and `gate-d-campaigns` reach an ending from every realm; a 2.x save (Valedorn) keeps its story and ids.
-
-**Explain.** "Getting started": choosing a kingdom; the story from anywhere.
+**Tests.** The merged world passes the pack checks; every realm has a capital, lords and troops; parties reach the coast and back; the world-sim and landed short runs hold their invariants; `test-world` still plays.
 
 **Version.** 4.2.0.
 
-### P10-03 · Origins: the frame and the first three (L)
+### P10-03 · Walkable towns: every capital and free city (L)
+
+**Problem.** Only Stonebridge can be walked. P10-04's story starts in every realm's start town, and the owner wants every major town walkable.
+
+**Build.**
+- **A walkable hub** for each capital and free city: the six capitals, Merrow and Gullhaven, besides Stonebridge. Villages and forts stay menu-only.
+- **No two alike** (the owner's rule): each has its own layout in `data/town_hubs.js` (a square, a harbour, a hill town, a walled market), its own people, and props that fit its culture and land.
+- **The people:** the innkeeper, merchant, recruiter and an elder or official in each, by role, so P10-04's story can cast them. Named from the town's culture.
+- **Art:** today's tile art, with new layouts. Small adaptations of the graphics are welcome (owner), through the `crownless-art` skill; the full graphics pass is P10-G2.
+- `js/town.js` reads the hub for the settlement it is in. No town name in `js/`.
+
+**Tests.** Every capital and free city has a hub that passes the checks; walking and talking in two of them by real input (`settlement.spec.js`); the layouts differ.
+
+**Play.** Walk three of the new towns at 812×375.
+
+**Version.** 4.3.0.
+
+### P10-04 · Choose your kingdom, and the main story from anywhere (L)
+
+**Problem.** Every game starts at Stonebridge, and the main story (Q1–Q4) is tied to Stonebridge, Eastwatch, Highmere, Oakford and Greywall Fort, between Valedorn and the Aurelians.
+
+**Build.**
+- **Choose your kingdom** at a new game: any of the world's realms (not a free city). Each realm names a start town in data (`start` per faction). The choice is kept in the save (`c.startRealm`).
+- **The main story from any kingdom.** It keeps its shape and beats, but its people and places are cast by role (`c.story.cast`), chosen from the map's neighbours: your start town and its elder and captain; a rival realm next to yours, its magistrate's town and its fence's town; a nearby village for the grain wagon; the contested fort between the two. More roles and characters may be added where the story needs them (owner: "make the story as you think fits"). Starting in Valedorn gives today's cast.
+- **The story's locks move with the cast:** the contested fort is locked until the last quest ends, and the two cast realms stay in tension until then (D-W5's rule, for whichever pair is cast).
+- **The common quest.** Q1 becomes the quest every origin leads into (P10-05). It keeps its ending (the charter fragment and the first hint about the contested fort), so it opens the main story. For now the plain start leads into it directly.
+- **Then the open world.** After the common quest, the story can be followed or left. Its journal says so, and the world goes on without it. Every start reaches the same story and the same endings.
+
+**Tests.** Every realm's cast resolves; `npm run simulate:story` reaches an ending from every realm; `gate-d-campaigns` splits its seeds across the realms and runs fewer (about 8 a realm), so it stays well under its old 27 minutes.
+
+**Explain.** "Getting started": choosing a kingdom; the story from anywhere.
+
+**Version.** 4.4.0.
+
+### P10-05 · Origins: the frame and the first three (L)
 
 **Build.**
 - **An origin** replaces the background at a new game. Each has:
   - a situation at the start, in the chosen kingdom's lands;
-  - an opening quest of 3 to 5 steps, which teaches the basics on the way;
+  - an opening quest of 3 to 5 steps, a small tutorial with hints that teaches the basics on the way;
   - its people;
-  - a hand-off into the common quest (P10-02).
+  - a hand-off into the common quest (P10-04), and from it into the open world.
 - **The first three:**
   - **The unhorsed traveller:** thrown from your horse, bandits ride off with it, and you stand at a town's gate. The innkeeper offers rest, and work that leads after the thieves.
   - **The impoverished noble:** a family matter, such as a debt, a lost seat or a sibling held for ransom, settled with your first few soldiers.
   - **The farmhand** (today's background, rewritten as an origin): a village raided; you lead its few willing men.
 - **The same place at the end** (the owner's rule): every origin ends at about the same gold, soldiers, gear, level and renown, within a small band set in data. Each keeps one small edge of its own: a better weapon, +1 strength, a little more money, a contact. The edges are balanced, not equal in kind.
-- **Data, not code:** origins live in `data/origins.js`, with the quests in `data/quests.js` and the dialogue in `data/dialogue.js`, through the story's own conditions and effects. A new effect only where one is missing.
+- **Data, not code:** origins live in `data/origins.js`, with the quests in `data/quests.js` and the dialogue in `data/dialogue.js`, through the story's own conditions and effects. A new effect only where one is missing. The story's `background` condition becomes `origin`.
 - **No politics at the start** (the owner's rule): nobody starts sworn, landed or at court.
 - **The speed hint** (P10-01) shows at each origin quest's end.
 
-**Tests.**
-- Every origin from every realm on both worlds, played by a bot to the common quest.
-- The end state of each within the band.
-- Saves: an old save keeps its background as its origin.
+**Tests.** Every origin from every realm, played by a bot to the common quest; the end state of each within the band.
 
-**Version.** 4.3.0.
+**Version.** 4.5.0.
 
-### P10-04 · Origins: the scout and the peddler (M)
+### P10-06 · Origins: the scout and the peddler (M)
 
 **Build.**
-- **The scout** and **the peddler**, today's last two backgrounds, rewritten as origins on P10-03's frame. Five origins in all.
+- **The scout** and **the peddler**, today's last two backgrounds, rewritten as origins on P10-05's frame. Five origins in all.
 - **The balance check over all five:** one table of the end state (gold, soldiers, gear, level, renown, the edge), from every realm. Any origin outside the band is retuned, at most two tries a number.
 
-**Tests.** As P10-03, for all five.
+**Tests.** As P10-05, for all five.
 
-**Version.** 4.4.0.
+**Version.** 4.6.0.
 
-### P10-05 · Onboarding and hints (M)
+### P10-07 · Onboarding and hints (M)
 
 **Build.**
 - **A guide for the main beginner steps,** whatever the origin: moving on the map, entering a town and talking, hiring, buying food, the first battle's controls, auto-resolve, saving.
@@ -3332,9 +3376,28 @@ Moved here from P9-T (owner, 2026-11-24).
 
 **Tests.** The guide's steps with each origin; skip one, skip all; off in Settings; the browser startup flow with the guide on and off.
 
-**Version.** 4.5.0.
+**Version.** 4.7.0.
 
-### P10-06 · Women soldiers and soldiers' portraits (M)
+### P10-08 · UI and menus toward the references (L)
+
+Split from the old art pass (owner, 2026-11-24): menus and the UI first, as the priority; sprites and scenes later (P10-G1, P10-G2).
+
+**Build.**
+- **The UI toward references 04–06:**
+  - deep navy panels with thin gold borders;
+  - cream serif headings;
+  - framed portraits;
+  - pixel stat icons;
+  - tabs with a raised active state;
+  - rounded touch buttons with gold rims.
+- Screen by screen, starting with the party screen and the dialogue box, then the settlement menu, the Journal, Settings and the HUD.
+- **Renderer changes allowed** for this task (an exception to the art rule). **Partial is fine:** what is not done is listed as open.
+
+**Tests.** Browser screenshots of the reworked screens at 812×375 and on desktop; `layout`, `text-size` and `settlement` specs; text size and reduced effects still work.
+
+**Version.** 4.8.0.
+
+### P10-09 · Women soldiers and soldiers' portraits (M)
 
 **Build.**
 - **Women soldiers** (D-P8g's promise): lines of their own in two realms, plus one bandit type. The realms and lines are set in data and chosen by fit; no more than that (the owner: "don't overdo it").
@@ -3342,51 +3405,42 @@ Moved here from P9-T (owner, 2026-11-24).
 - **Their own progression:** a woman recruit upgrades along her own line, not into the men's.
 - **Women's names** come from each culture's list, as the lords' do.
 - **Portraits:**
-  - A few generic portraits for soldiers, men and women: base faces with hair colour and beard style changed, not one portrait per soldier.
+  - A few generic portraits for soldiers, men and women: base faces with hair colour and beard style changed, not one portrait per soldier. Placeholders are fine (owner).
   - The choice is made once per soldier from its id and kept in the save (the `portrait` slot).
-  - The roster shows them, in the frame the references use.
-  - Made with the `crownless-art` skill.
-- **Battle sprites:** use the role's sprites until P10-07.
+  - The roster shows them, plain is fine.
+- **Battle sprites:** use the role's sprites until P10-G1.
 
 **Tests.** The 85/15 rate over many recruits; a woman upgrades in her own line; the same seed gives the same recruits; portraits stay the same over a save and load; a pack's troop may say `gender`.
 
-**Version.** 4.6.0.
+**Version.** 4.9.0.
 
-### P10-07 · Art pass: battles (L)
+### P10-G1 · Graphics: battles (L)
 
-The owner, 2026-11-24: an art pass, or at least partial updates, toward the references in `art-reference/` (battles and town scenes, not the overworld).
+The owner, 2026-11-24: an art pass, or at least partial updates, toward the references in `art-reference/` (battles and town scenes, not the overworld). No fixed place in the order: whenever it fits.
 
 **Build.**
 - **Soldiers and the hero in battle** toward the references:
   - about 32×48, 3 heads tall, 4 directions with a 4-frame walk;
   - a dark-brown outline, 2–4 steps of shading, light from the upper left;
   - kit by role and realm.
-- **Women soldiers' battle sprites** (P10-06).
+- **Women soldiers' battle sprites** (P10-09), once it has landed.
 - **The battle ground:** props and tiles where they fit.
-- **Renderer changes** to draw the new frames are allowed here (an exception to the art rule, for this task only). The old frames stay as a fallback until each set is complete.
+- **Renderer changes** to draw the new frames are allowed here. The old frames stay as a fallback until each set is complete.
 - **Partial is fine:** each set (infantry, archers, cavalry, the hero, props) can land on its own. What is not done is listed as open.
 
 **Tests.** Every role and troop has frames, or the fallback; the battle's frame time on the phone-sized browser case is no worse than before; screenshots of a battle.
 
-**Version.** 4.7.0.
+**Version.** The next minor version when it lands.
 
-### P10-08 · Art pass: towns and the UI (L)
+### P10-G2 · Graphics: towns (L)
 
 **Build.**
-- **Stonebridge's town scene** toward reference 03: the buildings, walls and gate, props, and townsfolk in the new character style. Then the other town hubs, if any.
-- **The UI toward references 04–06:**
-  - deep navy panels with thin gold borders;
-  - cream serif headings;
-  - framed portraits;
-  - pixel stat icons;
-  - tabs with a raised active state.
-  
-  Done screen by screen, starting with the party screen and the dialogue box.
-- **Renderer changes allowed** for this task only, as in P10-07. **Partial is fine**, as in P10-07.
+- **Stonebridge's town scene** toward reference 03: the buildings, walls and gate, props, and townsfolk in the new character style. Then the other walkable towns (P10-03), each keeping its own look.
+- **Renderer changes allowed**, and **partial is fine**, as in P10-G1.
 
-**Tests.** Browser screenshots of the reworked screens at 812×375 and on desktop; text size and the reduced-effects setting still work.
+**Tests.** Browser screenshots of the reworked towns at 812×375 and on desktop; walking and talking still work.
 
-**Version.** 4.8.0.
+**Version.** The next minor version when it lands.
 
 ### P10-T · Phase 10 tuning and acceptance (M)
 
@@ -3395,12 +3449,13 @@ The owner, 2026-11-24: an art pass, or at least partial updates, toward the refe
   - wars on 20–50% of days;
   - one to three risings a year;
   - two to six lords' deaths a year;
-  - the coast's wars;
+  - the coast's wars (now a region of the one world);
   - a realm keeping its last fort.
+- **The old failures:** `landed` (seeds 2 and 3), the Phase 8 exit, Prototypes D and F, fixed or kept as known with a reason.
 - **The origins' balance** confirmed over all five and every realm.
 - **The scenario matrix** brought up to date, with the new start scenarios.
 - **`docs/PHASE-10-VALIDATION.md`,** with the checks waiting on the owner's phone play.
 
-**Runs.** Each run over 20 minutes, and the whole checkpoint, is suggested and run only on the owner's yes, unless a full overnight run was asked for.
+**Runs.** Each run over 20 minutes is asked about, or added to the next night run.
 
 **Version.** 5.0.0.
