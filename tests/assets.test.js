@@ -49,7 +49,7 @@ test('no runtime dependencies: the page loads only its own files', () => {
   }
   const shipped = [
     ...fs.readdirSync(path.join(ROOT, 'js')).map((f) => path.join(ROOT, 'js', f)),
-    ...fs.readdirSync(path.join(ROOT, 'data')).map((f) => path.join(ROOT, 'data', f)),
+    ...fs.readdirSync(path.join(ROOT, 'data'), { recursive: true }).map((f) => path.join(ROOT, 'data', f)).filter((f) => f.endsWith('.js')), // with data/worlds (P9-08)
     path.join(ROOT, 'style.css'),
   ];
   for (const file of shipped) {

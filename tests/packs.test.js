@@ -83,10 +83,11 @@ test('every check rejects a bad pack with a precise message (which file, which e
     ['too big', `{"x":"${'a'.repeat(2 * 1024 * 1024)}"}`, /over the 2 MB a pack may be/],
     ['no manifest', (p) => delete p.manifest, /bad\.json › manifest: missing/],
     ['bad pack id', (p) => (p.manifest.id = 'Sample Pack'), /manifest: id must be 1–40 of a–z/],
-    ['the official id', (p) => (p.manifest.id = 'sundered_realm'), /id sundered_realm is the official world's/],
+    ['the official id', (p) => (p.manifest.id = 'sundered_realm'), /id sundered_realm is an official world's/],
+    ['the id of the second world', (p) => (p.manifest.id = 'sundered_coast'), /id sundered_coast is an official world's/],
     ['no version', (p) => (p.manifest.version = 'one'), /manifest: version must look like 1\.0\.0/],
     ['bad engine range', (p) => (p.manifest.engine = 'soon'), /manifest: engine must be a version range/],
-    ['engine too new', (p) => (p.manifest.engine = '>=9.0.0'), /needs the game at >=9\.0\.0; this is 3\.13\.0/],
+    ['engine too new', (p) => (p.manifest.engine = '>=9.0.0'), /needs the game at >=9\.0\.0; this is \d+\.\d+\.\d+$/],
     ['a missing required pack', (p) => (p.manifest.requires = ['other']), /requires the pack other, which is not loaded/],
     ['an unknown table', (p) => (p.dragons = {}), /bad\.json › dragons: not a table of the world format/],
     ['an id outside the namespace', (p) => (p.troops.cairn_x = { ...p.troops['sample:cairn_herder'], id: 'cairn_x' }), /troops › cairn_x: a new entry's id must be sample:<name>/],
@@ -184,4 +185,61 @@ test('ids: every id check and save key takes a colon', () => {
   const again = CL.save.load();
   assert.equal(again.accounts.budgets['sample:mill'], 40);
   assert.equal(CL.accounts.balance(again, 'budget:sample:mill'), 40);
+});
+
+// P9-08: the pack checker (`npm run check-pack <dir>`): the game's own checks in Node, the same messages.
+test('the pack checker: good packs and worlds pass; a bad one fails with the game\'s own message and exit code 1', () => {
+  const os = require('node:os');
+  const { execFileSync } = require('node:child_process');
+  const { checkPaths: check } = require('../scripts/check-pack');
+  const checkPaths = (paths) => JSON.parse(JSON.stringify(check(paths))); // plain arrays, out of the game's sandbox
+  const { exportPackage } = require('../scripts/export-world');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'crownless-packs-'));
+  try {
+    // Good: the sample pack, the second world's package and the official world in the format.
+    fs.writeFileSync(path.join(dir, 'coast.json'), JSON.stringify(exportPackage('sundered_coast')));
+    fs.writeFileSync(path.join(dir, 'realm.json'), JSON.stringify(exportWorld()));
+    const good = checkPaths([path.join(ROOT, 'packs', 'sample'), dir]);
+    assert.deepEqual(good.map((r) => [path.basename(r.file), r.ok, r.kind]), [['sample.json', true, 'pack'], ['coast.json', true, 'world'], ['realm.json', true, 'world']]);
+    // A pack that requires another is checked after it: given in order, it passes.
+    const child = { manifest: { id: 'child', title: 'Child', author: 'T', version: '1.0.0', engine: '>=3.13.0', requires: ['sample'] }, merge: { troops: { 'sample:cairn_herder': { wage: 2 } } } };
+    fs.writeFileSync(path.join(dir, 'z_child.json'), JSON.stringify(child));
+    assert.equal(checkPaths([path.join(ROOT, 'packs', 'sample'), path.join(dir, 'z_child.json')])[1].ok, true);
+    assert.match(checkPaths([path.join(dir, 'z_child.json')])[0].errors[0], /^z_child\.json › manifest: requires the pack sample, which is not loaded$/);
+    // Bad: the same messages as the game's import, naming the file and the entry.
+    const bad = sample();
+    bad.troops['sample:cairn_spear'].upgradeTo = 'sample:nobody';
+    fs.writeFileSync(path.join(dir, 'bad.json'), JSON.stringify(bad));
+    const { CL } = loadGame({ party: false });
+    const inGame = CL.packs.parse(JSON.stringify(bad), { file: 'bad.json' }).errors;
+    assert.deepEqual(checkPaths([path.join(dir, 'bad.json')])[0].errors, [...inGame]);
+    assert.deepEqual([...inGame], ['bad.json › sample:cairn_spear: troop sample:cairn_spear: unknown upgrade sample:nobody']);
+    // A bad world: a place off its map, a village seated in the other realm, a table it gives whole changed by merge.
+    const w = exportPackage('sundered_coast');
+    w.settlements.brindle.mapX = 400;
+    w.settlements.fenwick.seat = 'calder';
+    fs.writeFileSync(path.join(dir, 'w_bad.json'), JSON.stringify(w));
+    assert.deepEqual(checkPaths([path.join(dir, 'w_bad.json')])[0].errors, ['w_bad.json › world_map sundered_coast: settlement brindle outside the map', 'w_bad.json › settlement fenwick: seat calder is not a fort or town of ostrand']);
+    w.settlements.brindle.mapX = 22;
+    w.settlements.fenwick.seat = 'coldkeep';
+    w.merge.troops = { looter: { wage: 1 } };
+    w.world_map.elsewhere = w.world_map.sundered_coast;
+    assert.deepEqual([...CL.packs.checkWorld(w, { file: 'w.json' })], ['w.json › world_map: needs one world, under the manifest\'s id sundered_coast (got sundered_coast, elsewhere)', 'w.json › merge › troops: the world gives this table whole; change it there']);
+    // The command: exit code 0 when all pass, 1 with the problems listed.
+    const run = (...args) => {
+      try {
+        return { code: 0, out: execFileSync(process.execPath, [path.join(ROOT, 'scripts', 'check-pack.js'), ...args], { encoding: 'utf8' }) };
+      } catch (e) {
+        return { code: e.status, out: e.stdout };
+      }
+    };
+    const ok = run(path.join(ROOT, 'packs', 'sample'));
+    assert.equal(ok.code, 0);
+    assert.match(ok.out, /^ok {3}.*sample\.json: the pack sample, 4 entries$/m);
+    const no = run(path.join(dir, 'bad.json'));
+    assert.equal(no.code, 1);
+    assert.match(no.out, /FAIL .*bad\.json: 1 problem\n {2}- bad\.json › sample:cairn_spear: troop sample:cairn_spear: unknown upgrade sample:nobody/);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
 });

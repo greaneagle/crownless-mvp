@@ -20,7 +20,8 @@
       body: [
         'You are a wanderer on the Border March, where two crowns claim an empire that is gone. Earn a name with your sword, hire soldiers, and decide who Greywall belongs to — or whether it belongs to either. Beyond the March lie the highlands of Hrothmark to the north, the Vessaro League’s southern coast and the free port of Merrow.',
         'Begin in Stonebridge: Elder Maren has work for a stranger. Her quest teaches the rest. The Journal always says what to do next.',
-        'Nothing ends the game. Lose a battle and you are captured, lose some crowns and gear, and are let go near a settlement.'
+        'Nothing ends the game. Lose a battle and you are captured, lose some crowns and gear, and are let go near a settlement.',
+        'Worlds: a new game asks which world. The Sundered Realm has the story; the Sundered Coast is a sandbox, two realms and a free port with no story, where you make your own way. Your save remembers its world.'
       ]
     },
     map: {

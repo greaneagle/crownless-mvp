@@ -55,6 +55,19 @@ P8-02 shipped with no new image files: the Realm screen is text. These would rep
 | 14 | **The assault**: ladders against the wall, a broken gate, the ram, a wall walkway and the keep | The assault battle map | Gaps in the wall, a crate for the gate, crates for the keep line (`js/arena.js`) |
 | 9 | **Holding marks** on the map: a pennant showing who holds the gates when they differ from the realm that claims it (an occupied fort) | World map | None yet: the settlement is drawn in its controller's colour, as before |
 
+### Phase 9: the Sundered Coast (from build 3.14.0)
+
+P9-08's second world shipped with no new image files: its troops use today's sprites by role (`allyArt` in `js/assets.js`: infantry and archer frames, in the realm's colour on the map), and its places, banners and terrain are the map's canvas shapes. These would replace the stand-ins.
+
+| # | Asset | Where it shows | Stand-in today |
+|---|---|---|---|
+| 15 | **Ostrand troop sprites** (3): Ostrand Levy, Shieldman (round shield, mail, cold-sea blue), Cliff Bowman (fur hood, longbow) | Battles; the troop tree | The shared infantry and archer frames |
+| 16 | **Saltreach League troop sprites** (3): Salt Militia, Flats Pikeman (long pike, brimmed hat), League Crossbow (pavise on the back) | Battles; the troop tree | The shared infantry and archer frames |
+| 17 | **Wreckers** (the coast's outlaws): a wrecker with a hooked pole and a lantern | Battles against wreckers | The Reaver frames |
+| 18 | **Gullhaven**: a harbour town icon with masts, and its banner (G) | World map | The town icon and a letter on the colour |
+| 19 | **Banners** for Ostrand (O) and the Saltreach League (S), and arms for the eight lords' houses (Vargr, Hask, Skarde; Salaro, Ferro, Vento) | World-map markers, the Realm screen | A letter on the faction colour |
+| 20 | **Sea cliffs and salt pans** on the world map | The northern cliffs and the salt flats | Plain grass |
+
 ## Things to keep in mind (not legal advice)
 - **AI-generated images.** The sheets were generated with **ChatGPT**'s image tools (OpenAI). How copyright applies to AI-generated images depends on the country, and OpenAI's terms of use govern the outputs. Before selling, read the then-current terms on ownership and commercial use of outputs and keep a dated copy with the release records (`docs/V2-PLAN.md` R-01).
 - **The GDD's "no Pokémon" rule.** The sprites are a generic 16-bit fantasy style: hooded wanderers, helmeted soldiers, tabards and pennants. None of them are characters, tiles or logos from an existing game. The rule is about copying; a similar era look is fine.

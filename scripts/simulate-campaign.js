@@ -17,8 +17,8 @@ function mulberry(seed) {
 }
 
 /** A fresh GDD new game on a seeded world, driven headlessly. */
-function newCampaign(seed, background = 'farmhand') {
-  const env = loadGame({ party: false, random: mulberry(seed * 7919), seed });
+function newCampaign(seed, background = 'farmhand', { world } = {}) {
+  const env = loadGame({ party: false, random: mulberry(seed * 7919), seed, world }); // P9-08: `world`, another official world
   const { CL } = env;
   const messages = [];
   CL.ui = headlessUi(CL, messages);

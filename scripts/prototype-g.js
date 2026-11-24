@@ -25,11 +25,12 @@ function mulberry(seed) {
 const WARN = /Wages short|run out of food|deserted|^Quartermaster .*: (food|wages)|went unpaid|leaves the company/;
 
 /** One campaign in one style: play half, save, reload from storage, play the rest. */
-function run(seed, style, days) {
+// P9-08: `world` plays another official world (data/worlds/*.js), as `--world <id>` does.
+function run(seed, style, days, { world } = {}) {
   const storage = memoryStorage();
   const messages = [];
   const boot = (fresh) => {
-    const env = loadGame({ party: false, worldEvents: true, random: mulberry(seed * 7919), seed, storage });
+    const env = loadGame({ party: false, worldEvents: true, random: mulberry(seed * 7919), seed, storage, world });
     const { CL } = env;
     CL.ui = headlessUi(CL, messages);
     if (fresh) {
@@ -99,10 +100,12 @@ function main() {
   const days = Number(process.argv[2] || 30);
   const seeds = Number(process.argv[3] || 6);
   const rows = [];
-  const only = process.argv.slice(4); // optional: the styles to run (default all four)
+  const w = process.argv.indexOf('--world');
+  const world = w > 0 ? process.argv[w + 1] : undefined;
+  const only = process.argv.slice(4).filter((a, i, all) => a !== '--world' && all[i - 1] !== '--world'); // optional: the styles to run (default all four)
   for (const style of only.length ? only : ['hands-off', 'presets', 'expert', 'landed']) {
     const all = [];
-    for (let seed = 1; seed <= seeds; seed++) all.push(run(seed, style, days));
+    for (let seed = 1; seed <= seeds; seed++) all.push(run(seed, style, days, { world }));
     const sum = (k) => all.reduce((n, r) => n + r[k], 0);
     const med = (k) => [...all.map((r) => r[k])].sort((a, b) => a - b)[Math.floor(all.length / 2)];
     rows.push({

@@ -63,7 +63,7 @@
       return {
         title: g.newGame ? 'A NEW WANDERER' : 'WHO ARE YOU?',
         text: g.newGame
-          ? 'You arrive outside Stonebridge with little more than a sword. Who were you before the road?'
+          ? `You arrive at ${CL.content.get('settlements', CL.world.map().start).name} with little more than a sword. Who were you before the road?`
           : 'Your party remembers your deeds, but not your name. Tell them who leads them.',
         button: 'Begin',
         secondary: g.newGame ? 'Back' : null,
@@ -1737,6 +1737,17 @@
   }
 
   function renderCreator() {
+    // P9-08: which world, at a new game, when this build has more than one. Another world reloads the page.
+    const worlds = CL.worlds.installed();
+    const pick = $('#worldPick');
+    pick.classList.toggle('hidden', !(CL.game.newGame && worlds.length > 1));
+    $('#worldChoices').replaceChildren(
+      ...worlds.map((w) =>
+        choiceButton(w.name, w.id === CL.worlds.current(), () => {
+          if (w.id !== CL.worlds.current()) CL.worlds.switchTo(w.id, { newGame: true });
+        }, [Object.assign(document.createElement('b'), { textContent: w.name }), w.sandbox ? 'A sandbox: no story, the realms as they are.' : 'The story of the Crownless, and the realms beyond it.']),
+      ),
+    );
     $('#cloakChoices').replaceChildren(
       ...CL.character.CLOAKS.map((id) => {
         const sw = Object.assign(document.createElement('span'), { className: 'swatch' });
@@ -3248,7 +3259,7 @@
     realmBtn.onclick = openRealm;
     realmRow.append(realmBtn);
     if (!rows.length) {
-      $('#journalScreen').replaceChildren(realmRow, el('p', '', 'No quests yet. People in Stonebridge may have work for a stranger — try the Elder.'), ...extra, chronCard, newsCard);
+      $('#journalScreen').replaceChildren(realmRow, el('p', '', CL.world.map().sandbox ? 'No story in this world: take contracts, serve a realm or found your own.' : 'No quests yet. People in Stonebridge may have work for a stranger — try the Elder.'), ...extra, chronCard, newsCard);
       return;
     }
     const label = { active: 'In progress', done: 'Complete', failed: 'Failed' };

@@ -41,7 +41,7 @@ test('P9-07: import the sample pack in Settings, turn it on, and its settlement 
   }
   expect(inView(at)).toBe(true);
   await pressAt(page, at.x, at.y);
-  expect(await game(page, (CL) => CL.game.travel && CL.game.travel.id)).toBe('sample:highcairn');
+  expect(await game(page, (CL) => CL.game.travel?.id)).toBe('sample:highcairn');
   await waitMode(page, 'settlement', 60_000);
   await expect(page.locator('#overlayTitle')).toHaveText('HIGHCAIRN');
   await expect(page.locator('#prep')).toContainText('Hire Cairn Herder');

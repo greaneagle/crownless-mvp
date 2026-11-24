@@ -1,8 +1,8 @@
 # Crownless — World Format
 
-_From build 3.13.0 (P9-07, design §23). A world, and a pack that adds to one, is one JSON object: a manifest and the content tables by name. Nothing in a world or a pack is ever run; the game reads it as data, checks it, and copies it into its content._
+_From build 3.13.0 (P9-07, design §23); the checker, the preview and the second world from 3.14.0 (P9-08). A world, and a pack that adds to one, is one JSON object: a manifest and the content tables by name. Nothing in a world or a pack is ever run; the game reads it as data, checks it, and copies it into its content._
 
-`node scripts/export-world.js [file]` writes the official world (the Sundered Realm, from `data/*.js`) in this format; `tests/packs.test.js` checks that it loads exactly as `data/*.js` does. The sample pack is `packs/sample/sample.json`.
+`node scripts/export-world.js [file]` writes the official world (the Sundered Realm, from `data/*.js`) in this format; `tests/packs.test.js` checks that it loads exactly as `data/*.js` does. `--world sundered_coast` writes the second official world (`data/worlds/sundered_coast.js`). The sample pack is `packs/sample/sample.json`.
 
 ## The object
 
@@ -24,7 +24,7 @@ _From build 3.13.0 (P9-07, design §23). A world, and a pack that adds to one, i
 | `version` | `major.minor.patch`, such as `1.0.0`. A save records it |
 | `engine` | The game versions it works with, as comparators separated by spaces: `>=3.13.0 <4.0.0`, `^3.13.0`, `=3.13.0` or `3.13.0` |
 | `requires` | Optional: ids of packs that must be on, and applied, before this one |
-| `kind` | Optional: `pack` (the default) adds to a world; `world` is a whole world (the export). Settings imports packs only |
+| `kind` | Optional: `pack` (the default) adds to a world; `world` is a whole world (see "Making a world"). Settings imports packs only |
 
 ### Tables
 
@@ -86,6 +86,27 @@ A pack is checked before it is kept and again when it is applied. Each problem s
 - **At boot** the packs turned on are applied in the order they were turned on, before the game reads its content. One that is gone or no longer passes its checks is left out, and the title says so.
 - **Saves:** a new save records the packs it began with (`packs: [{ id, version }]`, docs/SAVE-FORMAT.md). A save whose pack is not on is refused, untouched: the title says "This save needs the pack sample (version 1.0.0)", and turning the pack on and reloading opens it. A save of the official world alone opens with packs on or off.
 
+## Making a world
+
+A whole world is the same object with `"kind": "world"` in its manifest. It gives the tables it replaces **whole**; the tables it leaves out are the game's shared ones (items and the blacksmith's rules, goods, loot, skills and backgrounds, contracts, news, world events, businesses, help and tips, battle maps and the companions). `merge` changes fields of those shared tables for this world (the Sundered Coast moves the retinue's homes and the tournament's hosts to its own places). A world must give at least `factions`, `settlements`, `troops` (with `hero`, and the troops the shared tables name: `looter`, `reaver`, `mercenary`, `sellsword`), `encounters`, `party_templates`, `cultures` and its one `world_map` entry, under its manifest's `id`. `quests`, `dialogue` and `town_hubs` may be empty.
+
+- **A sandbox:** `"sandbox": true` on the world map: no story; a new campaign begins as the others are after theirs (the story flag `ending` is `sandbox`), so realms can be founded and the lords' rights are open from day one.
+- **Starting relations:** `relations` (peace, tension or war between two kingdoms). The Sundered Coast starts at war, so its realms move at once.
+- **Lords:** `world_map.nobles` (one `ruler` a realm; `holds`, `kin`, `traits`), as in the Sundered Realm.
+
+**Step by step.**
+1. Start from a copy of `data/worlds/sundered_coast.js` (or `node scripts/export-world.js --world sundered_coast my_world.json` for JSON), and give it a new `id`.
+2. Place its settlements, roads, rivers, regions and sites inside its `bounds`.
+3. **Check it:** `npm run check-pack <folder or file> …` checks every `.json` pack or world given, with the game's own checks and messages (the same as Settings gives at import). Packs are checked in order, each with the ones before it applied, so a pack may require one given before it. Exit code 1 when anything has a problem, with each problem listed: `w.json › settlement fenwick: seat calder is not a fort or town of ostrand`.
+4. **See it:** open `tools/preview.html` from a local server (`npm run serve`, then `http://localhost:8123/tools/preview.html`). Open a `.json` world or pack: it draws the map (land, coast, hills, mountains, marsh, forests, rivers and their crossings, roads, regions, sites, and every settlement in its realm's colour, a pack's new places ringed) and lists what the checks found beside it. The preview uses no game code beyond the content checks (`js/core.js`, `js/content.js`, `js/packs.js`); the story's and the realms' own rules are checked by `npm run check-pack`.
+5. **Play it:** a world ships as a classic script in `data/worlds/<id>.js` that sets `CROWNLESS_WORLDS.<id>`, loaded by `index.html` before `js/worlds.js`. The bots take a world: `npm run landed -- 180 3 --world <id>`, `npm run prototype-g -- 8 2 --world <id>`, and `newCampaign(seed, background, { world })`.
+
+## Worlds in the game
+
+- **Which world?** A new game asks, when the build has more than one (the Sundered Realm, with the story, and the Sundered Coast, a sandbox). Choosing another world keeps the choice (`crownless_world`) and reloads the page straight into the creator; the world is put in place (`js/worlds.js`) before anything reads the content.
+- **Saves:** a save records its world (`worldId`). Opened while another world is chosen, the game opens the save's own world (a reload), and the save is untouched. A save of a world this build does not have is kept aside, as before.
+- **Packs** are checked against the world in play; a pack made for one world is left out in the other, and the title says so.
+
 ## Not here
 
-The checker command and the preview page (P9-08). Packs with code (never).
+A world editor; sharing packs or worlds online; importing a whole world in Settings (the official worlds ship with the game). Packs with code (never).

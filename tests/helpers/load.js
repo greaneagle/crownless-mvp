@@ -7,7 +7,7 @@ const vm = require('node:vm');
 const ROOT = path.join(__dirname, '..', '..');
 
 // Logic modules only (no render/input/main — those need a real DOM).
-const LOGIC_MODULES = ['core', 'content', 'state', 'storage', 'packs', 'events', 'clock', 'soldiers', 'traits', 'chronicle', 'accounts', 'quartermaster', 'surgeon', 'blacksmith', 'scout', 'detachments', 'retinue', 'merchant', 'troops', 'save', 'assets', 'camera', 'arena', 'tactics', 'prep', 'groups', 'formations', 'divisions', 'objective', 'morale', 'reinforce', 'units', 'combat', 'party', 'upkeep', 'trade', 'autoresolve', 'spatial', 'sight', 'parties', 'contracts', 'realm', 'crowns', 'diplomacy', 'founding', 'rebellion', 'armies', 'houses', 'rights', 'lords', 'allegiance', 'fiefs', 'sieges', 'assault', 'nobles', 'claims', 'story', 'companion', 'news', 'happenings', 'tourney', 'business', 'portable', 'world', 'mapview', 'gestures', 'encounter', 'town', 'character', 'debug', 'settings', 'audio', 'tips', 'fullscreen'];
+const LOGIC_MODULES = ['core', 'content', 'worlds', 'state', 'storage', 'packs', 'events', 'clock', 'soldiers', 'traits', 'chronicle', 'accounts', 'quartermaster', 'surgeon', 'blacksmith', 'scout', 'detachments', 'retinue', 'merchant', 'troops', 'save', 'assets', 'camera', 'arena', 'tactics', 'prep', 'groups', 'formations', 'divisions', 'objective', 'morale', 'reinforce', 'units', 'combat', 'party', 'upkeep', 'trade', 'autoresolve', 'spatial', 'sight', 'parties', 'contracts', 'realm', 'crowns', 'diplomacy', 'founding', 'rebellion', 'armies', 'houses', 'rights', 'lords', 'allegiance', 'fiefs', 'sieges', 'assault', 'nobles', 'claims', 'story', 'companion', 'news', 'happenings', 'tourney', 'business', 'portable', 'world', 'mapview', 'gestures', 'encounter', 'town', 'character', 'debug', 'settings', 'audio', 'tips', 'fullscreen'];
 const CONTENT_MODULES = [
   'factions',
   'settlements',
@@ -31,6 +31,12 @@ const CONTENT_MODULES = [
   'help',
   'names',
 ];
+// P9-08: the other official worlds (data/worlds/*.js), loaded beside the built-in one.
+const WORLD_MODULES = fs
+  .readdirSync(path.join(ROOT, 'data', 'worlds'))
+  .filter((f) => f.endsWith('.js'))
+  .map((f) => f.slice(0, -3))
+  .sort();
 
 /** Mulberry32: a small seeded stand-in for Math.random. */
 function mulberry(seed) {
@@ -68,8 +74,9 @@ function memoryStorage(initial = {}) {
  * `content` (W-04): change the content before the game loads: a function given CROWNLESS_CONTENT (to
  * edit it in place, or return a replacement), or an object of tables that replace those of the same
  * name. The test world (tests/helpers/test-world.js) is one.
+ * `world` (P9-08): play another official world (data/worlds/*.js), as choosing it at a new game does.
  */
-function loadGame({ storage = memoryStorage(), random, party = true, worldParties = false, worldEvents = false, seed = 12345, content, packs = [] } = {}) {
+function loadGame({ storage = memoryStorage(), random, party = true, worldParties = false, worldEvents = false, seed = 12345, content, packs = [], world } = {}) {
   const uiCalls = [];
   // No `Math` here: the game gets the context's own, so nothing one game does to Math (or that a
   // script does to the host's Math.random) reaches another game in the same process (H-01: the host
@@ -84,6 +91,8 @@ function loadGame({ storage = memoryStorage(), random, party = true, worldPartie
   vm.createContext(sandbox);
   vm.runInContext('Math', sandbox).random = random || mulberry((seed ^ 0x5bd1e995) >>> 0);
   runModules(sandbox, 'data', CONTENT_MODULES);
+  runModules(sandbox, path.join('data', 'worlds'), WORLD_MODULES);
+  if (world) storage.setItem('crownless_world', world);
   if (typeof content === 'function') sandbox.CROWNLESS_CONTENT = content(sandbox.CROWNLESS_CONTENT) || sandbox.CROWNLESS_CONTENT;
   else if (content) Object.assign(sandbox.CROWNLESS_CONTENT, content);
   for (const m of LOGIC_MODULES) {
@@ -139,7 +148,10 @@ function loadGame({ storage = memoryStorage(), random, party = true, worldPartie
     const c = CL.campaign;
     c.gold = 130;
     c.character = CL.character.create({ name: 'Tester', background: 'farmhand' });
-    for (const t of ['levy', 'levy', 'levy', 'hunter', 'hunter']) CL.save.addSoldier(c, t);
+    // The fixture's soldiers: 3 Levies and 2 Hunters, or in another world its first realm's recruits.
+    const T = CL.content.table('troops');
+    const first = CL.world.map().factions.map((f) => CL.content.get('factions', f)).find((f) => f.recruits?.length)?.recruits[0];
+    for (const t of T.levy && T.hunter ? ['levy', 'levy', 'levy', 'hunter', 'hunter'] : [first, first, first, first, first]) CL.save.addSoldier(c, t);
   }
   return { CL, storage, uiCalls, sandbox };
 }
@@ -160,4 +172,13 @@ function loadContent() {
   return sandbox.CROWNLESS_CONTENT;
 }
 
-module.exports = { loadGame, loadContent, memoryStorage, mulberry, CONTENT_MODULES };
+/** P9-08: the other official worlds' packages (data/worlds/*.js), by id. */
+function loadWorlds() {
+  const sandbox = {};
+  sandbox.window = sandbox;
+  vm.createContext(sandbox);
+  runModules(sandbox, path.join('data', 'worlds'), WORLD_MODULES);
+  return JSON.parse(JSON.stringify(sandbox.CROWNLESS_WORLDS || {}));
+}
+
+module.exports = { loadGame, loadContent, loadWorlds, memoryStorage, mulberry, CONTENT_MODULES, WORLD_MODULES };

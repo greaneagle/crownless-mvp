@@ -255,7 +255,7 @@
   /**
    * Is this a complete save of a version this build can read? Never changes `d`.
    * @param {unknown} d parsed JSON
-   * @returns {{ problems: string[], newer?: boolean, otherWorld?: boolean }}
+   * @returns {{ problems: string[], newer?: boolean, otherWorld?: boolean, elsewhere?: string }}
    */
   function check(d) {
     if (!isObject(d)) return { problems: ['it is not a saved campaign'] };
@@ -268,7 +268,11 @@
       else if (!isKind(d[field], kind)) problems.push(`"${field}" is not a valid ${kind.replace('|null', '')}`);
     }
     if (problems.length) return { problems };
-    if (v >= 3 && !knownWorld(d.worldId)) return { problems: [`it belongs to another world ("${d.worldId}")`], otherWorld: true };
+    if (v >= 3 && !knownWorld(d.worldId)) {
+      // P9-08: a save of another official world this build has opens in that world (js/worlds.js).
+      if (CL.worlds?.known(d.worldId)) return { problems: [`it belongs to the world ${CL.worlds.name(d.worldId)}`], elsewhere: d.worldId };
+      return { problems: [`it belongs to another world ("${d.worldId}")`], otherWorld: true };
+    }
     return { problems: [] };
   }
 
@@ -620,7 +624,7 @@
    * The load path for any saved campaign (storage, a file, the pre-import slot): check its structure
    * and world, migrate it, repair it. Never touches storage.
    * @param {unknown} d parsed JSON
-   * @returns {{ campaign: Campaign | null, problems: string[], from?: number, newer?: boolean, otherWorld?: boolean, incompatible?: boolean, packs?: { id: string, version: string }[] }}
+   * @returns {{ campaign: Campaign | null, problems: string[], from?: number, newer?: boolean, otherWorld?: boolean, elsewhere?: string, incompatible?: boolean, packs?: { id: string, version: string }[] }}
    */
   function fromRaw(d) {
     const r = check(d);
@@ -671,6 +675,7 @@
         if (CL.storage.get(INCOMPATIBLE_KEY) == null) CL.storage.set(INCOMPATIBLE_KEY, text);
         CL.save.notice = r.packs ? `${r.problems.join('. ')}. Turn it on in Settings (or import it there) and reload: your save is kept as it was.` : `Your save could not be opened: ${r.problems[0]}. It has been kept safe and nothing will overwrite it.`;
       }
+      if (r.elsewhere && key === KEY) CL.save.elsewhere = r.elsewhere; // the boot opens that world (js/main.js)
       if (r.otherWorld && key === KEY) {
         if (CL.storage.get(OTHER_WORLD_KEY) == null) CL.storage.set(OTHER_WORLD_KEY, text);
         CL.save.notice = 'The world has grown: new kingdoms lie beyond the March, and campaigns begun before cannot continue in it, so a new one begins. Your old save has been kept safe and nothing will overwrite it.';
@@ -688,8 +693,9 @@
   /** Load the best available save. Sets CL.save.existed so the title can offer Continue. */
   function load() {
     CL.save.existed = true;
+    CL.save.elsewhere = null;
     let c = loadKey(KEY);
-    if (!c) {
+    if (!c && !CL.save.elsewhere) {
       c = loadKey(BACKUP_KEY);
       if (c) {
         CL.diag.log('warn', 'Main save unreadable; restored backup');

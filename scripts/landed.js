@@ -10,15 +10,17 @@
 // pressed for land-hungry lords, and sieges they rode to unsummoned.
 const { loadGame } = require('../tests/helpers/load');
 
-function run(seed, days = 180) {
-  const { CL } = loadGame({ party: true, worldParties: true, worldEvents: true, seed });
+// P9-08: `world` plays another official world (data/worlds/*.js), as `--world <id>` does.
+function run(seed, days = 180, { world } = {}) {
+  const { CL } = loadGame({ party: true, worldParties: true, worldEvents: true, seed, world });
   const c = CL.campaign;
-  const s = CL.content.get('settlements', 'merrow');
-  Object.assign(c.world, { x: s.mapX, y: s.mapY, location: 'merrow' }); // the free city: out of everyone's way
+  const free = CL.realm.kingdoms(c).find((f) => f.freeCity);
+  const s = Object.values(CL.content.table('settlements')).find((x) => x.ownerFaction === free?.id) || CL.content.get('settlements', CL.world.map().start);
+  Object.assign(c.world, { x: s.mapX, y: s.mapY, location: s.id }); // the free city: out of everyone's way
   CL.game.mode = 'settlement';
   // The sandbox after the story (D-W5: until Q4 ends the March pair is held in tension, and the other
   // kingdoms rarely meet), so its wars can come: the story's ending as the Crown holding Greywall.
-  CL.story.state(c).flags.ending = 'valedorn';
+  CL.story.state(c).flags.ending ||= CL.realm.realms(c)[0].id;
   const forts = () => {
     const out = {};
     for (const f of CL.realm.realms()) out[f.id] = Object.values(c.holdings).filter((h) => h.kind === 'fort' && h.controller === f.id).length;
@@ -148,8 +150,10 @@ module.exports = { run };
 
 if (require.main === module) {
   const [days = 180, seeds = 3] = process.argv.slice(2).filter((a) => /^\d+$/.test(a)).map(Number);
+  const w = process.argv.indexOf('--world');
+  const world = w > 0 ? process.argv[w + 1] : undefined;
   for (let i = 1; i <= seeds; i++) {
-    const r = run(i, days);
+    const r = run(i, days, { world });
     if (process.argv.includes('--json')) {
       console.log(JSON.stringify(r));
       continue;

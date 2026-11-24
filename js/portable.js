@@ -190,6 +190,8 @@
     const check = CL.save.check(raw);
     if (check.newer) return { ok: false, reason: 'This save was made by a newer version of Crownless. Update the game first.' };
     if (check.otherWorld) return { ok: false, reason: 'This save belongs to a world this version no longer has: campaigns begun before the world grew cannot continue in it.', problems: check.problems };
+    // P9-08: a save of the other official world: it is imported in that world.
+    if (check.elsewhere) return { ok: false, reason: `This save belongs to ${CL.worlds.name(check.elsewhere)}. Choose that world at a new game, then import it again.`, problems: [] };
     if (check.problems.length) return { ok: false, reason: 'The save is incomplete or damaged, so it was not loaded.', problems: check.problems };
     const gone = CL.packs.missing(raw.packs); // P9-07: a pack it was begun with is not on
     if (gone.length) return { ok: false, reason: `${gone.map(CL.save.packNeeded).join('. ')}. Turn it on in Settings, reload, and import again.`, problems: [] };

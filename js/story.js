@@ -67,8 +67,9 @@
   const tree = (id) => CL.content.table('dialogue')[id] || null;
   const isFlagValue = (v) => ['boolean', 'string'].includes(typeof v) || (typeof v === 'number' && Number.isFinite(v));
 
+  /** A new campaign's story. P9-08: a sandbox world (no story) begins as the others are after theirs. */
   function blank() {
-    return { flags: {}, quests: {}, visits: {} };
+    return { flags: CL.world?.map().sandbox ? { ending: 'sandbox' } : {}, quests: {}, visits: {} };
   }
 
   const state = (c = camp()) => {

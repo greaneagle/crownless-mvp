@@ -13,7 +13,7 @@ All save keys are read and written through the storage layer (`CL.storage`, `js/
 | `crownless_save_v2` … `crownless_save_v5` | From 1.2.0: a save of that older schema exactly as it was when a later build first migrated it (`crownless_save_v<n>`). Written once, never replaced (a further way back if a migration ever goes wrong) |
 | `crownless_v03_party` | A 0.3.x save (schema v1), migrated on first load and left as a further backup |
 
-These live in their own keys and are **not part of a save**: `crownless_packs_on` (the content packs turned on, from 3.13.0; the packs themselves are in IndexedDB, docs/WORLD-FORMAT.md), `crownless_settings` (device settings), `crownless_tips_seen` (tips already shown), `crownless_last_export` (export reminders), `crownless_dev` (developer tools).
+These live in their own keys and are **not part of a save**: `crownless_world` (the world chosen at a new game, from 3.14.0; absent for the Sundered Realm; with `crownless_world_new` in sessionStorage for the one reload into the creator), `crownless_packs_on` (the content packs turned on, from 3.13.0; the packs themselves are in IndexedDB, docs/WORLD-FORMAT.md), `crownless_settings` (device settings), `crownless_tips_seen` (tips already shown), `crownless_last_export` (export reminders), `crownless_dev` (developer tools).
 
 ## Exported file
 `Save & export` writes JSON:
@@ -41,7 +41,7 @@ Everything read back, from storage, a file or the pre-import slot, goes through 
    - v7: all of v6, plus `chronicle` (an array) and `honour` (an object).
    - v8: all of v7, plus `accounts` (an object), `ledger` (an array) and `followers` (an object).
    - v9: the same top-level fields as v8 (the merchant lives inside `followers`).
-2. **World:** a v3 save must belong to this world (`worldId`). From 2.7.0 (W-05b, decision D-W2) the world is `sundered_realm`, so every save of the old Border March (`border_march`, every build up to 2.6.0) is refused: on load the game begins a new campaign, says so once, and keeps the old save untouched in `crownless_save_other_world`; an import is refused with the reason. The schema did not change (still v9).
+2. **World:** a v3 save must belong to this world (`worldId`). From 2.7.0 (W-05b, decision D-W2) the world is `sundered_realm`, so every save of the old Border March (`border_march`, every build up to 2.6.0) is refused: on load the game begins a new campaign, says so once, and keeps the old save untouched in `crownless_save_other_world`; an import is refused with the reason. The schema did not change (still v9). From 3.14.0 (P9-08) a save of another official world this build has (the Sundered Coast, `sundered_coast`) is not refused: the boot opens that world (`crownless_world`, a reload) and the save, untouched.
 3. **Migrations** (`CL.save.MIGRATIONS`): pure steps from schema n to n + 1, applied in order. v1 → current is `migrateV1` (it builds soldiers from the old counts).
    - **2 → 3 (1.2.0):** adds `worldId: "border_march"` and `contentVersion: "unknown"` (which build wrote a v2 save was never recorded). Nothing else changes.
    - **3 → 4 (1.3.0):** adds `rng`, the named random streams, each seeded from `rngSeed` and the stream's name (so the same save always gets the same streams), and `nextResultId: 1` and `nextEventId: 1`. Nothing used them before. Nothing else changes.

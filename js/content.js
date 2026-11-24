@@ -39,6 +39,9 @@
     'businesses',
   ];
 
+  /** P9-08: tables a world may leave empty (a sandbox world has no story or walkable town). */
+  const OPTIONAL = ['quests', 'dialogue', 'town_hubs'];
+
   const raw = () => root.CROWNLESS_CONTENT || {};
 
   function table(name) {
@@ -143,7 +146,7 @@
   function validate(C = raw()) {
     const errors = [];
     const err = (msg) => errors.push(msg);
-    for (const t of TABLES) if (!C[t] || !Object.keys(C[t]).length) err(`missing table: ${t}`);
+    for (const t of TABLES) if (!C[t] || (!OPTIONAL.includes(t) && !Object.keys(C[t]).length)) err(`missing table: ${t}`);
 
     for (const t of TABLES) {
       if (!C[t]) continue;
@@ -374,6 +377,22 @@
     return errors;
   }
 
+  /**
+   * P9-08: a world package (docs/WORLD-FORMAT.md) over the shared content: the tables it gives replace
+   * those of the same name whole; `merge` then changes fields of entries that exist. Pure data.
+   * @param {Record<string, any>} base the content as data/*.js built it
+   * @param {Record<string, any>} world a world package (manifest, tables, merge)
+   */
+  function compose(base, world) {
+    const C = { ...base };
+    for (const [t, v] of Object.entries(world)) if (t !== 'manifest' && t !== 'merge') C[t] = JSON.parse(JSON.stringify(v));
+    for (const [t, entries] of Object.entries(world.merge || {})) {
+      C[t] = { ...C[t] };
+      for (const [id, fields] of Object.entries(entries)) if (C[t][id]) C[t][id] = { ...C[t][id], ...JSON.parse(JSON.stringify(fields)) };
+    }
+    return C;
+  }
+
   /** Validate once at boot and log every problem to diagnostics. */
   function init() {
     const errors = validate();
@@ -382,5 +401,5 @@
     return errors;
   }
 
-  CL.content = { TABLES, LAWS, table, get, troop, item, encounter, lootTable, validate, init };
+  CL.content = { TABLES, OPTIONAL, LAWS, table, get, troop, item, encounter, lootTable, validate, compose, init };
 })(typeof window !== 'undefined' ? window : globalThis);

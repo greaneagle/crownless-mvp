@@ -635,6 +635,8 @@ declare global {
   /** Result of CL.save.check: why a parsed save can't be loaded (empty when it can). */
   interface SaveCheck {
     problems: string[];
+    /** P9-08: it belongs to this other official world, which the build has. */
+    elsewhere?: string;
     /** Made by a newer build with a later save schema. */
     newer?: boolean;
     /** Belongs to another world (content package). */
@@ -676,6 +678,8 @@ declare global {
     lastError: string | null;
     stale: boolean;
     notice: string | null;
+    /** P9-08: the main save belongs to this other official world (the boot opens it). */
+    elsewhere?: string | null;
     load(): Campaign;
     write(): boolean;
     autosave(): boolean;

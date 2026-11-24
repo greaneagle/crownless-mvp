@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>World Preview</title>
+<!-- P9-08: the map preview of a world package or pack (docs/WORLD-FORMAT.md, "Making a world"). It
+     draws the map, settlements, roads and regions, and lists what the checks found. It uses no game
+     code beyond the content checks: js/core.js, js/content.js and js/packs.js, over the shared tables
+     of data/*.js. The story's and the realms' own rules are checked by `npm run check-pack`. -->
+<script src="../data/factions.js"></script>
+<script src="../data/settlements.js"></script>
+<script src="../data/troops.js"></script>
+<script src="../data/items.js"></script>
+<script src="../data/markets.js"></script>
+<script src="../data/quests.js"></script>
+<script src="../data/dialogue.js"></script>
+<script src="../data/battle_maps.js"></script>
+<script src="../data/encounters.js"></script>
+<script src="../data/world_map.js"></script>
+<script src="../data/character.js"></script>
+<script src="../data/world_parties.js"></script>
+<script src="../data/contracts.js"></script>
+<script src="../data/town_hubs.js"></script>
+<script src="../data/companions.js"></script>
+<script src="../data/news.js"></script>
+<script src="../data/world_events.js"></script>
+<script src="../data/tournaments.js"></script>
+<script src="../data/businesses.js"></script>
+<script src="../data/help.js"></script>
+<script src="../data/names.js"></script>
+<script src="../data/worlds/sundered_coast.js"></script>
+<script src="../js/core.js"></script>
+<script src="../js/content.js"></script>
+<script src="../js/packs.js"></script>
+<style>
+:root { --bg: #f4f1ea; --panel: #fffdf8; --ink: #2a2620; --muted: #6b645a; --line: #d8d1c4; --ok: #2f7a3f; --bad: #a83232; --land: #e9e2cf; --sea: #b9d3e0; --road: #8a6a3f; --water: #4f86b0; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #1d1b18; --panel: #26231f; --ink: #ece6da; --muted: #a89f90; --line: #3d3832; --ok: #6cc07f; --bad: #e07a7a; --land: #3a362e; --sea: #26404f; --road: #c49a5e; --water: #6fa6d0; } }
+:root[data-theme="dark"] { --bg: #1d1b18; --panel: #26231f; --ink: #ece6da; --muted: #a89f90; --line: #3d3832; --ok: #6cc07f; --bad: #e07a7a; --land: #3a362e; --sea: #26404f; --road: #c49a5e; --water: #6fa6d0; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 system-ui, sans-serif; }
+header, main { max-width: 1200px; margin: 0 auto; padding: 12px 16px; }
+h1 { font-size: 20px; margin: 4px 0; }
+header p { margin: 4px 0 10px; color: var(--muted); }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+button, label.file { font: inherit; padding: 6px 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--ink); cursor: pointer; }
+label.file input { display: none; }
+main { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 16px; }
+@media (max-width: 760px) { main { grid-template-columns: minmax(0, 1fr); } }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px; min-width: 0; }
+canvas { width: 100%; height: auto; display: block; border-radius: 4px; }
+#title { font-weight: 600; margin-bottom: 6px; }
+#status { font-weight: 600; }
+#status.ok { color: var(--ok); }
+#status.bad { color: var(--bad); }
+#findings { padding-left: 18px; margin: 8px 0; overflow-wrap: anywhere; }
+#findings li { margin: 4px 0; }
+#legend, #summary { color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>World preview</h1>
+  <p>Open a world or a pack (one <code>.json</code> file) to see its map and what the checks find. Nothing in it is run.</p>
+  <div class="row">
+    <label class="file">Open a .json file<input id="file" type="file" accept=".json,application/json"></label>
+    <button id="official" type="button">The official world</button>
+    <button id="coast" type="button">The Sundered Coast</button>
+  </div>
+</header>
+<main>
+  <section class="card"><div id="title">No world open yet</div><canvas id="map" width="900" height="720" aria-label="The world's map"></canvas><p id="legend">Towns are large dots, forts squares, villages small dots, in their realm's colour; a ring marks a pack's new place; ✕ marks a site. Roads are brown, rivers blue, regions dashed.</p></section>
+  <section class="card" aria-live="polite"><div id="status">Checks: nothing open</div><ul id="findings"></ul><p id="summary"></p></section>
+</main>
+<script>
+(function () {
+  'use strict';
+  const CL = window.Crownless;
+  const BASE = JSON.parse(JSON.stringify(window.CROWNLESS_CONTENT));
+  const $ = (s) => document.querySelector(s);
+
+  /** The content the file makes: a world over the shared tables, or the official world with a pack added. */
+  function contentOf(obj) {
+    if (obj?.manifest?.kind === 'world') return CL.content.compose(BASE, obj);
+    return CL.packs.apply(JSON.parse(JSON.stringify(BASE)), obj);
+  }
+
+  function show(name, text) {
+    const { errors } = CL.packs.parse(text, { file: name, content: BASE });
+    let obj = null;
+    try {
+      obj = JSON.parse(text);
+    } catch {
+      obj = null;
+    }
+    const status = $('#status');
+    status.textContent = errors.length ? `Checks: ${errors.length} problem${errors.length === 1 ? '' : 's'}` : 'Checks: no problems found';
+    status.className = errors.length ? 'bad' : 'ok';
+    $('#findings').replaceChildren(...errors.map((e) => Object.assign(document.createElement('li'), { textContent: e })));
+    if (!obj || typeof obj !== 'object') {
+      $('#title').textContent = `${name}: not JSON, so there is nothing to draw`;
+      $('#summary').textContent = '';
+      return;
+    }
+    let C;
+    try {
+      C = contentOf(obj);
+    } catch (e) {
+      $('#title').textContent = `${name}: could not be put together (${e.message})`;
+      return;
+    }
+    const added = new Set(obj.manifest?.kind === 'world' ? [] : Object.keys(obj.settlements || {}));
+    draw(C, added);
+    const m = obj.manifest || {};
+    $('#title').textContent = `${m.title || name} · ${m.kind === 'world' ? 'a world' : 'a pack'}${m.version ? ` · ${m.version}` : ''}`;
+    const w = Object.values(C.world_map || {})[0];
+    const n = (t) => Object.keys(C[t] || {}).length;
+    $('#summary').textContent = w ? `${w.name}: ${w.bounds?.w} × ${w.bounds?.h}; ${(w.factions || []).length} kingdoms; ${n('settlements')} settlements, ${n('troops')} troops, ${(w.nobles || []).length} lords, ${Object.keys(w.sites || {}).length} sites.` : 'No world map.';
+  }
+
+  function draw(C, added) {
+    const cv = $('#map');
+    const x = cv.getContext('2d');
+    const w = Object.values(C.world_map || {})[0];
+    const css = getComputedStyle(document.documentElement);
+    const v = (k) => css.getPropertyValue(k).trim();
+    x.clearRect(0, 0, cv.width, cv.height);
+    if (!w?.bounds?.w || !w?.bounds?.h) return;
+    const s = Math.min(cv.width / w.bounds.w, 720 / w.bounds.h);
+    cv.height = Math.ceil(w.bounds.h * s);
+    const P = ([px, py]) => [px * s, py * s];
+    x.fillStyle = v('--land');
+    x.fillRect(0, 0, cv.width, cv.height);
+    // The coast: a band of sea along each side named.
+    x.fillStyle = v('--sea');
+    const band = 4 * s;
+    for (const side of w.coast || []) {
+      if (side === 'north') x.fillRect(0, 0, cv.width, band);
+      if (side === 'south') x.fillRect(0, cv.height - band, cv.width, band);
+      if (side === 'west') x.fillRect(0, 0, band, cv.height);
+      if (side === 'east') x.fillRect(w.bounds.w * s - band, 0, band, cv.height);
+    }
+    const poly = (pts, fill) => {
+      if (!Array.isArray(pts) || pts.length < 3) return;
+      x.beginPath();
+      pts.forEach((p, i) => (i ? x.lineTo(...P(p)) : x.moveTo(...P(p))));
+      x.closePath();
+      x.fillStyle = fill;
+      x.fill();
+    };
+    const AREA = { mountain: 'rgba(120,115,110,0.55)', hills: 'rgba(170,140,90,0.45)', marsh: 'rgba(80,140,130,0.45)' };
+    for (const a of w.areas || []) poly(a.poly, AREA[a.kind] || 'rgba(0,0,0,0.2)');
+    for (const f of w.forests || []) poly(f, 'rgba(60,120,60,0.45)');
+    // Regions, dashed, with their names.
+    x.setLineDash([6, 5]);
+    x.strokeStyle = v('--muted');
+    x.lineWidth = 1;
+    x.font = '12px system-ui, sans-serif';
+    x.fillStyle = v('--muted');
+    for (const r of Object.values(w.regions || {})) {
+      x.strokeRect(r.x * s, r.y * s, r.w * s, r.h * s);
+      x.fillText(r.name || '', r.x * s + 4, r.y * s + 14);
+    }
+    x.setLineDash([]);
+    // Rivers and their crossings.
+    x.strokeStyle = v('--water');
+    for (const wt of w.waters || []) {
+      x.lineWidth = Math.max(2, (wt.width || 1) * s * 0.8);
+      x.beginPath();
+      (wt.line || []).forEach((p, i) => (i ? x.lineTo(...P(p)) : x.moveTo(...P(p))));
+      x.stroke();
+      for (const c of wt.crossings || []) {
+        x.fillStyle = c.kind === 'bridge' ? v('--road') : v('--land');
+        x.fillRect(c.x * s - 4, c.y * s - 4, 8, 8);
+      }
+    }
+    // Roads between the places they name.
+    const S = C.settlements || {};
+    x.strokeStyle = v('--road');
+    x.lineWidth = 2;
+    for (const road of w.roads || []) {
+      const pts = road.map((id) => S[id]).filter(Boolean);
+      x.beginPath();
+      pts.forEach((p, i) => (i ? x.lineTo(p.mapX * s, p.mapY * s) : x.moveTo(p.mapX * s, p.mapY * s)));
+      x.stroke();
+    }
+    // Sites.
+    x.strokeStyle = v('--bad');
+    x.lineWidth = 2;
+    for (const st of Object.values(w.sites || {})) {
+      const [px, py] = P([st.mapX, st.mapY]);
+      x.beginPath();
+      x.moveTo(px - 4, py - 4);
+      x.lineTo(px + 4, py + 4);
+      x.moveTo(px + 4, py - 4);
+      x.lineTo(px - 4, py + 4);
+      x.stroke();
+    }
+    // Settlements, in their owner's colour, with their names.
+    x.font = '12px system-ui, sans-serif';
+    for (const p of Object.values(S)) {
+      if (!Number.isFinite(p.mapX) || !Number.isFinite(p.mapY)) continue;
+      const [px, py] = P([p.mapX, p.mapY]);
+      x.fillStyle = C.factions?.[p.ownerFaction]?.color || '#888';
+      x.strokeStyle = v('--ink');
+      x.lineWidth = 1;
+      const r = p.type === 'town' ? 7 : 4.5;
+      if (p.type === 'fort') {
+        x.fillRect(px - 5, py - 5, 10, 10);
+        x.strokeRect(px - 5, py - 5, 10, 10);
+      } else {
+        x.beginPath();
+        x.arc(px, py, r, 0, Math.PI * 2);
+        x.fill();
+        x.stroke();
+      }
+      if (added.has(p.id)) {
+        x.strokeStyle = v('--bad');
+        x.lineWidth = 2;
+        x.beginPath();
+        x.arc(px, py, 11, 0, Math.PI * 2);
+        x.stroke();
+      }
+      x.fillStyle = v('--ink');
+      x.fillText(p.placeName || p.name || p.id, px + 8, py - 6);
+    }
+  }
+
+  $('#file').addEventListener('change', async (e) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    show(f.name, await f.text());
+    e.target.value = '';
+  });
+  $('#official').addEventListener('click', () => {
+    const world = { manifest: { id: Object.keys(BASE.world_map)[0], title: 'The official world', author: 'Crownless', version: CL.BUILD, engine: `>=${CL.BUILD}`, kind: 'world' }, ...BASE };
+    show('official.json', JSON.stringify(world));
+  });
+  $('#coast').addEventListener('click', () => show('sundered_coast.json', JSON.stringify(window.CROWNLESS_WORLDS.sundered_coast)));
+})();
+</script>
+</body>
+</html>

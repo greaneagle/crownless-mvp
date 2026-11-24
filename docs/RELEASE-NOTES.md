@@ -1,5 +1,28 @@
 # Crownless — Release Notes
 
+## v3.14.0 — Creator tools and a second world (P9-08) · 2026-11-24
+
+### New
+- **The Sundered Coast**, a second world: the Kingdom of Ostrand on the northern cliffs, the Saltreach League on the salt flats, and the Free Port of Gullhaven between them. Its own cultures, troops (three a realm) and eight lords. A sandbox: no story, and the two realms start at war.
+- **Which world?** A new game asks which world to play, the Sundered Realm (with the story) or the Sundered Coast. Choosing the coast reloads the page straight back into the creator.
+- **Saves know their world.** A save of the coast, opened while the Sundered Realm is chosen, opens the coast instead. The save is untouched.
+- **The pack checker:** `npm run check-pack <folder or file>` checks packs and whole worlds with the game's own checks and messages, and exits with code 1 when anything is wrong.
+- **The map preview:** `tools/preview.html` draws a world's or a pack's map (places, roads, rivers, regions, sites) and lists what the checks found.
+- "Getting started" has a line on worlds. `docs/WORLD-FORMAT.md` has "Making a world".
+
+### Known
+- The coast's realms start at war, but the war ends in a truce within about 11 days and rarely returns in 180 days (the shared world pacing). Left for P9-T.
+- The second world was played in the desktop pane at phone size, not on a phone.
+- The coast's troops, banners and Gullhaven use today's art (requests in `docs/ASSETS.md`, rows 15–20).
+
+### Under the hood
+- `js/worlds.js`: the worlds this build has, the one chosen (`crownless_world`), put in place at load before anything reads the content. A world is `data/worlds/<id>.js` in the world format (`kind: "world"`): the tables it gives replace the game's whole; `merge` changes the shared ones (`CL.content.compose`).
+- `CL.packs.checkWorld`: the checks for a whole world; `parse` takes either kind. A pack's id may not be any official world's.
+- `quests`, `dialogue` and `town_hubs` may be empty. A sandbox world (`sandbox: true`) begins after its story (`ending: 'sandbox'`).
+- The bots take a world: `landed` and `prototype-g` (`--world <id>`, or `{ world }`), `newCampaign(seed, background, { world })`; `loadGame({ world })` in the tests.
+- No save schema step: `worldId` was already recorded.
+- **Tests:** 905 fast tests (1 new in `packs.test.js` for the checker, 2 new in `world-package.test.js` for the coast); browser `startup.spec.js` and `packs.spec.js` 16 of 16 (2 new); slow suite 18 of 22. The 3 new coast tests in `slow/second-world.test.js` pass. The 4 failures were already failing at the P9-06 checkpoint: landed seed 3, the Phase 8 exit, Prototype D and Prototype F.
+
 ## v3.13.0 — Content packs (P9-07) · 2026-11-24
 
 ### New

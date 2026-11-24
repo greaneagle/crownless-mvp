@@ -59,3 +59,28 @@ test('the new-game helper reaches Stonebridge with the default Farmhand', async 
   await newGame(page);
   expect(await game(page, (CL) => [CL.campaign.character.background, CL.campaign.world.location])).toEqual(['farmhand', 'stonebridge']);
 });
+
+test('P9-08: choosing the second world at a new game reloads into it, and its save reopens it', async ({ page }) => {
+  await open(page);
+  await press(page, '#primaryBtn');
+  await waitMode(page, 'create');
+  await expect(page.locator('#worldPick')).toBeVisible();
+  await expect(page.locator('#worldChoices button')).toHaveCount(2);
+  await expect(page.locator('#worldChoices button[aria-checked="true"]')).toContainText('The Sundered Realm');
+  // Another world: the page reloads into it, straight back to the creator.
+  await press(page, page.locator('#worldChoices button', { hasText: 'The Sundered Coast' }));
+  await page.waitForFunction(() => window.Crownless?.worlds?.current() === 'sundered_coast' && window.Crownless.game.mode === 'create', null, { timeout: 30_000 });
+  await expect(page.locator('#worldChoices button[aria-checked="true"]')).toContainText('The Sundered Coast');
+  await expect(page.locator('#overlayText')).toContainText('You arrive at Gullhaven');
+  await page.locator('#heroName').fill('Coaster');
+  await press(page, '#primaryBtn'); // Begin
+  await waitMode(page, 'settlement');
+  await expect(page.locator('#overlayTitle')).toHaveText('GULLHAVEN');
+  expect(await game(page, (CL) => [CL.campaign.worldId, CL.campaign.world.location, CL.story.state(CL.campaign).flags.ending])).toEqual(['sundered_coast', 'gullhaven', 'sandbox']);
+  // With the built-in world chosen again, the save of the coast opens its own world.
+  await game(page, (CL) => CL.save.write() && localStorage.removeItem(CL.worlds.KEY));
+  await page.reload();
+  await page.waitForFunction(() => window.Crownless?.worlds?.current() === 'sundered_coast' && window.Crownless.game.mode === 'title', null, { timeout: 30_000 });
+  await expect(page.locator('#primaryBtn')).toHaveText('Continue');
+  expect(await game(page, (CL) => CL.campaign.character.name)).toBe('Coaster');
+});

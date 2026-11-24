@@ -3142,7 +3142,7 @@ The phase opens with five battle-scale tasks (owner, 2026-11-22; decisions D-P9a
 - **Checks:** 902 fast tests; lint clean but the 2 old warnings; browser 231 passed, 9 skipped (packs.spec 4 of 4); slow `test-world` passes. Story and quest ids unchanged, so `gate-d-campaigns` was not needed.
 - **Played at 812×375:** imported the sample in Settings, turned it on, reloaded (your save still opened), new game recorded the pack, reached Highcairn (Debug Go there after two Reaver bands), hired a Cairn Herder; pack off and reload named the pack and left the save unchanged; on again, it opened. Your save restored. **Open for P9-T:** packs on a phone; a refused save has no way back once a new game is played; the game still loads `data/*.js`, not the JSON world.
 
-### P9-08 · Creator tools and a second world (L) — Specified
+### P9-08 · Creator tools and a second world (L) — ✅ Done in 3.14.0
 
 **Problem.** Making a world means reading the code. Design §23.1: Crownless is a platform, and the Border March its first world.
 
@@ -3168,6 +3168,16 @@ The phase opens with five battle-scale tasks (owner, 2026-11-22; decisions D-P9a
 - **Play:** a new game in the second world: ride, fight a band, meet its lords.
 - **Explain:** a "Worlds" line in "Getting started"; `docs/WORLD-FORMAT.md` gains "Making a world", with the checker and the preview.
 - **Not here:** a world editor; sharing packs online.
+
+**Done (3.14.0).**
+- **The checker:** `scripts/check-pack.js` (`npm run check-pack <dir or file> …`): the game's own `packs.parse` in Node, the same messages, packs checked in turn (a pack may require one given before it), exit code 1 on errors. `export-world.js --world <id>` writes an official world's package.
+- **Whole worlds:** `packs.checkWorld` (shape, manifest, one `world_map` under its id, `merge` on shared tables only, then `content.validate` on `content.compose(base, world)`); `parse` takes either kind.
+- **The preview:** `tools/preview.html` loads a `.json` world or pack (or either official world), draws land, coast, areas, forests, rivers and crossings, roads, regions, sites and places in their realm's colour (a pack's new ones ringed), and lists the findings. It uses only `core.js`, `content.js` and `packs.js`.
+- **The Sundered Coast** (`data/worlds/sundered_coast.js`, a sandbox on 150 × 120): Ostrand (crown) and the Saltreach League (league), each with a town, two forts and three villages; the Free Port of Gullhaven; its own cultures, three troops a realm, 8 lords; it starts at war. I laid out its own map instead of reusing the test world's, so the places are new. One tuning try: tension gave 1 war in 3 runs and no siege; war at the start gives sieges and a fort taken.
+- **Choosing a world:** `js/worlds.js` (`crownless_world`, put in place at load); "Which world?" in the creator reloads into it; a save of the other world opens that world, untouched; a file import names the world to choose. The intro and the empty journal name the world's own start. "Getting started" has a Worlds line; WORLD-FORMAT has "Making a world".
+- **The bots on it:** `campaign-bots`, `prototype-g` and `landed` take `{ world }`; `tests/slow/second-world.test.js` (4 seeds × 15 days; Prototype G every style with a reload; 180 days alone, 2 seeds: wars, sieges, a fort a realm, the invariants).
+- **Checks:** 905 fast tests; lint clean but the 2 old warnings; browser startup and packs specs 16 of 16; slow suite 18 of 22. The 3 coast tests pass; the 4 failures are the same as at the P9-06 checkpoint (landed seed 3, Phase 8 exit, Prototypes D and F).
+- **Played at 812×375:** chose the coast at a new game, began at Gullhaven, hired a Mercenary, rode to the Looter Camp and won (the pane was hidden, so the fight and the rides were stepped by script), and found Ostrand's lords Hask, Vargr and Skarde besieging Rookmoor. Your save was restored (from its pre-migration copy, same day). **Open for P9-T:** the coast's war ends in a truce within days and seldom returns; not tried on a phone.
 
 ### P9-T · Phase 9 tuning and acceptance (M) — Specified
 

@@ -16,7 +16,17 @@
     CL.content.init();
     CL.settings.load(); // device settings: volumes, battle size, effects
     CL.audio.bind();
+    const fresh = CL.worlds.takeNewGame(); // P9-08: a new game in the world just chosen
     CL.campaign = CL.save.load();
+    // P9-08: the save belongs to another world this build has: open that world (the save is untouched).
+    const there = CL.save.elsewhere;
+    if (there && !fresh) {
+      if (CL.worlds.chosen() !== there) {
+        CL.worlds.switchTo(there);
+        return;
+      }
+      CL.save.notice = `Your save belongs to ${CL.worlds.name(there)}, which could not be opened. It has been kept safe and nothing will overwrite it.`;
+    }
     CL.save.bindTabs();
     CL.assets.preload();
 
@@ -96,6 +106,10 @@
     }
 
     CL.ui.changeMode('title');
+    if (fresh) {
+      CL.game.newGame = true;
+      CL.ui.changeMode('create');
+    }
     if (CL.save.notice) CL.ui.message(CL.save.notice);
     if (CL.packs.problems().length) CL.ui.message(`A pack was left out: ${CL.packs.problems()[0]} (Settings lists your packs).`); // P9-07
     diag.log('info', 'Crownless booted', { build: CL.BUILD, assetCount: diag.assets.requested });

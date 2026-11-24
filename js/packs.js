@@ -99,17 +99,49 @@
   const kind = (v) => (v === null ? 'null' : Array.isArray(v) ? 'list' : typeof v === 'object' ? 'object' : typeof v);
 
   /** The manifest's problems (`file` names the pack in each message). */
-  function checkManifest(m, file, err) {
+  function checkManifest(m, file, err, world = false) {
     const at = `${file} › manifest`;
     if (!isObj(m)) return err(`${at}: missing (it needs id, title, author, version and engine)`);
     if (!NAME.test(m.id || '')) err(`${at}: id must be 1–40 of a–z, 0–9 and _ (got ${JSON.stringify(m.id)})`);
-    else if (m.id === OFFICIAL) err(`${at}: id ${m.id} is the official world's`);
+    else if (!world && (m.id === OFFICIAL || CL.worlds?.known(m.id))) err(`${at}: id ${m.id} is an official world's`);
     for (const k of ['title', 'author']) if (typeof m[k] !== 'string' || !m[k].trim()) err(`${at}: ${k} must be text`);
     if (!parseVersion(m.version)) err(`${at}: version must look like 1.0.0 (got ${JSON.stringify(m.version)})`);
     if (!validRange(m.engine)) err(`${at}: engine must be a version range such as ">=3.13.0 <4.0.0" (got ${JSON.stringify(m.engine)})`);
     else if (!satisfies(CL.BUILD, m.engine)) err(`${at}: needs the game at ${m.engine}; this is ${CL.BUILD}`);
     if (m.requires != null && (!Array.isArray(m.requires) || m.requires.some((r) => !NAME.test(typeof r === 'string' ? r : r?.id || '')))) err(`${at}: requires must be a list of pack ids`);
     if (m.kind != null && !['pack', 'world'].includes(m.kind)) err(`${at}: kind must be pack or world`);
+  }
+
+  /** `merge`'s problems: only entries that exist (in `content` or the pack's own), no change of id, the same type as now. */
+  function checkMerge(merge, content, pack, file, err) {
+    if (merge == null) return;
+    if (!isObj(merge)) return err(`${file} › merge: must be an object of tables`);
+    for (const [t, entries] of Object.entries(merge)) {
+      if (!CL.content.TABLES.includes(t)) {
+        err(`${file} › merge › ${t}: not a table of the world format`);
+        continue;
+      }
+      if (!isObj(entries)) {
+        err(`${file} › merge › ${t}: must be an object of entries by id`);
+        continue;
+      }
+      for (const [key, fields] of Object.entries(entries)) {
+        const at = `${file} › merge › ${t} › ${key}`;
+        const old = content[t]?.[resolve(key)] || pack[t]?.[key];
+        if (!old) {
+          err(`${at}: there is no ${t} entry ${key} to change`);
+          continue;
+        }
+        if (!isObj(fields)) {
+          err(`${at}: must be an object of fields`);
+          continue;
+        }
+        for (const [f, v] of Object.entries(fields)) {
+          if (f === 'id') err(`${at}: an entry's id cannot change`);
+          else if (f in old && old[f] !== null && v !== null && kind(old[f]) !== kind(v)) err(`${at}: ${f} must be ${kind(old[f]) === 'list' ? 'a list' : `a ${kind(old[f]) === 'string' ? 'text' : kind(old[f])}`}, as it is now (got ${kind(v) === 'string' ? 'text' : kind(v)})`);
+        }
+      }
+    }
   }
 
   /**
@@ -158,36 +190,7 @@
         added.push([t, key]);
       }
     }
-    if (pack.merge != null) {
-      if (!isObj(pack.merge)) err(`${file} › merge: must be an object of tables`);
-      else
-        for (const [t, entries] of Object.entries(pack.merge)) {
-          if (!TABLES.includes(t)) {
-            err(`${file} › merge › ${t}: not a table of the world format`);
-            continue;
-          }
-          if (!isObj(entries)) {
-            err(`${file} › merge › ${t}: must be an object of entries by id`);
-            continue;
-          }
-          for (const [key, fields] of Object.entries(entries)) {
-            const at = `${file} › merge › ${t} › ${key}`;
-            const old = content[t]?.[resolve(key)] || pack[t]?.[key];
-            if (!old) {
-              err(`${at}: there is no ${t} entry ${key} to change`);
-              continue;
-            }
-            if (!isObj(fields)) {
-              err(`${at}: must be an object of fields`);
-              continue;
-            }
-            for (const [f, v] of Object.entries(fields)) {
-              if (f === 'id') err(`${at}: an entry's id cannot change`);
-              else if (f in old && old[f] !== null && v !== null && kind(old[f]) !== kind(v)) err(`${at}: ${f} must be ${kind(old[f]) === 'list' ? 'a list' : `a ${kind(old[f]) === 'string' ? 'text' : kind(old[f])}`}, as it is now (got ${kind(v) === 'string' ? 'text' : kind(v)})`);
-            }
-          }
-        }
-    }
+    checkMerge(pack.merge, content, pack, file, err);
     if (errors.length) return errors;
     // The game's own checks on the result: references, ranges, the map.
     const copy = JSON.parse(JSON.stringify(content));
@@ -201,6 +204,40 @@
     }
     return errors;
   }
+
+  /**
+   * P9-08: every problem with a whole world (`kind: "world"`): the same shape, manifest and merge rules
+   * as a pack; its one world_map entry under its own id; then the game's content checks on the world
+   * put over `base` (the shared tables it does not give: items, goods, skills, help …).
+   * @returns {string[]}
+   */
+  function checkWorld(world, { file = 'world.json', base = raw() } = {}) {
+    const errors = [];
+    const err = (msg) => errors.push(msg);
+    if (!isObj(world)) return [`${file}: a world is one JSON object`];
+    walk(world, file, err);
+    if (errors.length) return errors;
+    checkManifest(world.manifest, file, err, true);
+    if (errors.length) return errors;
+    const id = world.manifest.id;
+    if (world.manifest.kind !== 'world') err(`${file} › manifest: kind must be world for a whole world`);
+    const allowed = [...CL.content.TABLES, ...WORLD_EXTRA];
+    for (const [t, entries] of Object.entries(world)) {
+      if (t === 'manifest' || t === 'merge') continue;
+      if (!allowed.includes(t)) err(`${file} › ${t}: not a table of the world format`);
+      else if (!isObj(entries)) err(`${file} › ${t}: must be an object of entries by id`);
+      else for (const [key, rec] of Object.entries(entries)) for (const k of TEXT) if (isObj(rec) && k in rec && typeof rec[k] !== 'string') err(`${file} › ${t} › ${key}: ${k} must be text`);
+    }
+    const maps = Object.keys(world.world_map || {});
+    if (maps.length !== 1 || maps[0] !== id) err(`${file} › world_map: needs one world, under the manifest's id ${id} (got ${maps.join(', ') || 'none'})`);
+    checkMerge(world.merge, base, {}, file, err);
+    for (const t of Object.keys(world.merge || {})) if (world[t]) err(`${file} › merge › ${t}: the world gives this table whole; change it there`);
+    if (errors.length) return errors;
+    for (const e of CL.content.validate(CL.content.compose(JSON.parse(JSON.stringify(base)), world))) err(`${file} › ${e}`);
+    return errors;
+  }
+  // Tables of the format outside CL.content.TABLES (the blacksmith's rules, the founded realms' banners).
+  const WORLD_EXTRA = ['forge', 'realm_palette'];
 
   /** Add the pack's entries to `content` and change the fields `merge` names. Pure data: nothing is run. */
   function apply(content, pack) {
@@ -232,7 +269,7 @@
     } catch (e) {
       return { pack: null, errors: [`${file}: not JSON (${String(e.message || e).slice(0, 120)})`] };
     }
-    const errors = check(pack, { ...opts, file });
+    const errors = pack?.manifest?.kind === 'world' ? checkWorld(pack, { ...opts, file }) : check(pack, { ...opts, file });
     return { pack: errors.length ? null : pack, errors };
   }
 
@@ -409,5 +446,5 @@
     return bootErrors;
   }
 
-  CL.packs = { LIMIT, ON_KEY, official, resolve, satisfies, check, apply, parse, worldContent, use, applied, forSave, missing, sanitize, onIds, list, importText, setOn, remove, boot, problems: () => bootErrors.slice() };
+  CL.packs = { LIMIT, ON_KEY, official, resolve, satisfies, check, checkWorld, apply, parse, worldContent, use, applied, forSave, missing, sanitize, onIds, list, importText, setOn, remove, boot, problems: () => bootErrors.slice() };
 })(typeof window !== 'undefined' ? window : globalThis);

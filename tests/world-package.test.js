@@ -5,7 +5,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { loadGame } = require('./helpers/load');
+const { loadGame, memoryStorage } = require('./helpers/load');
 const { testWorld, WORLD, THIRD, THIRD_LANDS } = require('./helpers/test-world'); // the bot plays it in tests/slow/test-world.test.js
 
 const ROOT = path.join(__dirname, '..');
@@ -111,4 +111,60 @@ test('js/ names no kingdom or world, and has no 0–100 bound literals', () => {
     });
   }
   assert.deepEqual(problems, []);
+});
+
+// P9-08: the second official world, the Sundered Coast (data/worlds/sundered_coast.js).
+test('the Sundered Coast: two realms and a free port on 150 × 120, its own people and troops, a sandbox', () => {
+  const { CL } = loadGame({ world: 'sundered_coast', party: false });
+  assert.deepEqual(Array.from(CL.content.validate()), []);
+  assert.deepEqual(JSON.parse(JSON.stringify(CL.worlds.installed().map((w) => w.id))), ['sundered_realm', 'sundered_coast']);
+  assert.equal(CL.world.id(), 'sundered_coast');
+  assert.equal(CL.packs.official(), 'sundered_coast', 'the world in play is the one ids resolve against');
+  assert.deepEqual({ ...CL.world.bounds() }, { w: 150, h: 120 });
+  assert.deepEqual(Array.from(CL.realm.realms(), (k) => k.id), ['ostrand', 'saltreach']);
+  assert.ok(CL.realm.kingdoms().find((k) => k.id === 'gullhaven').freeCity);
+  assert.equal(CL.world.start().id, 'gullhaven');
+  // Its own cultures, troop lines (three a realm) and eight lords, one ruler a realm.
+  const T = Object.values(CL.content.table('troops'));
+  for (const f of ['ostrand', 'saltreach']) {
+    assert.equal(T.filter((t) => t.faction === f).length, 3, `${f}: three troops`);
+    assert.equal(CL.content.get('factions', f).culture, f, `${f}: its own culture`);
+    assert.equal(CL.realm.forts().filter((s) => s.ownerFaction === f).length, 2, `${f}: two forts`);
+  }
+  const nobles = CL.world.map().nobles;
+  assert.equal(nobles.length, 8);
+  assert.deepEqual(Array.from(nobles.filter((n) => n.ruler), (n) => n.realm), ['ostrand', 'saltreach']);
+  // The shared tables stay the game's; merge changed only what it names.
+  assert.ok(CL.content.get('items', 'arming_sword'));
+  assert.equal(CL.content.get('companions', 'sigrun').home, 'harrowgate');
+  assert.deepEqual(Array.from(CL.content.get('tournaments', 'lists').hosts), ['gullhaven', 'harrowgate', 'calder']);
+  // A sandbox: no story, and a new campaign begins as the others are after theirs.
+  assert.equal(Object.keys(CL.content.table('quests')).length, 0);
+  CL.game.newGame = true;
+  CL.character.begin({ name: 'Coaster', background: 'farmhand' });
+  const c = CL.campaign;
+  assert.deepEqual([c.worldId, c.world.location, CL.story.state(c).flags.ending], ['sundered_coast', 'gullhaven', 'sandbox']);
+  assert.equal(Object.keys(c.people).length, 8);
+  assert.equal(CL.realm.invariants(c).length, 0);
+});
+
+test('a save of one official world, opened in the other, is sent to its own world untouched', () => {
+  const coast = loadGame({ world: 'sundered_coast' });
+  coast.CL.save.write();
+  const coastSave = coast.storage.data[coast.CL.save.KEY];
+  const realm = loadGame();
+  realm.CL.save.write();
+  const realmSave = realm.storage.data[realm.CL.save.KEY];
+  const there = loadGame({ storage: memoryStorage({ [coast.CL.save.KEY]: coastSave }) });
+  assert.equal(there.CL.save.elsewhere, 'sundered_coast');
+  assert.equal(there.CL.save.existed, false);
+  assert.equal(there.storage.data[coast.CL.save.KEY], coastSave, 'the save is untouched');
+  assert.match(there.CL.save.fromRaw(JSON.parse(coastSave)).problems[0], /belongs to the world The Sundered Coast/);
+  // Chosen in storage, the coast opens it.
+  const back = loadGame({ storage: memoryStorage({ [coast.CL.save.KEY]: coastSave }), world: 'sundered_coast' });
+  assert.equal(back.CL.save.existed, true);
+  assert.equal(back.CL.campaign.worldId, 'sundered_coast');
+  assert.equal(loadGame({ world: 'sundered_coast', storage: memoryStorage({ [realm.CL.save.KEY]: realmSave }) }).CL.save.elsewhere, 'sundered_realm');
+  // A file import names the world to choose instead.
+  assert.match(realm.CL.portable.parse(coastSave).reason, /^This save belongs to The Sundered Coast\. Choose that world at a new game, then import it again\.$/);
 });
