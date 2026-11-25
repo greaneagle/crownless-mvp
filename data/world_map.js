@@ -27,6 +27,10 @@
       // story's two realms, as cast from the kingdom you begin in, begin in tension and stay so until
       // its ending sets them (decision D-W5; js/story.js `holdsPair`).
       relations: [{ between: ['valedorn', 'aurelian'], state: 'tension' }, { between: ['ostrand', 'saltreach'], state: 'war' }], // P10-02: the coast's realms begin at war
+      // P10-08: how far you see on the map (js/sight.js): the company's base reach in map units, and
+      // what adds to it, as fractions (each point of Pathfinding, Mara riding along, a horse); the
+      // circles your forts and towns and your patrols out on the map watch. Night and forest shrink them all.
+      sight: { base: 12, pathfinding: 0.04, companion: 0.15, horse: 0.1, holdings: { fort: 10, town: 8 }, detachment: 8 },
       // The world simulation's budget (W-07): no more than this many regular parties spawn in one region.
       simulation: { partiesPerRegion: 16 },
       // P9-B3 (D-P9b): the size of the world's armies, to match a company of up to 200. `households`:

@@ -32,7 +32,7 @@
         {
           id: 'q1_wagon_back',
           journal: 'Bring the wagon home to {cast:home}. Reavers lie in wait on the {cast:village} road.',
-          band: { template: 'bandits', tag: 'q1_ambush', between: ['@village', '@home'], troops: { looter: 3 }, text: 'Reavers burst from the ditch and run for the grain wagon, blades out!' },
+          band: { template: 'bandits', name: 'Reaver Ambush', tag: 'q1_ambush', between: ['@village', '@home'], troops: { looter: 3 }, text: 'Reavers burst from the ditch and run for the grain wagon, blades out!' },
           on: [
             { event: 'battle', match: { win: true, tag: 'q1_ambush' }, do: [{ set: 'q1_wagon_safe' }, { stage: 'q1_report' }, { note: 'You broke the ambush. One of the Reavers carried a scrap of sealed parchment.' }] },
             { event: 'enter', match: { settlement: '@home' }, do: [{ set: 'q1_wagon_slipped' }, { stage: 'q1_report' }, { note: 'You slipped the wagon past the ambush and into {cast:home}.' }] }
@@ -79,6 +79,7 @@
           journal: 'Recover the packet from the Reavers camped on the road between {cast:rival_town} and {cast:fence_town} — fight them, cow them, or pay the fence in {cast:fence_town} for their secret.',
           band: {
             template: 'bandits',
+            name: 'Packet Thieves',
             tag: 'q2_thieves',
             camp: true, // they sit on their loot; the player chooses how to deal with them
             between: ['@rival_town', '@fence_town'],

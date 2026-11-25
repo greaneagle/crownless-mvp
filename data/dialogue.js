@@ -25,9 +25,10 @@
         first: {
           text: [
             'Welcome to {cast:home}, {name}. Strangers are rarer than reavers these days.',
-            { if: { origin: 'farmhand' }, text: 'You have a farmer’s hands. Good — we need people who know what a harvest costs. And word from {cast:village} is that you led its men well.' },
-            { if: { origin: 'traveller' }, text: 'You are the one who walked in at the gate and rode out after your horse. The inn has told half the town.' },
-            { if: { origin: 'noble' }, text: 'An old name, and the moneylender’s men broken on the road. Your father would have been glad of you.' },
+            { if: { origin: 'farmhand' }, text: 'You have a farmer’s hands. Good — we need people who know what a harvest costs.' },
+            { if: [{ origin: 'farmhand' }, { flag: 'origin_done' }], text: 'And word from {cast:village} is that you led its men well.' },
+            { if: [{ origin: 'traveller' }, { flag: 'origin_done' }], text: 'You are the one who walked in at the gate and rode out after your horse. The inn has told half the town.' },
+            { if: [{ origin: 'noble' }, { flag: 'origin_done' }], text: 'An old name, and the moneylender’s men broken on the road. Your father would have been glad of you.' },
             { if: { origin: 'scout' }, text: 'You walk like someone who reads the ground. The roads could use eyes like yours.' },
             { if: { origin: 'peddler' }, text: 'A peddler, by the look of that pack. Trade has been thin since the caravans started vanishing.' }
           ],

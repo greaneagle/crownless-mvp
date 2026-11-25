@@ -11,7 +11,14 @@
  *   the Hide stance (in a forest, standing still)  × HIDDEN
  * A sighting is remembered: parties chase where they last saw you, then search there (js/parties.js);
  * the map shows the parties the company sees and a faded mark where it last saw the rest (js/render.js).
- * Story bands and the caravan you escort are always shown, so nothing a quest needs is ever lost. */
+ * Story bands and the caravan you escort are always shown, so nothing a quest needs is ever lost.
+ *
+ * P10-08: sight that grows (the world's `sight` numbers, data/world_map.js). The company sees
+ * `base` map units, times the scout follower's 1.5 (js/scout.js), and further by each point of
+ * Pathfinding, with Mara riding along (a scout) and on a horse. Its other eyes: each fort or town
+ * you hold watches its own circle, and each of your patrols out on the map (js/detachments.js) its
+ * own. Night, high ground and forest scale every one of them as above. The map draws what none of
+ * them reaches a little darker (js/render.js, unless reduced effects). */
 (function (root) {
   'use strict';
   const CL = root.Crownless;
@@ -77,13 +84,46 @@
   /** Does a party see the company? @param {Campaign} c */
   const partySees = (c, p, day = c.day) => CL.world.mapDist(p.x, p.y, c.world.x, c.world.y) <= partyRange(c, p, day);
 
+  /** P10-08: the world's sight numbers, over the defaults. */
+  const DEFAULTS = { base: PLAYER_SIGHT, pathfinding: 0.04, companion: 0.15, horse: 0.1, holdings: { fort: 10, town: 8 }, detachment: 8 };
+  const rules = () => ({ ...DEFAULTS, ...(CL.world.map().sight || {}) });
+
+  /**
+   * How far the company sees in the open, by day, on flat ground: the base, the scout follower,
+   * Pathfinding, Mara and a horse (P10-08). @param {Campaign} c
+   */
+  function companyRange(c) {
+    const R = rules();
+    let r = R.base * (CL.scout?.sightFactor(c) ?? 1); // a scout sees further (P7-02)
+    r *= 1 + R.pathfinding * (CL.character?.skill('pathfinding', c) || 0);
+    if (CL.companion?.has(c, 'mara')) r *= 1 + R.companion; // a scout of the old empire
+    if (c.equipment?.horse) r *= 1 + R.horse; // a view from the saddle
+    return r;
+  }
+
   /** How far the company sees a party from where it stands. @param {Campaign} c */
-  const playerRange = (c, p, day = c.day) => PLAYER_SIGHT * (CL.scout?.sightFactor(c) ?? 1) * factor(day, c.world, p); // a scout sees further (P7-02)
+  const playerRange = (c, p, day = c.day) => companyRange(c) * factor(day, c.world, p);
+
+  /**
+   * Everything that watches for you (P10-08), as circles { x, y, r, kind } before night and ground:
+   * the company, each fort or town you hold, each of your patrols on the map. @param {Campaign} c
+   */
+  function sources(c) {
+    const R = rules();
+    const out = [{ x: c.world.x, y: c.world.y, r: companyRange(c), kind: 'company' }];
+    const S = CL.content.table('settlements');
+    for (const [sid, h] of Object.entries(c.holdings || {})) {
+      const r = R.holdings?.[h.kind];
+      if (r && h.holder === CL.realm?.PLAYER && S[sid]) out.push({ x: S[sid].mapX, y: S[sid].mapY, r, kind: 'holding' });
+    }
+    if (R.detachment) for (const p of c.parties || []) if (p.detachment != null) out.push({ x: p.x, y: p.y, r: R.detachment, kind: 'patrol' });
+    return out;
+  }
 
   /** Does the company see this party? Story bands and an escorted caravan always show. @param {Campaign} c */
   function playerSees(c, p, day = c.day) {
     if (p.questTag || p.escortTo || p.detachment != null || !options.rules) return true; // your own patrols always show (P7-05)
-    return CL.world.mapDist(c.world.x, c.world.y, p.x, p.y) <= playerRange(c, p, day);
+    return sources(c).some((s) => CL.world.mapDist(s.x, s.y, p.x, p.y) <= s.r * factor(day, s, p));
   }
 
   /** Note what the company sees now: each party's last-seen spot (saved with the party). @param {Campaign} c */
@@ -103,5 +143,5 @@
     return null;
   }
 
-  CL.sight = { options, PLAYER_SIGHT, NIGHT, HIGH_GROUND, FOREST, HIDDEN, SIZE, MEMORY_DAYS, hourOf, isNight, factor, canHide, hidden, setHidden, visibility, partyRange, partySees, playerRange, playerSees, look, shown };
+  CL.sight = { options, PLAYER_SIGHT, rules, companyRange, sources, NIGHT, HIGH_GROUND, FOREST, HIDDEN, SIZE, MEMORY_DAYS, hourOf, isNight, factor, canHide, hidden, setHidden, visibility, partyRange, partySees, playerRange, playerSees, look, shown };
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -177,3 +177,50 @@ test('saves: the Hide stance, where parties last saw you and where you last saw 
   assert.equal(junk.parties[0].lastSeen, undefined);
   assert.equal(junk.parties[0].seenAt, undefined);
 });
+
+// ---- P10-08: sight that grows, and its other eyes ----
+
+test('P10-08: the company sees further with Pathfinding, Mara, a horse and a scout, by the world’s numbers', () => {
+  const { CL, c, S } = onMap();
+  const R = S.rules();
+  assert.deepEqual(plain(R), plain({ base: 12, pathfinding: 0.04, companion: 0.15, horse: 0.1, holdings: { fort: 10, town: 8 }, detachment: 8 }));
+  const base = S.companyRange(c);
+  assert.equal(base, 12);
+  c.character.skills.pathfinding = 5;
+  assert.ok(Math.abs(S.companyRange(c) - 12 * 1.2) < 1e-9, 'each point of Pathfinding');
+  c.equipment.horse = 'nag';
+  assert.ok(Math.abs(S.companyRange(c) - 12 * 1.2 * 1.1) < 1e-9, 'a view from the saddle');
+  assert.ok(CL.companion.join(c, 'mara'));
+  const m = CL.world.map().sight;
+  const withMara = S.companyRange(c);
+  m.companion = 0;
+  assert.ok(Math.abs(withMara / S.companyRange(c) - 1.15) < 1e-9, 'Mara rides along (and lends her Pathfinding too)');
+  m.companion = 0.15;
+  // The numbers are the world's: change them and sight follows.
+  m.base = 24;
+  assert.ok(Math.abs(S.companyRange(c) / withMara - 2) < 1e-9);
+  m.base = 12;
+});
+
+test('P10-08: a fort you hold and your patrols watch their own circles; night shrinks them; a party nobody sees is hidden', () => {
+  const { CL, c, S } = onMap();
+  Object.assign(c.world, { x: GRASS[0], y: GRASS[1] });
+  const fort = Object.values(CL.content.table('settlements')).find((s) => s.type === 'fort' && CL.world.mapDist(s.mapX, s.mapY, c.world.x, c.world.y) > 30);
+  const band = CL.parties.spawn(c, 'bandits');
+  Object.assign(band, { x: fort.mapX + 4, y: fort.mapY });
+  c.day = 3 + NOON;
+  assert.equal(S.playerSees(c, band), false, 'far from the company, nothing watches it');
+  c.holdings[fort.id].holder = CL.realm.PLAYER;
+  assert.ok(S.sources(c).some((s) => s.kind === 'holding' && s.x === fort.mapX && s.r === 10));
+  assert.equal(S.playerSees(c, band), true, 'your fort sees it');
+  c.day = 3 + MIDNIGHT;
+  Object.assign(band, { x: fort.mapX + 8, y: fort.mapY });
+  assert.equal(S.playerSees(c, band), false, 'at night the fort sees only 6');
+  // A patrol of yours out on the map watches 8 around it.
+  c.day = 3 + NOON;
+  c.holdings[fort.id].holder = c.holdings[fort.id].holder === CL.realm.PLAYER ? 'person:1' : c.holdings[fort.id].holder;
+  const patrol = { ...CL.parties.spawn(c, 'bandits'), detachment: 1, x: band.x - 6, y: band.y };
+  c.parties.push(patrol);
+  assert.ok(S.sources(c).some((s) => s.kind === 'patrol'));
+  assert.equal(S.playerSees(c, band), true, 'your patrol sees it');
+});

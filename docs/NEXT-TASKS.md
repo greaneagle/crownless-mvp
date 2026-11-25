@@ -3453,7 +3453,7 @@ Moved here from P9-T (owner, 2026-11-24). It runs when the owner asks for the ni
 - **Tests:** `tests/guide.test.js` (the steps in order; with each of the five origins, the town, hiring if nobody, the map; Got it, Skip the guide, Show hints again; off; food, saving and an encounter at their moments; the four stages). Browser: a new game with the guide on shows its first step, Skip clears it, off shows nothing.
 - **Checks:** 909 fast pass; lint clean but the 2 old warnings; typecheck clean. Browser 249 passed, 9 skipped. **Played** at 812×375: How to Play from the title (by stage), a farmhand's first steps in Oakford and on the map, Skip the guide, the new Settings words. Found and fixed: "(you)" before there was a hero; "In a town" in a village; "guide 4 of 8" straight after "1 of 8" (steps that never come for a start), so the card no longer numbers them.
 
-### P10-08 · UI and menus toward the references (L)
+### P10-08 · UI and menus toward the references (L) — ✅ Done in 4.8.0 (in part)
 
 Split from the old art pass (owner, 2026-11-24): menus and the UI first, as the priority; sprites and scenes later (P10-G1, P10-G2).
 
@@ -3475,6 +3475,16 @@ Split from the old art pass (owner, 2026-11-24): menus and the UI first, as the 
 **Tests.** Browser screenshots of the reworked screens at 812×375 and on desktop; `layout`, `text-size` and `settlement` specs; text size and reduced effects still work. Sight: each way of seeing further widens it by its data number, night and forest still shrink it, a party outside sight is not shown; the fog follows the sight radius (a screenshot day and night) and is off with reduced effects; a quest band's label is its name.
 
 **Version.** 4.8.0.
+
+**Done (4.8.0).**
+- **The frame** (one themed block at the end of `style.css`, colours as tokens): deep navy panels with a thin double gold border on every modal, side panel and tip card; cream small-capital headings over a gold rule; gold-rimmed rounded buttons with a lighter rim when chosen; tabs whose active one stands up in banner red (reference 04); themed inputs, sliders and scrollbars. Ten gold pixel icons (`.ico-heart` and so on), drawn from 10×10 masks.
+- **Screen by screen:** the dialogue box (reference 05: the name, what they are in italics, framed answer rows with a gold »); the party sheet (reference 04: framed portrait, name, level and origin, XP bar, seven stats with icons); the town menu's numbers with icons; the journal, Settings and How to Play in the frame; the title's line brought up to date.
+- **Sight that grows** (`sight` in `data/world_map.js`, `CL.sight.companyRange`, `sources`): Pathfinding +4% a point, Mara +15%, a horse +10%, with the scout's ×1.5; your forts and towns watch 10 and 8, your patrols 8; night and ground scale each.
+- **The fog of sight** (`js/render.js`): beyond every circle the map is a little darker, under the places and parties, soft at the edge; smaller at night; off with reduced effects.
+- **Story bands named on the map** (`CL.render.questName`); every story band now has a name.
+- **Found and fixed:** the elder praised a plain start's opening it never played (the lines now need `origin_done`); menu conversations had no subtitle.
+- **Tests:** `tests/sight.test.js` (each way of seeing further by its number; a fort's and a patrol's circles; night shrinks them); `tests/browser/look.spec.js` (the fog darker beyond sight and not within, shrinking at night, off with reduced effects; a band's name; the dialogue box and the party sheet). Checks: 911 fast pass; lint clean but the 2 old warnings; typecheck clean. Browser 252 passed, 9 skipped, 3 failed once under load (text size Small, the cut-short wait, a phone pinch) and passed 43 of 43 alone. The town menu's summary first wrapped to two lines on the phone and pushed Rest off the screen: shortened (“5/8 soldiers”), as tall as before within 3 px.
+- **Open:** soldiers' portraits (P10-09); the battle HUD and Prepare panel beyond the frame; news of parties beyond sight; new visual baselines on Linux. **Played** at 812×375: the town menu, party sheet, dialogue, journal, Settings, the Realms tabs, the map's fog by night and day.
 
 ### P10-09 · Women soldiers and soldiers' portraits (M)
 

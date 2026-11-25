@@ -102,6 +102,12 @@
     }
     for (const st of Object.values(m.sites || {})) if (!inside(st.mapX, st.mapY)) err(`${w}: site ${st.id} outside the map`);
     // P9-B3: the world's army sizes, each a factor from 1 to 10 (missing ones are 1).
+    // P10-08: sight (js/sight.js).
+    if (m.sight != null) {
+      const s = m.sight;
+      const num = (v, lo, hi) => Number.isFinite(v) && v >= lo && v <= hi;
+      if (!num(s.base, 1, 60) || !num(s.pathfinding, 0, 1) || !num(s.companion, 0, 2) || !num(s.horse, 0, 2) || !num(s.detachment, 0, 60) || Object.values(s.holdings || {}).some((r) => !num(r, 0, 60))) err(`${w}: sight needs base 1–60, fractions 0–2 and circles 0–60`);
+    }
     for (const [k, v] of Object.entries(m.armies || {})) if (!['households', 'garrisons', 'beyondHome'].includes(k) || !(Number.isFinite(v) && v >= 1 && v <= 10)) err(`${w}: armies.${k} must be households, garrisons or beyondHome, a number from 1 to 10`);
     const points = [...(m.river || []), ...(m.forests || []).flat(), ...(m.hills || [])];
     if (points.some(([x, y]) => !inside(x, y))) err(`${w}: terrain outside the map`);

@@ -57,7 +57,7 @@ test('Walk the streets, tap the elder to walk over and talk, then go back to the
   await pressAt(page, p.x, p.y);
   await waitMode(page, 'talk', 20_000);
   expect(await game(page, (CL) => CL.game.talk.npc.id)).toBe(npc.id);
-  await expect(page.locator('#overlayTitle')).toHaveText(npc.name.toUpperCase());
+  await expect(page.locator('#overlayTitle')).toHaveText(npc.name); // P10-08: the speaker's own name
   await expect(page.locator('#talkOptions button').first()).toBeVisible();
   // The last option of a conversation takes you back to the streets.
   await press(page, page.locator('#talkOptions button').last());
@@ -91,7 +91,7 @@ for (const id of ['hrothgard', 'gullhaven']) {
     await pressAt(page, p.x, p.y);
     await waitMode(page, 'talk', 20_000);
     expect(await game(page, (CL) => CL.game.talk.npc.id)).toBe(inn.id);
-    await expect(page.locator('#overlayTitle')).toHaveText(inn.name.toUpperCase());
+    await expect(page.locator('#overlayTitle')).toHaveText(inn.name);
     await expect(page.locator('#talkOptions button', { hasText: 'Rest a day by the fire' })).toBeVisible();
     await press(page, page.locator('#talkOptions button', { hasText: 'Goodbye' }));
     await waitMode(page, 'town');

@@ -71,7 +71,8 @@
     }
     if (mode === 'talk') {
       const t = g.talk;
-      return { title: t.npc.name.toUpperCase(), text: `“${t.line}”`, button: null };
+      // P10-08 (reference 05): the speaker's own name, and what they are beneath it.
+      return { title: t.npc.name, sub: t.npc.tag || null, text: `“${t.line}”`, button: null };
     }
     if (mode === 'journal') {
       return { title: 'JOURNAL', text: '', button: 'Back' };
@@ -136,16 +137,15 @@
       };
     }
     if (mode === 'character') {
-      const ch = CL.campaign.character;
-      const bg = CL.content.get('origins', ch.origin);
-      return { title: ch.name.toUpperCase(), text: `Level ${ch.level} ${bg.name}. ${CL.world.clockLabel()}.`, button: 'Back' };
+      // P10-08: the name and level are on the hero's card below.
+      return { title: 'PARTY', text: `${CL.world.clockLabel()}.`, button: 'Back' };
     }
     const existed = CL.save.existed;
     return {
       title: 'CROWNLESS',
       // A save that could not be opened (SC-33, or W-05b's old world) is explained here, where it can't
       // be missed, as well as in the passing message.
-      text: CL.save.notice || 'The Border March: travel between towns, hire soldiers, and break the Road Reavers who prey on the roads.',
+      text: CL.save.notice || 'Six kingdoms and the ruins of an empire. Choose where you begin and who you were, hire soldiers, take a side or none, and make a name.',
       button: existed ? 'Continue' : 'New game',
       secondary: existed ? (g.confirmNew ? 'Erase save and start over?' : 'New game') : null,
     };
@@ -236,6 +236,8 @@
       if (g.result.slowOffer) $('#result').append(slowOfferBox(g.result.slowOffer));
     }
     $('#overlayTitle').textContent = screen.title;
+    $('#overlaySub').textContent = screen.sub || '';
+    $('#overlaySub').classList.toggle('hidden', !screen.sub);
     $('#overlayText').textContent = screen.text;
     $('#primaryBtn').classList.toggle('hidden', !screen.button);
     if (screen.button) $('#primaryBtn').textContent = screen.button;
@@ -2026,15 +2028,42 @@
       return d;
     };
     const next = C.xpToNext(ch.level);
-    const levelText =
-      ch.level >= C.MAX_LEVEL ? `Level ${ch.level} (max)` : `Level ${ch.level} · XP ${ch.xp}/${next}`;
     const points = [
       ch.skillPoints ? `${ch.skillPoints} skill point${ch.skillPoints > 1 ? 's' : ''} to spend` : '',
       ch.attributePoints ? `${ch.attributePoints} attribute point${ch.attributePoints > 1 ? 's' : ''} to spend` : '',
     ].filter(Boolean);
     const cap = CL.party.partyCap(c);
+    // P10-08 (reference 04): a framed portrait, the name, level and origin, the road to the next level.
+    const portrait = Object.assign(document.createElement('canvas'), { width: 64, height: 80 });
+    const px = portrait.getContext('2d');
+    px.imageSmoothingEnabled = false;
+    const sprite = CL.assets.heroSprite(CL.assets.key('u', CL.assets.heroFrames.down[0]), ch.cloak);
+    if (sprite) px.drawImage(sprite, 4, 2, 56, 76);
+    const origin = CL.content.get('origins', ch.origin);
+    const toNext = ch.level >= C.MAX_LEVEL ? 1 : ch.xp / next;
+    const card = el('div', { className: 'heroCard' },
+      el('div', { className: 'frame' }, portrait),
+      el('div', { className: 'who' },
+        el('b', { textContent: ch.name }),
+        el('i', { textContent: `Level ${ch.level} ${origin?.name || ''}` }),
+        el('div', { className: 'xpBar' }, Object.assign(document.createElement('span'), { style: `width:${Math.round(toNext * 100)}%` })),
+        el('div', { className: 'xpText', textContent: ch.level >= C.MAX_LEVEL ? 'Highest level' : `${ch.xp} / ${next} XP` }),
+      ),
+    );
+    const stat = (icon, label, value) => el('div', {}, el('span', { className: `ico ico-${icon}` }), label, el('b', { textContent: String(value) }));
+    const grid = el('div', { className: 'statGrid' },
+      stat('heart', 'Health', hero.hp),
+      stat('sword', 'Damage', Math.round(hero.damage * 10) / 10),
+      stat('shield', 'Armour', `${hero.armor}${hero.canBlock ? '' : ' · no block'}`),
+      stat('boot', 'Travel', `×${C.travelFactor().toFixed(2)}`),
+      stat('people', 'Company', `${CL.party.headcount(c)} / ${cap}`),
+      stat('star', 'Renown', c.renown),
+      stat('coin', 'Crowns', c.gold),
+    );
     stats.replaceChildren(
-      line([levelText, ...points]),
+      card,
+      grid,
+      line(points),
       spendLine(
         C.ATTRIBUTES.map((a) =>
           spendable(`${C.ATTRIBUTE_NAMES[a]} ${C.attribute(a)}`, ch.attributePoints > 0 && C.attribute(a) < C.MAX_ATTRIBUTE, () =>
@@ -2042,13 +2071,6 @@
           ),
         ),
       ),
-      line([
-        `HP ${hero.hp}`,
-        `Damage ${Math.round(hero.damage * 10) / 10}`,
-        `Armor ${hero.armor}`,
-        hero.canBlock ? 'Can block' : 'No shield — cannot block',
-        `Travel ×${C.travelFactor().toFixed(2)}`,
-      ]),
       spendLine(
         Object.values(CL.content.table('skills')).map((sk) =>
           spendable(`${sk.name} ${C.skill(sk.id)}`, ch.skillPoints > 0 && ch.skills[sk.id] < C.MAX_SKILL, () => C.spendSkill(sk.id)),
@@ -2536,9 +2558,15 @@
   function refreshRoster() {
     const c = CL.campaign;
     const p = CL.party;
-    $('#rosterSummary').textContent =
-      `Day ${p.dayNumber()} · ${c.gold} crowns · ${c.renown} renown · ` +
-      `${CL.party.headcount(c)}/${p.partyCap()} in the company · ${c.victories} wins`;
+    // P10-08: the company's numbers with their icons (the words stay for screen readers and tests).
+    const sum = (icon, text) => el('span', { className: 'sumItem' }, el('span', { className: `ico ico-${icon}` }), text);
+    $('#rosterSummary').replaceChildren(
+      sum('book', `Day ${p.dayNumber()}`),
+      sum('coin', `${c.gold} crowns`),
+      sum('star', `${c.renown} renown`),
+      sum('people', `${CL.party.headcount(c)}/${p.partyCap()} soldiers`),
+      sum('sword', `${c.victories} wins`),
+    );
 
     // One line per troop type: ready count, plus wounded and when they return.
     const groups = {};
@@ -3008,7 +3036,11 @@
   function talkTo(dialogueId) {
     const conv = CL.story.talk(dialogueId);
     if (!conv) return;
-    CL.game.talk = { npc: { id: dialogueId, name: conv.speaker, action: 'talk' }, conv, line: conv.text };
+    // P10-08: what they are, under their name: their tag in the streets, or the story person's own.
+    const street = CL.town.peopleOf(CL.campaign.world.location).find((n) => n.dialogue === dialogueId);
+    const tree = CL.content.table('dialogue')[dialogueId];
+    const tag = street?.tag || (tree?.tag || tree?.cast ? CL.story.lookOf(tree).tag : null);
+    CL.game.talk = { npc: { id: dialogueId, name: conv.speaker, tag, action: 'talk' }, conv, line: conv.text };
     changeMode('talk');
   }
 

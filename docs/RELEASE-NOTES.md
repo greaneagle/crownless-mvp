@@ -1,5 +1,22 @@
 # Crownless — Release Notes
 
+## v4.8.0 — UI toward the references, and the fog of sight (P10-08) · 2026-11-25
+
+### New
+- **A new look,** after the art references: deep navy panels with a thin double gold border, cream serif headings in small capitals, gold-rimmed rounded buttons, tabs whose active one stands up in banner red, gold pixel icons, themed inputs and scrollbars.
+- **The dialogue box:** the speaker's own name, what they are beneath it in italics, and each answer a framed row, a gold » on the one you point at.
+- **The party sheet:** a framed portrait, your name, level and origin, a bar to the next level, and your numbers with icons (health, damage, armour, travel, company, renown, crowns).
+- **The town menu's numbers** carry the same icons. The title screen says what the game is now.
+- **Seeing further:** Pathfinding (+4% a point), Mara riding with you (+15%) and a horse (+10%) widen the company's sight, with the scout follower's ×1.5; every fort and town you hold watches 10 and 8 map units round it, and each of your patrols 8. Night, high ground and forest scale them all. The numbers are the world's (`sight` in `data/world_map.js`).
+- **The fog of sight:** what none of your eyes reach is drawn a little darker, with a soft edge to what they do; it shrinks at night. Reduced effects turns it off.
+- **Story bands are named on the map** ("Horse Thieves", "Reaver Ambush"), not "Quest: Reavers".
+
+### Fixed
+- The elder no longer thanks a plain-start farmhand, traveller or noble for an opening they never played.
+
+### Open
+- Soldiers' portraits (P10-09) and the battle HUD and Prepare panel beyond the new frame; news that tells of parties beyond your sight; the visual baselines, made on Linux (`npm run test:visual:docker`).
+
 ## v4.7.0 — Onboarding and hints (P10-07) · 2026-11-25
 
 ### New

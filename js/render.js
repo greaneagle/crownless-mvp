@@ -774,7 +774,7 @@
     else if (!crowded) {
       const marked = (p.contractId && !p.ambush) || p.questTag || p.escortTo;
       const own = t.kind === 'detachment' ? CL.detachments.find(CL.campaign, p.detachment) : null;
-      const name = army ? `${CL.realm.faction(army.realm)?.short || 'An'} army` : own ? `${own.captainName}${own.status === 'returning' ? ' (coming back)' : ''}` : p.lordId ? CL.realm.titled(p.lordId, CL.campaign) : p.escortTo ? 'Escort' : p.contractId && !p.ambush ? 'Contract target' : p.questTag ? (t.kind === 'bandit' ? 'Quest: Reavers' : 'Quest: Column') : t.kind === 'bandit' ? 'Reavers' : t.kind === 'patrol' ? 'Patrol' : 'Caravan';
+      const name = army ? `${CL.realm.faction(army.realm)?.short || 'An'} army` : own ? `${own.captainName}${own.status === 'returning' ? ' (coming back)' : ''}` : p.lordId ? CL.realm.titled(p.lordId, CL.campaign) : p.escortTo ? 'Escort' : p.contractId && !p.ambush ? 'Contract target' : p.questTag ? questName(p, t) : t.kind === 'bandit' ? 'Reavers' : t.kind === 'patrol' ? 'Patrol' : 'Caravan';
       const prio = marked ? LABEL_PRIORITY.quest : hostile ? LABEL_PRIORITY.hostile : LABEL_PRIORITY.party;
       // If there is no room for its name, the party keeps its size as a badge on the icon.
       label(`${name} ${n}`, x, y + 20, marked ? '#ffd34d' : hostile ? '#ffb3a1' : '#e8f0ff', { prio, iy: y, fallback: () => countBadge(x, y, n, hostile) });
@@ -1097,6 +1097,50 @@
     }
   }
 
+  /** P10-08: a story band on the map, by its own name ("Horse Thieves"); a generic mark if it has none. */
+  const questName = (p, t = CL.content.get('party_templates', p.template)) => CL.story.bandSpec(p.questTag, CL.campaign)?.name || (t.kind === 'bandit' ? 'Quest: Reavers' : 'Quest: Column');
+
+  // P10-08: the fog of sight. Where none of your eyes reach (js/sight.js `sources`), the map is a
+  // little darker; inside, it is as drawn, with a soft edge. Night and high ground scale each circle
+  // as they scale sight. Off with reduced effects.
+  let fogCanvas = null;
+  const FOG = { color: 'rgba(8, 14, 26, 0.32)', edge: 0.75 };
+  function drawFog() {
+    const c = CL.campaign;
+    const V = CL.mapView;
+    if (!fogCanvas) fogCanvas = document.createElement('canvas');
+    const cw = Math.round(W * backing);
+    const ch = Math.round(H * backing);
+    if (fogCanvas.width !== cw || fogCanvas.height !== ch) Object.assign(fogCanvas, { width: cw, height: ch });
+    const f = fogCanvas.getContext('2d');
+    f.setTransform(backing, 0, 0, backing, 0, 0);
+    f.globalCompositeOperation = 'source-over';
+    f.clearRect(0, 0, W, H);
+    f.fillStyle = FOG.color;
+    f.fillRect(0, 0, W, H);
+    f.globalCompositeOperation = 'destination-out';
+    const k = CL.world.aspect();
+    for (const s of CL.sight.sources(c)) {
+      const r = s.r * CL.sight.factor(c.day, s, s);
+      const [sx, sy] = V.toScreen(s.x, s.y);
+      const rx = Math.abs(V.toScreen(s.x + r, s.y)[0] - sx);
+      const ry = Math.abs(V.toScreen(s.x, s.y + r / k)[1] - sy); // gameplay distance counts north–south by the aspect
+      if (!(rx > 1 && ry > 1) || sx + rx < 0 || sx - rx > W || sy + ry < 0 || sy - ry > H) continue;
+      f.save();
+      f.translate(sx, sy);
+      f.scale(1, ry / rx);
+      const grad = f.createRadialGradient(0, 0, rx * FOG.edge, 0, 0, rx);
+      grad.addColorStop(0, 'rgba(0,0,0,1)');
+      grad.addColorStop(1, 'rgba(0,0,0,0)');
+      f.fillStyle = grad;
+      f.beginPath();
+      f.arc(0, 0, rx, 0, Math.PI * 2);
+      f.fill();
+      f.restore();
+    }
+    ctx.drawImage(fogCanvas, 0, 0, W, H);
+  }
+
   function drawWorld() {
     const { map } = CL.world;
     const V = CL.mapView;
@@ -1115,6 +1159,8 @@
     ctx.imageSmoothingEnabled = !exact;
     ctx.drawImage(layer.canvas, exact ? Math.round(ox * backing) / backing : ox, exact ? Math.round(oy * backing) / backing : oy, layer.canvas.width * scale, layer.canvas.height * scale);
     ctx.imageSmoothingEnabled = false;
+
+    if (!CL.settings?.get('reducedEffects') && CL.sight.options.rules) drawFog(); // P10-08: under the places and parties
 
     mapLabels = [];
     // W-07: only what the camera can see (with room for labels and banners at the edge).
@@ -1554,5 +1600,5 @@
     }
   }
 
-  CL.render = { BUSY, busyBattle, bodyAlpha, init, draw, setBackingScale, backingScale: () => backing };
+  CL.render = { BUSY, busyBattle, bodyAlpha, init, draw, setBackingScale, backingScale: () => backing, questName };
 })(typeof window !== 'undefined' ? window : globalThis);
