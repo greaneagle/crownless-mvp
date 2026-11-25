@@ -87,3 +87,30 @@ test('a battle draws no sprite image: every soldier and obstacle is the art kitâ
   expect(sprites).toEqual([]);
   expect(await game(page, (CL) => CL.diag.events.filter((e) => e.level === 'error').length)).toBe(0);
 });
+
+test('a townâ€™s streets draw no sprite image, and its people still talk (P10-G3)', async ({ page }) => {
+  await open(page, { settings: { sharpness: 'balanced' } });
+  await newGame(page);
+  await press(page, page.locator('#secondaryBtn', { hasText: 'Walk the streets' }));
+  await waitMode(page, 'town');
+  const sprites = await page.evaluate(async () => {
+    const seen = new Set();
+    const draw = CanvasRenderingContext2D.prototype.drawImage;
+    CanvasRenderingContext2D.prototype.drawImage = function (img, ...rest) {
+      if (img instanceof HTMLImageElement) seen.add(img.src.replace(location.origin, ''));
+      return draw.call(this, img, ...rest);
+    };
+    await new Promise((r) => setTimeout(r, 1200));
+    CanvasRenderingContext2D.prototype.drawImage = draw;
+    return [...seen];
+  });
+  expect(sprites).toEqual([]);
+  // Walk to the innkeeper and talk (the hero set beside them is setup; TALK is pressed for real).
+  await game(page, (CL) => {
+    const n = CL.game.town.npcs.find((x) => x.role === 'innkeeper');
+    Object.assign(CL.game.town.hero, { x: n.x + 14, y: n.y });
+  });
+  await page.waitForFunction(() => window.Crownless.game.town?.near?.role === 'innkeeper');
+  await press(page, '#attackBtn');
+  await waitMode(page, 'talk');
+});

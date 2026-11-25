@@ -304,7 +304,7 @@
       id: 'origin_retainer',
       speaker: 'Old Tam',
       tag: 'Retainer',
-      frames: [80, 81, 82, 83],
+      role: 'elder', // P10-G3: drawn as an old retainer
       place: '@home',
       visible: { quest: 'o_noble', is: 'active' },
       start: [{ if: { quest: 'o_noble', stage: 'o_noble_home' }, node: 'home' }, { if: { quest: 'o_noble', stage: 'o_noble_tam' }, node: 'debt' }, 'waiting'],
@@ -648,7 +648,7 @@
       speaker: 'Mara',
       place: '@home',
       tag: 'Scout',
-      frames: [124, 125, 126, 127],
+      companion: 'mara', // P10-G3: drawn in her own look (data/companions.js)
       // She turns up after Q2, until she joins (or is gone for good).
       visible: [{ quest: 'q2', is: 'done' }, { not: { companion: 'mara' } }, { not: { flag: 'mara_gone' } }, { not: { flag: 'mara_scouting' } }],
       start: [

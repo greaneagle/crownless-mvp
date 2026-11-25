@@ -5,7 +5,7 @@
  * opens their menu. The scene uses the battle-map format (ground, decor, obstacles) on the same
  * 960×540 canvas, so the same collision and drawing code applies. People walk inside x 47–908,
  * y 65–490 (js/units.js BOUNDS); an obstacle with no `look` is an unseen wall (the sea, a river).
- *   npcs[].frames: unit sprite frames (u####) for their idle/walk cycle
+ *   npcs[].gender: 'female' for a woman (the art kit draws the people from their role, P10-G3)
  *   npcs[].pace:   optional [x, y] the NPC walks to and back from
  *   npcs[].action: 'trade' | 'recruit' | 'tavern' | 'talk' | 'leave'
  *   npcs[].role:   'innkeeper' | 'merchant' | 'recruiter' | 'elder' | 'official' | 'guard': who they
@@ -19,6 +19,8 @@
  *                  realm's envoy and Mara in your start town, the rival's envoy and caravan master in
  *                  its town). The elder and recruiter of your start town speak the story in person.
  *   obstacles[].colors: optional { wall, roof, door } for a building, in the town's own style
+ *   obstacles[].spec:   optional art-kit building spec (js/art/kit.js `building`) over the one made from
+ *                       its kind and its realm's culture: a landmark's tower, its roof form, its sign
  *   ground.road / ground.plaza.color: optional street and square colours
  *   entry: 'menu' (default) or 'streets': what arriving opens. Menu first, with "Walk the streets"
  *          one tap away (owner playtest finding F-3); people with conversations are also listed there. */
@@ -26,12 +28,13 @@
   root.CROWNLESS_CONTENT = root.CROWNLESS_CONTENT || {};
   var C = root.CROWNLESS_CONTENT;
   var tree = function (x, y) {
-    return { shape: 'circle', x: x, y: y, r: 20, blocksArrows: true, look: { tile: 'w0132', w: 92, h: 97 } };
+    return { shape: 'circle', x: x, y: y, r: 20, blocksArrows: true, look: 'tree' };
   };
-  var building = function (look, x, y, w, h, label, colors) {
+  var building = function (look, x, y, w, h, label, colors, spec) {
     var o = { shape: 'rect', x: x, y: y, w: w, h: h, look: look };
     if (label) o.label = label;
     if (colors) o.colors = colors;
+    if (spec) o.spec = spec;
     return o;
   };
   var stall = function (x, y, label) {
@@ -67,7 +70,6 @@
       entry: 'menu',
       ground: {
         base: '#6f8f4e',
-        tiles: ['w0000', 'w0001', 'w0002'],
         roads: [
           { x: 30, y: 270, w: 470, h: 56 },
           { x: 440, y: 120, w: 70, h: 330 },
@@ -75,12 +77,12 @@
         ],
         plaza: { x: 475, y: 290, rx: 120, ry: 70 }
       },
-      decor: [['w0147', 560, 360, 40, 31], ['w0167', 380, 210, 36, 28], ['w0147', 300, 330, 40, 31], ['w0167', 640, 180, 36, 28]],
+      decor: [['ferns', 560, 360, 40, 31], ['leaves', 380, 210, 36, 28], ['ferns', 300, 330, 40, 31], ['leaves', 640, 180, 36, 28]],
       obstacles: [
         { shape: 'rect', x: 110, y: 80, w: 220, h: 120, look: 'tavern', label: 'The Grey Ford Inn' },
         { shape: 'rect', x: 520, y: 100, w: 110, h: 60, look: 'stall', label: 'Market' },
         { shape: 'rect', x: 690, y: 80, w: 200, h: 120, look: 'barracks', label: 'Muster Hall' },
-        { shape: 'rect', x: 680, y: 350, w: 190, h: 110, look: 'house', label: "Elder's House" },
+        { shape: 'rect', x: 680, y: 350, w: 190, h: 110, look: 'house', label: "Elder's House", spec: { wall: 'plaster', base: true, beams: true, roof: 'slate', form: 'hip', tower: 'right', windows: 3 } },
         { shape: 'rect', x: 130, y: 370, w: 150, h: 95, look: 'house' },
         { shape: 'circle', x: 470, y: 330, r: 22, look: 'well' },
         tree(60, 120), tree(370, 470), tree(900, 300), tree(620, 470)
@@ -94,7 +96,7 @@
           name: 'Hilde the Innkeeper',
           tag: 'Innkeeper',
           role: 'innkeeper',
-          frames: [64, 65, 66, 67],
+          gender: 'female',
           x: 220,
           y: 228,
           action: 'tavern',
@@ -109,7 +111,6 @@
           name: 'Ottmar the Merchant',
           tag: 'Merchant',
           role: 'merchant',
-          frames: [96, 97, 98, 99],
           x: 575,
           y: 190,
           pace: [640, 190],
@@ -122,7 +123,6 @@
           short: 'Brun',
           tag: 'Recruiter',
           role: 'recruiter',
-          frames: [76, 77, 78, 79],
           x: 760,
           y: 238,
           pace: [850, 238],
@@ -135,7 +135,7 @@
           short: 'Maren',
           tag: 'Elder',
           role: 'elder',
-          frames: [288, 289, 290, 291],
+          gender: 'female',
           x: 775,
           y: 318,
           action: 'talk',
@@ -146,7 +146,6 @@
           name: 'Gate Guard',
           tag: 'Gate',
           role: 'guard',
-          frames: [80, 81, 82, 83],
           x: 70,
           y: 250,
           action: 'leave',
@@ -163,15 +162,14 @@
       name: 'Eastwatch',
       ground: {
         base: '#7d8a5a',
-        tiles: ['w0050', 'w0000', 'w0012'],
         road: '#b7a07a',
         roads: [{ x: 445, y: 410, w: 70, h: 130 }, { x: 120, y: 300, w: 140, h: 40 }, { x: 700, y: 300, w: 140, h: 40 }],
         stone: { x: 250, y: 196, w: 460, h: 224, color: '#c4b99e' }
       },
-      decor: [['w0167', 270, 440, 36, 28], ['w0167', 650, 440, 36, 28], ['w0147', 230, 150, 40, 31], ['w0147', 700, 150, 40, 31]],
+      decor: [['leaves', 270, 440, 36, 28], ['leaves', 650, 440, 36, 28], ['ferns', 230, 150, 40, 31], ['ferns', 700, 150, 40, 31]],
       obstacles: [
         building('wall', 24, 50, 912, 20),
-        building('house', 380, 80, 200, 100, 'Basilica', IMPERIAL),
+        building('house', 380, 80, 200, 100, 'Basilica', IMPERIAL, { wall: 'whitewash', base: true, beams: false, form: 'hip', tower: 'right', windows: 4, door: 'center' }),
         building('tavern', 60, 170, 180, 110, 'The Ninth Mile', IMPERIAL),
         building('barracks', 730, 170, 190, 115, 'Legion Muster', { wall: '#d9cdb2', roof: '#8e3a26', door: '#3a2a1a' }),
         stall(290, 330, 'Grain'),
@@ -191,7 +189,7 @@
           name: 'Prisca the Innkeeper',
           tag: 'Innkeeper',
           role: 'innkeeper',
-          frames: [96, 97, 98, 99],
+          gender: 'female',
           x: 150,
           y: 305,
           action: 'tavern',
@@ -206,7 +204,6 @@
           name: 'Marcel Rufo',
           tag: 'Merchant',
           role: 'merchant',
-          frames: [92, 93, 94, 95],
           x: 340,
           y: 405,
           pace: [620, 405],
@@ -219,7 +216,6 @@
           short: 'Varo',
           tag: 'Recruiter',
           role: 'recruiter',
-          frames: [244, 245, 246, 247],
           x: 820,
           y: 310,
           pace: [745, 310],
@@ -232,7 +228,6 @@
           short: 'Oren',
           tag: 'Magistrate',
           role: 'official',
-          frames: [288, 289, 290, 291],
           x: 480,
           y: 212,
           action: 'talk',
@@ -246,7 +241,6 @@
           name: 'Gate Legionary',
           tag: 'Gate',
           role: 'guard',
-          frames: [72, 73, 74, 75],
           x: 400,
           y: 455,
           action: 'leave',
@@ -263,7 +257,6 @@
       name: 'Hrothgard',
       ground: {
         base: '#b9c2c0',
-        tiles: ['w0020', 'w0034', 'w0020'],
         road: '#8a7a66',
         patches: [{ x: 300, y: 470, rx: 160, ry: 40, color: '#a7afab' }, { x: 820, y: 280, rx: 90, ry: 50, color: '#c9d0cd' }],
         roads: [
@@ -272,9 +265,9 @@
           { x: 450, y: 180, w: 380, h: 56 }
         ]
       },
-      decor: [['w0174', 200, 300, 52, 37], ['w0174', 252, 300, 52, 37], ['w0174', 520, 250, 52, 37], ['w0110', 30, 180, 58, 36], ['w0110', 860, 370, 58, 36]],
+      decor: [['fence', 200, 300, 52, 37], ['fence', 252, 300, 52, 37], ['fence', 520, 250, 52, 37], ['turf', 30, 180, 58, 36], ['turf', 860, 370, 58, 36]],
       obstacles: [
-        building('barracks', 600, 40, 300, 130, "Jarl's Hall", NORTH),
+        building('barracks', 600, 40, 300, 130, "Jarl's Hall", NORTH, { form: 'long', beams: true, door: 'center', sign: null, shields: true, banner: true, chimney: -0.5 }),
         building('tavern', 180, 180, 220, 110, 'The Horn and Hearth', NORTH),
         stall(560, 280, 'Furs & Iron'),
         building('barracks', 700, 400, 200, 105, 'Huscarl Yard', NORTH_STONE),
@@ -294,7 +287,7 @@
           name: 'Tove of the Hearth',
           tag: 'Alewife',
           role: 'innkeeper',
-          frames: [128, 129, 130, 131],
+          gender: 'female',
           x: 290,
           y: 315,
           action: 'tavern',
@@ -309,7 +302,6 @@
           name: 'Orm Netter',
           tag: 'Trader',
           role: 'merchant',
-          frames: [92, 93, 94, 95],
           x: 615,
           y: 385,
           pace: [688, 385],
@@ -322,7 +314,6 @@
           short: 'Halvar',
           tag: 'Recruiter',
           role: 'recruiter',
-          frames: [76, 77, 78, 79],
           x: 600,
           y: 450,
           pace: [470, 450],
@@ -335,7 +326,7 @@
           short: 'Gudrun',
           tag: 'Lawspeaker',
           role: 'official',
-          frames: [288, 289, 290, 291],
+          gender: 'female',
           x: 750,
           y: 208,
           action: 'talk',
@@ -349,7 +340,6 @@
           name: 'Gate Warden',
           tag: 'Gate',
           role: 'guard',
-          frames: [84, 85, 86, 87],
           x: 90,
           y: 310,
           action: 'leave',
@@ -366,7 +356,6 @@
       name: 'Vessara',
       ground: {
         base: '#8f9a5a',
-        tiles: ['w0000', 'w0050', 'w0001'],
         road: '#c0a678',
         patches: [{ x: 480, y: 420, rx: 540, ry: 34, color: '#d8c48a' }],
         waters: [{ x: 0, y: 428, w: 960, h: 112 }],
@@ -374,11 +363,11 @@
         plaza: { x: 480, y: 300, rx: 110, ry: 55, color: '#c2a67a' },
         stone: { x: 24, y: 368, w: 912, h: 60, color: '#b9a98a' }
       },
-      decor: [['w0121', 300, 424, 86, 61], ['w0121', 620, 424, 86, 61], ['w0167', 280, 300, 36, 28], ['w0147', 650, 300, 40, 31]],
+      decor: [['planks', 300, 424, 86, 61], ['planks', 620, 424, 86, 61], ['leaves', 280, 300, 36, 28], ['ferns', 650, 300, 40, 31]],
       obstacles: [
         unseen(0, 430, 960, 110),
         building('tavern', 60, 100, 200, 110, 'The Lantern', SOUTH),
-        building('house', 700, 100, 220, 110, 'Salt Guild', SOUTH),
+        building('house', 700, 100, 220, 110, 'Salt Guild', SOUTH, { base: true, form: 'hip', tower: 'left', windows: 3, sign: { kind: 'guild', at: 'right' } }),
         building('barracks', 60, 250, 190, 100, 'Company House', { wall: '#d6a96a', roof: '#8a3a22', door: '#3a2614' }),
         building('house', 730, 284, 170, 76, 'Harbour Office', SOUTH),
         building('house', 280, 30, 100, 60, null, SOUTH),
@@ -395,7 +384,7 @@
           name: 'Rosa of the Lantern',
           tag: 'Innkeeper',
           role: 'innkeeper',
-          frames: [96, 97, 98, 99],
+          gender: 'female',
           x: 160,
           y: 235,
           action: 'tavern',
@@ -410,7 +399,6 @@
           name: 'Tommaso Remari',
           tag: 'Merchant',
           role: 'merchant',
-          frames: [128, 129, 130, 131],
           x: 615,
           y: 385,
           pace: [500, 385],
@@ -423,7 +411,6 @@
           short: 'Salvo',
           tag: 'Recruiter',
           role: 'recruiter',
-          frames: [244, 245, 246, 247],
           x: 155,
           y: 374,
           pace: [270, 374],
@@ -436,7 +423,7 @@
           short: 'Vanna',
           tag: 'Harbourmaster',
           role: 'official',
-          frames: [288, 289, 290, 291],
+          gender: 'female',
           x: 815,
           y: 378,
           pace: [710, 378],
@@ -451,7 +438,6 @@
           name: 'Gate Guard',
           tag: 'Gate',
           role: 'guard',
-          frames: [80, 81, 82, 83],
           x: 700,
           y: 264,
           action: 'leave',
@@ -468,14 +454,13 @@
       name: 'Merrow',
       ground: {
         base: '#6f8a52',
-        tiles: ['w0000', 'w0001', 'w0002'],
         road: '#9c8460',
         waters: [{ x: 440, y: 0, w: 100, h: 540 }],
         roads: [{ x: 24, y: 250, w: 420, h: 60 }, { x: 420, y: 250, w: 140, h: 60 }],
         plaza: { x: 720, y: 300, rx: 150, ry: 90, color: '#a39c88' }
       },
       // The bridge: planks over the road where it crosses the river.
-      decor: [['w0121', 424, 248, 70, 64], ['w0121', 486, 248, 70, 64], ['w0147', 150, 360, 40, 31], ['w0167', 600, 200, 36, 28], ['w0147', 300, 190, 40, 31]],
+      decor: [['planks', 424, 248, 70, 64], ['planks', 486, 248, 70, 64], ['ferns', 150, 360, 40, 31], ['leaves', 600, 200, 36, 28], ['ferns', 300, 190, 40, 31]],
       obstacles: [
         unseen(450, 0, 80, 248),
         unseen(450, 312, 80, 228),
@@ -483,7 +468,7 @@
         building('barracks', 60, 60, 170, 110, 'Free Company', RIVER),
         stall(590, 150, 'Wool'),
         stall(700, 150, 'Salt'),
-        building('house', 790, 40, 140, 90, 'Guildhall', { wall: '#b3aa98', roof: '#5d4a6a', door: '#3a2614' }),
+        building('house', 790, 40, 140, 90, 'Guildhall', { wall: '#b3aa98', roof: '#5d4a6a', door: '#3a2614' }, { base: true, form: 'end', tower: 'left', sign: { kind: 'guild', at: 'right' } }),
         { shape: 'circle', x: 720, y: 320, r: 22, look: 'well' },
         building('house', 580, 420, 130, 90, null, RIVER),
         building('house', 760, 420, 150, 90, null, RIVER),
@@ -498,7 +483,7 @@
           name: 'Bet Ferryman',
           tag: 'Innkeeper',
           role: 'innkeeper',
-          frames: [96, 97, 98, 99],
+          gender: 'female',
           x: 340,
           y: 465,
           action: 'tavern',
@@ -513,7 +498,6 @@
           name: 'Kit Saltback',
           tag: 'Merchant',
           role: 'merchant',
-          frames: [92, 93, 94, 95],
           x: 650,
           y: 230,
           pace: [790, 230],
@@ -526,7 +510,6 @@
           short: 'Rook',
           tag: 'Sellsword',
           role: 'recruiter',
-          frames: [124, 125, 126, 127],
           x: 145,
           y: 200,
           pace: [280, 200],
@@ -539,7 +522,7 @@
           short: 'Corrie',
           tag: 'Reeve',
           role: 'official',
-          frames: [68, 69, 70, 71],
+          gender: 'female',
           x: 860,
           y: 165,
           action: 'talk',
@@ -553,7 +536,6 @@
           name: 'Bridge Watch',
           tag: 'Gate',
           role: 'guard',
-          frames: [80, 81, 82, 83],
           x: 90,
           y: 232,
           action: 'leave',
@@ -570,16 +552,15 @@
       name: 'Gullhaven',
       ground: {
         base: '#7f8d5e',
-        tiles: ['w0000', 'w0050', 'w0061'],
         road: '#a8916a',
         patches: [{ x: 690, y: 270, rx: 60, ry: 300, color: '#d6c28a' }],
         waters: [{ x: 700, y: 0, w: 260, h: 540 }],
         roads: [{ x: 24, y: 240, w: 690, h: 60 }]
       },
       decor: [
-        ['w0121', 700, 128, 86, 61], ['w0121', 786, 128, 86, 61],
-        ['w0121', 700, 298, 86, 61], ['w0121', 786, 298, 86, 61],
-        ['w0147', 180, 380, 40, 31]
+        ['planks', 700, 128, 86, 61], ['planks', 786, 128, 86, 61],
+        ['planks', 700, 298, 86, 61], ['planks', 786, 298, 86, 61],
+        ['ferns', 180, 380, 40, 31]
       ],
       obstacles: [
         unseen(712, 0, 248, 130),
@@ -590,8 +571,8 @@
         building('tavern', 80, 60, 220, 120, 'The Gull and Anchor', PORT),
         building('barracks', 280, 370, 190, 110, "Marines' Hall", PORT),
         stall(340, 140, 'Spices'),
-        building('barracks', 500, 40, 180, 110, 'Warehouse', { wall: '#9a8466', roof: '#4b5a5e', door: '#2e2a22' }),
-        building('barracks', 520, 370, 160, 100, 'Chandlery', PORT),
+        building('barracks', 500, 40, 180, 110, 'Warehouse', { wall: '#9a8466', roof: '#4b5a5e', door: '#2e2a22' }, { wall: 'timber', beams: true, door: 'wide', sign: null, shields: false, banner: false, windows: 1 }),
+        building('barracks', 520, 370, 160, 100, 'Chandlery', PORT, { form: 'gable', sign: { kind: 'guild', at: 'left' }, shields: false, banner: false, awning: '#3f5f6f' }),
         building('crate', 640, 195, 34, 30),
         building('crate', 640, 330, 32, 28),
         tree(130, 430)
@@ -604,7 +585,7 @@
           name: 'Wenna of the Anchor',
           tag: 'Innkeeper',
           role: 'innkeeper',
-          frames: [128, 129, 130, 131],
+          gender: 'female',
           x: 190,
           y: 205,
           action: 'tavern',
@@ -619,7 +600,6 @@
           name: 'Hob Mudlark',
           tag: 'Merchant',
           role: 'merchant',
-          frames: [92, 93, 94, 95],
           x: 395,
           y: 215,
           pace: [520, 215],
@@ -632,7 +612,6 @@
           short: 'Jory',
           tag: 'Recruiter',
           role: 'recruiter',
-          frames: [76, 77, 78, 79],
           x: 375,
           y: 340,
           pace: [220, 340],
@@ -645,7 +624,7 @@
           short: 'Ysolt',
           tag: 'Portwarden',
           role: 'official',
-          frames: [288, 289, 290, 291],
+          gender: 'female',
           x: 800,
           y: 158,
           pace: [740, 158],
@@ -661,7 +640,6 @@
           short: 'Abe',
           tag: 'Elder',
           role: 'elder',
-          frames: [68, 69, 70, 71],
           x: 790,
           y: 328,
           action: 'talk',
@@ -675,7 +653,6 @@
           name: 'Watchman',
           tag: 'Gate',
           role: 'guard',
-          frames: [84, 85, 86, 87],
           x: 90,
           y: 222,
           action: 'leave',
@@ -692,18 +669,17 @@
       name: 'Harrowgate',
       ground: {
         base: '#6f7f62',
-        tiles: ['w0000', 'w0012', 'w0002'],
         road: '#8f8676',
         waters: [{ x: 0, y: 0, w: 960, h: 104 }],
         roads: [{ x: 424, y: 250, w: 70, h: 240 }, { x: 110, y: 250, w: 630, h: 46 }],
         stone: { x: 300, y: 310, w: 380, h: 140, color: '#8d8a80' }
       },
-      decor: row('w0110', 0, 960, 90, 58, 36).concat([['w0174', 240, 440, 52, 37], ['w0174', 900, 440, 52, 37]]),
+      decor: row('turf', 0, 960, 90, 58, 36).concat([['fence', 240, 440, 52, 37], ['fence', 900, 440, 52, 37]]),
       obstacles: [
         unseen(0, 0, 960, 118),
         building('wall', 24, 470, 400, 24),
         building('wall', 494, 470, 442, 24),
-        building('barracks', 380, 132, 220, 92, "Steward's Keep", CLIFF),
+        building('barracks', 380, 132, 220, 92, "Steward's Keep", CLIFF, { wall: 'stone', form: 'hip', tower: 'left', sign: null, shields: true, banner: true }),
         building('tavern', 60, 320, 200, 100, 'The Salt Kettle', CLIFF),
         building('barracks', 760, 300, 160, 110, 'Shield Hall', { wall: '#8a8478', roof: '#2e3640', door: '#22201c' }),
         stall(310, 330, 'Fish'),
@@ -720,7 +696,7 @@
           name: 'Thora Salter',
           tag: 'Innkeeper',
           role: 'innkeeper',
-          frames: [96, 97, 98, 99],
+          gender: 'female',
           x: 230,
           y: 445,
           action: 'tavern',
@@ -735,7 +711,6 @@
           name: 'Vidar Cooper',
           tag: 'Merchant',
           role: 'merchant',
-          frames: [128, 129, 130, 131],
           x: 380,
           y: 410,
           pace: [600, 410],
@@ -748,7 +723,6 @@
           short: 'Ulf',
           tag: 'Recruiter',
           role: 'recruiter',
-          frames: [72, 73, 74, 75],
           x: 715,
           y: 350,
           pace: [715, 262],
@@ -761,7 +735,7 @@
           short: 'Liv',
           tag: 'Steward',
           role: 'official',
-          frames: [288, 289, 290, 291],
+          gender: 'female',
           x: 490,
           y: 244,
           action: 'talk',
@@ -775,7 +749,6 @@
           name: 'Gate Warden',
           tag: 'Gate',
           role: 'guard',
-          frames: [80, 81, 82, 83],
           x: 395,
           y: 440,
           action: 'leave',
@@ -792,7 +765,6 @@
       name: 'Calder',
       ground: {
         base: '#a3a27a',
-        tiles: ['w0050', 'w0061', 'w0000'],
         road: '#c9b892',
         patches: [
           { x: 740, y: 430, rx: 150, ry: 55, color: '#ebe8dc' },
@@ -801,9 +773,9 @@
         ],
         roads: [{ x: 24, y: 245, w: 912, h: 60 }]
       },
-      decor: [['w0167', 300, 420, 36, 28], ['w0147', 620, 410, 40, 31]],
+      decor: [['leaves', 300, 420, 36, 28], ['ferns', 620, 410, 40, 31]],
       obstacles: [
-        building('house', 60, 50, 200, 120, 'Salt Exchange', SALT),
+        building('house', 60, 50, 200, 120, 'Salt Exchange', SALT, { base: true, form: 'hip', tower: 'right', windows: 4, door: 'center', sign: { kind: 'guild', at: 'left' } }),
         building('tavern', 620, 60, 220, 110, 'The Salt Cellar', SALT),
         building('house', 300, 60, 120, 85, null, SALT),
         building('house', 440, 60, 120, 85, null, SALT),
@@ -826,7 +798,7 @@
           name: 'Serena of the Cellar',
           tag: 'Innkeeper',
           role: 'innkeeper',
-          frames: [96, 97, 98, 99],
+          gender: 'female',
           x: 730,
           y: 198,
           action: 'tavern',
@@ -841,7 +813,6 @@
           name: 'Cosimo Mercante',
           tag: 'Merchant',
           role: 'merchant',
-          frames: [92, 93, 94, 95],
           x: 420,
           y: 275,
           pace: [600, 275],
@@ -854,7 +825,6 @@
           short: 'Emilio',
           tag: 'Recruiter',
           role: 'recruiter',
-          frames: [244, 245, 246, 247],
           x: 160,
           y: 345,
           pace: [300, 345],
@@ -867,7 +837,7 @@
           short: 'Donata',
           tag: 'Factor',
           role: 'official',
-          frames: [288, 289, 290, 291],
+          gender: 'female',
           x: 160,
           y: 200,
           action: 'talk',
@@ -882,7 +852,6 @@
           short: 'Benedetto',
           tag: 'Elder',
           role: 'elder',
-          frames: [68, 69, 70, 71],
           x: 700,
           y: 368,
           action: 'talk',
@@ -893,7 +862,6 @@
           name: 'Gate Guard',
           tag: 'Gate',
           role: 'guard',
-          frames: [84, 85, 86, 87],
           x: 860,
           y: 228,
           action: 'leave',

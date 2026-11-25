@@ -698,6 +698,8 @@
    *   door      'center' | 'left' | 'right' | 'wide' (a barn or forge);  windows: count
    *   sign      { kind: 'tavern' | 'smith' | 'barracks' | 'guild', at: 'left' | 'right' }
    *   awning    a colour for a cloth awning over the door
+   *   wallColor, roofColor, doorColor   a town's own colours instead of the materials' (P10-G3)
+   *   tower     'left' | 'right': a landmark's tower rising behind that end (drawn by js/art/town.js)
    * `night` (0..1) lights the windows.
    */
   function building(ctx, b, t = 0, night = 0) {
@@ -706,8 +708,9 @@
     const w = b.w * s;
     const h = b.h * s;
     const d = (b.d ?? b.w * 0.5) * s;
-    const [wall, wallShade] = WALLS[b.wall || 'plaster'];
-    const [roof, roofShade] = ROOFS[b.roof || 'terracotta'];
+    // A town's own colours (data/town_hubs.js `colors`) may stand in for the materials' (P10-G3).
+    const [wall, wallShade] = b.wallColor ? [b.wallColor, tone(b.wallColor, -0.14)] : WALLS[b.wall || 'plaster'];
+    const [roof, roofShade] = b.roofColor ? [b.roofColor, tone(b.roofColor, -0.18)] : ROOFS[b.roof || 'terracotta'];
     const L = x - w / 2;
     const R = x + w / 2;
     const top = y - h;
@@ -832,7 +835,7 @@
     const doorH = (b.door === 'wide' ? 20 : 17) * s;
     const dx = b.door === 'left' ? L + w * 0.22 : b.door === 'right' ? R - w * 0.22 : x;
     rrect(ctx, dx - doorW / 2, y - doorH, doorW, doorH, b.door === 'wide' ? 2 * s : 5 * s);
-    fillLine(ctx, b.door === 'wide' ? tone(PAL.door, -0.1) : PAL.door);
+    fillLine(ctx, b.doorColor || (b.door === 'wide' ? tone(PAL.door, -0.1) : PAL.door));
     if (b.door === 'wide' && night === 0) {
       ctx.fillStyle = '#2f2722';
       ctx.fillRect(dx - doorW / 2 + 3, y - doorH + 3, doorW - 6, doorH - 3);

@@ -14,7 +14,6 @@
   };
   // P10-G2: battles are drawn by the art kit (js/art/), so no soldier sprites are loaded. What is left
   // here is the towns' and the map's until P10-G3 and P10-G4.
-  const worldTiles = [0, 1, 2, 3, 7, 12, 20, 34, 50, 61, 91, 110, 121, 132, 147, 167, 174];
 
   const key = (prefix, i) => prefix + String(i).padStart(4, '0');
 
@@ -35,11 +34,8 @@
   function preload() {
     const used = new Set([
       ...Object.values(heroFrames).flat(),
-      // Townsfolk in walkable town hubs.
-      ...Object.values(CL.content?.table('town_hubs') || {}).flatMap((h) => h.npcs.flatMap((n) => n.frames)),
     ]);
     for (const i of used) loadImg(key('u', i));
-    for (const i of worldTiles) loadImg(key('w', i));
   }
 
   // ---- Hero cloak colours ----

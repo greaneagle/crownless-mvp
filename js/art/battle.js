@@ -714,5 +714,5 @@
     return img;
   }
 
-  G.battle = { FIG, TEAM, TILE_LOOK, draw, unit, fallen, ground, obstacle, arrows, effects, miniature, lookOf: (u) => lookOf(state(CL.game), u), sides, baseOf, lookName };
+  G.battle = { FIG, TEAM, TILE_LOOK, water, draw, unit, fallen, ground, obstacle, arrows, effects, miniature, lookOf: (u) => lookOf(state(CL.game), u), sides, baseOf, lookName };
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -125,6 +125,14 @@ A standing or walking soldier is a **baked frame**: drawn once per look, facing,
 
 A new obstacle look is a branch in `obstacle()` and a name in the maps' comment (`data/battle_maps.js`). A new pose has to bake, so keep it a function of the pose's few fields.
 
+## Towns (`js/art/town.js`)
+
+`CL.gfx.town.draw(ctx, town, opts)` draws a town's streets.
+- **Buildings:** each is drawn inside its footprint in `data/town_hubs.js` (the box is also its collision) from `specOf`: its kind (tavern, barracks, house), the town's `colors`, and its realm's culture, with the obstacle's own `spec` over that. A landmark gets `tower: 'left' | 'right'` or a `long` hall. The ground and each building are baked once per town, scale and light.
+- **People:** drawn from their `role` (`ROLE_LOOK` to the kit's role looks), a woman when `gender: 'female'`, a companion in their own look.
+- **Life:** smoke from chimneys, banners, a child at the well, gulls over water, hens in the northern and salt towns. The light follows the campaign's hour (`nightOf`).
+- **To add a town:** lay out its footprints in the data as before. To give a building more character, add a `spec`.
+
 ## What it costs
 
 Drawing in code costs more than stamping sprites. Measure before and after a change:

@@ -34,7 +34,7 @@
     const spots = hub.spots || [];
     const story = placed.slice(0, spots.length).map((t, i) => {
       const look = CL.story.lookOf(t);
-      return { id: t.id, name: CL.story.speakerOf(t), tag: look.tag, frames: look.frames, x: spots[i].x, y: spots[i].y, action: 'talk', dialogue: t.id, visible: t.visible, lines: ['…'] };
+      return { id: t.id, name: CL.story.speakerOf(t), tag: look.tag, role: look.role, companion: look.companion, gender: look.gender, x: spots[i].x, y: spots[i].y, action: 'talk', dialogue: t.id, visible: t.visible, lines: ['…'] };
     });
     return [...own, ...story];
   }

@@ -1,5 +1,29 @@
 # Crownless — Release Notes
 
+## v4.12.0 — Towns in the new art (P10-G3) · 2026-11-25
+
+The third step toward the code-drawn art (D-P10k): all eight walkable towns are drawn by it. Their layouts, their people and where everything stands are as before.
+
+### New
+- **Every town in its own style**, from the art kit's buildings:
+  - Stonebridge's timber-framed inn, slate muster hall and the elder's tower.
+  - Eastwatch's whitewashed forum and basilica.
+  - Hrothgard's dark timber halls under shingle and turf.
+  - Vessara and Calder's terracotta guild halls.
+  - Merrow's and Gullhaven's harbour sheds and piers.
+  - Harrowgate's stone keep on the cliffs.
+
+  Each town keeps its own colours, and its landmark has a tower or a great hall.
+- **Signs, awnings and shields say what a building is** before you read its name: a tankard for the inn, crossed spears for the barracks, a key for the guilds. Names show only when you are near.
+- **The townsfolk** are drawn by what they do (innkeepers in aprons, merchants in brimmed hats, guards with spears and shields, officials in fine cloaks), and the women as women. The story's envoys and caravan masters, the retainer and Mara appear in their own looks.
+- **Life:** chimneys smoke, banners move, a child runs round the well, gulls wheel over the harbours and hens peck in the northern towns. At dusk and at night (the campaign's own hour), the windows and doorways glow.
+
+### Under the hood
+- **The town module:** `js/art/town.js` draws the streets. A building is drawn inside its old footprint from a spec: its kind, the town's colours and its realm's culture, or its own `spec` (a landmark). The ground and the buildings are drawn once and stamped, so a town draws in under a millisecond.
+- **The town data:** `data/town_hubs.js` names kit looks and decor (planks, earth banks, flowers, ferns, fences) instead of tile ids; the townsfolk's sprite frames are gone, and the women are marked.
+- **The story's people:** in `data/factions.js` and `data/dialogue.js` they have a role, or a companion's look, instead of frames.
+- **What sprites are left:** only the hero on the world map and in the creator and party sheet, until P10-G4 and P10-G5.
+
 ## v4.11.0 — Battles in the new art (P10-G2) · 2026-11-25
 
 The second of the six steps toward the code-drawn art (D-P10k): every battle is now drawn by it. Towns and the map keep their current look until their own steps.

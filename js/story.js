@@ -653,10 +653,14 @@
   /** A dialogue's speaker, as cast. */
   const speakerOf = (t, c = camp()) => format(t.speaker, c);
 
-  /** A cast dialogue's look in the streets: its own, else its person's, else a traveller's. */
+  /**
+   * A cast dialogue's look in the streets (P10-G3, drawn by the art kit): its tag; a companion's own look,
+   * or a role (the person's, else a traveller's); a woman's when the person is one.
+   */
   function lookOf(t, c = camp()) {
     const p = typeof t.cast === 'string' ? person(t.cast, c) : null;
-    return { tag: t.tag || p?.tag || 'Traveller', frames: t.frames || p?.frames || [72, 73, 74, 75] };
+    const realmP = typeof t.cast === 'string' && !STREET_ROLES.includes(t.cast) ? F(t.cast === 'crown_agent' ? castOf(c)?.crown : castOf(c)?.rival)?.story?.[t.cast === 'caravan' ? 'caravan' : 'agent'] : null;
+    return { tag: t.tag || p?.tag || 'Traveller', role: t.role || realmP?.role || 'townsman', companion: t.companion || null, gender: (realmP?.he || p?.he) === 'she' ? 'female' : null };
   }
 
   // ---- Journal ----

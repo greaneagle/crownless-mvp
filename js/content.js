@@ -380,7 +380,7 @@
       if (h.entry != null && !['menu', 'streets'].includes(h.entry)) err(`town_hub ${h.id}: entry must be 'menu' or 'streets'`);
       for (const n of h.npcs || []) {
         if (!['trade', 'recruit', 'tavern', 'talk', 'leave'].includes(n.action)) err(`town_hub ${h.id}: ${n.id} has unknown action ${n.action}`);
-        if (!n.frames?.length) err(`town_hub ${h.id}: ${n.id} needs sprite frames`);
+        if (n.gender != null && n.gender !== 'female') err(`town_hub ${h.id}: ${n.id} gender may only be 'female'`); // P10-G3: drawn from the role
         if (n.dialogue && !C.dialogue?.[n.dialogue]) err(`town_hub ${h.id}: ${n.id} unknown dialogue ${n.dialogue}`);
         if (!n.dialogue && !n.lines?.length) err(`town_hub ${h.id}: ${n.id} has nothing to say`);
         if (n.dialogue && n.action === 'leave') err(`town_hub ${h.id}: ${n.id} leaves, so cannot hold a conversation`);

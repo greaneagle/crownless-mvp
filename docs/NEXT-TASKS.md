@@ -3698,7 +3698,7 @@ The owner played the graphics demo (`docs/GRAPHICS-DEMO.md`, commit e5bae98) and
   - The battle, assault, tourney, zoom and art specs: 36 of 36.
 - **Seen** in screenshots at 1280×720 and 812×375 @3× (Balanced): the forest at 40, the ford, the hills, the wagon ambush, the courtyard, the assault, the open field at 100, the lists. Not played by hand on a phone.
 
-### P10-G3 · Towns in the new art (L)
+### P10-G3 · Towns in the new art (L) — ✅ Done in 4.12.0
 
 **Build.**
 - **Every walkable town** (P10-03: Stonebridge, Eastwatch, Hrothgard, Vessara, Merrow, Gullhaven, Harrowgate, Calder) drawn from building specs in `data/town_hubs.js`.
@@ -3725,6 +3725,40 @@ The owner played the graphics demo (`docs/GRAPHICS-DEMO.md`, commit e5bae98) and
 - Screenshots of every town by day and at night, at 812×375 and on desktop.
 
 **Version.** 4.12.0.
+
+**Done (4.12.0).**
+- **The town module** `js/art/town.js` (`CL.gfx.town.draw`), called by `js/render.js` for the streets:
+  - the ground (streets with edges, the squares' cobbles, flagstones, water, decor, tufts);
+  - every building, stall, well, tree, wall and crate in depth order with the people;
+  - the night's shade and light;
+  - the few words on screen.
+- **Layouts kept** (owner's option, not taken: bigger towns). Every town stays one screen with its P10-03 layout: every footprint, collision, person, story spot and exit is where it was. A building is drawn inside its footprint (front wall on the box's bottom edge, roof to its top) from `specOf`:
+  - its kind (tavern: a stone ground floor, framing, the tankard sign, an awning; barracks: stone, a long roof, crossed spears, shields, a banner; house);
+  - the town's `colors` (the hubs' own palettes, through new `wallColor`/`roofColor`/`doorColor` in the kit);
+  - its realm's culture's materials;
+  - an obstacle's own `spec` over that.
+- **Landmarks** (`spec`): Stonebridge's Elder's House (stone floor, slate hip, a tower), Eastwatch's Basilica, Hrothgard's Jarl's Hall, the Salt Guild, Merrow's Guildhall, Harrowgate's Steward's Keep and Calder's Salt Exchange (towers or a great hall); Gullhaven's Warehouse and Chandlery as harbour sheds.
+- **People:**
+  - drawn from their role (innkeeper, merchant, recruiter, elder, official, guard; seeded faces, and nothing random about their sex);
+  - the 15 women of the towns marked `gender: 'female'` in the data;
+  - the story's cast: each realm's agent and caravan master in `data/factions.js`, the retainer and Mara in `data/dialogue.js`, take a role, or a companion's look, instead of frames (`CL.story.lookOf`);
+  - the hero in their own look.
+- **Life:** chimney smoke, moving barracks banners, swinging signs, a child round the well, gulls over the harbours (Vessara, Merrow, Gullhaven, Harrowgate), hens in Hrothgard, Harrowgate and Calder. **Light:** dusk and dawn half-dark, night dark (`nightOf`, the campaign's hour), with lit windows and a glow at every door.
+- **Labels:** a building's name only within about 190 px of the hero, a person's title within 230, and the name with "TALK: …" in reach, as before.
+- **Data:** `data/town_hubs.js` names kit looks for trees and decor kinds instead of tile ids. The piers and the Harrowgate cliff edge were tiles; they are now `planks` and `turf`, found because two people stood on bare sea in the first screenshots. Ground tiles and the people's `frames` are gone.
+- **Removed:**
+  - the town sprites: the NPC frames, tile trees and decor;
+  - `drawGround`, `drawBuilding`, `drawStall`, `drawWell`, `drawObstacle`, `drawNpc`, `drawUnit`, `drawSwing`, `drawImage`;
+  - the world tiles' preload.
+  - `js/assets.js` now loads only the hero's frames (the map and the creator, P10-G4 and P10-G5). The manifest: 16 of 170 files used.
+- **The budget:** a town draws in at most the battle's budget at 40 (2× P10-G1's 0.5 ms baseline, so 1.0 ms).
+  - Drawn plainly, the eight towns took 0.80–1.11 ms (Eastwatch over).
+  - With the ground and each building drawn once per town, scale and light and then stamped: **0.65–0.81 ms on the desktop bench, 0.62–0.76 on the phone profile** (Balanced, headless desktop Chromium).
+- **Tests:**
+  - `tests/art-town.test.js`: every town draws by day and at night with no sprite, the way out, and a person's name and TALK in reach. Each building's spec sits on its footprint and keeps its landmark's own spec, and walking at its front from the street stops at the wall. Every person stands clear of the buildings, is a woman only when the data says so, and talks from beside them. The story's cast takes roles and looks.
+  - `tests/browser/art.spec.js`: the streets draw no sprite, and TALK opens a conversation.
+- **Checks:** 934 fast pass; lint clean but the 2 old warnings; typecheck clean; browser 275 passed, 9 skipped, none failed.
+- **Seen** in screenshots of every town by day and at night at 1280×720 and 812×375 @3×. Not played by hand on a phone.
 
 ### P10-G4 · The world map in the new art (L)
 
