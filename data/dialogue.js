@@ -246,6 +246,58 @@
         }
       }
     },
+    // The scout's recruiter: your start town's own, while the opening quest needs them (P10-06).
+    origin_recruiter: {
+      id: 'origin_recruiter',
+      speaker: '{cast:recruiter}',
+      cast: 'recruiter',
+      visible: { any: [{ quest: 'o_scout', stage: 'o_scout_ask' }, { quest: 'o_scout', stage: 'o_scout_back' }] },
+      start: [{ if: { quest: 'o_scout', stage: 'o_scout_back' }, node: 'back' }, 'ask'],
+      nodes: {
+        ask: {
+          services: false,
+          text: [
+            'You are a scout? Then you are what I need. Outlaws are watching the road past {cast:border}, and I will not send recruits down it blind.',
+            'Hire two to ride with you, go to {cast:border} and ask what they have seen, then find them. Break them or send them running, and come back and tell me.'
+          ],
+          options: [{ text: 'I’ll find them.', do: [{ stage: 'o_scout_hire', quest: 'o_scout' }] }]
+        },
+        back: {
+          services: false,
+          text: [
+            'Broken, or run off? Either way the road is ours again, and you found them faster than anyone I have sent. You have quick feet and quicker eyes. Keep them.',
+            'There is more work in town than I can fill. {Cast:elder} has the most of it. And the map runs faster if you are in a hurry: the button by the zoom.'
+          ],
+          options: [{ text: 'I’ll go and see.', do: [{ attribute: 'agi', by: 1 }, { note: 'The road taught you something: +1 Agility.', quest: 'o_scout' }, { set: 'origin_done' }, { complete: 'o_scout' }, { start: 'q1' }] }]
+        }
+      }
+    },
+    // The peddler's merchant: your start town's own, while the opening quest needs them (P10-06).
+    origin_merchant: {
+      id: 'origin_merchant',
+      speaker: '{cast:merchant}',
+      cast: 'merchant',
+      visible: { any: [{ quest: 'o_peddler', stage: 'o_ped_deal' }, { quest: 'o_peddler', stage: 'o_ped_back' }] },
+      start: [{ if: { quest: 'o_peddler', stage: 'o_ped_back' }, node: 'back' }, 'deal'],
+      nodes: {
+        deal: {
+          services: false,
+          text: [
+            'A peddler with an empty pack. I know the look. Here is a deal: {cast:village} has grain from its own fields, and the town is short of it.',
+            'Buy some there and sell it here. Take two guards, mind: a peddler alone on the road is a peddler robbed. Here is something toward the grain, and there is more for you when it is in.'
+          ],
+          options: [{ text: 'You have a deal.', do: [{ gold: 25 }, { stage: 'o_ped_guards', quest: 'o_peddler' }, { note: 'The merchant gave you 25 crowns toward the grain.', quest: 'o_peddler' }] }]
+        },
+        back: {
+          services: false,
+          text: [
+            'The grain is in, and the price came down a little for it. That is trade. Here: the rest of what I promised.',
+            'If you want more than grain, {cast:elder} has work for a band with guards. And the map runs faster if you are in a hurry: the button by the zoom.'
+          ],
+          options: [{ text: 'I’ll go and see.', do: [{ gold: 45 }, { note: 'The merchant paid you for the deal.', quest: 'o_peddler' }, { set: 'origin_done' }, { complete: 'o_peddler' }, { start: 'q1' }] }]
+        }
+      }
+    },
     // The impoverished noble's retainer, in your start town while the opening quest lasts.
     origin_retainer: {
       id: 'origin_retainer',

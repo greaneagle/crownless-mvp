@@ -1,5 +1,16 @@
 # Crownless — Release Notes
 
+## v4.6.0 — Origins: the scout and the peddler (P10-06) · 2026-11-25
+
+### New
+- **The scout's opening, Eyes on the Road:** your town's recruiter wants outlaws on the border road counted. Hire two, ride to the border village and ask what they have seen, then break the road watchers or scare them off, and report back. The edge: +1 Agility.
+- **The peddler's opening, A Pack and a Profit:** your town's merchant has a deal. Take 25 crowns toward it, hire two guards, buy grain in your village, sell it in the town, and collect the rest. It teaches the market. The edge: a merchant's thanks, a little more money.
+- **All five origins now have an opening quest** that ends in the common quest, within the same band. The balance check over all five, from every kingdom, is one table in `tests/slow/origins.test.js`.
+
+### Under the hood
+- A new effect `attribute` (+1 to one of the hero's attributes); the merchant is a street role; a town person's opening dialogue comes before their own.
+- The story bot buys and sells for a `trade` step.
+
 ## v4.5.0 — Origins: the frame and the first three (P10-05) · 2026-11-25
 
 ### New

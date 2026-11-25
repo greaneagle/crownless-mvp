@@ -70,11 +70,11 @@ function handOffs(CL) {
   return out;
 }
 
-test('five origins replace the backgrounds; three have opening quests, each a few steps that end in the common quest', () => {
+test('five origins replace the backgrounds; each has an opening quest, each a few steps that end in the common quest', () => {
   const { CL } = loadGame({ party: false });
   const O = CL.content.table('origins');
   assert.deepEqual(JSON.parse(JSON.stringify(Object.keys(O))), ['traveller', 'noble', 'farmhand', 'scout', 'peddler']);
-  for (const o of Object.values(O).filter((x) => x.quest)) {
+  for (const o of Object.values(O)) {
     const q = CL.content.get('quests', o.quest);
     assert.ok(q.opening && q.stages.length >= 3 && q.stages.length <= 5, `${o.id}: 3 to 5 steps`);
     assert.ok(handOffs(CL).has(o.quest), `${o.id}: leads into Q1`);
@@ -153,12 +153,45 @@ test('the farmhand, from Ostrand: begins in the village with its willing men; th
   assert.match(CL.story.talk('story_elder', c).text, /you led its men well/);
 });
 
-test('the scout and the peddler begin with the common quest (their openings are P10-06’s); bots and tests keep the bare start', () => {
-  for (const origin of ['scout', 'peddler']) {
-    const { CL } = newCampaign(14, origin, { realm: 'hrothmark', plain: false });
-    assert.equal(CL.campaign.world.location, 'hrothgard');
-    assert.equal(CL.story.questStatus(CL.campaign, 'q1'), 'active');
-  }
+test('P10-06, the scout, from Hrothmark: the recruiter, two hires, the border village, the road watchers; +1 Agility', () => {
+  const { CL } = newCampaign(16, 'scout', { realm: 'hrothmark', plain: false });
+  const c = CL.campaign;
+  const k = c.story.cast;
+  assert.equal(c.world.location, 'hrothgard');
+  assert.ok(CL.town.streetPeople('hrothgard').some((p) => p.id === 'origin_recruiter' && p.name === 'Halvar Axehand'), 'the recruiter speaks the opening, before his own talk');
+  say(CL, CL.story.talk('origin_recruiter', c), /find them/);
+  hire(CL, 2);
+  arrive(CL, k.border);
+  assert.equal(CL.story.state(c).quests.o_scout.stage, 'o_scout_camp');
+  beat(CL, 'o_scout_watchers');
+  arrive(CL, 'hrothgard');
+  const agi = c.character.attributes.agi;
+  say(CL, CL.story.talk('origin_recruiter', c), /go and see/);
+  assert.equal(c.character.attributes.agi, agi + 1, 'the edge');
+  inBand(CL, c, 'scout');
+  assert.equal(CL.town.streetPeople('hrothgard').find((p) => p.name === 'Halvar Axehand').id, 'story_recruiter', 'back to his own talk');
+});
+
+test('P10-06, the peddler, from Vessaro: the merchant, two guards, grain bought in the village and sold in the town', () => {
+  const { CL } = newCampaign(17, 'peddler', { realm: 'vessaro', plain: false });
+  const c = CL.campaign;
+  const k = c.story.cast;
+  let gold = c.gold;
+  say(CL, CL.story.talk('origin_merchant', c), /deal/);
+  assert.equal(c.gold, gold + 25, 'toward the grain: nobody is stuck without the crowns to buy it');
+  hire(CL, 2);
+  arrive(CL, k.village);
+  assert.ok(CL.trade.buy(c, k.village, 'grain', 2).ok);
+  assert.equal(CL.story.state(c).quests.o_peddler.stage, 'o_ped_sell');
+  arrive(CL, 'vessara');
+  assert.ok(CL.trade.sell(c, 'vessara', 'grain', 2).ok);
+  gold = c.gold;
+  say(CL, CL.story.talk('origin_merchant', c), /go and see/);
+  assert.equal(c.gold, gold + 45, 'the edge: a merchant’s thanks');
+  inBand(CL, c, 'peddler');
+});
+
+test('bots and tests keep the bare start', () => {
   const { CL } = newCampaign(15, 'farmhand'); // plain: the GDD start
   assert.equal(CL.campaign.world.location, 'stonebridge');
   assert.equal(CL.campaign.roster.length, 0);

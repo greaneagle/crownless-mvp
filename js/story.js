@@ -21,6 +21,7 @@
  *    { gold: n }  { renown: n }  { xp: n }  { food: n }  { rep: 'valedorn', by: n }
  *    { give: 'item', n = 1 }  { take: 'item', n = 1 }  { equip: 'item' } (worn; what it replaces goes to the pack; P10-05)
  *    { recruit: 'levy', n = 1 } (or '@crown' / '@rival': that realm's first recruit; P10-05)
+ *    { attribute: 'agi', by = 1 } (the hero's attribute, up to its cap; P10-06)
  *    { start: 'q1' }  { stage: 's', quest: 'q1' }  { complete: 'q1' }  { fail: 'q1' }
  *    { owner: 'greywall_fort', to: 'aurelian' }  { message: 'text' }  { note: 'text', quest: 'q1' }
  *    { companion: 'mara' } (joins)  { part: 'mara', reason: 'fell' } (leaves for good)
@@ -82,11 +83,11 @@
   const MAX_NOTES = 20;
   const PLACE_ROLES = ['home', 'village', 'border', 'fort', 'rival_fort', 'rival_town', 'fence_town'];
   const REALM_ROLES = ['crown', 'rival'];
-  const PEOPLE_ROLES = ['elder', 'recruiter', 'innkeeper', 'crown_agent', 'rival_agent', 'caravan'];
-  const STREET_ROLES = ['elder', 'recruiter', 'innkeeper']; // spoken in person by your start town's people
+  const PEOPLE_ROLES = ['elder', 'recruiter', 'innkeeper', 'merchant', 'crown_agent', 'rival_agent', 'caravan'];
+  const STREET_ROLES = ['elder', 'recruiter', 'innkeeper', 'merchant']; // spoken in person by your start town's people
   const ROLES = [...REALM_ROLES, ...PLACE_ROLES, 'camp', ...PEOPLE_ROLES];
   const COND_KEYS = ['flag', 'not', 'all', 'any', 'quest', 'gold', 'renown', 'level', 'soldiers', 'rep', 'standing', 'skill', 'attribute', 'origin', 'has', 'owner', 'at', 'companion', 'room', 'veteran', 'follower'];
-  const EFFECT_KEYS = ['set', 'clear', 'add', 'gold', 'renown', 'xp', 'food', 'rep', 'give', 'take', 'equip', 'recruit', 'start', 'stage', 'complete', 'fail', 'owner', 'message', 'note', 'companion', 'part', 'send', 'recall', 'ending', 'honourVeteran', 'retinue'];
+  const EFFECT_KEYS = ['set', 'clear', 'add', 'gold', 'renown', 'xp', 'food', 'rep', 'give', 'take', 'equip', 'attribute', 'recruit', 'start', 'stage', 'complete', 'fail', 'owner', 'message', 'note', 'companion', 'part', 'send', 'recall', 'ending', 'honourVeteran', 'retinue'];
 
   const camp = () => CL.campaign;
   const quest = (id) => CL.content.table('quests')[id] || null;
@@ -246,8 +247,9 @@
   function streetDialogue(sid, npcId, c = camp()) {
     const k = castOf(c);
     if (!k || sid !== k.home) return null;
-    for (const t of Object.values(CL.content.table('dialogue'))) if (STREET_ROLES.includes(t.cast) && person(t.cast, c)?.npc === npcId && test(t.visible, c)) return t.id;
-    return null;
+    // One that holds only for a while (an opening quest's, with `visible`) before the person's own.
+    const trees = Object.values(CL.content.table('dialogue')).filter((t) => STREET_ROLES.includes(t.cast) && person(t.cast, c)?.npc === npcId && test(t.visible, c));
+    return (trees.find((t) => t.visible) || trees[0])?.id || null;
   }
 
   // ---- Conditions ----
@@ -333,6 +335,9 @@
       const left = (c.inventory[e.take] || 0) - (e.n || 1);
       if (left > 0) c.inventory[e.take] = left;
       else delete c.inventory[e.take];
+    } else if ('attribute' in e) {
+      const a = c.character?.attributes;
+      if (a && e.attribute in a) a[e.attribute] = Math.min(CL.character.MAX_ATTRIBUTE ?? 20, a[e.attribute] + ('by' in e ? e.by : 1));
     } else if ('equip' in e) {
       const it = CL.content.table('items')[e.equip];
       if (it?.slot) {
@@ -751,6 +756,7 @@
       if ((k === 'give' || k === 'take') && !C.items?.[e[k]]) err(`${where}: unknown item ${e[k]}`);
       if (k === 'recruit' && !(C.troops?.[e.recruit] || realmKnown(e.recruit, C) && isRole(e.recruit))) err(`${where}: unknown troop ${e.recruit}`);
       if (k === 'equip' && !C.items?.[e.equip]?.slot) err(`${where}: equip needs an item that is worn`);
+      if (k === 'attribute' && (!['str', 'agi', 'int', 'cha'].includes(e.attribute) || ('by' in e && !Number.isInteger(e.by)))) err(`${where}: attribute needs str, agi, int or cha`);
       if (['start', 'complete', 'fail'].includes(k) && !C.quests?.[e[k]]) err(`${where}: unknown quest ${e[k]}`);
       if (k === 'stage') {
         const q = C.quests?.[e.quest || questId];

@@ -3411,7 +3411,7 @@ Moved here from P9-T (owner, 2026-11-24). It runs when the owner asks for the ni
 - **Tests:** `tests/origins.test.js` (the five, each opening walked, Intimidate too, the bare start); `tests/slow/origins.test.js` (3 origins × 6 kingdoms by the focused story bot, inside the band, about 25 s).
 - **Checks:** 901 fast pass; lint clean but the 2 old warnings; typecheck clean. Browser 247 passed, 9 skipped (the 4.2 save fixtures now say `origin`). `tests/slow/origins.test.js` passes. **Played** at 812×375: a traveller in Saltreach, from the inn to the speed hint. The origin cards were cramped (now a grid), and the noble's forged blade was unknown to the world checker (now the axe). The map labels a quest band "Quest: Reavers", not its name: the renderer's, left for P10-08.
 
-### P10-06 · Origins: the scout and the peddler (M)
+### P10-06 · Origins: the scout and the peddler (M) — ✅ Done in 4.6.0
 
 **Build.**
 - **The scout** and **the peddler**, today's last two backgrounds, rewritten as origins on P10-05's frame. Five origins in all.
@@ -3420,6 +3420,15 @@ Moved here from P9-T (owner, 2026-11-24). It runs when the owner asks for the ni
 **Tests.** As P10-05, for all five.
 
 **Version.** 4.6.0.
+
+**Done (4.6.0).**
+- **The scout, Eyes on the Road:** your town's recruiter, two hires, the border village (ask what they have seen), the road watchers beaten or cowed, the recruiter again. The edge: +1 Agility (a new effect, `attribute`).
+- **The peddler, A Pack and a Profit:** your town's merchant, 25 crowns toward the grain, two guards, grain bought in your village and sold in the town (the market taught), 45 crowns at the end. The edge: a merchant's thanks. The merchant is a street role; a person's opening talk comes before their own.
+- **The balance check** (`tests/slow/origins.test.js`, worth = gold + 15 a soldier + worn gear, every kingdom): traveller 151–203 (2 soldiers, the horse in the gear); noble 155–182 (3, the axe); farmhand 147–174 (3, the men without a fee); scout 121–160 (2, +1 Agility not counted); peddler 150–189 (2, its money in the gold). Every row inside the band.
+- **Retuned:** the peddler came out about 35 behind, its edge being money: the merchant's last pay 15 → 45 (one try). And the peddler could hire two hunters, have 10 crowns left and be stuck without grain: the merchant now advances 25 for it.
+- **Tests:** `tests/origins.test.js` walks the scout from Hrothmark and the peddler from Vessaro; every opening's band can be cowed; the slow test plays 5 × 6. The story bot buys and sells for a `trade` step.
+- **Checks:** 903 fast pass; lint clean but the 2 old warnings; typecheck clean. Browser 247 passed, 9 skipped (three phone map-camera cases timed out once beside a play-test and passed 12 of 12 alone).
+- **Played** at 812×375: a peddler in Valedorn, from Ottmar's deal through Oakford's market to selling the grain in Stonebridge.
 
 ### P10-07 · Onboarding and hints (M)
 

@@ -80,7 +80,7 @@ test('P10-04: choose your kingdom: six realms on the new-game screen; Ostrand be
   await expect(realms.nth(4)).toHaveAttribute('aria-checked', 'true');
   await expect(realms.nth(4)).toContainText('from Harrowgate');
   await expect(page.locator('#realmNote')).toContainText('Kingdom of Ostrand');
-  await press(page, page.locator('#bgChoices button', { hasText: 'Scout' })); // the common quest at once
+  await game(page, (CL) => (CL.game.plainStart = true)); // the common quest at once (the origins have their own tests)
   await press(page, '#primaryBtn'); // Begin
   await waitMode(page, 'settlement');
   await expect(page.locator('#overlayTitle')).toHaveText('HARROWGATE');

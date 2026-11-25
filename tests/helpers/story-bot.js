@@ -171,6 +171,14 @@ function makeStoryBot(CL, rnd, { winChance = 0.85, reloadChance = 0.04, until = 
       note(`recruit ${id} for ${st.id}`);
       return true;
     }
+    if (t.event === 'trade') {
+      // P10-06: buy or sell a good at a market (where the trigger says, else here or at home).
+      const sid = m.settlement || c().world.location || CL.story.castOf(c()).home;
+      if (!goTo(sid)) return true;
+      const r = m.side === 'sell' ? CL.trade.sell(c(), sid, m.good, c().cargo[m.good] || 1) : CL.trade.buy(c(), sid, m.good, 2);
+      note(`${m.side} ${m.good} at ${sid} for ${st.id}: ${r.ok ? 'done' : r.reason}`);
+      return true;
+    }
     if (t.event === 'battle' || t.event === 'parley') {
       if (m.tag) {
         const p = c().parties.find((x) => x.questTag === m.tag);

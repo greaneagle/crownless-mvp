@@ -293,6 +293,72 @@
       ],
       rewards: { renown: 5, xp: 30 }
     },
+    // The scout: the recruiter's errand, two hires, the border village, the outlaws, the recruiter again (P10-06).
+    o_scout: {
+      id: 'o_scout',
+      title: 'Eyes on the Road',
+      giver: 'origin_recruiter',
+      opening: true,
+      summary: 'Outlaws are watching the road past {cast:border}, and {cast:home} wants to know how many before anyone rides out.',
+      stages: [
+        { id: 'o_scout_ask', journal: 'Talk to {cast:recruiter} in {cast:home}: a scout is wanted. (In a town, Talk to on its menu.)' },
+        {
+          id: 'o_scout_hire',
+          journal: 'Hire two soldiers to ride with you ({flag:o_scout_hired}/2): Hire on the town menu.',
+          on: [
+            { event: 'recruit', if: { flag: 'o_scout_hired', gte: 1 }, do: [{ add: 'o_scout_hired' }, { stage: 'o_scout_ride' }, { message: 'Two at your back. Now ride for {cast:border}.' }] },
+            { event: 'recruit', do: [{ add: 'o_scout_hired' }] }
+          ]
+        },
+        {
+          id: 'o_scout_ride',
+          journal: 'Ride to {cast:border} and ask what the villagers have seen: tap the village on the map. Riding is quicker on roads, and Wait (top right) lets time pass.',
+          on: [{ event: 'enter', match: { settlement: '@border' }, do: [{ note: 'The villagers of {cast:border} pointed you to the outlaws’ camp, close by.' }, { message: '“Down by the stream,” the villagers say. “A handful. They watch who comes and goes.”' }, { stage: 'o_scout_camp' }] }]
+        },
+        {
+          id: 'o_scout_camp',
+          journal: 'Find the outlaws watching the road near {cast:border}, and break them or scare them off: tap them on the map.',
+          band: { template: 'bandits', name: 'Road Watchers', tag: 'o_scout_watchers', near: '@border', troops: { looter: 3 }, camp: true, text: 'Outlaws in a hide of cut branches, watching the road. They have watched you all the way from {cast:border}.' },
+          on: [
+            { event: 'battle', match: { win: true, tag: 'o_scout_watchers' }, do: [{ note: 'The road watchers are broken.' }, { message: 'The road is clear.' }, { stage: 'o_scout_back' }] },
+            { event: 'parley', match: { tag: 'o_scout_watchers', outcome: 'intimidate' }, do: [{ note: 'The road watchers fled when they saw your swords.' }, { message: 'They run. The road is clear.' }, { stage: 'o_scout_back' }] }
+          ]
+        },
+        { id: 'o_scout_back', journal: 'Ride back to {cast:home} and tell {cast:recruiter}.' }
+      ],
+      rewards: { gold: 15, renown: 3, xp: 30 }
+    },
+    // The peddler: the merchant, two guards, grain bought in the village and sold in the town, the merchant again (P10-06).
+    o_peddler: {
+      id: 'o_peddler',
+      title: 'A Pack and a Profit',
+      giver: 'origin_merchant',
+      opening: true,
+      summary: 'Your pack is nearly empty. {cast:merchant} in {cast:home} has a deal for a peddler who can carry grain.',
+      stages: [
+        { id: 'o_ped_deal', journal: 'Talk to {cast:merchant} in {cast:home} about a deal. (In a town, Talk to on its menu.)' },
+        {
+          id: 'o_ped_guards',
+          journal: 'Hire two guards for the road ({flag:o_ped_hired}/2): Hire on the town menu.',
+          on: [
+            { event: 'recruit', if: { flag: 'o_ped_hired', gte: 1 }, do: [{ add: 'o_ped_hired' }, { stage: 'o_ped_buy' }, { message: 'Two guards. Now for the grain.' }] },
+            { event: 'recruit', do: [{ add: 'o_ped_hired' }] }
+          ]
+        },
+        {
+          id: 'o_ped_buy',
+          journal: 'Ride to {cast:village} and buy grain at its market (Market, then Buy): a sack or two will do.',
+          on: [{ event: 'trade', match: { good: 'grain', side: 'buy', settlement: '@village' }, do: [{ note: 'Grain bought at {cast:village}. Sacks on the cart, guards beside it.' }, { stage: 'o_ped_sell' }] }]
+        },
+        {
+          id: 'o_ped_sell',
+          journal: 'Bring the grain to {cast:home} and sell it at the market (Market, then Sell). A market pays less the more you sell it.',
+          on: [{ event: 'trade', match: { good: 'grain', side: 'sell', settlement: '@home' }, do: [{ note: 'The grain is sold in {cast:home}.' }, { stage: 'o_ped_back' }] }]
+        },
+        { id: 'o_ped_back', journal: 'Tell {cast:merchant} the grain is in.' }
+      ],
+      rewards: { renown: 5, xp: 30 }
+    },
     // The farmhand: the headman, the raiders, the headman again, then to the town for work.
     o_farmhand: {
       id: 'o_farmhand',

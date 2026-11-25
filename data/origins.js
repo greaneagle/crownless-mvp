@@ -60,24 +60,30 @@
       situation: 'Smoke over {cast:village}. Raiders have been through your village, and three of its men have taken up their tools to go after them, if you will lead.',
       edge: 'Three of your village’s men, who follow you without a recruit’s fee.'
     },
-    // P10-06 rewrites these two as origins with their own opening quests; until then they begin with the common quest.
+    // P10-06: the last two of today's backgrounds, rewritten as origins.
     scout: {
       id: 'scout',
       name: 'Scout',
-      description: 'You ran messages along the borders and know every shortcut.',
+      description: 'You ran messages along the borders and know every shortcut. A scout is always wanted somewhere.',
       attribute: 'agi',
       skill: 'pathfinding',
       kit: kit(60),
-      start: '@home'
+      start: '@home',
+      quest: 'o_scout',
+      situation: 'You come into {cast:home} off the road, as you always have. The recruiter is asking for a scout.',
+      edge: 'Quick feet and quicker eyes: +1 Agility when the errand is done.'
     },
     peddler: {
       id: 'peddler',
       name: 'Peddler',
-      description: 'You hawked wares town to town and can talk a price down.',
+      description: 'You hawked wares town to town and can talk a price down. Your pack is nearly empty.',
       attribute: 'cha',
       skill: 'trade',
       kit: kit(60),
-      start: '@home'
+      start: '@home',
+      quest: 'o_peddler',
+      situation: 'You come into {cast:home} with a nearly empty pack. The merchant in the square looks like someone with a deal.',
+      edge: 'A merchant’s thanks: a little more money to start with.'
     }
   };
   // Where every opening quest ends (the owner's rule: about the same gold, soldiers, gear, level and

@@ -1,6 +1,8 @@
 // P10-05: every origin with an opening quest, from every kingdom, played by the story bot until its
 // opening quest has led into the common quest (Q1); each ends within the band set in data
-// (data/origins.js `origin_rules.band`).   npm run test:slow
+// (data/origins.js `origin_rules.band`). P10-06: all five, and one table of the end state with each
+// origin's edge and its worth (gold + 15 a soldier + worn gear), printed for the balance check.
+//   npm run test:slow
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { newCampaign, mulberry } = require('../../scripts/simulate-campaign');
@@ -27,7 +29,7 @@ test(`every origin's opening quest, from every kingdom, leads into the common qu
       assert.equal(CL.story.questStatus(c, 'q1'), 'active', `${origin} in ${realm}: it leads into the common quest`);
       assert.equal(CL.story.state(c).flags.origin_done, true);
       const s = endState(CL, c);
-      out.push({ origin, realm, ...s });
+      out.push({ origin, realm, ...s, worth: s.gold + 15 * s.soldiers + s.gear, edge: CL.content.get('origins', origin).edge.split(':')[0] });
       for (const k of Object.keys(BAND).filter((x) => x !== 'id')) {
         assert.ok(s[k] >= BAND[k][0] && s[k] <= BAND[k][1], `${origin} in ${realm}: ${k} ${s[k]} outside ${BAND[k].join('–')}`);
       }
