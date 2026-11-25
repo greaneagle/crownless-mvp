@@ -62,6 +62,13 @@
       try {
         const dt = (ts - last) / 1000;
         last = ts;
+        // The experimental graphics demo (Debug panel) runs instead of the game while open: nothing of the
+        // real campaign updates, travels, autosaves or draws until it is closed (js/gfx/demo.js).
+        if (CL.gfxDemo?.active) {
+          CL.gfxDemo.frame(dt);
+          requestAnimationFrame(loop);
+          return;
+        }
         const t0 = performance.now();
         CL.combat.update(dt);
         CL.world.update(dt);

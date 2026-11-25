@@ -440,6 +440,12 @@
     const n = Number(btn.dataset.n || 1);
     const mode = CL.game.mode;
     switch (act) {
+      case 'gfxDemo':
+        // The experimental graphics demo (js/gfx/): loaded only now, run on a copy of the campaign, never saved.
+        if (mode === 'battle' || mode === 'prepare') return CL.ui.message('Finish the battle first');
+        toggle(false);
+        openGfxDemo();
+        return;
       case 'gold':
         addGold(n);
         break;
@@ -1013,6 +1019,36 @@
     CL.ui.message(`Debug: ${btn.textContent}`);
   }
 
+  /** The graphics demo's files, in order (an experiment: not loaded in normal play). */
+  const GFX_FILES = ['kit', 'figures', 'gallery', 'map', 'city', 'battle', 'demo'];
+  let gfxLoading = null;
+  /** Load the graphics demo once, then open it. @param {string} [scene] */
+  function openGfxDemo(scene = 'map') {
+    if (CL.gfxDemo) return CL.gfxDemo.enter(scene);
+    gfxLoading ??= GFX_FILES.reduce(
+      (p, f) =>
+        p.then(
+          () =>
+            new Promise((ok, fail) => {
+              const s = document.createElement('script');
+              s.src = `js/gfx/${f}.js`;
+              s.onload = ok;
+              s.onerror = () => fail(new Error(`js/gfx/${f}.js did not load`));
+              document.body.appendChild(s);
+            }),
+        ),
+      Promise.resolve(),
+    );
+    return gfxLoading.then(
+      () => CL.gfxDemo.enter(scene),
+      (e) => {
+        gfxLoading = null;
+        log('graphics demo failed to load', { error: String(e) });
+        CL.ui.message('The graphics demo could not be loaded');
+      },
+    );
+  }
+
   function toggle(show) {
     const panel = document.querySelector('#cheatPanel');
     const open = show ?? panel.classList.contains('hidden');
@@ -1055,6 +1091,7 @@
     cameraTest,
     fordTest,
     mapTest,
+    openGfxDemo,
     wipeSave,
     toggle,
     bind,

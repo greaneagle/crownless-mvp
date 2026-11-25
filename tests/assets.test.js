@@ -48,7 +48,7 @@ test('no runtime dependencies: the page loads only its own files', () => {
     assert.ok(!/^(https?:)?\/\//.test(m[1]) || m[1].startsWith('data:'), `external resource ${m[1]}`);
   }
   const shipped = [
-    ...fs.readdirSync(path.join(ROOT, 'js')).map((f) => path.join(ROOT, 'js', f)),
+    ...fs.readdirSync(path.join(ROOT, 'js'), { recursive: true }).map((f) => path.join(ROOT, 'js', f)).filter((f) => /\.(js|css)$/.test(f)), // with js/gfx (the graphics demo)
     ...fs.readdirSync(path.join(ROOT, 'data'), { recursive: true }).map((f) => path.join(ROOT, 'data', f)).filter((f) => f.endsWith('.js')), // with data/worlds (P9-08)
     path.join(ROOT, 'style.css'),
   ];
