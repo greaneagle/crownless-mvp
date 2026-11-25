@@ -242,12 +242,13 @@ test('a patrol hunts for a week in a living world and comes back with consistent
   const d = sendHunt(CL, c, D, vet, ids, { days: 7 }).detachment;
   const battlesBefore = new Map([vet, ...c.roster, ...d.soldiers].map((s) => [s.id, s.record.battles]));
   c.food = 200;
-  for (let day = 0; day < 9 && d.status !== 'back'; day++) CL.party.advanceDays(1);
+  let out = 0;
+  for (let day = 0; day < 9 && d.status !== 'back'; day++, out++) CL.party.advanceDays(1);
   assert.equal(d.status, 'back', 'back by its day, or sooner');
   const t = d.tally;
   assert.equal(everyone(c).length + t.fallen.length + t.deserted, start, 'every soldier accounted for');
   for (const s of c.roster) assert.ok(s.record.battles - (battlesBefore.get(s.id) || 0) <= t.battles, `${s.name}: no fight counted twice`);
   assert.equal(CL.accounts.balance(c, D.ACCOUNT), 0, 'every crown back in the chest');
-  assert.ok(d.log.length >= 7, 'a report a day at least');
+  assert.ok(d.log.length >= Math.min(7, out), 'a report a day at least, for each day it was out (it comes back early when beaten)');
   assert.match(d.report, /patrol is back after/);
 });

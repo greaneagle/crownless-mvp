@@ -107,6 +107,33 @@
    * @param {Campaign} c @param {ContentId} troop
    * @param {{ origin?: string | null, veteran?: boolean }} [opts] veteran: served before records were kept
    */
+  /**
+   * P10-09 (D-P10d): who answers a hire of `troop`: the troop itself, or in its `women.share` of
+   * hires (the campaign's 'recruits' roll, so the same seed gives the same recruits) the woman's troop
+   * of its line. @param {Campaign} c @param {string} troop
+   */
+  function answers(c, troop) {
+    const w = CL.content.table('troops')[troop]?.women;
+    if (!w?.troop || !CL.content.table('troops')[w.troop]) return troop;
+    return CL.autoresolve.roll(c, 'recruits') < w.share ? w.troop : troop;
+  }
+
+  // P10-09: soldiers' portraits, a few generic faces: a skin, a face, a hair colour, and for men a
+  // beard, women a hair style. Chosen once from the soldier's id and kept (`portrait`, 'm-1-2-3').
+  const PORTRAIT = { skins: 3, faces: 2, hair: 5, beards: 4, styles: 2 };
+  /** @param {{ id: number, troop: string }} s */
+  function portraitFor(s) {
+    const female = CL.content.table('troops')[s.troop]?.gender === 'female';
+    let h = (s.id * 2654435761) >>> 0; // a soldier's own, from its id: the same every time
+    const take = (n) => {
+      const v = h % n;
+      h = Math.floor(h / n) ^ ((h * 40503) >>> 0) % 97;
+      return v;
+    };
+    const parts = [take(PORTRAIT.skins), take(PORTRAIT.faces), take(PORTRAIT.hair), take(female ? PORTRAIT.styles : PORTRAIT.beards)];
+    return `${female ? 'f' : 'm'}-${parts.join('-')}`;
+  }
+
   function fresh(c, troop, { origin = c.world?.location ?? null, veteran = false } = {}) {
     const o = settlement(origin) ? origin : null;
     const culture = cultureFor(troop, o, c);
@@ -344,7 +371,7 @@
     return { ...d, roster, rng: { ...(d.rng || {}), names: names.rng.names } };
   }
 
-  CL.soldiers = {
+  CL.soldiers = { answers, portraitFor, PORTRAIT,
     NOTES_MAX,
     NAME_MAX,
     RECORD_KEYS,

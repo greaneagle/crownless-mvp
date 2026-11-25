@@ -220,7 +220,7 @@
       detection: 9,
       lairs: ['outlaw_glade', 'burnt_mill'],
       roam: 14,
-      troops: { looter: [3, 6], reaver: [0, 2] },
+      troops: { looter: [3, 6], reaver: [0, 2], outlaw_huntress: [0, 2] }, // P10-09: huntresses among the western outlaws
       toll: { base: 25, perTroop: 5 },
       reward: { goldBase: 20, goldPerKill: 4, renown: 3 },
       lootBySize: [[6, 'low'], [10, 'mid'], [99, 'high']],

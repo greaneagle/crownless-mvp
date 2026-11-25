@@ -2212,6 +2212,7 @@
             renderTroops();
           },
         },
+        portraitImg(s, 'portrait small'), // P10-09
         el('b', { textContent: s.name }),
         el('span', { textContent: `${t.name} · ${t.tier} ${t.role}${CL.traits.def(s.trait) ? ` · ${CL.traits.def(s.trait).name}` : ''} · ${xpText(s)}${status}${ready}` }),
       );
@@ -2285,6 +2286,51 @@
   }
 
   /** One soldier's profile card: who they are, their record and notes, rename and upgrade. */
+  // ---- P10-09: soldiers' portraits (placeholders until the graphics pass): a few generic faces ----
+
+  const FACE = {
+    skins: ['#e8c19a', '#c79a6c', '#8d5a3b'],
+    hair: ['#2a1d16', '#5b3a22', '#8a4b26', '#c9a45a', '#9a958c'], // black, brown, auburn, fair, grey
+    // 16×16: H hair, S skin, E eyes, M mouth, C clothes; two face shapes.
+    faces: [
+      ['................', '.....HHHHHH.....', '....HHHHHHHH....', '...HHHHHHHHHH...', '...HSSSSSSSSH...', '...SSSSSSSSSS...', '...SSESSSSESS...', '...SSSSSSSSSS...', '...SSSSSSSSSS...', '...SSSSSSSSSS...', '....SSSMMSSS....', '.....SSSSSS.....', '......SSSS......', '...CCCCCCCCCC...', '..CCCCCCCCCCCC..', '..CCCCCCCCCCCC..'],
+      ['................', '.....HHHHHH.....', '....HHHHHHHH....', '....HHHHHHHH....', '....HSSSSSSH....', '....SSSSSSSS....', '....SESSSSES....', '....SSSSSSSS....', '....SSSSSSSS....', '....SSSSSSSS....', '....SSSMMSSS....', '.....SSSSSS.....', '......SSSS......', '...CCCCCCCCCC...', '..CCCCCCCCCCCC..', '..CCCCCCCCCCCC..'],
+    ],
+    // Over the face: a man's beard (none, stubble, short, full) or a woman's hair (long, braided).
+    beards: [[], [[9, 4], [9, 11], [10, 5], [10, 10], [11, 6], [11, 9]], [[10, 5], [10, 6], [10, 9], [10, 10], [11, 5], [11, 6], [11, 7], [11, 8], [11, 9], [11, 10]], [[8, 4], [8, 11], [9, 4], [9, 5], [9, 10], [9, 11], [10, 4], [10, 5], [10, 6], [10, 9], [10, 10], [10, 11], [11, 5], [11, 6], [11, 7], [11, 8], [11, 9], [11, 10], [12, 6], [12, 7], [12, 8], [12, 9]]],
+    styles: [
+      [[4, 2], [5, 2], [6, 2], [7, 2], [8, 2], [9, 2], [10, 2], [11, 3], [4, 13], [5, 13], [6, 13], [7, 13], [8, 13], [9, 13], [10, 13], [11, 12]],
+      [[4, 2], [5, 2], [6, 2], [7, 2], [8, 13], [9, 13], [10, 13], [11, 13], [12, 13], [13, 14], [4, 13], [5, 13], [6, 13], [7, 13]],
+    ],
+  };
+  const faceCache = new Map();
+  /** A soldier's portrait as an image URL: drawn once per kind of face, from its `portrait` id. */
+  function portraitSrc(s) {
+    const t = CL.content.troop(s.troop);
+    const cloth = CL.realm.faction(t?.faction)?.color || '#4b5563';
+    const key = `${s.portrait}|${cloth}`;
+    if (faceCache.has(key)) return faceCache.get(key);
+    const [sex, skin, face, hair, extra] = String(s.portrait).split('-');
+    const cv = Object.assign(document.createElement('canvas'), { width: 16, height: 16 });
+    const x = cv.getContext('2d');
+    const paint = { H: FACE.hair[+hair] || FACE.hair[0], S: FACE.skins[+skin] || FACE.skins[0], E: '#1b1410', M: '#6e3b2e', C: cloth };
+    const rows = FACE.faces[+face] || FACE.faces[0];
+    for (let y = 0; y < rows.length; y++) {
+      for (let i = 0; i < rows[y].length; i++) {
+        const colour = paint[rows[y][i]];
+        if (!colour) continue;
+        x.fillStyle = colour;
+        x.fillRect(i, y, 1, 1);
+      }
+    }
+    x.fillStyle = paint.H;
+    for (const [y, i] of (sex === 'f' ? FACE.styles[+extra] : FACE.beards[+extra]) || []) x.fillRect(i, y, 1, 1);
+    const url = cv.toDataURL();
+    faceCache.set(key, url);
+    return url;
+  }
+  const portraitImg = (s, cls = 'portrait') => (s.portrait ? el('img', { className: cls, src: portraitSrc(s), alt: '' }) : null);
+
   function soldierCard(s) {
     const g = CL.game;
     const c = CL.campaign;
@@ -2319,7 +2365,7 @@
       input.select();
     };
     nameRow.append(renameBtn);
-    const portrait = s.portrait ? el('img', { className: 'portrait', src: `assets/${s.portrait}`, alt: '' }) : null;
+    const portrait = portraitImg(s); // P10-09
     const stat = (label, n) => el('span', {}, el('b', { textContent: String(n) }), ` ${label}`);
     const upgrades = P.soldierUpgrades(s, c).map((o) => {
       const to = CL.content.troop(o.to);

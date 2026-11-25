@@ -253,12 +253,14 @@
     if (!recruitsHere().includes(troopId) || !canRecruit(c(), troopId)) return false;
     const price = CL.content.troop(troopId).recruitCost;
     CL.accounts.spend(c(), price, `hiring a ${CL.content.troop(troopId).name}`);
-    const s = CL.save.addSoldier(c(), troopId);
-    CL.events.emit(c(), 'SoldierRecruited', { soldierId: s.id, troop: troopId, settlement: c().world.location, via: 'hire' });
+    // P10-09: in some lines a woman answers the call, in the line's `women.share` of hires.
+    const answered = CL.soldiers.answers(c(), troopId);
+    const s = CL.save.addSoldier(c(), answered);
+    CL.events.emit(c(), 'SoldierRecruited', { soldierId: s.id, troop: answered, settlement: c().world.location, via: 'hire' });
     if (write) CL.save.write();
     CL.ui.refreshRoster();
     CL.diag.log('info', 'Soldier recruited', { troop: troopId, cost: price });
-    CL.story.emit('recruit', { troop: troopId, settlement: c().world.location });
+    CL.story.emit('recruit', { troop: answered, settlement: c().world.location });
     return true;
   }
 

@@ -183,6 +183,7 @@
   function addSoldier(c, troop, woundedUntil = null, opts = {}) {
     /** @type {Soldier} */
     const s = { id: c.nextSoldierId++, troop, xp: 0, woundedUntil, ...CL.soldiers.fresh(c, troop, opts) };
+    s.portrait = CL.soldiers.portraitFor(s); // P10-09: a face of their own, kept
     c.roster.push(s);
     return s;
   }

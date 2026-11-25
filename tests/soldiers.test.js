@@ -43,7 +43,7 @@ test('a recruit is named from where they joined: Valedorn, Aurelian, or border f
   assert.equal(recruit.joined, CL.campaign.day);
   assert.deepEqual(plain(recruit.record), { battles: 0, victories: 0, kills: 0, assists: 0, wounds: 0, captures: 0, wagesPaid: 0 });
   assert.deepEqual(plain(recruit.notes), [{ day: CL.campaign.day, kind: 'joined', place: 'eastwatch' }]);
-  assert.equal(recruit.portrait, null, 'a portrait slot, empty until there is art');
+  assert.match(recruit.portrait, /^m-\d-\d-\d-\d$/, 'P10-09: a face of their own, chosen from the id');
 });
 
 test('a fort recruits under its owner: when Greywall changes hands, so do the names', () => {

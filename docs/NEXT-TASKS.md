@@ -3486,7 +3486,7 @@ Split from the old art pass (owner, 2026-11-24): menus and the UI first, as the 
 - **Tests:** `tests/sight.test.js` (each way of seeing further by its number; a fort's and a patrol's circles; night shrinks them); `tests/browser/look.spec.js` (the fog darker beyond sight and not within, shrinking at night, off with reduced effects; a band's name; the dialogue box and the party sheet). Checks: 911 fast pass; lint clean but the 2 old warnings; typecheck clean. Browser 252 passed, 9 skipped, 3 failed once under load (text size Small, the cut-short wait, a phone pinch) and passed 43 of 43 alone. The town menu's summary first wrapped to two lines on the phone and pushed Rest off the screen: shortened (“5/8 soldiers”), as tall as before within 3 px.
 - **Open:** soldiers' portraits (P10-09); the battle HUD and Prepare panel beyond the frame; news of parties beyond sight; new visual baselines on Linux. **Played** at 812×375: the town menu, party sheet, dialogue, journal, Settings, the Realms tabs, the map's fog by night and day.
 
-### P10-09 · Women soldiers and soldiers' portraits (M)
+### P10-09 · Women soldiers and soldiers' portraits (M) — ✅ Done in 4.9.0
 
 **Build.**
 - **Women soldiers** (D-P8g's promise): lines of their own in two realms, plus one bandit type. The realms and lines are set in data and chosen by fit; no more than that (the owner: "don't overdo it").
@@ -3502,6 +3502,15 @@ Split from the old art pass (owner, 2026-11-24): menus and the UI first, as the 
 **Tests.** The 85/15 rate over many recruits; a woman upgrades in her own line; the same seed gives the same recruits; portraits stay the same over a save and load; a pack's troop may say `gender`.
 
 **Version.** 4.9.0.
+
+**Done (4.9.0).**
+- **The lines, by fit** (`data/troops.js`): Hrothmark's shieldmaidens (Shieldmaiden, Shield-sister, Hearth Maiden: a quicker shield line); the Vessaro League's town women (Popolana, then the crossbow: Balestriera, Arbalestriera); the western outlaws' Outlaw Huntress (up to two a band). No more than that.
+- **Recruiting:** `women: { troop, share: 0.15 }` on the clansman and the militia; a hire of one brings, at that share, the woman's troop (`CL.soldiers.answers`, the campaign's own `recruits` roll). 1000 hires came out at 12–18%; the same seed gives the same recruits.
+- **Their own progression and names:** each woman's line upgrades only within itself (the content checks refuse otherwise, for packs too), and her name is from her culture's women's names.
+- **Portraits** (placeholders, the owner): `CL.soldiers.portraitFor` picks a face from the soldier's id (sex, skin, face shape, hair colour, a beard or a hair style: 120 kinds; 49 among 60 soldiers), kept in `portrait`. Drawn as 16×16 pixels, cached by kind, framed in the soldiers' list and on the card. Battle sprites stay the role's until P10-G1.
+- **Found along the way:** the outlaws' huntresses changed the world's rolls, and a patrol test that assumed a whole week out failed when its patrol was beaten home on day one; it now asks a report for each day out.
+- **Tests:** `tests/women-soldiers.test.js` (the lines in data; 15% over 1000 hires and the same seed's same recruits; names and own-line upgrades; portraits kept over a save and load; a pack's women's line). Troop counts updated (41).
+- **Checks:** 916 fast pass; lint clean but the 2 old warnings (a `forEach` that returned a value in the portrait drawing was fixed); typecheck clean. Browser 253 passed, 9 skipped; battle-size's slow-battle offer failed once and passed alone; the cut-short wait fails about 1 run in 3 on 4.8.0 too (recorded for P10-T). **Played** at 812×375: a Hrothmark company's faces in the soldiers' list and on a Shieldmaiden's card, the new lines in the troop tree.
 
 ### P10-G1 · Graphics: battles (L)
 

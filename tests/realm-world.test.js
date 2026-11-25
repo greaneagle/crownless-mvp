@@ -61,7 +61,7 @@ test('the new kingdoms have full tier 1–3 troop trees in their own style, with
   const { CL } = loadGame();
   const T = CL.content.table('troops');
   for (const k of NEW_KINGDOMS) {
-    const line = Object.values(T).filter((t) => t.faction === k);
+    const line = Object.values(T).filter((t) => t.faction === k && t.gender !== 'female'); // P10-09: the women's lines are their own
     assert.equal(line.length, 6, k);
     assert.deepEqual(plain(line.map((t) => t.tier).sort()), ['T1', 'T2', 'T2', 'T3', 'T3', 'T3']);
     assert.ok(line.some((t) => t.role === 'cavalry'), `${k}: a cavalry branch`);

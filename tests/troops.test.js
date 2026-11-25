@@ -152,7 +152,7 @@ test('Reveal troop tree (debug) shows everything without changing what the campa
   const lines = CL.troopTree.view(c);
   assert.deepEqual(plain(lines.map((l) => l.faction)), ['valedorn', 'aurelian', 'hrothmark', 'vessaro', 'ostrand', 'saltreach', 'neutral']);
   const count = (nodes) => nodes.reduce((n, x) => n + 1 + count(x.children), 0);
-  assert.equal(lines.reduce((n, l) => n + count(l.nodes), 0), 34, 'every troop, the Sellsword and the new kingdoms’ (and P10-02 the coast’s) included');
+  assert.equal(lines.reduce((n, l) => n + count(l.nodes), 0), 41, 'every troop, the Sellsword and the new kingdoms’ (and P10-02 the coast’s, P10-09 the women’s lines) included');
   assert.deepEqual(plain(c.troopKnowledge), {});
   CL.game.revealTree = false;
 });

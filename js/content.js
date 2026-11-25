@@ -165,6 +165,9 @@
       for (const u of [t.upgradeTo, t.altUpgradeTo]) if (u && !C.troops[u]) err(`troop ${t.id}: unknown upgrade ${u}`);
       for (const k of ['shield', 'brace']) if (t[k] != null && typeof t[k] !== 'boolean') err(`troop ${t.id}: ${k} must be true or false`);
       if (t.gender != null && !['male', 'female'].includes(t.gender)) err(`troop ${t.id}: gender must be male or female (default male, D-P8g)`);
+      // P10-09: a woman's line upgrades within itself; a line's women's troop is a woman's, at a share.
+      if (t.gender === 'female') for (const u of [t.upgradeTo, t.altUpgradeTo]) if (u && C.troops[u] && C.troops[u].gender !== 'female') err(`troop ${t.id}: a woman's line upgrades into her own line, not ${u}`);
+      if (t.women != null && (C.troops[t.women.troop]?.gender !== 'female' || C.troops[t.women.troop].faction !== t.faction || !(t.women.share > 0 && t.women.share < 1))) err(`troop ${t.id}: women needs a woman's troop of its faction and a share between 0 and 1`);
       if (t.shield && t.role === 'archer') err(`troop ${t.id}: archers carry no shield`);
       for (const s of ['hp', 'damage', 'armor', 'speed', 'reach']) {
         if (!(Number.isFinite(t[s]) && t[s] >= 0)) err(`troop ${t.id}: bad ${s}`);

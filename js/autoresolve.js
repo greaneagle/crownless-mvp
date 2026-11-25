@@ -68,7 +68,7 @@
   // Moment-to-moment rolls inside a fought battle (aim, AI timing) stay unseeded: they depend on the
   // player's real-time input anyway. News and cosmetics never use any of these.
   /** @type {Array<keyof Campaign["rng"]>} */
-  const STREAMS = ['casualties', 'loot', 'upkeep', 'names'];
+  const STREAMS = ['casualties', 'loot', 'upkeep', 'names', 'recruits']; // recruits: who answers a hire (P10-09)
 
   /** A stream's starting seed from the campaign seed and the stream's name (FNV-1a, then mixed). */
   function streamSeed(base, name) {

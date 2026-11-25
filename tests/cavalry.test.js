@@ -134,6 +134,8 @@ test('every troop type can appear in play (the 15 from the GDD, the Sellsword fr
     CL.campaign.world.location = s.id;
     for (const id of CL.party.recruitsHere()) reach.add(id);
   }
+  // P10-09: a woman of the line answers some hires.
+  for (const id of [...reach]) if (CL.content.troop(id).women) reach.add(CL.content.troop(id).women.troop);
   // Upgrades from anything reachable.
   let grew = true;
   while (grew) {
@@ -151,6 +153,6 @@ test('every troop type can appear in play (the 15 from the GDD, the Sellsword fr
   for (const e of Object.values(CL.content.table('encounters'))) for (const w of e.waves) for (const id of Object.keys(w)) reach.add(id);
   for (const t of Object.values(CL.content.table('party_templates'))) for (const id of Object.keys(t.troops || {})) reach.add(id);
   const all = Object.keys(CL.content.table('troops')).filter((id) => id !== 'hero');
-  assert.equal(all.length, 34); // 15 from the GDD; the Sellsword (V2-03b) is trained from Mercenaries; 6 each for Hrothmark and Vessaro (W-05b); 3 each for Ostrand and Saltreach (P10-02)
+  assert.equal(all.length, 41); // 15 from the GDD; the Sellsword (V2-03b) is trained from Mercenaries; 6 each for Hrothmark and Vessaro (W-05b); 3 each for Ostrand and Saltreach (P10-02); the women's lines and the outlaws' huntress (P10-09)
   assert.deepEqual(all.filter((id) => !reach.has(id)), []);
 });

@@ -322,7 +322,7 @@ Every Phase 9 task is **Specified** (2026-11-22; NEXT-TASKS has each in full). T
 | **P10-06** | ✅ **Done in 4.6.0.** **Origins, the scout and the peddler,** and the balance check over all five | M | P10-05 |
 | **P10-07** | ✅ **Done in 4.7.0.** **Onboarding and hints:** a guide for the main beginner steps with any origin, hints for the rest, one setting to turn them off, How to Play by stage | M | P10-06 |
 | **P10-08** | ✅ **Done in 4.8.0** (in part, as planned). **UI and menus** toward the references (renderer changes allowed; partial is fine); seeing further on the map and a light fog of sight (owner, 2026-11-25); quest bands named on the map | L | P10-07 |
-| **P10-09** | **Women soldiers** in two realms and one bandit type (15% of recruits, their own lines), and a few placeholder portraits | M | P9-T |
+| **P10-09** | ✅ **Done in 4.9.0.** **Women soldiers** in two realms and one bandit type (15% of recruits, their own lines), and a few placeholder portraits | M | P9-T |
 | **P10-G1** | **Graphics, battles,** toward the references, whenever it fits (renderer changes allowed; partial is fine) | L | — |
 | **P10-G2** | **Graphics, towns,** toward the references, whenever it fits (renderer changes allowed; partial is fine) | L | P10-03 |
 | **P10-T** | **Tuning and acceptance:** the world's open tuning (wars, risings, deaths), the old failures, the origins' balance, `docs/PHASE-10-VALIDATION.md`; ships 5.0.0 | M | all above |

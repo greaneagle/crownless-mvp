@@ -107,7 +107,7 @@ function loadGame({ storage = memoryStorage(), random, party = true, worldPartie
   // Soldiers' names keep their own seeded stream, so scripted rolls go only to the outcomes.
   if (random) {
     const seeded = CL.autoresolve.roll;
-    CL.autoresolve.roll = (c, stream) => (stream === 'names' ? seeded(c, stream) : random());
+    CL.autoresolve.roll = (c, stream) => (stream === 'names' || stream === 'recruits' ? seeded(c, stream) : random()); // P10-09: who answers a hire keeps its seeded stream too
   }
   const record =
     (name) =>

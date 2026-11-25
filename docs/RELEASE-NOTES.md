@@ -1,5 +1,19 @@
 # Crownless — Release Notes
 
+## v4.9.0 — Women soldiers and soldiers' portraits (P10-09) · 2026-11-25
+
+### New
+- **Women soldiers,** in two realms and one band (the owner: "don't overdo it"):
+  - **Hrothmark's shieldmaidens:** Shieldmaiden, Shield-sister, Hearth Maiden, a quicker shield line.
+  - **The Vessaro League's town women:** Popolana, then the crossbow as Balestriera and Arbalestriera.
+  - **The western outlaws** ride with up to two Outlaw Huntresses, forest archers.
+- **Mixed into the normal recruits:** hire a Clansman or a Militia and, about one time in seven (15%, in data), a woman of the line answers instead. The draw is the campaign's own seeded roll, so the same seed gives the same recruits.
+- **Their own progression and names:** a woman upgrades only within her own line, and is named from her culture's women's names.
+- **Soldiers' portraits:** a small face for every soldier, a man's or a woman's: one of three skins and two face shapes, five hair colours, and a beard or a hair style. Chosen once from the soldier's id and kept in the save. They show, framed, in the soldiers' list and on each soldier's card. Placeholders until the graphics pass; battle sprites stay the role's.
+
+### Under the hood
+- `women: { troop, share }` on a line's first recruit; `CL.soldiers.answers`, `portraitFor`; a `recruits` random stream. The checks hold a woman's line to itself and a line's women's troop to its faction; a pack's troop may say `gender`.
+
 ## v4.8.0 — UI toward the references, and the fog of sight (P10-08) · 2026-11-25
 
 ### New
