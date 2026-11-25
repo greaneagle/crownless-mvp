@@ -89,3 +89,20 @@ test('P10-04: choose your kingdom: six realms on the new-game screen; Ostrand be
   await expect(page.locator('#peopleHere')).toContainText('Talk to Steward Liv');
   await expect(page.locator('#peopleHere')).toContainText('Talk to Marshal Hakon');
 });
+
+test('P10-07: with the guide on, a new game opens on its first step; Skip the guide clears it; off, nothing shows', async ({ page }) => {
+  await open(page, { settings: { tips: true } });
+  await newGame(page, { opening: true });
+  await expect(page.locator('#tipCard')).toBeVisible();
+  await expect(page.locator('#tipTitle')).toHaveText('Towns and villages · guide');
+  await expect(page.locator('#tipSkip')).toBeVisible();
+  await press(page, '#tipSkip');
+  await expect(page.locator('#tipCard')).toBeHidden();
+  expect(await game(page, (CL) => ['settlement', 'town', 'map', 'encounter'].map((m) => CL.tips.due(m)?.id || null))).toEqual([null, null, null, null]);
+  // Off in Settings (the test default): a new game shows no card at all.
+  await game(page, (CL) => {
+    CL.settings.set('tips', false);
+    CL.tips.reset();
+  });
+  expect(await game(page, (CL) => CL.tips.due('settlement'))).toBeNull();
+});

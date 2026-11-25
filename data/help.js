@@ -1,7 +1,9 @@
 /* Crownless content: help. Plain classic script; no modules, no fetch.
- * help_topics: the How to Play screen (GDD §11 "initial mappings are documented in Help"), in order.
+ * help_topics (P10-07: `stage`, captain, vassal, lord or ruler: How to Play opens at yours): the How to Play screen (GDD §11 "initial mappings are documented in Help"), in order.
  *   Each topic has paragraphs and, optionally, controls: [[touch, keyboard/mouse, action], …].
- * tips: first-time tips (Gate E tutorial). Each shows once per device, the first time its moment comes:
+ * tips: first-time tips (Gate E tutorial). Each shows once per device, the first time its moment comes.
+ *   P10-07: guide: true makes it a step of the beginner guide (numbered in this table's order, and
+ *   skippable all at once); the rest are hints for the deeper systems.
  *   on: the screen (map, town, settlement, encounter, battle, trade, contracts, character, journal, realm, ransom, grant, siegeAlarm,
  *       saves, result), and optionally when: a situation js/tips.js knows (lowFood, points, wounded,
  *       reserves, captured, awayFromHome: the party is in a region of the world not marked `home`, atCapital: in a kingdom's capital). text, or
@@ -15,6 +17,7 @@
   C.help_topics = {
     start: {
       id: 'start',
+      stage: 'captain',
       order: 1,
       title: 'Getting started',
       body: [
@@ -28,6 +31,7 @@
     },
     map: {
       id: 'map',
+      stage: 'captain',
       order: 2,
       title: 'The map',
       body: [
@@ -50,6 +54,7 @@
     },
     lands: {
       id: 'lands',
+      stage: 'vassal',
       order: 3,
       title: 'The lands',
       body: [
@@ -74,6 +79,7 @@
     },
     towns: {
       id: 'towns',
+      stage: 'captain',
       order: 4,
       title: 'Towns and villages',
       body: [
@@ -88,6 +94,7 @@
     },
     battle: {
       id: 'battle',
+      stage: 'captain',
       order: 5,
       title: 'Battle',
       body: [
@@ -121,6 +128,7 @@
     },
     party: {
       id: 'party',
+      stage: 'captain',
       order: 6,
       title: 'Your company',
       body: [
@@ -143,6 +151,7 @@
     },
     trade: {
       id: 'trade',
+      stage: 'captain',
       order: 7,
       title: 'Trade and contracts',
       body: [
@@ -152,6 +161,7 @@
     },
     story: {
       id: 'story',
+      stage: 'captain',
       order: 8,
       title: 'Story, reputation and news',
       body: [
@@ -166,6 +176,7 @@
     },
     saving: {
       id: 'saving',
+      stage: 'captain',
       order: 9,
       title: 'Saving and settings',
       body: [
@@ -186,6 +197,7 @@
     },
     rule: {
       id: 'rule',
+      stage: 'ruler',
       order: 11,
       title: 'Your realm',
       body: [
@@ -197,6 +209,7 @@
     },
     armies: {
       id: 'armies',
+      stage: 'lord',
       order: 12,
       title: 'Armies',
       body: [
@@ -208,6 +221,7 @@
     },
     houses: {
       id: 'houses',
+      stage: 'lord',
       order: 13,
       title: 'Houses',
       body: [
@@ -219,12 +233,16 @@
   };
 
   C.tips = {
-    map: { id: 'map', on: 'map', help: 'map', title: 'The map', text: 'Tap a place to travel there; time passes as you ride. Your Journal says where your work is.' },
-    town: { id: 'town', on: 'town', help: 'towns', title: 'In the streets', textTouch: 'Tap a person to walk over and talk. Town menu has hiring, food, the market and contracts. Walk to "To the road" to leave.', textKeys: 'Click a person to walk over and talk, or walk with WASD and press Space. Town menu has hiring, food, the market and contracts.' },
-    settlement: { id: 'settlement', on: 'settlement', help: 'party', title: 'In a settlement', text: 'Hire soldiers, buy food, rest or trade. Everyone you hire eats and draws a weekly wage, so keep a few days’ food.' },
-    encounter: { id: 'encounter', on: 'encounter', help: 'battle', title: 'An encounter', text: 'Attack to fight it yourself, or Auto-resolve to roll it from your strength. You can also pay, threaten or try to slip away — each button shows the odds.' },
+    // P10-07: the beginner guide, in its order (guide: true); then the hints.
+    settlement: { id: 'settlement', guide: true, on: 'settlement', help: 'party', title: 'Towns and villages', text: 'Its people are under Talk to: they have work, news and the story. In a town, Walk the streets to meet them face to face. Hiring, food and the market are on this menu too.' },
+    town: { id: 'town', guide: true, on: 'town', help: 'towns', title: 'In the streets', textTouch: 'Tap a person to walk over and talk. Town menu has hiring, food, the market and contracts. Walk to "To the road" to leave.', textKeys: 'Click a person to walk over and talk, or walk with WASD and press Space. Town menu has hiring, food, the market and contracts.' },
+    hire: { id: 'hire', guide: true, on: 'settlement', when: 'canHire', help: 'party', title: 'Hiring', text: 'Hire soldiers with the Hire buttons: each costs crowns now, then eats and draws a small weekly wage. Two or three will do to start; Party shows who you have.' },
+    map: { id: 'map', guide: true, on: 'map', help: 'map', title: 'The map', text: 'Tap a place to travel there; time passes as you ride. Your Journal says where your work is.' },
+    lowFood: { id: 'lowFood', guide: true, on: 'map', when: 'lowFood', help: 'party', title: 'Food', text: 'Your company eats every day, a ration for five. Buy food in any town or village (Buy food on its menu): hungry soldiers lose morale and may desert.' },
+    encounter: { id: 'encounter', guide: true, on: 'encounter', help: 'battle', title: 'An encounter', text: 'Attack to fight it yourself, or Auto-resolve to roll it from your strength. You can also pay, threaten or try to slip away — each button shows the odds.' },
+    battle: { id: 'battle', guide: true, on: 'battle', help: 'battle', pause: true, title: 'Your first battle', textTouch: 'Joystick to move, ATTACK to swing, hold BLOCK to raise your shield (front only). ORDERS: pick a group, then Follow, Hold or Charge.', textKeys: 'WASD to move, Space or left click to swing, Shift or right click to block (front only). 1–3 pick a group; F, H, C order Follow, Hold, Charge. Esc pauses.' },
+    save: { id: 'save', guide: true, on: 'map', when: 'secondDay', help: 'saving', title: 'Saving', text: 'The game saves itself in this browser as you play. Browsers can clear it, so keep a copy now and then: Settings, then Save & export (it also moves your game to another device).' },
     prepare: { id: 'prepare', on: 'prepare', help: 'battle', title: 'Prepare for battle', text: 'Balanced suits most fights: just press Fight. Simulate settles it from your strength and shows why. Defensive and Aggressive set different starts, and Custom lets you drag each group’s flag inside the green zone.' },
-    battle: { id: 'battle', on: 'battle', help: 'battle', pause: true, title: 'Your first battle', textTouch: 'Joystick to move, ATTACK to swing, hold BLOCK to raise your shield (front only). ORDERS: pick a group, then Follow, Hold or Charge.', textKeys: 'WASD to move, Space or left click to swing, Shift or right click to block (front only). 1–3 pick a group; F, H, C order Follow, Hold, Charge. Esc pauses.' },
     reserves: { id: 'reserves', on: 'battle', when: 'reserves', help: 'battle', title: 'Reserves', text: 'Not everyone fits on the field at once. The rest wait in reserve and step in as others fall — see Reserves on the HUD.' },
     captured: { id: 'captured', on: 'result', when: 'captured', help: 'start', title: 'Captured', text: 'A lost battle costs some crowns and gear, never the game. You are let go near a settlement; rest, hire and try again.' },
     trade: { id: 'trade', on: 'trade', help: 'trade', title: 'The market', text: 'Goods are cheap where plentiful and dear where short: buy low here, sell somewhere else. Cargo slows you down.' },
@@ -242,8 +260,10 @@
     saves: { id: 'saves', on: 'saves', help: 'saving', title: 'Keep a copy', text: 'The game saves itself in this browser, but browsers can clear it. Export a copy now and then — it also moves your game to another device.' },
     speed: { id: 'speed', on: 'map', when: 'originDone', help: 'map', title: 'Map speed', text: 'Time on the map runs at Normal speed, an hour a second. The ▶ button beside the zoom makes it Fast, four hours a second, and tapping it again slows it back. Wait lets whole days pass at once.' },
     points: { id: 'points', on: 'map', when: 'points', help: 'party', title: 'Points to spend', text: 'You have skill or attribute points to spend. Open Party: Leadership lets you lead more soldiers, One-Handed hits harder.' },
-    lowFood: { id: 'lowFood', on: 'map', when: 'lowFood', help: 'party', title: 'Food is running low', text: 'Buy food in any town or village. Hungry soldiers lose morale and may desert.' },
     beyond: { id: 'beyond', on: 'map', when: 'awayFromHome', help: 'lands', title: 'Beyond the March', text: 'A new land, with its own kingdom, troops and prices. Its capital posts contracts and someone there has work for you. Zoom out to see the whole realm; Centre brings you back.' },
-    wounded: { id: 'wounded', on: 'map', when: 'wounded', help: 'party', title: 'Wounded soldiers', text: 'The wounded sit out battles for about two days. Resting in a settlement passes the time safely.' }
+    wounded: { id: 'wounded', on: 'map', when: 'wounded', help: 'party', title: 'Wounded soldiers', text: 'The wounded sit out battles for about two days. Resting in a settlement passes the time safely.' },
+    fief: { id: 'fief', on: 'realm', when: 'fiefTab', help: 'lands', title: 'Your fief', text: 'What you hold, how it is doing and what it pays: prosperity, its garrison and its policies. It runs itself, with a line a week; set its policies here.' },
+    army: { id: 'army', on: 'map', when: 'summoned', help: 'armies', title: 'Summoned to the army', text: 'Your liege calls you to ride with the army. Its banner is on the map: ride to it, and near it its battles are yours. The Allegiance tab shows where it gathers.' },
+    houses: { id: 'houses', on: 'realm', when: 'lordsTab', help: 'houses', title: 'Lords and houses', text: 'Every lord belongs to a house, and lords remember what was done to their kin. Ask… opens what you can do with a lord: a marriage joins two houses.' }
   };
 })(typeof window !== 'undefined' ? window : globalThis);

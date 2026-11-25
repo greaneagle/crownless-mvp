@@ -3533,7 +3533,10 @@
   // ---- First-time tips and How to play (Gate E tutorial; data/help.js) ----
 
   function showTip(t) {
-    $('#tipTitle').textContent = t.title;
+    // P10-07: a guide step says it is one (not its number: some steps never come for some starts),
+    // and the whole guide can be skipped.
+    $('#tipTitle').textContent = t.guide ? `${t.title} · guide` : t.title;
+    $('#tipSkip').classList.toggle('hidden', !t.guide);
     $('#tipText').textContent = t.text;
     $('#tipMore').dataset.topic = t.help;
     $('#tipCard').classList.remove('hidden');
@@ -3544,13 +3547,25 @@
     CL.tips?.dismiss();
   }
 
+  const STAGE_NAMES = { captain: 'As a captain', vassal: 'As a vassal', lord: 'As a lord', ruler: 'As a ruler', other: 'And more' };
+
   function openHelp(topic) {
     const el = (tag, cls, text) => Object.assign(document.createElement(tag), { className: cls || '', textContent: text || '' });
-    const topics = Object.values(CL.content.table('help_topics')).sort((a, b) => a.order - b.order);
+    // P10-07: How to Play by stage; yours first, its first topic open (unless a tip asked for one).
+    const playing = Boolean(CL.campaign?.character);
+    const mine = playing ? CL.tips.stage(CL.campaign) : 'captain';
+    const stages = [mine, ...CL.tips.STAGES.filter((x) => x !== mine), 'other'];
+    const byOrder = Object.values(CL.content.table('help_topics')).sort((a, b) => a.order - b.order);
+    const topics = stages.flatMap((st) => byOrder.filter((h) => (h.stage || 'other') === st));
+    const first = topic || topics[0]?.id || 'start';
+    let shown = null;
     $('#helpTopics').replaceChildren(
-      ...topics.map((h) => {
+      ...topics.flatMap((h) => {
+        const st = h.stage || 'other';
+        const head = st !== shown ? [el('h3', 'setH helpStage', `${STAGE_NAMES[st]}${playing && st === mine ? ' (you)' : ''}`)] : [];
+        shown = st;
         const d = el('details', 'helpTopic');
-        d.open = h.id === (topic || 'start');
+        d.open = h.id === first;
         d.append(el('summary', '', h.title), ...h.body.map((p) => el('p', '', p)));
         if (h.controls?.length) {
           const table = el('table', 'helpKeys');
@@ -3564,7 +3579,7 @@
           }
           d.append(table);
         }
-        return d;
+        return [...head, d];
       }),
     );
     if (!$('#settingsPanel').classList.contains('hidden')) $('#settingsPanel').classList.add('hidden');
@@ -3574,7 +3589,7 @@
     $('#helpPanel').classList.remove('hidden');
     // Start at the chosen topic, not wherever the panel was last scrolled to.
     const open = $('#helpTopics .helpTopic[open]');
-    $('#helpPanel').scrollTop = open && topic && topic !== 'start' ? open.offsetTop - 8 : 0;
+    $('#helpPanel').scrollTop = open && topic && topic !== topics[0]?.id ? open.offsetTop - 8 : 0;
   }
 
   let helpPaused = false;
@@ -3587,15 +3602,20 @@
 
   function bindHelp() {
     $('#tipOk').onclick = hideTip;
+    $('#tipSkip').onclick = () => {
+      CL.tips.skipGuide();
+      $('#tipCard').classList.add('hidden');
+      message('Guide skipped. Hints still show the first time something comes up.');
+    };
     $('#tipMore').onclick = () => {
       const topic = $('#tipMore').dataset.topic;
       hideTip();
       openHelp(topic);
     };
-    $('#titleHelpBtn').onclick = () => openHelp('start');
+    $('#titleHelpBtn').onclick = () => openHelp(); // P10-07: at your stage
     $('#settingsHelp').onclick = () => {
       closeSettings();
-      openHelp('start');
+      openHelp();
     };
     $('#closeHelp').onclick = closeHelp;
     $('#doneHelp').onclick = closeHelp;
@@ -3609,7 +3629,7 @@
       CL.tips.reset();
       CL.settings.set('tips', true);
       $('#setTips').checked = true;
-      message('Tips will show again.');
+      message('The guide and hints will show again.');
     };
   }
 

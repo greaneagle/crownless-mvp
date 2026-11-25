@@ -3430,7 +3430,7 @@ Moved here from P9-T (owner, 2026-11-24). It runs when the owner asks for the ni
 - **Checks:** 903 fast pass; lint clean but the 2 old warnings; typecheck clean. Browser 247 passed, 9 skipped (three phone map-camera cases timed out once beside a play-test and passed 12 of 12 alone).
 - **Played** at 812×375: a peddler in Valedorn, from Ottmar's deal through Oakford's market to selling the grain in Stonebridge.
 
-### P10-07 · Onboarding and hints (M)
+### P10-07 · Onboarding and hints (M) — ✅ Done in 4.7.0
 
 **Build.**
 - **A guide for the main beginner steps,** whatever the origin: moving on the map, entering a town and talking, hiring, buying food, the first battle's controls, auto-resolve, saving.
@@ -3443,6 +3443,15 @@ Moved here from P9-T (owner, 2026-11-24). It runs when the owner asks for the ni
 **Tests.** The guide's steps with each origin; skip one, skip all; off in Settings; the browser startup flow with the guide on and off.
 
 **Version.** 4.7.0.
+
+**Done (4.7.0).**
+- **The guide** (`guide: true` in `data/help.js` tips, in order): towns and villages and their people, the streets, hiring (only with nobody hired yet), the map, food, an encounter and auto-resolve, the first battle (it waits), saving (after a day on the road). The old tips for these became its steps, two are new (hiring, saving).
+- **Shown once, at the moment;** the card says "guide" and has **Skip the guide** beside More help and Got it. Got it passes one step; Skip the guide marks them all, and the hints still come.
+- **Hints only for the deeper systems,** each once: the market, contracts, the Realms screen, your fief (new), sieges, the army's summons (new), lords and houses (new), your realm.
+- **One setting,** "Guide and hints" (today's tips setting), and **Show hints again** resets both.
+- **How to Play by stage:** every topic has a `stage`; the screen groups them as a captain, a vassal, a lord, a ruler, yours first (marked "(you)" in a game) with its first topic open. `CL.tips.stage`: a ruler of a realm, a lord holding land, a vassal sworn, else a captain.
+- **Tests:** `tests/guide.test.js` (the steps in order; with each of the five origins, the town, hiring if nobody, the map; Got it, Skip the guide, Show hints again; off; food, saving and an encounter at their moments; the four stages). Browser: a new game with the guide on shows its first step, Skip clears it, off shows nothing.
+- **Checks:** 909 fast pass; lint clean but the 2 old warnings; typecheck clean. Browser 249 passed, 9 skipped. **Played** at 812×375: How to Play from the title (by stage), a farmhand's first steps in Oakford and on the map, Skip the guide, the new Settings words. Found and fixed: "(you)" before there was a hero; "In a town" in a village; "guide 4 of 8" straight after "1 of 8" (steps that never come for a start), so the card no longer numbers them.
 
 ### P10-08 · UI and menus toward the references (L)
 

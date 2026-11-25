@@ -2,6 +2,11 @@
  * situation comes up, a short card explains it once — per device, so a second campaign on the same
  * phone isn't lectured again. Tips can be turned off or shown again from Settings. The first battle
  * waits while its controls card is read. Q1 remains the playable tutorial (GDD §4).
+ * P10-07: the beginner steps are a guide (`guide: true`, in the table's order): moving on the map,
+ * a town and its people, hiring, food, an encounter and auto-resolve, the first battle, saving. Each
+ * shows once at its moment; one can be passed with Got it, or the whole guide with Skip the guide.
+ * Everything deeper is a hint card only. One setting turns both off; "Show hints again" resets them.
+ * How to Play opens at your stage (`stage`: captain, vassal, lord or ruler).
  * Seen tips live in their own storage key, like the settings, never in the save. */
 (function (root) {
   'use strict';
@@ -62,6 +67,15 @@
       const r = CL.world.regionAt(c.world.x, c.world.y, c);
       return Boolean(r) && !r.home;
     },
+    // P10-07: the guide's moments. In a settlement with no soldiers yet, where some are for hire.
+    canHire: (c) => c.roster.length === 0 && Boolean(c.world?.location) && CL.party.recruitsHere().length > 0,
+    // A day on the road: time to say the game saves itself.
+    secondDay: (c) => c.day >= 1,
+    // P10-07: deeper hints. You are summoned to ride with your realm's army.
+    summoned: (c) => Boolean(c.armyCall),
+    // The Realms screen's Lords tab (houses and marriage) and Fief tab are open.
+    lordsTab: () => CL.game.realmTab === 'lords',
+    fiefTab: () => CL.game.realmTab === 'fief',
     // P8-04: at a kingdom's capital, where Service and fealty are offered.
     atCapital: (c) => {
       const sid = c.world?.location;
@@ -88,6 +102,35 @@
     return touch ? t.textTouch : t.textKeys;
   }
 
+  /** P10-07: the guide's steps, in order. */
+  const guideSteps = () => tips().filter((t) => t.guide);
+
+  /** Skip the whole guide: its steps are marked seen (the hints still show). */
+  function skipGuide() {
+    for (const t of guideSteps()) markSeen(t.id);
+    if (showing?.guide) dismiss();
+    CL.diag.log('info', 'Guide skipped');
+  }
+
+  /** "Guide 2 of 7" for a guide step, or null. */
+  function step(t) {
+    const all = guideSteps();
+    const i = all.findIndex((x) => x.id === t.id);
+    return i < 0 ? null : { n: i + 1, of: all.length };
+  }
+
+  /**
+   * Your stage, for How to Play (P10-07): a ruler of a realm, a lord holding land, a vassal sworn to a
+   * crown, or a captain of a free company.
+   */
+  function stage(c = CL.campaign) {
+    if (!c) return 'captain';
+    if (Object.values(c.rulers || {}).includes(CL.realm.PLAYER)) return 'ruler';
+    if (Object.values(c.holdings || {}).some((h) => h.holder === CL.realm.PLAYER)) return 'lord';
+    if (CL.allegiance?.state(c).kind === 'vassal') return 'vassal';
+    return 'captain';
+  }
+
   /** The first unseen tip for this screen whose situation holds, or null. */
   function due(mode) {
     if (CL.settings?.get('tips') === false || !CL.campaign) return null;
@@ -108,7 +151,7 @@
     showing = t;
     markSeen(t.id);
     if (t.pause && mode === 'battle') CL.ui.setPaused?.(true, 'tip');
-    CL.ui.showTip?.({ ...t, text: textFor(t) });
+    CL.ui.showTip?.({ ...t, text: textFor(t), step: step(t) });
     CL.diag.log('info', 'Tip shown', { tip: t.id });
     return t;
   }
@@ -135,11 +178,13 @@
       if (!C.help_topics?.[t.help]) err(`tip ${t.id}: unknown help topic ${t.help}`);
       if (t.when && !WHEN[t.when]) err(`tip ${t.id}: unknown situation ${t.when}`);
     }
+    const STAGES = ['captain', 'vassal', 'lord', 'ruler'];
+    for (const h of Object.values(C.help_topics || {})) if (h.stage != null && !STAGES.includes(h.stage)) err(`help ${h.id}: stage is captain, vassal, lord or ruler`);
     for (const h of Object.values(C.help_topics || {})) {
       if (!h.title || !Array.isArray(h.body) || !h.body.length) err(`help ${h.id}: needs a title and text`);
       for (const row of h.controls || []) if (!Array.isArray(row) || row.length !== 3) err(`help ${h.id}: controls rows are [touch, keys, action]`);
     }
   }
 
-  CL.tips = { SEEN_KEY, WHEN, check, dismiss, tick, reset, due, textFor, validate, showing: () => showing };
+  CL.tips = { SEEN_KEY, WHEN, STAGES: ['captain', 'vassal', 'lord', 'ruler'], check, dismiss, tick, reset, due, textFor, validate, skipGuide, guideSteps, step, stage, showing: () => showing };
 })(typeof window !== 'undefined' ? window : globalThis);

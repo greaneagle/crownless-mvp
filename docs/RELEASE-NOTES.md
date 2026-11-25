@@ -1,5 +1,16 @@
 # Crownless — Release Notes
 
+## v4.7.0 — Onboarding and hints (P10-07) · 2026-11-25
+
+### New
+- **A beginner guide,** whatever your origin: a town and its people, the streets, hiring (if you have nobody yet), the map, food, an encounter and auto-resolve, the first battle's controls, and saving. Each step shows once, when it is needed, marked "guide". Got it passes one step; **Skip the guide** passes them all.
+- **Hints for everything deeper,** each once: the market, contracts, the Realm screen, your fief, sieges, being summoned to an army, lords and houses, your realm.
+- **One setting** in Settings, "Guide and hints", turns both off or on; **Show hints again** brings both back.
+- **How to Play by stage:** as a captain, a vassal, a lord, a ruler. Yours comes first, marked (you), with the rest a tap away.
+
+### Under the hood
+- `guide: true` on a tip makes it a guide step; `CL.tips.skipGuide`, `guideSteps`, `stage`. New moments: `canHire`, `secondDay`, `summoned`, `lordsTab`, `fiefTab`. Help topics take a `stage`.
+
 ## v4.6.0 — Origins: the scout and the peddler (P10-06) · 2026-11-25
 
 ### New
