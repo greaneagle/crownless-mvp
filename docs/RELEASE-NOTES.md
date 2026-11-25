@@ -1,5 +1,31 @@
 # Crownless — Release Notes
 
+## v4.11.0 — Battles in the new art (P10-G2) · 2026-11-25
+
+The second of the six steps toward the code-drawn art (D-P10k): every battle is now drawn by it. Towns and the map keep their current look until their own steps.
+
+### New
+- **Every soldier drawn by the art kit,** from their troop's kit and in their side's colours: your company under your realm's colours (or your own banner, a free company's gold) and the foe in theirs.
+  - The hero in their cloak, Mara and the retinue in their own looks.
+  - A lord fighting in person under a gold plume with a pennant, and tournament fighters in their own colours.
+  - Women soldiers as their lines are.
+- **You can see what every soldier is doing,** straight from the battle:
+  - the blade rises in the windup, sweeps through and recovers; a spear or pike levels and thrusts;
+  - a shield comes across the body on a block;
+  - a bow is drawn while the archer reloads, a crossbow wound back over its slower load;
+  - a struck soldier flashes and recoils; the fallen lie still and fade.
+  - Horses always show in profile, with their legs moving.
+  - Blue rings under your soldiers, red under theirs, gold under you.
+- **Every battlefield in the new art:** the meadows, forests, the ford, the hills, the courtyard and the lists (now fenced). The assault has its stone curtain wall, the gate, the ladders at the gaps and the ram shed while it works. The escort's wagon burns when lost.
+- **The minimap, the tactical overview and the Prepare screen** show a small painted map of the field.
+- **Calm effects:** a small burst for a hit, a pale arc for a block, a puff where an arrow lands, the rally's ring. Arrows and bolts have heads and fletching. Reduced effects keeps only the rally.
+- **Big battles stay smooth:** a soldier standing or walking is drawn once and then stamped, and in a battle of more than 80 at once their blows are too. With 200 on the field, drawing costs about what the old sprites did.
+
+### Under the hood
+- **The battle module:** `js/art/battle.js` draws the ground, the obstacles, every unit, the fallen, arrows, effects and the minimap's field from the battle's state, and never changes it.
+- **Kit looks in the maps:** battle maps and the generated arenas name kit looks (`tree`, `bush`, `rock`, `wall`, `fence`, `crate`, `wagon`; decor `flowers`, `ferns`, `leaves`, `stones`, `fence`) instead of tile ids. The arenas' random draws are unchanged, so every map is laid out as before. A pack's map with old tile ids is drawn with the nearest look.
+- **Sprites gone from battles:** the soldiers' sprite sets and the companions' `frames`. Only the towns' and the map's sprites are left, until their steps.
+
 ## v4.10.0 — The art kit in the game (P10-G1) · 2026-11-25
 
 The first of six steps that re-draw the whole game in code and retire the sprites (the owner's decision after playing the graphics demo, D-P10k). This step builds the foundation; the scenes keep their current look until their own steps.

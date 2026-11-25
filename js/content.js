@@ -408,8 +408,8 @@
       if (!(k.reward?.goldBase >= 0)) err(`contract ${k.id}: needs a reward`);
     }
     for (const m of Object.values(C.companions || {})) {
-      if (!m.frames?.length || !(m.hp > 0) || !(m.weaponFactor > 0)) err(`companion ${m.id}: needs frames, hp and weaponFactor`);
-      if (m.look != null) for (const e of checkLook(m.look, `companion ${m.id}`)) err(e); // P10-G1 (frames go with the battle sprites, P10-G2)
+      if (!(m.hp > 0) || !(m.weaponFactor > 0)) err(`companion ${m.id}: needs hp and weaponFactor`);
+      if (m.look != null) for (const e of checkLook(m.look, `companion ${m.id}`)) err(e); // P10-G1; drawn by the art kit (P10-G2)
       for (const [slot, id] of Object.entries(m.startGear || {})) {
         if (!m.gearSlots.includes(slot) || C.items?.[id]?.slot !== slot) err(`companion ${m.id}: bad start gear ${id}`);
       }

@@ -1,11 +1,14 @@
 /* Crownless content: battle_maps. Plain classic script; no modules, no fetch.
- * GDD §8: three battle scenes sharing one tile palette, collision system and spawn anchors.
- * Coordinates are battle-canvas pixels (960×540; the playable area is x 47–908, y 65–490).
- *   ground:    base colour, tiled ground sprites (w####), optional patches of dirt/stone
- *   decor:     [tile, x, y, w, h] sprites drawn under everyone, no collision
+ * GDD §8: battle scenes sharing one collision system and spawn anchors, drawn by the art kit
+ * (js/art/battle.js, P10-G2). Coordinates are battle-canvas pixels (960×540; the playable area is
+ * x 47–908, y 65–490).
+ *   ground:    base colour, optional patches of dirt or grass, a courtyard's `stone`
+ *   decor:     [kind, x, y, w, h] drawn under everyone, no collision: 'flowers', 'ferns', 'leaves',
+ *              'fence' (a short piece), 'stones'
  *   obstacles: circles { shape:'circle', x, y, r } or rects { shape:'rect', x, y, w, h } that block
  *              movement; blocksArrows: false for low cover (rocks, bushes, fences)
- *              look: { tile, w, h } sprite drawn with its base on the obstacle, or 'wall' / 'crate'
+ *              look: what the kit draws: 'tree' | 'pine' | 'birch' | 'bush' | 'rock' (circles),
+ *              'wall' | 'fence' | 'crate' | 'wagon' (rects); a `seed` varies its shape
  *   spawn:     hero anchor (allies form up behind it) and the box enemies appear in
  * Large maps (V2-05, from 1.8.0) are generated in code (js/arena.js) from a spec instead:
  *   generate:  { kind: 'forest' | 'field', scale: screens each way, seed } — the same map every time
@@ -16,21 +19,21 @@
   root.CROWNLESS_CONTENT = root.CROWNLESS_CONTENT || {};
   var C = root.CROWNLESS_CONTENT;
   var rock = function (x, y) {
-    return { shape: 'circle', x: x, y: y, r: 15, blocksArrows: false, look: { tile: 'w0012', w: 40, h: 30 } };
+    return { shape: 'circle', x: x, y: y, r: 15, blocksArrows: false, look: 'rock' };
   };
   var tree = function (x, y) {
-    return { shape: 'circle', x: x, y: y, r: 20, blocksArrows: true, look: { tile: 'w0132', w: 92, h: 97 } };
+    return { shape: 'circle', x: x, y: y, r: 20, blocksArrows: true, look: 'tree' };
   };
   var bush = function (x, y, t) {
-    return { shape: 'circle', x: x, y: y, r: 14, blocksArrows: false, look: { tile: t || 'w0002', w: 38, h: 30 } };
+    return { shape: 'circle', x: x, y: y, r: 14, blocksArrows: false, look: 'bush', seed: t || 2 };
   };
   C.battle_maps = {
     grass_field: {
       id: 'grass_field',
       name: 'Grass Field',
       tileset: '16x16',
-      ground: { base: '#71904e', tiles: ['w0000', 'w0001', 'w0002'], patch: { color: '#a28e61', x: 481, y: 271, rx: 320, ry: 182 } },
-      decor: [['w0091', 40, 70, 49, 57], ['w0091', 850, 75, 58, 63], ['w0034', 71, 430, 65, 72], ['w0050', 864, 411, 65, 72], ['w0110', 550, 90, 54, 55], ['w0121', 120, 89, 57, 62]],
+      ground: { base: '#71904e', patch: { color: '#a28e61', x: 481, y: 271, rx: 320, ry: 182 } },
+      decor: [['flowers', 40, 70, 49, 57], ['flowers', 850, 75, 58, 63], ['flowers', 71, 430, 65, 72], ['flowers', 864, 411, 65, 72], ['flowers', 550, 90, 54, 55], ['flowers', 120, 89, 57, 62]],
       obstacles: [rock(560, 205), rock(610, 360), rock(420, 420)],
       spawn: { hero: { x: 330, y: 270 }, enemies: { x0: 735, x1: 887, y0: 91, y1: 450 } }
     },
@@ -38,12 +41,12 @@
       id: 'forest_clearing',
       name: 'Forest Clearing',
       tileset: '16x16',
-      ground: { base: '#4f7140', tiles: ['w0000', 'w0050', 'w0003'], patch: { color: '#6f8a4c', x: 500, y: 290, rx: 260, ry: 150 } },
-      decor: [['w0147', 300, 120, 44, 34], ['w0167', 690, 455, 36, 28], ['w0147', 830, 300, 40, 31], ['w0167', 150, 455, 36, 28]],
+      ground: { base: '#4f7140', patch: { color: '#6f8a4c', x: 500, y: 290, rx: 260, ry: 150 } },
+      decor: [['ferns', 300, 120, 44, 34], ['leaves', 690, 455, 36, 28], ['ferns', 830, 300, 40, 31], ['leaves', 150, 455, 36, 28]],
       obstacles: [
         tree(110, 120), tree(250, 450), tree(420, 140), tree(470, 330), tree(560, 210),
         tree(640, 420), tree(720, 130), tree(860, 470), tree(900, 210),
-        bush(380, 250, 'w0001'), bush(600, 300, 'w0002'), bush(770, 300, 'w0003'), bush(180, 300, 'w0002')
+        bush(380, 250, 1), bush(600, 300, 2), bush(770, 300, 3), bush(180, 300, 2)
       ],
       spawn: { hero: { x: 300, y: 330 }, enemies: { x0: 700, x1: 880, y0: 100, y1: 440 } }
     },
@@ -59,13 +62,13 @@
       id: 'tourney_lists',
       name: 'The Lists',
       tileset: '16x16',
-      ground: { base: '#6f8a4c', tiles: ['w0000', 'w0001'], patch: { color: '#b49a68', x: 480, y: 275, rx: 300, ry: 150 } },
-      decor: [['w0174', 90, 90, 52, 37], ['w0174', 860, 90, 52, 37], ['w0174', 90, 450, 52, 37], ['w0174', 860, 450, 52, 37]],
+      ground: { base: '#6f8a4c', patch: { color: '#b49a68', x: 480, y: 275, rx: 300, ry: 150 } },
+      decor: [['fence', 90, 90, 52, 37], ['fence', 860, 90, 52, 37], ['fence', 90, 450, 52, 37], ['fence', 860, 450, 52, 37]],
       obstacles: [
-        { shape: 'rect', x: 150, y: 110, w: 660, h: 14, blocksArrows: false, look: 'wall' },
-        { shape: 'rect', x: 150, y: 430, w: 660, h: 14, blocksArrows: false, look: 'wall' },
-        { shape: 'rect', x: 150, y: 110, w: 14, h: 334, blocksArrows: false, look: 'wall' },
-        { shape: 'rect', x: 796, y: 110, w: 14, h: 334, blocksArrows: false, look: 'wall' }
+        { shape: 'rect', x: 150, y: 110, w: 660, h: 14, blocksArrows: false, look: 'fence' },
+        { shape: 'rect', x: 150, y: 430, w: 660, h: 14, blocksArrows: false, look: 'fence' },
+        { shape: 'rect', x: 150, y: 110, w: 14, h: 334, blocksArrows: false, look: 'fence' },
+        { shape: 'rect', x: 796, y: 110, w: 14, h: 334, blocksArrows: false, look: 'fence' }
       ],
       spawn: { hero: { x: 330, y: 275 }, enemies: { x0: 610, x1: 650, y0: 255, y1: 295 } }
     },
@@ -73,8 +76,8 @@
       id: 'greywall_courtyard',
       name: 'Greywall Courtyard',
       tileset: '16x16',
-      ground: { base: '#7a7055', tiles: ['w0007', 'w0061'], stone: { x: 580, y: 110, w: 330, h: 320, color: '#8d8a80' } },
-      decor: [['w0174', 120, 120, 52, 37], ['w0174', 120, 400, 52, 37], ['w0012', 300, 460, 34, 25]],
+      ground: { base: '#7a7055', stone: { x: 580, y: 110, w: 330, h: 320, color: '#8d8a80' } },
+      decor: [['fence', 120, 120, 52, 37], ['fence', 120, 400, 52, 37], ['stones', 300, 460, 34, 25]],
       obstacles: [
         { shape: 'rect', x: 560, y: 90, w: 350, h: 22, blocksArrows: true, look: 'wall' },
         { shape: 'rect', x: 560, y: 430, w: 350, h: 22, blocksArrows: true, look: 'wall' },

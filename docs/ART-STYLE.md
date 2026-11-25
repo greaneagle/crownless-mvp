@@ -113,6 +113,18 @@ At night (`night` above 0.3) the windows light. Walls, towers and props work the
 
 **A building or prop.** Prefer a spec of `building()` or an existing prop with new values. When a new prop is needed, write it beside the others in `js/art/kit.js`: anchored at its foot, a shadow, the outline, base, shade and highlight. Then add it to the gallery's props page.
 
+## Battles (`js/art/battle.js`)
+
+The renderer hands a battle to `CL.gfx.battle.draw(ctx, game, view, k)`. It draws:
+- the ground (grass, the map's patches, rises, water, a courtyard's flagstones, decor);
+- the obstacles by their `look`, sorted with the units by their feet;
+- each unit from `lookOf(u)`: the hero, a companion, a lord, a tournament fighter, or a troop on its side;
+- the fallen, arrows, and the game's effects.
+
+A standing or walking soldier is a **baked frame**: drawn once per look, facing, step and scale (`cached`), then stamped. One striking, blocking, struck or shooting is drawn live, except in a big battle (over `CL.render.BUSY.from` at once), where those poses are baked too, three steps to a phase. The real phase still chooses the step.
+
+A new obstacle look is a branch in `obstacle()` and a name in the maps' comment (`data/battle_maps.js`). A new pose has to bake, so keep it a function of the pose's few fields.
+
 ## What it costs
 
 Drawing in code costs more than stamping sprites. Measure before and after a change:

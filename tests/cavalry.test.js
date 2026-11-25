@@ -107,7 +107,7 @@ test('cavalry battles on every map end and nobody gets stuck in scenery', () => 
   }
 });
 
-test('Footman → Rider and Spearman → Horse Scout are open; riders use their own art', () => {
+test('Footman → Rider and Spearman → Horse Scout are open; riders ride their own horses (P10-G2)', () => {
   const { CL } = loadGame();
   const c = CL.campaign;
   c.roster = [];
@@ -115,8 +115,8 @@ test('Footman → Rider and Spearman → Horse Scout are open; riders use their 
   c.gold = 500;
   assert.equal(CL.party.upgrade('footman', 'rider'), 1);
   assert.equal(c.roster[0].troop, 'rider');
-  assert.deepEqual(Array.from(CL.assets.troopArt.rider), [204, 205, 206, 207]);
-  assert.deepEqual(Array.from(CL.assets.troopArt.horse_scout), [210, 211, 212, 213]);
+  // Each rides a horse of its own look (the art kit draws it from data/troops.js).
+  assert.notEqual(CL.content.troop('rider').look.mount.coat, CL.content.troop('horse_scout').look.mount.coat);
 });
 
 test('Mercenaries are for hire in towns, not villages', () => {

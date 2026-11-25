@@ -1059,10 +1059,14 @@
    * Draw `paint(ctx)` (a drawing anchored at 0,0 inside a box of w×h around it, ox/oy from its
    * top-left to the anchor) once per pixel scale `k`, then reuse the image.
    */
-  function cached(key, k, w, h, ox, oy, paint) {
+  function cached(key, k, w, h, ox, oy, paint, max = 400) {
     const id = `${key}@${k.toFixed(2)}`;
     let c = caches.get(id);
-    if (!c) {
+    if (c) {
+      // Most recently used last, so the oldest is the one dropped when the cache is full.
+      caches.delete(id);
+      caches.set(id, c);
+    } else {
       c = root.document.createElement('canvas');
       c.width = Math.max(1, Math.ceil(w * k));
       c.height = Math.max(1, Math.ceil(h * k));
@@ -1070,7 +1074,7 @@
       cx.setTransform(k, 0, 0, k, ox * k, oy * k);
       paint(cx);
       caches.set(id, c);
-      if (caches.size > 400) caches.delete(caches.keys().next().value); // oldest first
+      while (caches.size > max) caches.delete(caches.keys().next().value); // the least recently used first
     }
     return c;
   }

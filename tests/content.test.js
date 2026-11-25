@@ -2,12 +2,9 @@
 // cross-references resolve. Canon checks follow Crownless_MVP_GDD_v1.md.
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const path = require('node:path');
 const { loadContent, CONTENT_MODULES } = require('./helpers/load');
 
 const C = loadContent();
-const ASSET_DIR = path.join(__dirname, '..', 'assets');
 
 test('every content module loads and every table is non-empty', () => {
   assert.equal(CONTENT_MODULES.length, 22); // 4.5.0 added data/origins.js (P10-05); 1.4.0 added data/names.js (V2-03); 2.19.0 data/world_events.js (P7-08); 2.20.0 data/tournaments.js (P7-09); 2.21.0 data/businesses.js (P7-10)
@@ -96,13 +93,17 @@ test('quest items are flagged and worthless to sell', () => {
   }
 });
 
-test('battle map sprites point at existing tile images', () => {
-  // Generated maps (V2-05) are built in code; tests/arena.test.js checks their sprites.
-  for (const m of Object.values(C.battle_maps).filter((x) => !x.generate)) {
-    const tiles = [...m.ground.tiles, ...m.decor.map((d) => d[0]), ...m.obstacles.filter((o) => o.look?.tile).map((o) => o.look.tile)];
-    for (const tile of tiles) {
-      assert.ok(fs.existsSync(path.join(ASSET_DIR, `${tile}.png`)), `${m.id}: missing assets/${tile}.png`);
-    }
+test('battle maps are drawn by the art kit: kit looks and decor kinds, no tile images (P10-G2)', () => {
+  const OBSTACLES = ['tree', 'pine', 'birch', 'bush', 'rock', 'wall', 'fence', 'crate', 'wagon'];
+  const DECOR = ['flowers', 'ferns', 'leaves', 'fence', 'stones'];
+  const { loadGame } = require('./helpers/load');
+  const { CL } = loadGame();
+  const maps = Object.values(C.battle_maps).map((m) => (m.generate ? CL.arena.build(m) : m));
+  maps.push(CL.arena.assault({ ladders: 3 }), CL.arena.assault({ defend: true }));
+  for (const m of maps) {
+    assert.equal(m.ground.tiles, undefined, `${m.id}: no ground tiles`);
+    for (const d of m.decor || []) assert.ok(DECOR.includes(d[0]), `${m.id}: decor ${d[0]}`);
+    for (const o of m.obstacles) assert.ok(OBSTACLES.includes(o.look) || o.gate, `${m.id}: obstacle look ${JSON.stringify(o.look)}`);
   }
 });
 

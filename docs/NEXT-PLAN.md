@@ -325,7 +325,7 @@ Every Phase 9 task is **Specified** (2026-11-22; NEXT-TASKS has each in full). T
 | **P10-08** | ✅ **Done in 4.8.0** (in part, as planned). **UI and menus** toward the references (renderer changes allowed; partial is fine); seeing further on the map and a light fog of sight (owner, 2026-11-25); quest bands named on the map | L | P10-07 |
 | **P10-09** | ✅ **Done in 4.9.0.** **Women soldiers** in two realms and one bandit type (15% of recruits, their own lines), and a few placeholder portraits | M | P9-T |
 | **P10-G1** | ✅ **Done in 4.10.0.** **The art kit in the game** (D-P10k, owner 2026-11-25): the demo's code-drawn kit as production modules, the canvas at the screen's real pixels with a Sharpness setting, a look for every troop and companion, culture sets, `docs/ART-STYLE.md`, the Art gallery | M–L | P10-09 |
-| **P10-G2** | **Battles in the new art:** every unit, map, the assault, overlays and effects; big-battle simplification; the battle sprites removed | L | P10-G1 |
+| **P10-G2** | ✅ **Done in 4.11.0.** **Battles in the new art:** every unit, map, the assault, overlays and effects; big-battle simplification; the battle sprites removed | L | P10-G1 |
 | **P10-G3** | **Towns in the new art:** all eight walkable towns from building specs, by culture, with life and night; the town sprites removed | L | P10-G1 |
 | **P10-G4** | **The world map in the new art:** terrain, settlements and parties as miniatures, siege camps; the fog, labels and taps kept | L | P10-G3 |
 | **P10-G5** | **The UI and portraits in the new art:** portraits from the figure parts, the hero, troops, house arms and banners, vector icons, the battle HUD and Prepare in the frame, home-screen icons | M–L | P10-G2 |

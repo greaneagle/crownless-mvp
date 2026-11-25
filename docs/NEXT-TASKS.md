@@ -3609,7 +3609,7 @@ The owner played the graphics demo (`docs/GRAPHICS-DEMO.md`, commit e5bae98) and
   - `battle-size`'s slow offer failed once in the first run: the known race (real frames counted after the test's 12 fps), recorded in P10-09.
 - **Seen** at 1280×720 and 812×375 @3× in screenshots: every gallery page, the map and a battle in the old art at Balanced. Not played by hand on a phone.
 
-### P10-G2 · Battles in the new art (L)
+### P10-G2 · Battles in the new art (L) — ✅ Done in 4.11.0
 
 **Build.**
 - **Every unit drawn by the kit** from its troop's look and side: soldiers, the hero, companions, lords in person (their realm's best kit, the gold plume and a pennant), tournament fighters in the lists' loaner kit, and women soldiers.
@@ -3643,6 +3643,60 @@ The owner played the graphics demo (`docs/GRAPHICS-DEMO.md`, commit e5bae98) and
 - No sprite image requested in a battle (network log).
 
 **Version.** 4.11.0.
+
+**Done (4.11.0).**
+- **The battle module** `js/art/battle.js` (`CL.gfx.battle.draw`), called by `js/render.js` for every battle. It draws, from the battle's state only: the ground, the obstacles in the units' depth order, every unit, the fallen, arrows, the effects, and the assault's ladders and ram. A test draws every unit twice and finds none of them changed.
+- **Units:**
+  - each troop's look on its side (`sides`: yours is your sworn or serving realm, else your own banner; theirs is the band's or encounter's realm, the Reavers for outlaws);
+  - the hero from the creator's choices, the companions from `data/companions.js`;
+  - a lord in person (`u.named`) under a gold plume with a pennant;
+  - a tournament fighter (`u.duelist`) in colours of their own;
+  - the walk, the swing's three phases, a spear's thrust, a raised shield, a bow drawn over the reload, a crossbow wound back, the struck flash and recoil, horses in profile with a leg cycle;
+  - rings (blue, red, gold), health bars on the hurt, the routing pennant and the shaken mark.
+- **Battlefields:**
+  - `data/battle_maps.js` and `js/arena.js` name kit looks instead of tile ids; the arenas' random draws are kept, so every map is the same as before, and their tests pass unchanged;
+  - the lists' barriers are fences now (vertical fences are drawn too);
+  - the assault: the curtain wall with merlons and its shadow, the gate's planks and iron, ladders at the gaps, the ram shed while it works;
+  - the escort's wagon burns when lost;
+  - ground: patches (dirt or sand by colour), rises, water with banks and ripples, the courtyard's flagstones, decor and tufts;
+  - a pack's map with old tile ids is drawn with the nearest look (`TILE_LOOK`).
+- **Overlays:** the minimap, the tactical overview and the Prepare screen draw `miniature(map)`, a small painted field. The edge threats, "approaching" and the HUD frame are unchanged.
+- **Effects** as in the demo; Reduced effects and big battles keep only the rally ring. Bolts are drawn shorter and heavier than arrows.
+- **Speed:**
+  - standing and walking soldiers are baked frames (per look, facing, one of six steps, team, scale; 3000 kept, least recently used dropped);
+  - soldiers' looks vary in four ways a troop, by the soldier's id;
+  - in a big battle (over 80 at once) blows, draws and guards are baked too, three steps a phase, chosen by the real phase;
+  - the fallen are baked;
+  - no dust or blade trail in a big battle.
+- **Removed:** the battle sprites (`allyArt`, `troopArt`, `enemyArt`, `e.art`, the companions' `frames`, `drawDowned`, the battle tiles and decor sprites). `js/assets.js` now loads only the towns' and the map's (P10-G3, P10-G4). The asset manifest was refreshed: 81 of 170 files used.
+- **Readability:** the bandits' hoods and tunics were too dark and read as lumps in a crowd; lightened. Big melees still pack tightly (the engine's spacing); the rings and the shield shapes carry friend and foe. Judged in screenshots at 812×375 with 100 on the field, not on a phone.
+- **The budget** (Debug battle benchmark, 10 s a size, Balanced; headless desktop Chromium):
+
+  | Device | Battle 40 / 100 / 200: drawing ms (P10-G1's baseline) | Largest at 30 fps |
+  |---|---|---|
+  | desktop 1280×720 | 0.8 (0.5) / 1.0 (0.5) / 1.6 (0.6–0.7) | 200, as before |
+  | phone 812×375 @3× | 0.7 (0.5) / 0.9 (0.5) / 1.5 (0.7) | 200, as before |
+
+  Drawing at 40 is 1.6× the baseline (the budget allows 2×), and the largest size didn't fall at all. The 200 row is from before the big-battle baking (below), which roughly halved it.
+- **The 200 test** (owner, 2026-11-25): 100 a side, all on the field, the open-field benchmark battle, Balanced. Drawing and update time per frame (the game's own diagnostics). The old renderer was run from 4.10.0 on the same battle. Headless desktop Chromium.
+
+  | 200 on the field | Old renderer: draw ms / fps | New, before the big-battle baking | New, after |
+  |---|---|---|---|
+  | Desktop, full speed, zoom 1× / zoomed out (0.75×) | 0.56 / 60 · 0.81 / 60 | 1.48 / 60 · 1.59 / 60 | 0.70 / 60 · 0.85 / 60 |
+  | Desktop, CPU slowed 4×, 1× / zoomed out | 3.15 / 29 · 4.14 / 27 | 8.09 / 20 · 9.28 / 22 | 3.71 / 39 · 4.70 / 37 |
+  | Phone profile, full speed, 1× / zoomed out | 0.57 / 60 · 0.80 / 60 | 1.38 / 60 · 1.49 / 60 | 0.74 / 60 · 0.84 / 60 |
+  | Phone profile, CPU slowed 4×, 1× / zoomed out | 3.06 / 29 · 4.03 / 26 | 7.92 / 20 · 9.15 / 21 | 3.58 / 36 · 4.52 / 36 |
+
+  The demo before any optimisation drew 4.8 and 8.1–8.5 ms (25–35 ms slowed 4×). With the baking, the new art draws within about 1.2× of the old sprites. The frame rate slowed 4× is even a little higher; that is within the run's noise, and the update cost also varied. **It passes.** P10-T measures it on the owner's phone.
+- **Tests:**
+  - `tests/art-battle.test.js`: every map, arena and assault draws; a battle is drawn without changing a unit, with standing soldiers stamped; a blow in a small battle is drawn live; each side's colours, the hero, Mara, a lord and a tournament fighter; a big battle bakes its blows.
+  - `tests/browser/art.spec.js`: a battle draws no sprite image (every `drawImage` source checked for 1.5 s).
+  - The content and arena tests check kit looks instead of tile files. The cavalry and Mara tests check looks instead of frames.
+- **Checks:**
+  - 930 fast pass; lint clean but the 2 old warnings; typecheck clean.
+  - Browser: 272 passed, 9 skipped, 1 failed under load. It was `text-size` at Large on the phone, the map's 2.5 s message again; the spec passes 20 of 20 on its own.
+  - The battle, assault, tourney, zoom and art specs: 36 of 36.
+- **Seen** in screenshots at 1280×720 and 812×375 @3× (Balanced): the forest at 40, the ford, the hills, the wagon ambush, the courtyard, the assault, the open field at 100, the lists. Not played by hand on a phone.
 
 ### P10-G3 · Towns in the new art (L)
 

@@ -242,13 +242,13 @@
     if (!alone && CL.companion.fit()) {
       const m = CL.companion.get();
       const u = makeUnit(anchor.x - 40, anchor.y + 34, 'ally', 'mercenary');
-      Object.assign(u, CL.companion.combat(), { companion: m.id, frames: CL.companion.def(m.id).frames, role: 'infantry', div: 'infantry' });
+      Object.assign(u, CL.companion.combat(), { companion: m.id, role: 'infantry', div: 'infantry' });
       CL.units.resolveObstacles(u);
       g.allies.push(u);
     }
     retinue.forEach((m, i) => {
       const u = makeUnit(anchor.x - 40 - (i + 1) * 30, anchor.y + 34 + ((i % 2) * 2 - 1) * 26, 'ally', 'mercenary');
-      Object.assign(u, CL.retinue.combat(m), { companion: m.id, frames: CL.retinue.def(m.id).frames, role: 'infantry', div: 'infantry' });
+      Object.assign(u, CL.retinue.combat(m), { companion: m.id, role: 'infantry', div: 'infantry' });
       CL.units.resolveObstacles(u);
       g.allies.push(u);
     });
@@ -311,12 +311,11 @@
 
   function spawnWave() {
     const g = game();
-    const art = CL.assets.enemyArt;
     g.wave++;
     const wave = g.encounterDef.waves[g.wave - 1];
     const troops = Object.entries(wave).flatMap(([id, n]) => Array(n).fill(id));
     const room = enemyCapOf(g);
-    for (const troopId of troops.slice(0, room)) addEnemy(g, troopId, art);
+    for (const troopId of troops.slice(0, room)) addEnemy(g, troopId);
     g.enemyReserve = troops.slice(room);
     if (g.share) CL.ui.message(`${g.encounterDef.name}: ${troops.length} · ${g.enemies.length} on the field, the rest in reserve`);
     else if (!g.duel) CL.ui.message(`Enemy wave ${g.wave} / ${g.totalWaves}${g.enemyReserve.length ? ` · ${g.enemyReserve.length} more waiting` : ''}`);
@@ -328,7 +327,7 @@
   const aliveCount = (list) => list.reduce((n, u) => n + (u.alive && !u.routing ? 1 : 0), 0);
 
   /** Put an enemy on the field: a troop id (in its spawn area), or { troop, join } for one riding in with a party (V2-09). */
-  function addEnemy(g, spec, art = CL.assets.enemyArt) {
+  function addEnemy(g, spec) {
     const troopId = typeof spec === 'string' ? spec : spec.troop;
     const box = g.battleMap.spawn.enemies;
     let [x, y] = [rand(box.x0, box.x1), rand(box.y0, box.y1)];
@@ -336,7 +335,6 @@
     const e = makeUnit(x, y, 'enemy', troopId);
     CL.units.resolveObstacles(e);
     e.face = 'left';
-    e.art = art[g.enemies.length % art.length];
     const j = typeof spec === 'string' ? null : g.joining?.find((x) => x.id === spec.join);
     if (j) CL.reinforce.place(g, j, e);
     CL.objective.onEnemy(g, e, Boolean(j)); // every second one goes for an escort's wagon (P7-11)

@@ -66,3 +66,24 @@ test('the Art gallery: every realm’s troops and more, page by page, and the sa
   await waitMode(page, 'map');
   expect(await storage(page)).toEqual(before);
 });
+
+test('a battle draws no sprite image: every soldier and obstacle is the art kit’s (P10-G2)', async ({ page }) => {
+  await open(page, { settings: { sharpness: 'balanced' } });
+  await newGame(page);
+  await toMap(page);
+  await debug(page, '[data-cheat="camera"][data-n="30"]');
+  await waitMode(page, 'battle');
+  const sprites = await page.evaluate(async () => {
+    const seen = new Set();
+    const draw = CanvasRenderingContext2D.prototype.drawImage;
+    CanvasRenderingContext2D.prototype.drawImage = function (img, ...rest) {
+      if (img instanceof HTMLImageElement) seen.add(img.src.replace(location.origin, ''));
+      return draw.call(this, img, ...rest);
+    };
+    await new Promise((r) => setTimeout(r, 1500));
+    CanvasRenderingContext2D.prototype.drawImage = draw;
+    return [...seen];
+  });
+  expect(sprites).toEqual([]);
+  expect(await game(page, (CL) => CL.diag.events.filter((e) => e.level === 'error').length)).toBe(0);
+});

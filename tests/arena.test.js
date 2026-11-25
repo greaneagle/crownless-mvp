@@ -4,12 +4,9 @@
 // courtyard stays one screen, and the device setting "Battlefield: Small" brings back the classic maps.
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const path = require('node:path');
 const { loadGame } = require('./helpers/load');
 
 const LARGE = ['forest_wilds', 'open_country'];
-const ASSETS = path.join(__dirname, '..', 'assets');
 
 function mulberry(seed) {
   let s = seed >>> 0;
@@ -73,14 +70,15 @@ test('Battlefield: Small brings back the one-screen maps, and only for the large
   assert.equal(CL.settings.set('battlefield', 'huge'), false);
 });
 
-test('the large maps are the same every time and use only sprites that exist', () => {
+test('the large maps are the same every time and use only the art kit’s looks (P10-G2)', () => {
   const { CL } = loadGame();
   const other = loadGame().CL;
   for (const id of LARGE) {
     const m = CL.arena.mapFor(id);
     assert.equal(JSON.stringify(other.arena.mapFor(id)), JSON.stringify(m), `${id} is deterministic`);
-    const tiles = [...m.ground.tiles, ...m.decor.map((d) => d[0]), ...m.obstacles.map((o) => o.look?.tile).filter(Boolean)];
-    for (const t of new Set(tiles)) assert.ok(fs.existsSync(path.join(ASSETS, `${t}.png`)), `${id}: missing assets/${t}.png`);
+    assert.equal(m.ground.tiles, undefined, `${id}: no ground tiles`);
+    for (const d of m.decor) assert.ok(['flowers', 'ferns', 'leaves', 'stones'].includes(d[0]), `${id}: decor ${d[0]}`);
+    for (const o of m.obstacles) assert.ok(['tree', 'bush', 'rock'].includes(o.look), `${id}: obstacle look ${JSON.stringify(o.look)}`);
     for (const o of m.obstacles) assert.ok(o.x > 40 && o.x < m.width - 40 && o.y > 60 && o.y < m.height - 40, `${id}: obstacle inside the arena`);
   }
   const forest = CL.arena.mapFor('forest_wilds').obstacles.filter((o) => o.blocksArrows).length;

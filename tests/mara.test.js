@@ -151,7 +151,9 @@ test('she fights beside the hero with her own look; her gear sets her numbers', 
   const u = CL.game.allies.find((a) => a.companion === 'mara');
   assert.ok(u);
   assert.equal(u.damage, 21 * 0.75);
-  assert.deepEqual(Array.from(u.frames), [124, 125, 126, 127]);
+  // Her own look (P10-G2: the art kit draws her from data/companions.js): the scout's hood and cloak.
+  assert.equal(CL.gfx.battle.lookOf(u).helmet, 'hood');
+  assert.equal(CL.gfx.battle.lookOf(u).cloak, CL.content.table('companions').mara.look.cloak);
   assert.equal(u.soldierId, null, 'never rolled as a soldier casualty');
   assert.equal(CL.companion.takeBack(c, 'weapon'), true);
   assert.equal(CL.companion.combat(c).damage, 6, 'unarmed');

@@ -38,8 +38,7 @@
     };
   }
 
-  const TREE = { shape: 'circle', r: 20, blocksArrows: true, look: { tile: 'w0132', w: 92, h: 97 } };
-  const BUSHES = ['w0001', 'w0002', 'w0003'];
+  const TREE = { shape: 'circle', r: 20, blocksArrows: true, look: 'tree' }; // P10-G2: the art kit's looks
 
   /**
    * The parts every arena shares: size, spawns kept clear, a placer that keeps obstacles apart.
@@ -70,8 +69,9 @@
     return { W, H, hero, enemies, obstacles, open, place };
   }
 
-  const bush = (rand) => (x, y) => ({ shape: 'circle', x, y, r: 14, blocksArrows: false, look: { tile: BUSHES[Math.floor(rand() * 3)], w: 38, h: 30 } });
-  const rock = (x, y) => ({ shape: 'circle', x, y, r: 15, blocksArrows: false, look: { tile: 'w0012', w: 40, h: 30 } });
+  // A bush's shape is drawn from the arena's own stream, as its sprite was, so every map is laid out as before.
+  const bush = (rand) => (x, y) => ({ shape: 'circle', x, y, r: 14, blocksArrows: false, look: 'bush', seed: Math.floor(rand() * 3) });
+  const rock = (x, y) => ({ shape: 'circle', x, y, r: 15, blocksArrows: false, look: 'rock' });
   const tree = (x, y) => ({ ...TREE, x, y });
 
   /**
@@ -86,8 +86,8 @@
     // About as dense as the forest clearing (9 trees, 4 bushes a screen), spread over the arena.
     f.place(9 * scale * scale, 95, tree);
     f.place(4 * scale * scale, 60, bush(rand));
-    const decor = Array.from({ length: 4 * scale * scale }, () => [rand() < 0.5 ? 'w0147' : 'w0167', Math.round(rand() * (f.W - 50)), Math.round(rand() * (f.H - 40)), 40, 31]);
-    return finish(f, { id: `forest_${scale}x`, name: `Forest (${scale}×)`, ground: { base: '#4f7140', tiles: ['w0000', 'w0050', 'w0003'], patches: f.open.map((c) => ({ color: '#6f8a4c', ...c })) }, decor });
+    const decor = Array.from({ length: 4 * scale * scale }, () => [rand() < 0.5 ? 'ferns' : 'leaves', Math.round(rand() * (f.W - 50)), Math.round(rand() * (f.H - 40)), 40, 31]);
+    return finish(f, { id: `forest_${scale}x`, name: `Forest (${scale}×)`, ground: { base: '#4f7140', patches: f.open.map((c) => ({ color: '#6f8a4c', ...c })) }, decor });
   }
 
   /**
@@ -103,9 +103,9 @@
     f.place(2 * scale * scale, 80, rock);
     f.place(2 * scale * scale, 60, bush(rand));
     const patches = Array.from({ length: 3 * scale }, () => ({ color: '#a28e61', x: 150 + rand() * (f.W - 300), y: 120 + rand() * (f.H - 240), rx: 90 + rand() * 180, ry: 60 + rand() * 100 }));
-    const flowers = ['w0091', 'w0110', 'w0121', 'w0034', 'w0050'];
+    const flowers = ['flowers', 'flowers', 'flowers', 'stones', 'flowers'];
     const decor = Array.from({ length: 3 * scale * scale }, () => [flowers[Math.floor(rand() * flowers.length)], Math.round(rand() * (f.W - 60)), Math.round(rand() * (f.H - 60)), 52, 56]);
-    return finish(f, { id: `field_${scale}x`, name: `Field (${scale}×)`, ground: { base: '#71904e', tiles: ['w0000', 'w0001', 'w0002'], patches }, decor });
+    return finish(f, { id: `field_${scale}x`, name: `Field (${scale}×)`, ground: { base: '#71904e', patches }, decor });
   }
 
   /**
@@ -124,10 +124,10 @@
     for (const [cx, cy] of copses) f.place(3, 70, tree, () => [cx + (rand() - 0.5) * 240, cy + (rand() - 0.5) * 180]);
     f.place(2 * scale * scale, 80, rock);
     f.place(2 * scale * scale, 60, bush(rand));
-    const flowers = ['w0091', 'w0110', 'w0121', 'w0034'];
+    const flowers = ['flowers', 'flowers', 'flowers', 'stones'];
     const decor = Array.from({ length: 2 * scale * scale }, () => [flowers[Math.floor(rand() * flowers.length)], Math.round(rand() * (f.W - 60)), Math.round(rand() * (f.H - 60)), 52, 56]).filter((d) => Number(d[1]) + 52 < river.x - 20 || Number(d[1]) > river.x + river.w + 20);
     return {
-      ...finish(f, { id: `ford_${scale}x`, name: `River ford (${scale}×)`, ground: { base: '#71904e', tiles: ['w0000', 'w0001', 'w0002'], patches: [], waters: [river] }, decor }),
+      ...finish(f, { id: `ford_${scale}x`, name: `River ford (${scale}×)`, ground: { base: '#71904e', patches: [], waters: [river] }, decor }),
       slow: [{ ...river, factor: FORD_SLOW }],
     };
   }
@@ -152,9 +152,9 @@
     for (const [cx, cy] of copses) f.place(3, 70, tree, () => [cx + (rand() - 0.5) * 240, cy + (rand() - 0.5) * 180]);
     f.place(2 * scale * scale, 80, rock);
     f.place(2 * scale * scale, 60, bush(rand));
-    const flowers = ['w0091', 'w0110', 'w0121', 'w0034'];
+    const flowers = ['flowers', 'flowers', 'flowers', 'stones'];
     const decor = Array.from({ length: 2 * scale * scale }, () => [flowers[Math.floor(rand() * flowers.length)], Math.round(rand() * (f.W - 60)), Math.round(rand() * (f.H - 60)), 52, 56]);
-    return { ...finish(f, { id: `hills_${scale}x`, name: `Hills (${scale}×)`, ground: { base: '#71904e', tiles: ['w0000', 'w0001', 'w0002'], patches: [], rises: high }, decor }), high };
+    return { ...finish(f, { id: `hills_${scale}x`, name: `Hills (${scale}×)`, ground: { base: '#71904e', patches: [], rises: high }, decor }), high };
   }
 
   function finish(f, parts) {
@@ -224,7 +224,7 @@
       id: `assault_${n}${gateOpen ? '_open' : ''}${defend ? '_defend' : ''}`,
       name: 'The walls',
       tileset: '16x16',
-      ground: { base: '#71904e', tiles: ['w0000', 'w0001', 'w0002'], patches: [], stone, rises: high },
+      ground: { base: '#71904e', patches: [], stone, rises: high },
       decor: [],
       width: W,
       height: H,
