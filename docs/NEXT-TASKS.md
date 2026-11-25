@@ -3595,6 +3595,10 @@ The owner played the graphics demo (`docs/GRAPHICS-DEMO.md`, commit e5bae98) and
 - The battle browser specs pass unchanged: controls, orders, the minimap, the overview, zoom, Prepare.
 - Screenshots of a 40 and a 100 battle, the assault and the lists at 812×375 and on desktop.
 - The benchmark against the budget.
+- **The 200 test, after the big-battle optimisation** (owner, 2026-11-25): once baking and simplification are in, a battle of 100 a side, all on the field at once. It is measured at zoom 1× and zoomed out, at full speed and with the CPU slowed 4×, on the desktop bench and the phone profile. The new art is compared with the old renderer on the same battle, and the result recorded in the Done paragraph. If it misses the budget, the task is not done.
+  - The demo's numbers before any optimisation (2026-11-25, headless desktop Chromium): the new art drew 4.8 ms a frame at 1× and 8.1–8.5 ms zoomed out (27–38 and 20–27 fps), against the old renderer's 1.2–1.4 and 1.6 ms (48–60 fps).
+  - Slowed 4×: 25–35 ms (5–7 fps) against 6–10 ms (18–24 fps).
+  - The 1× canvas didn't help: the cost is in building the shapes.
 - No sprite image requested in a battle (network log).
 
 **Version.** 4.11.0.
