@@ -317,7 +317,7 @@ Every Phase 9 task is **Specified** (2026-11-22; NEXT-TASKS has each in full). T
 | **P10-01** | ✅ **Done in 4.1.0.** **Map speed and the Wait screen:** Normal (1 game hour a second, the new default) and Fast (4, today's), a HUD button and a setting, and a hint; a Wait screen of days and hours that fades out and back, runs the world on, and stops for an encounter | M | P9-T |
 | **P10-02** | ✅ **Done in 4.2.0.** **One world:** the Sundered Coast joins the map as a region; the world chooser and the second official world go; older saves refused | M–L | P10-01 |
 | **P10-03** | ✅ **Done in 4.3.0.** **Walkable towns:** every capital and free city, each with its own layout and people | L | P10-02 |
-| **P10-04** | **Choose your kingdom, and the main story from anywhere:** a start town per realm; the story's people and places by role; Q1 becomes the common quest | L | P10-03 |
+| **P10-04** | ✅ **Done in 4.4.0.** **Choose your kingdom, and the main story from anywhere:** a start town per realm; the story's people and places by role; Q1 becomes the common quest | L | P10-03 |
 | **P10-05** | **Origins, the frame and the first three:** the unhorsed traveller, the impoverished noble, the farmhand; every origin ends in about the same state, with one small edge | L | P10-04 |
 | **P10-06** | **Origins, the scout and the peddler,** and the balance check over all five | M | P10-05 |
 | **P10-07** | **Onboarding and hints:** a guide for the main beginner steps with any origin, hints for the rest, one setting to turn them off, How to Play by stage | M | P10-06 |
@@ -393,7 +393,7 @@ The slow suite takes about 28 minutes, nearly all of it the 60-campaign story ch
 
 | Slow file | Exercises | Run it when a task changes |
 |---|---|---|
-| `gate-d-campaigns` (≈27 min) | Every quest and ending from a fresh start (60 seeds), and the sandbox after the ending | The story, quests, dialogue, the story forts or their villages, anything that can move Greywall or Ashgate, or travel inside the March |
+| `gate-d-campaigns` | Every quest and ending from a fresh start (P10-04: 7 campaigns in each of the six kingdoms, 42), and the sandbox after the ending | The story, quests, dialogue, the story's cast, its forts or their villages, anything that can move a story fort, or travel between the story's places |
 | `battle-parity`, `battle-extras` | Fought against simulated odds; formations, high ground, the wagon | Combat, units, auto-resolve, reinforcements, battle maps (P8-06b's assault) |
 | `campaign-bots` | No stalls over eight seeds; a short Prototype G | The campaign loop: money, wages, recruiting, contracts, encounters, the bots' styles |
 | `world-sim` | 80 parties over 90 days, save size, long rests | World parties, their counts and budgets (P8-01's lords), anything new in the save that grows with time |

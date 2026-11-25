@@ -138,7 +138,7 @@ if (probe.business && probe.retinue && probe.realm?.setOwner) {
       s.quests.q3 = { status: 'active', stage: 'q3_road', notes: [], startedDay: 0, stageDay: 0 };
       s.flags.q3_side = 'aurelian';
       CL.story.apply([{ complete: 'q3' }, { start: 'q4' }], c, { quest: 'q3' });
-      say(CL, 'aurelian_agent', /stand with the Remnant/);
+      say(CL, 'rival_agent', /stand with the Remnant/);
       const host = c.parties.find((p) => p.questTag === 'q4_host');
       must(host, 'the Q4 host');
       CL.parties.open(host.id);
@@ -146,7 +146,7 @@ if (probe.business && probe.retinue && probe.realm?.setOwner) {
       CL.debugTools.endBattleNow(true);
       CL.world.returnToMap();
       go(CL, 'greywall_fort');
-      say(CL, 'greywall_parley', /passes to the Remnant/);
+      say(CL, 'story_parley', /passes to the Remnant/);
       must(CL.realm.owner('greywall_fort', c) === 'aurelian', 'Greywall passed to Aurelia');
       must(CL.story.state(c).flags.ending === 'aurelian', 'the Aurelian ending');
       CL.world.returnToMap?.();

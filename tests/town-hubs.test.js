@@ -162,3 +162,22 @@ test('in every town: arrive at the gate, tap the innkeeper, talk, and walk back 
     assert.equal(CL.campaign.world.location, null);
   }
 });
+
+test('P10-04: every realm’s start town has spots for the story’s people: reachable, clear of the controls and of each other', () => {
+  const { CL } = loadGame();
+  const CORNERS = [{ x0: 0, x1: 200, y0: 380, y1: 540 }, { x0: 630, x1: 960, y0: 380, y1: 540 }, { x0: 0, x1: 960, y0: 0, y1: 95 }];
+  const under = (x, y) => CORNERS.some((k) => x >= k.x0 && x <= k.x1 && y >= k.y0 && y <= k.y1);
+  for (const realm of CL.story.startRealms()) {
+    const sid = CL.story.startOf(realm).id;
+    const hub = CL.town.hubFor(sid);
+    assert.ok((hub.spots || []).length >= 2, `${sid}: room for your envoy and Mara, or the rival's envoy and caravan master`);
+    const cells = reach(CL, hub);
+    const others = hub.npcs.flatMap((n) => [[n.x, n.y], ...(n.pace ? [n.pace] : [])]);
+    for (const p of hub.spots) {
+      assert.ok(cells.some(([cx, cy]) => Math.hypot(cx - p.x, cy - p.y) <= CL.town.TALK_RANGE - 6), `${sid}: spot ${p.x},${p.y} out of reach`);
+      assert.equal(CL.units.blocked(p.x, p.y), false, `${sid}: spot ${p.x},${p.y} in a wall`);
+      assert.equal(under(p.x, p.y - 16), false, `${sid}: spot ${p.x},${p.y} under a control`);
+      for (const [x, y] of [...others, ...hub.spots.filter((q) => q !== p).map((q) => [q.x, q.y])]) assert.ok(Math.hypot(x - p.x, y - p.y) >= 40, `${sid}: spot ${p.x},${p.y} on top of someone`);
+    }
+  }
+});

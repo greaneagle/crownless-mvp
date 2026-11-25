@@ -3354,7 +3354,7 @@ Moved here from P9-T (owner, 2026-11-24). It runs when the owner asks for the ni
 - **Checks:** 883 fast pass; lint clean but the 2 old warnings; typecheck clean. Browser full suite 244 passed, 9 skipped, 1 failed: `lords` Hold (phone), which fails about 1 run in 8 on 4.2.0 as well.
 - **Played** at 812×375: Hrothgard (tapped the alewife, her inn menu), Harrowgate (tapped the steward, talked, left through the wall's gate), Vessara; looked over Eastwatch, Merrow, Gullhaven and Calder. The preview's storage backed up and restored.
 
-### P10-04 · Choose your kingdom, and the main story from anywhere (L)
+### P10-04 · Choose your kingdom, and the main story from anywhere (L) — ✅ Done in 4.4.0
 
 **Problem.** Every game starts at Stonebridge, and the main story (Q1–Q4) is tied to Stonebridge, Eastwatch, Highmere, Oakford and Greywall Fort, between Valedorn and the Aurelians.
 
@@ -3370,6 +3370,16 @@ Moved here from P9-T (owner, 2026-11-24). It runs when the owner asks for the ni
 **Explain.** "Getting started": choosing a kingdom; the story from anywhere.
 
 **Version.** 4.4.0.
+
+**Done (4.4.0).**
+- **Choose your kingdom:** six realms on the new-game screen (no free city), each with its `start` town in `data/factions.js`; you begin there, and `c.startRealm` is saved. Valedorn is the default.
+- **The cast** (`CL.story.castFor`, kept in `c.story.cast`): the rival is the realm whose town is nearest yours; each side's fort nearest the other's land; your village nearest home (the wagon), another near the fort (the border errand), the village nearest the rival's town (the fence), the lair nearest home. People: your town's elder and recruiter by role, each realm's envoy and caravan master (twelve new, in `story`). Valedorn casts the March exactly.
+- **The story by role:** `'@role'` in places, realms, conditions and bands; `{cast:role.field}` in text (names, banners, colours, the compass); a band of a realm's `column` or `host`. Every line of Q1–Q4, their dialogue, the errands of the March and the story's news. Begun in Valedorn the words are as before, bar a few joins.
+- **The locks move:** the two cast forts are locked and the two realms held in tension until an ending (Ostrand and Saltreach begin at war, so cast they begin in tension). The story's gentler land is the regions of its places.
+- **The common quest:** Q1 begins with a new game; its end notes where the story goes on and that it can be left. Origins (P10-05) will lead into it.
+- **In the streets:** the elder and recruiter speak the story; the envoys, the caravan master and Mara stand at each capital's `spots`.
+- **Tests:** `tests/cast.test.js` (every realm's cast, no text left uncast, a new game in Ostrand, the streets of Hrothgard, Q1 from Saltreach, Vessaro's columns, hosts and parley); spots in `town-hubs.test.js`; a browser case choosing Ostrand. `npm run simulate:story -- 6 --every` reached an ending from all six. `gate-d-campaigns` now 7 a realm (42): in `docs/PENDING-CHECKS.md` for the next run (the owner).
+- **Checks:** 895 fast pass; lint clean but the 2 old warnings; typecheck clean. Browser 247 passed, 9 skipped. **Played** at 812×375: a game in Hrothmark (the kingdom cards, Gudrun's work, the thane, the journal) and one in Valedorn (Stonebridge as before). The cards were cramped and "the Clans’s" read badly: fixed.
 
 ### P10-05 · Origins: the frame and the first three (L)
 

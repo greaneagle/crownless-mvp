@@ -183,7 +183,7 @@
         return `${e.name} retired from the company with honour.`;
       case 'quest': {
         const q = CL.content.table('quests')[e.quest];
-        return `${e.status === 'done' ? 'Completed' : 'Failed'}: ${q?.title || e.quest}.`;
+        return `${e.status === 'done' ? 'Completed' : 'Failed'}: ${q ? CL.story.format(q.title) : e.quest}.`;
       }
       case 'tourney':
         return CL.tourney.chronicleText(e);

@@ -58,8 +58,8 @@
     // W-05c: the party has left the story's home land, for a named region of the world that isn't
     // `home` (data/world_map.js regions).
     awayFromHome: (c) => {
-      const r = CL.world.regionAt(c.world.x, c.world.y);
-      return Boolean(r) && !CL.world.map().regions[r.id].home;
+      const r = CL.world.regionAt(c.world.x, c.world.y, c);
+      return Boolean(r) && !r.home;
     },
     // P8-04: at a kingdom's capital, where Service and fealty are offered.
     atCapital: (c) => {

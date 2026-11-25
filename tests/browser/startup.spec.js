@@ -68,3 +68,23 @@ test('P10-02: one world: a new game asks no world, and the coast is on the map',
   expect(await game(page, (CL) => CL.worlds.installed().map((w) => w.id))).toEqual(['sundered_realm']);
   expect(await game(page, (CL) => ['gullhaven', 'harrowgate', 'calder'].map((id) => CL.content.get('settlements', id)?.name))).toEqual(['Gullhaven', 'Harrowgate', 'Calder']);
 });
+
+test('P10-04: choose your kingdom: six realms on the new-game screen; Ostrand begins in Harrowgate, its story cast from there', async ({ page }) => {
+  await open(page);
+  await press(page, '#primaryBtn');
+  await waitMode(page, 'create');
+  const realms = page.locator('#realmChoices button');
+  await expect(realms).toHaveCount(6);
+  await expect(realms.nth(0)).toHaveAttribute('aria-checked', 'true'); // Valedorn, as before
+  await press(page, realms.nth(4));
+  await expect(realms.nth(4)).toHaveAttribute('aria-checked', 'true');
+  await expect(realms.nth(4)).toContainText('from Harrowgate');
+  await expect(page.locator('#realmNote')).toContainText('Kingdom of Ostrand');
+  await press(page, '#primaryBtn'); // Begin
+  await waitMode(page, 'settlement');
+  await expect(page.locator('#overlayTitle')).toHaveText('HARROWGATE');
+  const s = await game(page, (CL) => ({ realm: CL.campaign.startRealm, at: CL.campaign.world.location, quest: CL.story.currentQuest()?.objective }));
+  expect(s).toEqual({ realm: 'ostrand', at: 'harrowgate', quest: 'Find work: talk to Steward Liv in Harrowgate.' });
+  await expect(page.locator('#peopleHere')).toContainText('Talk to Steward Liv');
+  await expect(page.locator('#peopleHere')).toContainText('Talk to Marshal Hakon');
+});

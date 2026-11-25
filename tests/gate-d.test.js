@@ -40,7 +40,7 @@ test('Gate D scope: the region, troops, maps, quests, contracts, companion, repu
     ['mara'],
   );
   for (const k of ['valedorn', 'aurelian']) assert.ok(k in CL.campaign.reputation, k);
-  assert.deepEqual(Object.keys(CL.content.get('quests', 'q4').endings).sort(), ['aurelian', 'compromise', 'valedorn']);
+  assert.deepEqual(Object.keys(CL.content.get('quests', 'q4').endings).sort(), ['compromise', 'crown', 'rival']);
   assert.ok(t('items').length >= 25, 'about 30 items including gear, horses and goods');
   assert.deepEqual(Array.from(CL.content.validate()), [], 'all content references check out');
 });

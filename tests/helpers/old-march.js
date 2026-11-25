@@ -84,7 +84,7 @@ function oldMarch(content) {
   }
   C.party_templates = templates;
   // People and errands of the lands beyond the March (W-05c) go with them.
-  C.dialogue = Object.fromEntries(Object.entries(C.dialogue).filter(([, t]) => !t.place || settlements[t.place]));
+  C.dialogue = Object.fromEntries(Object.entries(C.dialogue).filter(([, t]) => !t.place || t.place[0] === '@' || settlements[t.place])); // '@role': the story's cast (P10-04)
   C.quests = Object.fromEntries(Object.entries(C.quests).filter(([, q]) => C.dialogue[q.giver]));
   C.companions = Object.fromEntries(Object.entries(C.companions).filter(([, m]) => !m.home || settlements[m.home])); // P7-06: the wider world's companions
   return C;

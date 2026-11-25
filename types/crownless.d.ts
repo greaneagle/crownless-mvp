@@ -136,6 +136,8 @@ declare global {
     flags: Record<string, boolean | string | number>;
     quests: Record<ContentId, QuestRecord>;
     visits: Record<string, number>;
+    /** The story's cast, role → realm, settlement or site id (P10-04), or null. */
+    cast: Record<string, string | null> | null;
   }
 
   interface CompanionState {
@@ -180,6 +182,8 @@ declare global {
     /** Battle IDs at or below this one are already applied (exactly once). */
     lastResolvedBattle: number;
     world: WorldState;
+    /** The kingdom the game began in (P10-04). */
+    startRealm: string | null;
     character: Character | null;
     equipment: Equipment;
     food: number;

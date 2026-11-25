@@ -13,48 +13,52 @@
   root.CROWNLESS_CONTENT = root.CROWNLESS_CONTENT || {};
   var C = root.CROWNLESS_CONTENT;
   C.dialogue = {
-    stonebridge_elder: {
-      id: 'stonebridge_elder',
-      speaker: 'Elder Maren',
+    // P10-04: the main story's people are cast from the kingdom you began in (js/story.js; {cast:role}
+    // in text, '@role' in places, realms and conditions). `cast: 'elder' | 'recruiter'` is spoken by
+    // that person of your start town's streets; begun in Valedorn, the cast is the Border March's.
+    story_elder: {
+      id: 'story_elder',
+      speaker: '{cast:elder}',
+      cast: 'elder',
       start: [{ if: { quest: 'q1', stage: 'q1_report' }, node: 'q1_report' }, { if: { quest: 'q4', stage: 'q4_declare' }, node: 'q4_road' }, { if: { not: { flag: 'met_elder' } }, node: 'first' }, 'again'],
       nodes: {
         first: {
           text: [
-            'Welcome to Stonebridge, {name}. Strangers are rarer than reavers these days.',
+            'Welcome to {cast:home}, {name}. Strangers are rarer than reavers these days.',
             { if: { background: 'farmhand' }, text: 'You have a farmer’s hands. Good — we need people who know what a harvest costs.' },
             { if: { background: 'scout' }, text: 'You walk like someone who reads the ground. The roads could use eyes like yours.' },
             { if: { background: 'peddler' }, text: 'A peddler, by the look of that pack. Trade has been thin since the caravans started vanishing.' }
           ],
           options: [
             { text: 'Is there work for me?', do: [{ set: 'met_elder' }], next: 'q1_work' },
-            { text: 'What troubles Stonebridge?', do: [{ set: 'met_elder' }], next: 'troubles' },
+            { text: 'What troubles {cast:home}?', do: [{ set: 'met_elder' }], next: 'troubles' },
             { text: 'Only passing through.', do: [{ set: 'met_elder' }] }
           ]
         },
         again: {
           cycle: true,
           text: [
-            'Stonebridge has stood at this ford since before the empire. It will stand after.',
+            '{Cast:home} has stood here since before the empire. It will stand after.',
             { if: { renown: 20 }, text: 'People in the square speak of your band, {name}. Kindly, mostly.' },
-            { if: { standing: 'valedorn', is: 'hostile' }, text: 'The Crown’s riders were asking after you. I told them nothing — but be careful here.' },
-            { if: { standing: 'valedorn', is: 'friendly' }, text: 'The Crown’s captains speak well of you. That opens doors in this town.' },
+            { if: { standing: '@crown', is: 'hostile' }, text: '{Cast:crown.banner}’s riders were asking after you. I told them nothing — but be careful here.' },
+            { if: { standing: '@crown', is: 'friendly' }, text: '{Cast:crown.banner}’s captains speak well of you. That opens doors in this town.' },
             { if: { flag: 'ending', is: 'compromise' }, text: 'The Warden of the Road! Sit, sit — the children want to hear about the parley again.' },
-            { if: { flag: 'ending', is: 'valedorn' }, text: 'Greywall stays blue, and Stonebridge breathes easier. You did that.' },
-            { if: { flag: 'ending', is: 'aurelian' }, text: 'Red over Greywall. Strange days. But the war is over, and that is something.' }
+            { if: { flag: 'ending', is: 'crown' }, text: '{Cast:fort.place} stays {cast:crown.colour}, and {cast:home} breathes easier. You did that.' },
+            { if: { flag: 'ending', is: 'rival' }, text: '{Cast:rival.colour} over {cast:fort.place}. Strange days. But the war is over, and that is something.' }
           ],
           options: [
             { text: 'Is there work for me?', if: { quest: 'q1', is: 'unstarted' }, next: 'q1_work' },
             { text: 'About that work…', if: { quest: 'q1', stage: 'q1_choose_work' }, next: 'q1_work' },
             { text: 'About that work…', if: { any: [{ quest: 'q1', stage: 'q1_wagon_go' }, { quest: 'q1', stage: 'q1_wagon_back' }, { quest: 'q1', stage: 'q1_bandits' }, { quest: 'q1', stage: 'q1_recruits' }, { quest: 'q1', stage: 'q1_drill' }] }, next: 'q1_progress' },
-            { text: 'What troubles Stonebridge?', next: 'troubles' },
-            { text: 'Who holds Greywall now?', if: { flag: 'asked_troubles' }, next: 'greywall' },
+            { text: 'What troubles {cast:home}?', next: 'troubles' },
+            { text: 'Who holds {cast:fort.place} now?', if: { flag: 'asked_troubles' }, next: 'greywall' },
             { text: 'One of my soldiers was born here: {veteran}.', if: [{ veteran: 3 }, { quest: 'sq_homecoming', is: 'unstarted' }], next: 'sq_home_offer' },
             { text: 'The grain for the feast is bought.', if: { quest: 'sq_homecoming', stage: 'sq_home_report' }, next: 'sq_home_feast' }
           ]
         },
         sq_home_offer: {
           services: false,
-          text: ['{veteran}! I knew the family. Off to the wars with nothing but a borrowed spear, and back with a name. Stonebridge will feast them properly — if you can find the grain. The granary is bare this season.'],
+          text: ['{veteran}! I knew the family. Off to the wars with nothing but a borrowed spear, and back with a name. {Cast:home} will feast them properly — if you can find the grain. The granary is bare this season.'],
           options: [
             { text: 'I’ll buy the grain.', do: [{ start: 'sq_homecoming' }], quest: 'sq_homecoming' },
             { text: 'Another time.' }
@@ -62,31 +66,31 @@
         },
         sq_home_feast: {
           services: false,
-          text: ['The whole town turns out. {veteran} is seated at the head of the table, red to the ears, while the children ask for the story of every scar. You will hear about this feast in every tavern on the march.'],
+          text: ['The whole town turns out. {veteran} is seated at the head of the table, red to the ears, while the children ask for the story of every scar. You will hear about this feast in every tavern in the land.'],
           options: [{ text: 'To {veteran}!', do: [{ honourVeteran: 30 }, { complete: 'sq_homecoming' }] }]
         },
         q1_work: {
           services: false,
           text: [
             'Three jobs want doing, and I can pay for one. Fifty crowns, and the town’s thanks.',
-            'A grain wagon waits at Oakford and needs bringing home. Reavers out of the Looter Camp are raiding the roads and need breaking. And Sergeant Brun at the Muster Hall cannot fill his ranks.',
+            'A grain wagon waits at {cast:village} and needs bringing home. Reavers out of the {cast:camp} are raiding the roads and need breaking. And {cast:recruiter}, our recruiter, cannot fill the ranks.',
             { if: { background: 'farmhand' }, text: 'The wagon would suit you — you know what that grain is worth.' },
             { if: { background: 'scout' }, text: 'You could find the Reavers before they find you.' },
-            { if: { background: 'peddler' }, text: 'Brun pays a fair word for every recruit; a peddler knows how to strike a bargain.' }
+            { if: { background: 'peddler' }, text: '{Cast:recruiter.short} pays a fair word for every recruit; a peddler knows how to strike a bargain.' }
           ],
           options: [
-            { text: 'I’ll bring the grain wagon from Oakford.', do: [{ start: 'q1' }, { set: 'q1_path', to: 'wagon' }, { stage: 'q1_wagon_go', quest: 'q1' }], next: 'q1_taken' },
+            { text: 'I’ll bring the grain wagon from {cast:village}.', do: [{ start: 'q1' }, { set: 'q1_path', to: 'wagon' }, { stage: 'q1_wagon_go', quest: 'q1' }], next: 'q1_taken' },
             { text: 'I’ll deal with the Reavers.', do: [{ start: 'q1' }, { set: 'q1_path', to: 'bandits' }, { stage: 'q1_bandits', quest: 'q1' }], next: 'q1_taken' },
-            { text: 'I’ll help Sergeant Brun.', do: [{ start: 'q1' }, { set: 'q1_path', to: 'recruits' }, { stage: 'q1_recruits', quest: 'q1' }], next: 'q1_taken' },
+            { text: 'I’ll help {cast:recruiter}.', do: [{ start: 'q1' }, { set: 'q1_path', to: 'recruits' }, { stage: 'q1_recruits', quest: 'q1' }], next: 'q1_taken' },
             { text: 'Let me think on it.', do: [{ start: 'q1' }] }
           ]
         },
         q1_taken: {
           services: false,
           text: [
-            { if: { flag: 'q1_path', is: 'wagon' }, text: 'Good. Oakford lies south-west along the road. Bring the wagon back whole, and yourself with it.' },
-            { if: { flag: 'q1_path', is: 'bandits' }, text: 'Good. Break any band of them you find on the roads, or clear their camp north-west of town. Mind your numbers.' },
-            { if: { flag: 'q1_path', is: 'recruits' }, text: 'Good. Brun is at the Muster Hall. Hire three soldiers and show him they can fight.' },
+            { if: { flag: 'q1_path', is: 'wagon' }, text: 'Good. {Cast:village} lies {cast:village.dir} along the road. Bring the wagon back whole, and yourself with it.' },
+            { if: { flag: 'q1_path', is: 'bandits' }, text: 'Good. Break any band of them you find on the roads, or clear their camp {cast:camp.dir} of town. Mind your numbers.' },
+            { if: { flag: 'q1_path', is: 'recruits' }, text: 'Good. {Cast:recruiter.short} is in the town. Hire three soldiers and show them they can fight.' },
             'Your journal will keep the details. Come back when it is done.'
           ],
           options: [{ text: 'I’ll see it done.' }]
@@ -94,7 +98,7 @@
         q1_progress: {
           services: false,
           cycle: true,
-          text: ['The work is not finished yet, {name}. Check your journal.', 'Stonebridge is counting on you. No hurry — but do not forget us.'],
+          text: ['The work is not finished yet, {name}. Check your journal.', '{Cast:home} is counting on you. No hurry — but do not forget us.'],
           options: [{ text: 'On my way.' }]
         },
         q1_report: {
@@ -103,17 +107,17 @@
             { if: { flag: 'q1_wagon_safe' }, text: 'The grain is in, and the drivers say you broke the ambush yourself.' },
             { if: { flag: 'q1_wagon_slipped' }, text: 'The grain is in, and not a sack lost. The drivers say you slipped past the Reavers like a fox.' },
             { if: { flag: 'q1_path', is: 'bandits' }, text: 'The Reavers will think twice before raiding our road again.' },
-            { if: { flag: 'q1_path', is: 'recruits' }, text: 'Brun tells me your recruits held their line. He has not smiled like that in years.' },
+            { if: { flag: 'q1_path', is: 'recruits' }, text: '{Cast:recruiter.short} tells me your recruits held their line. Our recruiter has not smiled like that in years.' },
             'You have earned your wage. But there is something else — something that came back with you.'
           ],
-          options: [{ text: 'What is it?', do: [{ give: 'charter_fragment' }, { set: 'knows_charter' }, { complete: 'q1' }], next: 'q1_charter' }]
+          options: [{ text: 'What is it?', do: [{ give: 'charter_fragment' }, { set: 'knows_charter' }, { note: 'The story goes on with {cast:caravan} in {cast:rival_town}, if you want it. Or leave it: the world goes on without it.', quest: 'q1' }, { complete: 'q1' }], next: 'q1_charter' }]
         },
         q4_road: {
           services: false,
           text: [
-            'Both armies are marching on Greywall, {name}, and Stonebridge sits between them. Whoever wins, we bury our sons.',
+            'Both armies are marching on {cast:fort.place}, {name}, and {cast:home} sits between them. Whoever wins, we bury our sons.',
             'There are hard men on both sides who want this war, and they have hired blades to start it. Break those blades, and the envoys will have to talk instead.',
-            { if: [{ has: 'courier_packet' }, { flag: 'has_evidence' }], text: 'And you still carry Oswin’s packet. Two charters, both sealed — lay that on the parley table and neither crown can claim the law is theirs alone.' },
+            { if: [{ has: 'courier_packet' }, { flag: 'has_evidence' }], text: 'And you still carry {cast:caravan.short}’s packet. Two charters, both sealed — lay that on the parley table and neither crown can claim the law is theirs alone.' },
             { if: { not: [{ has: 'courier_packet' }, { flag: 'has_evidence' }] }, text: 'Without proof that neither claim is clean, though, they may only listen to the winner of the field.' }
           ],
           options: [
@@ -123,15 +127,15 @@
         },
         q4_road_sworn: {
           services: false,
-          text: ['Then the road thanks you. Ride for Greywall — and come home.'],
+          text: ['Then the road thanks you. Ride for {cast:fort.place} — and come home.'],
           options: [{ text: 'I will.' }]
         },
         q1_charter: {
           services: false,
           text: [
-            'A scrap of parchment with the old imperial seal. Part of a charter — the charter, perhaps, that both crowns say gives them Greywall.',
+            'A scrap of parchment with the old imperial seal. Part of a charter — the charter, perhaps, that both crowns say gives them {cast:fort.place}.',
             'Why would Reavers carry such a thing? Someone is paying them to move it, or to lose it.',
-            'Keep it safe, {name}. A caravan master in Eastwatch lost a sealed packet on the road last month. He may know more.'
+            'Keep it safe, {name}. A caravan master in {cast:rival_town} lost a sealed packet on the road last month. {Cast:caravan.short} may know more.'
           ],
           options: [{ text: 'I’ll keep it safe.' }]
         },
@@ -139,45 +143,46 @@
           services: false,
           text: [
             'Reavers on the roads, and nobody agrees whose job it is to stop them.',
-            'The Crown says Greywall Fort is theirs by right; the Aurelians say an imperial charter gives it to them.',
+            '{Cast:crown.banner} says {cast:fort} is theirs by right; {cast:rival.banner} says an imperial charter gives it to them.',
             'While the lords argue, the wagons burn.'
           ],
           options: [
-            { text: 'Tell me about Greywall.', do: [{ set: 'asked_troubles' }], next: 'greywall' },
+            { text: 'Tell me about {cast:fort.place}.', do: [{ set: 'asked_troubles' }], next: 'greywall' },
             { text: 'I will keep my eyes open.', do: [{ set: 'asked_troubles' }] }
           ]
         },
         greywall: {
           services: false,
           text: [
-            { if: { owner: 'greywall_fort', is: 'valedorn' }, text: 'Greywall flies the Crown’s blue, as it has for thirty years.' },
-            { if: { owner: 'greywall_fort', is: 'aurelian' }, text: 'Greywall flies the Aurelian red now. I never thought I would see it.' },
+            { if: { owner: '@fort', is: '@crown' }, text: '{Cast:fort.place} flies {cast:crown.banner}’s {cast:crown.colour}, as it has for thirty years.' },
+            { if: { owner: '@fort', is: '@rival' }, text: '{Cast:fort.place} flies the {cast:rival} {cast:rival.colour} now. I never thought I would see it.' },
             'They say an old imperial charter would settle who should hold it — if anyone could find the thing.',
             { if: { flag: 'heard_charter' }, text: 'You have asked me that before. My answer has not changed.' }
           ],
-          options: [{ text: 'Thank you, Elder.', do: [{ set: 'heard_charter' }] }]
+          options: [{ text: 'Thank you.', do: [{ set: 'heard_charter' }] }]
         }
       }
     },
-    sergeant_brun: {
-      id: 'sergeant_brun',
-      speaker: 'Sergeant Brun',
+    story_recruiter: {
+      id: 'story_recruiter',
+      speaker: '{cast:recruiter}',
+      cast: 'recruiter',
       start: [{ if: [{ quest: 'q1', stage: 'q1_recruits' }, { not: { flag: 'q1_brun_advance' } }], node: 'q1' }, 'talk'],
       nodes: {
         q1: {
           services: false,
           text: [
-            'So Maren sent you. Good. I need three strong backs before the Reavers grow bolder.',
+            'So {cast:elder.short} sent you. Good. I need three strong backs before the Reavers grow bolder.',
             'Hire them here. I’ll put fifteen crowns toward the first, and you can drill them on the road.'
           ],
-          options: [{ text: 'Thank you, Sergeant.', do: [{ gold: 15 }, { set: 'q1_brun_advance' }], next: 'talk' }]
+          options: [{ text: 'Thank you.', do: [{ gold: 15 }, { set: 'q1_brun_advance' }], next: 'talk' }]
         },
         talk: {
           cycle: true,
           text: [
             'Strong backs and steady hands wanted. Coin up front.',
             'A levy with a full belly fights twice as hard.',
-            { if: { quest: 'q1', stage: 'q1_recruits' }, text: 'Three, Maren said. You have hired {flag:q1_hired} so far.' },
+            { if: { quest: 'q1', stage: 'q1_recruits' }, text: 'Three, {cast:elder.short} said. You have hired {flag:q1_hired} so far.' },
             { if: { quest: 'q1', stage: 'q1_drill' }, text: 'Now take them out and win a fight. Nothing teaches like the first one.' }
           ],
           options: [
@@ -197,11 +202,11 @@
         sq_larders_done: {
           services: false,
           text: ['Full larders and the wages in the chest. Now that is a company. Here — for your trouble.'],
-          options: [{ text: 'Thank you, Sergeant.', do: [{ complete: 'sq_larders' }] }]
+          options: [{ text: 'Thank you.', do: [{ complete: 'sq_larders' }] }]
         },
         sq_planned_offer: {
           services: false,
-          text: ['A band of Reavers has dug in near Oakford: shields locked, sell-swords in the middle. Charge them and you lose good soldiers. Fight them yourself, and before you do, pick a setup on the Prepare screen. Defensive lets them come to your line.'],
+          text: ['A band of Reavers has dug in near {cast:village}: shields locked, sell-swords in the middle. Charge them and you lose good soldiers. Fight them yourself, and before you do, pick a setup on the Prepare screen. Defensive lets them come to your line.'],
           options: [
             { text: 'I’ll take them on to a plan.', do: [{ start: 'sq_planned' }] },
             { text: 'Not now.' }
@@ -209,27 +214,27 @@
         }
       }
     },
-    // GDD §4 Q4: "a short negotiation scene" at Greywall after the deciding battle.
-    greywall_parley: {
-      id: 'greywall_parley',
-      speaker: 'The Parley at Greywall',
-      place: 'greywall_fort',
+    // GDD §4 Q4: "a short negotiation scene" at the contested fort after the deciding battle.
+    story_parley: {
+      id: 'story_parley',
+      speaker: 'The Parley at {cast:fort.place}',
+      place: '@fort',
       visible: { quest: 'q4', stage: 'q4_terms' },
       start: 'terms',
       nodes: {
         terms: {
           services: false,
           text: [
-            'In a tent below Greywall’s walls, Captain Aldric and Magistrate Vell sit across a trestle table. Both look at you.',
-            { if: { flag: 'q4_side', is: 'valedorn' }, text: 'Aldric smiles; Vell does not. The field was the Crown’s, and everyone in the tent knows who won it.' },
-            { if: { flag: 'q4_side', is: 'aurelian' }, text: 'Vell inclines her head; Aldric stares at the table. The field was the Remnant’s, and everyone in the tent knows who won it.' },
+            'In a tent below {cast:fort.place}’s walls, {cast:crown_agent} and {cast:rival_agent} sit across a trestle table. Both look at you.',
+            { if: { flag: 'q4_side', is: 'crown' }, text: '{Cast:crown_agent.short} smiles; {cast:rival_agent.short} does not. The field was {cast:crown.banner}’s, and everyone in the tent knows who won it.' },
+            { if: { flag: 'q4_side', is: 'rival' }, text: '{Cast:rival_agent.short} inclines {cast:rival_agent.his} head; {cast:crown_agent.short} stares at the table. The field was {cast:rival.banner}’s, and everyone in the tent knows who won it.' },
             { if: { flag: 'q4_side', is: 'road' }, text: 'Neither army fired a shot. They are here because you made them talk — and they are waiting to see what you will say.' },
             { if: [{ flag: 'q4_side', is: 'road' }, { not: [{ has: 'courier_packet' }, { flag: 'has_evidence' }] }], text: 'Without proof, neither will yield the law to the other. One of them must have the fort.' }
           ],
           options: [
-            { text: 'Greywall stays with the Crown.', if: { any: [{ flag: 'q4_side', is: 'valedorn' }, [{ flag: 'q4_side', is: 'road' }, { not: [{ has: 'courier_packet' }, { flag: 'has_evidence' }] }]] }, do: [{ owner: 'greywall_fort', to: 'valedorn' }, { rep: 'valedorn', by: 25 }, { rep: 'aurelian', by: -25, if: { flag: 'q4_side', is: 'valedorn' } }, { complete: 'q4' }, { ending: 'valedorn', quest: 'q4' }] },
-            { text: 'Greywall passes to the Remnant.', if: { any: [{ flag: 'q4_side', is: 'aurelian' }, [{ flag: 'q4_side', is: 'road' }, { not: [{ has: 'courier_packet' }, { flag: 'has_evidence' }] }]] }, do: [{ owner: 'greywall_fort', to: 'aurelian' }, { rep: 'aurelian', by: 25 }, { rep: 'valedorn', by: -25, if: { flag: 'q4_side', is: 'aurelian' } }, { complete: 'q4' }, { ending: 'aurelian', quest: 'q4' }] },
-            { text: 'Lay both charters on the table: neither claim is clean.', if: [{ flag: 'q4_side', is: 'road' }, { has: 'courier_packet' }, { flag: 'has_evidence' }], do: [{ take: 'courier_packet' }, { rep: 'valedorn', by: 25 }, { rep: 'aurelian', by: 25 }, { complete: 'q4' }, { ending: 'compromise', quest: 'q4' }] },
+            { text: '{Cast:fort.place} stays with {cast:crown.banner}.', if: { any: [{ flag: 'q4_side', is: 'crown' }, [{ flag: 'q4_side', is: 'road' }, { not: [{ has: 'courier_packet' }, { flag: 'has_evidence' }] }]] }, do: [{ owner: '@fort', to: '@crown' }, { rep: '@crown', by: 25 }, { rep: '@rival', by: -25, if: { flag: 'q4_side', is: 'crown' } }, { complete: 'q4' }, { ending: 'crown', quest: 'q4' }] },
+            { text: '{Cast:fort.place} passes to {cast:rival.banner}.', if: { any: [{ flag: 'q4_side', is: 'rival' }, [{ flag: 'q4_side', is: 'road' }, { not: [{ has: 'courier_packet' }, { flag: 'has_evidence' }] }]] }, do: [{ owner: '@fort', to: '@rival' }, { rep: '@rival', by: 25 }, { rep: '@crown', by: -25, if: { flag: 'q4_side', is: 'rival' } }, { complete: 'q4' }, { ending: 'rival', quest: 'q4' }] },
+            { text: 'Lay both charters on the table: neither claim is clean.', if: [{ flag: 'q4_side', is: 'road' }, { has: 'courier_packet' }, { flag: 'has_evidence' }], do: [{ take: 'courier_packet' }, { rep: '@crown', by: 25 }, { rep: '@rival', by: 25 }, { complete: 'q4' }, { ending: 'compromise', quest: 'q4' }] },
             { text: 'Not yet. I need a moment.' }
           ]
         }
@@ -237,8 +242,9 @@
     },
     caravan_master: {
       id: 'caravan_master',
-      speaker: 'Caravan Master Oswin',
-      place: 'eastwatch',
+      speaker: '{cast:caravan}',
+      cast: 'caravan',
+      place: '@rival_town',
       start: [
         { if: { quest: 'q2', stage: 'q2_choose' }, node: 'q2_read' },
         { if: { quest: 'q2', stage: 'q2_recover' }, node: 'q2_waiting' },
@@ -248,9 +254,9 @@
       nodes: {
         intro: {
           text: [
-            'Oswin, master of the Eastwatch caravans — what is left of them. Reavers hit my wagons on the river road and took a courier’s packet sealed with the old imperial eagle.',
+            '{Cast:caravan.short}, master of the {cast:rival_town} caravans — what is left of them. Reavers hit my wagons on the road and took a courier’s packet sealed with the old imperial eagle.',
             { if: { has: 'charter_fragment' }, text: 'Wait — that scrap you carry. The same eagle, the same wax. Where did you find that?' },
-            { if: { not: { has: 'charter_fragment' } }, text: 'Whoever sealed it wanted it to reach Greywall. Whoever took it wanted it not to.' },
+            { if: { not: { has: 'charter_fragment' } }, text: 'Whoever sealed it wanted it to reach {cast:fort.place}. Whoever took it wanted it not to.' },
             'Bring it back and I will pay eighty crowns, no questions.'
           ],
           options: [
@@ -262,14 +268,14 @@
         },
         q2_go: {
           text: [
-            'They are camped on the river road between here and Highmere, bold as you like.',
-            'Fight them if you have the swords. A big enough company might scare them off without a fight. Or there is a fence in Highmere who hears everything — for a price.'
+            'They are camped on the road between here and {cast:fence_town}, bold as you like.',
+            'Fight them if you have the swords. A big enough company might scare them off without a fight. Or there is a fence in {cast:fence_town} who hears everything — for a price.'
           ],
           options: [{ text: 'I’ll be back with it.' }]
         },
         q2_waiting: {
           cycle: true,
-          text: ['The river road, between here and Highmere. Fight them, cow them, or buy their secret from the fence in Highmere.', 'Every day that packet is out there, someone is reading it who should not.'],
+          text: ['The road between here and {cast:fence_town}. Fight them, cow them, or buy their secret from the fence in {cast:fence_town}.', 'Every day that packet is out there, someone is reading it who should not.'],
           options: [
             { text: 'On my way.' },
             { text: 'Could a company earn from its wagons?', if: { quest: 'sq_venture', is: 'unstarted' }, next: 'sq_venture_offer' },
@@ -279,9 +285,9 @@
         q2_read: {
           services: false,
           text: [
-            'You found it! Let me see — two charters? Both sealed with the eagle, both naming a different heir to Greywall. One for the Crown, one for the Aurelian line.',
+            'You found it! Let me see — two charters? Both sealed with the eagle, both naming a different heir to {cast:fort.place}. One for {cast:crown.banner}, one for {cast:rival.banner}.',
             'Someone forged one of these. Or both. Whoever holds this packet holds the argument.',
-            'Captain Aldric of the Crown is in Stonebridge. Magistrate Vell sits here in Eastwatch. Or keep it, and let neither of them have it.'
+            '{Cast:crown_agent} of {cast:crown.banner} is in {cast:home}. {Cast:rival_agent} sits here in {cast:rival_town}. Or keep it, and let neither of them have it.'
           ],
           options: [
             { text: 'I’ll keep it. Nobody gets to use this yet.', if: { has: 'courier_packet' }, do: [{ set: 'q2_choice', to: 'kept' }, { set: 'has_evidence' }, { complete: 'q2' }], next: 'kept' },
@@ -298,8 +304,8 @@
           text: [
             'The caravans run a little easier these days. Thank you for that.',
             { if: { flag: 'q2_choice', is: 'kept' }, text: 'Still carrying that packet? Good. Neither crown has stopped asking about it.' },
-            { if: { flag: 'q2_choice', is: 'valedorn' }, text: 'The Crown’s men walk taller since you gave them that packet. The magistrate does not smile at me any more.' },
-            { if: { flag: 'q2_choice', is: 'aurelian' }, text: 'The magistrate says the packet proves the Aurelian claim. Half of Eastwatch believes her.' }
+            { if: { flag: 'q2_choice', is: 'crown' }, text: '{Cast:crown.banner}’s men walk taller since you gave them that packet. {Cast:rival_agent.title} does not smile at me any more.' },
+            { if: { flag: 'q2_choice', is: 'rival' }, text: '{Cast:rival_agent.title} says the packet proves the {cast:rival} claim. Half of {cast:rival_town} believes {cast:rival_agent.him}.' }
           ],
           options: [
             { text: 'Could a company earn from its wagons?', if: { quest: 'sq_venture', is: 'unstarted' }, next: 'sq_venture_offer' },
@@ -321,28 +327,31 @@
         }
       }
     },
-    valedorn_agent: {
-      id: 'valedorn_agent',
-      speaker: 'Captain Aldric',
+    // Your realm's envoy, in your start town: it holds the contested fort, and asks you to keep it.
+    crown_agent: {
+      id: 'crown_agent',
+      speaker: '{cast:crown_agent}',
+      cast: 'crown_agent',
+      place: '@home',
       start: [{ if: [{ quest: 'q2', stage: 'q2_choose' }, { has: 'courier_packet' }], node: 'q2' }, { if: [{ quest: 'q2', is: 'done' }, { any: [{ quest: 'q3', is: 'unstarted' }, { quest: 'q3', stage: 'q3_choose' }] }], node: 'q3_offer' }, { if: { quest: 'q4', stage: 'q4_declare' }, node: 'q4_declare' }, 'talk'],
       nodes: {
         q2: {
           services: false,
-          text: ['They say you have Oswin’s packet. The Crown would be grateful to see it, {name} — and the Crown remembers its friends.'],
-          options: [{ text: 'Show the packet to the Crown.', if: [{ quest: 'q2', stage: 'q2_choose' }, { has: 'courier_packet' }], do: [{ take: 'courier_packet' }, { set: 'q2_choice', to: 'valedorn' }, { rep: 'valedorn', by: 25 }, { rep: 'aurelian', by: -10 }, { complete: 'q2' }], next: 'q2_thanks' }, { text: 'Not yet.' }]
+          text: ['They say you have {cast:caravan.short}’s packet. {Cast:crown.banner} would be grateful to see it, {name} — and {cast:crown.banner} remembers its friends.'],
+          options: [{ text: 'Show the packet to {cast:crown.banner}.', if: [{ quest: 'q2', stage: 'q2_choose' }, { has: 'courier_packet' }], do: [{ take: 'courier_packet' }, { set: 'q2_choice', to: 'crown' }, { rep: '@crown', by: 25 }, { rep: '@rival', by: -10 }, { complete: 'q2' }], next: 'q2_thanks' }, { text: 'Not yet.' }]
         },
 
         q3_offer: {
           services: false,
           text: [
-            'An Aurelian supply column is camped on the Ashgate road, feeding their garrison. Break it, and Greywall stays blue. A hundred and twenty crowns, and the Crown’s gratitude.',
-            { if: { flag: 'q3_heard_aurelian' }, text: 'I hear the magistrate has made you an offer too. Choose wisely — or profitably.' }
+            '{Cast:rival.a} supply column is camped on the {cast:rival_fort.place} road, feeding their garrison. Break it, and {cast:fort.place} stays {cast:crown.colour}. A hundred and twenty crowns, and {cast:crown.banner}’s gratitude.',
+            { if: { flag: 'q3_heard_rival' }, text: 'I hear {cast:rival_agent.title} has made you an offer too. Choose wisely — or profitably.' }
           ],
           options: [
-            { text: 'I’ll ride for the Crown.', do: [{ start: 'q3' }, { set: 'q3_side', to: 'valedorn' }, { stage: 'q3_strike_aurelian', quest: 'q3' }], next: 'q3_go' },
-            { text: 'Sell the magistrate’s plans to the Crown (100 crowns).', if: { flag: 'q3_heard_aurelian' }, do: [{ start: 'q3' }, { set: 'q3_side', to: 'sold_to_valedorn' }, { gold: 100 }, { rep: 'valedorn', by: 10 }, { rep: 'aurelian', by: -25 }, { stage: 'q3_road', quest: 'q3' }], next: 'q3_sold' },
+            { text: 'I’ll ride for {cast:crown.banner}.', do: [{ start: 'q3' }, { set: 'q3_side', to: 'crown' }, { stage: 'q3_strike_rival', quest: 'q3' }], next: 'q3_go' },
+            { text: 'Sell {cast:rival_agent.title}’s plans to {cast:crown.banner} (100 crowns).', if: { flag: 'q3_heard_rival' }, do: [{ start: 'q3' }, { set: 'q3_side', to: 'sold_to_crown' }, { gold: 100 }, { rep: '@crown', by: 10 }, { rep: '@rival', by: -25 }, { stage: 'q3_road', quest: 'q3' }], next: 'q3_sold' },
             { text: 'I’ll fight for neither banner. I’ll guard the road.', do: [{ start: 'q3' }, { set: 'q3_side', to: 'road' }, { stage: 'q3_road', quest: 'q3' }], next: 'q3_refused' },
-            { text: 'Let me think about it.', do: [{ start: 'q3' }, { set: 'q3_heard_valedorn' }] }
+            { text: 'Let me think about it.', do: [{ start: 'q3' }, { set: 'q3_heard_crown' }] }
           ]
         },
         q3_go: {
@@ -352,7 +361,7 @@
         },
         q3_sold: {
           services: false,
-          text: ['A hundred crowns for knowing where they mean to strike. A fair trade — and the magistrate will never know who told us. While both banners chase shadows, the road is anyone’s. Watch yourself out there.'],
+          text: ['A hundred crowns for knowing where they mean to strike. A fair trade — and {cast:rival_agent.title} will never know who told us. While both banners chase shadows, the road is anyone’s. Watch yourself out there.'],
           options: [{ text: 'Pleasure doing business.' }]
         },
         q3_refused: {
@@ -363,39 +372,39 @@
 
         q4_declare: {
           services: false,
-          text: ['The Remnant has marched on Greywall. One battle will settle it. Stand with the Crown, {name}, and the Crown will stand with you.'],
+          text: ['{Cast:rival.banner} has marched on {cast:fort.place}. One battle will settle it. Stand with {cast:crown.banner}, {name}, and {cast:crown.banner} will stand with you.'],
           options: [
-            { text: 'I stand with the Crown at Greywall.', do: [{ set: 'q4_side', to: 'valedorn' }, { stage: 'q4_field_valedorn', quest: 'q4' }], next: 'q4_sworn' },
+            { text: 'I stand with {cast:crown.banner} at {cast:fort.place}.', do: [{ set: 'q4_side', to: 'crown' }, { stage: 'q4_field_crown', quest: 'q4' }], next: 'q4_sworn' },
             { text: 'Not yet.' }
           ]
         },
         q4_sworn: {
           services: false,
-          text: ['Then ride for Greywall. Win the field, and the parley will listen to you.'],
-          options: [{ text: 'To Greywall.' }]
+          text: ['Then ride for {cast:fort.place}. Win the field, and the parley will listen to you.'],
+          options: [{ text: 'To {cast:fort.place}.' }]
         },
         q2_thanks: {
           services: false,
-          text: ['Two charters… and only one of them true. The King’s lawyers will know which. You have done Valedorn a service it will not forget.'],
+          text: ['Two charters… and only one of them true. {Cast:crown.banner}’s lawyers will know which. You have done {cast:crown} a service it will not forget.'],
           options: [{ text: 'See that it doesn’t.' }]
         },
         talk: {
           cycle: true,
           text: [
-            'Greywall has been the Crown’s for thirty years. Paper will not change that.',
-            'Keep the roads clear and the Crown keeps your purse full. Simple.',
-            { if: { flag: 'q2_choice', is: 'valedorn' }, text: 'The packet you brought us has the Aurelians scrambling. Well done.' },
-            { if: { flag: 'q2_choice', is: 'aurelian' }, text: 'You gave that packet to the magistrate. I hope her gold was worth it.' },
-            { if: { flag: 'q2_choice', is: 'kept' }, text: 'You still have that packet, I hear. The Crown would pay well for it — if you ever tire of carrying it.' },
-            { if: [{ quest: 'q3', is: 'done' }, { flag: 'q3_side', is: 'valedorn' }], text: 'The Aurelian column will not trouble Greywall again. Good work.' },
-            { if: [{ quest: 'q3', is: 'done' }, { flag: 'q3_side', is: 'aurelian' }], text: 'You broke a Crown column. I will not forget whose side you chose.' },
-            { if: [{ quest: 'q3', is: 'done' }, { flag: 'q3_side', is: 'road' }], text: 'Neither banner, eh? The carters sing your name. The King does not.' }
+            '{Cast:fort.place} has been {cast:crown.banner}’s for thirty years. Paper will not change that.',
+            'Keep the roads clear and {cast:crown.banner} keeps your purse full. Simple.',
+            { if: { flag: 'q2_choice', is: 'crown' }, text: 'The packet you brought us has {cast:rival.banner} scrambling. Well done.' },
+            { if: { flag: 'q2_choice', is: 'rival' }, text: 'You gave that packet to {cast:rival_agent.title}. I hope {cast:rival_agent.his} gold was worth it.' },
+            { if: { flag: 'q2_choice', is: 'kept' }, text: 'You still have that packet, I hear. {Cast:crown.banner} would pay well for it — if you ever tire of carrying it.' },
+            { if: [{ quest: 'q3', is: 'done' }, { flag: 'q3_side', is: 'crown' }], text: 'The {cast:rival} column will not trouble {cast:fort.place} again. Good work.' },
+            { if: [{ quest: 'q3', is: 'done' }, { flag: 'q3_side', is: 'rival' }], text: 'You broke {cast:crown.a} column. I will not forget whose side you chose.' },
+            { if: [{ quest: 'q3', is: 'done' }, { flag: 'q3_side', is: 'road' }], text: 'Neither banner, eh? The carters sing your name. Our ruler does not.' }
           ],
-          options: [{ text: 'Any work on the frontier?', if: [{ quest: 'sq_border', is: 'unstarted' }, { not: { standing: 'valedorn', is: 'hostile' } }], next: 'sq_border_offer' }]
+          options: [{ text: 'Any work on the frontier?', if: [{ quest: 'sq_border', is: 'unstarted' }, { not: { standing: '@crown', is: 'hostile' } }], next: 'sq_border_offer' }]
         },
         sq_border_offer: {
           services: false,
-          text: ['Raiders are burning farms between Brackenfield and Greywall. I have a watch posted near Brackenfield; they are too few to attack, but if they hear a fight they will ride to it. Seventy crowns if you break the raiders.'],
+          text: ['Raiders are burning farms between {cast:border} and {cast:fort.place}. I have a watch posted near {cast:border}; they are too few to attack, but if they hear a fight they will ride to it. Seventy crowns if you break the raiders.'],
           options: [
             { text: 'I’ll break them.', do: [{ start: 'sq_border' }] },
             { text: 'Not now.' }
@@ -403,29 +412,31 @@
         }
       }
     },
-    aurelian_agent: {
-      id: 'aurelian_agent',
-      speaker: 'Magistrate Vell',
-      place: 'eastwatch',
+    // The rival realm's envoy, in its town: it claims the contested fort by an imperial charter.
+    rival_agent: {
+      id: 'rival_agent',
+      speaker: '{cast:rival_agent}',
+      cast: 'rival_agent',
+      place: '@rival_town',
       start: [{ if: [{ quest: 'q2', stage: 'q2_choose' }, { has: 'courier_packet' }], node: 'q2' }, { if: [{ quest: 'q2', is: 'done' }, { any: [{ quest: 'q3', is: 'unstarted' }, { quest: 'q3', stage: 'q3_choose' }] }], node: 'q3_offer' }, { if: { quest: 'q4', stage: 'q4_declare' }, node: 'q4_declare' }, 'talk'],
       nodes: {
         q2: {
           services: false,
-          text: ['Oswin tells me you recovered his packet. Imperial law belongs to those who keep it, {name}. Let me see it.'],
-          options: [{ text: 'Show the packet to the magistrate.', if: [{ quest: 'q2', stage: 'q2_choose' }, { has: 'courier_packet' }], do: [{ take: 'courier_packet' }, { set: 'q2_choice', to: 'aurelian' }, { rep: 'aurelian', by: 25 }, { rep: 'valedorn', by: -10 }, { complete: 'q2' }], next: 'q2_thanks' }, { text: 'Not yet.' }]
+          text: ['{Cast:caravan.short} tells me you recovered {cast:caravan.his} packet. Imperial law belongs to those who keep it, {name}. Let me see it.'],
+          options: [{ text: 'Show the packet to {cast:rival_agent.title}.', if: [{ quest: 'q2', stage: 'q2_choose' }, { has: 'courier_packet' }], do: [{ take: 'courier_packet' }, { set: 'q2_choice', to: 'rival' }, { rep: '@rival', by: 25 }, { rep: '@crown', by: -10 }, { complete: 'q2' }], next: 'q2_thanks' }, { text: 'Not yet.' }]
         },
 
         q3_offer: {
           services: false,
           text: [
-            'A Valedorn column holds the Greywall road, choking our couriers. Break it, and the law will have room to breathe. A hundred and twenty crowns, and the Remnant’s thanks.',
-            { if: { flag: 'q3_heard_valedorn' }, text: 'I hear Captain Aldric has made you an offer too. Choose wisely — or profitably.' }
+            '{Cast:crown.a} column holds the {cast:fort.place} road, choking our couriers. Break it, and the law will have room to breathe. A hundred and twenty crowns, and {cast:rival.banner}’s thanks.',
+            { if: { flag: 'q3_heard_crown' }, text: 'I hear {cast:crown_agent} has made you an offer too. Choose wisely — or profitably.' }
           ],
           options: [
-            { text: 'I’ll ride for the Remnant.', do: [{ start: 'q3' }, { set: 'q3_side', to: 'aurelian' }, { stage: 'q3_strike_valedorn', quest: 'q3' }], next: 'q3_go' },
-            { text: 'Sell the Crown’s plans to the magistrate (100 crowns).', if: { flag: 'q3_heard_valedorn' }, do: [{ start: 'q3' }, { set: 'q3_side', to: 'sold_to_aurelian' }, { gold: 100 }, { rep: 'aurelian', by: 10 }, { rep: 'valedorn', by: -25 }, { stage: 'q3_road', quest: 'q3' }], next: 'q3_sold' },
+            { text: 'I’ll ride for {cast:rival.banner}.', do: [{ start: 'q3' }, { set: 'q3_side', to: 'rival' }, { stage: 'q3_strike_crown', quest: 'q3' }], next: 'q3_go' },
+            { text: 'Sell {cast:crown.banner}’s plans to {cast:rival_agent.title} (100 crowns).', if: { flag: 'q3_heard_crown' }, do: [{ start: 'q3' }, { set: 'q3_side', to: 'sold_to_rival' }, { gold: 100 }, { rep: '@rival', by: 10 }, { rep: '@crown', by: -25 }, { stage: 'q3_road', quest: 'q3' }], next: 'q3_sold' },
             { text: 'I’ll fight for neither banner. I’ll guard the road.', do: [{ start: 'q3' }, { set: 'q3_side', to: 'road' }, { stage: 'q3_road', quest: 'q3' }], next: 'q3_refused' },
-            { text: 'Let me think about it.', do: [{ start: 'q3' }, { set: 'q3_heard_aurelian' }] }
+            { text: 'Let me think about it.', do: [{ start: 'q3' }, { set: 'q3_heard_rival' }] }
           ]
         },
         q3_go: {
@@ -435,7 +446,7 @@
         },
         q3_sold: {
           services: false,
-          text: ['A hundred crowns for knowing where they mean to strike. A fair trade — and Captain Aldric will never know who told us. While both banners chase shadows, the road is anyone’s. Watch yourself out there.'],
+          text: ['A hundred crowns for knowing where they mean to strike. A fair trade — and {cast:crown_agent} will never know who told us. While both banners chase shadows, the road is anyone’s. Watch yourself out there.'],
           options: [{ text: 'Pleasure doing business.' }]
         },
         q3_refused: {
@@ -446,42 +457,48 @@
 
         q4_declare: {
           services: false,
-          text: ['The Crown has drawn up its host before Greywall. One battle will decide whether the law comes home. Stand with us, {name}.'],
+          text: ['{Cast:crown.banner} has drawn up its host before {cast:fort.place}. One battle will decide whether the law comes home. Stand with us, {name}.'],
           options: [
-            { text: 'I stand with the Remnant at Greywall.', do: [{ set: 'q4_side', to: 'aurelian' }, { stage: 'q4_field_aurelian', quest: 'q4' }], next: 'q4_sworn' },
+            { text: 'I stand with {cast:rival.banner} at {cast:fort.place}.', do: [{ set: 'q4_side', to: 'rival' }, { stage: 'q4_field_rival', quest: 'q4' }], next: 'q4_sworn' },
             { text: 'Not yet.' }
           ]
         },
         q4_sworn: {
           services: false,
-          text: ['Then ride for Greywall. Win the field, and the parley will listen to you.'],
-          options: [{ text: 'To Greywall.' }]
+          text: ['Then ride for {cast:fort.place}. Win the field, and the parley will listen to you.'],
+          options: [{ text: 'To {cast:fort.place}.' }]
         },
         q2_thanks: {
           services: false,
-          text: ['Two charters, and one of them a forgery that favours Valedorn — I would stake my seat on it. The Remnant owes you, {name}.'],
+          text: ['Two charters, and one of them a forgery that favours {cast:crown} — I would stake my seat on it. {Cast:rival.banner} owes you, {name}.'],
           options: [{ text: 'I’ll remember that.' }]
         },
         talk: {
           cycle: true,
           text: [
-            'Greywall was granted by charter, not won by the sword. The law is on our side.',
-            'Eastwatch remembers the empire’s order. The roads were safe then.',
-            { if: { flag: 'q2_choice', is: 'aurelian' }, text: 'The packet you brought me is in the court archive. Valedorn’s claim is crumbling.' },
-            { if: { flag: 'q2_choice', is: 'valedorn' }, text: 'You handed that packet to the Crown. I hope you know what you have done.' },
+            '{Cast:fort.place} was granted by charter, not won by the sword. The law is on our side.',
+            '{Cast:rival_town} remembers the empire’s order. The roads were safe then.',
+            { if: { flag: 'q2_choice', is: 'rival' }, text: 'The packet you brought me is in the court archive. {Cast:crown}’s claim is crumbling.' },
+            { if: { flag: 'q2_choice', is: 'crown' }, text: 'You handed that packet to {cast:crown.banner}. I hope you know what you have done.' },
             { if: { flag: 'q2_choice', is: 'kept' }, text: 'You still keep that packet. The court would welcome it — whenever you choose.' },
-            { if: [{ quest: 'q3', is: 'done' }, { flag: 'q3_side', is: 'aurelian' }], text: 'The Greywall road is open to our couriers again. The court is grateful.' },
-            { if: [{ quest: 'q3', is: 'done' }, { flag: 'q3_side', is: 'valedorn' }], text: 'You cut down our column for the Crown. The law has a long memory.' },
+            { if: [{ quest: 'q3', is: 'done' }, { flag: 'q3_side', is: 'rival' }], text: 'The {cast:fort.place} road is open to our couriers again. The court is grateful.' },
+            { if: [{ quest: 'q3', is: 'done' }, { flag: 'q3_side', is: 'crown' }], text: 'You cut down our column for {cast:crown.banner}. The law has a long memory.' },
             { if: [{ quest: 'q3', is: 'done' }, { flag: 'q3_side', is: 'road' }], text: 'You guarded the road for everyone. Perhaps there is a third way after all.' }
           ]
         }
       }
     },
     // GDD §10: Mara joins after Q2 "for a modest cost or through a short trust dialogue". She already
-    // knows where Oswin's packet went; an honest answer earns her trust, a lie costs it.
+    // knows where the caravan master's packet went; an honest answer earns her trust, a lie costs it.
+    // P10-04: she waits in your start town.
     mara: {
       id: 'mara',
       speaker: 'Mara',
+      place: '@home',
+      tag: 'Scout',
+      frames: [124, 125, 126, 127],
+      // She turns up after Q2, until she joins (or is gone for good).
+      visible: [{ quest: 'q2', is: 'done' }, { not: { companion: 'mara' } }, { not: { flag: 'mara_gone' } }, { not: { flag: 'mara_scouting' } }],
       start: [
         { if: { companion: 'mara' }, node: 'with_us' },
         { if: { flag: 'mara_met' }, node: 'verdict' },
@@ -491,7 +508,7 @@
         meet: {
           services: false,
           text: [
-            'You are the one who found Oswin’s packet. I am Mara. I scouted these roads for the empire, back when there was an empire.',
+            'You are the one who found {cast:caravan.short}’s packet. I am Mara. I scouted these roads for the empire, back when there was an empire.',
             'I have been looking for someone worth riding with. I do not ride with fools, and I do not ride with liars.',
             { if: { flag: 'mara_saved' }, text: 'And you rode into that clash for me before you even knew my name. I owe you.' }
           ],
@@ -504,10 +521,10 @@
           services: false,
           text: ['So. Where did the packet go?'],
           options: [
-            { text: 'To Captain Aldric and the Crown.', if: { flag: 'q2_choice', is: 'valedorn' }, do: [{ add: 'mara_trust' }], next: 'why' },
-            { text: 'To Captain Aldric and the Crown.', if: { not: { flag: 'q2_choice', is: 'valedorn' } }, do: [{ set: 'mara_lied' }], next: 'why' },
-            { text: 'To Magistrate Vell.', if: { flag: 'q2_choice', is: 'aurelian' }, do: [{ add: 'mara_trust' }], next: 'why' },
-            { text: 'To Magistrate Vell.', if: { not: { flag: 'q2_choice', is: 'aurelian' } }, do: [{ set: 'mara_lied' }], next: 'why' },
+            { text: 'To {cast:crown_agent} and {cast:crown.banner}.', if: { flag: 'q2_choice', is: 'crown' }, do: [{ add: 'mara_trust' }], next: 'why' },
+            { text: 'To {cast:crown_agent} and {cast:crown.banner}.', if: { not: { flag: 'q2_choice', is: 'crown' } }, do: [{ set: 'mara_lied' }], next: 'why' },
+            { text: 'To {cast:rival_agent}.', if: { flag: 'q2_choice', is: 'rival' }, do: [{ add: 'mara_trust' }], next: 'why' },
+            { text: 'To {cast:rival_agent}.', if: { not: { flag: 'q2_choice', is: 'rival' } }, do: [{ set: 'mara_lied' }], next: 'why' },
             { text: 'I kept it.', if: { flag: 'q2_choice', is: 'kept' }, do: [{ add: 'mara_trust' }], next: 'why' },
             { text: 'I kept it.', if: { not: { flag: 'q2_choice', is: 'kept' } }, do: [{ set: 'mara_lied' }], next: 'why' },
             { text: 'That’s my business.', next: 'why' }
@@ -548,8 +565,8 @@
         with_us: {
           cycle: true,
           text: [
-            'The river road floods in spring. Keep to the high track past Highmere.',
-            'Both crowns want Greywall. Neither asked the people who live under it.',
+            'The low roads flood in spring. Keep to the high track past {cast:fence_town}.',
+            'Both crowns want {cast:fort.place}. Neither asked the people who live under it.',
             { if: { flag: 'mara_saved' }, text: 'I have not forgotten that you came for me on the road. I never will.' },
             { if: { companion: 'mara', is: 'fit' }, text: 'I am ready when you are.' },
             { if: { not: { companion: 'mara', is: 'fit' } }, text: 'Give me a day or two. That last fight took more out of me than I let on.' }
@@ -560,13 +577,13 @@
     bandit_informant: {
       id: 'bandit_informant',
       speaker: 'Wenna the Fence',
-      place: 'highmere',
+      place: '@fence_town',
       visible: { quest: 'q2', stage: 'q2_recover' },
       start: 'offer',
       nodes: {
         offer: {
           text: [
-            'Word travels fast among those who live off the road. You want Oswin’s packet.',
+            'Word travels fast among those who live off the road. You want {cast:caravan.short}’s packet.',
             'The lads by the river cannot read, so they hid it in a hollow oak and kept the satchel for show. Sixty crowns, and I will tell you which oak.'
           ],
           options: [

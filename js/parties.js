@@ -81,7 +81,7 @@
       Object.assign(p, { x: s.mapX, y: s.mapY, good: pick(c, t.goods) });
     }
     // P9-B3: beyond the story's own land the world's parties are bigger (data/world_map.js `armies`).
-    const k = W().regionAt(p.x, p.y)?.home ? 1 : W().armies().beyondHome;
+    const k = W().regionAt(p.x, p.y, c)?.home ? 1 : W().armies().beyondHome;
     if (k !== 1) for (const id of Object.keys(troops)) troops[id] = Math.max(1, Math.round(troops[id] * k));
     c.parties.push(p);
     CL.diag.log('info', 'Party spawned', { id: p.id, template: t.id, troops: p.troops });

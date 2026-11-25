@@ -23,10 +23,10 @@
       bounds: { w: 350, h: 200 }, // map units; every place, road and party stays inside (P10-02: the coast added east, 200 → 350)
       factions: ['valedorn', 'aurelian', 'hrothmark', 'vessaro', 'merrow', 'ostrand', 'saltreach', 'gullhaven'], // this world's kingdoms (data/factions.js)
       outlaws: 'neutral', // the faction of road bands and sell-swords: not a kingdom, never diplomatic
-      // Relations between kingdoms at the start (W-07); any pair not listed is at peace. `story`: the
-      // story holds it until its ending, which sets it (decision D-W5: the March pair stays in
-      // tension, its frontier clashes going on, until Q4 ends).
-      relations: [{ between: ['valedorn', 'aurelian'], state: 'tension', story: true }, { between: ['ostrand', 'saltreach'], state: 'war' }], // P10-02: the coast's realms begin at war
+      // Relations between kingdoms at the start (W-07); any pair not listed is at peace. P10-04: the
+      // story's two realms, as cast from the kingdom you begin in, begin in tension and stay so until
+      // its ending sets them (decision D-W5; js/story.js `holdsPair`).
+      relations: [{ between: ['valedorn', 'aurelian'], state: 'tension' }, { between: ['ostrand', 'saltreach'], state: 'war' }], // P10-02: the coast's realms begin at war
       // The world simulation's budget (W-07): no more than this many regular parties spawn in one region.
       simulation: { partiesPerRegion: 16 },
       // P9-B3 (D-P9b): the size of the world's armies, to match a company of up to 200. `households`:

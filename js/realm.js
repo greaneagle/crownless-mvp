@@ -278,7 +278,8 @@
     return f.some((sid) => c.holdings[sid].kind !== 'village') ? 'great' : 'lesser';
   }
   /** A story fort the story alone moves until Q4 ends: grants, sieges and debug check this. */
-  const locked = (c, sid) => Boolean(place(sid)?.story) && !CL.story?.state(c).flags.ending;
+  // P10-04: the story's forts are its cast's (the contested fort and the rival's), whichever kingdom you began in.
+  const locked = (c, sid) => Boolean(CL.story?.locksFort(c, sid));
   /** A realm's capital never changes controller in Phase 8 (P9-05). */
   const isCapital = (sid) => place(sid)?.type === 'town';
 
@@ -435,7 +436,8 @@
   const atOdds = (c, a, b) => ['war', 'tension'].includes(relation(c, a, b));
 
   /** A pair the story holds still until its ending (D-W5). */
-  const storyHeld = (c, a, b) => Boolean(worldPair(a, b)?.story) && !CL.story?.state(c).flags.ending;
+  // P10-04 (D-W5): the story's two realms, as cast, stay in tension until its ending.
+  const storyHeld = (c, a, b) => Boolean(CL.story?.holdsPair(c, a, b));
 
   const NEWS = { war: 'war_declared', tension: 'tension_rising', peace: 'peace_made' };
 
@@ -849,7 +851,8 @@
         if (own.length) err(`settlement ${s.id}: a village needs a seat (a fort or town of ${s.ownerFaction})`);
       } else if (!S[s.seat] || S[s.seat].type === 'village' || S[s.seat].ownerFaction !== s.ownerFaction) err(`settlement ${s.id}: seat ${s.seat} is not a fort or town of ${s.ownerFaction}`);
     }
-    for (const s of Object.values(S)) if (s.story && s.type !== 'fort') err(`settlement ${s.id}: only a fort can be a story fort`);
+    // P10-04: a realm's start town (a new game there begins in it) is one of its towns.
+    for (const f of Object.values(C.factions || {})) if (f.start != null && (S[f.start]?.ownerFaction !== f.id || S[f.start].type !== 'town')) err(`faction ${f.id}: start must be one of its towns`);
     for (const m of Object.values(C.world_map || {})) {
       const list = m.nobles || [];
       const byId = Object.fromEntries(list.map((n) => [n.id, n]));

@@ -7,7 +7,6 @@
  * gear: what the local armoury sells (towns a full range, villages the basics).
  * seat (villages, P8-02): the fort or town of the same kingdom the village is tied to (the nearest);
  *   it follows its seat when the seat changes hands. None only where the kingdom has no fort or town.
- * story (forts, P8-02): only the story moves it until Q4 ends (no grant, siege or debug grant).
  * placeName: the short form soldiers' bynames use ("Edric of Greywall"); defaults to name.
  * culture: optional name culture (data/names.js) for people raised here; defaults to the owner's. */
 (function (root) {
@@ -16,8 +15,8 @@
   C.settlements = {
     stonebridge: {id:'stonebridge',name:'Stonebridge',type:'town',ownerFaction:'valedorn',explorable:true,services:['recruit','trade','rest','contracts','leave'],mapX:100,mapY:105,market:{grain:0.95,salt:1.1,wool:0.9,iron:1.1,cloth:1.05,tools:1.0,timber:1.1,wine:1.15,flour:1.07},gear:['worn_sword','hand_axe','arming_sword','war_mace','oak_shield','kite_shield','leather_cap','iron_helm','gambeson','leather_chest','mail_hauberk','gloves','mail_mittens','boots','greaves','nag','rouncey','smoked_meat']},
     eastwatch: {id:'eastwatch',name:'Eastwatch',type:'town',ownerFaction:'aurelian',explorable:true,services:['recruit','trade','rest','contracts','leave'],mapX:112,mapY:90,market:{grain:1.15,salt:0.9,wool:1.1,iron:1.0,cloth:0.85,tools:0.9,timber:1.15,wine:1.05,flour:1.18},gear:['worn_sword','arming_sword','war_mace','knights_sword','oak_shield','heater_shield','iron_helm','bascinet','gambeson','leather_chest','mail_hauberk','gloves','boots','nag','rouncey','courser','smoked_meat']},
-    greywall_fort: {id:'greywall_fort',name:'Greywall Fort',placeName:'Greywall',type:'fort',ownerFaction:'valedorn',story:true,explorable:false,services:['recruit','rest'],mapX:92,mapY:80,garrison:{footman:10,guard:4,hunter:6,longbowman:2}},
-    ashgate_fort: {id:'ashgate_fort',name:'Ashgate Fort',placeName:'Ashgate',type:'fort',ownerFaction:'aurelian',story:true,explorable:false,services:['recruit','rest'],mapX:120,mapY:120,garrison:{spearman:10,legionary:4,skirmisher:6,marksman:2}},
+    greywall_fort: {id:'greywall_fort',name:'Greywall Fort',placeName:'Greywall',type:'fort',ownerFaction:'valedorn',explorable:false,services:['recruit','rest'],mapX:92,mapY:80,garrison:{footman:10,guard:4,hunter:6,longbowman:2}},
+    ashgate_fort: {id:'ashgate_fort',name:'Ashgate Fort',placeName:'Ashgate',type:'fort',ownerFaction:'aurelian',explorable:false,services:['recruit','rest'],mapX:120,mapY:120,garrison:{spearman:10,legionary:4,skirmisher:6,marksman:2}},
     oakford: {id:'oakford',name:'Oakford',type:'village',ownerFaction:'valedorn',seat:'stonebridge',explorable:false,services:['trade','rest'],mapX:85,mapY:112,market:{grain:0.8,salt:1.3,wool:0.9,iron:1.3,cloth:1.2,tools:1.25,timber:1.0,wine:1.25,flour:0.9},gear:['leather_cap','gambeson','boots','nag']},
     highmere: {id:'highmere',name:'Highmere',type:'village',ownerFaction:'valedorn',seat:'greywall_fort',explorable:false,services:['trade','rest'],mapX:105,mapY:75,market:{grain:1.1,salt:1.25,wool:0.8,iron:0.85,cloth:1.2,tools:1.1,timber:0.95,wine:1.3,flour:1.05},gear:['hand_axe','leather_cap','boots','gloves']},
     brackenfield: {id:'brackenfield',name:'Brackenfield',type:'village',ownerFaction:'valedorn',seat:'greywall_fort',explorable:false,services:['trade','recruit'],mapX:80,mapY:95,market:{grain:0.9,salt:1.3,wool:1.0,iron:1.2,cloth:1.25,tools:1.3,timber:1.0,wine:1.3,flour:0.95},gear:['hand_axe','oak_shield','leather_cap','nag']},

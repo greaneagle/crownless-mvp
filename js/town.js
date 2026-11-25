@@ -17,6 +17,28 @@
   const ROLES = ['innkeeper', 'merchant', 'recruiter', 'elder', 'official', 'guard'];
   const hubFor = (sid) => (sid ? Object.values(CL.content.table('town_hubs')).find((h) => h.settlement === sid) || null : null);
 
+  /**
+   * A town's people as the story casts them (P10-04): its own, with your start town's elder and
+   * recruiter speaking the story, and the story's people placed here (a dialogue whose `place` is a
+   * role: your realm's envoy and Mara at home, the rival's envoy and caravan master in its town) at
+   * the hub's `spots`, while there are spots.
+   */
+  function peopleOf(sid) {
+    const hub = hubFor(sid);
+    if (!hub) return [];
+    const own = hub.npcs.map((n) => {
+      const d = n.dialogue || CL.story.streetDialogue(sid, n.id);
+      return d ? { ...n, dialogue: d } : n;
+    });
+    const placed = CL.story.peopleAt(sid).filter((t) => typeof t.place === 'string' && t.place[0] === '@');
+    const spots = hub.spots || [];
+    const story = placed.slice(0, spots.length).map((t, i) => {
+      const look = CL.story.lookOf(t);
+      return { id: t.id, name: CL.story.speakerOf(t), tag: look.tag, frames: look.frames, x: spots[i].x, y: spots[i].y, action: 'talk', dialogue: t.id, visible: t.visible, lines: ['…'] };
+    });
+    return [...own, ...story];
+  }
+
   /** Enter a settlement's town scene (if it has one). Returns false for menu-only settlements. */
   function enter(sid = CL.campaign.world.location) {
     const hub = hubFor(sid);
@@ -27,7 +49,7 @@
       hub,
       hero,
       // People with a `visible` condition only appear when the story allows (e.g. Mara after Q2).
-      npcs: hub.npcs.filter((n) => CL.story.test(n.visible)).map((n) => ({ ...n, home: { x: n.x, y: n.y }, face: 'down', anim: 0, leg: 0, wait: 0, lineIndex: 0 })),
+      npcs: peopleOf(sid).filter((n) => CL.story.test(n.visible)).map((n) => ({ ...n, home: { x: n.x, y: n.y }, face: 'down', anim: 0, leg: 0, wait: 0, lineIndex: 0 })),
       near: null,
       walkTo: null,
     };
@@ -63,9 +85,7 @@
 
   /** People in a walkable place's streets who have a conversation, for its menu ("Talk to …"). */
   function streetPeople(sid = CL.campaign.world.location) {
-    const hub = hubFor(sid);
-    if (!hub) return [];
-    return hub.npcs.filter((n) => n.dialogue && CL.story.test(n.visible)).map((n) => ({ id: n.dialogue, name: n.name }));
+    return peopleOf(sid).filter((n) => n.dialogue && CL.story.test(n.visible)).map((n) => ({ id: n.dialogue, name: n.name }));
   }
 
   function npcAt(px, py) {
@@ -191,5 +211,5 @@
     else CL.ui.changeMode('settlement');
   }
 
-  CL.town = { TALK_RANGE, ROLES, hubFor, cast, enter, enterPlace, streetPeople, tap, npcAt, update, interact, open, leave, backToPlace };
+  CL.town = { TALK_RANGE, ROLES, hubFor, peopleOf, cast, enter, enterPlace, streetPeople, tap, npcAt, update, interact, open, leave, backToPlace };
 })(typeof window !== 'undefined' ? window : globalThis);

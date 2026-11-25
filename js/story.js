@@ -50,6 +50,26 @@
  * kingdom thinks of them.
  *
  * Text may use {name}, {gold}, {renown}, {settlement}, {veteran} and {flag:some_flag}.
+ *
+ * The cast (P10-04): the main story is told from whichever kingdom you chose (`c.startRealm`), so its
+ * places, realms and people are roles, cast from the map at a new game (`c.story.cast`, see `castFor`):
+ *   realms  crown (yours), rival (the realm next to yours)
+ *   places  home (your start town), village (your village nearest it: the grain wagon), border (your
+ *           village nearest the fort), fort (your fort facing the rival: the contested fort),
+ *           rival_fort (the rival's fort nearest you), rival_town (the rival's town), fence_town (the
+ *           village nearest it), camp (the outlaws' lair nearest home)
+ *   (each fort is its side's nearest the other side's land; the rival is the realm whose town is nearest yours)
+ *   people  elder and recruiter (your town's, by their role in its streets), crown_agent and
+ *           rival_agent (each realm's envoy), caravan (the rival town's caravan master); data/factions.js `story`
+ * In conditions, effects, matches, bands and places a role is written '@role' (e.g. { rep: '@crown' },
+ * { owner: '@fort', is: '@rival' }, between: ['@village', '@home']). A band may name `realm` and `force`
+ * ('column' | 'host') instead of a template and troops: that realm's patrol, with its story troops.
+ * In text, {cast:role} is a role's name and {cast:role.field} one of its words: realms short, a (with
+ * its article: "an Aurelian"), name, banner, colour, court ("the King’s hall"); places name, place, dir (the compass from home);
+ * people name, short, title ("the magistrate"), he, his, him.
+ * {Cast:…} capitalizes it. A dialogue with `cast: 'elder' | 'recruiter'` is spoken by that person in
+ * the home town's streets; one whose `place` is a role is also met in its town's streets (a hub's
+ * `spots`). The contested forts stay locked and the two realms in tension until an ending.
  * A quest with side: true is an errand (V2-Q): optional, shown as such in the Journal. Story state lives in `campaign.story`. */
 (function (root) {
   'use strict';
@@ -59,6 +79,10 @@
   const QUEST_STATUS = ['active', 'done', 'failed'];
   const MAX_FLAGS = 200;
   const MAX_NOTES = 20;
+  const PLACE_ROLES = ['home', 'village', 'border', 'fort', 'rival_fort', 'rival_town', 'fence_town'];
+  const REALM_ROLES = ['crown', 'rival'];
+  const PEOPLE_ROLES = ['elder', 'recruiter', 'crown_agent', 'rival_agent', 'caravan'];
+  const ROLES = [...REALM_ROLES, ...PLACE_ROLES, 'camp', ...PEOPLE_ROLES];
   const COND_KEYS = ['flag', 'not', 'all', 'any', 'quest', 'gold', 'renown', 'level', 'soldiers', 'rep', 'standing', 'skill', 'attribute', 'background', 'has', 'owner', 'at', 'companion', 'room', 'veteran', 'follower'];
   const EFFECT_KEYS = ['set', 'clear', 'add', 'gold', 'renown', 'xp', 'food', 'rep', 'give', 'take', 'recruit', 'start', 'stage', 'complete', 'fail', 'owner', 'message', 'note', 'companion', 'part', 'send', 'recall', 'ending', 'honourVeteran', 'retinue'];
 
@@ -68,14 +92,158 @@
   const isFlagValue = (v) => ['boolean', 'string'].includes(typeof v) || (typeof v === 'number' && Number.isFinite(v));
 
   /** A new campaign's story. P9-08: a sandbox world (no story) begins as the others are after theirs. */
-  function blank() {
-    return { flags: CL.world?.map().sandbox ? { ending: 'sandbox' } : {}, quests: {}, visits: {} };
+  function blank(realm = null) {
+    return { flags: CL.world?.map().sandbox ? { ending: 'sandbox' } : {}, quests: {}, visits: {}, cast: castFor(realm) };
   }
 
   const state = (c = camp()) => {
-    if (!c.story) c.story = blank();
+    if (!c.story) c.story = blank(c.startRealm);
     return c.story;
   };
+
+  // ---- The cast (P10-04) ----
+
+  const F = (id) => CL.realm.faction(id); // P9-03: every realm through CL.realm
+  const realmsOf = () => {
+    const m = CL.world.map();
+    return (m.factions || []).filter((f) => F(f) && !F(f).freeCity && f !== m.outlaws);
+  };
+  const settlements = () => Object.values(CL.content.table('settlements'));
+  /** A realm's start town: its `start` (data/factions.js), else its first town, else the world's start. */
+  function startOf(realm) {
+    const f = F(realm);
+    const S = CL.content.table('settlements');
+    if (f?.start && S[f.start]) return S[f.start];
+    return settlements().find((s) => s.ownerFaction === realm && s.type === 'town') || null;
+  }
+  /** The kingdoms a new game may begin in: every realm of the world with a start town. */
+  const startRealms = () => realmsOf().filter((f) => startOf(f));
+  /** The realm a new game begins in when none is chosen: the one holding the world's start. */
+  const defaultRealm = () => CL.content.table('settlements')[CL.world.map().start]?.ownerFaction || startRealms()[0] || null;
+
+  /**
+   * The story's cast for a game begun in `realm`, from the map as its data begins it (so the same
+   * realm always gives the same cast; Valedorn gives the original March story's). Null if the world
+   * cannot cast it (no rival, fort or village).
+   */
+  function castFor(realm) {
+    if (!CL.world || !CL.content.table('settlements')) return null;
+    if (!realm) realm = defaultRealm();
+    const home = startOf(realm);
+    if (!home) return null;
+    const d = (a, b) => Math.hypot(a.mapX - b.mapX, a.mapY - b.mapY);
+    const nearest = (list, score) => list.slice().sort((a, b) => score(a) - score(b) || (a.id < b.id ? -1 : 1))[0] || null;
+    const own = (f, type) => settlements().filter((s) => s.ownerFaction === f && s.type === type);
+    const rival = nearest(realmsOf().filter((f) => f !== realm && startOf(f)).map((id) => ({ id, town: startOf(id) })), (r) => d(home, r.town));
+    if (!rival) return null;
+    const rt = rival.town;
+    // Each side's fort nearest the other's land: the one it holds against it.
+    const facing = (f) => (s) => Math.min(...settlements().filter((x) => x.ownerFaction === f).map((x) => d(s, x)));
+    const fort = nearest(own(realm, 'fort'), facing(rival.id));
+    const rivalFort = nearest(own(rival.id, 'fort'), facing(realm));
+    const village = nearest(own(realm, 'village'), (s) => d(s, home));
+    if (!fort || !rivalFort || !village) return null;
+    const fence = nearest(settlements().filter((s) => s.type === 'village' && s.id !== village.id), (s) => d(s, rt));
+    const border = nearest(own(realm, 'village').filter((s) => s.id !== village.id && s.id !== fence?.id), (s) => d(s, fort)) || village;
+    const sites = Object.values(CL.world.map().sites || {}).filter((s) => s.encounter);
+    const lair = nearest(sites, (s) => d(s, home));
+    return {
+      crown: realm,
+      rival: rival.id,
+      home: home.id,
+      village: village.id,
+      border: border.id,
+      fort: fort.id,
+      rival_fort: rivalFort.id,
+      rival_town: rt.id,
+      fence_town: (fence || village).id,
+      camp: lair?.id || null,
+    };
+  }
+
+  const castOf = (c = camp()) => c?.story?.cast || null;
+  const isRole = (v) => typeof v === 'string' && v[0] === '@';
+  /** A value with its role resolved: '@fort' → 'greywall_fort'. Anything else is itself. */
+  function resolve(v, c = camp()) {
+    if (Array.isArray(v)) return v.map((x) => resolve(x, c));
+    if (!isRole(v)) return v;
+    return castOf(c)?.[v.slice(1)] ?? null;
+  }
+
+  /** A cast person: { name, short, he, his, him, tag?, frames? }, from a town's streets or a realm's story people. */
+  function person(role, c = camp()) {
+    const k = castOf(c);
+    if (!k) return null;
+    if (role === 'elder' || role === 'recruiter') {
+      const n = CL.town?.cast(k.home, role);
+      return n ? { name: n.name, short: n.short || n.name, he: 'they', his: 'their', him: 'them', npc: n.id } : null;
+    }
+    const realm = role === 'crown_agent' ? k.crown : k.rival;
+    const p = F(realm)?.story?.[role === 'caravan' ? 'caravan' : 'agent'];
+    const words = { he: ['he', 'his', 'him'], she: ['she', 'her', 'her'], they: ['they', 'their', 'them'] }[p?.he] || ['they', 'their', 'them'];
+    return p ? { ...p, he: words[0], his: words[1], him: words[2] } : null;
+  }
+
+  const COMPASS = ['east', 'north-east', 'north', 'north-west', 'west', 'south-west', 'south', 'south-east'];
+  /** The word for a role in text: {cast:role} or {cast:role.field}. */
+  function castWord(c, role, field) {
+    const k = castOf(c);
+    if (!k || !ROLES.includes(role)) return role;
+    if (PEOPLE_ROLES.includes(role)) {
+      const p = person(role, c);
+      return String(p?.[field || 'name'] ?? p?.name ?? role);
+    }
+    const id = k[role];
+    if (REALM_ROLES.includes(role)) {
+      const f = F(id);
+      if (!f) return role;
+      if (field === 'name') return f.name;
+      if (field === 'banner' || field === 'colour' || field === 'court') return f.story?.[field] || f.short;
+      if (field === 'a') return `${/^[AEIOU]/.test(f.short) ? 'an' : 'a'} ${f.short}`;
+      return f.short;
+    }
+    const s = role === 'camp' ? CL.world.map().sites?.[id] : CL.content.table('settlements')[id];
+    if (!s) return role;
+    if (field === 'dir') {
+      const h = CL.content.table('settlements')[k.home];
+      const a = Math.atan2(-(s.mapY - h.mapY), s.mapX - h.mapX);
+      return COMPASS[(Math.round(a / (Math.PI / 4)) + 8) % 8];
+    }
+    if (field === 'place') return s.placeName || s.name;
+    return s.name;
+  }
+
+  /** The regions the story is told in (its `home` land: the gentler bands, the "Beyond" tip). */
+  const homeLands = new WeakMap();
+  function homeLand(rid, c = camp()) {
+    const k = castOf(c);
+    if (!k) return undefined;
+    if (!homeLands.has(k)) {
+      const S = CL.content.table('settlements');
+      homeLands.set(k, new Set([k.home, k.rival_town, k.fort].map((id) => S[id] && CL.world.regionIdAt(S[id].mapX, S[id].mapY)).filter(Boolean)));
+    }
+    return homeLands.get(k).has(rid);
+  }
+
+  /** The forts the story decides (no siege or grant) until an ending: the contested fort and the rival's. */
+  function locksFort(c, sid) {
+    const k = castOf(c);
+    return Boolean(k) && (sid === k.fort || sid === k.rival_fort) && !state(c).flags.ending;
+  }
+
+  /** Are realms a and b the story's pair, held in tension until an ending? */
+  function holdsPair(c, a, b) {
+    const k = castOf(c);
+    return Boolean(k) && ((a === k.crown && b === k.rival) || (a === k.rival && b === k.crown)) && !state(c).flags.ending;
+  }
+
+  /** The story dialogue a town's person speaks (a tree with `cast`), or null. */
+  function streetDialogue(sid, npcId, c = camp()) {
+    const k = castOf(c);
+    if (!k || sid !== k.home) return null;
+    for (const t of Object.values(CL.content.table('dialogue'))) if (t.cast && (t.cast === 'elder' || t.cast === 'recruiter') && person(t.cast, c)?.npc === npcId) return t.id;
+    return null;
+  }
 
   // ---- Conditions ----
 
@@ -113,14 +281,14 @@
     if ('renown' in cond) return compare(c.renown, cond.renown);
     if ('level' in cond) return compare(c.character?.level || 1, cond.level);
     if ('soldiers' in cond) return compare(c.roster.filter((x) => x.woundedUntil === null).length, cond.soldiers);
-    if ('rep' in cond) return compare(CL.realm.score(c, cond.rep), cond);
-    if ('standing' in cond) return CL.realm.standing(c, cond.standing) === cond.is;
+    if ('rep' in cond) return compare(CL.realm.score(c, resolve(cond.rep, c)), cond);
+    if ('standing' in cond) return CL.realm.standing(c, resolve(cond.standing, c)) === cond.is;
     if ('skill' in cond) return compare(CL.character.skill(cond.skill, c), cond);
     if ('attribute' in cond) return compare(CL.character.attribute(cond.attribute, c), cond);
     if ('background' in cond) return c.character?.background === cond.background;
     if ('has' in cond) return (c.inventory[cond.has] || 0) > 0 || Object.values(c.equipment || {}).includes(cond.has);
-    if ('owner' in cond) return CL.realm.owner(cond.owner, c) === cond.is;
-    if ('at' in cond) return c.world.location === cond.at;
+    if ('owner' in cond) return CL.realm.owner(resolve(cond.owner, c), c) === resolve(cond.is, c);
+    if ('at' in cond) return c.world.location === resolve(cond.at, c);
     if ('companion' in cond) return cond.is === 'fit' ? CL.companion.fit(c) && CL.companion.has(c, cond.companion) : CL.companion.has(c, cond.companion);
     if ('room' in cond) return CL.party.partyCap(c) - CL.party.headcount(c) >= cond.room;
     if ('veteran' in cond) return Boolean(veteranHere(c, cond.veteran));
@@ -154,7 +322,7 @@
     else if ('renown' in e) c.renown = Math.max(0, c.renown + e.renown);
     else if ('xp' in e) CL.character.gainXp(e.xp, c);
     else if ('food' in e) c.food = Math.max(0, c.food + e.food);
-    else if ('rep' in e) CL.realm.adjust(c, e.rep, e.by, ctx.reason || 'story');
+    else if ('rep' in e) CL.realm.adjust(c, resolve(e.rep, c), e.by, ctx.reason || 'story');
     else if ('give' in e) c.inventory[e.give] = (c.inventory[e.give] || 0) + (e.n || 1);
     else if ('take' in e) {
       const left = (c.inventory[e.take] || 0) - (e.n || 1);
@@ -169,7 +337,7 @@
     else if ('stage' in e) setStage(c, e.quest || ctx.quest, e.stage);
     else if ('complete' in e) finish(c, e.complete, 'done');
     else if ('fail' in e) finish(c, e.fail, 'failed');
-    else if ('owner' in e) CL.realm.setOwner(c, e.owner, e.to, ctx.reason || 'story');
+    else if ('owner' in e) CL.realm.setOwner(c, resolve(e.owner, c), resolve(e.to, c), ctx.reason || 'story');
     else if ('message' in e) CL.ui.message(format(e.message, c));
     else if ('note' in e) note(c, e.quest || ctx.quest, format(e.note, c));
     else if ('companion' in e) CL.companion.join(c, e.companion);
@@ -206,7 +374,7 @@
     CL.diag.log('info', 'Ending', { quest: questId, ending: key });
     // W-07 (D-W5): the ending sets the kingdoms' relation it names; the usual rules take over after.
     const rel = quest(questId).endings[key].relations;
-    if (rel) CL.realm.setRelation(c, rel.between[0], rel.between[1], rel.to, `ending ${key}`);
+    if (rel) CL.realm.setRelation(c, resolve(rel.between[0], c), resolve(rel.between[1], c), rel.to, `ending ${key}`);
     CL.ui.showEnding?.(v);
   }
 
@@ -219,7 +387,7 @@
     CL.diag.log('info', 'Quest started', { quest: id });
     apply(q.stages[0].begin, c, { quest: id, reason: `quest ${id}` });
     ensureBands(c);
-    CL.ui.message(`New quest: ${q.title}`);
+    CL.ui.message(`New quest: ${format(q.title, c)}`);
     return true;
   }
 
@@ -250,13 +418,22 @@
       if (w.gold) CL.accounts.earn(c, w.gold, `quest: ${q.title}`);
       if (w.renown) c.renown += w.renown;
       if (w.xp) CL.character.gainXp(w.xp, c);
-      for (const [f, n] of Object.entries(w.rep || {})) CL.realm.adjust(c, f, n, `quest ${id}`);
-      CL.ui.message(`Quest complete: ${q.title}${w.gold ? ` · +${w.gold} crowns` : ''}${w.renown ? ` · +${w.renown} renown` : ''}`);
-    } else CL.ui.message(`Quest failed: ${q.title}`);
+      for (const [f, n] of Object.entries(w.rep || {})) CL.realm.adjust(c, resolve(f, c), n, `quest ${id}`);
+      CL.ui.message(`Quest complete: ${format(q.title, c)}${w.gold ? ` · +${w.gold} crowns` : ''}${w.renown ? ` · +${w.renown} renown` : ''}`);
+    } else CL.ui.message(`Quest failed: ${format(q.title, c)}`);
     CL.diag.log('info', 'Quest ended', { quest: id, status });
     CL.chronicle?.quest(c, id, status); // the company chronicle (V2-10)
     ensureBands(c);
     return true;
+  }
+
+  /**
+   * A new game's opening (P10-04): the common quest (`common: true`, Q1) begins at once, so the plain
+   * start leads straight into the story. P10-05's origins lead into it instead.
+   */
+  function opening(c = camp()) {
+    if (state(c).flags.ending) return;
+    for (const q of Object.values(CL.content.table('quests') || {})) if (q.common) start(c, q.id);
   }
 
   function note(c, id, text) {
@@ -268,6 +445,7 @@
 
   /** Where a stage band stands: beside a settlement or site, or between two of them (halfway, or `along`). */
   function placeOf(id) {
+    id = resolve(id);
     const s = CL.content.table('settlements')[id] || CL.world.map().sites[id];
     return s ? { x: s.mapX, y: s.mapY } : null;
   }
@@ -283,6 +461,16 @@
     return { x, y };
   }
 
+  /** A band spec as cast: a `realm` and `force` become that realm's patrol and its story troops. */
+  function bandOf(spec, c = camp()) {
+    const out = { ...spec };
+    if (spec.name) out.name = format(spec.name, c);
+    if (spec.text) out.text = format(spec.text, c);
+    if (!spec.realm) return out;
+    const f = F(resolve(spec.realm, c));
+    return { ...out, template: f?.story?.patrol, troops: { ...(f?.story?.[spec.force] || {}) } };
+  }
+
   /** A stage's bands: its `band` and any `bands`. */
   const stageBands = (st) => [st?.band, ...(st?.bands || [])].filter(Boolean);
 
@@ -291,7 +479,7 @@
     for (const [id, r] of Object.entries(state(c).quests)) {
       if (r.status !== 'active') continue;
       const band = stageBands(quest(id)?.stages.find((st) => st.id === r.stage)).find((b) => b.tag === tag);
-      if (band) return band;
+      if (band) return bandOf(band, c);
     }
     return null;
   }
@@ -310,7 +498,7 @@
     for (const [tag, spec] of wanted) {
       if (c.parties.some((p) => p.questTag === tag)) continue;
       const at = bandSpot(spec);
-      CL.parties.spawnQuestBand(c, spec, at.x, at.y);
+      CL.parties.spawnQuestBand(c, bandOf(spec, c), at.x, at.y);
     }
   }
 
@@ -335,8 +523,11 @@
     return (r.stageDay ?? r.startedDay) + st.deadline - c.day;
   }
 
-  const matches = (match, payload) =>
-    Object.entries(match || {}).every(([k, v]) => (Array.isArray(v) ? v.includes(payload[k]) : payload[k] === v));
+  const matches = (match, payload, c = camp()) =>
+    Object.entries(match || {}).every(([k, v]) => {
+      const want = resolve(v, c);
+      return Array.isArray(want) ? want.includes(payload[k]) : payload[k] === want;
+    });
 
   /**
    * Something happened in the world. Every active quest's current stage gets a look; the first
@@ -348,7 +539,7 @@
     for (const [id, r] of Object.entries(state(c).quests)) {
       if (r.status !== 'active') continue;
       const stage = quest(id)?.stages.find((st) => st.id === r.stage);
-      const hit = (stage?.on || []).find((t) => t.event === name && matches(t.match, payload) && test(t.if, c));
+      const hit = (stage?.on || []).find((t) => t.event === name && matches(t.match, payload, c) && test(t.if, c));
       if (!hit) continue;
       apply(hit.do, c, { quest: id, reason: `quest ${id}` });
       fired++;
@@ -367,6 +558,10 @@
       .replace(/\{renown\}/g, String(c.renown))
       .replace(/\{settlement\}/g, here)
       .replace(/\{veteran\}/g, veteranHere(c)?.name || 'your veteran')
+      .replace(/\{([Cc])ast:([a-z_]+)(?:\.([a-z]+))?\}/g, (_, k, role, field) => {
+        const w = castWord(c, role, field);
+        return k === 'C' ? w.charAt(0).toUpperCase() + w.slice(1) : w;
+      })
       .replace(/\{flag:([a-z0-9_:]+)\}/g, (_, f) => String(state(c).flags[f] ?? 0));
   }
 
@@ -410,7 +605,7 @@
     const options = (node.options || [])
       .map((o, i) => ({ ...o, index: i, text: format(o.text, c) }))
       .filter((o) => test(o.if, c));
-    return { dialogue: dialogueId, speaker: t.speaker, node: nodeId, text: nodeText(node, c, Math.max(0, visit)), options, services: node.services !== false };
+    return { dialogue: dialogueId, speaker: format(t.speaker, c), node: nodeId, text: nodeText(node, c, Math.max(0, visit)), options, services: node.services !== false };
   }
 
   /** Pick an option: apply its effects and move on. Returns the next view, or null when the talk ends. */
@@ -426,9 +621,18 @@
     return next;
   }
 
-  /** Conversations on offer at a menu-only settlement (dialogues with `place`). */
+  /** Conversations on offer at a settlement (dialogues with `place`, a settlement or a place role). */
   function peopleAt(sid, c = camp()) {
-    return Object.values(CL.content.table('dialogue')).filter((t) => t.place === sid && test(t.visible, c));
+    return Object.values(CL.content.table('dialogue')).filter((t) => t.place && resolve(t.place, c) === sid && test(t.visible, c));
+  }
+
+  /** A dialogue's speaker, as cast. */
+  const speakerOf = (t, c = camp()) => format(t.speaker, c);
+
+  /** A cast dialogue's look in the streets: its own, else its person's, else a traveller's. */
+  function lookOf(t, c = camp()) {
+    const p = typeof t.cast === 'string' ? person(t.cast, c) : null;
+    return { tag: t.tag || p?.tag || 'Traveller', frames: t.frames || p?.frames || [72, 73, 74, 75] };
   }
 
   // ---- Journal ----
@@ -442,7 +646,7 @@
       const stage = q.stages.find((st) => st.id === r.stage);
       const left = deadlineLeft(c, id);
       const objective = stage ? format(stage.journal, c) + (left !== null ? ` (${Math.max(0, left).toFixed(1)} days left)` : '') : null;
-      rows.push({ id, title: q.title, status: r.status, objective, notes: r.notes.slice(), summary: q.summary, side: Boolean(q.side) });
+      rows.push({ id, title: format(q.title, c), status: r.status, objective, notes: r.notes.slice(), summary: format(q.summary || '', c), side: Boolean(q.side) });
     }
     const order = { active: 0, done: 1, failed: 2 };
     return rows.sort((a, b) => order[a.status] - order[b.status]);
@@ -457,10 +661,20 @@
     const q = quest(id);
     const left = deadlineLeft(c, id);
     const objective = format(q.stages.find((st) => st.id === r.stage)?.journal || '', c) + (left !== null ? ` (${Math.max(0, left).toFixed(1)} days left)` : '');
-    return { id, title: q.title, objective };
+    return { id, title: format(q.title, c), objective };
   }
 
   // ---- Content checks (called by ContentDB.validate) ----
+
+  // A realm, place or site, or a role of its kind (P10-04).
+  const roleOf = (v) => (isRole(v) ? v.slice(1) : null);
+  const realmKnown = (v, C) => (roleOf(v) ? REALM_ROLES.includes(roleOf(v)) : Boolean(C.factions?.[v]));
+  const placeKnown = (v, C) => (roleOf(v) ? PLACE_ROLES.includes(roleOf(v)) : Boolean(C.settlements?.[v]));
+  const fortKnown = (v, C) => (roleOf(v) ? ['fort', 'rival_fort'].includes(roleOf(v)) : C.settlements?.[v]?.type === 'fort');
+  const spotKnown = (v, C) => {
+    const map = Object.values(C.world_map || {})[0];
+    return roleOf(v) ? [...PLACE_ROLES, 'camp'].includes(roleOf(v)) : Boolean(C.settlements?.[v] || map?.sites?.[v]);
+  };
 
   function checkCond(cond, C, where, err) {
     if (cond == null) return;
@@ -491,9 +705,10 @@
       else if ('stage' in cond && !C.quests[cond.quest].stages.some((s) => s.id === cond.stage)) err(`${where}: unknown stage ${cond.stage}`);
       if ('is' in cond && !['unstarted', ...QUEST_STATUS].includes(cond.is)) err(`${where}: bad quest status ${cond.is}`);
     }
-    if ((k === 'rep' || k === 'standing') && !C.factions?.[cond[k]]) err(`${where}: unknown faction ${cond[k]}`);
+    if ((k === 'rep' || k === 'standing') && !realmKnown(cond[k], C)) err(`${where}: unknown faction ${cond[k]}`);
     if (k === 'has' && !C.items?.[cond.has]) err(`${where}: unknown item ${cond.has}`);
-    if ((k === 'owner' || k === 'at') && !C.settlements?.[cond[k]]) err(`${where}: unknown settlement ${cond[k]}`);
+    if ((k === 'owner' || k === 'at') && !placeKnown(cond[k], C)) err(`${where}: unknown settlement ${cond[k]}`);
+    if (k === 'owner' && 'is' in cond && !realmKnown(cond.is, C)) err(`${where}: unknown faction ${cond.is}`);
     if (k === 'background' && !C.backgrounds?.[cond.background]) err(`${where}: unknown background ${cond.background}`);
     if (k === 'skill' && !C.skills?.[cond.skill]) err(`${where}: unknown skill ${cond.skill}`);
     if (k === 'companion' && !C.companions?.[cond.companion]) err(`${where}: unknown companion ${cond.companion}`);
@@ -513,7 +728,7 @@
       if (k === 'set' && 'to' in e && !isFlagValue(e.to)) err(`${where}: flag ${e.set} needs a simple value`);
       if (k === 'add' && 'by' in e && !Number.isFinite(e.by)) err(`${where}: add needs a number`);
       if (['gold', 'renown', 'xp', 'food'].includes(k) && !Number.isFinite(e[k])) err(`${where}: ${k} needs a number`);
-      if (k === 'rep' && (!C.factions?.[e.rep] || !Number.isFinite(e.by))) err(`${where}: bad rep effect`);
+      if (k === 'rep' && (!realmKnown(e.rep, C) || !Number.isFinite(e.by))) err(`${where}: bad rep effect`);
       if ((k === 'give' || k === 'take') && !C.items?.[e[k]]) err(`${where}: unknown item ${e[k]}`);
       if (k === 'recruit' && !C.troops?.[e.recruit]) err(`${where}: unknown troop ${e.recruit}`);
       if (['start', 'complete', 'fail'].includes(k) && !C.quests?.[e[k]]) err(`${where}: unknown quest ${e[k]}`);
@@ -522,7 +737,7 @@
         if (!q) err(`${where}: stage effect needs a quest`);
         else if (!q.stages.some((s) => s.id === e.stage)) err(`${where}: unknown stage ${e.stage}`);
       }
-      if (k === 'owner' && (C.settlements?.[e.owner]?.type !== 'fort' || !C.factions?.[e.to])) err(`${where}: bad owner effect`);
+      if (k === 'owner' && (!fortKnown(e.owner, C) || !realmKnown(e.to, C))) err(`${where}: bad owner effect`);
       if (['companion', 'part', 'send', 'recall'].includes(k) && !C.companions?.[e[k]]) err(`${where}: unknown companion ${e[k]}`);
       if (k === 'retinue' && !C.companions?.[e.retinue]?.retinue) err(`${where}: unknown retinue companion ${e.retinue}`);
       if (k === 'ending' && !C.quests?.[e.quest || questId]?.endings?.[e.ending]) err(`${where}: unknown ending ${e.ending}`);
@@ -532,6 +747,20 @@
   }
 
   function validate(C, err) {
+    // P10-04: every realm that can be cast has its story people, banner and forces.
+    for (const f of Object.values(C.factions || {})) {
+      const st = f.story;
+      if (!st) continue;
+      for (const k of ['agent', 'caravan']) if (!st[k]?.name || !st[k]?.short || !['he', 'she', 'they'].includes(st[k]?.he)) err(`faction ${f.id}: story ${k} needs a name, short and he/she/they`);
+      if (!st.banner || !st.colour || !st.court) err(`faction ${f.id}: story needs a banner, a colour and a court`);
+      if (/s$/.test(st.banner || '')) err(`faction ${f.id}: story banner is one thing ("the Crown"), for the text's verbs`);
+      if (!st.agent?.title) err(`faction ${f.id}: story agent needs a title`);
+      if (C.party_templates?.[st.patrol]?.kind !== 'patrol' || C.party_templates[st.patrol].faction !== f.id) err(`faction ${f.id}: story patrol must be its own patrol`);
+      for (const force of ['column', 'host']) {
+        const t = st[force] || {};
+        if (!Object.keys(t).length || Object.entries(t).some(([id, n]) => !C.troops?.[id] || !(Number.isInteger(n) && n > 0))) err(`faction ${f.id}: bad story ${force}`);
+      }
+    }
     for (const [id, t] of Object.entries(C.dialogue || {})) {
       const w = `dialogue ${id}`;
       if (t.id !== id) err(`${w}: id is '${t.id}'`);
@@ -540,7 +769,8 @@
         err(`${w}: no nodes`);
         continue;
       }
-      if (t.place && !C.settlements?.[t.place]) err(`${w}: unknown place ${t.place}`);
+      if (t.place && !placeKnown(t.place, C)) err(`${w}: unknown place ${t.place}`);
+      if (t.cast != null && !PEOPLE_ROLES.includes(t.cast)) err(`${w}: unknown cast role ${t.cast}`);
       checkCond(t.visible, C, w, err);
       const starts = typeof t.start === 'string' ? [t.start] : t.start || [];
       for (const s of starts) {
@@ -579,9 +809,10 @@
         checkEffects(st.expire, C, `${w}.${st.id} expire`, err, id);
         if (st.expire && !(st.deadline > 0)) err(`${w}.${st.id}: expire needs a deadline`);
         for (const b of stageBands(st)) {
-          const map = Object.values(C.world_map || {})[0];
-          const known = (x) => Boolean(C.settlements?.[x] || map?.sites?.[x]);
-          if (!['bandit', 'patrol'].includes(C.party_templates?.[b.template]?.kind)) err(`${w}.${st.id}: band needs a bandit or patrol template`);
+          const known = (x) => spotKnown(x, C);
+          if (b.realm) {
+            if (!realmKnown(b.realm, C) || !['column', 'host'].includes(b.force) || b.template || b.troops) err(`${w}.${st.id}: a realm's band needs a force (column or host), and no template or troops`);
+          } else if (!['bandit', 'patrol'].includes(C.party_templates?.[b.template]?.kind)) err(`${w}.${st.id}: band needs a bandit or patrol template`);
           if (b.map && !C.battle_maps?.[b.map]) err(`${w}.${st.id}: unknown battle map ${b.map}`);
           if (!/^[a-z0-9_:]{1,81}$/.test(b.tag || '')) err(`${w}.${st.id}: band needs a tag`);
           if (b.between ? !(b.between.length === 2 && b.between.every(known)) : !known(b.near)) err(`${w}.${st.id}: band needs a known place`);
@@ -596,12 +827,12 @@
           checkEffects(t.do, C, `${w}.${st.id}`, err, id);
         }
       }
-      for (const f of Object.keys(q.rewards?.rep || {})) if (!C.factions?.[f]) err(`${w}: unknown faction ${f} in rewards`);
+      for (const f of Object.keys(q.rewards?.rep || {})) if (!realmKnown(f, C)) err(`${w}: unknown faction ${f} in rewards`);
       for (const [key, e] of Object.entries(q.endings || {})) {
         if (!e.title || !e.text) err(`${w}: ending ${key} needs a title and text`);
         if (e.relations) {
           const r = e.relations;
-          const ok = Array.isArray(r.between) && r.between.length === 2 && r.between[0] !== r.between[1] && r.between.every((f) => C.factions?.[f]) && ['peace', 'tension', 'war'].includes(r.to);
+          const ok = Array.isArray(r.between) && r.between.length === 2 && r.between[0] !== r.between[1] && r.between.every((f) => realmKnown(f, C)) && ['peace', 'tension', 'war'].includes(r.to);
           if (!ok) err(`${w}: ending ${key} relations need two kingdoms and peace, tension or war`);
         }
         for (const x of Array.isArray(e.text) ? e.text : [e.text]) if (typeof x === 'object') checkCond(x.if, C, `${w}: ending ${key}`, err);
@@ -612,7 +843,7 @@
   // ---- Save ----
 
   function sanitize(s, d) {
-    s.story = blank();
+    s.story = blank(s.startRealm); // the cast: from the realm the game began in, as the data casts it
     const src = d?.story;
     if (!src || typeof src !== 'object') return;
     for (const [k, v] of Object.entries(src.flags || {}).slice(0, MAX_FLAGS)) {
@@ -640,13 +871,29 @@
 
   CL.story = {
     EVENTS,
+    ROLES,
     blank,
+    castFor,
+    castOf,
+    startRealms,
+    startOf,
+    defaultRealm,
+    resolve,
+    person,
+    homeLand,
+    locksFort,
+    holdsPair,
+    streetDialogue,
+    speakerOf,
+    lookOf,
+    bandOf,
     state,
     test,
     apply,
     start,
     setStage,
     finish,
+    opening,
     questStatus,
     ensureBands,
     bandSpec,

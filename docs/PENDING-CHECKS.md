@@ -4,7 +4,9 @@ _The owner's rule (D-P10f, 2026-11-24). A task that needs a run over 20 minutes 
 
 ## Pending
 
-_Nothing pending._
+| From | Run | Look for |
+|---|---|---|
+| P10-04 (4.4.0) | `node --test tests/slow/gate-d-campaigns.test.js`: 42 campaigns, 7 in each kingdom (about 15–20 min, not yet timed at this size) | Every run reaches an ending, from every kingdom; every stage, ending, Q1 route and branch reached; Mara saved and lost; the sandbox after the ending |
 
 ## Done
 

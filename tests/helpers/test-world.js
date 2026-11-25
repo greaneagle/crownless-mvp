@@ -39,6 +39,8 @@ function testWorld(content) {
   // The third kingdom: Sunhold's troops, its own name, banner and lands.
   const sun = C.factions.sunhold;
   C.factions[THIRD] = { ...sun, id: THIRD, name: 'Iron Reach Compact', short: 'Iron Reach', emblem: 'I', order: 3, color: '#6b6b2a', description: 'Hill clans of the far south-east (test world).' };
+  delete C.factions[THIRD].start; // P10-04: no town of its own, so no new game begins there
+  delete C.factions[THIRD].story;
   C.factions.northmark = { ...C.factions.northmark, name: 'Northmark Crown', short: 'Northmark' };
   C.factions.sunhold = { ...sun, name: 'Sunhold League', short: 'Sunhold' };
   for (const id of THIRD_LANDS) {

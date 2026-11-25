@@ -149,13 +149,13 @@ test('F-3: the menu reaches the people in the streets; a place can still choose 
   const { CL } = loadGame();
   // The Elder, the Captain and the Sergeant are in Stonebridge's streets, and listed on its menu too.
   const people = CL.town.streetPeople('stonebridge').map((p) => p.id);
-  for (const id of ['stonebridge_elder', 'valedorn_agent', 'sergeant_brun']) assert.ok(people.includes(id), id);
+  for (const id of ['story_elder', 'crown_agent', 'story_recruiter']) assert.ok(people.includes(id), id);
   assert.equal(people.includes('mara'), false, 'Mara only once the story brings her');
   assert.deepEqual(Array.from(CL.town.streetPeople('oakford')), [], 'no streets, no street people');
   // Talking from the menu returns to the menu.
   CL.campaign.world.location = 'stonebridge';
   CL.town.enterPlace();
-  const v = CL.story.talk('stonebridge_elder');
+  const v = CL.story.talk('story_elder');
   assert.ok(v.options.some((o) => /work for me/.test(o.text)), 'the Elder offers work from the menu');
   CL.town.backToPlace();
   assert.equal(CL.game.mode, 'settlement');

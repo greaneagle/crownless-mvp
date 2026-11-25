@@ -14,6 +14,10 @@
  *   npcs[].lines:  what they say (one is picked each time you talk)
  *   npcs[].tag:    short title shown under their feet
  *   npcs[].visible: optional story condition for appearing at all (js/story.js vocabulary)
+ *   npcs[].short:  the name the story calls them by ('Maren'), for those it casts (P10-04)
+ *   spots:         [{ x, y }]: where the story's people stand when it casts them here (P10-04: your
+ *                  realm's envoy and Mara in your start town, the rival's envoy and caravan master in
+ *                  its town). The elder and recruiter of your start town speak the story in person.
  *   obstacles[].colors: optional { wall, roof, door } for a building, in the town's own style
  *   ground.road / ground.plaza.color: optional street and square colours
  *   entry: 'menu' (default) or 'streets': what arriving opens. Menu first, with "Walk the streets"
@@ -82,6 +86,7 @@
         tree(60, 120), tree(370, 470), tree(900, 300), tree(620, 470)
       ],
       spawn: { x: 90, y: 298 },
+      spots: [{ x: 330, y: 300 }, { x: 300, y: 238 }, { x: 592, y: 360 }], // P10-04: where the story's envoys and Mara stand, when they are here
       exitZone: { x: 47, y: 262, w: 20, h: 72 },
       npcs: [
         {
@@ -114,6 +119,7 @@
         {
           id: 'sergeant',
           name: 'Sergeant Brun',
+          short: 'Brun',
           tag: 'Recruiter',
           role: 'recruiter',
           frames: [76, 77, 78, 79],
@@ -121,46 +127,19 @@
           y: 238,
           pace: [850, 238],
           action: 'recruit',
-          dialogue: 'sergeant_brun',
           lines: ['Strong backs and steady hands wanted. Coin up front.', 'A levy with a full belly fights twice as hard.']
         },
         {
           id: 'elder',
           name: 'Elder Maren',
+          short: 'Maren',
           tag: 'Elder',
           role: 'elder',
           frames: [288, 289, 290, 291],
           x: 775,
           y: 318,
           action: 'talk',
-          dialogue: 'stonebridge_elder',
           lines: ['Stonebridge has stood at this ford since before the empire. It will stand after.']
-        },
-        {
-          id: 'captain',
-          name: 'Captain Aldric',
-          tag: 'Captain',
-          role: 'official',
-          frames: [72, 73, 74, 75],
-          x: 330,
-          y: 300,
-          pace: [400, 300],
-          action: 'talk',
-          dialogue: 'valedorn_agent',
-          lines: ['Keep the roads clear and the Crown keeps your purse full.']
-        },
-        {
-          id: 'mara',
-          name: 'Mara',
-          tag: 'Scout',
-          frames: [124, 125, 126, 127],
-          x: 300,
-          y: 238,
-          action: 'talk',
-          dialogue: 'mara',
-          // She turns up after Q2, until she joins (or is gone for good).
-          visible: [{ quest: 'q2', is: 'done' }, { not: { companion: 'mara' } }, { not: { flag: 'mara_gone' } }, { not: { flag: 'mara_scouting' } }],
-          lines: ['I have walked every road between the forts.']
         },
         {
           id: 'guard',
@@ -204,6 +183,7 @@
         tree(660, 130)
       ],
       spawn: { x: 480, y: 445 },
+      spots: [{ x: 496, y: 360 }, { x: 608, y: 264 }, { x: 352, y: 264 }], // P10-04: where the story's envoys and Mara stand, when they are here
       exitZone: { x: 440, y: 475, w: 80, h: 20 },
       npcs: [
         {
@@ -236,6 +216,7 @@
         {
           id: 'recruiter',
           name: 'Optio Varo Lupo',
+          short: 'Varo',
           tag: 'Recruiter',
           role: 'recruiter',
           frames: [244, 245, 246, 247],
@@ -248,6 +229,7 @@
         {
           id: 'magistrate',
           name: 'Magistrate Oren Stellan',
+          short: 'Oren',
           tag: 'Magistrate',
           role: 'official',
           frames: [288, 289, 290, 291],
@@ -304,6 +286,7 @@
         tree(520, 110)
       ],
       spawn: { x: 90, y: 358 },
+      spots: [{ x: 480, y: 288 }, { x: 600, y: 216 }, { x: 440, y: 168 }], // P10-04: where the story's envoys and Mara stand, when they are here
       exitZone: { x: 47, y: 330, w: 20, h: 56 },
       npcs: [
         {
@@ -336,6 +319,7 @@
         {
           id: 'recruiter',
           name: 'Halvar Axehand',
+          short: 'Halvar',
           tag: 'Recruiter',
           role: 'recruiter',
           frames: [76, 77, 78, 79],
@@ -348,6 +332,7 @@
         {
           id: 'lawspeaker',
           name: 'Gudrun Lawspeaker',
+          short: 'Gudrun',
           tag: 'Lawspeaker',
           role: 'official',
           frames: [288, 289, 290, 291],
@@ -402,6 +387,7 @@
         tree(340, 330)
       ],
       spawn: { x: 860, y: 246 },
+      spots: [{ x: 472, y: 248 }, { x: 328, y: 240 }, { x: 504, y: 112 }], // P10-04: where the story's envoys and Mara stand, when they are here
       exitZone: { x: 890, y: 220, w: 25, h: 52 },
       npcs: [
         {
@@ -434,6 +420,7 @@
         {
           id: 'recruiter',
           name: 'Captain Salvo Ferraro',
+          short: 'Salvo',
           tag: 'Recruiter',
           role: 'recruiter',
           frames: [244, 245, 246, 247],
@@ -446,6 +433,7 @@
         {
           id: 'harbourmaster',
           name: 'Vanna Pescara',
+          short: 'Vanna',
           tag: 'Harbourmaster',
           role: 'official',
           frames: [288, 289, 290, 291],
@@ -535,6 +523,7 @@
         {
           id: 'recruiter',
           name: 'Rook Two-Knives',
+          short: 'Rook',
           tag: 'Sellsword',
           role: 'recruiter',
           frames: [124, 125, 126, 127],
@@ -547,6 +536,7 @@
         {
           id: 'reeve',
           name: 'Reeve Corrie',
+          short: 'Corrie',
           tag: 'Reeve',
           role: 'official',
           frames: [68, 69, 70, 71],
@@ -639,6 +629,7 @@
         {
           id: 'recruiter',
           name: 'Jory Crowfoot',
+          short: 'Jory',
           tag: 'Recruiter',
           role: 'recruiter',
           frames: [76, 77, 78, 79],
@@ -651,6 +642,7 @@
         {
           id: 'portwarden',
           name: 'Portwarden Ysolt',
+          short: 'Ysolt',
           tag: 'Portwarden',
           role: 'official',
           frames: [288, 289, 290, 291],
@@ -666,6 +658,7 @@
         {
           id: 'old_netter',
           name: 'Old Abe',
+          short: 'Abe',
           tag: 'Elder',
           role: 'elder',
           frames: [68, 69, 70, 71],
@@ -719,6 +712,7 @@
         building('house', 750, 134, 150, 80, null, CLIFF)
       ],
       spawn: { x: 459, y: 440 },
+      spots: [{ x: 352, y: 272 }, { x: 488, y: 360 }, { x: 600, y: 288 }], // P10-04: where the story's envoys and Mara stand, when they are here
       exitZone: { x: 430, y: 474, w: 58, h: 22 },
       npcs: [
         {
@@ -751,6 +745,7 @@
         {
           id: 'recruiter',
           name: 'Ulf Ironhand',
+          short: 'Ulf',
           tag: 'Recruiter',
           role: 'recruiter',
           frames: [72, 73, 74, 75],
@@ -763,6 +758,7 @@
         {
           id: 'steward',
           name: 'Steward Liv',
+          short: 'Liv',
           tag: 'Steward',
           role: 'official',
           frames: [288, 289, 290, 291],
@@ -822,6 +818,7 @@
         tree(900, 380)
       ],
       spawn: { x: 860, y: 275 },
+      spots: [{ x: 480, y: 416 }, { x: 512, y: 304 }, { x: 352, y: 480 }], // P10-04: where the story's envoys and Mara stand, when they are here
       exitZone: { x: 890, y: 245, w: 25, h: 60 },
       npcs: [
         {
@@ -854,6 +851,7 @@
         {
           id: 'recruiter',
           name: 'Emilio il Rosso',
+          short: 'Emilio',
           tag: 'Recruiter',
           role: 'recruiter',
           frames: [244, 245, 246, 247],
@@ -866,6 +864,7 @@
         {
           id: 'factor',
           name: 'Factor Donata',
+          short: 'Donata',
           tag: 'Factor',
           role: 'official',
           frames: [288, 289, 290, 291],
@@ -880,6 +879,7 @@
         {
           id: 'elder',
           name: 'Old Benedetto',
+          short: 'Benedetto',
           tag: 'Elder',
           role: 'elder',
           frames: [68, 69, 70, 71],

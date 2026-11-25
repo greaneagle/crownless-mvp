@@ -32,24 +32,24 @@ function winAgainst(CL, p) {
 
 test('the claimants only make their offers once Q2 is done', () => {
   const { CL } = loadGame();
-  assert.equal(CL.story.talk('valedorn_agent').node, 'talk');
+  assert.equal(CL.story.talk('crown_agent').node, 'talk');
   const { CL: CL2 } = ready();
-  assert.equal(CL2.story.talk('valedorn_agent').node, 'q3_offer');
-  assert.equal(CL2.story.talk('aurelian_agent').node, 'q3_offer');
+  assert.equal(CL2.story.talk('crown_agent').node, 'q3_offer');
+  assert.equal(CL2.story.talk('rival_agent').node, 'q3_offer');
 });
 
 test('for the Crown: break the Aurelian column in time and Mara rides back unhurt', () => {
   const { CL } = ready({ mara: true, opts: { random: () => 0.99 } });
   const c = CL.campaign;
   const gold = c.gold;
-  let v = CL.story.talk('valedorn_agent');
+  let v = CL.story.talk('crown_agent');
   assert.equal(
     v.options.some((o) => /Sell/.test(o.text)),
     false,
     'nothing to sell before hearing the other side',
   );
   v = say(CL, v, /ride for the Crown/);
-  assert.equal(stage(CL), 'q3_strike_aurelian');
+  assert.equal(stage(CL), 'q3_strike_rival');
   assert.equal(c.companion.away, true, 'Mara has ridden ahead');
   assert.equal(CL.companion.fit(c), false);
   assert.match(CL.story.currentQuest().objective, /3\.0 days left/);
@@ -76,8 +76,8 @@ test('too late: Mara is lost for good — her gear comes home, the quest goes on
   const { CL } = ready({ mara: true, opts: { random: () => 0.99 } });
   const c = CL.campaign;
   c.inventory = {};
-  say(CL, CL.story.talk('aurelian_agent'), /ride for the Remnant/);
-  assert.equal(stage(CL), 'q3_strike_valedorn');
+  say(CL, CL.story.talk('rival_agent'), /ride for the Remnant/);
+  assert.equal(stage(CL), 'q3_strike_crown');
   assert.equal(band(CL, 'q3_column').template, 'valedorn_patrol');
   CL.party.advanceDays(3.05);
   assert.equal(CL.companion.has(c), false);
@@ -97,7 +97,7 @@ test('too late: Mara is lost for good — her gear comes home, the quest goes on
 test('guard the road: the caravan saved, both banners pleased, the compromise flag set', () => {
   const { CL } = ready({ opts: { random: () => 0.99 } });
   const c = CL.campaign;
-  say(CL, CL.story.talk('valedorn_agent'), /fight for neither/);
+  say(CL, CL.story.talk('crown_agent'), /fight for neither/);
   assert.equal(stage(CL), 'q3_road');
   const raiders = band(CL, 'q3_raiders');
   assert.deepEqual({ ...raiders.troops }, { looter: 5, reaver: 3 });
@@ -111,16 +111,16 @@ test('sell one side’s plans to the other: paid, but no road-peace credit', () 
   const { CL } = ready({ opts: { random: () => 0.99 } });
   const c = CL.campaign;
   // Hear Vell out first…
-  assert.equal(say(CL, CL.story.talk('aurelian_agent'), /think about it/), null);
+  assert.equal(say(CL, CL.story.talk('rival_agent'), /think about it/), null);
   assert.equal(stage(CL), 'q3_choose');
   // …then sell her plans to Aldric.
   const gold = c.gold;
-  const v = CL.story.talk('valedorn_agent');
+  const v = CL.story.talk('crown_agent');
   assert.match(v.text, /offer too/);
   say(CL, v, /Sell the magistrate’s plans/);
   assert.equal(c.gold, gold + 100);
   assert.deepEqual({ ...c.reputation }, { valedorn: 10, aurelian: -25, hrothmark: 0, vessaro: 0, merrow: 0, ostrand: 0, saltreach: 0, gullhaven: 0 });
-  assert.equal(CL.story.state(c).flags.q3_side, 'sold_to_valedorn');
+  assert.equal(CL.story.state(c).flags.q3_side, 'sold_to_crown');
   assert.equal(stage(CL), 'q3_road');
   winAgainst(CL, band(CL, 'q3_raiders'));
   assert.equal(CL.story.questStatus(c, 'q3'), 'done');
@@ -130,12 +130,12 @@ test('sell one side’s plans to the other: paid, but no road-peace credit', () 
 test('and the mirror: hear Aldric out, then sell the Crown’s plans to Vell', () => {
   const { CL } = ready({ opts: { random: () => 0.99 } });
   const c = CL.campaign;
-  assert.equal(say(CL, CL.story.talk('valedorn_agent'), /think about it/), null);
+  assert.equal(say(CL, CL.story.talk('crown_agent'), /think about it/), null);
   const gold = c.gold;
-  say(CL, CL.story.talk('aurelian_agent'), /Sell the Crown’s plans/);
+  say(CL, CL.story.talk('rival_agent'), /Sell the Crown’s plans/);
   assert.equal(c.gold, gold + 100);
   assert.deepEqual({ ...c.reputation }, { valedorn: -25, aurelian: 10, hrothmark: 0, vessaro: 0, merrow: 0, ostrand: 0, saltreach: 0, gullhaven: 0 });
-  assert.equal(CL.story.state(c).flags.q3_side, 'sold_to_aurelian');
+  assert.equal(CL.story.state(c).flags.q3_side, 'sold_to_rival');
   assert.equal(stage(CL), 'q3_road');
   winAgainst(CL, band(CL, 'q3_raiders'));
   assert.equal(CL.story.questStatus(c, 'q3'), 'done');
@@ -149,7 +149,7 @@ test('Mara not yet recruited: she scouts anyway, leaves the inn, and owes you if
     return CL.game.town.npcs.some((n) => n.id === 'mara');
   };
   assert.equal(atInn(), true);
-  say(CL, CL.story.talk('valedorn_agent'), /fight for neither/);
+  say(CL, CL.story.talk('crown_agent'), /fight for neither/);
   assert.equal(atInn(), false, 'out scouting');
   winAgainst(CL, band(CL, 'q3_raiders'));
   assert.equal(atInn(), true, 'back at the inn');
@@ -166,7 +166,7 @@ test('Mara not yet recruited: she scouts anyway, leaves the inn, and owes you if
 
 test('Mara not recruited and too late: she is gone from the inn for good', () => {
   const { CL } = ready();
-  say(CL, CL.story.talk('aurelian_agent'), /ride for the Remnant/);
+  say(CL, CL.story.talk('rival_agent'), /ride for the Remnant/);
   CL.party.advanceDays(3.5);
   assert.equal(CL.story.state(CL.campaign).flags.mara_gone, 'fell');
   CL.town.enter('stonebridge');
@@ -180,7 +180,7 @@ test('a wounded Mara still rides ahead (GDD edge case: companion wounded at stor
   const { CL } = ready({ mara: true });
   const c = CL.campaign;
   CL.companion.wound(c, 'test');
-  say(CL, CL.story.talk('valedorn_agent'), /ride for the Crown/);
+  say(CL, CL.story.talk('crown_agent'), /ride for the Crown/);
   assert.equal(c.companion.away, true);
   CL.party.advanceDays(2.5); // her wound heals while she is away; she is still away
   assert.equal(CL.companion.fit(c), false);
@@ -189,12 +189,12 @@ test('a wounded Mara still rides ahead (GDD edge case: companion wounded at stor
 test('mid-quest saves keep the clock, the expiry and Mara’s absence', () => {
   const { CL } = ready({ mara: true });
   const c = CL.campaign;
-  say(CL, CL.story.talk('valedorn_agent'), /ride for the Crown/);
+  say(CL, CL.story.talk('crown_agent'), /ride for the Crown/);
   CL.party.advanceDays(1);
   let s = CL.save.sanitize(JSON.parse(JSON.stringify(c)));
   assert.equal(s.story.quests.q3.stageDay, c.story.quests.q3.stageDay);
   assert.equal(s.companion.away, true);
   CL.party.advanceDays(2.5);
   s = CL.save.sanitize(JSON.parse(JSON.stringify(c)));
-  assert.equal(s.story.quests.q3.expired, 'q3_strike_aurelian', 'it will not expire twice after a reload');
+  assert.equal(s.story.quests.q3.expired, 'q3_strike_rival', 'it will not expire twice after a reload');
 });

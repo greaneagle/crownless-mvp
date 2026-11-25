@@ -167,7 +167,7 @@ test('Elder Maren: background lines compose, choices set flags, the start node f
   const { CL } = loadGame();
   const S = CL.story;
   const c = CL.campaign;
-  let v = S.talk('stonebridge_elder');
+  let v = S.talk('story_elder');
   assert.equal(v.node, 'first');
   assert.match(v.text, /Welcome to Stonebridge, .*farmer’s hands/);
   assert.doesNotMatch(v.text, /peddler/);
@@ -182,19 +182,19 @@ test('Elder Maren: background lines compose, choices set flags, the start node f
   v = S.choose(v, 0);
   assert.match(v.text, /Crown’s blue/);
   CL.realm.setOwner(c, 'greywall_fort', 'aurelian');
-  v = S.view('stonebridge_elder', 'greywall');
+  v = S.view('story_elder', 'greywall');
   assert.match(v.text, /Aurelian red/);
   assert.equal(S.choose(v, 0), null, 'the talk ends');
   assert.equal(S.state(c).flags.heard_charter, true);
-  v = S.talk('stonebridge_elder');
+  v = S.talk('story_elder');
   assert.equal(v.node, 'again');
   assert.ok(v.options.some((o) => /Greywall/.test(o.text)), 'the follow-up question unlocks');
 });
 
 test('cycling nodes rotate through their matching lines', () => {
   const { CL } = loadGame();
-  const a = CL.story.talk('valedorn_agent').text;
-  const b = CL.story.talk('valedorn_agent').text;
+  const a = CL.story.talk('crown_agent').text;
+  const b = CL.story.talk('crown_agent').text;
   assert.notEqual(a, b);
 });
 
@@ -215,7 +215,7 @@ test('people at menu-only settlements; the journal and HUD show the current ques
   const S = CL.story;
   const c = CL.campaign;
   assert.ok(S.peopleAt('eastwatch').some((t) => t.id === 'tq_giver'));
-  assert.deepEqual(Array.from(S.peopleAt('stonebridge')), []);
+  assert.deepEqual(Array.from(S.peopleAt('stonebridge').map((t) => t.id)), ['crown_agent'], 'P10-04: your realm’s envoy, cast to your start town');
   assert.deepEqual(Array.from(S.journal()), []);
   assert.equal(S.currentQuest(), null);
   const v = S.choose(S.talk('tq_giver'), 0);
@@ -240,11 +240,11 @@ test('story state survives save and reload; junk is dropped', () => {
   CL.story.start(c, 'tq');
   CL.story.setStage(c, 'tq', 'tq_return');
   CL.story.state(c).flags.picked = 'valedorn';
-  CL.story.talk('stonebridge_elder');
+  CL.story.talk('story_elder');
   const s = CL.save.sanitize(JSON.parse(JSON.stringify(c)));
   assert.equal(s.story.quests.tq.stage, 'tq_return');
   assert.equal(s.story.flags.picked, 'valedorn');
-  assert.equal(s.story.visits.stonebridge_elder, 1);
+  assert.equal(s.story.visits.story_elder, 1);
 
   const junk = CL.save.sanitize({
     version: 2,

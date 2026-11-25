@@ -16,14 +16,14 @@ function mulberry(seed) {
   };
 }
 
-/** A fresh GDD new game on a seeded world, driven headlessly. */
-function newCampaign(seed, background = 'farmhand', { world } = {}) {
+/** A fresh GDD new game on a seeded world, driven headlessly. P10-04: `realm`, the kingdom it begins in. */
+function newCampaign(seed, background = 'farmhand', { world, realm } = {}) {
   const env = loadGame({ party: false, random: mulberry(seed * 7919), seed, world }); // P9-08: `world`, another official world
   const { CL } = env;
   const messages = [];
   CL.ui = headlessUi(CL, messages);
   CL.game.newGame = true;
-  CL.character.begin({ name: `Bot${seed}`, background });
+  CL.character.begin({ name: `Bot${seed}`, background, realm });
   const c = CL.campaign;
   c.rngSeed = seed;
   c.parties = [];

@@ -45,10 +45,20 @@
   const inBounds = (x, y) => x >= 0 && y >= 0 && x <= bounds().w && y <= bounds().h;
   /** The world's start settlement (a new game begins there; fallbacks point at it). */
   const start = () => settlement(map().start);
-  /** The named area holding a map point (data `regions`), or null. */
-  function regionAt(x, y) {
-    for (const [rid, r] of Object.entries(map().regions || {})) if (x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h) return { id: rid, name: r.name, home: Boolean(r.home) };
+  /** The id of the named area holding a map point (data `regions`), or null. */
+  function regionIdAt(x, y) {
+    for (const [rid, r] of Object.entries(map().regions || {})) if (x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h) return rid;
     return null;
+  }
+  /**
+   * The named area holding a map point, or null. `home`: the story is told there (P10-04: the
+   * regions of its cast places, for the kingdom you began in; a world's `home` regions otherwise).
+   */
+  function regionAt(x, y, c = CL.campaign) {
+    const rid = regionIdAt(x, y);
+    if (!rid) return null;
+    const r = map().regions[rid];
+    return { id: rid, name: r.name, home: CL.story?.homeLand(rid, c) ?? Boolean(r.home) };
   }
   const world = () => CL.campaign.world;
   const settlement = (id) => CL.content.get('settlements', id);
@@ -592,6 +602,7 @@
     inBounds,
     start,
     regionAt,
+    regionIdAt,
     armies,
     VIEW,
     HIT_RADIUS_PX,

@@ -267,7 +267,8 @@ test('content checks: a village with no seat or another kingdom’s, over the ca
     problems((D) => (D.world_map.sundered_realm.nobles.find((n) => n.id === 'hawise_greymantle').kin = [])).join(),
     /hamon_greymantle: kin tie to hawise_greymantle \(sibling\) isn't returned/,
   );
-  assert.match(problems((D) => (D.settlements.oakford.story = true)).join(), /oakford: only a fort can be a story fort/);
+  // P10-04: the story's forts are its cast's now (js/story.js `locksFort`), not a flag in the data.
+  assert.match(problems((D) => (D.factions.valedorn.start = 'oakford')).join(), /faction valedorn: start must be one of its towns/);
 });
 
 test('saves: people, rulers and holdings round-trip; junk is repaired; a kingdom the build lacks is refused', () => {

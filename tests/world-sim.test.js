@@ -137,7 +137,7 @@ test('the story holds the March pair in tension, however hot; after Q4 the endin
   assert.equal(R.relation(c, 'valedorn', 'aurelian'), 'peace');
   assert.ok(c.news.events.some((e) => e.kind === 'peace_made'));
   const b = loadGame().CL;
-  b.story.apply([{ ending: 'valedorn', quest: 'q4' }], b.campaign, { quest: 'q4' });
+  b.story.apply([{ ending: 'crown', quest: 'q4' }], b.campaign, { quest: 'q4' });
   assert.equal(b.realm.relation(b.campaign, 'valedorn', 'aurelian'), 'war');
   assert.equal(b.realm.storyHeld(b.campaign, 'valedorn', 'aurelian'), false);
 });

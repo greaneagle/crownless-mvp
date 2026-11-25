@@ -63,7 +63,7 @@
       return {
         title: g.newGame ? 'A NEW WANDERER' : 'WHO ARE YOU?',
         text: g.newGame
-          ? `You arrive at ${CL.content.get('settlements', CL.world.map().start).name} with little more than a sword. Who were you before the road?`
+          ? 'You come with little more than a sword. Where do you begin, and who were you before the road?' // P10-04: any kingdom
           : 'Your party remembers your deeds, but not your name. Tell them who leads them.',
         button: 'Begin',
         secondary: g.newGame ? 'Back' : null,
@@ -1819,7 +1819,7 @@
 
   const CLOAK_LABELS = { crimson: 'Crimson', forest: 'Forest', violet: 'Violet', ash: 'Ash grey' };
   const CLOAK_SWATCH = { crimson: '#9b2c2c', forest: '#2f6b35', violet: '#6b3a9b', ash: '#7c7c78' };
-  const draft = { cloak: 'crimson', background: 'farmhand' };
+  const draft = { cloak: 'crimson', background: 'farmhand', realm: null };
 
   function choiceButton(label, checked, onPick, html) {
     const b = document.createElement('button');
@@ -1844,6 +1844,25 @@
         }, [Object.assign(document.createElement('b'), { textContent: w.name }), w.sandbox ? 'A sandbox: no story, the realms as they are.' : 'The story of the Crownless, and the realms beyond it.']),
       ),
     );
+    // P10-04: which kingdom you begin in, at a new game: you start in its start town, and the story
+    // is told from there.
+    const realms = CL.story.startRealms();
+    if (!realms.includes(draft.realm)) draft.realm = CL.story.defaultRealm();
+    $('#realmPick').classList.toggle('hidden', !(CL.game.newGame && realms.length > 1));
+    $('#realmChoices').replaceChildren(
+      ...realms.map((id) => {
+        const f = CL.realm.faction(id);
+        const town = CL.story.startOf(id);
+        const b = choiceButton(f.name, draft.realm === id, () => {
+          draft.realm = id;
+          renderCreator();
+        }, [Object.assign(document.createElement('b'), { textContent: f.short }), `from ${town.name}`]);
+        b.title = `${f.name}: ${f.description}`;
+        return b;
+      }),
+    );
+    const chosen = CL.realm.faction(draft.realm);
+    $('#realmNote').textContent = chosen ? `${chosen.name}: ${chosen.description}` : '';
     $('#cloakChoices').replaceChildren(
       ...CL.character.CLOAKS.map((id) => {
         const sw = Object.assign(document.createElement('span'), { className: 'swatch' });
@@ -1884,7 +1903,7 @@
   }
 
   function creatorChoices() {
-    return { name: $('#heroName').value, gender: $('#heroGender').value, cloak: draft.cloak, background: draft.background };
+    return { name: $('#heroName').value, gender: $('#heroGender').value, cloak: draft.cloak, background: draft.background, realm: draft.realm };
   }
 
   // ---- Character sheet ----
@@ -2585,7 +2604,7 @@
     // them too), then dialogues placed at this settlement.
     const people = [
       ...CL.town.streetPeople(c.world.location),
-      ...CL.story.peopleAt(c.world.location, c).map((t) => ({ id: t.id, name: t.speaker })),
+      ...CL.story.peopleAt(c.world.location, c).map((t) => ({ id: t.id, name: CL.story.speakerOf(t, c) })),
     ].filter((p, i, all) => all.findIndex((q) => q.id === p.id) === i);
     $('#peopleHere').replaceChildren(
       ...people.map((t) => {

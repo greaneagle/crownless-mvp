@@ -10,7 +10,7 @@ function say(CL, conv, re) {
 }
 
 /** A campaign that has finished Q2 with the given choice. */
-function afterQ2(choice = 'valedorn', opts) {
+function afterQ2(choice = 'crown', opts) {
   const env = loadGame(opts);
   const { CL } = env;
   const s = CL.story.state(CL.campaign);
@@ -50,7 +50,7 @@ test('Mara waits by the inn in Stonebridge only after Q2, and leaves the street 
 });
 
 test('the trust dialogue: an honest answer and she joins for nothing', () => {
-  const { CL } = afterQ2('aurelian');
+  const { CL } = afterQ2('rival');
   const c = CL.campaign;
   const gold = c.gold;
   let v = interview(CL, /Magistrate Vell/);

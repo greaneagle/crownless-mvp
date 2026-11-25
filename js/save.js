@@ -66,8 +66,14 @@
    * oak shield, food — and no soldiers. The character itself is filled in by the creator.
    * @param {ContentId} [background] @returns {Campaign}
    */
-  function starter(background = 'farmhand') {
+  /**
+   * A new campaign. P10-04: `realm`, the kingdom you begin in (any realm of the world with a start
+   * town; default the one holding the world's start): you start in its start town, and the story is
+   * cast from it (js/story.js `castFor`).
+   */
+  function starter(background = 'farmhand', realm = null) {
     const seed = CL.autoresolve.newSeed();
+    const startRealm = CL.story.startRealms().includes(realm) ? realm : CL.story.defaultRealm();
     /** @type {Campaign} */
     const c = {
       version: VERSION,
@@ -85,6 +91,7 @@
       inventory: {},
       lastResolvedBattle: 0,
       world: CL.world.defaultState(), // map position, current settlement, site timers
+      startRealm, // the kingdom the game began in (P10-04)
       character: null, // set by the character creator
       equipment: CL.character.blankEquipment(),
       food: 0, // rations; one feeds 5 people for a day
@@ -131,7 +138,7 @@
       trust: {}, // trust[a][b]: what realm a thinks of b's word, sparse (P9-02)
       offers: {}, // "from|to|kind" → the day a realm last made that offer (P9-02)
       relations: CL.realm.defaultRelations(), // kingdom pair → peace, tension or war (W-07)
-      story: CL.story.blank(), // quest progress, story flags, conversation visits (GDD §13)
+      story: CL.story.blank(startRealm), // quest progress, story flags, conversation visits (GDD §13), its cast (P10-04)
       companion: null, // Mara, once she joins (GDD §10)
       news: CL.news.blank(), // recent world events and regional news lines
       troopKnowledge: {}, // troop → 'seen' | 'owned': the troop tree as discovered (js/troops.js)
@@ -147,6 +154,14 @@
       tourney: CL.tourney.blank(0), // tournaments: each host's next, the open ones, your bracket and rival (P7-09)
       businesses: CL.business.blank(), // your mill, and those sold or seized (P7-10)
     };
+    // P10-04: you begin in your kingdom's start town, and the story's two realms begin in tension.
+    const home = CL.story.startOf(startRealm);
+    if (home) Object.assign(c.world, { x: home.mapX, y: home.mapY, location: home.id });
+    const cast = c.story.cast;
+    if (cast) {
+      const k = cast.crown < cast.rival ? `${cast.crown}|${cast.rival}` : `${cast.rival}|${cast.crown}`;
+      if (c.relations[k]) c.relations[k].state = 'tension';
+    }
     CL.realm.sanitizeHoldings(c, null); // the world's people and holdings as its data begins them
     CL.fiefs.sanitize(c, null); // and how each holding stands: prosperity, garrison, policies (P8-05)
     CL.houses.sanitize(c, null); // the houses, from the people's kin (P9-06)
@@ -509,6 +524,7 @@
   /** The rest of `sanitize`, field by field, onto `s`. @param {any} s @param {any} d */
   function repair(s, d) {
     if (knownWorld(d.worldId)) s.worldId = d.worldId; // its own world (W-04), when this build has it
+    if (CL.story.startRealms().includes(d.startRealm)) s.startRealm = d.startRealm; // P10-04: the story is cast from it
     s.worldEdition = editionOf(s.worldId); // P10-02: check has refused any other edition
     s.packs = CL.packs.sanitize(d.packs); // P9-07: optional; fromRaw has already refused a save whose pack is missing
     for (const k of /** @type {const} */ (['gold', 'renown', 'battles', 'victories', 'lastResolvedBattle'])) s[k] = count(d[k], s[k]);

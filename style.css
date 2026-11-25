@@ -50,6 +50,7 @@
 .bgChoices{margin-top:8px}
 .bgChoices button{text-align:left;font-weight:normal;line-height:1.3}
 .bgChoices b{display:block}
+.realmChoices button{flex:1 1 30%}
 .swatch{display:inline-block;width:14px;height:14px;border-radius:3px;margin-right:6px;vertical-align:-2px;border:1px solid #0008}
 #createNote{font-size:calc(12px * var(--ui-scale));color:#c9ae7a;margin:8px 0 0}
 #sheetStats{line-height:1.5}

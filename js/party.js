@@ -413,7 +413,7 @@
     const g = CL.game;
     const band = g.partyId != null ? CL.parties?.find(camp, g.partyId) : null;
     // V2-Q: whether it was fought in person, with which setup, and whether help rode in.
-    CL.story?.emit('battle', { win, encounter: enc.id, site: g.siteId || null, party: band?.template || null, tag: band?.questTag || null, contract: Boolean(band?.contractId), fought: Boolean(outcome.fought), preset: outcome.fought ? outcome.preset || null : null, reinforced: Boolean(outcome.reinforced) }, camp);
+    CL.story?.emit('battle', { win, encounter: enc.id, site: g.siteId || null, party: band?.template || null, kind: band ? CL.content.get('party_templates', band.template)?.kind || null : null, tag: band?.questTag || null, contract: Boolean(band?.contractId), fought: Boolean(outcome.fought), preset: outcome.fought ? outcome.preset || null : null, reinforced: Boolean(outcome.reinforced) }, camp);
     return result;
   }
 

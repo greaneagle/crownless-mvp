@@ -1,5 +1,20 @@
 # Crownless — Release Notes
 
+## v4.4.0 — Choose your kingdom, and the story from anywhere (P10-04) · 2026-11-25
+
+### New
+- **Choose your kingdom** at a new game: Valedorn, Aurelia, Hrothmark, the Vessaro League, Ostrand or Saltreach (not a free city). You begin in its start town (`start` in `data/factions.js`), and the choice is kept in the save.
+- **The main story from any kingdom.** It keeps its four quests, its choices and its three endings. Its people and places are cast from the map around you: your town's elder and recruiter, your realm's envoy, the realm next to yours with its envoy and caravan master, your village for the grain wagon, the fort the two realms quarrel over. Begun in Valedorn it is the Border March's story, as before. Twelve new characters: each realm's envoy and caravan master.
+- **The story's locks follow the cast.** Its two forts change hands only in the story until it ends, and its two realms stay in tension until then (begun on the coast, Ostrand and Saltreach no longer start at war). The gentler land of the story (smaller bands) is where its places are.
+- **Q1 is the common quest.** A new game begins with it, so the journal points at your town's elder from the first minute. It keeps its ending, the charter fragment, and then the Journal says where the story goes on, and that it can be left.
+- **In the streets:** your town's elder and recruiter speak the story in person; your realm's envoy and Mara (and in the rival's town its envoy and caravan master) stand in each capital's square.
+- Help: "Getting started" tells of choosing a kingdom and the story from anywhere.
+
+### Under the hood
+- The story is written by role: `'@role'` in conditions, effects, matches, bands and places, `{cast:role}` and `{cast:role.field}` in text, a band of a realm's `column` or `host` (js/story.js). `CL.story.castFor`, `startRealms`, `resolve`, `person`; `CL.town.peopleOf`. Dialogues renamed by role (`story_elder`, `story_recruiter`, `crown_agent`, `rival_agent`, `story_parley`); the endings and choices are `crown` and `rival`, not realm ids.
+- `npm run simulate:story -- --every` plays the seeds in each kingdom in turn; `gate-d-campaigns` plays 7 campaigns in each of the six (42).
+- `story: true` on forts and relations is gone (the cast decides). No schema step; old saves are not kept.
+
 ## v4.3.1 — The night run, and what it found (P10-00) · 2026-11-25
 
 ### New

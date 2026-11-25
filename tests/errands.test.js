@@ -53,13 +53,13 @@ test('Home from the Wars (named soldiers, chronicle): a Stonebridge-born veteran
   CL.story.state(c).flags.met_elder = true;
   const vet = c.roster[1];
   vet.record.battles = 4;
-  assert.match(CL.story.talk('stonebridge_elder').options.map((o) => o.text).join('|'), new RegExp(`One of my soldiers was born here: ${vet.name}\\.`));
-  say(CL, 'stonebridge_elder', /born here/, /buy the grain/);
+  assert.match(CL.story.talk('story_elder').options.map((o) => o.text).join('|'), new RegExp(`One of my soldiers was born here: ${vet.name}\\.`));
+  say(CL, 'story_elder', /born here/, /buy the grain/);
   assert.equal(stage(CL, c, 'sq_homecoming'), 'sq_home_grain');
   assert.equal(CL.trade.buy(c, 'stonebridge', 'grain', 2).ok, true);
   assert.equal(stage(CL, c, 'sq_homecoming'), 'sq_home_report');
   const xp = vet.xp;
-  say(CL, 'stonebridge_elder', /grain for the feast/, /^To /);
+  say(CL, 'story_elder', /grain for the feast/, /^To /);
   assert.equal(status(CL, c, 'sq_homecoming'), 'done');
   assert.equal(vet.xp, xp + 30);
   assert.equal(CL.soldiers.noteText(vet.notes.at(-1)), 'Feted at home in Stonebridge.');
@@ -69,16 +69,16 @@ test('Home from the Wars (named soldiers, chronicle): a Stonebridge-born veteran
 
 test('Full Larders (quartermaster): hire one, let them lay in stores, report to Brun', () => {
   const { CL, c } = camp();
-  say(CL, 'sergeant_brun', /advice for a growing company/, /find one/);
+  say(CL, 'story_recruiter', /advice for a growing company/, /find one/);
   assert.equal(stage(CL, c, 'sq_larders'), 'sq_larders_hire');
   CL.quartermaster.hire(c); // hiring: wages set aside and food bought at once
   assert.equal(stage(CL, c, 'sq_larders'), 'sq_larders_report');
-  say(CL, 'sergeant_brun', /laid in stores/, /Thank you/);
+  say(CL, 'story_recruiter', /laid in stores/, /Thank you/);
   assert.equal(status(CL, c, 'sq_larders'), 'done');
   // Already have one when Brun asks: straight to laying in stores.
   const b = camp();
   b.CL.quartermaster.hire(b.c);
-  say(b.CL, 'sergeant_brun', /advice/, /find one/);
+  say(b.CL, 'story_recruiter', /advice/, /find one/);
   assert.equal(stage(b.CL, b.c, 'sq_larders'), 'sq_larders_stock');
 });
 
@@ -101,7 +101,7 @@ test('A Merchant’s First Venture (merchant): hire, trade until a profitable sa
 
 test('Smoke on the Border (reinforcements): the Valedorn watch rides in to the raiders’ fight', () => {
   const { CL, c } = camp();
-  say(CL, 'valedorn_agent', /work on the frontier/, /break them/);
+  say(CL, 'crown_agent', /work on the frontier/, /break them/);
   const raiders = c.parties.find((p) => p.questTag === 'sq_border_raiders');
   const watch = c.parties.find((p) => p.questTag === 'sq_border_watch');
   assert.ok(raiders && watch);
@@ -122,7 +122,7 @@ test('Smoke on the Border (reinforcements): the Valedorn watch rides in to the r
 
 test('A Planned Engagement (battle preparation): fight the drilled Reavers to a plan', () => {
   const { CL, c } = camp('stonebridge', ['footman', 'footman', 'footman', 'hunter', 'hunter', 'levy']);
-  say(CL, 'sergeant_brun', /fight to a plan/, /take them on/);
+  say(CL, 'story_recruiter', /fight to a plan/, /take them on/);
   const band = c.parties.find((p) => p.questTag === 'sq_planned_reavers');
   Object.assign(c.world, { x: band.x, y: band.y, location: null });
   CL.parties.open(band.id);
@@ -135,7 +135,7 @@ test('A Planned Engagement (battle preparation): fight the drilled Reavers to a 
   assert.ok(c.renown >= renown + 15, 'the plan earned a little more renown');
   // Settled by auto-resolve, it still ends (no lock-out), without the bonus.
   const b = camp('stonebridge', ['footman', 'footman', 'footman', 'footman', 'hunter', 'hunter']);
-  say(b.CL, 'sergeant_brun', /fight to a plan/, /take them on/);
+  say(b.CL, 'story_recruiter', /fight to a plan/, /take them on/);
   const band2 = b.c.parties.find((p) => p.questTag === 'sq_planned_reavers');
   b.CL.parties.open(band2.id);
   for (let i = 0; i < 6 && status(b.CL, b.c, 'sq_planned') === 'active'; i++) {

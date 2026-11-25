@@ -256,14 +256,14 @@
       id: 'tensions',
       priority: 0,
       lines: [
-        'Greywall still flies the banner of the {owner}, and both crowns watch it.',
+        '{Cast:fort.place} still flies the banner of the {owner}, and both crowns watch it.',
         'Both claimants are said to be counting swords along the border.',
         'Quiet days on the road. Merchants do not trust them.'
       ],
       byEnding: {
-        valedorn: ['The Crown’s hold on Greywall is firm. Aurelian riders still watch it from the east.'],
-        aurelian: ['The Remnant’s magistrates sit in Greywall now. Valedorn has not forgotten.'],
-        compromise: ['The road peace at Greywall holds, for now. Both banners fly over its gate.']
+        crown: ['{Cast:crown.banner}’s hold on {cast:fort.place} is firm. {Cast:rival} riders still watch it.'],
+        rival: ['{Cast:rival.banner} sits in {cast:fort.place} now. {Cast:crown} has not forgotten.'],
+        compromise: ['The road peace at {cast:fort.place} holds, for now. Both banners fly over its gate.']
       }
     }
   };

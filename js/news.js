@@ -74,8 +74,9 @@
   }
 
   function fill(text, e, c) {
+    text = CL.story.format(text, c); // P10-04: the story's places, as cast ({cast:fort.place})
     const good = e.good ? CL.content.table('markets')[e.good]?.name || e.good : 'goods';
-    const fort = e.fort || CL.realm.forts()[0]?.id; // the fort the news is about, or the world's first
+    const fort = e.fort || CL.story.castOf(c)?.fort || CL.realm.forts()[0]?.id; // the fort the news is about: the story's, or the world's first
     const owner = e.owner || (fort ? CL.realm.owner(fort, c) : null);
     const vars = {
       place: settlement(e.place)?.name || 'the border',

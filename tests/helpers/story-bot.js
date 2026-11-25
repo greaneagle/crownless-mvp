@@ -7,7 +7,8 @@
 //   - ride somewhere at random
 // Now and then it saves and reloads, like closing the browser. Travel is real map travel (with
 // whatever bands get in the way). Only the outcome of a battle is rolled rather than fought.
-const STONEBRIDGE_HUB = 'stonebridge';
+// P10-04: the story is cast from the kingdom the game began in; the bot reads its places through the
+// cast ('@role' in a trigger is resolved by CL.story.resolve).
 
 function makeStoryBot(CL, rnd, { winChance = 0.85, reloadChance = 0.04 } = {}) {
   const c = () => CL.campaign;
@@ -102,10 +103,9 @@ function makeStoryBot(CL, rnd, { winChance = 0.85, reloadChance = 0.04 } = {}) {
 
   // ---- Conversations ----
 
-  /** The story's settlements: those in the world's `home` regions (all of them in a world without any). */
+  /** The story's settlements: those in its `home` regions, as cast (all of them in a world without any). */
   function marchPlaces() {
-    const regions = CL.world.map().regions || {};
-    const home = (s) => regions[CL.world.regionAt(s.mapX, s.mapY)?.id]?.home;
+    const home = (s) => CL.world.regionAt(s.mapX, s.mapY, c())?.home;
     const all = Object.values(CL.content.table('settlements'));
     const mine = all.filter(home);
     return (mine.length ? mine : all).map((s) => s.id);
@@ -114,10 +114,9 @@ function makeStoryBot(CL, rnd, { winChance = 0.85, reloadChance = 0.04 } = {}) {
   /** Everyone the player could talk to right now, and where. */
   function people() {
     const out = [];
-    const hub = CL.content.table('town_hubs')[STONEBRIDGE_HUB];
-    for (const n of hub.npcs) if (n.dialogue && CL.story.test(n.visible)) out.push({ id: n.dialogue, at: STONEBRIDGE_HUB });
     for (const sid of Object.keys(CL.content.table('settlements'))) {
-      for (const t of CL.story.peopleAt(sid)) out.push({ id: t.id, at: sid });
+      const here = [...CL.town.streetPeople(sid), ...CL.story.peopleAt(sid)];
+      for (const t of here) if (!out.some((o) => o.id === t.id)) out.push({ id: t.id, at: sid });
     }
     if (CL.companion.has(c())) out.push({ id: c().companion.id, at: null }); // she rides with you
     return out;
@@ -159,14 +158,14 @@ function makeStoryBot(CL, rnd, { winChance = 0.85, reloadChance = 0.04 } = {}) {
     const triggers = st.on || [];
     if (!triggers.length) return false;
     const t = pick(triggers);
-    const m = t.match || {};
+    const m = Object.fromEntries(Object.entries(t.match || {}).map(([k, v]) => [k, CL.story.resolve(v, c())]));
     if (t.event === 'enter') {
       note(`ride to ${m.settlement} for ${st.id}`);
       goTo(m.settlement);
       return true;
     }
     if (t.event === 'recruit') {
-      if (!goTo('stonebridge')) return true;
+      if (!goTo(CL.story.castOf(c()).home)) return true;
       const id = pick(CL.party.recruitsHere());
       if (id) CL.party.recruit(id);
       note(`recruit ${id} for ${st.id}`);

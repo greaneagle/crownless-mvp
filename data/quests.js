@@ -11,42 +11,46 @@
   var C = root.CROWNLESS_CONTENT;
   C.quests = {
     // GDD §4 Q1 (onboarding): escort a grain wagon, clear nearby bandits or help a recruiter.
-    // Every route ends at Elder Maren with the charter fragment, so no branch locks later story.
+    // Every route ends at the elder with the charter fragment, so no branch locks later story.
+    // P10-04: the main story is cast from the kingdom you begin in ('@role' and {cast:role}, js/story.js);
+    // begun in Valedorn it is the Border March's. Q1 is the common quest: a new game begins with it
+    // (`common`), and every origin leads into it (P10-05). After it the story can be followed or left.
     q1: {
       id: 'q1',
       title: "A Stranger's Wage",
-      giver: 'stonebridge_elder',
-      summary: 'Stonebridge needs a sword for hire: fetch the grain wagon, break the Reavers or help the recruiter.',
+      giver: 'story_elder',
+      common: true,
+      summary: '{Cast:home} needs a sword for hire: fetch the grain wagon, break the Reavers or help the recruiter.',
       stages: [
-        { id: 'q1_choose_work', journal: 'Choose your work: talk to Elder Maren in Stonebridge again.' },
+        { id: 'q1_choose_work', journal: 'Find work: talk to {cast:elder} in {cast:home}.' },
         // Route 1: the grain wagon.
         {
           id: 'q1_wagon_go',
-          journal: 'Meet the grain wagon at Oakford, south-west along the road.',
-          on: [{ event: 'enter', match: { settlement: 'oakford' }, do: [{ stage: 'q1_wagon_back' }, { note: 'The wagon is loaded at Oakford. Reavers were seen on the road home.' }, { message: 'The grain wagon creaks out of Oakford behind you.' }] }]
+          journal: 'Meet the grain wagon at {cast:village}, {cast:village.dir} along the road.',
+          on: [{ event: 'enter', match: { settlement: '@village' }, do: [{ stage: 'q1_wagon_back' }, { note: 'The wagon is loaded at {cast:village}. Reavers were seen on the road home.' }, { message: 'The grain wagon creaks out of {cast:village} behind you.' }] }]
         },
         {
           id: 'q1_wagon_back',
-          journal: 'Bring the wagon home to Stonebridge. Reavers lie in wait on the Oakford road.',
-          band: { template: 'bandits', tag: 'q1_ambush', between: ['oakford', 'stonebridge'], troops: { looter: 3 }, text: 'Reavers burst from the ditch and run for the grain wagon, blades out!' },
+          journal: 'Bring the wagon home to {cast:home}. Reavers lie in wait on the {cast:village} road.',
+          band: { template: 'bandits', tag: 'q1_ambush', between: ['@village', '@home'], troops: { looter: 3 }, text: 'Reavers burst from the ditch and run for the grain wagon, blades out!' },
           on: [
             { event: 'battle', match: { win: true, tag: 'q1_ambush' }, do: [{ set: 'q1_wagon_safe' }, { stage: 'q1_report' }, { note: 'You broke the ambush. One of the Reavers carried a scrap of sealed parchment.' }] },
-            { event: 'enter', match: { settlement: 'stonebridge' }, do: [{ set: 'q1_wagon_slipped' }, { stage: 'q1_report' }, { note: 'You slipped the wagon past the ambush and into Stonebridge.' }] }
+            { event: 'enter', match: { settlement: '@home' }, do: [{ set: 'q1_wagon_slipped' }, { stage: 'q1_report' }, { note: 'You slipped the wagon past the ambush and into {cast:home}.' }] }
           ]
         },
-        // Route 2: the Reavers.
+        // Route 2: the outlaws.
         {
           id: 'q1_bandits',
-          journal: 'Break a band of Road Reavers on the map, or clear the Looter Camp north-west of Stonebridge.',
+          journal: 'Break a band of outlaws on the map, or clear the {cast:camp} {cast:camp.dir} of {cast:home}.',
           on: [
-            { event: 'battle', match: { win: true, site: 'looter_camp' }, do: [{ stage: 'q1_report' }, { note: 'The Looter Camp is cleared. Among the spoils: a scrap of sealed parchment.' }] },
-            { event: 'battle', match: { win: true, party: 'bandits' }, do: [{ stage: 'q1_report' }, { note: 'The Reavers are broken. Their leader carried a scrap of sealed parchment.' }] }
+            { event: 'battle', match: { win: true, site: '@camp' }, do: [{ stage: 'q1_report' }, { note: 'The {cast:camp} is cleared. Among the spoils: a scrap of sealed parchment.' }] },
+            { event: 'battle', match: { win: true, kind: 'bandit' }, do: [{ stage: 'q1_report' }, { note: 'The outlaws are broken. Their leader carried a scrap of sealed parchment.' }] }
           ]
         },
         // Route 3: the recruiter.
         {
           id: 'q1_recruits',
-          journal: 'Help Sergeant Brun at the Muster Hall: hire three soldiers ({flag:q1_hired}/3 so far).',
+          journal: 'Help {cast:recruiter}, the recruiter in {cast:home}: hire three soldiers ({flag:q1_hired}/3 so far).',
           on: [
             { event: 'recruit', if: { flag: 'q1_hired', gte: 2 }, do: [{ add: 'q1_hired' }, { stage: 'q1_drill' }, { message: 'Three new soldiers. Now see how they fight.' }] },
             { event: 'recruit', do: [{ add: 'q1_hired' }] }
@@ -55,31 +59,31 @@
         {
           id: 'q1_drill',
           journal: 'Lead your new soldiers to victory in a fight — any fight.',
-          on: [{ event: 'battle', match: { win: true }, do: [{ stage: 'q1_report' }, { note: 'Your recruits held. In the loot, Brun found a scrap of sealed parchment.' }] }]
+          on: [{ event: 'battle', match: { win: true }, do: [{ stage: 'q1_report' }, { note: 'Your recruits held. In the loot, {cast:recruiter.short} found a scrap of sealed parchment.' }] }]
         },
-        { id: 'q1_report', journal: 'Report back to Elder Maren in Stonebridge.' }
+        { id: 'q1_report', journal: 'Report back to {cast:elder} in {cast:home}.' }
       ],
-      rewards: { gold: 50, renown: 15, xp: 60, rep: { valedorn: 10 } }
+      rewards: { gold: 50, renown: 15, xp: 60, rep: { '@crown': 10 } }
     },
     // GDD §4 Q2 (investigation): recover a courier's packet by fighting, paying an informant or
-    // intimidating the thieves; it holds contradictory Greywall charters. Show it to Valedorn, to
-    // Aurelian, or keep it. The choice moves reputation and dialogue, never locks later quests.
+    // intimidating the thieves; it holds contradictory charters for the contested fort. Show it to
+    // your own realm, to the rival, or keep it. The choice moves reputation and dialogue, never locks later quests.
     q2: {
       id: 'q2',
       title: 'The Broken Seal',
       giver: 'caravan_master',
-      summary: 'Caravan Master Oswin lost a sealed courier packet to Reavers on the river road. It may say who should hold Greywall.',
+      summary: '{cast:caravan} lost a sealed courier packet to Reavers on the road. It may say who should hold {cast:fort.place}.',
       stages: [
         {
           id: 'q2_recover',
-          journal: 'Recover the packet from the Reavers camped on the river road between Eastwatch and Highmere — fight them, cow them, or pay the fence in Highmere for their secret.',
+          journal: 'Recover the packet from the Reavers camped on the road between {cast:rival_town} and {cast:fence_town} — fight them, cow them, or pay the fence in {cast:fence_town} for their secret.',
           band: {
             template: 'bandits',
             tag: 'q2_thieves',
             camp: true, // they sit on their loot; the player chooses how to deal with them
-            between: ['eastwatch', 'highmere'],
+            between: ['@rival_town', '@fence_town'],
             troops: { looter: 4, reaver: 2 },
-            text: 'The Reavers who took Oswin’s packet are dug in by the river, a broken courier’s satchel hanging from a spear.'
+            text: 'The Reavers who took {cast:caravan.short}’s packet are dug in by the road, a broken courier’s satchel hanging from a spear.'
           },
           on: [
             { event: 'battle', match: { win: true, tag: 'q2_thieves' }, do: [{ give: 'courier_packet' }, { set: 'q2_how', to: 'fought' }, { stage: 'q2_choose' }, { note: 'You took the packet from the Reavers by force.' }, { message: 'You recover the courier packet.' }] },
@@ -88,7 +92,7 @@
         },
         {
           id: 'q2_choose',
-          journal: 'The packet holds two sealed copies of the Greywall charter, naming different heirs. Show it to Captain Aldric in Stonebridge (Valedorn), Magistrate Vell in Eastwatch (Aurelian), or tell Oswin you are keeping it.'
+          journal: 'The packet holds two sealed copies of the {cast:fort.place} charter, naming different heirs. Show it to {cast:crown_agent} in {cast:home} ({cast:crown}), {cast:rival_agent} in {cast:rival_town} ({cast:rival}), or tell {cast:caravan.short} you are keeping it.'
         }
       ],
       rewards: { gold: 80, renown: 15, xp: 80 }
@@ -100,14 +104,14 @@
     q3: {
       id: 'q3',
       title: 'Two Banners',
-      giver: 'valedorn_agent',
-      summary: 'Captain Aldric and Magistrate Vell both want your sword. Whatever you choose, the roads will burn somewhere.',
+      giver: 'crown_agent',
+      summary: '{cast:crown_agent} and {cast:rival_agent} both want your sword. Whatever you choose, the roads will burn somewhere.',
       stages: [
-        { id: 'q3_choose', journal: 'Hear the offers: Captain Aldric in Stonebridge (Valedorn) and Magistrate Vell in Eastwatch (Aurelian). Support one, sell one’s plans to the other, or refuse both and guard the road.' },
+        { id: 'q3_choose', journal: 'Hear the offers: {cast:crown_agent} in {cast:home} ({cast:crown}) and {cast:rival_agent} in {cast:rival_town} ({cast:rival}). Support one, sell one’s plans to the other, or refuse both and guard the road.' },
         {
-          id: 'q3_strike_aurelian',
-          journal: 'For the Crown: break the Aurelian supply column camped on the Ashgate road, south-east of Stonebridge.',
-          band: { template: 'aurelian_patrol', name: 'Aurelian Supply Column', tag: 'q3_column', between: ['stonebridge', 'ashgate_fort'], troops: { spearman: 4, skirmisher: 3, recruit: 3 }, camp: true, text: 'The Aurelian supply column has made camp, wagons in a ring and spears out. They have seen your banner.' },
+          id: 'q3_strike_rival',
+          journal: 'For {cast:crown.banner}: break the {cast:rival} supply column camped on the {cast:rival_fort.place} road, {cast:rival_fort.dir} of {cast:home}.',
+          band: { realm: '@rival', force: 'column', name: '{cast:rival} Supply Column', tag: 'q3_column', between: ['@home', '@rival_fort'], camp: true, text: 'The {cast:rival} supply column has made camp, wagons in a ring and spears out. They have seen your banner.' },
           begin: [{ set: 'mara_scouting' }, { send: 'mara' }, { message: 'Mara rides ahead to scout. Reach the clash within 3 days, or she will be caught alone.' }],
           deadline: 3,
           expire: [
@@ -117,12 +121,12 @@
             { note: 'You came too late. Mara was caught scouting alone and did not come back.' },
             { message: 'Word comes back from the road: Mara was caught alone. She is gone.' }
           ],
-          on: [{ event: 'battle', match: { win: true, tag: 'q3_column' }, do: [{ recall: 'mara' }, { set: 'mara_saved', if: { flag: 'mara_scouting' } }, { note: 'You reached the clash in time. Mara rode out of the smoke unhurt.', if: { flag: 'mara_scouting' } }, { clear: 'mara_scouting' }, { rep: 'valedorn', by: 25 }, { note: 'The Aurelian column is broken. The Crown is in your debt.' }, { complete: 'q3' }, { start: 'q4' }] }]
+          on: [{ event: 'battle', match: { win: true, tag: 'q3_column' }, do: [{ recall: 'mara' }, { set: 'mara_saved', if: { flag: 'mara_scouting' } }, { note: 'You reached the clash in time. Mara rode out of the smoke unhurt.', if: { flag: 'mara_scouting' } }, { clear: 'mara_scouting' }, { rep: '@crown', by: 25 }, { note: 'The {cast:rival} column is broken. {Cast:crown.banner} is in your debt.' }, { complete: 'q3' }, { start: 'q4' }] }]
         },
         {
-          id: 'q3_strike_valedorn',
-          journal: 'For the Remnant: break the Valedorn column camped on the Greywall road, north of Stonebridge.',
-          band: { template: 'valedorn_patrol', name: 'Valedorn Column', tag: 'q3_column', between: ['stonebridge', 'greywall_fort'], troops: { footman: 4, hunter: 3, levy: 3 }, camp: true, text: 'The Crown’s column holds the Greywall road behind a wall of shields, blue pennants snapping.' },
+          id: 'q3_strike_crown',
+          journal: 'For {cast:rival.banner}: break the {cast:crown} column camped on the {cast:fort.place} road, {cast:fort.dir} of {cast:home}.',
+          band: { realm: '@crown', force: 'column', name: '{cast:crown} Column', tag: 'q3_column', between: ['@home', '@fort'], camp: true, text: '{Cast:crown.banner}’s column holds the {cast:fort.place} road behind a wall of shields, {cast:crown.colour} pennants snapping.' },
           begin: [{ set: 'mara_scouting' }, { send: 'mara' }, { message: 'Mara rides ahead to scout. Reach the clash within 3 days, or she will be caught alone.' }],
           deadline: 3,
           expire: [
@@ -132,12 +136,12 @@
             { note: 'You came too late. Mara was caught scouting alone and did not come back.' },
             { message: 'Word comes back from the road: Mara was caught alone. She is gone.' }
           ],
-          on: [{ event: 'battle', match: { win: true, tag: 'q3_column' }, do: [{ recall: 'mara' }, { set: 'mara_saved', if: { flag: 'mara_scouting' } }, { note: 'You reached the clash in time. Mara rode out of the smoke unhurt.', if: { flag: 'mara_scouting' } }, { clear: 'mara_scouting' }, { rep: 'aurelian', by: 25 }, { note: 'The Valedorn column is broken. The Remnant is in your debt.' }, { complete: 'q3' }, { start: 'q4' }] }]
+          on: [{ event: 'battle', match: { win: true, tag: 'q3_column' }, do: [{ recall: 'mara' }, { set: 'mara_saved', if: { flag: 'mara_scouting' } }, { note: 'You reached the clash in time. Mara rode out of the smoke unhurt.', if: { flag: 'mara_scouting' } }, { clear: 'mara_scouting' }, { rep: '@rival', by: 25 }, { note: 'The {cast:crown} column is broken. {Cast:rival.banner} is in your debt.' }, { complete: 'q3' }, { start: 'q4' }] }]
         },
         {
           id: 'q3_road',
-          journal: 'While the banners circle each other, Reavers have a caravan pinned on the Eastwatch road. Save it.',
-          band: { template: 'bandits', name: 'Caravan Raiders', tag: 'q3_raiders', between: ['stonebridge', 'eastwatch'], troops: { looter: 5, reaver: 3 }, camp: true, text: 'Reavers swarm a stranded caravan, cutting at the harness ropes. The drivers are fighting back with cudgels.' },
+          journal: 'While the banners circle each other, Reavers have a caravan pinned on the {cast:rival_town} road. Save it.',
+          band: { template: 'bandits', name: 'Caravan Raiders', tag: 'q3_raiders', between: ['@home', '@rival_town'], troops: { looter: 5, reaver: 3 }, camp: true, text: 'Reavers swarm a stranded caravan, cutting at the harness ropes. The drivers are fighting back with cudgels.' },
           begin: [{ set: 'mara_scouting' }, { send: 'mara' }, { message: 'Mara rides ahead to scout. Reach the clash within 3 days, or she will be caught alone.' }],
           deadline: 3,
           expire: [
@@ -147,80 +151,80 @@
             { note: 'You came too late. Mara was caught scouting alone and did not come back.' },
             { message: 'Word comes back from the road: Mara was caught alone. She is gone.' }
           ],
-          on: [{ event: 'battle', match: { win: true, tag: 'q3_raiders' }, do: [{ recall: 'mara' }, { set: 'mara_saved', if: { flag: 'mara_scouting' } }, { note: 'You reached the clash in time. Mara rode out of the smoke unhurt.', if: { flag: 'mara_scouting' } }, { clear: 'mara_scouting' }, { rep: 'valedorn', by: 10 }, { rep: 'aurelian', by: 10 }, { set: 'road_protector', if: { flag: 'q3_side', is: 'road' } }, { note: 'The caravan is safe. Both banners hear that someone still guards the road.' }, { complete: 'q3' }, { start: 'q4' }] }]
+          on: [{ event: 'battle', match: { win: true, tag: 'q3_raiders' }, do: [{ recall: 'mara' }, { set: 'mara_saved', if: { flag: 'mara_scouting' } }, { note: 'You reached the clash in time. Mara rode out of the smoke unhurt.', if: { flag: 'mara_scouting' } }, { clear: 'mara_scouting' }, { rep: '@crown', by: 10 }, { rep: '@rival', by: 10 }, { set: 'road_protector', if: { flag: 'q3_side', is: 'road' } }, { note: 'The caravan is safe. Both banners hear that someone still guards the road.' }, { complete: 'q3' }, { start: 'q4' }] }]
         }
       ],
       rewards: { gold: 120, renown: 15, xp: 100 }
     },
-    // GDD §4 Q4 (climax): one deciding field battle near Greywall, then a short negotiation. The
-    // outcome uses quest flags plus the battle: Valedorn victory, Aurelian victory, or the
-    // compromise / independent road peace — only for a hero who refused full allegiance AND kept
-    // Oswin's packet as evidence (Q2). Sets Greywall's owner and both kingdoms' standing, shows an
-    // ending panel, and the sandbox carries on.
+    // GDD §4 Q4 (climax): one deciding field battle near the contested fort, then a short negotiation.
+    // The outcome uses quest flags plus the battle: your realm's victory, the rival's, or the
+    // compromise / independent road peace — only for a hero who refused full allegiance AND kept the
+    // caravan master's packet as evidence (Q2). Sets the fort's owner and both realms' standing, shows
+    // an ending panel, and the sandbox carries on.
     q4: {
       id: 'q4',
-      title: 'The Greywall Verdict',
-      giver: 'aurelian_agent',
-      summary: 'Both banners march on Greywall. One battle and one parley will decide the fort, and the march with it.',
+      title: 'The {cast:fort.place} Verdict',
+      giver: 'rival_agent',
+      summary: 'Both banners march on {cast:fort.place}. One battle and one parley will decide the fort, and the land around it.',
       stages: [
         {
           id: 'q4_declare',
-          journal: 'Both armies march on Greywall. Declare for the Crown (Captain Aldric, Stonebridge), for the Remnant (Magistrate Vell, Eastwatch), or for the road and neither crown (Elder Maren, Stonebridge).'
+          journal: 'Both armies march on {cast:fort.place}. Declare for {cast:crown.banner} ({cast:crown_agent}, {cast:home}), for {cast:rival.banner} ({cast:rival_agent}, {cast:rival_town}), or for the road and neither crown ({cast:elder}, {cast:home}).'
         },
         {
-          id: 'q4_field_valedorn',
-          journal: 'For the Crown: break the Aurelian host drawn up before Greywall Fort.',
-          band: { template: 'aurelian_patrol', name: 'Aurelian Host', tag: 'q4_host', near: 'greywall_fort', map: 'greywall_courtyard', troops: { spearman: 6, legionary: 3, skirmisher: 4, marksman: 2, horse_scout: 2 }, camp: true, text: 'The Aurelian host stands before Greywall’s gate in red ranks, legionaries at the centre, horse on the wings. The Crown’s eyes are on you.' },
-          on: [{ event: 'battle', match: { win: true, tag: 'q4_host' }, do: [{ stage: 'q4_terms' }, { note: 'The Aurelian host broke before Greywall. The envoys wait in the parley tent.' }, { message: 'The field is yours. Go to the parley at Greywall Fort.' }] }]
+          id: 'q4_field_crown',
+          journal: 'For {cast:crown.banner}: break the {cast:rival} host drawn up before {cast:fort}.',
+          band: { realm: '@rival', force: 'host', name: '{cast:rival} Host', tag: 'q4_host', near: '@fort', map: 'greywall_courtyard', camp: true, text: 'The {cast:rival} host stands before {cast:fort.place}’s gate in {cast:rival.colour} ranks, horse on the wings. {Cast:crown.banner}’s eyes are on you.' },
+          on: [{ event: 'battle', match: { win: true, tag: 'q4_host' }, do: [{ stage: 'q4_terms' }, { note: 'The {cast:rival} host broke before {cast:fort.place}. The envoys wait in the parley tent.' }, { message: 'The field is yours. Go to the parley at {cast:fort}.' }] }]
         },
         {
-          id: 'q4_field_aurelian',
-          journal: 'For the Remnant: break the Valedorn host holding Greywall’s approach.',
-          band: { template: 'valedorn_patrol', name: 'Valedorn Host', tag: 'q4_host', near: 'greywall_fort', map: 'greywall_courtyard', troops: { footman: 6, guard: 3, hunter: 4, longbowman: 2, rider: 2 }, camp: true, text: 'The Crown’s host holds the approach to Greywall behind a wall of blue shields, riders waiting on the flanks. The Remnant’s eyes are on you.' },
-          on: [{ event: 'battle', match: { win: true, tag: 'q4_host' }, do: [{ stage: 'q4_terms' }, { note: 'The Valedorn host broke before Greywall. The envoys wait in the parley tent.' }, { message: 'The field is yours. Go to the parley at Greywall Fort.' }] }]
+          id: 'q4_field_rival',
+          journal: 'For {cast:rival.banner}: break the {cast:crown} host holding {cast:fort.place}’s approach.',
+          band: { realm: '@crown', force: 'host', name: '{cast:crown} Host', tag: 'q4_host', near: '@fort', map: 'greywall_courtyard', camp: true, text: '{Cast:crown.banner}’s host holds the approach to {cast:fort.place} behind a wall of {cast:crown.colour} shields, riders waiting on the flanks. {Cast:rival.banner}’s eyes are on you.' },
+          on: [{ event: 'battle', match: { win: true, tag: 'q4_host' }, do: [{ stage: 'q4_terms' }, { note: 'The {cast:crown} host broke before {cast:fort.place}. The envoys wait in the parley tent.' }, { message: 'The field is yours. Go to the parley at {cast:fort}.' }] }]
         },
         {
           id: 'q4_field_road',
-          journal: 'For the road: hired blades mean to start the war before either envoy can speak. Break them before Greywall Fort.',
-          band: { template: 'bandits', name: 'Hired Blades', tag: 'q4_host', near: 'greywall_fort', map: 'greywall_courtyard', troops: { mercenary: 5, reaver: 4, looter: 4 }, camp: true, text: 'Sell-swords and Reavers, paid by hard men on both sides, are spreading out to fire the first volley. Break them, and the envoys will have to talk.' },
-          on: [{ event: 'battle', match: { win: true, tag: 'q4_host' }, do: [{ stage: 'q4_terms' }, { note: 'The hired blades are broken. Neither army fired a shot. The envoys wait in the parley tent.' }, { message: 'The field is quiet. Go to the parley at Greywall Fort.' }] }]
+          journal: 'For the road: hired blades mean to start the war before either envoy can speak. Break them before {cast:fort}.',
+          band: { template: 'bandits', name: 'Hired Blades', tag: 'q4_host', near: '@fort', map: 'greywall_courtyard', troops: { mercenary: 5, reaver: 4, looter: 4 }, camp: true, text: 'Sell-swords and Reavers, paid by hard men on both sides, are spreading out to fire the first volley. Break them, and the envoys will have to talk.' },
+          on: [{ event: 'battle', match: { win: true, tag: 'q4_host' }, do: [{ stage: 'q4_terms' }, { note: 'The hired blades are broken. Neither army fired a shot. The envoys wait in the parley tent.' }, { message: 'The field is quiet. Go to the parley at {cast:fort}.' }] }]
         },
-        { id: 'q4_terms', journal: 'Go to the parley at Greywall Fort and set the terms.' }
+        { id: 'q4_terms', journal: 'Go to the parley at {cast:fort} and set the terms.' }
       ],
       rewards: { gold: 200, renown: 15, xp: 150 },
       endings: {
-        // W-07 (D-W5): each ending sets the March kingdoms' relation; from then on the usual rules apply.
-        valedorn: {
-          relations: { between: ['valedorn', 'aurelian'], to: 'war' },
-          title: 'The Crown Holds Greywall',
+        // W-07 (D-W5): each ending sets the two realms' relation; from then on the usual rules apply.
+        crown: {
+          relations: { between: ['@crown', '@rival'], to: 'war' },
+          title: '{Cast:crown.banner} Holds {cast:fort.place}',
           text: [
-            'The blue banner flies over Greywall, and the Crown’s lawyers call the Aurelian charter a forgery. Valedorn remembers who rode for it.',
-            { if: { flag: 'q2_choice', is: 'valedorn' }, text: 'The packet you gave Captain Aldric is read aloud in the King’s hall.' },
+            'The {cast:crown.colour} banner flies over {cast:fort.place}, and {cast:crown.banner}’s lawyers call the {cast:rival} charter a forgery. {Cast:crown} remembers who rode for it.',
+            { if: { flag: 'q2_choice', is: 'crown' }, text: 'The packet you gave {cast:crown_agent} is read aloud in {cast:crown.court}.' },
             { if: { flag: 'mara_saved' }, text: 'Mara rides at your side still, and the roads between the forts have never been better scouted.' },
             { if: { flag: 'mara_gone', is: 'fell' }, text: 'Some nights, at the fire, you still leave a place for Mara.' },
-            'The Remnant licks its wounds east of the river. The roads are quieter — for now. The march goes on, and so do you.'
+            '{Cast:rival.banner} licks its wounds beyond {cast:rival_fort.place}. The roads are quieter — for now. The world goes on, and so do you.'
           ]
         },
-        aurelian: {
-          relations: { between: ['valedorn', 'aurelian'], to: 'war' },
-          title: 'The Remnant Takes Greywall',
+        rival: {
+          relations: { between: ['@crown', '@rival'], to: 'war' },
+          title: '{Cast:rival.banner} Takes {cast:fort.place}',
           text: [
-            'The red banner rises over Greywall for the first time in thirty years. Imperial law has its fort back, and the Remnant remembers who won it.',
-            { if: { flag: 'q2_choice', is: 'aurelian' }, text: 'Magistrate Vell enters the packet you gave her into the court archive as proof of the Aurelian claim.' },
+            'The {cast:rival.colour} banner rises over {cast:fort.place} for the first time in thirty years. The charter has its fort back, and {cast:rival.banner} remembers who won it.',
+            { if: { flag: 'q2_choice', is: 'rival' }, text: '{Cast:rival_agent} enters the packet you gave {cast:rival_agent.him} into the court archive as proof of the {cast:rival} claim.' },
             { if: { flag: 'mara_saved' }, text: 'Mara rides at your side still, and the roads between the forts have never been better scouted.' },
             { if: { flag: 'mara_gone', is: 'fell' }, text: 'Some nights, at the fire, you still leave a place for Mara.' },
-            'The Crown swears it will return. The march goes on, and so do you.'
+            '{Cast:crown.banner} swears it will return. The world goes on, and so do you.'
           ]
         },
         compromise: {
-          relations: { between: ['valedorn', 'aurelian'], to: 'peace' },
+          relations: { between: ['@crown', '@rival'], to: 'peace' },
           title: 'The Road Peace',
           text: [
             'You lay both charters on the parley table — two eagles, two heirs, both forged. With the proof in front of them and no battle to hide behind, the envoys sign a road peace.',
-            'Greywall keeps its garrison, but its gates stay open to both crowns, and the roads between the forts are guarded in common.',
+            '{Cast:fort.place} keeps its garrison, but its gates stay open to both crowns, and the roads between the forts are guarded in common.',
             { if: { flag: 'mara_saved' }, text: 'Mara rides at your side still, and the roads between the forts have never been better scouted.' },
             { if: { flag: 'mara_gone', is: 'fell' }, text: 'Some nights, at the fire, you still leave a place for Mara.' },
-            'Carters and drovers call you the Warden of the Road. The march goes on, and so do you.'
+            'Carters and drovers call you the Warden of the Road. The world goes on, and so do you.'
           ]
         }
       }
@@ -228,30 +232,30 @@
     // ---- V2-Q: errands (owner decision: no new main story; small, optional quests that show the
     // new systems). Each is side: true, offered by someone you already know, and can be ignored.
 
-    // Named soldiers and the chronicle: a Stonebridge-born veteran is feasted at home.
+    // Named soldiers and the chronicle: a veteran born in your start town is feasted at home.
     sq_homecoming: {
       id: 'sq_homecoming',
       title: 'Home from the Wars',
-      giver: 'stonebridge_elder',
+      giver: 'story_elder',
       side: true,
-      summary: 'Stonebridge wants to feast one of its own who rides with your company.',
+      summary: '{Cast:home} wants to feast one of its own who rides with your company.',
       stages: [
         {
           id: 'sq_home_grain',
-          journal: 'Buy grain at any market for the feast, then bring word to Elder Maren in Stonebridge.',
+          journal: 'Buy grain at any market for the feast, then bring word to {cast:elder} in {cast:home}.',
           on: [{ event: 'trade', match: { good: 'grain', side: 'buy' }, do: [{ stage: 'sq_home_report' }, { note: 'Grain for the feast is in the wagons.' }] }]
         },
-        { id: 'sq_home_report', journal: 'Tell Elder Maren in Stonebridge the grain is bought.' }
+        { id: 'sq_home_report', journal: 'Tell {cast:elder} in {cast:home} the grain is bought.' }
       ],
-      rewards: { renown: 10, xp: 30, rep: { valedorn: 5 } }
+      rewards: { renown: 10, xp: 30, rep: { '@crown': 5 } }
     },
     // The quartermaster (V2-11).
     sq_larders: {
       id: 'sq_larders',
       title: 'Full Larders',
-      giver: 'sergeant_brun',
+      giver: 'story_recruiter',
       side: true,
-      summary: 'Sergeant Brun says a company marches on its stomach, and someone should be minding it.',
+      summary: '{cast:recruiter} says a company marches on its stomach, and someone should be minding it.',
       stages: [
         {
           id: 'sq_larders_hire',
@@ -263,7 +267,7 @@
           journal: 'Ride to a market with your quartermaster so they lay in stores.',
           on: [{ event: 'stores', do: [{ stage: 'sq_larders_report' }, { note: 'The quartermaster bought food from the company chest, and logged every crown.' }] }]
         },
-        { id: 'sq_larders_report', journal: 'Report to Sergeant Brun in Stonebridge.' }
+        { id: 'sq_larders_report', journal: 'Report to {cast:recruiter} in {cast:home}.' }
       ],
       rewards: { gold: 30, xp: 40 }
     },
@@ -273,7 +277,7 @@
       title: 'A Merchant’s First Venture',
       giver: 'caravan_master',
       side: true,
-      summary: 'Caravan Master Oswin thinks a company with wagons should earn from them.',
+      summary: '{cast:caravan} thinks a company with wagons should earn from them.',
       stages: [
         {
           id: 'sq_venture_hire',
@@ -285,48 +289,48 @@
           journal: 'Take your merchant to a few markets until they sell at a profit. They only know prices they have seen.',
           on: [{ event: 'venture', match: { profit: true }, do: [{ stage: 'sq_venture_report' }, { note: 'Your merchant sold at a profit. Their log says what and why.' }] }]
         },
-        { id: 'sq_venture_report', journal: 'Tell Caravan Master Oswin in Eastwatch how the venture went.' }
+        { id: 'sq_venture_report', journal: 'Tell {cast:caravan} in {cast:rival_town} how the venture went.' }
       ],
       rewards: { gold: 40, renown: 5, xp: 40 }
     },
-    // Nearby reinforcements (V2-09): a Valedorn watch close by rides in if you fight here.
+    // Nearby reinforcements (V2-09): your realm's watch close by rides in if you fight here.
     sq_border: {
       id: 'sq_border',
       title: 'Smoke on the Border',
-      giver: 'valedorn_agent',
+      giver: 'crown_agent',
       side: true,
-      summary: 'Raiders are burning farms between Brackenfield and Greywall. A Crown watch is posted nearby.',
+      summary: 'Raiders are burning farms between {cast:border} and {cast:fort.place}. A watch of {cast:crown.banner} is posted nearby.',
       stages: [
         {
           id: 'sq_border_fight',
-          journal: 'Break the raiders between Brackenfield and Greywall. The Valedorn watch near Brackenfield will ride to the fight if it hears it.',
+          journal: 'Break the raiders between {cast:border} and {cast:fort.place}. The {cast:crown} watch near {cast:border} will ride to the fight if it hears it.',
           bands: [
-            { template: 'bandits', tag: 'sq_border_raiders', name: 'Border Raiders', between: ['brackenfield', 'greywall_fort'], troops: { looter: 5, reaver: 3 }, camp: true, help: true, text: 'Smoke rises behind the raiders’ camp. Somewhere to the south a horn answers: the Crown’s watch has heard you.' },
-            { template: 'valedorn_patrol', tag: 'sq_border_watch', name: 'Valedorn Border Watch', near: 'brackenfield', troops: { footman: 3, hunter: 2 }, camp: true, helper: true, text: '“The raiders are north of here. Engage them and we will come — we can hear a fight from here.”' }
+            { template: 'bandits', tag: 'sq_border_raiders', name: 'Border Raiders', between: ['@border', '@fort'], troops: { looter: 5, reaver: 3 }, camp: true, help: true, text: 'Smoke rises behind the raiders’ camp. Somewhere a horn answers: {cast:crown.banner}’s watch has heard you.' },
+            { realm: '@crown', force: 'column', tag: 'sq_border_watch', name: '{cast:crown} Border Watch', near: '@border', camp: true, helper: true, text: '“The raiders are north of here. Engage them and we will come — we can hear a fight from here.”' }
           ],
           on: [
-            { event: 'battle', match: { win: true, tag: 'sq_border_raiders', reinforced: true }, do: [{ note: 'The Valedorn watch rode in and the raiders broke between you.' }, { rep: 'valedorn', by: 5 }, { complete: 'sq_border' }] },
+            { event: 'battle', match: { win: true, tag: 'sq_border_raiders', reinforced: true }, do: [{ note: 'The {cast:crown} watch rode in and the raiders broke between you.' }, { rep: '@crown', by: 5 }, { complete: 'sq_border' }] },
             { event: 'battle', match: { win: true, tag: 'sq_border_raiders' }, do: [{ note: 'You broke the raiders before the watch arrived.' }, { complete: 'sq_border' }] }
           ]
         }
       ],
-      rewards: { gold: 70, renown: 10, rep: { valedorn: 5 } }
+      rewards: { gold: 70, renown: 10, rep: { '@crown': 5 } }
     },
     // Battle preparation (V2-07): a dug-in band, best met with a plan.
     sq_planned: {
       id: 'sq_planned',
       title: 'A Planned Engagement',
-      giver: 'sergeant_brun',
+      giver: 'story_recruiter',
       side: true,
-      summary: 'Sergeant Brun wants to see the company fight to a plan, not just charge.',
+      summary: '{cast:recruiter} wants to see the company fight to a plan, not just charge.',
       stages: [
         {
           id: 'sq_planned_fight',
-          journal: 'Fight the drilled Reavers dug in near Oakford yourself. On the Prepare screen try a setup: Defensive lets them come to your line.',
-          band: { template: 'bandits', tag: 'sq_planned_reavers', name: 'Drilled Reavers', near: 'oakford', troops: { looter: 5, reaver: 4, mercenary: 2 }, camp: true, text: 'These Reavers stand in ranks, shields locked, sell-swords in the middle. They will not be rushed. A plan would help.' },
+          journal: 'Fight the drilled Reavers dug in near {cast:village} yourself. On the Prepare screen try a setup: Defensive lets them come to your line.',
+          band: { template: 'bandits', tag: 'sq_planned_reavers', name: 'Drilled Reavers', near: '@village', troops: { looter: 5, reaver: 4, mercenary: 2 }, camp: true, text: 'These Reavers stand in ranks, shields locked, sell-swords in the middle. They will not be rushed. A plan would help.' },
           on: [
-            { event: 'battle', match: { win: true, tag: 'sq_planned_reavers', fought: true, preset: ['defensive', 'aggressive', 'custom'] }, do: [{ note: 'You chose your setup and it held. Brun will want to hear it.' }, { renown: 5 }, { complete: 'sq_planned' }] },
-            { event: 'battle', match: { win: true, tag: 'sq_planned_reavers' }, do: [{ note: 'The Reavers are broken, if not quite to Brun’s plan.' }, { complete: 'sq_planned' }] }
+            { event: 'battle', match: { win: true, tag: 'sq_planned_reavers', fought: true, preset: ['defensive', 'aggressive', 'custom'] }, do: [{ note: 'You chose your setup and it held. {cast:recruiter.short} will want to hear it.' }, { renown: 5 }, { complete: 'sq_planned' }] },
+            { event: 'battle', match: { win: true, tag: 'sq_planned_reavers' }, do: [{ note: 'The Reavers are broken, if not quite to {cast:recruiter.short}’s plan.' }, { complete: 'sq_planned' }] }
           ]
         }
       ],

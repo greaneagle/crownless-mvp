@@ -28,7 +28,7 @@ function fightAndWin(CL) {
 const stage = (CL) => CL.story.state(CL.campaign).quests.q1?.stage;
 
 function takeWork(CL, route) {
-  let v = CL.story.talk('stonebridge_elder');
+  let v = CL.story.talk('story_elder');
   v = say(CL, v, /work for me/);
   assert.equal(v.node, 'q1_work');
   return say(CL, v, route);
@@ -38,7 +38,7 @@ function takeWork(CL, route) {
 function report(CL) {
   const c = CL.campaign;
   const before = { gold: c.gold, renown: c.renown, rep: c.reputation.valedorn };
-  let v = CL.story.talk('stonebridge_elder');
+  let v = CL.story.talk('story_elder');
   assert.equal(v.node, 'q1_report');
   const text = v.text;
   v = say(CL, v, /What is it/);
@@ -145,12 +145,12 @@ test('route 3, the recruiter: Brun’s advance, three hires, one won fight', () 
   const c = CL.campaign;
   takeWork(CL, /Sergeant Brun/);
   assert.equal(stage(CL), 'q1_recruits');
-  let v = CL.story.talk('sergeant_brun');
+  let v = CL.story.talk('story_recruiter');
   assert.equal(v.node, 'q1');
   const gold = c.gold;
   v = say(CL, v, /Thank you/);
   assert.equal(c.gold, gold + 15);
-  assert.equal(CL.story.talk('sergeant_brun').node, 'talk', 'the advance is paid once');
+  assert.equal(CL.story.talk('story_recruiter').node, 'talk', 'the advance is paid once');
   c.gold = 500;
   CL.party.recruit('levy');
   CL.party.recruit('levy');
@@ -167,17 +167,17 @@ test('route 3, the recruiter: Brun’s advance, three hires, one won fight', () 
 
 test('“let me think on it” keeps the quest open; the Elder offers the work again', () => {
   const { CL } = loadGame();
-  let v = CL.story.talk('stonebridge_elder');
+  let v = CL.story.talk('story_elder');
   v = say(CL, v, /work for me/);
   assert.equal(say(CL, v, /think on it/), null);
   assert.equal(stage(CL), 'q1_choose_work');
-  v = CL.story.talk('stonebridge_elder');
+  v = CL.story.talk('story_elder');
   assert.equal(v.node, 'again');
   v = say(CL, v, /About that work/);
   assert.equal(v.node, 'q1_work');
   v = say(CL, v, /Reavers/);
   assert.equal(stage(CL), 'q1_bandits');
-  v = CL.story.talk('stonebridge_elder');
+  v = CL.story.talk('story_elder');
   assert.equal(say(CL, v, /About that work/).node, 'q1_progress');
 });
 
@@ -185,6 +185,6 @@ test('Q1 is optional: the sandbox runs without it and the Elder can wait', () =>
   const { CL } = loadGame();
   CL.party.advanceDays(20);
   assert.equal(CL.story.questStatus(CL.campaign, 'q1'), 'unstarted');
-  const v = CL.story.talk('stonebridge_elder');
+  const v = CL.story.talk('story_elder');
   assert.ok(v.options.some((o) => /work for me/.test(o.text)));
 });

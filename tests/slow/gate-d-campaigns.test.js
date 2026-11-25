@@ -1,17 +1,20 @@
 // Gate D acceptance, the slow half (GDD §14; moved from tests/gate-d.test.js by H-01): "each ending
 // is reachable, no quest soft-locks, and the sandbox continues."
 //
-// The soft-lock check plays 40 whole campaigns from a fresh start with a randomized story bot
+// The soft-lock check plays 42 whole campaigns from a fresh start with a randomized story bot
 // (tests/helpers/story-bot.js) on the real game logic. The runs mix three starts (a funded company,
 // the bare GDD start, a bot that loses most fights), and the bot saves and reloads at random. Every
 // run must reach an ending, and together they must reach every ending, every quest stage and every
-// authored branch.   npm run test:slow
+// authored branch. P10-04: the seeds are split across the kingdoms (7 each), the story cast from each,
+// and every kingdom's runs must reach an ending.   npm run test:slow
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { newCampaign, mulberry } = require('../../scripts/simulate-campaign');
 const { makeStoryBot } = require('../helpers/story-bot');
 
-const SEEDS = 40; // 60 until P10-00 (owner, 2026-11-25: the night run a little shorter)
+const PER_REALM = 7; // P10-04: about 8 a kingdom (60 seeds until P10-00, 40 until P10-04)
+const REALMS = require('../helpers/load').loadGame().CL.story.startRealms();
+const SEEDS = PER_REALM * REALMS.length;
 
 /** Every value a story flag is ever set to in the content (so new branches join the check). */
 function authoredValues(CL, flag) {
@@ -28,8 +31,8 @@ function authoredValues(CL, flag) {
   return out;
 }
 
-function playOne(seed) {
-  const env = newCampaign(seed);
+function playOne(seed, realm) {
+  const env = newCampaign(seed, 'farmhand', { realm });
   const { CL } = env;
   const c = CL.campaign;
   if (seed % 3) {
@@ -42,16 +45,20 @@ function playOne(seed) {
   return { ...env, r };
 }
 
-test(`no quest soft-locks, every ending reachable: ${SEEDS} randomized campaigns from a fresh start`, () => {
+test(`no quest soft-locks, every ending reachable: ${SEEDS} randomized campaigns from a fresh start, ${PER_REALM} in each kingdom`, () => {
   const seen = { stages: new Set(), endings: new Set(), q1: new Set(), q2_choice: new Set(), q2_how: new Set(), q3_side: new Set(), mara: new Set() };
   let reloads = 0;
   let CL0 = null;
+  const ended = {};
   for (let seed = 1; seed <= SEEDS; seed++) {
-    const { CL, r } = playOne(seed);
+    const realm = REALMS[(seed - 1) % REALMS.length];
+    const { CL, r } = playOne(seed, realm);
     CL0 = CL;
+    assert.equal(CL.campaign.startRealm, realm);
     const quests = Object.entries(CL.story.state(CL.campaign).quests).map(([k, v]) => `${k}:${v.status}/${v.stage}`);
-    assert.ok(r.finished, `seed ${seed} never reached an ending (${quests.join(' ')})\n${r.trace.slice(-12).join('\n')}`);
+    assert.ok(r.finished, `seed ${seed} (${realm}) never reached an ending (${quests.join(' ')})\n${r.trace.slice(-12).join('\n')}`);
     assert.equal(r.stats.stuck, 0, `seed ${seed}: travel got stuck`);
+    ended[realm] = (ended[realm] || 0) + 1;
     const f = CL.story.state(CL.campaign).flags;
     for (const s of r.stats.stages) seen.stages.add(s);
     seen.endings.add(f.ending);
@@ -61,6 +68,7 @@ test(`no quest soft-locks, every ending reachable: ${SEEDS} randomized campaigns
     reloads += r.stats.reloads;
   }
   const CL = CL0;
+  assert.deepEqual(Object.keys(ended).sort(), [...REALMS].sort(), 'an ending from every kingdom');
   // The main story's stages (the bot leaves the V2-Q errands alone; tests/errands.test.js walks them).
   const stages = Object.values(CL.content.table('quests')).filter((q) => !q.side).flatMap((q) => q.stages.map((s) => s.id));
   assert.deepEqual(
@@ -85,7 +93,7 @@ test(`no quest soft-locks, every ending reachable: ${SEEDS} randomized campaigns
 
 test('after the ending the sandbox continues: news, work, patrols, travel and saves', () => {
   for (const seed of [1, 2, 13]) {
-    const { CL, r } = playOne(seed);
+    const { CL, r } = playOne(seed, 'valedorn');
     assert.ok(r.finished);
     const c = CL.campaign;
     const ending = CL.story.state(c).flags.ending;

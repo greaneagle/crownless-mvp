@@ -192,10 +192,12 @@
   function begin(choices) {
     const g = CL.game;
     if (g.newGame) {
-      CL.campaign = CL.save.starter(choices.background);
+      CL.campaign = CL.save.starter(choices.background, choices.realm); // P10-04: the kingdom you chose
       Object.assign(g, { newGame: false, travel: null, siteId: null, godMode: false });
     }
+    const fresh = !CL.campaign.character;
     CL.campaign.character = create(choices);
+    if (fresh) CL.story.opening(CL.campaign); // P10-04: the common quest begins (a new game, not a re-roll)
     CL.save.existed = true;
     CL.save.write();
     CL.diag.log('info', 'Character created', { name: CL.campaign.character.name, background: choices.background });

@@ -120,7 +120,7 @@ test('choice A: show it to Captain Aldric — Valedorn +25, Aurelian −10', () 
   const c = CL.campaign;
   withPacket(CL);
   const gold = c.gold;
-  let v = CL.story.talk('valedorn_agent');
+  let v = CL.story.talk('crown_agent');
   assert.equal(v.node, 'q2');
   v = say(CL, v, /Show the packet to the Crown/);
   assert.equal(v.node, 'q2_thanks');
@@ -132,7 +132,7 @@ test('choice A: show it to Captain Aldric — Valedorn +25, Aurelian −10', () 
   // Dialogue remembers.
   assert.match(CL.story.talk('caravan_master').text, /Crown’s men walk taller/);
   for (let i = 0; i < 6; i++) {
-    const t = CL.story.view('aurelian_agent', 'talk', c, i).text; // her small talk (Q3 offers come first now)
+    const t = CL.story.view('rival_agent', 'talk', c, i).text; // her small talk (Q3 offers come first now)
     if (/handed that packet to the Crown/.test(t)) return;
   }
   assert.fail('the magistrate never mentions it');
@@ -142,9 +142,9 @@ test('choice B: show it to Magistrate Vell — Aurelian +25, Valedorn −10', ()
   const { CL } = loadGame();
   const c = CL.campaign;
   withPacket(CL);
-  say(CL, CL.story.talk('aurelian_agent'), /Show the packet to the magistrate/);
+  say(CL, CL.story.talk('rival_agent'), /Show the packet to the magistrate/);
   assert.deepEqual({ ...c.reputation }, { valedorn: -10, aurelian: 25, hrothmark: 0, vessaro: 0, merrow: 0, ostrand: 0, saltreach: 0, gullhaven: 0 });
-  assert.equal(CL.story.state(c).flags.q2_choice, 'aurelian');
+  assert.equal(CL.story.state(c).flags.q2_choice, 'rival');
   assert.match(CL.story.talk('caravan_master').text, /Aurelian claim/);
 });
 
@@ -161,14 +161,14 @@ test('choice C: keep it — no reputation change, the evidence flag for the Q4 c
   assert.equal(c.inventory.courier_packet, 1, 'still carried, protected from sale');
   assert.equal(CL.story.state(c).flags.has_evidence, true);
   assert.equal(CL.trade.sellGear(c, 'eastwatch', 'courier_packet').ok, false);
-  assert.notEqual(CL.story.talk('valedorn_agent').node, 'q2', 'Aldric no longer asks for it as a quest');
+  assert.notEqual(CL.story.talk('crown_agent').node, 'q2', 'Aldric no longer asks for it as a quest');
 });
 
 test('the agents only take the packet while you carry it', () => {
   const { CL } = loadGame();
   withPacket(CL);
   delete CL.campaign.inventory.courier_packet; // lost somehow
-  assert.equal(CL.story.talk('valedorn_agent').node, 'talk');
+  assert.equal(CL.story.talk('crown_agent').node, 'talk');
   assert.equal(
     CL.story.talk('caravan_master').options.some((o) => /keep it/.test(o.text)),
     false,
