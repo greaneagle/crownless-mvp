@@ -3229,7 +3229,7 @@ The aim: a welcoming way into the world. You pick a kingdom and an origin. A sho
 - **The world at the start** stays basic: no new "lived-in" systems at the start of the phase.
 - **Versions:** each task is a minor version in build order, from 4.1.0. P10-00 is a patch on the build it runs on. P10-T ships 5.0.0.
 
-**Order:** P10-01 → P10-02 → P10-03 → P10-04 → P10-05 → P10-06 → P10-07 → P10-08 → P10-09 → P10-T. P10-00 runs on the owner's night run, whenever asked. The graphics tasks P10-G1 and P10-G2 have no fixed place: they go in "whenever it fits", in part if need be, before P10-T.
+**Order:** P10-01 → P10-02 → P10-03 → P10-04 → P10-05 → P10-06 → P10-07 → P10-08 → P10-09 → P10-G1 → P10-G2 → P10-G3 → P10-G4 → P10-G5 → P10-G6 → P10-T. P10-00 runs on the owner's night run, whenever asked. **Owner, 2026-11-25:** the graphics are no longer "whenever it fits": the code-drawn art replaces the sprites completely, in six tasks in order (D-P10k; "The art direction" below).
 
 | ID | Task | Size | Version |
 |---|---|---|---|
@@ -3243,8 +3243,12 @@ The aim: a welcoming way into the world. You pick a kingdom and an origin. A sho
 | P10-07 | Onboarding and hints | M | 4.7.0 |
 | P10-08 | UI and menus toward the references | L | 4.8.0 |
 | P10-09 | Women soldiers and soldiers' portraits | M | 4.9.0 |
-| P10-G1 | Graphics: battles | L | next minor when it lands |
-| P10-G2 | Graphics: towns | L | next minor when it lands |
+| P10-G1 | The art kit in the game: modules, the canvas at real pixels, a look for every troop, the style guide, the Art gallery | M–L | 4.10.0 |
+| P10-G2 | Battles in the new art | L | 4.11.0 |
+| P10-G3 | Towns in the new art | L | 4.12.0 |
+| P10-G4 | The world map in the new art | L | 4.13.0 |
+| P10-G5 | The UI and portraits in the new art | M–L | 4.14.0 |
+| P10-G6 | The old graphics removed | M | 4.15.0 |
 | P10-T | Tuning and acceptance | M | 5.0.0 |
 
 ### P10-00 · Phase 9's long runs and checkpoint (M) — ✅ Done in 4.3.1
@@ -3512,33 +3516,229 @@ Split from the old art pass (owner, 2026-11-24): menus and the UI first, as the 
 - **Tests:** `tests/women-soldiers.test.js` (the lines in data; 15% over 1000 hires and the same seed's same recruits; names and own-line upgrades; portraits kept over a save and load; a pack's women's line). Troop counts updated (41).
 - **Checks:** 916 fast pass; lint clean but the 2 old warnings (a `forEach` that returned a value in the portrait drawing was fixed); typecheck clean. Browser 253 passed, 9 skipped; battle-size's slow-battle offer failed once and passed alone; the cut-short wait fails about 1 run in 3 on 4.8.0 too (recorded for P10-T). **Played** at 812×375: a Hrothmark company's faces in the soldiers' list and on a Shieldmaiden's card, the new lines in the troop tree.
 
-### P10-G1 · Graphics: battles (L)
+### The art direction: drawn in code (owner, 2026-11-25; D-P10k)
 
-The owner, 2026-11-24: an art pass, or at least partial updates, toward the references in `art-reference/` (battles and town scenes, not the overworld). No fixed place in the order: whenever it fits.
+The owner played the graphics demo (`docs/GRAPHICS-DEMO.md`, commit e5bae98) and chose it as the game's art from now on. It replaces the sprite approach completely. The old P10-G1 and P10-G2 (sprites toward `art-reference/`, renderer changes allowed, partial was fine) are replaced by **P10-G1 to P10-G6** below. Together they convert every screen and remove the old graphics before P10-T. (In the Done text of earlier tasks, "P10-G1" meant the battles, now P10-G2, and "P10-G2" the towns, now P10-G3.)
+
+**Rules for all six tasks:**
+- **Everything is drawn in code.** It comes from the shared kit (`js/gfx/kit.js` and `js/gfx/figures.js` today, the production art modules from P10-G1): one palette, one outline, light from the upper left, one shadow, and a slightly raised three-quarter view. There are no image files, no Sprite Studio, no ComfyUI or other image generation, and no art for the owner to make or process.
+- **Data, not one-offs.** A troop, a townsperson, a building or a prop is a *look* or a *spec* in data, built from the kit's parts. When the kit lacks a part, the part is added to the kit (and the gallery), not drawn by hand in one place.
+- **The drawing only reads the game.** Animation and effects come from the state that already exists: facing, swing phases, guard, cooldowns, flash, fallen, morale. A drawing never changes a hitbox, a timing, a reach, a speed or a rule.
+- **Each task switches its own area outright.** There is no setting to choose old or new art. The old drawing and the sprites that area used are deleted in the same task. P10-G6 removes whatever is left.
+- **Phones first:**
+  - every task is checked at 812×375 as well as on desktop;
+  - it is measured on the bench (`npm run bench`, `npm run bench:map`, the Debug panel's battle benchmark and map stress test);
+  - it must not lower this device's numbers by more than its budget (each task says what it is).
+- **The UI's identity stays** (P10-08): navy, gold, cream and crimson. It is re-drawn in the same code style where it shows art (P10-G5).
+- **Versions:** one minor version each, in build order: 4.10.0 to 4.15.0.
+- **`crownless-art` and Sprite Studio are not used** from here on. The skill is retired in P10-G6.
+
+**Order:** P10-G1 → P10-G2 → P10-G3 → P10-G4 → P10-G5 → P10-G6 → P10-T.
+
+### P10-G1 · The art kit in the game (M–L)
+
+**Problem.** The kit lives only in the debug demo, loaded on demand. The game's canvas is 960×540 scaled up with pixelated rendering, so code-drawn art would be blurred or blocky.
 
 **Build.**
-- **Soldiers and the hero in battle** toward the references:
-  - about 32×48, 3 heads tall, 4 directions with a 4-frame walk;
-  - a dark-brown outline, 2–4 steps of shading, light from the upper left;
-  - kit by role and realm.
-- **Women soldiers' battle sprites** (P10-09), once it has landed.
-- **The battle ground:** props and tiles where they fit.
-- **Renderer changes** to draw the new frames are allowed here. The old frames stay as a fallback until each set is complete.
-- **Partial is fine:** each set (infantry, archers, cavalry, the hero, props) can land on its own. What is not done is listed as open.
+- **The art modules:** the demo's kit and figures become production modules, loaded by `index.html` like every other module. Split them as they grow, for example palette and helpers, figures, buildings, nature and props.
+  - Documented conventions: anchor at the foot, size factor `s`, a seed for variation.
+  - `// @ts-check` where it is practical.
+  - The demo keeps working on top of them until P10-G6.
+- **The canvas at the screen's real pixels:**
+  - the renderer draws at device pixels, with smoothing on for shapes;
+  - `image-rendering: pixelated` goes from the game canvas (the sprites still to be replaced keep their own nearest-pixel drawing until their task);
+  - a **Sharpness** setting (Sharp: the device's full resolution; Balanced: at most 2×, the phone default; Fast: 1×) replaces the Debug panel's "sharp canvas" (D-R1);
+  - the game's 960×540 logical frame stays, so no rule or coordinate changes.
+- **A look for every troop:** a `look` on each troop in `data/troops.js` (about 42), from the kit's vocabulary: armour, helmet, shield, weapon, quiver, mount, fur and so on. The realm's colours come from the side it fights for.
+  - Companions (`data/companions.js`) get a `look` too, in place of `frames`.
+  - The hero's look follows the creator's choices (cloak colour, gender) and what the hero has equipped (a shield or none; later the helmet and armour if it is cheap to do).
+  - The content checks validate every look: a known part, every troop covered. Packs may give a troop its look, and `docs/WORLD-FORMAT.md` documents it.
+- **Culture sets:** each culture (valedorn, aurelian, hrothmark, vessaro, border, ostrand, saltreach) gets its shapes and colours for kit and buildings. Examples: Aurelian crests and heater shields, Vessaro brimmed helms, pavises and crossbows, Ostrand's grey cliff kit, Saltreach's salt-town ochre. That takes the parts the demo lacks: a crossbow, a pavise, a brimmed helm, a pike.
+- **The style guide,** `docs/ART-STYLE.md`: the palette, the outline and light, the proportions, the perspective. It also shows how to add a troop, a culture, a building or a prop, with pictures from the gallery, so a future agent can extend the art without asking.
+- **The Art gallery** in the Debug panel: every troop of every realm, the companions, the hero, townsfolk, buildings by culture and props. It turns and cycles poses, at 1× and enlarged. It is isolated as the demo is (it shows nothing of the campaign and saves nothing).
 
-**Tests.** Every role and troop has frames, or the fallback; the battle's frame time on the phone-sized browser case is no worse than before; screenshots of a battle.
+**Tests.**
+- Every troop and companion has a valid look; a pack's look is checked.
+- The Sharpness setting sets the canvas size and is kept as a device setting.
+- The gallery opens and closes, leaving the save untouched.
+- Screenshots of the gallery at 812×375 and on desktop.
+- The battle benchmark and map stress test at each sharpness, recorded as the baseline for P10-G2 to P10-G4.
 
-**Version.** The next minor version when it lands.
+**Version.** 4.10.0.
 
-### P10-G2 · Graphics: towns (L)
+**Not here:** any scene drawn in the new style. The battles, towns and map keep their sprites and shapes until their task.
+
+### P10-G2 · Battles in the new art (L)
 
 **Build.**
-- **Stonebridge's town scene** toward reference 03: the buildings, walls and gate, props, and townsfolk in the new character style. Then the other walkable towns (P10-03), each keeping its own look.
-- **Renderer changes allowed**, and **partial is fine**, as in P10-G1.
+- **Every unit drawn by the kit** from its troop's look and side: soldiers, the hero, companions, lords in person (their realm's best kit, the gold plume and a pennant), tournament fighters in the lists' loaner kit, and women soldiers.
+  - What is drawn: the walk; the swing's windup, active part and recovery; a spear's thrust; a bow drawn while reloading and loosed; a crossbow's slower load; the shield across the body on guard; a flash and a recoil when struck; the fallen fading as now; the routing and shaken marks; horses always in profile with a leg cycle; health bars on the hurt.
+  - The rings under the feet: blue for yours, red for theirs, gold for the hero.
+- **The battle maps in the kit:**
+  - the classic maps (`grass_field`, `forest_clearing`, `forest_wilds`, `open_country`, `river_ford`, `hill_slopes`, `tourney_lists`, `greywall_courtyard`) and the generated arenas (forest, field, ford, hills);
+  - the assault (the wall, the gate, the ram, the ladders, the walkway, the keep line: the "stand-ins today" of asset row 14);
+  - the escort's wagon.
+  - Obstacles get a kit look in the data (`look: 'tree' | 'pine' | 'bush' | 'rock' | 'wall' | 'fence' | 'crate' | …`) in place of tile ids. Ground is soft grass, patches and tufts, water, rises and marsh in the kit's colours.
+- **The battle's overlays** in the same style: the minimap, the tactical overview, the edge threats, "approaching", the Prepare screen's field preview, the battle HUD (P10-08's open item) and the result screen's frame.
+- **Effects** as in the demo: a small burst for a hit, a pale arc for a block, a puff for an arrow in the ground, the rally ring, dust, a short trail on a live blade. Reduced effects keeps only the rally ring. Arrows and bolts have heads.
+- **Big battles:**
+  - figures are simplified past the busy threshold (fewer parts, no trail or dust: `BUSY` in `js/render.js`);
+  - standing and walking frames may be baked into small images per look, facing and scale, and redrawn when the zoom or sharpness changes;
+  - attacks are always drawn live.
+- **Readability in the melee:** the owner's one doubt in the demo. Try a slightly smaller fighting pose, the facing shown by the shield side, and the rings. Judge at 812×375 with 100 on the field.
+- **Removed:** the unit sprites' drawing in battles, the battle tiles and decor sprites, and `assets.troopArt`, `allyArt` and `enemyArt` (or whatever is left of them after the towns).
 
-**Tests.** Browser screenshots of the reworked towns at 812×375 and on desktop; walking and talking still work.
+**Budget.** The battle benchmark's largest size at 30 fps or better may fall by at most one step (for example 100 to 80) at Balanced sharpness on the owner's phone. On the desktop bench, drawing time at 40 on the field is at most twice P10-G1's baseline.
 
-**Version.** The next minor version when it lands.
+**Tests.**
+- Every troop draws in every facing and pose (a smoke test over the content); every battle map's obstacles have a look.
+- The battle browser specs pass unchanged: controls, orders, the minimap, the overview, zoom, Prepare.
+- Screenshots of a 40 and a 100 battle, the assault and the lists at 812×375 and on desktop.
+- The benchmark against the budget.
+- No sprite image requested in a battle (network log).
+
+**Version.** 4.11.0.
+
+### P10-G3 · Towns in the new art (L)
+
+**Build.**
+- **Every walkable town** (P10-03: Stonebridge, Eastwatch, Hrothgard, Vessara, Merrow, Gullhaven, Harrowgate, Calder) drawn from building specs in `data/town_hubs.js`.
+  - Each town keeps its own character: the ford town, the forum, the hill town, the harbours, the river city, the cliff town, the salt market.
+  - Each town keeps its culture's buildings: walls, roof forms and materials, framing, signs, awnings, chimneys.
+  - Each town keeps its landmark: a guildhall, a keep, a forum, a harbour.
+  - The demo's Stonebridge is the model.
+- **Bigger towns** if the layout wants room: a town may grow past one screen with the battle camera, as the demo's does.
+  - Every role (innkeeper, merchant, recruiter, elder or official, guard) stays, with every story spot (P10-04) and the exit.
+  - The menu-first entry and "Walk the streets" stay as they are.
+- **People:** townsfolk from role looks with seeded variety. They stand at their work (the smith hammering, the merchant at the stall) or walk short loops. People cast by the story (`CL.town.cast`) wear their part's look.
+- **Life and light:**
+  - chimney smoke, moving banners and signs, a child, chickens or gulls by the town's kind;
+  - at night (the campaign's own hours) windows and lamps glow;
+  - building names show only near them, and a person's name and role in reach.
+- **Props by culture:** stalls, wells, forges, racks, carts, boats and nets at the harbours, salt heaps at Calder.
+- **Removed:** the town sprites (NPC frames, tile trees and decor), the old building and stall drawing, and `drawNpc`'s images.
+
+**Budget.** At 812×375, Balanced sharpness, a town draws in at most the battle's budget at 40.
+
+**Tests.**
+- Each town: walking into every building's footprint is blocked, every NPC is reachable and talks, and the exit leads out.
+- `town`, `town-hubs`, `settlement` and story specs pass.
+- Screenshots of every town by day and at night, at 812×375 and on desktop.
+
+**Version.** 4.12.0.
+
+### P10-G4 · The world map in the new art (L)
+
+**Build.**
+- **The terrain** from the world's data, in the kit's language:
+  - grass with soft variation;
+  - mountains as shaded peaks with snow by height;
+  - hills as mounds;
+  - forests as grouped trees on a darker floor (pines in the north, birch where it fits);
+  - marsh with reeds and pools;
+  - the river with banks, its bridges and fords drawn as they are;
+  - the coast with sand and shallows, the sea with slow ripples;
+  - roads that curve;
+  - fields round villages.
+  - The terrain layer stays cached per zoom step (W-02), at the new sharpness.
+- **Settlements as miniatures,** by kind and culture, from the town buildings at map scale:
+  - towns and capitals walled, with a landmark;
+  - free cities and harbours with piers and boats;
+  - forts and castles with keep, towers and walls;
+  - villages with houses, a barn or long hall, fences and fields.
+  - Who holds them shows in banners, and an occupier's pennant (asset row 9). Lairs and camps, ruins and the story's places get their own small pieces.
+- **Parties as miniatures:**
+  - patrols: two soldiers and the realm's banner;
+  - lords: mounted, with the house's banner, gold-edged;
+  - armies: the commander and a bigger banner with a count;
+  - caravans: a covered wagon;
+  - bands: hooded figures with a dark banner;
+  - quest bands under their own names;
+  - your detachments;
+  - your own party: the hero, two of your soldiers, your banner, the gold ring.
+  - A stance ring (blue friend, cream neutral, red hostile) supplements the colours.
+  - Siege camps: tents, a ram and ladders round the walls (asset row 13).
+- **What the map already does stays,** redrawn:
+  - the fog of sight (P10-08);
+  - night;
+  - the last-seen ghosts;
+  - edge markers;
+  - count badges;
+  - the label rules (only what matters at the zoom);
+  - every tap target and its size.
+- **Party glyphs cached** as small images by kind, realm, facing and frame, so 200 parties (W-07's stress test) stay within budget.
+- **Removed:** the old settlement, site and party shapes, the map's hero sprite, and the old terrain drawing.
+
+**Budget.** The map stress test (200 parties and the lords) and `npm run bench:map` may slow by at most a quarter from P10-G1's baseline at Balanced sharpness.
+
+**Tests.**
+- The map, sight, mapview, world-map and map-camera specs pass.
+- Every settlement kind and culture and every party kind draws (a smoke test).
+- Screenshots of the whole world and of each region, zoomed out and in, by day and at night, at 812×375 and on desktop.
+- The stress test against the budget.
+
+**Version.** 4.13.0.
+
+### P10-G5 · The UI and portraits in the new art (M–L)
+
+**Build.**
+- **Portraits from the figure parts,** at a larger scale with a face (eyes, brows, nose, mouth by kind):
+  - soldiers' portraits (P10-09's `portrait` kinds map onto skin, face shape, hair and beard);
+  - the hero, from the creator's choices;
+  - the companions;
+  - the lords and rulers on the Realm screens.
+  - In the frame of P10-08, in the soldiers' list, on the cards, in dialogue and on the party sheet.
+- **The hero** in the creator's preview and on the party sheet drawn by the kit, with the cloak colour, gender and equipment.
+- **Troops in the recruit screens, the troop tree and the soldiers' cards:** each troop's small figure.
+- **House arms and banners** (asset rows 6, 8 and 10): each house's shield and banner from the kit's devices and its realm's colours, on the Realm screens, the lords' map banners and in battle.
+- **The icons:** P10-08's ten pixel icons, and the emoji goods (row 7), redrawn as small vector icons in the same style: outline, light, the gold on navy.
+- **The frame:**
+  - the battle HUD and the Prepare panel finished in the frame (P10-08's open);
+  - `image-rendering: pixelated` and the pixel-specific rules removed from `style.css`;
+  - navy, gold, cream and crimson stay.
+  - The title screen gets a small drawn scene from the kit if it fits the frame.
+- **Home-screen icons** made from the kit's hero by a script that draws them in a headless browser (Playwright is already a development tool). This replaces `scripts/make-icons.js`'s sprite scaling.
+- **Removed:** the 16×16 portrait drawing, the hero sprite recolouring (`assets.heroSprite`), and the pixel icon masks.
+
+**Tests.**
+- Portraits stay the same over a save and load, and every portrait kind draws.
+- `layout`, `text-size` and the party, journal and realm specs pass.
+- Screenshots of the creator, the party sheet, the soldiers' list, a card, the Realm screen and dialogue at 812×375 and on desktop, at Normal and Larger text.
+
+**Version.** 4.14.0.
+
+### P10-G6 · The old graphics removed (M)
+
+**Build.**
+- **Delete:**
+  - every image in `assets/` and `assets/manifest.json`;
+  - `js/assets.js` (whatever is left);
+  - `scripts/asset-manifest.js`;
+  - every `tile`, `frames` and sprite id left in the data;
+  - every sprite fallback in the renderer.
+- **Guard it:** `tests/assets.test.js` becomes the check that the game ships no raster art except the home-screen icons, and that no screen requests an image (a browser network check over a walk through the map, a town, a battle and the menus).
+- **Retire:**
+  - the **Graphics Demo** (its scenes are now the game; the Art gallery stays in the Debug panel);
+  - the **`crownless-art` skill** (`.claude/skills/crownless-art`);
+  - the Sprite Studio, ComfyUI and LiliPixel instructions in the docs.
+  - `art-reference/` and `art-work/` are local and git-ignored; they are left for the owner to delete.
+- **Documents:**
+  - `docs/ASSETS.md` rewritten: everything is code; only the home-screen icons are image files, and they are made by a script;
+  - How to Play's Credits;
+  - the README's art lines;
+  - `docs/V1-DOCUMENTATION.md`'s art and asset sections;
+  - `docs/WORLD-FORMAT.md`'s looks and specs;
+  - `docs/GRAPHICS-DEMO.md` marked as the history of the decision.
+- **Visual baselines** re-made on CI's Linux (`npm run test:visual:docker`), and the visual specs brought to the new screens.
+
+**Tests.**
+- The fast suite, the full browser suite and the visual baselines.
+- The asset guard: no image file but the icons, no image requested.
+- `npm run lint` with no new warnings.
+
+**Version.** 4.15.0.
+
+**Then P10-T** takes the art into its acceptance: the owner's phone play of every scene (map, towns, battles, menus), the battle benchmark and map stress test on the phone, and the visual baselines.
 
 ### P10-T · Phase 10 tuning and acceptance (M)
 
@@ -3552,6 +3752,7 @@ The owner, 2026-11-24: an art pass, or at least partial updates, toward the refe
 - **The old failures:** `landed` (seeds 2 and 3), the Phase 8 exit, Prototypes D and F, fixed or kept as known with a reason.
 - **The origins' balance** confirmed over all five and every realm.
 - **The scenario matrix** brought up to date, with the new start scenarios.
+- **The art** (P10-G1 to P10-G6): the owner's phone play of the map, every town, battles of 40 and 100 and the menus; the battle benchmark and the map stress test on the phone against P10-G1's baseline; the visual baselines.
 - **`docs/PHASE-10-VALIDATION.md`,** with the checks waiting on the owner's phone play.
 
 **Runs.** Each run over 20 minutes is asked about, or added to the next night run.

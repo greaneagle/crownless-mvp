@@ -1,6 +1,6 @@
 # Graphics demo: a code-drawn art direction (experiment)
 
-_Built 2026-11-25 on 4.9.0, in a session without commits. **An experiment for the owner to judge.** It changes nothing in normal play, isn't a Phase 10 graphics task (P10-G1 and P10-G2 stay open), and doesn't change the plan._
+_Built 2026-11-25 on 4.9.0 (commit e5bae98). **Adopted by the owner the same day** (D-P10k): this approach becomes the game's art, and Phase 10 converts to it in P10-G1 to P10-G6 (`docs/NEXT-TASKS.md`). The demo itself changes nothing in normal play; it is retired in P10-G6._
 
 ## How to open it
 
