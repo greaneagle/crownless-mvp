@@ -21,3 +21,6 @@ contact-sheet*.png
 ComfyUI/
 ComfyUI_windows_portable/
 !assets/**
+
+# The graphics demo's screenshots (docs/GRAPHICS-DEMO.md): about 11 MB, kept on this machine
+docs/graphics-demo/
