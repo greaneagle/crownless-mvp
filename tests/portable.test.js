@@ -71,13 +71,13 @@ test('rejected: unknown IDs, listed — and the current save is untouched', () =
   f.campaign.inventory.excalibur = 1;
   f.campaign.equipment.weapon = 'boots';
   f.campaign.world.location = 'atlantis';
-  f.campaign.character.background = 'wizard';
+  f.campaign.character.origin = 'wizard';
   f.campaign.cargo.spice = 3;
   f.checksum = CL.portable.checksum(JSON.stringify(f.campaign));
   const r = CL.portable.importText(JSON.stringify(f));
   assert.equal(r.ok, false);
   const all = r.problems.join(' | ');
-  for (const bit of ['troop "dragon"', 'item "excalibur"', '"boots" cannot be worn as weapon', 'settlement "atlantis"', 'background "wizard"', 'trade good "spice"']) {
+  for (const bit of ['troop "dragon"', 'item "excalibur"', '"boots" cannot be worn as weapon', 'settlement "atlantis"', 'origin "wizard"', 'trade good "spice"']) {
     assert.ok(all.includes(bit), bit);
   }
   assert.equal(storage.data.crownless_save, before, 'nothing written');

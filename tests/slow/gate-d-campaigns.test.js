@@ -70,7 +70,7 @@ test(`no quest soft-locks, every ending reachable: ${SEEDS} randomized campaigns
   const CL = CL0;
   assert.deepEqual(Object.keys(ended).sort(), [...REALMS].sort(), 'an ending from every kingdom');
   // The main story's stages (the bot leaves the V2-Q errands alone; tests/errands.test.js walks them).
-  const stages = Object.values(CL.content.table('quests')).filter((q) => !q.side).flatMap((q) => q.stages.map((s) => s.id));
+  const stages = Object.values(CL.content.table('quests')).filter((q) => !q.side && !q.opening).flatMap((q) => q.stages.map((s) => s.id));
   assert.deepEqual(
     stages.filter((s) => !seen.stages.has(s)),
     [],

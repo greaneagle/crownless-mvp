@@ -70,7 +70,7 @@
     const sites = CL.world.map().sites;
     for (const id of Object.keys(obj(raw.world?.sites) ? raw.world.sites : {})) if (!sites[id]) bad(`unknown site "${id}"`);
     if (raw.character) {
-      if (!has('backgrounds', raw.character.background)) bad(`unknown background "${raw.character.background}"`);
+      if (!has('origins', raw.character.origin)) bad(`unknown origin "${raw.character.origin}"`);
       for (const id of Object.keys(obj(raw.character.skills) ? raw.character.skills : {})) if (!has('skills', id)) bad(`unknown skill "${id}"`);
     }
     for (const id of Object.keys(obj(raw.cargo) ? raw.cargo : {})) {

@@ -3381,7 +3381,7 @@ Moved here from P9-T (owner, 2026-11-24). It runs when the owner asks for the ni
 - **Tests:** `tests/cast.test.js` (every realm's cast, no text left uncast, a new game in Ostrand, the streets of Hrothgard, Q1 from Saltreach, Vessaro's columns, hosts and parley); spots in `town-hubs.test.js`; a browser case choosing Ostrand. `npm run simulate:story -- 6 --every` reached an ending from all six. `gate-d-campaigns` now 7 a realm (42): in `docs/PENDING-CHECKS.md` for the next run (the owner).
 - **Checks:** 895 fast pass; lint clean but the 2 old warnings; typecheck clean. Browser 247 passed, 9 skipped. **Played** at 812×375: a game in Hrothmark (the kingdom cards, Gudrun's work, the thane, the journal) and one in Valedorn (Stonebridge as before). The cards were cramped and "the Clans’s" read badly: fixed.
 
-### P10-05 · Origins: the frame and the first three (L)
+### P10-05 · Origins: the frame and the first three (L) — ✅ Done in 4.5.0
 
 **Build.**
 - **An origin** replaces the background at a new game. Each has:
@@ -3401,6 +3401,15 @@ Moved here from P9-T (owner, 2026-11-24). It runs when the owner asks for the ni
 **Tests.** Every origin from every realm, played by a bot to the common quest; the end state of each within the band.
 
 **Version.** 4.5.0.
+
+**Done (4.5.0).**
+- **Origins** (`data/origins.js`) replace the backgrounds: five on the new-game screen, short cards with the chosen one's story, start and edge below. `character.origin`, the story's `origin` condition. Nobody starts sworn, landed or at court.
+- **The traveller:** your town's innkeeper, two hires, the horse thieves on the road, the inn again; the edge, your horse (a nag). **The noble:** Old Tam's strongbox, three hires, the moneylender's men by your border village, home; the edge, your grandfather's axe. **The farmhand:** begins in your village with three of the realm's levies; the raiders, the headman, the town; the edge, those men without a fee.
+- **Cast from any kingdom** like the main story; each ends by starting Q1 and sets `origin_done`, so the speed hint shows. A band can be beaten or cowed. New effects `equip` and `recruit: '@crown'`; the innkeeper a street role.
+- **The band** (`origin_rules`): gold 30–130 (40 at first: cowing a band brings no loot), 2–3 soldiers, worn gear 40–90, level 1–2, renown 3–12. Measured from every kingdom: traveller about 55–95 crowns, 2 soldiers and the horse; noble 60–90, 3 and the axe; farmhand 87, 3. Worth within about 20 crowns. One retune: the farmhand's village collection of 30 crowns went.
+- **The bare start stays** for bots and scripts (`plain`; `CL.game.plainStart` in the browser helper), so the slow bots' numbers do not move.
+- **Tests:** `tests/origins.test.js` (the five, each opening walked, Intimidate too, the bare start); `tests/slow/origins.test.js` (3 origins × 6 kingdoms by the focused story bot, inside the band, about 25 s).
+- **Checks:** 901 fast pass; lint clean but the 2 old warnings; typecheck clean. Browser 247 passed, 9 skipped (the 4.2 save fixtures now say `origin`). `tests/slow/origins.test.js` passes. **Played** at 812×375: a traveller in Saltreach, from the inn to the speed hint. The origin cards were cramped (now a grid), and the noble's forged blade was unknown to the world checker (now the axe). The map labels a quest band "Quest: Reavers", not its name: the renderer's, left for P10-08.
 
 ### P10-06 · Origins: the scout and the peddler (M)
 
@@ -3439,9 +3448,13 @@ Split from the old art pass (owner, 2026-11-24): menus and the UI first, as the 
   - tabs with a raised active state;
   - rounded touch buttons with gold rims.
 - Screen by screen, starting with the party screen and the dialogue box, then the settlement menu, the Journal, Settings and the HUD.
+- **Seeing further, and the fog on the map** (owner, 2026-11-25):
+  - **Sight that can grow:** how far the company sees (today a fixed 12 map units, `js/sight.js` PLAYER_SIGHT, then night, high ground and forest) gains ways to see further: the Pathfinding skill or a scout (the scout follower and Mara are natural fits), a horse, a watchtower or fort you hold, and news that tells you of parties beyond your sight. The numbers in data; the same rules for the AI's parties where they apply.
+  - **The fog:** the map is slightly darker where you cannot see exact movement and slightly lighter where you can, so your sight reads at a glance: a soft-edged circle of sight round the company (and round what else gives sight), night and forest shrinking it as they do now. Parties outside it stay hidden or faded, as today. Subtle, readable on a phone, and switched off by reduced effects.
+- **Quest bands named on the map** (found in P10-05): a story band shows its own name ("Horse Thieves", "Supply Column"), not "Quest: Reavers" or "Quest: Column".
 - **Renderer changes allowed** for this task (an exception to the art rule). **Partial is fine:** what is not done is listed as open.
 
-**Tests.** Browser screenshots of the reworked screens at 812×375 and on desktop; `layout`, `text-size` and `settlement` specs; text size and reduced effects still work.
+**Tests.** Browser screenshots of the reworked screens at 812×375 and on desktop; `layout`, `text-size` and `settlement` specs; text size and reduced effects still work. Sight: each way of seeing further widens it by its data number, night and forest still shrink it, a party outside sight is not shown; the fog follows the sight radius (a screenshot day and night) and is off with reduced effects; a quest band's label is its name.
 
 **Version.** 4.8.0.
 

@@ -3,9 +3,9 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { loadGame } = require('./helpers/load');
 
-test('backgrounds add +1 attribute and +1 skill to the 5/5/5/5 base', () => {
+test('origins add +1 attribute and +1 skill to the 5/5/5/5 base', () => {
   const { CL } = loadGame();
-  const make = (background) => CL.character.create({ name: 'A', background });
+  const make = (origin) => CL.character.create({ name: 'A', origin });
   const f = make('farmhand');
   assert.deepEqual({ ...f.attributes }, { str: 6, agi: 5, int: 5, cha: 5 });
   assert.equal(f.skills.one_handed, 1);
@@ -16,18 +16,18 @@ test('backgrounds add +1 attribute and +1 skill to the 5/5/5/5 base', () => {
   assert.equal(p.attributes.cha, 6);
   assert.equal(p.skills.trade, 1);
   assert.equal(Object.keys(f.skills).length, 8, 'the 8 MVP skills');
-  assert.equal(make('wizard').background, 'farmhand', 'unknown background falls back');
+  assert.equal(make('wizard').origin, 'farmhand', 'unknown origin falls back');
 });
 
 test('names are cleaned: control characters and angle brackets dropped, 20 chars max', () => {
   const { CL } = loadGame();
-  const name = (n) => CL.character.create({ name: n, background: 'scout' }).name;
+  const name = (n) => CL.character.create({ name: n, origin: 'scout' }).name;
   assert.equal(name('  Aldric of Oakford  '), 'Aldric of Oakford');
   assert.equal(name('<b>Mara</b>'), 'bMara/b');
   assert.equal(name('Tab\there'), 'Tabhere');
   assert.equal(name('x'.repeat(40)).length, 20);
   assert.equal(name('   '), 'Wanderer');
-  const ch = CL.character.create({ name: 'Q', gender: 'dragon', cloak: 'neon', background: 'scout' });
+  const ch = CL.character.create({ name: 'Q', gender: 'dragon', cloak: 'neon', origin: 'scout' });
   assert.equal(ch.gender, 'unspecified');
   assert.equal(ch.cloak, 'crimson');
 });
@@ -66,7 +66,7 @@ test('equip swaps through the pack atomically; unequip returns the item', () => 
 test('travel factor: +3% per Pathfinding point, a horse and the Ring of Roads stack', () => {
   const { CL } = loadGame();
   const c = CL.campaign;
-  c.character = CL.character.create({ name: 'S', background: 'scout' });
+  c.character = CL.character.create({ name: 'S', origin: 'scout' });
   assert.ok(Math.abs(CL.character.travelFactor() - 1.03) < 1e-9);
   c.inventory.nag = 1;
   c.inventory.ring_of_roads = 1;
@@ -93,7 +93,7 @@ test('starting a new game builds a fresh campaign from the kit and enters Stoneb
   const { CL, storage, uiCalls } = loadGame({ party: false });
   CL.campaign.gold = 999; // must not survive a new game
   CL.game.newGame = true;
-  CL.character.begin({ name: 'Edda', gender: 'woman', cloak: 'forest', background: 'peddler' });
+  CL.character.begin({ name: 'Edda', gender: 'woman', cloak: 'forest', origin: 'peddler' });
   const c = CL.campaign;
   assert.equal(c.gold, 60);
   assert.equal(c.character.name, 'Edda');
@@ -101,7 +101,7 @@ test('starting a new game builds a fresh campaign from the kit and enters Stoneb
   assert.equal(c.roster.length, 0);
   assert.equal(CL.save.existed, true);
   assert.equal(CL.game.newGame, false);
-  assert.equal(JSON.parse(storage.data.crownless_save).character.background, 'peddler');
+  assert.equal(JSON.parse(storage.data.crownless_save).character.origin, 'peddler');
   assert.ok(uiCalls.some((x) => x[0] === 'changeMode' && x[1] === 'settlement'), 'starts at the Stonebridge menu (F-3), the streets one tap away');
   assert.equal(CL.campaign.world.location, 'stonebridge');
 });
@@ -111,23 +111,23 @@ test('an older save gains a character without losing its party or gold', () => {
   CL.campaign.character = null;
   CL.campaign.gold = 444;
   CL.game.newGame = false;
-  CL.character.begin({ name: 'Old Hand', background: 'scout' });
+  CL.character.begin({ name: 'Old Hand', origin: 'scout' });
   assert.equal(CL.campaign.gold, 444);
   assert.equal(CL.campaign.roster.length, 5);
-  assert.equal(CL.campaign.character.background, 'scout');
+  assert.equal(CL.campaign.character.origin, 'scout');
 });
 
 test('saved characters and equipment are validated', () => {
   const { CL } = loadGame();
-  assert.equal(CL.character.sanitize({ background: 'wizard' }), null);
+  assert.equal(CL.character.sanitize({ origin: 'wizard' }), null);
   const ch = CL.character.sanitize({
     name: 'Ok',
-    background: 'farmhand',
+    origin: 'farmhand',
     attributes: { str: 50, agi: 7, int: 'x' },
     skills: { trade: 3, one_handed: -1, juggling: 5 },
     level: 2,
   });
-  assert.equal(ch.attributes.str, 6, 'out of range → background default');
+  assert.equal(ch.attributes.str, 6, 'out of range → origin default');
   assert.equal(ch.attributes.agi, 7);
   assert.equal(ch.skills.trade, 3);
   assert.equal(ch.skills.one_handed, 1);
@@ -139,9 +139,9 @@ test('saved characters and equipment are validated', () => {
   assert.equal(eq.head, null);
 });
 
-test('content validator checks backgrounds and their kits', () => {
+test('content validator checks origins and their kits', () => {
   const { CL } = loadGame();
-  CL.content.table('backgrounds').scout.kit = { gold: 60, equipment: { weapon: 'boots' }, items: { ghost: 1 } };
+  CL.content.table('origins').scout.kit = { gold: 60, equipment: { weapon: 'boots' }, items: { ghost: 1 } };
   const errors = Array.from(CL.content.validate()).join('\n');
   assert.match(errors, /kit item boots does not fit weapon/);
   assert.match(errors, /unknown kit item ghost/);

@@ -10,7 +10,7 @@ test('the test world plays: the campaign bot gets through 30 days, parties roam 
   const { CL, storage } = env;
   CL.ui = headlessUi(CL, []);
   CL.game.newGame = true;
-  CL.character.begin({ name: 'Bot', background: 'farmhand' });
+  CL.character.begin({ name: 'Bot', origin: 'farmhand', plain: true });
   const c = CL.campaign;
   c.parties = [];
   c.partySpawns = {};

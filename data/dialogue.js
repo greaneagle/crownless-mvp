@@ -25,9 +25,11 @@
         first: {
           text: [
             'Welcome to {cast:home}, {name}. Strangers are rarer than reavers these days.',
-            { if: { background: 'farmhand' }, text: 'You have a farmer’s hands. Good — we need people who know what a harvest costs.' },
-            { if: { background: 'scout' }, text: 'You walk like someone who reads the ground. The roads could use eyes like yours.' },
-            { if: { background: 'peddler' }, text: 'A peddler, by the look of that pack. Trade has been thin since the caravans started vanishing.' }
+            { if: { origin: 'farmhand' }, text: 'You have a farmer’s hands. Good — we need people who know what a harvest costs. And word from {cast:village} is that you led its men well.' },
+            { if: { origin: 'traveller' }, text: 'You are the one who walked in at the gate and rode out after your horse. The inn has told half the town.' },
+            { if: { origin: 'noble' }, text: 'An old name, and the moneylender’s men broken on the road. Your father would have been glad of you.' },
+            { if: { origin: 'scout' }, text: 'You walk like someone who reads the ground. The roads could use eyes like yours.' },
+            { if: { origin: 'peddler' }, text: 'A peddler, by the look of that pack. Trade has been thin since the caravans started vanishing.' }
           ],
           options: [
             { text: 'Is there work for me?', do: [{ set: 'met_elder' }], next: 'q1_work' },
@@ -74,9 +76,11 @@
           text: [
             'Three jobs want doing, and I can pay for one. Fifty crowns, and the town’s thanks.',
             'A grain wagon waits at {cast:village} and needs bringing home. Reavers out of the {cast:camp} are raiding the roads and need breaking. And {cast:recruiter}, our recruiter, cannot fill the ranks.',
-            { if: { background: 'farmhand' }, text: 'The wagon would suit you — you know what that grain is worth.' },
-            { if: { background: 'scout' }, text: 'You could find the Reavers before they find you.' },
-            { if: { background: 'peddler' }, text: '{Cast:recruiter.short} pays a fair word for every recruit; a peddler knows how to strike a bargain.' }
+            { if: { origin: 'farmhand' }, text: 'The wagon would suit you — you know what that grain is worth.' },
+            { if: { origin: 'traveller' }, text: 'You know the roads and the thieves on them by now. The Reavers would suit you.' },
+            { if: { origin: 'noble' }, text: 'A house that wants soldiers again should start with recruits.' },
+            { if: { origin: 'scout' }, text: 'You could find the Reavers before they find you.' },
+            { if: { origin: 'peddler' }, text: '{Cast:recruiter.short} pays a fair word for every recruit; a peddler knows how to strike a bargain.' }
           ],
           options: [
             { text: 'I’ll bring the grain wagon from {cast:village}.', do: [{ start: 'q1' }, { set: 'q1_path', to: 'wagon' }, { stage: 'q1_wagon_go', quest: 'q1' }], next: 'q1_taken' },
@@ -211,6 +215,101 @@
             { text: 'I’ll take them on to a plan.', do: [{ start: 'sq_planned' }] },
             { text: 'Not now.' }
           ]
+        }
+      }
+    },
+    // ---- P10-05: the origins' people (data/origins.js, the opening quests in data/quests.js).
+    // The unhorsed traveller's innkeeper: your start town's own, while the opening quest needs them.
+    origin_innkeeper: {
+      id: 'origin_innkeeper',
+      speaker: '{cast:innkeeper}',
+      cast: 'innkeeper',
+      visible: { any: [{ quest: 'o_traveller', stage: 'o_trav_inn' }, { quest: 'o_traveller', stage: 'o_trav_back' }] },
+      start: [{ if: { quest: 'o_traveller', stage: 'o_trav_back' }, node: 'back' }, 'arrive'],
+      nodes: {
+        arrive: {
+          services: false,
+          text: [
+            'On foot, and limping? Sit down before you fall down. There is a bed and a bowl for you here, and you can pay me when you have a purse again.',
+            'Your horse? The thieves who ride the {cast:village} road. They camp out there brazen as you like, and nobody goes after them alone.',
+            'Hire a couple of swords from {cast:recruiter.short} and go together. A company is the only way anyone gets anything back on these roads.'
+          ],
+          options: [{ text: 'I’ll get my horse back.', do: [{ food: 2 }, { stage: 'o_trav_hire', quest: 'o_traveller' }, { note: 'The innkeeper fed you and told you where the thieves camp, on the {cast:village} road.', quest: 'o_traveller' }] }]
+        },
+        back: {
+          services: false,
+          text: [
+            'Is that your horse at my trough? Ha! Then the road has a new captain on it.',
+            'If you want work, {cast:elder} has more of it than hands. Go and see. And you will hear the map can run faster, if you are in a hurry: the button by the zoom.'
+          ],
+          options: [{ text: 'I’ll go and see.', do: [{ set: 'origin_done' }, { complete: 'o_traveller' }, { start: 'q1' }] }]
+        }
+      }
+    },
+    // The impoverished noble's retainer, in your start town while the opening quest lasts.
+    origin_retainer: {
+      id: 'origin_retainer',
+      speaker: 'Old Tam',
+      tag: 'Retainer',
+      frames: [80, 81, 82, 83],
+      place: '@home',
+      visible: { quest: 'o_noble', is: 'active' },
+      start: [{ if: { quest: 'o_noble', stage: 'o_noble_home' }, node: 'home' }, { if: { quest: 'o_noble', stage: 'o_noble_tam' }, node: 'debt' }, 'waiting'],
+      nodes: {
+        debt: {
+          services: false,
+          text: [
+            'You came. Good. Your father owed a moneylender more than the house was worth, and now he is dead the moneylender wants it paid.',
+            'His men took your brother out to {cast:border} and say they will keep him until the debt is settled. We cannot pay it. But we can settle it another way.',
+            'Here is what is left in the strongbox. Hire three soldiers with it, and go and get him.'
+          ],
+          options: [{ text: 'I will bring him home.', do: [{ gold: 40 }, { stage: 'o_noble_hire', quest: 'o_noble' }] }]
+        },
+        waiting: {
+          services: false,
+          cycle: true,
+          text: ['Your journal knows the way, my lord. I will be here.', 'Hire your soldiers, then go for him. The moneylender’s men will not wait for ever.'],
+          options: [{ text: 'On my way.' }]
+        },
+        home: {
+          services: false,
+          text: [
+            'You brought him home. Your father would have wept to see it.',
+            'Take this. It hung over his hearth: your grandfather’s axe. Older than the debt and worth more than it, to us. Now go and make the name worth something again. {Cast:elder} in the town square is always looking for a sword.'
+          ],
+          options: [{ text: 'I will.', do: [{ equip: 'hand_axe' }, { note: 'Old Tam gave you your grandfather’s axe.', quest: 'o_noble' }, { set: 'origin_done' }, { complete: 'o_noble' }, { start: 'q1' }] }]
+        }
+      }
+    },
+    // The farmhand's headman, in your village while the opening quest lasts.
+    origin_headman: {
+      id: 'origin_headman',
+      speaker: 'The Headman of {cast:village}',
+      place: '@village',
+      visible: { quest: 'o_farmhand', is: 'active' },
+      start: [{ if: { quest: 'o_farmhand', stage: 'o_farm_report' }, node: 'report' }, { if: { quest: 'o_farmhand', stage: 'o_farm_headman' }, node: 'raid' }, 'waiting'],
+      nodes: {
+        raid: {
+          services: false,
+          text: [
+            'They came at dawn, took the grain from the barns and the beasts from the pens, and they are camped not an hour away, sharing it out.',
+            'Three of our men have their flails and their fathers’ old spears, and they will follow you. You always were the one who kept a cool head.'
+          ],
+          options: [{ text: 'We go now.', do: [{ stage: 'o_farm_raiders', quest: 'o_farmhand' }] }]
+        },
+        waiting: {
+          services: false,
+          cycle: true,
+          text: ['The raiders are close. Your journal knows where.', 'Keep the men together and they will hold.'],
+          options: [{ text: 'On my way.' }]
+        },
+        report: {
+          services: false,
+          text: [
+            'The grain is back in the barns. The village will not forget it.',
+            'The men want to keep following you, and there is no living here this winter. Take them to {cast:home}: there is work there for a band that can fight. Mind you feed them.'
+          ],
+          options: [{ text: 'To {cast:home}, then.', do: [{ stage: 'o_farm_town', quest: 'o_farmhand' }] }]
         }
       }
     },

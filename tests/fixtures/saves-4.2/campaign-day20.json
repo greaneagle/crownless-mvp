@@ -786,7 +786,7 @@
    "name": "Bot3",
    "gender": "unspecified",
    "cloak": "crimson",
-   "background": "farmhand",
+   "origin": "farmhand",
    "attributes": {
     "str": 9,
     "agi": 5,

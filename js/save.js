@@ -62,16 +62,17 @@
   const editionOf = (id) => CL.content.table('world_map')[id]?.edition || 1;
 
   /**
-   * A brand-new campaign (GDD §5): the background's kit — 60 crowns, worn sword, clothing,
+   * A brand-new campaign (GDD §5): the origin's kit (P10-05) — 60 crowns, worn sword, clothing,
    * oak shield, food — and no soldiers. The character itself is filled in by the creator.
-   * @param {ContentId} [background] @returns {Campaign}
+   * With no origin (a save being read, a test) it is the bare start, in the start town.
+   * @param {ContentId | null} [origin] @param {string | null} [realm] @param {{ plain?: boolean }} [opts] @returns {Campaign}
    */
   /**
    * A new campaign. P10-04: `realm`, the kingdom you begin in (any realm of the world with a start
    * town; default the one holding the world's start): you start in its start town, and the story is
    * cast from it (js/story.js `castFor`).
    */
-  function starter(background = 'farmhand', realm = null) {
+  function starter(origin = null, realm = null, { plain = !origin } = {}) {
     const seed = CL.autoresolve.newSeed();
     const startRealm = CL.story.startRealms().includes(realm) ? realm : CL.story.defaultRealm();
     /** @type {Campaign} */
@@ -155,7 +156,9 @@
       businesses: CL.business.blank(), // your mill, and those sold or seized (P7-10)
     };
     // P10-04: you begin in your kingdom's start town, and the story's two realms begin in tension.
-    const home = CL.story.startOf(startRealm);
+    // P10-05: or where your origin begins (its `start`, a story role: the farmhand in your village).
+    const begins = plain ? null : CL.content.table('origins')?.[origin]?.start;
+    const home = (begins && CL.content.table('settlements')[CL.story.resolve(begins, c)]) || CL.story.startOf(startRealm);
     if (home) Object.assign(c.world, { x: home.mapX, y: home.mapY, location: home.id });
     const cast = c.story.cast;
     if (cast) {
@@ -165,7 +168,7 @@
     CL.realm.sanitizeHoldings(c, null); // the world's people and holdings as its data begins them
     CL.fiefs.sanitize(c, null); // and how each holding stands: prosperity, garrison, policies (P8-05)
     CL.houses.sanitize(c, null); // the houses, from the people's kin (P9-06)
-    CL.character.applyKit(c, background);
+    CL.character.applyKit(c, origin || 'farmhand');
     CL.upkeep.stowFood(c);
     CL.parties.ensure(c, true);
     return c;

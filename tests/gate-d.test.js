@@ -24,7 +24,7 @@ test('Gate D scope: the region, troops, maps, quests, contracts, companion, repu
   assert.equal(t('battle_maps').filter((m) => !m.generate && m.id !== 'tourney_lists').length, 3, 'the three hand-made maps (and, from 2.20.0, the tourney ground)');
   assert.equal(t('battle_maps').filter((m) => m.generate).length, 4, 'plus two large generated ones from 1.8.0 (V2-05), the river ford from 2.6.0 (W-05a) and the hill slopes from 2.22.0 (P7-11)');
   assert.deepEqual(
-    t('quests').filter((q) => !q.side).map((q) => q.id),
+    t('quests').filter((q) => !q.side && !q.opening).map((q) => q.id), // P10-05: the origins' opening quests are tests/origins.test.js's
     ['q1', 'q2', 'q3', 'q4'],
     'the four story quests (V2-Q errands are extra and optional)',
   );

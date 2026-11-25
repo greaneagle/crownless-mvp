@@ -78,7 +78,7 @@ declare global {
     name: string;
     gender: 'man' | 'woman' | 'unspecified';
     cloak: string;
-    background: ContentId;
+    origin: ContentId;
     attributes: Record<string, number>;
     skills: Record<string, number>;
     level: number;
@@ -669,7 +669,7 @@ declare global {
     /** The Sundered Realm's people and holdings as 2.24.0 began them (the 18 → 19 migration's constants). */
     V19_SUNDERED: { people: string[][]; rulers: Record<string, string>; holdings: (string | null)[][] };
     preMigrationKey(version: number): string;
-    starter(background?: ContentId): Campaign;
+    starter(origin?: ContentId | null, realm?: string | null, opts?: { plain?: boolean }): Campaign;
     addSoldier(c: Campaign, troop: ContentId, woundedUntil?: number | null, opts?: { origin?: string | null; veteran?: boolean }): Soldier;
     check(d: unknown): SaveCheck;
     migrate(d: Record<string, any>): Record<string, any> | null;

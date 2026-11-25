@@ -169,7 +169,7 @@ test('auto-resolve gives XP to the soldiers who took part', () => {
 
 test('saved level and points are validated', () => {
   const { CL } = loadGame();
-  const ch = CL.character.sanitize({ background: 'scout', level: 50, xp: 30, skillPoints: 3, attributePoints: -1 });
+  const ch = CL.character.sanitize({ origin: 'scout', level: 50, xp: 30, skillPoints: 3, attributePoints: -1 });
   assert.equal(ch.level, 1, 'out of range → 1');
   assert.equal(ch.xp, 30);
   assert.equal(ch.skillPoints, 3);

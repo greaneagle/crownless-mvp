@@ -161,12 +161,16 @@ async function settlementOnPage(page, id) {
   return mapToPage(page, mx, my);
 }
 
-/** Start a new game through the title and creation screens, ending in the first settlement's menu. */
-async function newGame(page, { name = 'Tester', background = null } = {}) {
+/**
+ * Start a new game through the title and creation screens, ending in the first settlement's menu.
+ * P10-05: the bare start (Stonebridge, the common quest) unless `opening` plays the origin's quest.
+ */
+async function newGame(page, { name = 'Tester', origin = null, opening = false } = {}) {
   await press(page, '#primaryBtn'); // New game
   await waitMode(page, 'create');
   await page.locator('#heroName').fill(name);
-  if (background) await press(page, page.locator('#bgChoices button', { hasText: background }));
+  if (origin) await press(page, page.locator('#bgChoices button', { hasText: origin }));
+  await game(page, (CL, plain) => (CL.game.plainStart = plain), !opening);
   await press(page, '#primaryBtn'); // Begin
   await waitMode(page, 'settlement');
 }

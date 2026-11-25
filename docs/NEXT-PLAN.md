@@ -318,10 +318,10 @@ Every Phase 9 task is **Specified** (2026-11-22; NEXT-TASKS has each in full). T
 | **P10-02** | ✅ **Done in 4.2.0.** **One world:** the Sundered Coast joins the map as a region; the world chooser and the second official world go; older saves refused | M–L | P10-01 |
 | **P10-03** | ✅ **Done in 4.3.0.** **Walkable towns:** every capital and free city, each with its own layout and people | L | P10-02 |
 | **P10-04** | ✅ **Done in 4.4.0.** **Choose your kingdom, and the main story from anywhere:** a start town per realm; the story's people and places by role; Q1 becomes the common quest | L | P10-03 |
-| **P10-05** | **Origins, the frame and the first three:** the unhorsed traveller, the impoverished noble, the farmhand; every origin ends in about the same state, with one small edge | L | P10-04 |
+| **P10-05** | ✅ **Done in 4.5.0.** **Origins, the frame and the first three:** the unhorsed traveller, the impoverished noble, the farmhand; every origin ends in about the same state, with one small edge | L | P10-04 |
 | **P10-06** | **Origins, the scout and the peddler,** and the balance check over all five | M | P10-05 |
 | **P10-07** | **Onboarding and hints:** a guide for the main beginner steps with any origin, hints for the rest, one setting to turn them off, How to Play by stage | M | P10-06 |
-| **P10-08** | **UI and menus** toward the references (renderer changes allowed; partial is fine) | L | P10-07 |
+| **P10-08** | **UI and menus** toward the references (renderer changes allowed; partial is fine); seeing further on the map and a light fog of sight (owner, 2026-11-25); quest bands named on the map | L | P10-07 |
 | **P10-09** | **Women soldiers** in two realms and one bandit type (15% of recruits, their own lines), and a few placeholder portraits | M | P9-T |
 | **P10-G1** | **Graphics, battles,** toward the references, whenever it fits (renderer changes allowed; partial is fine) | L | — |
 | **P10-G2** | **Graphics, towns,** toward the references, whenever it fits (renderer changes allowed; partial is fine) | L | P10-03 |

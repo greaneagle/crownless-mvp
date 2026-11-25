@@ -26,7 +26,7 @@ test('the Phase 9 exit: rule, command, treat, appoint and grant; a lord declines
     env.CL.ui = headlessUi(env.CL, messages);
     if (fresh) {
       env.CL.game.newGame = true;
-      env.CL.character.begin({ name: 'Exit9', background: 'farmhand' });
+      env.CL.character.begin({ name: 'Exit9', origin: 'farmhand', plain: true });
       const c = env.CL.campaign;
       c.rngSeed = 9;
       c.rng = env.CL.autoresolve.streamSeeds(9);

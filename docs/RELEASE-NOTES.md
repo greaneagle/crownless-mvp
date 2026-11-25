@@ -1,5 +1,22 @@
 # Crownless — Release Notes
 
+## v4.5.0 — Origins: the frame and the first three (P10-05) · 2026-11-25
+
+### New
+- **Origins replace the backgrounds.** At a new game you choose who you were before the road: the unhorsed traveller, the impoverished noble, the farmhand, the scout or the peddler. Each keeps the old +1 attribute and +1 skill.
+- **Three opening quests,** each three or four steps that teach the basics (talking, hiring, riding out, a first fight, the Prepare screen or auto-resolve), cast from the kingdom you chose:
+  - **Thrown at the Gate** (the traveller): your start town's innkeeper, two hires, the horse thieves on the road, back to the inn. You get your horse back.
+  - **A Debt of Honour** (the noble): Old Tam, your family's last retainer, gives you the strongbox; hire three, free your brother from the moneylender's men, bring him home. Tam gives you your grandfather's axe.
+  - **Smoke over the village** (the farmhand): you begin in your village with three of its men, the realm's own levies; break the raiders, tell the headman, ride to the town. The men are your edge: soldiers without a fee.
+- Each ends by starting the common quest (Q1), with the speed hint; the scout and the peddler begin with the common quest until 4.6.0. A band can be beaten or cowed.
+- **The same place at the end:** every opening ends within one band set in data (gold 30–130, 2–3 soldiers, worn gear worth 40–90, level 1–2, renown 3–12). Played from every kingdom, the three end within about 20 crowns' worth of each other.
+- The new-game screen: the origins as short cards, the chosen one's story, start and edge below.
+
+### Under the hood
+- `data/origins.js` (`origins`, `origin_rules`) replaces `C.backgrounds`; `character.origin` replaces `background`, and the story's condition is `origin`. New effects: `equip`, and `recruit: '@crown'` (a realm's first recruit). The innkeeper is a street role.
+- A `plain` start (bots, scripts, `CL.game.plainStart` in the browser tests): the start town and the common quest, the GDD's bare start. Every slow bot keeps it, so their numbers do not move.
+- The story bot's `focus`: a new player's way through one quest. `tests/origins.test.js`; `tests/slow/origins.test.js` plays every origin from every kingdom.
+
 ## v4.4.0 — Choose your kingdom, and the story from anywhere (P10-04) · 2026-11-25
 
 ### New

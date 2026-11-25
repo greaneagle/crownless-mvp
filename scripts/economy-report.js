@@ -29,7 +29,7 @@ const marks = { gold15: [], gold30: [], gold60: [], renown30: [], renown60: [], 
 for (let seed = 1; seed <= seeds; seed++) {
   const msgs = [];
   const { CL } = loadGame({ party: false, random: mulberry(seed * 7919), seed });
-  CL.ui = headlessUi(CL, msgs); CL.game.newGame = true; CL.character.begin({ name: 'B', background: 'farmhand' });
+  CL.ui = headlessUi(CL, msgs); CL.game.newGame = true; CL.character.begin({ name: 'B', origin: 'farmhand', plain: true });
   const c = CL.campaign; c.rngSeed = seed; c.parties = []; c.partySpawns = {}; c.nextPartyId = 1; CL.parties.ensure(c, true);
   if (CL.accounts) {
     c.ledger = [];

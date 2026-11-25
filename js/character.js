@@ -45,8 +45,12 @@
   }
 
   /** A new character from creator choices. Unknown choices fall back to safe defaults. */
-  function create({ name, gender, cloak, background }) {
-    const bg = CL.content.table('backgrounds')[background] || CL.content.get('backgrounds', 'farmhand');
+  /** P10-05: the origins a new hero chooses from (data/origins.js); the first is the default. */
+  const origins = () => CL.content.table('origins');
+  const defaultOrigin = () => (origins().farmhand ? 'farmhand' : Object.keys(origins())[0]);
+
+  function create({ name, gender, cloak, origin }) {
+    const bg = origins()[origin] || origins()[defaultOrigin()];
     const attributes = Object.fromEntries(ATTRIBUTES.map((a) => [a, BASE_ATTRIBUTE]));
     const skills = Object.fromEntries(skillIds().map((s) => [s, 0]));
     attributes[bg.attribute] += 1;
@@ -55,7 +59,7 @@
       name: cleanName(name),
       gender: GENDERS.includes(gender) ? gender : 'unspecified',
       cloak: CLOAKS.includes(cloak) ? cloak : 'crimson',
-      background: bg.id,
+      origin: bg.id,
       attributes,
       skills,
       level: 1,
@@ -108,16 +112,16 @@
     return true;
   }
 
-  /** Apply a background's starting kit to a fresh campaign (gold, equipped gear, pack items). */
-  function applyKit(c, backgroundId) {
-    const kit = CL.content.get('backgrounds', backgroundId).kit;
+  /** Apply an origin's starting kit to a fresh campaign (gold, equipped gear, pack items). */
+  function applyKit(c, originId) {
+    const kit = (origins()[originId] || origins()[defaultOrigin()]).kit;
     c.gold = kit.gold;
     c.equipment = { ...blankEquipment(), ...kit.equipment };
     c.inventory = { ...kit.items };
   }
 
   function defaultEquipment() {
-    const kit = CL.content.get('backgrounds', 'farmhand').kit;
+    const kit = origins()[defaultOrigin()].kit;
     return { ...blankEquipment(), ...kit.equipment };
   }
 
@@ -192,15 +196,17 @@
   function begin(choices) {
     const g = CL.game;
     if (g.newGame) {
-      CL.campaign = CL.save.starter(choices.background, choices.realm); // P10-04: the kingdom you chose
+      // P10-04: the kingdom you chose; P10-05: your origin. `plain` (bots and scripts): the bare GDD
+      // start, in the start town with the common quest, whatever the origin.
+      CL.campaign = CL.save.starter(choices.origin, choices.realm, { plain: Boolean(choices.plain) });
       Object.assign(g, { newGame: false, travel: null, siteId: null, godMode: false });
     }
     const fresh = !CL.campaign.character;
     CL.campaign.character = create(choices);
-    if (fresh) CL.story.opening(CL.campaign); // P10-04: the common quest begins (a new game, not a re-roll)
+    if (fresh) CL.story.opening(CL.campaign, { plain: Boolean(choices.plain) }); // P10-05: your origin's opening quest begins (or the common quest)
     CL.save.existed = true;
     CL.save.write();
-    CL.diag.log('info', 'Character created', { name: CL.campaign.character.name, background: choices.background });
+    CL.diag.log('info', 'Character created', { name: CL.campaign.character.name, origin: CL.campaign.character.origin });
     if (CL.party.currentSettlement()) CL.town.enterPlace();
     else CL.ui.changeMode('map');
   }
@@ -210,8 +216,8 @@
   const isInt = (n, lo, hi) => Number.isInteger(n) && n >= lo && n <= hi;
 
   function sanitize(d) {
-    if (!d || typeof d !== 'object' || !CL.content.table('backgrounds')[d.background]) return null;
-    const ch = create({ name: d.name, gender: d.gender, cloak: d.cloak, background: d.background });
+    if (!d || typeof d !== 'object' || !origins()[d.origin]) return null;
+    const ch = create({ name: d.name, gender: d.gender, cloak: d.cloak, origin: d.origin });
     for (const a of ATTRIBUTES) if (isInt(d.attributes?.[a], 1, MAX_ATTRIBUTE)) ch.attributes[a] = d.attributes[a];
     for (const s of skillIds()) if (isInt(d.skills?.[s], 0, MAX_SKILL)) ch.skills[s] = d.skills[s];
     if (isInt(d.level, 1, MAX_LEVEL)) ch.level = d.level;

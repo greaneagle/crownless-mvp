@@ -24,7 +24,7 @@ test('the Phase 8 exit: acquire, lose, go landless, change allegiance, retake, i
     env.CL.ui = headlessUi(env.CL, messages);
     if (fresh) {
       env.CL.game.newGame = true;
-      env.CL.character.begin({ name: 'Exit8', background: 'farmhand' });
+      env.CL.character.begin({ name: 'Exit8', origin: 'farmhand', plain: true });
       const c = env.CL.campaign;
       c.rngSeed = 8;
       c.rng = env.CL.autoresolve.streamSeeds(8); // the dice streams too, or a new game seeds them from the clock

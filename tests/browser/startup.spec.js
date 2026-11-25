@@ -21,16 +21,16 @@ test('with a save in the browser, the title offers Continue (and New game behind
   expect(await game(page, (CL) => CL.game.mode)).toBe('title');
 });
 
-test('character creation: name, presentation, background and cloak, then the first settlement opens', async ({ page }) => {
+test('character creation: name, presentation, origin and cloak, then the first settlement opens', async ({ page }) => {
   await open(page);
   await press(page, '#primaryBtn');
   await waitMode(page, 'create');
   await expect(page.locator('#overlayTitle')).toHaveText('A NEW WANDERER');
   await page.locator('#heroName').fill('Ada Tester');
   await page.locator('#heroGender').selectOption('woman');
-  const backgrounds = page.locator('#bgChoices button');
-  await expect(backgrounds).toHaveCount(3);
-  await press(page, backgrounds.nth(1)); // Scout
+  const origins = page.locator('#bgChoices button');
+  await expect(origins).toHaveCount(5); // P10-05: the traveller, the noble, the farmhand, the scout, the peddler
+  await press(page, origins.nth(3)); // Scout: no opening quest yet (P10-06)
   const cloaks = page.locator('#cloakChoices button');
   expect(await cloaks.count()).toBeGreaterThan(1);
   await press(page, cloaks.nth(2));
@@ -39,7 +39,7 @@ test('character creation: name, presentation, background and cloak, then the fir
   const ch = await game(page, (CL) => ({ ...CL.campaign.character, place: CL.campaign.world.location, saved: Boolean(localStorage.getItem('crownless_save')) }));
   expect(ch.name).toBe('Ada Tester');
   expect(ch.gender).toBe('woman');
-  expect(ch.background).toBe('scout');
+  expect(ch.origin).toBe('scout');
   expect(ch.place).toBe('stonebridge');
   expect(ch.saved).toBe(true);
   await expect(page.locator('#overlayTitle')).toHaveText('STONEBRIDGE');
@@ -57,7 +57,7 @@ test('Back from character creation returns to the title without starting a game'
 test('the new-game helper reaches Stonebridge with the default Farmhand', async ({ page }) => {
   await open(page);
   await newGame(page);
-  expect(await game(page, (CL) => [CL.campaign.character.background, CL.campaign.world.location])).toEqual(['farmhand', 'stonebridge']);
+  expect(await game(page, (CL) => [CL.campaign.character.origin, CL.campaign.world.location])).toEqual(['farmhand', 'stonebridge']);
 });
 
 test('P10-02: one world: a new game asks no world, and the coast is on the map', async ({ page }) => {
@@ -80,6 +80,7 @@ test('P10-04: choose your kingdom: six realms on the new-game screen; Ostrand be
   await expect(realms.nth(4)).toHaveAttribute('aria-checked', 'true');
   await expect(realms.nth(4)).toContainText('from Harrowgate');
   await expect(page.locator('#realmNote')).toContainText('Kingdom of Ostrand');
+  await press(page, page.locator('#bgChoices button', { hasText: 'Scout' })); // the common quest at once
   await press(page, '#primaryBtn'); // Begin
   await waitMode(page, 'settlement');
   await expect(page.locator('#overlayTitle')).toHaveText('HARROWGATE');

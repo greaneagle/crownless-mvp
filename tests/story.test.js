@@ -66,7 +66,7 @@ test('conditions: flags, numbers, quests, kingdoms, the hero and the world', () 
     { quest: 'q1', is: 'unstarted' },
     { rep: 'valedorn', gte: 0 },
     { standing: 'aurelian', is: 'neutral' },
-    { background: 'farmhand' },
+    { origin: 'farmhand' },
     { has: 'charter_fragment' },
     { has: 'worn_sword' }, // equipped counts
     { owner: 'greywall_fort', is: 'valedorn' },
@@ -77,7 +77,7 @@ test('conditions: flags, numbers, quests, kingdoms, the hero and the world', () 
     { attribute: 'str', gte: 1 },
   ];
   for (const cond of yes) assert.equal(S.test(cond, c), true, JSON.stringify(cond));
-  const no = [{ flag: 'other' }, { flag: 'seen', is: 'no' }, { gold: 101 }, { gold: { lte: 99 } }, { all: [{ gold: 1 }, { gold: 1000 }] }, { quest: 'q1' }, { background: 'scout' }, { has: 'mara_token' }, { soldiers: 6 }];
+  const no = [{ flag: 'other' }, { flag: 'seen', is: 'no' }, { gold: 101 }, { gold: { lte: 99 } }, { all: [{ gold: 1 }, { gold: 1000 }] }, { quest: 'q1' }, { origin: 'scout' }, { has: 'mara_token' }, { soldiers: 6 }];
   for (const cond of no) assert.equal(S.test(cond, c), false, JSON.stringify(cond));
 });
 

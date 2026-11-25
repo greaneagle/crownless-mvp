@@ -10,7 +10,7 @@
  *    { quest: 'q1', is: 'unstarted'|'active'|'done'|'failed' }  { quest: 'q1', stage: 's' }
  *    { gold: n }  { renown: n }  { level: n }  { soldiers: n }  — "at least n", or { gte, lte }
  *    { rep: 'valedorn', gte: n }  { standing: 'aurelian', is: 'friendly' }
- *    { skill: 'trade', gte: n }  { attribute: 'cha', gte: n }  { background: 'scout' }
+ *    { skill: 'trade', gte: n }  { attribute: 'cha', gte: n }  { origin: 'farmhand' } (P10-05, was background)
  *    { has: 'item' }  { owner: 'greywall_fort', is: 'valedorn' }  { at: 'stonebridge' }
  *    { companion: 'mara' } (with you)  { companion: 'mara', is: 'fit' }  { room: 1 } (free party slots)
  *    { veteran: 3 } (a soldier born where you are, with at least 3 battles; V2-Q)
@@ -19,7 +19,8 @@
  *  Effects (`do`): a list, applied in order.
  *    { set: 'flag', to: v = true }  { clear: 'flag' }  { add: 'counter', by: 1 }
  *    { gold: n }  { renown: n }  { xp: n }  { food: n }  { rep: 'valedorn', by: n }
- *    { give: 'item', n = 1 }  { take: 'item', n = 1 }  { recruit: 'levy', n = 1 }
+ *    { give: 'item', n = 1 }  { take: 'item', n = 1 }  { equip: 'item' } (worn; what it replaces goes to the pack; P10-05)
+ *    { recruit: 'levy', n = 1 } (or '@crown' / '@rival': that realm's first recruit; P10-05)
  *    { start: 'q1' }  { stage: 's', quest: 'q1' }  { complete: 'q1' }  { fail: 'q1' }
  *    { owner: 'greywall_fort', to: 'aurelian' }  { message: 'text' }  { note: 'text', quest: 'q1' }
  *    { companion: 'mara' } (joins)  { part: 'mara', reason: 'fell' } (leaves for good)
@@ -81,10 +82,11 @@
   const MAX_NOTES = 20;
   const PLACE_ROLES = ['home', 'village', 'border', 'fort', 'rival_fort', 'rival_town', 'fence_town'];
   const REALM_ROLES = ['crown', 'rival'];
-  const PEOPLE_ROLES = ['elder', 'recruiter', 'crown_agent', 'rival_agent', 'caravan'];
+  const PEOPLE_ROLES = ['elder', 'recruiter', 'innkeeper', 'crown_agent', 'rival_agent', 'caravan'];
+  const STREET_ROLES = ['elder', 'recruiter', 'innkeeper']; // spoken in person by your start town's people
   const ROLES = [...REALM_ROLES, ...PLACE_ROLES, 'camp', ...PEOPLE_ROLES];
-  const COND_KEYS = ['flag', 'not', 'all', 'any', 'quest', 'gold', 'renown', 'level', 'soldiers', 'rep', 'standing', 'skill', 'attribute', 'background', 'has', 'owner', 'at', 'companion', 'room', 'veteran', 'follower'];
-  const EFFECT_KEYS = ['set', 'clear', 'add', 'gold', 'renown', 'xp', 'food', 'rep', 'give', 'take', 'recruit', 'start', 'stage', 'complete', 'fail', 'owner', 'message', 'note', 'companion', 'part', 'send', 'recall', 'ending', 'honourVeteran', 'retinue'];
+  const COND_KEYS = ['flag', 'not', 'all', 'any', 'quest', 'gold', 'renown', 'level', 'soldiers', 'rep', 'standing', 'skill', 'attribute', 'origin', 'has', 'owner', 'at', 'companion', 'room', 'veteran', 'follower'];
+  const EFFECT_KEYS = ['set', 'clear', 'add', 'gold', 'renown', 'xp', 'food', 'rep', 'give', 'take', 'equip', 'recruit', 'start', 'stage', 'complete', 'fail', 'owner', 'message', 'note', 'companion', 'part', 'send', 'recall', 'ending', 'honourVeteran', 'retinue'];
 
   const camp = () => CL.campaign;
   const quest = (id) => CL.content.table('quests')[id] || null;
@@ -174,7 +176,7 @@
   function person(role, c = camp()) {
     const k = castOf(c);
     if (!k) return null;
-    if (role === 'elder' || role === 'recruiter') {
+    if (STREET_ROLES.includes(role)) {
       const n = CL.town?.cast(k.home, role);
       return n ? { name: n.name, short: n.short || n.name, he: 'they', his: 'their', him: 'them', npc: n.id } : null;
     }
@@ -237,11 +239,14 @@
     return Boolean(k) && ((a === k.crown && b === k.rival) || (a === k.rival && b === k.crown)) && !state(c).flags.ending;
   }
 
-  /** The story dialogue a town's person speaks (a tree with `cast`), or null. */
+  /**
+   * The story dialogue a town's person speaks (a tree with `cast` of a street role, whose `visible`
+   * holds), or null. The first that holds, in the table's order.
+   */
   function streetDialogue(sid, npcId, c = camp()) {
     const k = castOf(c);
     if (!k || sid !== k.home) return null;
-    for (const t of Object.values(CL.content.table('dialogue'))) if (t.cast && (t.cast === 'elder' || t.cast === 'recruiter') && person(t.cast, c)?.npc === npcId) return t.id;
+    for (const t of Object.values(CL.content.table('dialogue'))) if (STREET_ROLES.includes(t.cast) && person(t.cast, c)?.npc === npcId && test(t.visible, c)) return t.id;
     return null;
   }
 
@@ -285,7 +290,7 @@
     if ('standing' in cond) return CL.realm.standing(c, resolve(cond.standing, c)) === cond.is;
     if ('skill' in cond) return compare(CL.character.skill(cond.skill, c), cond);
     if ('attribute' in cond) return compare(CL.character.attribute(cond.attribute, c), cond);
-    if ('background' in cond) return c.character?.background === cond.background;
+    if ('origin' in cond) return c.character?.origin === cond.origin;
     if ('has' in cond) return (c.inventory[cond.has] || 0) > 0 || Object.values(c.equipment || {}).includes(cond.has);
     if ('owner' in cond) return CL.realm.owner(resolve(cond.owner, c), c) === resolve(cond.is, c);
     if ('at' in cond) return c.world.location === resolve(cond.at, c);
@@ -328,10 +333,18 @@
       const left = (c.inventory[e.take] || 0) - (e.n || 1);
       if (left > 0) c.inventory[e.take] = left;
       else delete c.inventory[e.take];
+    } else if ('equip' in e) {
+      const it = CL.content.table('items')[e.equip];
+      if (it?.slot) {
+        const old = c.equipment[it.slot];
+        if (old) c.inventory[old] = (c.inventory[old] || 0) + 1;
+        c.equipment[it.slot] = it.id;
+      }
     } else if ('recruit' in e) {
-      for (let i = 0; i < (e.n || 1) && CL.party.headcount(c) < CL.party.partyCap(c); i++) {
-        const s = CL.save.addSoldier(c, e.recruit);
-        CL.events.emit(c, 'SoldierRecruited', { soldierId: s.id, troop: e.recruit, settlement: c.world?.location ?? null, via: 'story' });
+      const troop = isRole(e.recruit) ? F(resolve(e.recruit, c))?.recruits?.[0] : e.recruit;
+      for (let i = 0; troop && i < (e.n || 1) && CL.party.headcount(c) < CL.party.partyCap(c); i++) {
+        const s = CL.save.addSoldier(c, troop);
+        CL.events.emit(c, 'SoldierRecruited', { soldierId: s.id, troop, settlement: c.world?.location ?? null, via: 'story' });
       }
     } else if ('start' in e) start(c, e.start);
     else if ('stage' in e) setStage(c, e.quest || ctx.quest, e.stage);
@@ -431,9 +444,15 @@
    * A new game's opening (P10-04): the common quest (`common: true`, Q1) begins at once, so the plain
    * start leads straight into the story. P10-05's origins lead into it instead.
    */
-  function opening(c = camp()) {
+  function opening(c = camp(), { plain = false } = {}) {
     if (state(c).flags.ending) return;
-    for (const q of Object.values(CL.content.table('quests') || {})) if (q.common) start(c, q.id);
+    // P10-05: your origin's start, and its opening quest, which leads into the common quest
+    // (`plain`, for bots and scripts: the common quest at once).
+    const o = plain ? null : CL.content.table('origins')?.[c.character?.origin];
+    apply(o?.begin, c, { reason: 'origin' });
+    if (o?.situation) CL.ui.message(format(o.situation, c));
+    if (o?.quest) start(c, o.quest);
+    else for (const q of Object.values(CL.content.table('quests') || {})) if (q.common) start(c, q.id);
   }
 
   function note(c, id, text) {
@@ -709,7 +728,7 @@
     if (k === 'has' && !C.items?.[cond.has]) err(`${where}: unknown item ${cond.has}`);
     if ((k === 'owner' || k === 'at') && !placeKnown(cond[k], C)) err(`${where}: unknown settlement ${cond[k]}`);
     if (k === 'owner' && 'is' in cond && !realmKnown(cond.is, C)) err(`${where}: unknown faction ${cond.is}`);
-    if (k === 'background' && !C.backgrounds?.[cond.background]) err(`${where}: unknown background ${cond.background}`);
+    if (k === 'origin' && !C.origins?.[cond.origin]) err(`${where}: unknown origin ${cond.origin}`);
     if (k === 'skill' && !C.skills?.[cond.skill]) err(`${where}: unknown skill ${cond.skill}`);
     if (k === 'companion' && !C.companions?.[cond.companion]) err(`${where}: unknown companion ${cond.companion}`);
     if (k === 'veteran' && !(Number.isInteger(cond.veteran) && cond.veteran >= 0)) err(`${where}: veteran needs a number of battles`);
@@ -730,7 +749,8 @@
       if (['gold', 'renown', 'xp', 'food'].includes(k) && !Number.isFinite(e[k])) err(`${where}: ${k} needs a number`);
       if (k === 'rep' && (!realmKnown(e.rep, C) || !Number.isFinite(e.by))) err(`${where}: bad rep effect`);
       if ((k === 'give' || k === 'take') && !C.items?.[e[k]]) err(`${where}: unknown item ${e[k]}`);
-      if (k === 'recruit' && !C.troops?.[e.recruit]) err(`${where}: unknown troop ${e.recruit}`);
+      if (k === 'recruit' && !(C.troops?.[e.recruit] || realmKnown(e.recruit, C) && isRole(e.recruit))) err(`${where}: unknown troop ${e.recruit}`);
+      if (k === 'equip' && !C.items?.[e.equip]?.slot) err(`${where}: equip needs an item that is worn`);
       if (['start', 'complete', 'fail'].includes(k) && !C.quests?.[e[k]]) err(`${where}: unknown quest ${e[k]}`);
       if (k === 'stage') {
         const q = C.quests?.[e.quest || questId];

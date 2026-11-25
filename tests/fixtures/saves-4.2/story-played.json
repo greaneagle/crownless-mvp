@@ -3,7 +3,7 @@
  "version": 30,
  "game": "4.2.0",
  "exportedAt": "2026-11-24T20:29:10.118Z",
- "checksum": "4aac44f9",
+ "checksum": "e288b2ab",
  "campaign": {
   "version": 30,
   "worldId": "sundered_realm",
@@ -192,7 +192,7 @@
    "name": "Bot4",
    "gender": "unspecified",
    "cloak": "crimson",
-   "background": "farmhand",
+   "origin": "farmhand",
    "attributes": {
     "str": 6,
     "agi": 5,

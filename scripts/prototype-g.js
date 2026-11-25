@@ -58,7 +58,7 @@ function run(seed, style, days, { world } = {}) {
     CL.ui = headlessUi(CL, messages);
     if (fresh) {
       CL.game.newGame = true;
-      CL.character.begin({ name: `G${seed}`, background: 'farmhand' });
+      CL.character.begin({ name: `G${seed}`, origin: 'farmhand', plain: true });
       const c = CL.campaign;
       c.rngSeed = seed;
       c.rng = CL.autoresolve.streamSeeds(seed); // P8-T: the dice streams too (a new game seeds them from the clock)

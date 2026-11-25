@@ -10,7 +10,7 @@
 // P10-04: the story is cast from the kingdom the game began in; the bot reads its places through the
 // cast ('@role' in a trigger is resolved by CL.story.resolve).
 
-function makeStoryBot(CL, rnd, { winChance = 0.85, reloadChance = 0.04 } = {}) {
+function makeStoryBot(CL, rnd, { winChance = 0.85, reloadChance = 0.04, until = null, focus = null } = {}) {
   const c = () => CL.campaign;
   const g = CL.game;
   const pick = (list) => list[Math.floor(rnd() * list.length)];
@@ -208,11 +208,35 @@ function makeStoryBot(CL, rnd, { winChance = 0.85, reloadChance = 0.04 } = {}) {
 
   // ---- The loop ----
 
-  const finished = () => CL.story.questStatus(c(), 'q4') === 'done';
+  // `until` (P10-05): stop when it holds instead, e.g. when an origin's opening quest has led into Q1.
+  const finished = () => (until ? until(c()) : CL.story.questStatus(c(), 'q4') === 'done');
+
+  /**
+   * `focus` (P10-05): a quest to follow as a new player would, and nothing else: work its stage, or
+   * talk to its giver when the stage waits on a conversation.
+   */
+  function focused() {
+    const r = CL.story.state(c()).quests[focus];
+    const st = r?.status === 'active' && CL.content.get('quests', focus).stages.find((s) => s.id === r.stage);
+    if (!st) return;
+    if (work(st)) return;
+    const giver = CL.content.get('quests', focus).giver;
+    const who = people().find((p) => p.id === giver);
+    if (who) converse(who);
+    else {
+      CL.party.advanceDays(0.3); // its band is not on the map yet: wait for it
+      stats.waits++;
+    }
+  }
 
   function play(maxSteps = 600) {
     for (; stats.steps < maxSteps && !finished(); stats.steps++) {
       settle();
+      if (focus) {
+        focused();
+        if (rnd() < reloadChance) reload();
+        continue;
+      }
       const r = rnd();
       const stages = activeStages();
       if (r < 0.45 && stages.length && work(pick(stages))) {

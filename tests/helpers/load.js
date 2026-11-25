@@ -20,6 +20,7 @@ const CONTENT_MODULES = [
   'encounters',
   'world_map',
   'character',
+  'origins',
   'world_parties',
   'contracts',
   'town_hubs',
@@ -164,7 +165,7 @@ function loadGame({ storage = memoryStorage(), random, party = true, worldPartie
   if (party && !CL.save.existed) {
     const c = CL.campaign;
     c.gold = 130;
-    c.character = CL.character.create({ name: 'Tester', background: 'farmhand' });
+    c.character = CL.character.create({ name: 'Tester', origin: 'farmhand' });
     // The fixture's soldiers: 3 Levies and 2 Hunters, or in another world its first realm's recruits.
     const T = CL.content.table('troops');
     const first = CL.world.map().factions.map((f) => CL.content.get('factions', f)).find((f) => f.recruits?.length)?.recruits[0];

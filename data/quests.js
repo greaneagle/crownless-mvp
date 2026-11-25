@@ -229,6 +229,98 @@
         }
       }
     },
+    // ---- P10-05: the origins' opening quests (data/origins.js). Each is a small tutorial, cast like
+    // the main story from the kingdom you began in, and ends by starting the common quest (Q1). Its
+    // last step sets `origin_done` (the speed hint shows then) and gives the origin's edge.
+
+    // The unhorsed traveller: the innkeeper, two hires, the horse thieves, the innkeeper again.
+    o_traveller: {
+      id: 'o_traveller',
+      title: 'Thrown at the Gate',
+      giver: 'origin_innkeeper',
+      opening: true,
+      summary: 'Bandits threw you from your horse and rode off with it. You came into {cast:home} on foot.',
+      stages: [
+        { id: 'o_trav_inn', journal: 'Find the inn in {cast:home} and talk to {cast:innkeeper}. (In a town, Talk to on its menu, or walk its streets and tap someone.)' },
+        {
+          id: 'o_trav_hire',
+          journal: 'Hire two soldiers to ride with you ({flag:o_trav_hired}/2): Hire on the town menu, from {cast:recruiter}.',
+          on: [
+            { event: 'recruit', if: { flag: 'o_trav_hired', gte: 1 }, do: [{ add: 'o_trav_hired' }, { stage: 'o_trav_thieves' }, { message: 'Two swords at your back. Now go and get your horse.' }] },
+            { event: 'recruit', do: [{ add: 'o_trav_hired' }] }
+          ]
+        },
+        {
+          id: 'o_trav_thieves',
+          journal: 'Ride out after the horse thieves, camped on the {cast:village} road: leave town, then tap them on the map to ride there.',
+          band: { template: 'bandits', name: 'Horse Thieves', tag: 'o_trav_thieves', between: ['@home', '@village'], along: 0.6, troops: { looter: 3 }, camp: true, text: 'Three ragged men round a fire, and tethered behind them, your horse. It knows you before they do.' },
+          on: [
+            { event: 'battle', match: { win: true, tag: 'o_trav_thieves' }, do: [{ equip: 'nag' }, { note: 'You took your horse back. It is no charger, but it is yours, and the roads go a little faster.' }, { message: 'Your horse is yours again.' }, { stage: 'o_trav_back' }] },
+            { event: 'parley', match: { tag: 'o_trav_thieves', outcome: 'intimidate' }, do: [{ equip: 'nag' }, { note: 'The thieves fled without a fight and left your horse behind. It is no charger, but it is yours.' }, { message: 'The thieves run, and your horse is yours again.' }, { stage: 'o_trav_back' }] }
+          ]
+        },
+        { id: 'o_trav_back', journal: 'Ride back to {cast:home} and tell {cast:innkeeper}.' }
+      ],
+      rewards: { gold: 10, renown: 3, xp: 30 }
+    },
+    // The impoverished noble: the retainer, three hires, the moneylender's men, home with your brother.
+    o_noble: {
+      id: 'o_noble',
+      title: 'A Debt of Honour',
+      giver: 'origin_retainer',
+      opening: true,
+      summary: 'Your late father’s debts have come due, and the moneylender’s men have taken your brother against them.',
+      stages: [
+        { id: 'o_noble_tam', journal: 'Talk to Old Tam, your family’s last retainer, in {cast:home}. (In a town, Talk to on its menu.)' },
+        {
+          id: 'o_noble_hire',
+          journal: 'Hire three soldiers with the purse Tam gave you ({flag:o_noble_hired}/3): Hire on the town menu, from {cast:recruiter}.',
+          on: [
+            { event: 'recruit', if: { flag: 'o_noble_hired', gte: 2 }, do: [{ add: 'o_noble_hired' }, { stage: 'o_noble_free' }, { message: 'Three soldiers. Enough to make the moneylender’s men think again.' }] },
+            { event: 'recruit', do: [{ add: 'o_noble_hired' }] }
+          ]
+        },
+        {
+          id: 'o_noble_free',
+          journal: 'Free your brother from the moneylender’s men, camped near {cast:border}: tap them on the map, then Attack. Before the fight, the Prepare screen lets you choose a plan, or let the battle be settled for you.',
+          band: { template: 'bandits', name: 'Debt Collectors', tag: 'o_noble_collectors', near: '@border', troops: { looter: 3, reaver: 1 }, camp: true, text: 'Hired toughs in a moneylender’s pay, and your brother tied to a cart wheel among them. "The debt is the debt," says their leader. "Pay it or go."' },
+          on: [
+            { event: 'battle', match: { win: true, tag: 'o_noble_collectors' }, do: [{ note: 'The collectors are broken. Your brother is free, and the moneylender will not want to send more.' }, { message: 'Your brother is free.' }, { stage: 'o_noble_home' }] },
+            { event: 'parley', match: { tag: 'o_noble_collectors', outcome: 'intimidate' }, do: [{ note: 'The collectors looked at your soldiers and cut your brother loose.' }, { message: 'Your brother is free.' }, { stage: 'o_noble_home' }] }
+          ]
+        },
+        { id: 'o_noble_home', journal: 'Bring your brother home to Old Tam in {cast:home}.' }
+      ],
+      rewards: { renown: 5, xp: 30 }
+    },
+    // The farmhand: the headman, the raiders, the headman again, then to the town for work.
+    o_farmhand: {
+      id: 'o_farmhand',
+      title: 'Smoke over {cast:village}',
+      giver: 'origin_headman',
+      opening: true,
+      summary: 'Raiders burned through {cast:village}, your village. Three of its men will follow you after them.',
+      stages: [
+        { id: 'o_farm_headman', journal: 'Talk to the headman of {cast:village}. (In a village, Talk to on its menu.)' },
+        {
+          id: 'o_farm_raiders',
+          journal: 'Lead the village’s men against the raiders camped near {cast:village}: leave the village, then tap them on the map. Before the fight, Prepare lets you choose a plan, or let the battle be settled for you.',
+          band: { template: 'bandits', name: 'Raiders', tag: 'o_farm_raiders', near: '@village', troops: { looter: 4 }, camp: true, text: 'The raiders who burned {cast:village}, sharing out its sacks round a fire. They laugh at the farmhands with flails. They stop laughing.' },
+          on: [
+            { event: 'battle', match: { win: true, tag: 'o_farm_raiders' }, do: [{ note: 'The raiders are broken, and the village’s grain is back on its carts.' }, { message: 'The raiders are broken.' }, { stage: 'o_farm_report' }] },
+            { event: 'parley', match: { tag: 'o_farm_raiders', outcome: 'intimidate' }, do: [{ note: 'The raiders fled and left the village’s grain behind.' }, { message: 'The raiders run.' }, { stage: 'o_farm_report' }] }
+          ]
+        },
+        { id: 'o_farm_report', journal: 'Go back to {cast:village} and tell the headman.' },
+        {
+          id: 'o_farm_town',
+          journal: 'Ride to {cast:home}, the town nearest the village, and look for work there. A company needs feeding.',
+          on: [{ event: 'enter', match: { settlement: '@home' }, do: [{ set: 'origin_done' }, { complete: 'o_farmhand' }, { start: 'q1' }] }]
+        }
+      ],
+      rewards: { renown: 3, xp: 30 }
+    },
+
     // ---- V2-Q: errands (owner decision: no new main story; small, optional quests that show the
     // new systems). Each is side: true, offered by someone you already know, and can be ignored.
 

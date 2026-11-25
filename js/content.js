@@ -24,7 +24,8 @@
     'encounters',
     'world_map',
     'skills',
-    'backgrounds',
+    'origins',
+    'origin_rules',
     'party_templates',
     'contracts',
     'town_hubs',
@@ -271,15 +272,22 @@
       if (it.slot && !SLOTS.includes(it.slot)) err(`item ${it.id}: unknown slot ${it.slot}`);
       if (it.slot === 'weapon' && !(it.stats?.damage > 0)) err(`item ${it.id}: weapon needs stats.damage`);
     }
-    for (const b of Object.values(C.backgrounds || {})) {
-      if (!['str', 'agi', 'int', 'cha'].includes(b.attribute)) err(`background ${b.id}: bad attribute ${b.attribute}`);
-      if (!C.skills?.[b.skill]) err(`background ${b.id}: unknown skill ${b.skill}`);
-      if (!(b.kit?.gold >= 0)) err(`background ${b.id}: kit needs gold`);
+    // P10-05: origins (data/origins.js), which replace the backgrounds.
+    for (const b of Object.values(C.origins || {})) {
+      if (!['str', 'agi', 'int', 'cha'].includes(b.attribute)) err(`origin ${b.id}: bad attribute ${b.attribute}`);
+      if (!C.skills?.[b.skill]) err(`origin ${b.id}: unknown skill ${b.skill}`);
+      if (!(b.kit?.gold >= 0)) err(`origin ${b.id}: kit needs gold`);
       for (const [slot, id] of Object.entries(b.kit?.equipment || {})) {
-        if (C.items?.[id]?.slot !== slot) err(`background ${b.id}: kit item ${id} does not fit ${slot}`);
+        if (C.items?.[id]?.slot !== slot) err(`origin ${b.id}: kit item ${id} does not fit ${slot}`);
       }
-      for (const id of Object.keys(b.kit?.items || {})) if (!C.items?.[id]) err(`background ${b.id}: unknown kit item ${id}`);
+      for (const id of Object.keys(b.kit?.items || {})) if (!C.items?.[id]) err(`origin ${b.id}: unknown kit item ${id}`);
+      if (b.quest != null && (!C.quests?.[b.quest] || C.quests[b.quest].common)) err(`origin ${b.id}: its quest must be an opening quest`);
+      if (b.start != null && !['@home', '@village'].includes(b.start)) err(`origin ${b.id}: start is '@home' or '@village'`);
+      if (!b.name || !b.description) err(`origin ${b.id}: needs a name and a description`);
+      if (b.quest && (!b.situation || !b.edge)) err(`origin ${b.id}: an opening quest needs a situation and an edge`);
     }
+    const band = C.origin_rules?.band;
+    if (band) for (const k of ['gold', 'soldiers', 'gear', 'level', 'renown']) if (!(Array.isArray(band[k]) && band[k][0] <= band[k][1])) err(`origin_rules band: ${k} needs [low, high]`);
     for (const t of Object.values(C.party_templates || {})) {
       if (!['bandit', 'patrol', 'caravan', 'detachment', 'lord'].includes(t.kind)) err(`party_template ${t.id}: bad kind ${t.kind}`);
       if (!C.factions?.[t.faction]) err(`party_template ${t.id}: unknown faction ${t.faction}`);

@@ -137,7 +137,7 @@
     }
     if (mode === 'character') {
       const ch = CL.campaign.character;
-      const bg = CL.content.get('backgrounds', ch.background);
+      const bg = CL.content.get('origins', ch.origin);
       return { title: ch.name.toUpperCase(), text: `Level ${ch.level} ${bg.name}. ${CL.world.clockLabel()}.`, button: 'Back' };
     }
     const existed = CL.save.existed;
@@ -1819,7 +1819,7 @@
 
   const CLOAK_LABELS = { crimson: 'Crimson', forest: 'Forest', violet: 'Violet', ash: 'Ash grey' };
   const CLOAK_SWATCH = { crimson: '#9b2c2c', forest: '#2f6b35', violet: '#6b3a9b', ash: '#7c7c78' };
-  const draft = { cloak: 'crimson', background: 'farmhand', realm: null };
+  const draft = { cloak: 'crimson', origin: 'farmhand', realm: null };
 
   function choiceButton(label, checked, onPick, html) {
     const b = document.createElement('button');
@@ -1874,20 +1874,21 @@
       }),
     );
     $('#bgChoices').replaceChildren(
-      ...Object.values(CL.content.table('backgrounds')).map((bg) => {
-        const title = Object.assign(document.createElement('b'), {
-          textContent: `${bg.name} · +1 ${CL.character.ATTRIBUTE_NAMES[bg.attribute]}, +1 ${CL.content.get('skills', bg.skill).name}`,
-        });
-        return choiceButton(bg.name, draft.background === bg.id, () => {
-          draft.background = bg.id;
+      ...Object.values(CL.content.table('origins')).map((bg) => {
+        // P10-05: a short card each (as the kingdoms'); the chosen one's story is in the note below.
+        const title = Object.assign(document.createElement('b'), { textContent: bg.name });
+        return choiceButton(bg.name, draft.origin === bg.id, () => {
+          draft.origin = bg.id;
           renderCreator();
-        }, [title, bg.description]);
+        }, [title, `+1 ${CL.character.ATTRIBUTE_NAMES[bg.attribute]}, +1 ${CL.content.get('skills', bg.skill).name}`]);
       }),
     );
-    const kit = CL.content.get('backgrounds', draft.background).kit;
+    const o = CL.content.get('origins', draft.origin);
+    const kit = o.kit;
     const gear = Object.values(kit.equipment).map((id) => CL.content.item(id).name);
+    // P10-05: an origin's start is its opening quest; its edge is what it keeps.
     $('#createNote').textContent = CL.game.newGame
-      ? `You start with ${kit.gold} crowns, ${gear.join(', ')} and ${CL.party.describeItems(kit.items)}. No soldiers — yet.`
+      ? `${o.description} You start with ${kit.gold} crowns, ${gear.join(', ')} and ${CL.party.describeItems(kit.items)}.${o.quest ? ` Your first steps are your own story; then the common one. Its edge: ${o.edge}` : ' Your story begins with the common quest.'}`
       : 'Your gold, soldiers and gear are kept.';
     drawPreview();
   }
@@ -1903,7 +1904,8 @@
   }
 
   function creatorChoices() {
-    return { name: $('#heroName').value, gender: $('#heroGender').value, cloak: draft.cloak, background: draft.background, realm: draft.realm };
+    // CL.game.plainStart (debug, and the browser tests): the bare start, without the opening quest.
+    return { name: $('#heroName').value, gender: $('#heroGender').value, cloak: draft.cloak, origin: draft.origin, realm: draft.realm, plain: Boolean(CL.game.plainStart) };
   }
 
   // ---- Character sheet ----
