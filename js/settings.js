@@ -31,6 +31,9 @@
   // P10-01: the map's speed, in game hours a real second: Normal for a new device (gentle for a new
   // player), Fast as before 4.1.0. Read by CL.world.rate().
   const MAP_SPEEDS = { normal: 1, fast: 4 };
+  // P10-G1: the canvas's resolution. Sharp: the screen's own pixels (up to 3 a CSS pixel); Balanced: at
+  // most 2 a CSS pixel (the default, the phones' sweet spot); Fast: the classic 960×540, scaled up.
+  const SHARPNESS = { sharp: 3, balanced: 2, fast: 0 };
   const battleZoom = (v, d) => (Number.isFinite(v) ? Math.max(BATTLE_ZOOM.min, Math.min(BATTLE_ZOOM.max, Math.round(v * 100) / 100)) : d);
   const mapZoom = (v, d) => (Number.isFinite(v) ? Math.max(MAP_ZOOM.min, Math.min(MAP_ZOOM.max, Math.round(v * 100) / 100)) : d);
 
@@ -77,7 +80,7 @@
   function defaults() {
     const touch = isTouch();
     // Full screen is on by default on phones, where the address bar costs the most room.
-    return { music: 50, sfx: 70, battleSize: touch ? BATTLE_DEFAULT.touch : BATTLE_DEFAULT.desktop, battleSizeChosen: false, slowOffered: false, battlefield: 'large', prepPreset: 'auto', prepSkip: false, prepCustom: null, prepPlans: [], reducedEffects: false, healthBars: true, tips: true, fullscreen: touch, textSize: 'normal', mapZoom: null, battleZoom: 1, mapSpeed: 'normal' };
+    return { music: 50, sfx: 70, battleSize: touch ? BATTLE_DEFAULT.touch : BATTLE_DEFAULT.desktop, battleSizeChosen: false, slowOffered: false, battlefield: 'large', prepPreset: 'auto', prepSkip: false, prepCustom: null, prepPlans: [], reducedEffects: false, healthBars: true, tips: true, fullscreen: touch, textSize: 'normal', mapZoom: null, battleZoom: 1, mapSpeed: 'normal', sharpness: 'balanced' };
   }
 
   let current = defaults();
@@ -106,6 +109,7 @@
       mapZoom: mapZoom(r.mapZoom, d.mapZoom), // null: the world's own opening zoom
       battleZoom: battleZoom(r.battleZoom, d.battleZoom),
       mapSpeed: Object.hasOwn(MAP_SPEEDS, r.mapSpeed) ? r.mapSpeed : d.mapSpeed,
+      sharpness: Object.hasOwn(SHARPNESS, r.sharpness) ? r.sharpness : d.sharpness,
     };
   }
 
@@ -160,6 +164,7 @@
     CL.combat?.setActiveCap(current.battleSize);
     CL.audio?.setVolumes(current.music, current.sfx);
     CL.ui?.applyTextScale?.(textScale());
+    CL.render?.fit?.();
   }
 
   /** The text-size factor: 0.9, 1, 1.15 or 1.3. */
@@ -189,5 +194,5 @@
     return true;
   }
 
-  CL.settings = { KEY, BATTLE_SIZES, BATTLE_DEFAULT, SLOW, slowerOffer, BATTLEFIELDS, PREP_PRESETS, TEXT_SIZES, MAP_ZOOM, BATTLE_ZOOM, MAP_SPEEDS, defaults, sanitize, load, get, all, set, apply, textScale, font };
+  CL.settings = { KEY, BATTLE_SIZES, BATTLE_DEFAULT, SLOW, slowerOffer, BATTLEFIELDS, PREP_PRESETS, TEXT_SIZES, MAP_ZOOM, BATTLE_ZOOM, MAP_SPEEDS, SHARPNESS, defaults, sanitize, load, get, all, set, apply, textScale, font };
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -148,6 +148,55 @@
     if (cap != null && !(Number.isInteger(cap) && cap >= 1)) err(`${w}: simulation.partiesPerRegion must be a whole number of at least 1`);
   }
 
+  /**
+   * P10-G1 (D-P10k): what a `look` may say (troops, companions; packs too). The art kit (js/art/figures.js)
+   * draws every part listed here, and nothing else: a part the kit lacks is added there and here.
+   */
+  const LOOK = {
+    armour: ['gambeson', 'mail', 'leather', 'fur', 'rags'],
+    helmet: ['nasal', 'kettle', 'great', 'cap', 'hood', 'spangen', 'crest', 'plumed', 'furhat', 'sallet'],
+    hat: ['brim', 'cap', 'kerchief', 'coif'],
+    shield: ['kite', 'round', 'heater', 'wood', 'pavise'],
+    weapon: ['sword', 'axe', 'greataxe', 'spear', 'pike', 'lance', 'bow', 'crossbow', 'hammer', 'staff', 'club'],
+    hairStyle: ['short', 'long', 'braid', 'bun', 'bald', 'tied'],
+    colours: ['tunic', 'legs', 'boots', 'hoodColor', 'capColor', 'hatColor', 'band', 'cloak', 'cloakTrim', 'plume', 'apron', 'hair', 'skin'],
+    flags: ['tabard', 'quiver', 'fur', 'pauldrons', 'beard', 'female'],
+    long: ['spear', 'pike', 'lance'],
+  };
+  const isColour = (v) => typeof v === 'string' && /^#[0-9a-f]{6}$/i.test(v);
+  /** Problems with a look, each starting with `at`. @param {any} look @param {string} at */
+  function checkLook(look, at) {
+    const out = [];
+    if (!look || typeof look !== 'object') return [`${at}: needs a look`];
+    for (const [k, v] of Object.entries(look)) {
+      if (['armour', 'helmet', 'hat', 'shield', 'weapon', 'hairStyle'].includes(k)) {
+        if (v != null && !LOOK[k].includes(v)) out.push(`${at}: unknown ${k} '${v}' (one of ${LOOK[k].join(', ')})`);
+      } else if (LOOK.colours.includes(k)) {
+        if (!isColour(v)) out.push(`${at}: ${k} must be a colour like '#a59273'`);
+      } else if (LOOK.flags.includes(k)) {
+        if (typeof v !== 'boolean') out.push(`${at}: ${k} must be true or false`);
+      } else if (k === 'bowSize') {
+        if (!(v >= 0.8 && v <= 1.4)) out.push(`${at}: bowSize between 0.8 and 1.4`);
+      } else if (k === 'mount') {
+        if (!v || !isColour(v.coat) || (v.mane != null && !isColour(v.mane)) || (v.pony != null && typeof v.pony !== 'boolean')) out.push(`${at}: mount needs a coat colour (and may give a mane colour and pony)`);
+      } else out.push(`${at}: '${k}' is not part of a look`);
+    }
+    return out;
+  }
+  /** A troop's look agrees with what it does: shield, reach, shot, mount. @param {any} t */
+  function lookAgrees(t) {
+    const L = t.look || {};
+    const out = [];
+    if (Boolean(L.shield) !== Boolean(t.shield)) out.push(`troop ${t.id}: its look ${t.shield ? 'needs' : 'may not have'} a shield (shield: ${Boolean(t.shield)})`);
+    if (t.role === 'archer' && L.weapon !== (t.ranged?.projectileSpeed >= 300 ? 'crossbow' : 'bow')) out.push(`troop ${t.id}: an archer whose shot flies at ${t.ranged?.projectileSpeed} carries a ${t.ranged?.projectileSpeed >= 300 ? 'crossbow' : 'bow'}`);
+    if (t.role !== 'archer' && ['bow', 'crossbow'].includes(L.weapon)) out.push(`troop ${t.id}: only archers carry a bow or crossbow`);
+    if (t.role !== 'archer' && t.reach >= 70 && !LOOK.long.includes(L.weapon)) out.push(`troop ${t.id}: a long reach (${t.reach}) needs a spear, pike or lance`);
+    if (t.role !== 'archer' && t.reach < 55 && LOOK.long.includes(L.weapon)) out.push(`troop ${t.id}: a spear, pike or lance needs a reach of 55 or more (${t.reach})`);
+    if (L.female != null) out.push(`troop ${t.id}: a troop's look doesn't say female: its gender does`);
+    if ((t.role === 'cavalry') !== Boolean(L.mount)) out.push(`troop ${t.id}: ${t.role === 'cavalry' ? 'cavalry needs a mount' : 'only cavalry has a mount'}`);
+    return out;
+  }
+
   /** Return a list of human-readable problems; empty means the content is consistent. `C` is the
    * content to check (P9-07: a pack is checked on a copy); by default the game's own. */
   function validate(C = raw()) {
@@ -169,6 +218,9 @@
       if (t.gender === 'female') for (const u of [t.upgradeTo, t.altUpgradeTo]) if (u && C.troops[u] && C.troops[u].gender !== 'female') err(`troop ${t.id}: a woman's line upgrades into her own line, not ${u}`);
       if (t.women != null && (C.troops[t.women.troop]?.gender !== 'female' || C.troops[t.women.troop].faction !== t.faction || !(t.women.share > 0 && t.women.share < 1))) err(`troop ${t.id}: women needs a woman's troop of its faction and a share between 0 and 1`);
       if (t.shield && t.role === 'archer') err(`troop ${t.id}: archers carry no shield`);
+      // P10-G1: a troop's look, when it has one, is the kit's vocabulary and agrees with the troop. A pack's
+      // troop may leave it out: the kit then draws one from its role, reach, shot and shield (figures.js).
+      if (t.look != null) for (const e of [...checkLook(t.look, `troop ${t.id}`), ...lookAgrees(t)]) err(e);
       for (const s of ['hp', 'damage', 'armor', 'speed', 'reach']) {
         if (!(Number.isFinite(t[s]) && t[s] >= 0)) err(`troop ${t.id}: bad ${s}`);
       }
@@ -357,6 +409,7 @@
     }
     for (const m of Object.values(C.companions || {})) {
       if (!m.frames?.length || !(m.hp > 0) || !(m.weaponFactor > 0)) err(`companion ${m.id}: needs frames, hp and weaponFactor`);
+      if (m.look != null) for (const e of checkLook(m.look, `companion ${m.id}`)) err(e); // P10-G1 (frames go with the battle sprites, P10-G2)
       for (const [slot, id] of Object.entries(m.startGear || {})) {
         if (!m.gearSlots.includes(slot) || C.items?.[id]?.slot !== slot) err(`companion ${m.id}: bad start gear ${id}`);
       }
@@ -426,5 +479,5 @@
     return errors;
   }
 
-  CL.content = { TABLES, OPTIONAL, LAWS, table, get, troop, item, encounter, lootTable, validate, compose, init };
+  CL.content = { TABLES, OPTIONAL, LAWS, LOOK, checkLook, lookAgrees, table, get, troop, item, encounter, lootTable, validate, compose, init };
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -3535,7 +3535,7 @@ The owner played the graphics demo (`docs/GRAPHICS-DEMO.md`, commit e5bae98) and
 
 **Order:** P10-G1 → P10-G2 → P10-G3 → P10-G4 → P10-G5 → P10-G6 → P10-T.
 
-### P10-G1 · The art kit in the game (M–L)
+### P10-G1 · The art kit in the game (M–L) — ✅ Done in 4.10.0
 
 **Problem.** The kit lives only in the debug demo, loaded on demand. The game's canvas is 960×540 scaled up with pixelated rendering, so code-drawn art would be blurred or blocky.
 
@@ -3567,6 +3567,47 @@ The owner played the graphics demo (`docs/GRAPHICS-DEMO.md`, commit e5bae98) and
 **Version.** 4.10.0.
 
 **Not here:** any scene drawn in the new style. The battles, towns and map keep their sprites and shapes until their task.
+
+**Done (4.10.0).**
+- **The art modules:** `js/art/kit.js` and `js/art/figures.js`, moved from the demo and loaded by `index.html` before the renderer, and by the tests' loader. The demo and the gallery (`js/gfx/`) draw with them. Not `// @ts-check` yet: `tsconfig` reads `js/*.js` only, and the kit is canvas drawing with few types worth checking.
+- **The canvas at real pixels** (`CL.render.fit`):
+  - the backing store is the canvas's CSS width × the pixels per CSS pixel, capped by **Sharpness** (Sharp 3, Balanced 2, the default; Fast 1);
+  - it is never under 960×540;
+  - it is refitted on a resize and when the setting changes;
+  - Fast keeps the classic 960×540, scaled up pixelated as before;
+  - the other two scale smoothly; `image-rendering: pixelated` is gone from `#game`.
+  - The sprites still in use keep nearest-pixel drawing until their task.
+  - The setting is in Settings. The Debug panel's "Sharp canvas" (D-R1) is gone, and the benchmark reports say the canvas size and the sharpness.
+- **Looks for every troop:**
+  - all 41 in `data/troops.js` (a `LOOKS` table, one row a troop) and the four companions (`look` beside `frames`, which go with the battle sprites in P10-G2);
+  - the vocabulary is `CL.content.LOOK`; `checkLook` and `lookAgrees` hold every look to the kit's parts and to the troop;
+  - the agreement found that the demo had drawn shields on troops that can't block, and randomly made soldiers women: both are now the troop's (`shield`, `gender`).
+  - A pack's look is checked the same way but is optional: with none, `defaultLook` draws one from what the troop does. The sample pack's three troops have theirs. `docs/WORLD-FORMAT.md` documents it.
+- **Culture sets** (`CULTURES` in the kit): a device, a shield and town materials for each of the seven cultures. A realm's colours come from `data/factions.js` (`CL.gfx.realm`, which also takes realms founded in play). New parts: the crossbow (its string drawn back over the slower load), the pike, the pavise, the sallet, and the bar, cross, lozenge and wave devices.
+- **The style guide** `docs/ART-STYLE.md`: the rules, the conventions, the vocabulary, the cultures, and how to add a troop, a culture, a part, a building or a prop. It points to the live gallery rather than pictures, because image files are what this direction removes.
+- **The Art gallery** (Debug → Art gallery, inside the demo's isolated runtime): ten pages, one for each realm's troops (at 1× and 2.2×), the people, buildings by culture, and nature and props. It turns and cycles poses.
+- **The baseline for P10-G2 to P10-G4** (the old art, headless desktop Chromium, no throttling; Debug battle benchmark at 10 s a size, map stress test with 200 parties and the lords):
+
+  | Device · Sharpness | Canvas | Battle 40 / 100 / 200: fps, draw ms | Map, zoomed out / 2.4×: fps, draw ms |
+  |---|---|---|---|
+  | desktop 1280×720 · Sharp and Balanced | 1277×718 | 60, 0.5 / 60, 0.5 / 60, 0.6–0.7 | 59, 2.6 / 60, 1.9 |
+  | desktop · Fast | 960×540 | 60, 0.5 / 60, 0.5 / 60, 0.6 | 60, 2.3 / 60, 1.7 |
+  | phone 812×375 @3× · Sharp | 1987×1118 | 60, 0.5 / 60, 0.6 / 60, 0.7 | 48, 3.4 / 60, 2.6 |
+  | phone · Balanced | 1325×745 | 60, 0.5 / 60, 0.5 / 60, 0.7 | 60, 2.5 / 60, 1.8 |
+  | phone · Fast | 960×540 | 60, 0.4 / 60, 0.5 / 60, 0.6 | 60, 2.3 / 60, 1.6 |
+
+  The largest battle at 30 fps or better was 200 everywhere. On a real phone these numbers will be lower: P10-T measures them there.
+- **Tests:**
+  - `tests/art.test.js`: every look valid and agreeing; the checks refuse bad looks; every vocabulary part paints something (a counting fake canvas); every troop draws in every facing and pose; looks are stable, a woman's troop is a woman, colours follow the side, and the defaults agree; Sharpness is a kept device setting.
+  - `tests/browser/art.spec.js`: the canvas size at each sharpness and after a reload; the map and a battle at the new sharpness; the Art gallery's pages and the save untouched.
+  - `tests/assets.test.js` now reads `js/` recursively. The settings test lists the new default.
+- **Checks:** 926 fast pass; lint clean but the 2 old warnings; typecheck clean.
+  - **The browser suite at Balanced failed first:** 16 `text-size` and `layout` cases timed out. Headless Chromium draws in software, and a canvas at the real pixels, six workers at once, let the map's 2.5 s message expire before the checks reached it. They pass on 4.9.0 and at Fast.
+  - **The test device is pinned to Fast** (`tests/browser/helpers.js`), like its other fixed settings; `art.spec.js` tests Balanced and Sharp on purpose.
+  - **Then:** 270 passed, 9 skipped, 1 failed. The demo's tap-to-talk was lost when the hero slid along a wall; fixed, and the demo canvas now follows Sharpness. The demo and art specs pass 32 of 32, twice each.
+  - The whole suite now takes 4.6 minutes instead of 11.
+  - `battle-size`'s slow offer failed once in the first run: the known race (real frames counted after the test's 12 fps), recorded in P10-09.
+- **Seen** at 1280×720 and 812×375 @3× in screenshots: every gallery page, the map and a battle in the old art at Balanced. Not played by hand on a phone.
 
 ### P10-G2 · Battles in the new art (L)
 

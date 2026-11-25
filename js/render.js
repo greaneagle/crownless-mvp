@@ -15,19 +15,34 @@
 
   const FACE_ANGLE = { up: -Math.PI / 2, right: 0, down: Math.PI / 2, left: Math.PI };
 
-  let backing = 1; // canvas pixels per game pixel (decision D-R1: 1 unless the Debug panel's test is on)
+  let backing = 1; // canvas pixels per game pixel (P10-G1: from the Sharpness setting and the screen)
 
   function init(canvas) {
     ctx = canvas.getContext('2d');
     ctx.imageSmoothingEnabled = false;
+    fit();
+    root.addEventListener?.('resize', () => fit());
   }
 
   /**
-   * D-R1 measurement only (W-01, Debug panel "Sharp canvas"): draw into a backing store of
-   * min(devicePixelRatio, 2) × 960×540 so enlarged canvas text is sharper, to time it on a phone.
-   * The game still works in 960×540 units: every frame starts from this scale, and input maps taps
-   * through the canvas's on-screen size, so nothing else changes. Not saved.
+   * P10-G1 (D-P10k): the canvas at the screen's real pixels, so the art drawn in code is crisp. The game
+   * still works in 960×540 units: every frame starts from this scale, and input maps taps through the
+   * canvas's on-screen size, so no rule or coordinate changes. The Sharpness setting caps the pixels per
+   * CSS pixel (Sharp 3, Balanced 2); never fewer than the classic 960×540, which Fast keeps, scaled up
+   * pixel by pixel as before. Called at start, on a resize and when the setting changes.
+   * @returns {number} the backing scale
    */
+  function fit() {
+    if (!ctx) return backing;
+    const cap = CL.settings?.SHARPNESS?.[CL.settings.get('sharpness')] ?? 2;
+    const css = ctx.canvas.getBoundingClientRect?.().width || W;
+    const k = cap ? Math.max(1, Math.round(((css * Math.min(root.devicePixelRatio || 1, cap)) / W) * 100) / 100) : 1;
+    ctx.canvas.style.imageRendering = cap ? 'auto' : 'pixelated';
+    if (k !== backing || ctx.canvas.width !== Math.round(W * k)) setBackingScale(k);
+    return backing;
+  }
+
+  /** Set the backing scale directly (fit() chooses it; tests and the benchmark may set it). */
   function setBackingScale(k) {
     backing = k;
     ctx.canvas.width = Math.round(W * k);
@@ -1600,5 +1615,5 @@
     }
   }
 
-  CL.render = { BUSY, busyBattle, bodyAlpha, init, draw, setBackingScale, backingScale: () => backing, questName };
+  CL.render = { BUSY, busyBattle, bodyAlpha, init, fit, draw, setBackingScale, backingScale: () => backing, questName };
 })(typeof window !== 'undefined' ? window : globalThis);

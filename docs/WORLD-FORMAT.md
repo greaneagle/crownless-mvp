@@ -46,7 +46,7 @@ The official world has these (`js/content.js` `TABLES`, plus `forge` and `realm_
 |---|---|
 | `factions` | A realm or the outlaws: `name`, `short`, `emblem`, `order`, `culture`, `ruler { male, female }` (the title), `color`, `description`, `initialReputation`, `recruits` (troop ids), `garrison { troop: n }`, `laws` (`power` crown\|league, `share` 0–0.5, `succession` eldest\|kin\|council, `fiefCap` 1–9, `war` ruler\|council), `freeCity` |
 | `settlements` | `name`, `placeName`, `type` (village\|town\|fort), `ownerFaction`, `seat` (a village's fort or town of the same realm), `services` (trade, rest, recruit, contracts, leave), `recruits` (from 3.13.0: the place's own troops, beside its owner's; needs the recruit service), `mapX`, `mapY` (inside the world's bounds), `market { good: 0.8–1.4 }` (every trade good, where there is trade), `gear` (items the armoury sells), `garrison` (a fort's), `story`, `explorable` |
-| `troops` | `name`, `faction`, `role` (infantry\|archer\|cavalry), `tier` (T1–T3), `hp`, `damage`, `armor`, `speed`, `reach`, `wage`, `recruitCost`, `upgradeTo`, `upgradeCost`, `altUpgradeTo`, `altUpgradeCost`, `shield`, `brace`, `gender`, `culture`; an archer's `ranged { range, projectileSpeed, cooldown, accuracy }` |
+| `troops` | `name`, `faction`, `role` (infantry\|archer\|cavalry), `tier` (T1–T3), `hp`, `damage`, `armor`, `speed`, `reach`, `wage`, `recruitCost`, `upgradeTo`, `upgradeCost`, `altUpgradeTo`, `altUpgradeCost`, `shield`, `brace`, `gender`, `culture`, `look` (P10-G1: what the art kit draws, `docs/ART-STYLE.md`; optional for a pack's troop); an archer's `ranged { range, projectileSpeed, cooldown, accuracy }` |
 | `items` | `name`, `type`, `slot` (weapon, offhand, head, body, hands, feet, horse, ring), `tier`, `rarity`, `value`, `weight`, `stats` (a weapon needs `damage`), `questItem`. Forged pieces (`id+1` …) are made from `forge` |
 | `forge` | The blacksmith's rules: bonuses per slot, `maxLevel`, costs |
 | `loot_tables` | `chancePerKill` (0–1), `table [{ item, weight }]` (no quest items) |
@@ -60,7 +60,7 @@ The official world has these (`js/content.js` `TABLES`, plus `forge` and `realm_
 | `party_templates` | Map parties: `kind` (bandit, patrol, caravan, detachment, lord), `faction`, `count`, `speed`, `troops { troop: [min, max] }`, and by kind `lairs`, `home`, `route`, `goods`, `frontier`, `toll`, `reward`, `lootBySize` |
 | `contracts` | `kind` (hunt, escort, delivery), its band, troop pool, limits, distance, time limit and reward |
 | `town_hubs` | A walkable town: `settlement` (an `explorable` one), `ground`, `obstacles`, `spawn`, `exitZone`, `npcs` (each with an action, frames and words or a dialogue, and a `role`: innkeeper, merchant, recruiter, elder, official or guard). Every hub needs an innkeeper, a merchant, a recruiter and an elder or official (P10-03) |
-| `companions` | Mara and the retinue: `frames`, `hp`, `weaponFactor`, `skills`, `gearSlots`, `startGear`, wages and loyalty |
+| `companions` | Mara and the retinue: `look`, `frames`, `hp`, `weaponFactor`, `skills`, `gearSlots`, `startGear`, wages and loyalty |
 | `news` | News kinds: `priority`, `lines` (and by ending) |
 | `world_events` | Happenings in places: where, how often, choices and outcomes |
 | `tournaments` | Hosts, rounds, fees and prizes |

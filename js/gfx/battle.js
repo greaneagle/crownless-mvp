@@ -176,9 +176,7 @@
     let L = B.looks.get(u);
     if (L) return L;
     if (u.role === 'hero') {
-      const ch = CL.campaign?.character;
-      L = G.fig.heroLook(ch?.cloak, ch?.gender === 'female');
-      if (!u.canBlock) L.shield = null;
+      L = G.fig.heroFor(CL.campaign?.character, u.canBlock);
     } else {
       const side = u.team === 'ally' ? 'valedorn' : B.foe.side;
       L = G.fig.troopLook(u.troop, side, u.id);

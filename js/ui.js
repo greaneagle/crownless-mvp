@@ -3489,6 +3489,7 @@
     $('#setTextSize').value = s.textSize;
     $('#setBattleSize').value = String(s.battleSize);
     $('#setBattlefield').value = s.battlefield;
+    $('#setSharpness').value = s.sharpness;
     $('#setPrepSkip').value = s.prepSkip ? 'skip' : 'prepare';
     $('#setHealthBars').checked = s.healthBars;
     $('#setReduced').checked = s.reducedEffects;
@@ -3550,6 +3551,7 @@
     $('#setTextSize').onchange = () => CL.settings.set('textSize', $('#setTextSize').value);
     $('#setBattleSize').onchange = () => CL.settings.set('battleSize', Number($('#setBattleSize').value));
     $('#setBattlefield').onchange = () => CL.settings.set('battlefield', $('#setBattlefield').value);
+    $('#setSharpness').onchange = () => CL.settings.set('sharpness', $('#setSharpness').value); // P10-G1
     $('#setPrepSkip').onchange = () => CL.settings.set('prepSkip', $('#setPrepSkip').value === 'skip');
     $('#setHealthBars').onchange = () => CL.settings.set('healthBars', $('#setHealthBars').checked);
     $('#setReduced').onchange = () => CL.settings.set('reducedEffects', $('#setReduced').checked);

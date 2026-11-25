@@ -1,5 +1,26 @@
 # Crownless — Release Notes
 
+## v4.10.0 — The art kit in the game (P10-G1) · 2026-11-25
+
+The first of six steps that re-draw the whole game in code and retire the sprites (the owner's decision after playing the graphics demo, D-P10k). This step builds the foundation; the scenes keep their current look until their own steps.
+
+### New
+- **Sharper on every screen:** the game now draws at the screen's real pixels instead of a small picture scaled up. A **Sharpness** setting chooses how fine:
+  - **Sharp:** every pixel of the screen.
+  - **Balanced:** nearly as crisp and lighter on a phone; the default.
+  - **Fast:** the classic picture, for slow devices.
+  The sprites still to be replaced keep their pixel look until their step.
+- **Every troop has a look:** what the new art draws it wearing and carrying, in its realm's colours and its culture's shapes. Examples: the League's crossbows, pikes, pavises and sallets; the Hrothmark round shields and spangenhelms; Aurelian crests and heater shields; Ostrand's grey and Saltreach's ochre. The companions have theirs, and the hero follows the creator's cloak and presentation.
+- **Art gallery** (Debug panel): every realm's troops at battle size and enlarged, turning and cycling poses; the hero, the companions and townsfolk; buildings by culture; nature and props. Nothing in your campaign changes.
+
+### Under the hood
+- **The art modules:** the demo's kit moved into the game as `js/art/kit.js` and `js/art/figures.js`.
+- **Looks in data:** a `look` on every troop in `data/troops.js` and on each companion. The vocabulary is `CL.content.LOOK`. The content checks hold a look to the kit's parts and to the troop: a shield only with `shield`, a long weapon for a long reach, a bow or crossbow by the shot, a mount for cavalry.
+- **Packs:** a pack's troop may give its own look. With none, it is drawn from what it does. The sample pack's troops have theirs.
+- **Cultures:** each culture's device, shield and town materials (`CULTURES`). A realm's colours come from `data/factions.js`.
+- **The style guide:** `docs/ART-STYLE.md`.
+- **Sharpness:** the Debug panel's "Sharp canvas" test is gone; the setting replaces it.
+
 ## v4.9.0 — Women soldiers and soldiers' portraits (P10-09) · 2026-11-25
 
 ### New

@@ -224,7 +224,12 @@
       const b = S.cityLand.map.bounds;
       h.x = Math.max(b.minX, Math.min(b.maxX, h.x));
       h.y = Math.max(b.minY, Math.min(b.maxY, h.y));
-      if (h.target && Math.hypot(h.x - bx, h.y - by) < SPEED * dt * 0.15) h.target = null; // stuck on a wall: stop
+      if (h.target && Math.hypot(h.x - bx, h.y - by) < SPEED * dt * 0.15) {
+        // Stuck on a wall: stop, and talk if the person sought is in reach anyway.
+        h.target = null;
+        if (h.talkTo && near(h, h.talkTo) < TALK_REACH) talk(S, h.talkTo, api);
+        h.talkTo = null;
+      }
       h.face = Math.abs(vx) > Math.abs(vy) * 0.8 ? (vx < 0 ? 'left' : 'right') : vy < 0 ? 'up' : 'down';
       h.move = Math.min(1, h.move + dt * 6);
       h.walk += dt * 11;

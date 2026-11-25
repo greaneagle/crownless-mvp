@@ -522,7 +522,8 @@
       simMs: Number(avg(p.sim)),
       drawMs: Number(avg(p.draw)),
       worstFrameMs: Math.round(p.worst),
-      canvas: CL.render?.backingScale?.() ?? 1, // D-R1 (W-01): 1, or the Debug panel's sharp canvas
+      canvas: CL.render?.backingScale?.() ?? 1, // canvas pixels per game pixel (P10-G1's Sharpness)
+      sharpness: CL.settings?.get('sharpness') ?? 'balanced',
       textSize: CL.settings?.get('textSize') ?? 'normal',
     };
     // The camera test (PROTO-A) also reports the arena and how long the armies took to meet.
@@ -534,7 +535,7 @@
     const html = [
       `<strong>${stats.fps} fps average over ${stats.seconds} s</strong>`,
       `Up to ${stats.peak} units on the field (battle size ${stats.cap})`,
-      `Per frame: simulation ${stats.simMs} ms · drawing ${stats.drawMs} ms (canvas ${stats.canvas === 1 ? '960×540' : `${stats.canvas}× sharp`}, text ${stats.textSize})`,
+      `Per frame: simulation ${stats.simMs} ms · drawing ${stats.drawMs} ms (canvas ${Math.round(960 * stats.canvas)}×${Math.round(540 * stats.canvas)}, ${stats.sharpness}, text ${stats.textSize})`,
       `Slowest frame: ${stats.worstFrameMs} ms`,
       ...(big ? [`Arena ${stats.arena}: first contact after ${stats.contactS ?? '–'} s, first fall after ${stats.firstDownS ?? '–'} s, battle ${stats.battleS} s of play`] : []),
       ...(g.joining?.length ? [`Parties that rode in: ${g.joining.filter((j) => j.arrived).map((j) => `${j.name} (${j.size}) at ${Math.round(j.arriveAt)} s`).join(', ') || 'none (the battle ended first)'}`] : []),

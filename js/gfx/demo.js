@@ -264,6 +264,11 @@
 
   function pixelRatio() {
     const dpr = root.devicePixelRatio || 1;
+    if (D.sharp === 'device') {
+      // The game's own Sharpness setting (P10-G1): Sharp 3, Balanced 2, Fast 1 a CSS pixel.
+      const cap = CL.settings?.SHARPNESS?.[CL.settings.get('sharpness')] ?? 2;
+      return Math.min(cap || 1, dpr);
+    }
     return D.sharp === 'low' ? 1 : D.sharp === '2x' ? Math.min(2, dpr) : Math.min(3, dpr);
   }
 
@@ -297,7 +302,7 @@
       <div id="gfxBar" role="toolbar" aria-label="Graphics demo">
         <button id="gfxMenu" aria-expanded="true" title="Show or hide the demo controls">☰</button>
         <span class="gfxGroup" id="gfxScenes">${SCENES.map((s) => `<button data-gfx-scene="${s}">${SCENE_NAMES[s]}</button>`).join('')}</span>
-        <span class="gfxGroup"><button id="gfxTime" title="Time of day">Day</button><button id="gfxArt" title="Draw this battle with the game's current art instead">Old art</button><button id="gfxSharp" title="Canvas resolution: full is the sharpest; 1× costs far less to draw on a phone">Res full</button><button id="gfxStats" title="Frame rate and drawing time">Stats</button><button id="gfxReset" title="Start the demo over">Reset</button><button id="gfxExit" class="gfxExit" title="Back to your game, exactly as it was">Exit demo</button></span>
+        <span class="gfxGroup"><button id="gfxTime" title="Time of day">Day</button><button id="gfxArt" title="Draw this battle with the game's current art instead">Old art</button><button id="gfxSharp" title="Canvas resolution: as the Sharpness setting, or 2× or 1× for a test (1× costs far less to draw on a phone)">Res: setting</button><button id="gfxStats" title="Frame rate and drawing time">Stats</button><button id="gfxReset" title="Start the demo over">Reset</button><button id="gfxExit" class="gfxExit" title="Back to your game, exactly as it was">Exit demo</button></span>
       </div>
       <div id="gfxStatsBox" class="hidden" aria-live="off"></div>
       <div id="gfxPrompt" class="hidden"></div>
@@ -324,7 +329,7 @@
     };
     ui.querySelector('#gfxSharp').onclick = () => {
       D.sharp = D.sharp === 'device' ? '2x' : D.sharp === '2x' ? 'low' : 'device';
-      ui.querySelector('#gfxSharp').textContent = { device: 'Res full', '2x': 'Res 2×', low: 'Res 1×' }[D.sharp];
+      ui.querySelector('#gfxSharp').textContent = { device: 'Res: setting', '2x': 'Res 2×', low: 'Res 1×' }[D.sharp];
     };
     ui.querySelector('#gfxReset').onclick = () => reset(true);
     ui.querySelector('#gfxExit').onclick = () => exit();

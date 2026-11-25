@@ -1,9 +1,8 @@
-/* Crownless graphics demonstration (experimental; Debug → Graphics Demo). Not part of normal play:
- * this file is only loaded when the demo is opened, and nothing in the game calls it.
- *
- * The shared visual language: one palette, one outline, one light, one shadow, and the small set of
- * drawing helpers every scene is built from (nature, props, buildings). Characters and horses are in
- * figures.js; the three scenes in map.js, city.js and battle.js.
+/* Crownless art: the shared visual language (P10-G1, D-P10k). Everything the game shows is drawn in
+ * code from this kit and js/art/figures.js: one palette, one outline, one light, one shadow, and the
+ * drawing helpers every scene is built from (nature, props, buildings, banners and devices). There are
+ * no image files. docs/ART-STYLE.md explains the rules and how to add a troop, a culture or a prop;
+ * Debug → Art gallery shows every part.
  *
  * Conventions (every drawing function):
  *   - `ctx` first, then the anchor point: the object's foot or base centre (x, y) in world pixels, where
@@ -85,13 +84,47 @@
     shadowDy: 0.12,
   };
 
-  /** Realm colours and shapes used by the demo (from data/factions.js where it has them). */
-  const REALMS = {
-    valedorn: { color: '#3b6ea5', trim: '#e8dcb8', dark: '#2d5582', device: 'chevron', shield: 'kite' },
-    hrothmark: { color: '#4f7a5a', trim: '#e2d6b4', dark: '#3a5c44', device: 'quarter', shield: 'round' },
-    reavers: { color: '#5a3a32', trim: '#b0453a', dark: '#3e2622', device: 'slash', shield: 'round' },
-    merchant: { color: '#c08a3e', trim: '#f0e2bf', dark: '#946628', device: 'coin', shield: 'round' },
+  /**
+   * Cultures (data/factions.js `culture`): the shapes their soldiers and towns are drawn with. Colour comes
+   * from each realm's own `color`; the culture gives the device on banners and tabards, the usual shield,
+   * and the town's materials (walls, roofs and roof forms, most common first).
+   */
+  const CULTURES = {
+    valedorn: { device: 'chevron', shield: 'kite', walls: ['plaster', 'stone', 'whitewash'], roofs: ['terracotta', 'slate', 'thatch'], forms: ['end', 'gable', 'hip'] },
+    aurelian: { device: 'bar', shield: 'heater', walls: ['whitewash', 'stone', 'plaster'], roofs: ['terracotta', 'terracotta', 'slate'], forms: ['hip', 'gable', 'end'] },
+    hrothmark: { device: 'quarter', shield: 'round', walls: ['timber', 'timber', 'stone'], roofs: ['shingle', 'turf', 'shingle'], forms: ['long', 'gable', 'end'] },
+    vessaro: { device: 'lozenge', shield: 'heater', walls: ['whitewash', 'plaster', 'stone'], roofs: ['terracotta', 'terracotta', 'thatch'], forms: ['hip', 'gable', 'hip'] },
+    border: { device: 'coin', shield: 'round', walls: ['plaster', 'timber', 'stone'], roofs: ['thatch', 'shingle', 'terracotta'], forms: ['gable', 'end', 'long'] },
+    ostrand: { device: 'wave', shield: 'kite', walls: ['stone', 'stone', 'whitewash'], roofs: ['slate', 'slate', 'turf'], forms: ['gable', 'long', 'end'] },
+    saltreach: { device: 'cross', shield: 'heater', walls: ['whitewash', 'plaster', 'stone'], roofs: ['terracotta', 'slate', 'thatch'], forms: ['hip', 'end', 'gable'] },
   };
+
+  /** Not realms, but sides with a look of their own. */
+  const SIDES = {
+    reavers: { color: '#5a3a32', trim: '#b0453a', dark: '#3e2622', device: 'slash', shield: 'round', culture: 'border' },
+    merchant: { color: '#c08a3e', trim: '#f0e2bf', dark: '#946628', device: 'coin', shield: 'round', culture: 'border' },
+  };
+
+  const realmCache = new Map();
+  /**
+   * A side's colours and shapes: a realm id from data/factions.js (its colour, its culture's device and
+   * shield), one of SIDES, or an object already in this shape (passed through). Memoised.
+   */
+  function realm(id) {
+    if (id && typeof id === 'object') return id;
+    let r = realmCache.get(id);
+    if (r) return r;
+    const f = CL.realm?.faction?.(id) || CL.content?.table?.('factions')?.[id] || null;
+    if (SIDES[id]) r = SIDES[id];
+    else if (f) {
+      const c = CULTURES[f.culture] || CULTURES.border;
+      r = { color: f.color, trim: f.id === 'neutral' ? '#b0453a' : '#ecdfbd', dark: tone(f.color, -0.25), device: f.id === 'neutral' ? 'slash' : c.device, shield: c.shield, culture: f.culture };
+    } else r = { color: '#7a6e5a', trim: '#ecdfbd', dark: '#5a5040', device: 'coin', shield: 'round', culture: 'border' };
+    realmCache.set(id, r);
+    return r;
+  }
+  /** Old name kept for the scenes that use it: REALMS[x] is realm(x). */
+  const REALMS = new Proxy({}, { get: (_, id) => realm(String(id)) });
 
   /** Mulberry32: a small seeded generator for stable variation. */
   function rng(seed) {
@@ -385,8 +418,8 @@
   }
 
   /** A banner on a pole: field colour, a simple device, a gentle wave from `t`. */
-  function banner(ctx, x, y, s, realm, t = 0, h = 34) {
-    const R = REALMS[realm] || realm;
+  function banner(ctx, x, y, s, side, t = 0, h = 34) {
+    const R = realm(side);
     const H = h * s;
     ctx.strokeStyle = STYLE.outline;
     ctx.lineWidth = 2.6 * s;
@@ -431,6 +464,29 @@
     } else if (R.device === 'slash') {
       ctx.moveTo(x - r, y - r);
       ctx.lineTo(x + r, y + r);
+      ctx.stroke();
+    } else if (R.device === 'bar') {
+      ctx.moveTo(x - r, y);
+      ctx.lineTo(x + r, y);
+      ctx.lineWidth = r * 0.7;
+      ctx.stroke();
+    } else if (R.device === 'cross') {
+      ctx.moveTo(x - r, y - r);
+      ctx.lineTo(x + r, y + r);
+      ctx.moveTo(x + r, y - r);
+      ctx.lineTo(x - r, y + r);
+      ctx.stroke();
+    } else if (R.device === 'lozenge') {
+      ctx.moveTo(x, y - r);
+      ctx.lineTo(x + r * 0.75, y);
+      ctx.lineTo(x, y + r);
+      ctx.lineTo(x - r * 0.75, y);
+      ctx.closePath();
+      ctx.fill();
+    } else if (R.device === 'wave') {
+      ctx.moveTo(x - r, y);
+      ctx.quadraticCurveTo(x - r * 0.5, y - r * 0.7, x, y);
+      ctx.quadraticCurveTo(x + r * 0.5, y + r * 0.7, x + r, y);
       ctx.stroke();
     } else {
       ctx.arc(x, y, r * 0.7, 0, Math.PI * 2);
@@ -537,8 +593,8 @@
   }
 
   /** A weapon rack: spears and shields by the barracks door. */
-  function rack(ctx, x, y, s = 1, realm = 'valedorn') {
-    const R = REALMS[realm];
+  function rack(ctx, x, y, s = 1, side = 'valedorn') {
+    const R = realm(side);
     shadow(ctx, x + 3 * s, y, 14 * s, 4 * s, 10 * s);
     ctx.strokeStyle = PAL.woodShade;
     ctx.lineWidth = 2.2 * s;
@@ -558,7 +614,7 @@
     shieldShape(ctx, x + 13 * s, y - 10 * s, 6 * s, R.shield, R);
   }
 
-  /** A shield's face: 'kite', 'round' or 'heater', in a realm's colours with its device. */
+  /** A shield's face: 'kite', 'round', 'heater' or 'pavise', in a side's colours with its device. */
   function shieldShape(ctx, x, y, r, shape, R, back = false) {
     ctx.beginPath();
     if (shape === 'kite') {
@@ -566,6 +622,9 @@
       ctx.quadraticCurveTo(x, y - r * 1.25, x + r * 0.85, y - r * 0.9);
       ctx.quadraticCurveTo(x + r * 0.8, y + r * 0.4, x, y + r * 1.45);
       ctx.quadraticCurveTo(x - r * 0.8, y + r * 0.4, x - r * 0.85, y - r * 0.9);
+    } else if (shape === 'pavise') {
+      // The southern pavise: tall, near-rectangular, a raised ridge down the middle.
+      ctx.roundRect(x - r * 0.95, y - r * 1.45, r * 1.9, r * 2.7, r * 0.3);
     } else if (shape === 'heater') {
       ctx.moveTo(x - r * 0.9, y - r * 0.85);
       ctx.lineTo(x + r * 0.9, y - r * 0.85);
@@ -602,7 +661,11 @@
       fillLine(ctx, PAL.steel, STYLE.line * 0.7);
       return;
     }
-    device(ctx, x, y - r * 0.05, r * 0.55, R);
+    if (shape === 'pavise') {
+      ctx.fillStyle = R.trim;
+      ctx.fillRect(x - r * 0.14, y - r * 1.5, r * 0.28, r * 2.8);
+      device(ctx, x, y - r * 0.4, r * 0.6, R);
+    } else device(ctx, x, y - r * 0.05, r * 0.55, R);
     ctx.restore();
   }
 
@@ -893,7 +956,7 @@
   }
 
   /** A round tower with a conical roof (or a flat crenellated top when `cap` is 'flat'). */
-  function tower(ctx, x, y, s = 1, h = 54, r = 15, roof = 'slate', cap = 'cone', t = 0, realm = null) {
+  function tower(ctx, x, y, s = 1, h = 54, r = 15, roof = 'slate', cap = 'cone', t = 0, side = null) {
     const H = h * s;
     const Rr = r * s;
     ctx.fillStyle = STYLE.shadow;
@@ -928,7 +991,7 @@
       poly(ctx, [x, y - H - Rr * 2.4, x + Rr * 1.25, y - H + 2 * s, x + Rr * 0.2, y - H + 2 * s]);
       fill(ctx, rs);
     }
-    if (realm) banner(ctx, x, y - H - (cap === 'flat' ? 4 * s : Rr * 2.3), s * 0.8, realm, t, 18);
+    if (side) banner(ctx, x, y - H - (cap === 'flat' ? 4 * s : Rr * 2.3), s * 0.8, side, t, 18);
   }
 
   /** A covered wagon (the merchant's): two wheels, a bed and a cloth hood; `t` turns the wheels. */
@@ -1018,6 +1081,9 @@
   CL.gfx = Object.assign(CL.gfx || {}, {
     PAL,
     STYLE,
+    CULTURES,
+    SIDES,
+    realm,
     REALMS,
     WALLS,
     ROOFS,

@@ -4,7 +4,11 @@
  * P10-09 (D-P10d): women soldiers, in two realms and one band, no more. `gender: 'female'` marks a
  * woman's troop (her name from her culture's women's names); her line upgrades into her own line.
  * `women: { troop, share }` on a realm's first recruit: hiring it brings, in `share` of hires (drawn
- * from the campaign's own 'recruits' roll), that woman's troop instead. Battle sprites are the role's. */
+ * from the campaign's own 'recruits' roll), that woman's troop instead.
+ * P10-G1 (D-P10k): every troop's `look`, below: what the art kit draws it wearing and carrying (the
+ * vocabulary is CL.content.LOOK). The realm's colours come from the side it fights for. A look agrees
+ * with the troop: a shield only with `shield`, a spear or pike for long reach, a bow or a crossbow by
+ * the shot, a mount for cavalry (the content checks hold it). Faces, skin and hair vary by soldier. */
 (function (root) {
   root.CROWNLESS_CONTENT = root.CROWNLESS_CONTENT || {};
   var C = root.CROWNLESS_CONTENT;
@@ -63,4 +67,49 @@
 
     hero: {id:'hero',name:'Hero',faction:'neutral',role:'hero',tier:'T1',hp:85,damage:18,armor:0,speed:142,reach:67,wage:0,recruitCost:0,upgradeTo:null,upgradeCost:0},
   };
+  // P10-G1: looks (one row a troop; js/content.js LOOK lists the parts).
+  var LOOKS = {
+    levy: { tunic: '#a59273', helmet: 'cap', weapon: 'club' },
+    footman: { tunic: '#c6b38c', armour: 'gambeson', tabard: true, helmet: 'nasal', shield: 'kite', weapon: 'sword' },
+    guard: { armour: 'mail', pauldrons: true, tabard: true, helmet: 'great', shield: 'kite', weapon: 'sword' },
+    hunter: { tunic: '#7a6e4a', armour: 'leather', helmet: 'hood', hoodColor: '#5f6a45', weapon: 'bow', quiver: true },
+    longbowman: { tunic: '#c6b38c', armour: 'gambeson', tabard: true, helmet: 'kettle', weapon: 'bow', bowSize: 1.15, quiver: true },
+    rider: { armour: 'mail', tabard: true, helmet: 'nasal', weapon: 'lance', mount: { coat: '#8a5a3a', mane: '#2e2119' } },
+    recruit: { tunic: '#c9b48e', helmet: 'cap', capColor: '#8a3b32', weapon: 'sword' },
+    spearman: { tunic: '#b8a582', armour: 'leather', tabard: true, helmet: 'crest', plume: '#b0453a', weapon: 'spear' },
+    legionary: { armour: 'mail', pauldrons: true, tabard: true, helmet: 'crest', plume: '#b0453a', shield: 'heater', weapon: 'sword' },
+    skirmisher: { tunic: '#c9b48e', armour: 'leather', helmet: 'cap', capColor: '#8a3b32', weapon: 'bow', quiver: true },
+    marksman: { tunic: '#c9b48e', armour: 'gambeson', tabard: true, helmet: 'kettle', weapon: 'bow', bowSize: 1.15, quiver: true },
+    horse_scout: { tunic: '#c9b48e', armour: 'leather', tabard: true, helmet: 'crest', plume: '#e8dcb8', weapon: 'spear', mount: { coat: '#6a4a32', mane: '#241a14' } },
+    clansman: { tunic: '#6f776b', armour: 'fur', hairStyle: 'braid', beard: true, weapon: 'axe' },
+    shieldmaiden: { tunic: '#68705f', armour: 'fur', hairStyle: 'braid', shield: 'round', weapon: 'sword' },
+    shield_sister: { tunic: '#68705f', armour: 'fur', tabard: true, helmet: 'spangen', hairStyle: 'braid', shield: 'round', weapon: 'sword' },
+    hearth_maiden: { armour: 'mail', fur: true, tabard: true, helmet: 'spangen', hairStyle: 'braid', shield: 'round', weapon: 'axe' },
+    axeman: { tunic: '#5f6a5c', armour: 'fur', tabard: true, helmet: 'spangen', beard: true, shield: 'round', weapon: 'axe' },
+    huscarl: { armour: 'mail', pauldrons: true, fur: true, helmet: 'spangen', beard: true, shield: 'round', weapon: 'axe' },
+    fell_archer: { tunic: '#62695a', armour: 'fur', helmet: 'furhat', weapon: 'bow', quiver: true },
+    fell_warden: { tunic: '#62695a', armour: 'leather', fur: true, helmet: 'spangen', beard: true, weapon: 'bow', bowSize: 1.15, quiver: true },
+    hill_rider: { tunic: '#62695a', armour: 'fur', helmet: 'spangen', beard: true, weapon: 'spear', mount: { coat: '#9a7a52', mane: '#5a4430', pony: true } },
+    militia: { tunic: '#d8c48e', helmet: 'cap', capColor: '#b5862a', weapon: 'club' },
+    popolana: { tunic: '#c98a4a', hat: 'kerchief', hatColor: '#b5862a', weapon: 'club' },
+    balestriera: { tunic: '#d8c48e', armour: 'gambeson', hat: 'kerchief', hatColor: '#b5862a', weapon: 'crossbow', quiver: true },
+    arbalestriera: { tunic: '#d8c48e', armour: 'gambeson', tabard: true, helmet: 'sallet', weapon: 'crossbow', quiver: true },
+    pikeman: { tunic: '#d8c48e', armour: 'gambeson', tabard: true, helmet: 'sallet', weapon: 'pike' },
+    pavisier: { armour: 'mail', tabard: true, helmet: 'sallet', shield: 'pavise', weapon: 'sword' },
+    crossbowman: { tunic: '#d8c48e', armour: 'leather', helmet: 'kettle', weapon: 'crossbow', quiver: true },
+    arbalester: { armour: 'mail', tabard: true, helmet: 'sallet', weapon: 'crossbow', quiver: true },
+    light_horse: { tunic: '#d8c48e', armour: 'leather', tabard: true, hat: 'brim', hatColor: '#8a6a3a', band: '#b5862a', weapon: 'spear', mount: { coat: '#b08a5a', mane: '#4a3626' } },
+    outlaw_huntress: { tunic: '#6a5a40', armour: 'leather', helmet: 'hood', hoodColor: '#4a4a32', weapon: 'bow', quiver: true },
+    looter: { tunic: '#8a7458', armour: 'rags', helmet: 'hood', hoodColor: '#5a4a3c', weapon: 'club' },
+    reaver: { tunic: '#6b5240', armour: 'leather', helmet: 'hood', hoodColor: '#3e2e28', weapon: 'axe' },
+    mercenary: { tunic: '#7d7a72', armour: 'gambeson', helmet: 'kettle', shield: 'heater', weapon: 'sword' },
+    sellsword: { armour: 'mail', pauldrons: true, helmet: 'great', shield: 'heater', weapon: 'sword' },
+    ostrand_levy: { tunic: '#8a8f94', armour: 'fur', helmet: 'cap', capColor: '#5a6470', weapon: 'axe' },
+    ostrand_shieldman: { tunic: '#7d858c', armour: 'mail', tabard: true, helmet: 'nasal', shield: 'kite', weapon: 'sword' },
+    ostrand_bowman: { tunic: '#7d858c', armour: 'leather', fur: true, helmet: 'hood', hoodColor: '#5a6470', weapon: 'bow', quiver: true },
+    saltreach_militia: { tunic: '#e2d2a8', hat: 'brim', hatColor: '#c9a55e', band: '#b0782a', weapon: 'club' },
+    saltreach_pikeman: { tunic: '#e2d2a8', armour: 'gambeson', tabard: true, helmet: 'kettle', weapon: 'pike' },
+    saltreach_crossbow: { tunic: '#e2d2a8', armour: 'leather', hat: 'brim', hatColor: '#c9a55e', band: '#b0782a', weapon: 'crossbow', quiver: true },
+  };
+  for (var lookId in LOOKS) C.troops[lookId].look = LOOKS[lookId];
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -1,4 +1,4 @@
-/* Crownless graphics demonstration (experimental, debug only): modular miniature characters.
+/* Crownless art: modular miniature characters (P10-G1, D-P10k).
  *
  * One renderer draws every person: soldiers, the hero, townsfolk. A *look* says what they wear and
  * carry; a *pose* says what they are doing this frame. Both are plain objects, so a look can later be
@@ -21,7 +21,7 @@
   'use strict';
   const CL = root.Crownless;
   const G = CL.gfx;
-  const { PAL, STYLE, REALMS, ellipse, rrect, poly, fillLine, fill, tone } = G;
+  const { PAL, STYLE, ellipse, rrect, poly, fillLine, fill, tone } = G;
 
   const SKINS = ['#f1c9a5', '#e2b48c', '#c98f63', '#9c6a45', '#7a4e33'];
   const HAIRS = ['#3b2a20', '#6b4a2e', '#a8743e', '#d9b36a', '#8a8a86', '#2a2421', '#b25a32'];
@@ -94,8 +94,8 @@
       stroke(-8, 20, 2.2, PAL.wood);
       poly(ctx, [15, -1, 19, -8, 23, -7, 23, 6, 19, 7, 15, 1]);
       fillLine(ctx, steel, 0.9);
-    } else if (kind === 'spear' || kind === 'lance') {
-      const L = (kind === 'lance' ? 40 : 34) * len;
+    } else if (kind === 'spear' || kind === 'lance' || kind === 'pike') {
+      const L = (kind === 'lance' ? 40 : kind === 'pike' ? 48 : 34) * len;
       stroke(-12 * len, L, 1.8, PAL.wood);
       poly(ctx, [L - 1, -2.3, L + 7, 0, L - 1, 2.3]);
       fillLine(ctx, steel, 0.9);
@@ -146,8 +146,56 @@
     ctx.restore();
   }
 
+  /**
+   * A crossbow held level, pointing along +x (local): the stock, the prod across its front, and the
+   * string drawn back to the nut while it is loaded (`pull` 1), with the bolt on top. A crossbow loads
+   * slowly (the troop's cooldown), so `pull` rises over the whole reload.
+   */
+  function crossbow(ctx, x, y, pull, dir = 1) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(dir, 1);
+    ctx.lineCap = 'round';
+    const line = (x0, y0, x1, y1, w, color) => {
+      ctx.strokeStyle = STYLE.outline;
+      ctx.lineWidth = w + 1.4;
+      ctx.beginPath();
+      ctx.moveTo(x0, y0);
+      ctx.lineTo(x1, y1);
+      ctx.stroke();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = w;
+      ctx.stroke();
+    };
+    line(-5, 1.5, 9, 0, 2.6, PAL.wood);
+    ctx.strokeStyle = STYLE.outline;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(10, -7);
+    ctx.quadraticCurveTo(12.5, 0, 10, 7);
+    ctx.stroke();
+    ctx.strokeStyle = PAL.steelShade;
+    ctx.lineWidth = 1.8;
+    ctx.stroke();
+    const nx = 10 - Math.max(0, Math.min(1, pull)) * 7;
+    ctx.strokeStyle = '#efe6cf';
+    ctx.lineWidth = 0.8;
+    ctx.beginPath();
+    ctx.moveTo(10, -7);
+    ctx.lineTo(nx, 0);
+    ctx.lineTo(10, 7);
+    ctx.stroke();
+    if (pull > 0.95) {
+      line(nx, -0.8, 14, -0.8, 1.1, PAL.wood);
+      poly(ctx, [14, -2.2, 16.5, -0.8, 14, 0.6]);
+      fill(ctx, steel);
+    }
+    ctx.lineCap = 'butt';
+    ctx.restore();
+  }
+
   function shield(ctx, L, x, y, r, back) {
-    const R = REALMS[L.realm] || REALMS.valedorn;
+    const R = G.realm(L.realm || 'valedorn');
     const shape = L.shield === 'wood' ? 'round' : L.shield;
     G.shieldShape(ctx, x, y, r, shape, L.shield === 'wood' ? { ...R, wood: true, device: 'none' } : R, back);
   }
@@ -303,6 +351,26 @@
           rrect(ctx, -1.6, y - r * 1.9, 3.2, r * 0.8, 1.4);
         }
         fillLine(ctx, color, 0.9);
+      }
+      return;
+    }
+    if (kind === 'sallet') {
+      // The southern sallet: a rounded bowl with a tail sweeping down the back of the neck.
+      ctx.beginPath();
+      ctx.arc(0, y - 0.3, r * 1.1, Math.PI, Math.PI * 2);
+      if (face === 'up' || side) ctx.lineTo(r * 1.1, y + 1);
+      ctx.closePath();
+      fillLine(ctx, steel);
+      if (side || face === 'up') {
+        poly(ctx, side ? [-r * 1.1, y - 0.5, -r * 1.75, y + 3.5, -r * 0.6, y + 1.8] : [-r * 1.15, y, r * 1.15, y, r * 0.9, y + 3.5, -r * 0.9, y + 3.5]);
+        fillLine(ctx, PAL.steelShade, 0.9);
+      }
+      ctx.fillStyle = PAL.steelShade;
+      ellipse(ctx, r * 0.45, y - r * 0.5, r * 0.38, r * 0.4);
+      ctx.fill();
+      if (face !== 'up') {
+        ctx.fillStyle = '#2c3138';
+        ctx.fillRect(side ? r * 0.2 : -r * 0.75, y - 0.4, side ? r * 0.85 : r * 1.5, 1.4);
       }
       return;
     }
@@ -463,7 +531,7 @@
       ctx.fillRect(ww - 5, hem - 5, 3, 3);
     }
     if (L.tabard && face !== 'up') {
-      const R = REALMS[L.tabard];
+      const R = G.realm(L.tabard);
       const tw = side ? ww * 0.75 : ww * 0.62;
       const tx = side ? ww * 0.15 : 0;
       ctx.fillStyle = R.color;
@@ -472,7 +540,7 @@
       ctx.fillRect(tx - tw, hem - 1.6, tw * 2, 1.6);
       if (!side) G.device(ctx, tx, top + 6.5, 2.4, R);
     } else if (L.tabard && face === 'up') {
-      ctx.fillStyle = REALMS[L.tabard].color;
+      ctx.fillStyle = G.realm(L.tabard).color;
       ctx.fillRect(-ww * 0.62, top + 1, ww * 1.24, hem - top + 2);
     }
     if (L.apron && face !== 'up') {
@@ -578,7 +646,7 @@
     const side = face === 'left' || face === 'right';
     const up = face === 'up';
     const kind = L.weapon;
-    const spear = kind === 'spear' || kind === 'lance';
+    const spear = kind === 'spear' || kind === 'lance' || kind === 'pike';
     // Rest: [hand x, hand y, angle].
     let hx = side ? 2.5 : up ? 7.2 : -7.2;
     let hy = -13;
@@ -658,7 +726,8 @@
     ctx.translate(0, -bob - (P.mounted ? 13 : 0));
 
     const wa = weaponArm(L, P, face);
-    const ranged = L.weapon === 'bow';
+    const ranged = L.weapon === 'bow' || L.weapon === 'crossbow';
+    const shoot = (x, y, pull, dir) => (L.weapon === 'crossbow' ? crossbow(ctx, x, y, pull, dir) : bow(ctx, x, y, pull, dir, L.bowSize || 1));
     const guard = Boolean(P.guard && L.shield);
     const skin = L.skin || SKINS[0];
     const sleeve = L.armour === 'mail' ? '#9aa3ab' : L.armour === 'leather' ? '#8a6240' : L.tunic || '#9c8a66';
@@ -690,7 +759,7 @@
     if (up) {
       drawWeapon();
       if (!guard) drawShield();
-      if (ranged) bow(ctx, -5.5, -17, P.draw || 0, -1, L.bowSize || 1);
+      if (ranged) shoot(-5.5, -17, P.draw || 0, -1);
     }
     if (side && L.shield && !guard) {
       // The far arm's shield shows behind the body, toward the back.
@@ -717,7 +786,7 @@
     if (side) {
       if (ranged) {
         const pull = P.draw || 0;
-        bow(ctx, 6.5, -16.5, pull, 1, L.bowSize || 1);
+        shoot(6.5, -16.5, pull, 1);
         arm(ctx, 0, shoulderY, 6, -16, sleeve, skin);
         arm(ctx, -1, shoulderY, 5.5 - pull * 7, -16.5, sleeve, skin);
       } else {
@@ -745,7 +814,7 @@
     // Front layer.
     if (!side && !up) {
       drawTrail();
-      if (ranged) bow(ctx, 6, -17, P.draw || 0, 1, L.bowSize || 1);
+      if (ranged) shoot(6, -17, P.draw || 0, 1);
       drawShield();
       drawWeapon();
     }
@@ -788,7 +857,7 @@
     const mane = H.mane || '#3b2a20';
     const move = Math.min(1, P.move || 0);
     const walk = P.walk || 0;
-    const R = REALMS[H.cloth] || null;
+    const R = H.cloth ? G.realm(H.cloth) : null;
     ctx.save();
     ctx.translate(x, y);
     ctx.scale(s, s);
@@ -880,59 +949,70 @@
     ctx.restore();
   }
 
-  // ---- Looks: troops (from data/troops.js ids) and townsfolk ----
-
-  const TROOP_LOOKS = {
-    // Valedorn: blue tabards, kite shields, nasal helms; Stonebridge's knightly march.
-    levy: { tunic: '#a59273', armour: null, helmet: 'cap', shield: 'wood', weapon: 'club', culture: 'valedorn' },
-    footman: { tunic: '#c6b38c', armour: 'gambeson', tabard: true, helmet: 'nasal', shield: 'kite', weapon: 'sword', culture: 'valedorn' },
-    guard: { armour: 'mail', pauldrons: true, tabard: true, helmet: 'great', shield: 'kite', weapon: 'sword', culture: 'valedorn' },
-    hunter: { tunic: '#7a6e4a', armour: 'leather', helmet: 'hood', hoodColor: '#5f6a45', weapon: 'bow', quiver: true, culture: 'valedorn' },
-    longbowman: { tunic: '#c6b38c', armour: 'gambeson', tabard: true, helmet: 'kettle', weapon: 'bow', bowSize: 1.15, quiver: true, culture: 'valedorn' },
-    rider: { armour: 'mail', tabard: true, helmet: 'nasal', shield: 'kite', weapon: 'lance', mount: { coat: '#8a5a3a', mane: '#2e2119' }, culture: 'valedorn' },
-    // Aurelian: crested helms, heater shields, long spears (the hired spearmen).
-    spearman: { tunic: '#b8a582', armour: 'leather', tabard: true, helmet: 'crest', plume: '#b0453a', shield: 'heater', weapon: 'spear', culture: 'aurelian' },
-    // Hrothmark: grey-green wool, fur, round painted shields, axes; the northern clans.
-    clansman: { tunic: '#6f776b', armour: 'fur', helmet: null, hairStyle: 'braid', beard: true, shield: 'wood', weapon: 'axe', culture: 'hrothmark' },
-    shieldmaiden: { tunic: '#68705f', armour: 'fur', female: true, hairStyle: 'braid', shield: 'round', weapon: 'sword', culture: 'hrothmark' },
-    axeman: { tunic: '#5f6a5c', armour: 'fur', tabard: true, helmet: 'spangen', beard: true, shield: 'round', weapon: 'axe', culture: 'hrothmark' },
-    huscarl: { armour: 'mail', fur: true, helmet: 'spangen', beard: true, weapon: 'greataxe', culture: 'hrothmark' },
-    fell_archer: { tunic: '#62695a', armour: 'fur', helmet: 'furhat', weapon: 'bow', quiver: true, culture: 'hrothmark' },
-    hill_rider: { tunic: '#62695a', armour: 'fur', helmet: 'spangen', beard: true, shield: 'round', weapon: 'spear', mount: { coat: '#9a7a52', mane: '#5a4430', pony: true }, culture: 'hrothmark' },
-    // The road bands: hoods, rags, mismatched kit.
-    looter: { tunic: '#8a7458', armour: 'rags', helmet: 'hood', hoodColor: '#5a4a3c', weapon: 'club', culture: 'reavers' },
-    reaver: { tunic: '#6b5240', armour: 'leather', helmet: 'hood', hoodColor: '#3e2e28', shield: 'round', weapon: 'axe', culture: 'reavers' },
-    mercenary: { tunic: '#7d7a72', armour: 'gambeson', helmet: 'kettle', shield: 'heater', weapon: 'sword', culture: 'reavers' },
-    outlaw_huntress: { tunic: '#6a5a40', armour: 'leather', female: true, helmet: 'hood', hoodColor: '#4a4a32', weapon: 'bow', quiver: true, culture: 'reavers' },
-  };
+  // ---- Looks: troops (data/troops.js `look`), the hero, companions and townsfolk ----
 
   /**
-   * A troop's look on a side. `side` is the realm whose colours it wears (its army's, so a hired
-   * spearman fights in the company's blue); skin, hair and face come from `seed`, never per frame.
+   * A troop's look on a side. The parts come from the troop's own `look` (data/troops.js; packs may
+   * give theirs), whether it is a woman from the troop's `gender`, and the colours from `side`: the
+   * realm or band it fights for (its army's, so a hired spearman fights in the company's colours).
+   * Skin, hair, hair style and beard come from `seed` (the unit's or soldier's id), never per frame.
    */
+  /**
+   * A troop with no look of its own (a pack may leave it out): one from what it does, so it still agrees
+   * with the troop: a bow or crossbow by its shot, a spear for a long reach, a shield if it blocks, a
+   * horse for cavalry, a helmet and armour by tier.
+   */
+  function defaultLook(t) {
+    const tier = Number(String(t?.tier || 'T1').slice(1)) || 1;
+    const L = { armour: [null, 'gambeson', 'leather', 'mail'][Math.min(3, tier)] || null, tabard: tier > 1, helmet: tier > 2 ? 'nasal' : tier > 1 ? 'kettle' : 'cap' };
+    if (t?.role === 'archer') Object.assign(L, { weapon: t.ranged?.projectileSpeed >= 300 ? 'crossbow' : 'bow', quiver: true, helmet: tier > 2 ? 'kettle' : 'hood' });
+    else L.weapon = t?.reach >= 70 ? (t.role === 'cavalry' ? 'lance' : 'spear') : 'sword';
+    if (t?.shield) L.shield = G.realm(t.faction).shield || 'round';
+    if (t?.role === 'cavalry') L.mount = { coat: '#8a5a3a', mane: '#2e2119' };
+    return L;
+  }
+
   function troopLook(troopId, side, seed = 1) {
-    const base = TROOP_LOOKS[troopId] || TROOP_LOOKS.footman;
+    const t = CL.content.table('troops')[troopId] || null;
+    const base = t?.look || defaultLook(t);
+    const female = t?.gender === 'female';
     const r = G.rng(seed * 7 + 3);
-    const female = base.female || r() < (side === 'hrothmark' ? 0.25 : 0.12);
-    const hair = HAIRS[Math.floor(r() * HAIRS.length)];
+    const culture = G.realm(side).culture;
+    const hair = base.hair || HAIRS[Math.floor(r() * HAIRS.length)];
+    const pale = culture === 'hrothmark' || culture === 'ostrand';
     const L = {
       ...base,
       seed,
+      female,
       realm: side,
       tabard: base.tabard ? side : null,
-      skin: SKINS[Math.floor(r() * (side === 'hrothmark' ? 3 : SKINS.length))],
+      skin: base.skin || SKINS[Math.floor(r() * (pale ? 3 : SKINS.length))],
       hair,
       hairStyle: base.hairStyle || (female ? (r() < 0.5 ? 'braid' : 'bun') : r() < 0.15 ? 'bald' : 'short'),
-      female,
-      beard: base.beard && !female ? tone(hair, -0.1) : !female && r() < 0.25 ? tone(hair, -0.1) : null,
-      legs: side === 'hrothmark' ? '#5a5048' : '#6b5a46',
+      beard: female ? null : base.beard ? tone(hair, -0.1) : r() < 0.25 ? tone(hair, -0.1) : null,
+      legs: base.legs || (pale ? '#5a5048' : '#6b5a46'),
     };
-    if (L.shield === 'round' || L.shield === 'kite' || L.shield === 'heater') L.realm = side;
     return L;
+  }
+
+  /** A companion's look (data/companions.js), on the side they fight for. */
+  function companionLook(id, side = 'player') {
+    const m = CL.content.table('companions')[id];
+    const base = m?.look || {};
+    return { ...base, seed: id.length * 31, realm: side, tabard: base.tabard ? side : null, beard: base.beard ? tone(base.hair || HAIRS[0], -0.1) : null };
   }
 
   /** The hero: the player's own cloak colour, a plumed helm, gold trim, a sword and kite shield. */
   const CLOAKS = { crimson: '#a8423a', forest: '#4f7b4f', violet: '#6b4f8a', ash: '#7f8387' };
+  /**
+   * The hero, from the creator's choices: the cloak colour and presentation, and a shield only when one
+   * is carried (`canBlock`, js/character.js heroCombat). Gold trim and a plumed helm mark them out.
+   */
+  function heroFor(character, canBlock = true) {
+    const L = heroLook(character?.cloak, character?.gender === 'woman');
+    if (!canBlock) L.shield = null;
+    return L;
+  }
   function heroLook(cloak = 'crimson', female = false) {
     return {
       seed: 99,
@@ -992,5 +1072,5 @@
     };
   }
 
-  G.fig = { SKINS, HAIRS, BODY, CLOAKS, TROOP_LOOKS, ROLE_LOOKS, figure, horse, fallen, troopLook, heroLook, townLook, weapon, bow };
+  G.fig = { SKINS, HAIRS, BODY, CLOAKS, ROLE_LOOKS, figure, horse, fallen, defaultLook, troopLook, companionLook, heroLook, heroFor, townLook, weapon, bow, crossbow };
 })(typeof window !== 'undefined' ? window : globalThis);

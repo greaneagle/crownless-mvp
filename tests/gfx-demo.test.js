@@ -9,7 +9,7 @@ const vm = require('node:vm');
 const { loadGame, memoryStorage } = require('./helpers/load');
 
 const ROOT = path.join(__dirname, '..');
-const GFX = ['kit', 'figures', 'gallery', 'map', 'city', 'battle'];
+const GFX = ['gallery', 'map', 'city', 'battle']; // the art kit (js/art/) is loaded with the game
 
 /** A game with the demo's drawing and scene files loaded into it (no DOM: nothing is drawn). */
 function withGfx() {
@@ -81,13 +81,13 @@ test('every soldier the demo battle fields is a real troop with its own look, an
   const troops = new Set([...B.ARMY, ...Object.values(B.FOES).flatMap((f) => Object.keys(f.wave))]);
   for (const id of troops) {
     assert.ok(CL.content.troop(id), id);
-    assert.ok(F.TROOP_LOOKS[id], `${id} has a look`);
+    assert.ok(CL.content.troop(id).look, `${id} has a look`);
   }
   assert.ok(B.ARMY.length + 1 + Object.values(B.FOES.hrothmark.wave).reduce((a, b) => a + b, 0) <= 40, 'the whole battle fits on the field at once');
   // Roles show: spears for reach-70 infantry, bows for archers, a horse for cavalry.
   for (const id of troops) {
     const t = CL.content.troop(id);
-    const L = F.TROOP_LOOKS[id];
+    const L = t.look;
     if (t.role === 'archer') assert.equal(L.weapon, 'bow', id);
     if (t.role === 'cavalry') assert.ok(L.mount, id);
     if (t.role === 'infantry' && t.reach >= 70) assert.equal(L.weapon, 'spear', id);

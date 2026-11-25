@@ -185,7 +185,7 @@
     CL.mapView.startTest((r) => {
       Object.assign(g, was);
       const run = (x) => `${x.zoom}×: ${x.fps} fps, drawing ${x.drawMs} ms, slowest frame ${x.worstFrameMs} ms`;
-      const canvas = r.canvas === 1 ? '960×540' : `${r.canvas}× sharp`;
+      const canvas = `${Math.round(960 * r.canvas)}×${Math.round(540 * r.canvas)}`;
       g.mapTestResult = r;
       log('map drawing test', r);
       CL.ui.message(`Map test: ${r.runs.map(run).join(' · ')} (canvas ${canvas}, text ${r.textSize})`);
@@ -268,7 +268,7 @@
     const ok = rows.filter((r) => r.fps >= BENCH.target);
     const best = ok.length ? ok[ok.length - 1].cap : null;
     const line = (r) => `${r.cap}: ${r.fps} fps, slowest ${r.worstFrameMs} ms, sim ${r.simMs} + draw ${r.drawMs} ms`;
-    const summary = `Battle benchmark: ${rows.map(line).join(' · ')} · best at ${BENCH.target} fps: ${best ?? 'none'} (canvas ${rows[0].canvas === 1 ? '960×540' : `${rows[0].canvas}×`}, text ${rows[0].textSize})`;
+    const summary = `Battle benchmark: ${rows.map(line).join(' · ')} · best at ${BENCH.target} fps: ${best ?? 'none'} (canvas ${Math.round(960 * rows[0].canvas)}×${Math.round(540 * rows[0].canvas)}, ${rows[0].sharpness}, text ${rows[0].textSize})`;
     CL.diag.log('info', summary, { rows, best });
     const g = CL.game;
     g.result = {
@@ -441,10 +441,11 @@
     const mode = CL.game.mode;
     switch (act) {
       case 'gfxDemo':
-        // The experimental graphics demo (js/gfx/): loaded only now, run on a copy of the campaign, never saved.
+      case 'artGallery':
+        // The graphics demo and the Art gallery (js/gfx/): loaded only now, run on a copy of the campaign, never saved.
         if (mode === 'battle' || mode === 'prepare') return CL.ui.message('Finish the battle first');
         toggle(false);
-        openGfxDemo();
+        openGfxDemo(act === 'artGallery' ? 'gallery' : 'map');
         return;
       case 'gold':
         addGold(n);
@@ -853,15 +854,6 @@
       case 'god':
         btn.textContent = `God mode: ${toggleGod() ? 'on' : 'off'}`;
         return;
-      case 'sharp': {
-        // D-R1 (W-01): a sharper canvas at min(devicePixelRatio, 2), to measure on a phone with the
-        // Big battle and the map. A view switch for testing only: not saved, nothing else changes.
-        const k = CL.render.backingScale() > 1 ? 1 : Math.min(root.devicePixelRatio || 1, 2);
-        CL.render.setBackingScale(k);
-        btn.textContent = `Sharp canvas: ${k > 1 ? `${k}×` : 'off'}`;
-        log('sharp canvas', { backing: k });
-        return;
-      }
       case 'tree':
         // Show every troop on the troop tree with full details (V2-03b). A view switch for testing:
         // the campaign's own knowledge is not changed or saved.
@@ -1019,8 +1011,9 @@
     CL.ui.message(`Debug: ${btn.textContent}`);
   }
 
-  /** The graphics demo's files, in order (an experiment: not loaded in normal play). */
-  const GFX_FILES = ['kit', 'figures', 'gallery', 'map', 'city', 'battle', 'demo'];
+  /** The graphics demo's files, in order (an experiment: not loaded in normal play; the art kit it
+   * draws with, js/art/, is part of the game from P10-G1). */
+  const GFX_FILES = ['gallery', 'map', 'city', 'battle', 'demo'];
   let gfxLoading = null;
   /** Load the graphics demo once, then open it. @param {string} [scene] */
   function openGfxDemo(scene = 'map') {
