@@ -310,3 +310,18 @@ test('P9-T: a rising fights its crown first: its army besieges and raids the cro
   const villages = CL.armies.raidable(c, { realm: r }, lead);
   if (villages.length) assert.equal(c.holdings[villages[0]].controller, 'valedorn', 'and its villages first');
 });
+
+test('P10-00: a rising that loses all its land has lost the civil war: it ends as the crown’s win, and its record goes', () => {
+  const env = world();
+  const { c, R, RB } = env;
+  const { x, lords } = rising(env);
+  const theirs = Object.keys(c.holdings).filter((sid) => c.holdings[sid].controller === x.rising && c.holdings[sid].kind !== 'village');
+  assert.ok(theirs.length > 0);
+  for (const sid of theirs) R.transfer(c, sid, { controller: 'valedorn', sovereign: 'valedorn', reason: 'test', capital: true });
+  // The last one taken, as a siege's taking calls it (js/sieges.js take → CL.armies.onTaken).
+  env.CL.armies.onTaken(c, theirs.at(-1), x.rising);
+  assert.equal(c.realms[x.rising], undefined, 'the rising realm is gone');
+  assert.equal(RB.state(c).list.includes(x), false, 'and its rebellion with it');
+  for (const p of lords) assert.equal(c.people[p].realm, 'valedorn', `${p} home to their realm`);
+  assert.deepEqual(plain(R.invariants(c)), []);
+});

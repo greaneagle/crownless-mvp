@@ -176,7 +176,7 @@ test('the Phase 9 exit: rule, command, treat, appoint and grant; a lord declines
   // Its lords' households grow strong enough (test setup: what a longer civil war would bring them) that
   // the rising's own army, which fights its crown first, marches on Westholt.
   const strong = () => {
-    const need = CL.armies.needed(c, FORT);
+    const need = CL.armies.needed(c, FORT, rising);
     for (const q of c.parties.filter((p) => p.lordId && c.people[p.lordId].realm === rising)) {
       let k = 1.5;
       while (CL.autoresolve.troopsPower(CL.lords.troopsFor(c, q.lordId, k)) < need && k < 12) k += 0.5;

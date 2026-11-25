@@ -29,6 +29,7 @@ test('Lords: a ransom offer interrupts the map with Accept, Hold and Release; Ac
   const before = await game(page, (CL) => {
     const c = CL.campaign;
     const id = Object.keys(c.people).find((k) => c.people[k].key === 'hamon_greymantle');
+    CL.houses.woundsKill = () => false; // P10-00: a beaten lord can die of his wounds (P9-06); here he lives
     CL.lords.beaten(c, CL.lords.partyOf(c, id), 'player');
     CL.lords.prisonerOf(c, id).offerDay = c.day;
     CL.ui.openRansom();
@@ -57,6 +58,7 @@ test('Lords: Hold keeps the prisoner and closes the offer; Release lets them go'
   await toMap(page);
   await game(page, (CL) => {
     const c = CL.campaign;
+    CL.houses.woundsKill = () => false; // P10-00: a beaten lord can die of his wounds (P9-06); here they live
     for (const key of ['hamon_greymantle', 'tancred_greymantle']) {
       const id = Object.keys(c.people).find((k) => c.people[k].key === key);
       CL.lords.beaten(c, CL.lords.partyOf(c, id), 'player');

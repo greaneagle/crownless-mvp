@@ -320,3 +320,21 @@ test('P9-T: the old crown answers before it besieges: no siege of the new realm 
   R.setRelation(c, 'valedorn', me, 'war', 'test');
   assert.equal(R.siegeWar(c, 'valedorn', me), true, 'at war');
 });
+
+test('P10-00: a lord who founds a realm gives up a village whose seat stays behind, and keeps a claim on it', () => {
+  const { CL, c, F, R } = world();
+  const lord = Object.keys(c.people).find((p) => !R.rules(p, c) && CL.lords.partyOf(c, p) && R.fiefsOf(p, c).some((s) => c.holdings[s].kind === 'fort' && !R.locked(c, s)));
+  const realm = c.people[lord].realm;
+  const fort = R.fiefsOf(lord, c).find((s) => c.holdings[s].kind === 'fort' && !R.locked(c, s));
+  // Test setup: the lord also holds a village of another seat of the realm (as the long run found).
+  const village = Object.keys(c.holdings).find((s) => c.holdings[s].kind === 'village' && c.holdings[s].sovereign === realm && c.holdings[s].seat !== fort && !R.fiefsOf(lord, c).includes(s) && c.holdings[c.holdings[s].seat]?.holder !== lord);
+  for (const x of R.fiefsOf(lord, c).filter((s) => s !== fort)) R.transfer(c, x, { holder: R.rulerOf(realm, c), reason: 'test' });
+  assert.ok(R.transfer(c, village, { holder: lord, willing: true, reason: 'test' }), 'granted the village');
+  const id = F.declare(c, lord, fort, { free: true });
+  assert.ok(id);
+  assert.equal(c.holdings[fort].sovereign, id, 'the fort goes to the new realm');
+  assert.equal(c.holdings[village].sovereign, realm, 'the village stays with its seat');
+  assert.equal(c.holdings[village].holder, R.rulerOf(realm, c), 'given up to the old crown');
+  assert.ok(c.holdings[village].claims.some((k) => k.by === lord), 'the founder keeps a claim');
+  assert.deepEqual(plain(R.invariants(c)), []);
+});

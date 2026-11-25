@@ -1,5 +1,27 @@
 # Crownless — Release Notes
 
+## v4.3.1 — The night run, and what it found (P10-00) · 2026-11-25
+
+### New
+- **The long run.** `npm run long-run [years]` plays the world alone for 30 years (the owner: "100 years doesn't make sense"), with every realm's ruler the AI's. Every day it checks every invariant, and four of its own: no negative money anywhere, no holding changing hands back and forth in a day, no endless loop of events, and no realm with more than half the land. Each year it reports the day's time, the save's size, the realms, wars, people and forts. `--trace` prints each new problem as it first happens.
+- `tests/slow/long-run.test.js`: ten years of it in the slow suite.
+
+### Fixed
+- **A crash after a realm lost its last holding:** its patrols looked for a holding to ride to and found none. A realm that holds nothing now has no patrols until it holds land again.
+- **A lord could stay counted in an army he had left.** When his household was broken, he rode out again from home before the army's next muster. The army now lets go of anyone whose party is not riding with it.
+- **A lord who founded a realm could keep holding a village for the realm he left** (a village whose seat stayed behind). He now gives it up to the old crown, and keeps a claim on it.
+- **A rising that lost all its land was left half-ended.** It has now lost the civil war: it ends as the crown's win, and its lords go home.
+- **Runaway realms.** Over years one realm could take nearly all the land, mostly by forts surrendering to it. A realm controlling more than a quarter of the land is now overstretched: its sieges need more strength to begin, and no garrison surrenders to it for hopeless odds, only for hunger. The same rule holds for you.
+- Two browser tests that sometimes failed: a beaten lord could die of his wounds before the ransom test began, and the tournament test could tap ATTACK after the bout had ended.
+
+### Faster
+- **The world runs about three times faster** than in 4.2.0 (twice as fast as 4.1.0). Every terrain lookup rebuilt every road, and the coast's roads made that much costlier. The roads are now kept, and far roads are skipped. The terrain is the same at every point.
+
+### Under the hood
+- `battle-parity` plays 30 seeds a scenario (was 40) and `gate-d-campaigns` 40 campaigns (was 60): the night run a little shorter.
+- `CL.sieges.stretch` and `gatherNeed`; `CL.armies.needed` takes the realm.
+- No schema step.
+
 ## v4.3.0 — Walkable towns: every capital and free city (P10-03) · 2026-11-25
 
 ### New

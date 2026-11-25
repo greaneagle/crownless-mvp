@@ -1,13 +1,13 @@
-// B-01 (slow): fought against Simulate (scripts/parity.js, 40 seeds a scenario). Fought battles come
+// B-01 (slow): fought against Simulate (scripts/parity.js, 30 seeds a scenario; 40 until P10-00). Fought battles come
 // out ahead of the stated odds, but not by a mile, and Simulate is only a little worse than fighting.
-// The target is 5–15 points over the odds; with 40 seeds a scenario is good to about ±8, so the check
+// The target is 5–15 points over the odds; with 30 seeds a scenario is good to about ±9, so the check
 // allows 0–25 for each and asks the close fights' average to sit inside the target.
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { run } = require('../../scripts/parity');
 
 test('fought battles: over the stated odds, but not far; Simulate only a little worse; every fight ends', () => {
-  const rows = run({ seeds: 40 });
+  const rows = run({ seeds: 30 });
   for (const r of rows) {
     assert.equal(r.unfinished, 0, `${r.scenario}: every fight ends`);
     const over = r.foughtWin - r.odds;
@@ -21,7 +21,7 @@ test('fought battles: over the stated odds, but not far; Simulate only a little 
 
 // P9-B4, layer 1: the same fights with no orders at all, the Auto setup choosing the plan (the default).
 test('layer 1: with Auto and no orders, fought battles are over the odds but not far', () => {
-  const rows = run({ seeds: 40, preset: 'auto' });
+  const rows = run({ seeds: 30, preset: 'auto' });
   for (const r of rows) {
     assert.equal(r.unfinished, 0, `${r.scenario}: every fight ends`);
     const over = r.foughtWin - r.odds;
@@ -37,7 +37,7 @@ test('layer 1: with Auto and no orders, fought battles are over the odds but not
 // battle size of 150; at 40 every assault ends (its balance there is open: docs/NEXT-TASKS.md, P9-B5).
 test('sieges: an assault fought on the walls comes out over the odds, but not far, both ways', () => {
   const { runSiege } = require('../../scripts/parity');
-  for (const r of runSiege({ seeds: 40 })) {
+  for (const r of runSiege({ seeds: 30 })) {
     assert.equal(r.unfinished, 0, `${r.scenario}: every fight ends`);
     assert.ok(r.overOdds >= -5 && r.overOdds <= 25, `${r.scenario}: fought ${r.foughtWin}% against the odds ${r.odds.toFixed(0)}%`);
   }

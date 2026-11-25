@@ -127,11 +127,12 @@
     const f = c.holdings[sid].controller;
     return Object.values(c.holdings).filter((x) => x.controller === f && x.kind !== 'village').length <= 1;
   };
-  /** The garrison's power an army must beat to begin a siege here. */
-  function needed(c, sid) {
+  /** The garrison's power realm f's army must beat to begin a siege here. */
+  function needed(c, sid, f) {
     const h = c.holdings[sid];
     const g = h.kind === 'town' && !troopCount(h.garrison) ? capitalGarrison(c, sid) : h.garrison || {};
-    return A().troopsPower(g) * (lastOf(c, sid) ? CL.sieges.RULES.lastFortRatio : CL.sieges.RULES.gatherRatio);
+    // P10-00: an overstretched realm (past a third of the land) needs more (CL.sieges.gatherNeed).
+    return A().troopsPower(g) * CL.sieges.gatherNeed(c, f, lastOf(c, sid));
   }
 
   // ---- Raising ----
@@ -329,12 +330,17 @@
     }
   }
 
-  /** The members still with it: free, of its realm, with a party. A captured commander: the next takes over. */
+  /**
+   * The members still with it: free, of its realm, with a party that rides with it. A captured
+   * commander: the next takes over. P10-00 (the long run): a lord whose household was broken rides out
+   * again from home with a new party before the next muster; that party is not the army's, so they
+   * have left it.
+   */
   function muster(c, a) {
-    const leaving = a.members.filter((pid) => c.people[pid]?.status !== 'free' || c.people[pid].realm !== a.realm || !L().partyOf(c, pid));
+    const leaving = a.members.filter((pid) => c.people[pid]?.status !== 'free' || c.people[pid].realm !== a.realm || L().partyOf(c, pid)?.armyId !== a.id);
     for (const pid of leaving) {
       const q = L().partyOf(c, pid);
-      if (q) release(c, q);
+      if (q && (q.armyId === a.id || q.armyId == null)) release(c, q); // never another army's
     }
     a.members = a.members.filter((pid) => !leaving.includes(pid));
     if (a.commander === PLAYER) {
@@ -473,7 +479,7 @@
     const threat = foes.find((b) => ['besiege', 'raid'].includes(b.objective) && R().owner(b.target, c) === f);
     if (threat && threat.target !== a.target) return set(c, a, 'defend', nearestOwn(c, f, at(threat.target)) || threat.target, `It rides to defend against the ${factionName(threat.realm)}.`);
     const tried = a.tried || [];
-    const sid = targets(c, f, cq).find((x) => !tried.includes(x) && power >= needed(c, x));
+    const sid = targets(c, f, cq).find((x) => !tried.includes(x) && power >= needed(c, x, f));
     if (sid) return set(c, a, 'besiege', sid, `It marches on ${placeName(sid)}.`);
     const v = raidable(c, a, cq)[0];
     if (v) return set(c, a, 'raid', v, `It rides to raid ${placeName(v)}.`);
@@ -719,6 +725,14 @@
   /** A realm with no holdings is gone: its lords seek service elsewhere; a founded realm is removed. */
   function gone(c, f) {
     if (R().rules(PLAYER, c) === f) return; // your own realm ends by your hand (P9-T)
+    // P10-00 (the long run): a rising that holds nothing has lost its civil war; it ends by the
+    // rebellion's own rules (its lords home to their realm, its record gone with it).
+    const rising = CL.rebellion?.ofRising(c, f);
+    if (rising) {
+      CL.rebellion.end(c, rising, 'crown');
+      CL.diag.log('info', 'Realm gone', { realm: f });
+      return;
+    }
     const lords = Object.keys(c.people).filter((pid) => c.people[pid].realm === f && pid !== R().rulerOf(f, c) && c.people[pid].status === 'free');
     const other = R()
       .realms()

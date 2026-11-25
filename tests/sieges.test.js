@@ -270,3 +270,27 @@ test('saves: sieges round-trip; junk is repaired; v22 migrates; 2.28.0’s saves
   delete v22.sieges;
   assert.deepEqual(plain(CL.save.migrate(v22).sieges), []);
 });
+
+test('P10-00: overstretched past a quarter of the land, a realm needs more to begin a siege, and nobody surrenders to it for hopeless odds', () => {
+  const { CL, c, S, R } = war({ strength: 3 });
+  assert.equal(S.stretch(c, 'valedorn') > 0, false, 'Valedorn starts within a third');
+  assert.equal(S.gatherNeed(c, 'valedorn', false), S.RULES.gatherRatio);
+  // Give Valedorn half the land (everything but Aurelia's).
+  const others = Object.keys(c.holdings).filter((sid) => !['valedorn', 'aurelian'].includes(c.holdings[sid].controller));
+  const all = Object.keys(c.holdings).length;
+  for (const sid of others.slice(0, Math.ceil(all / 2) - Object.values(c.holdings).filter((h) => h.controller === 'valedorn').length)) R.transfer(c, sid, { controller: 'valedorn', sovereign: 'valedorn', reason: 'test', capital: true });
+  const st = S.stretch(c, 'valedorn');
+  assert.ok(st > 0.3 && st < 0.4, `half the land: stretched ${st.toFixed(2)}`);
+  assert.ok(S.gatherNeed(c, 'valedorn', false) > S.RULES.gatherRatio * 1.4, 'needs more to begin');
+  assert.equal(S.gatherNeed(c, 'aurelian', false), S.RULES.gatherRatio, 'the smaller realm does not');
+  // A siege by overwhelming numbers: the garrison does not give up while it has food.
+  const s = S.plan(c, 'valedorn');
+  assert.ok(s, 'still besieges, with the numbers');
+  const fell = [];
+  CL.events.on('HoldingChanged', (e) => {
+    if (e.holding === s.sid && e.from.controller !== e.to.controller) fell.push(e.reason);
+  });
+  hours(CL, 24 * 3);
+  assert.ok(c.holdings[s.sid].food > 0, 'food left');
+  assert.equal(fell.includes('surrendered'), false, `no surrender for hopeless odds (${fell.join(', ') || 'held'})`);
+});

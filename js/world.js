@@ -80,22 +80,31 @@
 
   // ---- Terrain ----
 
-  function distToSegment(px, py, ax, ay, bx, by) {
-    const k = aspect();
-    const [dx, dy] = [bx - ax, (by - ay) * k];
-    const [qx, qy] = [px - ax, (py - ay) * k];
+  function distToSegment(px, py, ax, ay, bx, by, k = aspect()) {
+    const dx = bx - ax;
+    const dy = (by - ay) * k;
+    const qx = px - ax;
+    const qy = (py - ay) * k;
     const len2 = dx * dx + dy * dy || 1;
-    const t = clamp((qx * dx + qy * dy) / len2, 0, 1);
+    const t = Math.min(1, Math.max(0, (qx * dx + qy * dy) / len2));
     return Math.hypot(qx - t * dx, qy - t * dy);
   }
 
+  // P10-00: terrain is read for every party at every step, and rebuilding the roads each time cost the
+  // bigger world (4.2.0) more than twice the time. Kept until the map's roads or the places change.
+  let roadCache = { roads: null, places: null, segs: [] };
   function roadSegments() {
+    const roads = map().roads;
+    const places = CL.content.table('settlements');
+    if (roadCache.roads === roads && roadCache.places === places) return roadCache.segs;
     const segs = [];
-    for (const road of map().roads) {
+    roadCache = { roads, places, segs };
+    for (const road of roads) {
       for (let i = 1; i < road.length; i++) {
         const a = settlement(road[i - 1]);
         const b = settlement(road[i]);
-        segs.push([a.mapX, a.mapY, b.mapX, b.mapY]);
+        // With its bounding box, so a point far from the road is passed over at once.
+        segs.push([a.mapX, a.mapY, b.mapX, b.mapY, Math.min(a.mapX, b.mapX), Math.max(a.mapX, b.mapX), Math.min(a.mapY, b.mapY), Math.max(a.mapY, b.mapY)]);
       }
     }
     return segs;
@@ -112,8 +121,8 @@
   }
 
   /** Is (x, y) within `width` map units of a polyline? */
-  function nearLine(x, y, line, width) {
-    for (let i = 1; i < line.length; i++) if (distToSegment(x, y, ...line[i - 1], ...line[i]) <= width) return true;
+  function nearLine(x, y, line, width, k = aspect()) {
+    for (let i = 1; i < line.length; i++) if (distToSegment(x, y, ...line[i - 1], ...line[i], k) <= width) return true;
     return false;
   }
 
@@ -127,8 +136,13 @@
     const m = map();
     const waters = m.waters || [];
     for (const w of waters) for (const c of w.crossings || []) if (mapDist(x, y, c.x, c.y) <= c.r) return c.kind;
-    if (roadSegments().some((s) => distToSegment(x, y, ...s) <= m.roadWidth)) return 'road';
-    for (const w of waters) if (nearLine(x, y, w.line, w.width)) return 'river';
+    const k = aspect();
+    const rw = m.roadWidth;
+    for (const s of roadSegments()) {
+      if (x < s[4] - rw || x > s[5] + rw || y < s[6] - rw / k || y > s[7] + rw / k) continue; // too far for this road
+      if (distToSegment(x, y, s[0], s[1], s[2], s[3], k) <= rw) return 'road';
+    }
+    for (const w of waters) if (nearLine(x, y, w.line, w.width, k)) return 'river';
     for (const a of m.areas || []) if (inPolygon(x, y, a.poly)) return a.kind;
     if (m.forests.some((poly) => inPolygon(x, y, poly))) return 'forest';
     return 'grass';

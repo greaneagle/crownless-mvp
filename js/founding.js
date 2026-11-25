@@ -90,6 +90,16 @@
       if (!R().transfer(c, x, { controller: id, sovereign: id, holder: who, willing: true, reason: 'founded', quiet: true })) continue;
       if (from !== PLAYER && fromRuler && fromRuler !== who) R().addClaim(c, x, { by: fromRuler, realm: from, kind: 'old' });
     }
+    // P10-00 (the long run): what cannot follow (a village whose seat stays with the old realm) is given
+    // up to that realm's ruler; the founder keeps an old claim on it. Before, the founder kept holding it
+    // for a realm they no longer served.
+    for (const x of held) {
+      const hx = c.holdings[x];
+      if (hx.sovereign === id) continue;
+      const crown = R().rulerOf(hx.sovereign, c);
+      if (crown && crown !== who) R().transfer(c, x, { holder: crown, reason: 'forfeit', quiet: true });
+    }
+    const moved = held.filter((x) => c.holdings[x].sovereign === id);
     if (who === PLAYER) CL.allegiance?.crowned(c, old);
     else {
       c.people[who].home = sid;
@@ -104,7 +114,7 @@
     CL.news?.record(c, 'realm_founded', { place: sid, faction: id, text });
     CL.chronicle?.add(c, { day: c.day, kind: 'holding', place: sid, event: 'changed', by: id });
     if (who === PLAYER) CL.ui.message(`${text} ${old ? `The ${R().faction(old)?.name} have ${RULES.acceptDays} days to accept it, or it is war.` : ''}`.trim());
-    CL.diag.log('info', 'Realm founded', { realm: id, by: who, at: sid, from: old, holdings: held });
+    CL.diag.log('info', 'Realm founded', { realm: id, by: who, at: sid, from: old, holdings: moved });
     return id;
   }
 

@@ -354,3 +354,34 @@ test('P9-T: a lord who changes realm leaves their army at once, and its records 
   assert.notEqual(a.commander, lords[0], 'the next commands');
   assert.equal(CL.armies.invariants(c).length, 0, CL.armies.invariants(c).join('; '));
 });
+
+test('P10-00: a lord whose household is broken rides out again with a new party, and has left the army', () => {
+  const { CL, c, A } = war();
+  const a = A.plan(c, 'valedorn');
+  assert.ok(a && a.members.length >= 3);
+  const pid = a.members.find((x) => x !== a.commander);
+  // Broken on the road (the party goes), then out again from home before the army's next muster.
+  const old = CL.lords.partyOf(c, pid);
+  c.parties.splice(c.parties.indexOf(old), 1);
+  CL.lords.ensure(c, c.day, true);
+  const fresh = CL.lords.partyOf(c, pid);
+  assert.ok(fresh && fresh !== old, 'a new party');
+  assert.equal(fresh.armyId, undefined);
+  hours(CL, 1);
+  assert.equal(A.byId(c, a.id)?.members.includes(pid) ?? false, false, 'no longer counted in the army');
+  assert.deepEqual(Array.from(CL.realm.invariants(c).filter((p) => /army/.test(p))), []);
+});
+
+test('P10-00: a realm that holds nothing has no patrols, and none muster until it holds land again', () => {
+  const { CL, c, R } = war();
+  for (const t of Object.values(CL.content.table('party_templates'))) if (t.kind === 'patrol') c.partySpawns[t.id] = 0;
+  CL.parties.ensure(c, true);
+  const patrolsOf = (f) => c.parties.filter((p) => CL.content.get('party_templates', p.template).kind === 'patrol' && CL.content.get('party_templates', p.template).faction === f);
+  assert.ok(patrolsOf('aurelian').length > 0, 'Aurelia patrols while it holds land');
+  for (const sid of Object.keys(c.holdings).filter((x) => c.holdings[x].controller === 'aurelian')) R.transfer(c, sid, { controller: 'valedorn', sovereign: 'valedorn', reason: 'test', capital: true });
+  // The day goes on without a fault (it threw choosing where a landless realm's patrol rides).
+  hours(CL, 6);
+  assert.equal(patrolsOf('aurelian').length, 0, 'its patrols stand down');
+  CL.parties.ensure(c, true);
+  assert.equal(patrolsOf('aurelian').length, 0, 'and none muster');
+});

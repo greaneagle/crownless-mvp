@@ -1,7 +1,7 @@
 // Gate D acceptance, the slow half (GDD §14; moved from tests/gate-d.test.js by H-01): "each ending
 // is reachable, no quest soft-locks, and the sandbox continues."
 //
-// The soft-lock check plays 60 whole campaigns from a fresh start with a randomized story bot
+// The soft-lock check plays 40 whole campaigns from a fresh start with a randomized story bot
 // (tests/helpers/story-bot.js) on the real game logic. The runs mix three starts (a funded company,
 // the bare GDD start, a bot that loses most fights), and the bot saves and reloads at random. Every
 // run must reach an ending, and together they must reach every ending, every quest stage and every
@@ -11,7 +11,7 @@ const assert = require('node:assert/strict');
 const { newCampaign, mulberry } = require('../../scripts/simulate-campaign');
 const { makeStoryBot } = require('../helpers/story-bot');
 
-const SEEDS = 60;
+const SEEDS = 40; // 60 until P10-00 (owner, 2026-11-25: the night run a little shorter)
 
 /** Every value a story flag is ever set to in the content (so new branches join the check). */
 function authoredValues(CL, flag) {
@@ -42,7 +42,7 @@ function playOne(seed) {
   return { ...env, r };
 }
 
-test('no quest soft-locks, every ending reachable: 60 randomized campaigns from a fresh start', () => {
+test(`no quest soft-locks, every ending reachable: ${SEEDS} randomized campaigns from a fresh start`, () => {
   const seen = { stages: new Set(), endings: new Set(), q1: new Set(), q2_choice: new Set(), q2_how: new Set(), q3_side: new Set(), mara: new Set() };
   let reloads = 0;
   let CL0 = null;

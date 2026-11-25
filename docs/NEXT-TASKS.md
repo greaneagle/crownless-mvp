@@ -3247,21 +3247,30 @@ The aim: a welcoming way into the world. You pick a kingdom and an origin. A sho
 | P10-G2 | Graphics: towns | L | next minor when it lands |
 | P10-T | Tuning and acceptance | M | 5.0.0 |
 
-### P10-00 · Phase 9's long runs and checkpoint (M)
+### P10-00 · Phase 9's long runs and checkpoint (M) — ✅ Done in 4.3.1
 
 Moved here from P9-T (owner, 2026-11-24). It runs when the owner asks for the night run, not in the task order.
 
 **Build** (on the evening of the night run, before it starts).
 - **The long-run tools** (SC-29, D-P9i): the world alone with delegated rulers, checking every invariant every day. There is no negative money, no repeated ownership collision, no endless event loop, and no runaway realm (one holding more than half the land).
-  - `tests/slow/long-run.test.js`: 20 years.
-  - `scripts/long-run.js` (`npm run long-run`): 100 years, in no suite.
+  - `tests/slow/long-run.test.js`: 10 years, one seed.
+  - `scripts/long-run.js` (`npm run long-run`): 30 years, one seed, in no suite (the owner, 2026-11-25: 30 years, not 100).
 - Both are built and tested on short slices first (a year or two, one seed), about 20–30 minutes in all. Then the night run starts.
 
-**The night run.** In the background, in one go: the 20-year and 100-year runs, the whole slow suite, the full browser suite, and every check in `docs/PENDING-CHECKS.md`.
+**The night run.** In the background, in one go: the 10-year and 30-year runs, the whole slow suite (`battle-parity` at 30 seeds a scenario, `gate-d-campaigns` at 40), the full browser suite, and every check in `docs/PENDING-CHECKS.md`. About 1–1½ hours on 4.3.1's faster world (the 30 years about 50 minutes a seed).
 
 **After.** The results go in the validation notes and `docs/PENDING-CHECKS.md` is cleared of what ran. Faults found are fixed by the next task, first. The old failures and tuning numbers are only recorded, for P10-T.
 
 **Version.** A patch on the build it runs on.
+
+**Done (4.3.1).**
+- **The tools:** `scripts/long-run.js` (`npm run long-run [years] [--seed n] [--trace]`): the world alone, every invariant every day, and no negative money, no holding flipping within a day, no event loop, no realm past half the land; a yearly line of day time, save size, realms, wars and forts. `tests/slow/long-run.test.js` plays 10 years. Built on a one-year slice first (6 minutes).
+- **The night run** (the owner, 2026-11-25): the browser suite, the slow suite (`battle-parity` 30 seeds, `gate-d-campaigns` 40) and 30 years on seeds 1–3; after the fixes, again. About 4½ hours in all.
+- **Faults found and fixed:** a landless realm's patrols threw (they stand down now); a lord counted in an army he had left (the muster lets go of a member whose party is not the army's); a founder holding a village for the realm he left (given up to the old crown, with a claim); a rising with no land half-ended (the crown's win). Each has a test that fails without it.
+- **Runaway realms** (one realm took all the land on two seeds of three): overstretched past a quarter of the land, a realm's sieges need more to begin and no garrison surrenders to it for hopeless odds; you too. Two tries: past half the land on seed 2 from year 4 to year 19; seed 1 never past 48%; seed 3 still in year 9. The rest is P10-T's.
+- **Three times faster:** terrain lookups rebuilt every road since 4.2.0 (`happenings-bots` took 117 s against 50); the roads are kept and far ones skipped, and the terrain is the same at all 461,648 points checked.
+- **Flakes made steady:** the tourney bout (the weary opponent no longer raises a shield) and the `lords` ransom cases (the beaten lord no longer dies of his wounds in the setup).
+- **Checks:** 888 fast pass; lint clean but the 2 old warnings; typecheck clean. Browser 244 passed, 9 skipped. Slow 14 of 22; the rest recorded for P10-T: siege defence under the odds (−7.7 at 40 seeds), the Phase 7 exit's money on seed 2 (316; passes at 4.1.0), `landed`, the Phase 8 and 9 exits, Prototypes D and F. `docs/PHASE-9-VALIDATION.md` has the numbers.
 
 ### P10-01 · Map speed and the Wait screen (M) — ✅ Done in 4.1.0
 

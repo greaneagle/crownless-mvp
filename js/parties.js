@@ -107,8 +107,14 @@
 
   /** Keep each template at its target count once its respawn timer has passed. */
   function ensure(c, ignoreTimers = false) {
+    // P10-00 (the long run): a realm that holds nothing has no patrols; theirs stand down, and none
+    // muster until it holds land again.
+    const landed = Object.keys(c.holdings || {}).length > 0; // holdings are set up (not a bare test world)
+    const landless = (f) => landed && CL.realm.isRealm(f, c) && !CL.realm.holdings(c, f).length;
+    for (const p of [...c.parties]) if (tpl(p.template)?.kind === 'patrol' && !p.questTag && !p.contractId && !p.eventId && landless(tpl(p.template).faction)) c.parties.splice(c.parties.indexOf(p), 1);
     for (const t of Object.values(CL.content.table('party_templates'))) {
       if (t.kind === 'lord') continue; // one a lord, not a count (js/lords.js)
+      if (t.kind === 'patrol' && landless(t.faction)) continue;
       let active = c.parties.filter((p) => p.template === t.id && !p.contractId && !p.questTag && !p.eventId).length;
       while (active < t.count && (ignoreTimers || now(c) >= (c.partySpawns[t.id] || 0))) {
         const p = spawn(c, t.id);
@@ -296,7 +302,8 @@
           // The border beat, where rival patrols meet (GDD §12 frontier clashes).
           [p.tx, p.ty] = W().clampToMap(f.x + (A().next(c) * 2 - 1) * f.jitter, f.y + (A().next(c) * 2 - 1) * f.jitter, EDGE);
         } else {
-          const s = pick(c, CL.realm.holdings(c, t.faction));
+          // A realm that has just lost its last holding: back to the home fort (ensure stands them down).
+          const s = pick(c, CL.realm.holdings(c, t.faction)) || settlement(t.home);
           [p.tx, p.ty] = [s.mapX, s.mapY];
         }
       }

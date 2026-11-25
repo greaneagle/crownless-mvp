@@ -133,3 +133,34 @@ What changed:
 5. **A faction in your realm:** its warnings, its demands, refuse them, the civil war; deposed or not, the game goes on.
 6. **The Sundered Coast** on a phone (P9-08's open item), and a content pack on a phone (P9-07's).
 7. **SC-34:** a mid-range phone, a large arena with cavalry and reinforcements: frame time and touch.
+
+## P10-00: the night run (4.3.1, 2026-11-25)
+
+The owner asked for it on 2026-11-25, with the long run cut to 30 years ("100 years doesn't make sense") and the rest a little shorter. The long-run tools were built and tried on a one-year slice first. Then, in one go: the full browser suite, the whole slow suite and 30 years of the world alone; then again on the fixed code.
+
+**The long run** (`npm run long-run`, the world alone, every invariant every day, plus no negative money, no holding changing hands back and forth in a day, no endless loop of events, no realm with more than half the land):
+
+| Seed | First run (4.3.0) | Final (4.3.1) |
+|---|---|---|
+| 1 | from day 1721, a lord counted in an army he had left; day 2083, the day threw (a landless realm's patrol) | 30 years, every invariant held; the most land one realm held: 48% |
+| 2 | Hrothmark past half the land on day 1374 (year 4), all of it by day 3854 | every invariant held; Hrothmark past half on day 6726 (year 19), at most 86% |
+| 3 | a founder holding a village for the realm he left (day 3857, and three more later); Aurelia past half on day 3155 | every invariant held; Aurelia past half on day 3155 (year 9), at most 76% |
+
+- The save after 30 years: 178–191 KB (the budget is 4 MB). A day of the world alone: 200–380 ms, falling as the realms fight down to fewer parties.
+- `tests/slow/long-run.test.js` (10 years, seed 1): passes.
+
+**Fixed:** the landless realm's patrols (they stand down), the army muster (a member whose party is not the army's has left it), a founder's village that cannot follow (given up to the old crown, with a claim), a rising that loses all its land (the crown's win), and runaway realms (overstretched past a quarter of the land: sieges need up to 4× more to begin, no surrender for hopeless odds). The world runs three times faster (the roads were rebuilt at every terrain lookup since the coast joined in 4.2.0; terrain the same at all 461,648 points checked).
+
+**The slow suite** (final code): 14 of 22 pass. `gate-d-campaigns` (40 campaigns) passes. Failing, all recorded for P10-T:
+- `battle-parity`, sieges: defending a fort comes out under the odds (−12 at 30 seeds; −7.7 at 40, the test allows −5); attacking +18.7. Not run since 4.0.0's sharper odds.
+- The Phase 7 exit, seed 2: the company ends with 316 crowns (the test wants 500). It passes at 4.1.0; at 4.1.0 seed 3 ends with 461. The bigger world's draws; the bot meets 1–3 world events in 100 days, against 5–6 before the coast.
+- `landed` (a founded realm with one riding lord, seed 1), the Phase 8 and Phase 9 exits, Prototypes D and F: as before.
+- `happenings-bots` failed its 120-second guard only with four long runs beside the suite; alone it takes 36 s (117 s before the speed-up).
+
+**The browser suite:** 244 passed, 9 skipped; the tourney bout ("BOUT LOST") and the `lords` ransom cases made steady (20 of 20 and 10 of 10).
+
+### Open, for P10-T
+
+- **Runaway realms** on two seeds of three, though years later and smaller than before. The overstretch numbers have had their two tries; what else could check a leader (rivals allying against it, unrest in conquered land) is a design choice.
+- Siege balance when defending; the Phase 7 exit's money on seed 2; the known scenario drift.
+- Wars and risings: still few in the world alone (0–5 wars at a year's end).

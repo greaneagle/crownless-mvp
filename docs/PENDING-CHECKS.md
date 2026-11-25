@@ -4,15 +4,13 @@ _The owner's rule (D-P10f, 2026-11-24). A task that needs a run over 20 minutes 
 
 ## Pending
 
-| Added by | Run | Look for | About |
-|---|---|---|---|
-| P9-T | `tests/slow/long-run.test.js` (20 years, built in P10-00) | Every invariant every day; no negative money, ownership collision, endless event loop or runaway realm | 60–90 min |
-| P9-T | `npm run long-run` (100 years, built in P10-00) | The same, over 100 years; save size; time per year | 5–8 h |
-| P9-T | The whole slow suite, `npm run test:slow` | Pass or fail per file. Known failures to record, not fix (P10-T): `landed` (Aurelia's last fort, seed 2; seed 3 before; from 4.2.0 a founded realm with one riding lord, seed 1), `phase8-exit`, `phase9-exit` (from 4.2.0), `prototype-d`, `prototype-f` | 44 min |
-| P9-T | `battle-parity` (in the slow suite) | Fought against Simulate's odds after 4.0.0's sharper big-battle odds | 26 min |
-| P10-02 | `tests/slow/gate-d-campaigns.test.js` | Every quest and ending from a fresh start in the one world, with the coast added (the March itself is unchanged) | 27 min |
-| P9-T | The full browser suite, `npx playwright test` | Pass or fail; known flakes (tourney "BOUT LOST", battle-zoom pinch, ford on the phone, the battle-size spec's slow offer, `lords` Hold about 1 run in 8) | 3–5 min |
+_Nothing pending._
 
 ## Done
 
-_Nothing yet._
+| Ran | What | Result |
+|---|---|---|
+| P10-00, 2026-11-25 (4.3.1) | `npm run long-run` (30 years) on seeds 1–3, about 45–55 min each side by side | Every invariant held, every day, on all three. A runaway realm on seeds 2 and 3 (past half the land in year 19 and year 9). Faults found and fixed: a landless realm's patrols (the day threw), the army muster, a founder's village, a landless rising. `docs/PHASE-9-VALIDATION.md` |
+| P10-00 | `tests/slow/long-run.test.js` (10 years, seed 1), about 20 min | Passes |
+| P10-00 | The whole slow suite (`battle-parity` 30 seeds, `gate-d-campaigns` 40) | 14 of 22 pass. For P10-T: siege defence under the odds; the Phase 7 exit's money (seed 2); `landed`, the Phase 8 and 9 exits, Prototypes D and F as before |
+| P10-00 | The full browser suite | 244 passed, 9 skipped; the tourney and `lords` flakes fixed |

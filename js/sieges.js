@@ -15,6 +15,10 @@
  *   walls), less 0.3 with a ram. Won, the fort falls; lost, the besiegers lose two in five and lift.
  * - **Surrender:** at no food, or when the odds are hopeless (90% against them), the garrison walks
  *   out and the castellan goes free.
+ * - **Overstretched** (P10-00, the long run: one realm took nearly all the land in ten years, most of it
+ *   by surrender): a realm controlling more than a quarter of the land needs more to begin a siege
+ *   (×(1 + 3 × how far past a quarter, of the rest)), and no garrison surrenders to it for hopeless odds,
+ *   only for hunger. You, ruling a realm, too.
  * - **Relief:** the defending realm's free lords within reach ride in; when they arrive the two sides
  *   fight it out (by power, as off-screen battles), and beaten besiegers lift.
  * - **Lifted** when the war ends, when the besiegers' power falls below the garrison's, after 20 days, or
@@ -54,6 +58,7 @@
     camp: 2.5, // map units: where the besiegers sit
     logMax: 12,
     playerRep: -25, // an independent besieging a realm: as attacking a lord (P8-01)
+    overstretch: { from: 1 / 4, gather: 3 }, // P10-00: past a quarter of the land, sieges are harder
   };
 
   const R = () => CL.realm;
@@ -226,6 +231,20 @@
     if (h.kind === 'town') return Object.values(c.holdings).filter((x) => x.kind !== 'village' && x.controller === h.controller).length <= 1;
     return Object.values(c.holdings).filter((x) => x.kind === 'fort' && x.controller === h.controller).length <= 1;
   }
+
+  /**
+   * P10-00: how overstretched realm f is: 0 up to a quarter of the land, rising to 1 when it holds it all.
+   * Holdings of every kind count, villages too.
+   */
+  function stretch(c, f) {
+    const all = Object.values(c.holdings || {});
+    if (!f || !all.length) return 0;
+    const share = all.filter((h) => h.controller === f).length / all.length;
+    const { from } = RULES.overstretch;
+    return Math.max(0, (share - from) / (1 - from));
+  }
+  /** P10-00: what realm f's siege power must be, as a multiple of the garrison's, to begin. */
+  const gatherNeed = (c, f, last) => (last ? RULES.lastFortRatio : RULES.gatherRatio) * (1 + RULES.overstretch.gather * stretch(c, f));
 
   /** End a siege: its lords go home to refill (lifted, taken or surrendered). */
   function end(c, s, how, ctx = {}) {
@@ -463,7 +482,7 @@
       const there = s.lords.map((pid) => CL.lords.partyOf(c, pid)).filter((q) => q && near(c, q, s.sid));
       // A realm's last fort is harder to besiege: twice its garrison's power, not 1.5× (§20.7).
       const last = lastHeld(c, s.sid);
-      if (attack(c, s) >= (last ? RULES.lastFortRatio : RULES.gatherRatio) * defence(c, s).raw && there.length >= RULES.minLords) {
+      if (attack(c, s) >= gatherNeed(c, s.realm, last) * defence(c, s).raw && there.length >= RULES.minLords) {
         s.phase = 'encircled';
         s.began = c.day;
         log(s, c.day, `${placeName(s.sid)} is encircled.`);
@@ -487,7 +506,9 @@
     // (only hunger), and its besiegers wait for the ram and better odds, so the relief can come.
     const o = A().winChance(attack(c, s), defence(c, s).power, true);
     const lastFort = lastHeld(c, s.sid);
-    if (h.food <= 0 || (!lastFort && c.day - s.began >= RULES.ladders && o >= RULES.hopeless)) {
+    // P10-00: nor to an overstretched realm: they hold out while the food lasts.
+    const yields = !lastFort && !(stretch(c, s.realm) > 0);
+    if (h.food <= 0 || (yields && c.day - s.began >= RULES.ladders && o >= RULES.hopeless)) {
       log(s, c.day, `${placeName(s.sid)} surrenders.`);
       return take(c, s, 'surrendered');
     }
@@ -584,5 +605,5 @@
     s.siegePlanned = Number.isInteger(d?.siegePlanned) ? d.siegePlanned : null;
   }
 
-  CL.sieges = { RULES, list, at, shut, of, defence, attack, odds, foodDays, preview, begin, plan, byArmy, lastHeld, end, take, assault, playerAssault, prepared, storm, defend, lift, callRelief, relieve, step, postFor, sanitize };
+  CL.sieges = { RULES, stretch, gatherNeed, list, at, shut, of, defence, attack, odds, foodDays, preview, begin, plan, byArmy, lastHeld, end, take, assault, playerAssault, prepared, storm, defend, lift, callRelief, relieve, step, postFor, sanitize };
 })(typeof window !== 'undefined' ? window : globalThis);
