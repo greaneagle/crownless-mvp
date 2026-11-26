@@ -26,7 +26,7 @@ const { spread } = require(path.join(ROOT, 'scripts/parity'));
 
 const PILOTS = ['masher', 'timer', 'turtle'];
 const OPPONENTS = ['looter', 'footman', 'huscarl'];
-const WEAPONS = ['worn_sword', 'hand_axe', 'arming_sword', 'war_mace', 'knights_sword'];
+const WEAPONS = ['worn_sword', 'hand_axe', 'arming_sword', 'war_mace', 'knights_sword', 'ash_spear', 'great_sword', 'great_axe']; // P11-05: the new three
 /** The three armour sets, each with a shield (the turtle needs one). */
 const ARMOUR = {
   light: { offhand: 'oak_shield', head: null, body: 'clothing', hands: null, feet: 'boots' },
@@ -44,6 +44,10 @@ function game(seed, weapon, armour) {
   c.roster = [];
   c.companions = c.companions || {};
   Object.assign(c.equipment, { weapon, ...ARMOUR[armour] });
+  // P11-05: what the weapon needs (P11-03), given, so each weapon is measured in the hand (a lab).
+  const r = CL.gear.reqOf(weapon) || {};
+  for (const a of ['str', 'agi']) if (r[a]) c.character.attributes[a] = Math.max(c.character.attributes[a], r[a]);
+  for (const [k, v] of Object.entries(r.skills || {})) c.character.skills[k] = Math.max(c.character.skills[k] || 0, v);
   return CL;
 }
 

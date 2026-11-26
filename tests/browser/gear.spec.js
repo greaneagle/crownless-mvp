@@ -131,7 +131,7 @@ test('a requirement on the sheet: kept though not met, what points would unlock,
   await expect(page.locator('#sheetStats')).not.toContainText('Your points would unlock');
   // What each skill does, folded away.
   await press(page, page.locator('#sheetStats .statHelp summary'));
-  await expect(page.locator('#sheetStats .statHelp')).toContainText('Two-Handed: From 5.5.0');
+  await expect(page.locator('#sheetStats .statHelp')).toContainText('Two-Handed: +3% damage and a little quicker recovery');
 });
 
 test('in battle: SWITCH (Q) brings the second weapon to hand, the shield slung, and back', async ({ page }) => {
@@ -146,14 +146,14 @@ test('in battle: SWITCH (Q) brings the second weapon to hand, the shield slung, 
   await expect(sw).toBeVisible();
   await expect(sw).toHaveAttribute('aria-label', 'Switch to Test Greatsword (Q)');
   await expect(page.locator('#blockBtn')).toBeEnabled();
-  const state = () => game(page, (CL) => ({ which: CL.game.loadout.which, family: CL.game.hero.profile.family, block: CL.game.hero.canBlock, switching: Boolean(CL.game.loadout.switching) }));
+  const state = () => game(page, (CL) => ({ which: CL.game.loadout.which, family: CL.game.hero.profile.family, block: CL.game.hero.canBlock, guard: CL.game.hero.guardKind, switching: Boolean(CL.game.loadout.switching) }));
   if (isTouch(page)) await press(page, sw);
   else await page.keyboard.press('KeyQ');
-  await expect.poll(state).toEqual({ which: 'secondary', family: 'greatsword', block: false, switching: false });
-  await expect(page.locator('#blockBtn')).toBeDisabled(); // both hands: no block
+  await expect.poll(state).toEqual({ which: 'secondary', family: 'greatsword', block: false, guard: 'weapon', switching: false });
+  await expect(page.locator('#blockBtn')).toBeEnabled(); // P11-05: both hands: no shield, but the weapon guards
   await expect(sw).toHaveAttribute('aria-label', /^Switch to /);
   if (isTouch(page)) await press(page, sw);
   else await page.keyboard.press('KeyQ');
-  await expect.poll(state).toEqual({ which: 'primary', family: await game(page, (CL) => CL.content.item(CL.campaign.equipment.weapon).family), block: true, switching: false });
+  await expect.poll(state).toEqual({ which: 'primary', family: await game(page, (CL) => CL.content.item(CL.campaign.equipment.weapon).family), block: true, guard: 'shield', switching: false });
   await expect(page.locator('#blockBtn')).toBeEnabled();
 });

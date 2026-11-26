@@ -145,11 +145,16 @@
       if (P.shot > 0.2) P.draw = 0;
     }
     P.hit = u.flash > 0 ? Math.min(1, u.flash / 0.14) : 0;
+    // P11-05: a shield under pressure, a broken guard, a stagger.
+    const g = CL.game;
+    if (u.press) P.press = Math.min(1, u.press / ((CL.combat?.SHIELD?.capacity || 4) * (1 + (CL.combat?.SHIELD?.skill || 0) * (u.profile?.shieldSkill || 0))));
+    if ((u.guardBrokenUntil ?? -1) > g.t) P.broken = true;
+    if (u.staggeredAt != null && g.t - u.staggeredAt < 0.35) P.stagger = 1 - (g.t - u.staggeredAt) / 0.35;
     return P;
   }
 
   /** Can this pose be a baked frame (nothing in it but standing or walking)? */
-  const still = (P) => !P.atk && !P.guard && !P.hit && !(P.draw > 0.05) && !(P.shot > 0);
+  const still = (P) => !P.atk && !P.guard && !P.hit && !(P.draw > 0.05) && !(P.shot > 0) && !P.broken && !P.stagger;
 
   /** Draw a unit's body (figure, or horse and rider) at 0,0 in the current transform. */
   function body(ctx, u, L, P) {
@@ -182,9 +187,9 @@
     const face = cav && (u.face === 'up' || u.face === 'down') ? `${u.face}${P.hface}` : u.face;
     const kq = Math.round(k * 10) / 10;
     const q = (v) => Math.min(ACT_FRAMES - 1, Math.floor(v * ACT_FRAMES));
-    const pose = act ? `${P.atk ? `${P.atk.phase}${q(P.atk.k)}` : ''}${P.guard ? 'g' : ''}${P.draw > 0.05 ? `d${q(P.draw)}` : ''}${P.shot > 0 ? 's' : ''}` : '';
+    const pose = act ? `${P.atk ? `${P.atk.phase}${q(P.atk.k)}` : ''}${P.guard ? 'g' : ''}${P.draw > 0.05 ? `d${q(P.draw)}` : ''}${P.shot > 0 ? 's' : ''}${P.broken ? 'b' : ''}` : '';
     const key = `u:${L.key}|${face}|${step}|${u.team}|${pose}|${kq}`;
-    const Qa = act ? { atk: P.atk ? { phase: P.atk.phase, k: (q(P.atk.k) + 0.5) / ACT_FRAMES } : null, guard: P.guard, draw: P.draw > 0.05 ? (q(P.draw) + 0.5) / ACT_FRAMES : 0, shot: P.shot > 0 ? 0.6 : 0 } : {};
+    const Qa = act ? { atk: P.atk ? { phase: P.atk.phase, k: (q(P.atk.k) + 0.5) / ACT_FRAMES } : null, guard: P.guard, draw: P.draw > 0.05 ? (q(P.draw) + 0.5) / ACT_FRAMES : 0, shot: P.shot > 0 ? 0.6 : 0, broken: P.broken, press: 0, stagger: 0 } : {};
     const [w, h, ox, oy] = cav ? [52, 70, 26, 62] : [40, 58, 20, 50];
     const img = G.cached(key, kq, w * FIG, h * FIG, ox * FIG, oy * FIG, (c) => {
       ring(c, u);
@@ -207,6 +212,7 @@
     const L = lookOf(B, u);
     const tr = B.track.get(u);
     const P = poseOf(u, tr, t, reduced);
+    P.reducedGlint = reduced; // the glint goes with Reduced effects (the windup pose still reads)
     const busy = CL.render?.busyBattle?.();
     if (busy) P.reduced = true; // no blade trail in a big battle
     const y = u.y + 5;
@@ -218,8 +224,39 @@
       body(ctx, u, L, P);
       if (L.lord) pennant(ctx, u, t);
     }
+    if (P.atk?.phase === 'windup' && !P.reducedGlint && glints(B, u)) glint(ctx, L, P, P.atk.k);
     ctx.restore();
     marks(ctx, u, y);
+  }
+
+  /** P11-05: does this fighter's windup get the glint: aimed at the hero, or the hero's opponent? */
+  function glints(B, u) {
+    const h = B.g.hero;
+    if (!h?.alive || u.team === h.team) return false;
+    return u.target === h || B.heroFoe === u;
+  }
+
+  /** A small four-pointed glint at the weapon's tip: a shape, not a colour (it grows to the strike). */
+  function glint(ctx, L, P, k) {
+    const tip = G.fig.weaponTip(L, P);
+    if (!tip) return;
+    const s = FIG * (L.scale || 1);
+    const r = 2 + 2.5 * k;
+    ctx.save();
+    ctx.translate(tip.x * s, tip.y * s);
+    ctx.beginPath();
+    for (let i = 0; i < 8; i++) {
+      const a = (i * Math.PI) / 4;
+      const d = i % 2 ? r * 0.3 : r;
+      ctx.lineTo(Math.cos(a) * d, Math.sin(a) * d);
+    }
+    ctx.closePath();
+    ctx.fillStyle = '#fffbe8';
+    ctx.strokeStyle = 'rgba(40,30,20,0.7)';
+    ctx.lineWidth = 0.8;
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
   }
 
   /** A lord's pennant on a staff behind them (P8-01's lords in person). */
@@ -607,7 +644,7 @@
     for (const e of list) {
       if (!seen(e.x, e.y, 60)) continue;
       if (only && e.kind !== only) continue;
-      const life = e.life || (e.kind === 'hit' ? 0.35 : e.kind === 'rally' ? 0.6 : 0.2);
+      const life = e.life || { hit: 0.35, rally: 0.6, whiff: 0.3, break: 0.45, stagger: 0.35 }[e.kind] || 0.2;
       const k = 1 - Math.max(0, e.t) / life;
       ctx.save();
       ctx.translate(e.x, e.y);
@@ -632,6 +669,34 @@
         ctx.fillStyle = '#ffffff';
         ellipse(ctx, 0, -9 - k * 5, 2.2, 2.2);
         ctx.fill();
+      } else if (e.kind === 'whiff') {
+        // P11-05: a small dust arc where the swing cut empty air.
+        ctx.globalAlpha = 0.55 * (1 - k);
+        ctx.strokeStyle = '#e8dcc0';
+        ctx.lineWidth = 2;
+        const f = { right: 0, down: Math.PI / 2, left: Math.PI, up: -Math.PI / 2 }[e.face] ?? 0;
+        ctx.beginPath();
+        ctx.arc(0, 0, 14 + k * 6, f - 0.7, f + 0.7);
+        ctx.stroke();
+      } else if (e.kind === 'break') {
+        // A broken guard: the shield's arc split, two shards falling.
+        ctx.globalAlpha = 1 - k;
+        ctx.strokeStyle = '#e4eef6';
+        ctx.lineWidth = 2.6;
+        ctx.beginPath();
+        ctx.arc(-2 - k * 4, k * 6, 10, -2.4, -1.65);
+        ctx.moveTo(2 + k * 4, k * 6);
+        ctx.arc(2 + k * 4, k * 6, 10, -1.45, -0.7);
+        ctx.stroke();
+      } else if (e.kind === 'stagger') {
+        // A stagger: three short marks wheeling over the head.
+        ctx.globalAlpha = 1 - k;
+        ctx.fillStyle = '#efe4c4';
+        for (let i = 0; i < 3; i++) {
+          const a = k * 4 + (i * Math.PI * 2) / 3;
+          ellipse(ctx, Math.cos(a) * 7, Math.sin(a) * 2.5, 1.6, 1.6);
+          ctx.fill();
+        }
       } else if (e.kind === 'thunk') {
         ctx.globalAlpha = 0.5 * (1 - k);
         ellipse(ctx, 0, 0, 4 + k * 6, 2 + k * 3);
@@ -646,6 +711,20 @@
       }
       ctx.restore();
     }
+  }
+
+  /** P11-05: the enemy the hero is facing and close to (for the glint). */
+  function heroFoe(g) {
+    const h = g.hero;
+    if (!h?.alive) return null;
+    let best = null;
+    let bd = 110;
+    for (const e of g.enemies) {
+      if (!e.alive) continue;
+      const d = Math.hypot(e.x - h.x, e.y - h.y);
+      if (d < bd && CL.units.inArc(h, e, CL.units.ARC.block)) [best, bd] = [e, d];
+    }
+    return best;
   }
 
   // ---- The whole field, from js/render.js ----
@@ -663,6 +742,7 @@
     const chars = [...g.allies, ...g.enemies];
     if (g.hero) chars.push(g.hero);
     track(B, chars, reduced, busy);
+    B.heroFoe = heroFoe(g);
     ground(ctx, g.battleMap, v, t);
     siegeworks(ctx, g, seen);
     for (const p of B.dust) {
@@ -738,5 +818,5 @@
     return img;
   }
 
-  G.battle = { FIG, TEAM, water, draw, unit, fallen, ground, obstacle, arrows, effects, miniature, lookOf: (u) => lookOf(state(CL.game), u), lookCount: () => (battle && battle.g === CL.game ? battle.lookCount || 0 : 0), sides, baseOf, lookName };
+  G.battle = { poseOf: (u) => poseOf(u, battle?.track.get(u), 0, false), FIG, TEAM, water, draw, unit, fallen, ground, obstacle, arrows, effects, miniature, lookOf: (u) => lookOf(state(CL.game), u), lookCount: () => (battle && battle.g === CL.game ? battle.lookCount || 0 : 0), sides, baseOf, lookName };
 })(typeof window !== 'undefined' ? window : globalThis);

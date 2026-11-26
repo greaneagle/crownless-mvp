@@ -47,16 +47,34 @@
    * @param {Unit} u @param {Unit[]} opponents
    */
   function shouldGuard(u, opponents) {
-    if (!u.alive || !hasShield(u) || CL.units.isCommitted(u)) return false;
+    // P11-05: not during its own swing at all: its recovery (longer after a whiff) is the opening a
+    // patient fighter strikes into (docs/PHASE-11-PLAN.md §10.2).
+    if (!u.alive || !hasShield(u) || u.swing) {
+      u.threatSince = null;
+      return false;
+    }
+    let threat = false;
     for (const o of opponents) {
       if (!o?.alive || !o.swing || o.ranged) continue;
       const phase = CL.units.swingPhase(o);
       if (phase !== 'windup' && phase !== 'active') continue;
       if (Math.hypot(o.x - u.x, o.y - u.y) > o.reach * SHIELD_LOOKOUT) continue;
       if (!CL.units.inArc(o, u, CL.profile.arcOf(o))) continue; // not aimed at us (the cone of its blow, from its profile)
-      if (CL.units.inArc(u, o, CL.units.ARC.block)) return true; // in front: raise it
+      if (CL.units.inArc(u, o, CL.units.ARC.block)) {
+        threat = true; // in front: raise it
+        break;
+      }
     }
-    return false;
+    // P11-05: honestly: the shield comes up a reaction after the threat is seen (by tier; P11-10 by
+    // style), never in the same frame; it stays up while the threat lasts.
+    const t = CL.game?.t ?? 0;
+    if (!threat) {
+      u.threatSince = null;
+      return false;
+    }
+    if (u.threatSince == null) u.threatSince = t;
+    const delay = CL.combat?.GUARD_DELAY?.[CL.content.table('troops')[u.troop]?.tier] ?? CL.combat?.GUARD_DELAY?.T2 ?? 0.22;
+    return t - u.threatSince >= delay - 1e-9;
   }
 
   /**

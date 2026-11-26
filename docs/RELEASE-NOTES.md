@@ -1,5 +1,30 @@
 # Crownless — Release Notes
 
+## v5.5.0 — Melee rhythm and defence (P11-05) · 2026-11-26
+
+How you fight now matters. Every weapon has its own rhythm, a miss costs time, shields can be worn down, and the hero fights on the same body rules as everyone else. This is milestone M1, "The weapon in your hand", for the owner to play.
+
+### New
+- **Each weapon fights differently.** A sword is quick and catches up to three in front of you; an axe and a mace are shorter and slower, the axe wears shields down and the mace interrupts; a greatsword reaches further, sweeps wide and recovers slowly; a greataxe hits hardest and slowest; a spear reaches furthest with a narrow thrust.
+- **New weapons:** the **Ash Spear** (in every town, a shield allowed), the **Greatsword** and the **Greataxe** (in the bigger towns; Strength 7 and Two-Handed 1). The greatsword can also turn up as loot.
+- **A miss costs time:** a swing at nobody recovers longer, so a held Attack gives a patient foe openings. "Missed" or "Out of reach" says so.
+- **Interruptions within limits:** a heavy blow that lands in someone's windup interrupts it, but nobody can be interrupted twice in quick succession, and repeated hits push less each time.
+- **Shields wear down.** Every blocked blow presses a shield; enough break the guard and lower it for a moment ("Your guard is broken!"). The **Shield** skill now works: more before it breaks, quicker recovery, a little wider.
+- **Weapon guard:** with a two-handed weapon or a spear and no shield, Block raises the weapon and takes part of a frontal blow.
+- **Honest soldiers:** shield troops raise their shields a moment after they see a blow coming (quicker the better they are), and never while recovering from their own swing.
+- **You are one of them (D-P11d):** your reach and attack rate are your weapon's, your walking pace your own (Agility helps; mail slows a little, until 5.6.0 weighs your load). One-Handed, Two-Handed and Polearm train their weapons: more damage and a slightly quicker recovery.
+- **Feedback:** a glint on a weapon tip wound up at you, a dust arc for a miss, a split arc for a broken guard, marks for a stagger, and sounds for each. How to Play → **Fighting**; two hints the first time you miss and break a guard.
+- **Timed parry, an experiment** (Settings, off by default; D-P11j): Block raised just before a blow lands turns it aside and opens the attacker. It stays only if the owner likes it.
+
+### Changed
+- **Battles play differently** (on purpose): the golden battles are recorded again. Measured (40 seeds): fought by a button-masher, 6 to 21 points over the stated odds (the outnumbered company +6, was +16); a fighter who strikes into openings beats footmen, huscarls and legionaries without a scratch and wins the lists; the masher wins the first two rounds and loses the final.
+- One-Handed now trains only swords, axes and maces.
+
+### Under the hood
+- `data/weapons.js`: each melee family's windup, active and recovery, `miss`, `maxTargets`, `stagger`, `poise`, `shieldPressure`, `knockback`, `moveDuringAttack`, `guard`, `skill` and `skillRecovery`; one cooldown for the hero and everyone. `data/character.js` `body`: the hero's pace. The bounds are checked for packs too.
+- `js/combat.js`: the whiff, targets nearest first, stagger, knockback, shield pressure, the weapon guard and the parry. `js/groups.js`: the guard's reaction. The tap buffer is measured to when you're next ready.
+- `tests/melee.test.js` (13). The simulation at 200 fighters: 3.47 ms a frame (P11-00 3.19, +9%).
+
 ## v5.4.0 — The equipment you see (P11-04) · 2026-11-26
 
 The hero now looks like what they carry, everywhere. Nothing about how battles play changed.

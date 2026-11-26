@@ -4,7 +4,9 @@
  * troop's weapon reference that overrides it, and the wielder (a troop, the hero, a companion; a lord in
  * person or a tournament fighter scale it). The simulation, the AI, the art and the auto-resolve read
  * the profile; nothing else holds a swing's timing, a cooldown or a blow's arc.
- * In 5.1.0 every profile reproduces 5.0.0's numbers exactly. Pure logic, no DOM. */
+ * In 5.1.0 every profile reproduced 5.0.0's numbers exactly. P11-05 (5.5.0): each family's rhythm, a
+ * whiff's cost, the targets a blow strikes, stagger and poise, shield pressure, knockback, the guard, and
+ * the hero's body from the weapon in hand and data/character.js `body` (D-P11d). Pure logic, no DOM. */
 (function (root) {
   'use strict';
   const CL = root.Crownless;
@@ -68,6 +70,15 @@
       hands: pick('hands'),
       timing: { windup, active, recovery, total: windup + active + recovery },
       miss: pick('miss'),
+      // P11-05: interruption, shields, the push, moving while committed, the guard and the skill.
+      stagger: pick('stagger') ?? 1,
+      poise: pick('poise') ?? 1,
+      shieldPressure: pick('shieldPressure') ?? 1,
+      knockback: pick('knockback') ?? 6,
+      moveDuringAttack: pick('moveDuringAttack') ?? 1,
+      guardKind: pick('guard') || 'none',
+      skill: pick('skill') || null,
+      skillRecovery: pick('skillRecovery') || 0,
       // 90° is cos(π/4) exactly as 5.0.0's ARC.attack (not cos of 45° in degrees, which differs in the last bit).
       arc: arcDeg === 90 ? DEFAULT_ARC : Math.cos(((arcDeg / 2) * Math.PI) / 180),
       maxTargets: pick('maxTargets') || Infinity,
@@ -98,29 +109,43 @@
       const w = weaponOf(troopWeapon(t));
       const part = weaponPart(w.family, w.item);
       // A troop's own damage, reach and shot override the family (P11-11 moves troops onto profiles).
-      p = { ...part, hp: t.hp, maxhp: t.hp, damage: t.damage, armor: t.armor, speed: t.speed, reach: t.reach, ranged: t.ranged || null, canBlock: Boolean(t.shield) };
+      p = { ...part, hp: t.hp, maxhp: t.hp, damage: t.damage, armor: t.armor, speed: t.speed, reach: t.reach, ranged: t.ranged || null, canBlock: Boolean(t.shield), guardKind: t.shield ? 'shield' : 'none' };
     } else if (source.hero) {
       const c = source.hero;
       const eq = source.equipment;
-      const body = CL.content.troop('hero');
       const w = weaponOf(eq?.weapon || null);
       const part = weaponPart(w.family, w.item);
       const H = CL.character;
       const shield = eq?.offhand ? CL.content.item(eq.offhand) : null;
       const hp = 60 + 5 * H.attribute('str', c);
       const baseDamage = w.item ? w.item.stats.damage : H.UNARMED_DAMAGE;
+      // P11-05: the weapon's own skill trains it: +3% damage a point (One-Handed did for every weapon),
+      // and a little less recovery (the family's skillRecovery a point, at most a third).
+      const trained = part.skill ? H.skill(part.skill, c) : 0;
+      const quicker = Math.min(part.timing.recovery / 3, part.timing.recovery * part.skillRecovery * trained);
+      const timing = { ...part.timing, recovery: part.timing.recovery - quicker, total: part.timing.total - quicker };
+      const cd = Math.max(timing.total, part.cooldown.hero - quicker);
+      const canBlock = Boolean(shield?.stats.block);
       p = {
         ...part,
+        timing,
+        cooldown: { hero: cd, ai: cd },
         hp,
         maxhp: hp,
-        damage: baseDamage * (1 + H.SKILL_DAMAGE * H.skill('one_handed', c)),
+        damage: baseDamage * (1 + H.SKILL_DAMAGE * trained),
         armor: H.equippedItems(c, eq).reduce((sum, it) => sum + (it.stats.armor || 0), 0),
-        speed: body.speed,
-        reach: body.reach,
+        // D-P11d: the body is the hero's own, not the `hero` troop's: reach from the weapon, speed from a
+        // walking pace, Agility and (until P11-06's load) the armour's class.
+        speed: heroSpeed(c, eq),
+        reach: part.familyReach,
         ranged: null,
-        canBlock: Boolean(shield?.stats.block),
+        canBlock,
+        guardKind: canBlock ? 'shield' : part.guardKind === 'weapon' ? 'weapon' : 'none',
+        // The Shield skill: more a shield takes before it breaks, a quicker recovery, a little wider.
+        shieldSkill: H.skill('shield', c),
       };
     } else if (source.companion) {
+      // (A companion keeps their own body: data/companions.js; their guard is none, as before.)
       const d = source.companion;
       const eq = source.equipment || {};
       const item = (slot) => (eq[slot] ? CL.content.item(eq[slot]) : null);
@@ -128,13 +153,26 @@
       const w = weaponOf(eq.weapon || null);
       const part = weaponPart(w.family, w.item);
       const armor = d.armor + d.gearSlots.reduce((sum, slot) => sum + (item(slot)?.stats.armor || 0), 0);
-      p = { ...part, hp: d.hp, maxhp: d.hp, damage: weapon ? weapon.stats.damage * d.weaponFactor : d.unarmedDamage, armor, speed: d.speed, reach: d.reach, ranged: null, canBlock: false };
+      p = { ...part, hp: d.hp, maxhp: d.hp, damage: weapon ? weapon.stats.damage * d.weaponFactor : d.unarmedDamage, armor, speed: d.speed, reach: d.reach, ranged: null, canBlock: false, guardKind: 'none' };
     } else throw new Error('A profile needs a troop, the hero or a companion');
     if (ctx.leader) Object.assign(p, { hp: Math.round(p.hp * ctx.leader.hp), maxhp: Math.round(p.maxhp * ctx.leader.hp), damage: p.damage * ctx.leader.damage });
     if (ctx.duel) Object.assign(p, { hp: ctx.duel.hp, maxhp: ctx.duel.hp, damage: ctx.duel.damage, armor: ctx.duel.armor });
     delete p.familyReach;
     delete p.familyRanged;
     return p;
+  }
+
+  /**
+   * P11-05 (D-P11d): the hero's walking speed: data/character.js `body`'s pace, Agility's share a point
+   * above 5, and the body armour's class (a placeholder P11-06 replaces with the load). @param {any} c @param {any} eq
+   */
+  function heroSpeed(c, eq) {
+    const B = CL.content.table('body');
+    const agi = CL.character.attribute('agi', c) - 5;
+    const it = eq?.body ? CL.content.table('items')[eq.body] : null;
+    const look = it ? (it.forgedFrom ? CL.content.table('items')[it.forgedFrom] : it)?.look : null;
+    const cls = look?.armour || (it ? ['cloth', 'gambeson', 'leather', 'mail'][Math.min(3, it.tier || 1)] : 'cloth');
+    return (B.speed || 100) * (1 + (B.agility || 0) * agi) * (B.armour?.[cls] ?? 1);
   }
 
   /** The body and weapon numbers a profile puts on a unit (what combat reads off the unit). */
@@ -164,7 +202,7 @@
     const t = u.swing.t;
     if (t < T.windup) return 'windup';
     if (t < T.windup + T.active) return 'active';
-    if (t < T.total) return 'recovery';
+    if (t < T.total + (u.swing.miss || 0)) return 'recovery'; // P11-05: a whiff recovers longer
     return null;
   }
 
@@ -177,7 +215,7 @@
     if (!ph) return null;
     const T = timingOf(u);
     const st = u.swing.t;
-    const k = ph === 'windup' ? st / T.windup : ph === 'active' ? (st - T.windup) / T.active : (st - T.windup - T.active) / T.recovery;
+    const k = ph === 'windup' ? st / T.windup : ph === 'active' ? (st - T.windup) / T.active : (st - T.windup - T.active) / (T.recovery + (u.swing.miss || 0));
     return { phase: ph, k: Math.max(0, Math.min(1, k)) };
   }
 
@@ -196,5 +234,5 @@
   /** How close a melee fighter must be to strike: just inside its reach. @param {any} u */
   const strikeRange = (u) => u.reach - 1;
 
-  CL.profile = { SWORD, DEFAULT_TIMING, DEFAULT_COOLDOWN, LOOK_FAMILY, UNIT_FIELDS, familyOfLook, troopWeapon, weaponOf, resolve, apply, of, timingOf, phaseOf, attackProgress, cooldownOf, arcOf, targetsOf, strikeRange };
+  CL.profile = { heroSpeed, SWORD, DEFAULT_TIMING, DEFAULT_COOLDOWN, LOOK_FAMILY, UNIT_FIELDS, familyOfLook, troopWeapon, weaponOf, resolve, apply, of, timingOf, phaseOf, attackProgress, cooldownOf, arcOf, targetsOf, strikeRange };
 })(typeof window !== 'undefined' ? window : globalThis);

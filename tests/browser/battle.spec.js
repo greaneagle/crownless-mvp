@@ -118,6 +118,43 @@ test('Attack swings the sword and a held Block raises the shield', async ({ page
   await page.waitForFunction(() => !window.Crownless.game.blockHeld);
 });
 
+test('P11-05: a swing at nothing says so; a blow is blocked; the greatsword in hand slings the shield', async ({ page }) => {
+  await toFieldBattle(page);
+  // Nobody in reach: a swing is a whiff, and the hero reads it.
+  await press(page, '#attackBtn');
+  await expect(page.locator('#message')).toContainText(/Missed|Out of reach/);
+  expect(await game(page, (CL) => CL.game.whiffed)).toBe(true);
+  // Test setup: a foe winding up right in front of a raised shield.
+  await game(page, (CL) => {
+    const g = CL.game;
+    const h = g.hero;
+    const e = g.enemies[0];
+    Object.assign(e, { x: h.x + 36, y: h.y, face: 'left', swing: null, attackCooldown: 0, aiTimer: 99, target: h });
+    h.face = 'right';
+  });
+  await hold(page, '#blockBtn', async () => {
+    await page.waitForFunction(() => window.Crownless.game.hero.guard);
+    const blocked = await game(page, (CL) => CL.combat.hit(CL.game.hero, 10, CL.game.enemies[0]));
+    expect(blocked).toBe('blocked');
+  });
+  // A greatsword brought to hand: the shield slung on the back, the weapon guarding.
+  await game(page, (CL) => {
+    const c = CL.campaign;
+    c.inventory.great_sword = 1;
+    CL.content.table('items').great_sword.req = {}; // test setup: what it needs, met
+    CL.character.equip('great_sword', c, 'weapon2');
+    CL.gear.begin(CL.game, c, c.equipment, 'primary');
+    CL.ui.gearButtons(); // the SWITCH button shows with a second weapon
+  });
+  if (await game(page, () => matchMedia('(pointer: coarse)').matches)) await press(page, '#switchBtn');
+  else await page.keyboard.press('KeyQ');
+  await expect.poll(() => game(page, (CL) => {
+    const L = CL.gfx.battle.lookOf(CL.game.hero);
+    return [CL.game.hero.profile.family, CL.game.hero.guardKind, L.weapon, L.shield, Boolean(L.shieldBack)];
+  })).toEqual(['greatsword', 'weapon', 'greatsword', null, true]);
+  await expect(page.locator('#blockBtn')).toBeEnabled();
+});
+
 test('the Orders panel picks a group, gives an order and rallies', async ({ page }) => {
   await toFieldBattle(page);
   await press(page, '#ordersBtn');

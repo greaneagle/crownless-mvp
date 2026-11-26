@@ -14,7 +14,7 @@ const { spread } = require('../scripts/parity');
 const want = JSON.parse(fs.readFileSync(PROFILES, 'utf8'));
 const plain = (v) => JSON.parse(JSON.stringify(v));
 
-test('every family and every weapon resolves, each with 5.0.0 timing for now', () => {
+test('every family and every weapon resolves, each on its own family’s rhythm (P11-05), the hero on everyone’s cooldown', () => {
   const { CL } = loadGame();
   const P = CL.profile;
   const F = CL.content.table('weapon_families');
@@ -26,12 +26,17 @@ test('every family and every weapon resolves, each with 5.0.0 timing for now', (
   const weapons = Object.values(CL.content.table('items')).filter((it) => it.slot === 'weapon');
   assert.ok(weapons.length >= 5);
   for (const it of weapons) {
+    CL.campaign.character.skills = Object.fromEntries(Object.keys(CL.campaign.character.skills).map((k) => [k, 0])); // untrained: the family's own numbers
     const p = P.resolve({ hero: CL.campaign, equipment: { ...CL.campaign.equipment, weapon: it.id } });
+    const f = F[it.family];
     assert.equal(p.family, it.family, it.id);
-    assert.deepEqual(plain(p.timing), plain(P.DEFAULT_TIMING), it.id);
-    assert.deepEqual([p.cooldown.hero, p.cooldown.ai, p.maxTargets, p.miss], [0.52, 0.86, Infinity, 0], it.id);
-    assert.equal(p.arc, Math.cos(Math.PI / 4), it.id);
+    assert.deepEqual(plain(p.timing), { windup: f.windup, active: f.active, recovery: f.recovery, total: f.windup + f.active + f.recovery }, it.id);
+    assert.equal(p.cooldown.hero, p.cooldown.ai, `${it.id}: D-P11d, the hero on the same cooldown as everyone`);
+    assert.deepEqual([p.cooldown.hero, p.maxTargets, p.miss, p.reach], [f.cooldown.hero, f.maxTargets || Infinity, f.miss, f.reach], it.id);
   }
+  // Each melee family has its own rhythm; the bows and the lance keep 5.0.0's sword until their tasks.
+  assert.notDeepEqual([F.sword.windup, F.sword.recovery], [F.greataxe.windup, F.greataxe.recovery]);
+  for (const id of ['shortbow', 'longbow', 'crossbow', 'lance']) assert.deepEqual([F[id].windup, F[id].active, F[id].recovery, F[id].cooldown.ai], [0.16, 0.12, 0.24, 0.86], id);
   assert.deepEqual(plain(P.DEFAULT_TIMING), { windup: 0.16, active: 0.12, recovery: 0.24, total: 0.52 });
   assert.equal(CL.units.SWING, P.DEFAULT_TIMING, 'SWING is only the sword family default');
 });
@@ -109,10 +114,11 @@ test('the art reads a swing through attackProgress, from the unit’s own timing
   const { CL } = loadGame();
   const u = CL.units.makeUnit(0, 0, 'ally', 'footman');
   assert.equal(CL.profile.attackProgress(u), null);
+  // P11-05: the sword's windup 0.16, active 0.12, recovery 0.26.
   for (const [t, phase, k] of [
     [0.08, 'windup', 0.5],
     [0.22, 'active', 0.5],
-    [0.4, 'recovery', 0.5],
+    [0.41, 'recovery', 0.5],
   ]) {
     u.swing = { t, hit: [] };
     const a = CL.profile.attackProgress(u);
@@ -120,8 +126,11 @@ test('the art reads a swing through attackProgress, from the unit’s own timing
     assert.ok(Math.abs(a.k - k) < 1e-9, `${phase} ${a.k}`);
     assert.equal(CL.units.swingPhase(u), phase);
   }
-  u.swing = { t: 0.53, hit: [] };
+  u.swing = { t: 0.55, hit: [] };
   assert.equal(CL.profile.attackProgress(u), null);
+  // A whiff stretches the recovery, and the art reads it.
+  u.swing = { t: 0.55, hit: [], miss: 0.2 };
+  assert.equal(CL.profile.attackProgress(u).phase, 'recovery');
   // A slower weapon (a pack's override) is drawn and fought on its own timing.
   u.profile = { ...u.profile, timing: { windup: 0.4, active: 0.1, recovery: 0.5, total: 1 } };
   u.swing = { t: 0.3, hit: [] };
@@ -145,8 +154,9 @@ test('forged pieces keep their family and their own copy of the combat block', (
   const t = L2.content.table('items');
   assert.deepEqual(plain(t['war_mace+1'].combat), { recovery: 0.3 });
   assert.notEqual(t['war_mace+1'].combat, t.war_mace.combat);
+  L2.campaign.character.skills.one_handed = 0; // untrained: the override as it is
   const q = L2.profile.resolve({ hero: L2.campaign, equipment: { ...L2.campaign.equipment, weapon: 'war_mace+1' } });
-  assert.deepEqual([q.timing.recovery, q.timing.total], [0.3, 0.16 + 0.12 + 0.3]);
+  assert.deepEqual([q.timing.recovery, q.timing.total], [0.3, 0.2 + 0.12 + 0.3]);
 });
 
 test('the content and pack checks cover families, item overrides and troop weapons', () => {
@@ -174,7 +184,11 @@ test('the content and pack checks cover families, item overrides and troop weapo
   one((C) => (C.items.hand_axe.family = 'flail'), /item hand_axe: a weapon needs a known family \(flail\)/);
   one((C) => (C.items.boots.family = 'sword'), /item boots: only a weapon has a family/);
   one((C) => (C.items.war_mace.combat = { windup: -1 }), /item war_mace: combat: bad windup/);
-  one((C) => (C.items.war_mace.combat = { stagger: 1 }), /item war_mace: combat: unknown field stagger/);
+  one((C) => (C.items.war_mace.combat = { wobble: 1 }), /item war_mace: combat: unknown field wobble/);
+  one((C) => (C.items.war_mace.combat = { stagger: 9 }), /item war_mace: combat: bad stagger/); // P11-05: the new fields, in bounds
+  one((C) => (C.weapon_families.axe.windup = 2), /weapon family axe: bad windup/);
+  one((C) => (C.weapon_families.axe.reach = 200), /weapon family axe: bad reach/);
+  one((C) => (C.weapon_families.axe.guard = 'cloak'), /weapon family axe: bad guard/);
   one((C) => delete C.weapon_families.axe.recovery, /weapon family axe: needs recovery/);
   one((C) => (C.weapon_families.axe.hands = 3), /weapon family axe: bad hands/);
   one((C) => (C.weapon_families.axe.look = 'halberd'), /weapon family axe: bad look/);

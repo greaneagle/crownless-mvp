@@ -178,10 +178,11 @@
     const out = [];
     const RULES = {
       hands: (v) => v === 1 || v === 2,
-      reach: (v) => Number.isFinite(v) && v > 0 && v <= 200,
-      windup: (v) => Number.isFinite(v) && v > 0 && v <= 2,
-      active: (v) => Number.isFinite(v) && v > 0 && v <= 2,
-      recovery: (v) => Number.isFinite(v) && v > 0 && v <= 3,
+      reach: (v) => Number.isFinite(v) && v >= 30 && v <= 140,
+      // P11-05: the bounds a family's rhythm keeps (packs too).
+      windup: (v) => Number.isFinite(v) && v >= 0.05 && v <= 1.5,
+      active: (v) => Number.isFinite(v) && v >= 0.05 && v <= 1.5,
+      recovery: (v) => Number.isFinite(v) && v >= 0.05 && v <= 1.5,
       miss: (v) => Number.isFinite(v) && v >= 0 && v <= 2,
       arc: (v) => Number.isFinite(v) && v > 0 && v <= 360,
       maxTargets: (v) => Number.isInteger(v) && v >= 0 && v <= 20,
@@ -190,11 +191,19 @@
       switch: (v) => Number.isFinite(v) && v >= 0 && v <= 3, // P11-02: seconds to bring it to hand
       mounted: (v) => ['yes', 'no', 'penalty'].includes(v), // from horseback (P11-08 sets them)
       armourLimit: (v) => Number.isFinite(v) && v >= 0, // the heaviest armour it works well with (P11-06)
+      stagger: (v) => Number.isFinite(v) && v >= 0 && v <= 5,
+      poise: (v) => Number.isFinite(v) && v >= 0 && v <= 5,
+      shieldPressure: (v) => Number.isFinite(v) && v >= 0 && v <= 10,
+      knockback: (v) => Number.isFinite(v) && v >= 0 && v <= 40,
+      moveDuringAttack: (v) => Number.isFinite(v) && v >= 0 && v <= 1,
+      guard: (v) => ['shield', 'weapon', 'none'].includes(v),
+      skill: (v) => v === null || (typeof v === 'string' && /^[a-z_]+$/.test(v)),
+      skillRecovery: (v) => Number.isFinite(v) && v >= 0 && v <= 0.1,
       look: (v) => v === null || LOOK.weapon.includes(v),
     };
     for (const [k, ok] of Object.entries(RULES)) {
       if (f[k] == null) {
-        if (!partial && !['look', 'mounted', 'armourLimit'].includes(k)) out.push(`${at}: needs ${k}`);
+        if (!partial && !['look', 'mounted', 'armourLimit', 'skill'].includes(k)) out.push(`${at}: needs ${k}`);
         continue;
       }
       if (!ok(f[k])) out.push(`${at}: bad ${k}`);
@@ -418,6 +427,7 @@
       // P11-01: a weapon is of a known family, and its `combat` block overrides that family within range.
       if (it.slot === 'weapon' && !C.weapon_families?.[it.family]) err(`item ${it.id}: a weapon needs a known family (${it.family ?? 'none'})`);
       if (it.family != null && it.slot !== 'weapon') err(`item ${it.id}: only a weapon has a family`);
+      if (C.weapon_families?.[it.id]) err(`item ${it.id}: an item's id can't be a weapon family's (a troop's weapon names either)`); // P11-05
       if (it.combat != null) for (const e of checkCombat(it.combat, `item ${it.id}: combat`, true)) err(e);
       for (const e of checkItemLook(it, C)) err(e); // P11-04
     }

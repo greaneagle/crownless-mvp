@@ -416,6 +416,7 @@
     const p = CL.profile.resolve({ hero: c, equipment: kitFor(c, L.kit, to) });
     CL.profile.apply(h, p, ['damage', 'armor', 'reach', 'speed', 'ranged']); // the body (HP) stays as it is
     h.canBlock = p.canBlock;
+    h.guardKind = p.guardKind; // P11-05: the guard comes with the weapon in hand
     h.attackCooldown = Math.max(0, L.ready[to] - g.t);
     CL.ui.message(`${nameOf(weaponIn(L.kit, to))} in hand`);
     CL.ui.gearButtons?.();

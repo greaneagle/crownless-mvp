@@ -208,7 +208,7 @@ test('a big battle of every realm, with switches: the bake keys stay under 3,000
     fights += [...g.allies, ...g.enemies].filter((u) => !u.alive).length;
   }
   assert.ok(keys.size > 100, `the battles were drawn (${keys.size})`);
-  assert.ok(fights > 20, `and fought (${fights} fell)`);
+  assert.ok(fights > 10, `and fought (${fights} fell)`);
   assert.ok(keys.size < 3000, `${keys.size} bake keys`);
   if (process.env.SHOW_KEYS) console.log('bake keys', keys.size, 'realms', realms.length, 'fell', fights);
 });

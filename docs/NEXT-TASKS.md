@@ -4044,7 +4044,7 @@ The aim: easy to fight, rewarding to fight well, meaningful to command. The play
 | P11-02 | Carried and wielded: loadouts and one gear check | M–L | 5.2.0 | ✅ Done |
 | P11-03 | The progression budget and equipment requirements | M–L | 5.3.0 | ✅ Done |
 | P11-04 | The equipment you see | M–L | 5.4.0 | ✅ Done |
-| P11-05 | Melee rhythm and defence | L | 5.5.0 | Ready |
+| P11-05 | Melee rhythm and defence | L | 5.5.0 | ✅ Done (M1 play to come) |
 | P11-06 | Armour, weight and movement | M | 5.6.0 | Specified |
 | P11-07 | Bows and crossbows in your hands | L | 5.7.0 | Specified |
 | P11-08 | Fighting from the saddle | L | 5.8.0 | Specified |
@@ -4491,7 +4491,7 @@ The aim: easy to fight, rewarding to fight well, meaningful to command. The play
 
 ---
 
-### P11-05 · Melee rhythm and defence (L) — 5.5.0, Ready — **Milestone M1**
+### P11-05 · Melee rhythm and defence (L) — 5.5.0, ✅ Done (the owner's M1 play to come) — **Milestone M1**
 
 **Now.** One timing for every swing; the hero swings every 0.52 s and the AI every 0.86 s; a swing hits every opponent in its cone; a hit pushes 6 px and nothing else; a raised shield stops every frontal blow for ever; the AI raises shields the instant an opponent winds up; the hero's reach (67) and speed (142) out-class nearly every soldier (plan §3). P11-00 measured how much the *timer* and *turtle* pilots gain over the *masher* (little, by the analysis).
 
@@ -4554,6 +4554,22 @@ The aim: easy to fight, rewarding to fight well, meaningful to command. The play
 - **Play:** M1.
 - **Explain:** "Fighting" in How to Play; tips `whiff` and `shieldPressure` (once each).
 - **Not here:** armour weight, bows, horses, AI styles.
+
+**Done (5.5.0).**
+- **D-P11d:** the hero's reach, timing and cooldown are the weapon's (`cooldown.hero` = `cooldown.ai` in every family); speed from `data/character.js` `body` (100 px/s, +2% a point of Agility above 5, a placeholder by armour class: gambeson 98%, leather 96%, mail 92%; `CL.profile.heroSpeed`). The `hero` troop's 142 and 67 are unused.
+- **Families** (`data/weapons.js`, plan §10.2a): sword, axe, mace, greatsword, greataxe, spear, pike and fists each with windup, active, recovery, cooldown, `miss`, `arc`, `maxTargets`, `stagger`, `poise`, `shieldPressure`, `knockback`, `moveDuringAttack`, `guard`, `skill`, `skillRecovery`. The bows, crossbow and lance keep 5.0.0's sword. `checkCombat` bounds the new fields and the timing (0.05–1.5 s) and reach (30–140).
+- **Rules** (`js/combat.js`): the whiff (`swing.miss` stretches the recovery; `phaseOf` and `attackProgress` read it); targets nearest first, the second and later at 70% (`MELEE.second`); stagger over poise in a windup, then 0.3 s without a swing and 0.9 s immune; knockback halving within 1.2 s; shield pressure (capacity 4, 1.5 a second recovery while down, 1 s broken; the Shield skill +10% and a degree each side a point; cover shields are pressed too); the weapon guard (45% through, 90°); `moveDuringAttack` for the hero and the AI. `guardOf`, `blockArc`.
+- **Guard reactions** (`js/groups.js` `shouldGuard`): after 0.2 / 0.13 / 0.1 s by tier, never in the same frame, and never during the unit's own swing (the recovery is the opening). Found by measuring: with the reaction slower than a sword's windup no shield ever blocked; and with the shield allowed in its own recovery, striking into recovery (plan §10.2's counter) was always blocked.
+- **Items:** Ash Spear (`ash_spear`, tier 1, 40), Greatsword (`great_sword`, tier 2, 150, its family's Strength 7 and Two-Handed 1), Greataxe (`great_axe`, tier 2, 140); the spear in every town, the two-handers in the five bigger towns; the greatsword in the high loot table. Their ids differ from the families': an item id equal to a family's was read as the bare family (fists' damage) by `weaponOf`; a content check now refuses it.
+- **Skills:** One-Handed, Two-Handed, Polearm train their own families (+3% damage, 2% less recovery a point, at most a third); fists by none. Texts in `data/character.js`.
+- **Feedback:** "Missed" / "Out of reach", "Blocked", "You broke their guard" / "Your guard is broken!", "You staggered them" / "Interrupted!" (at most every 1.5 s each); effects `whiff`, `break`, `stagger`; sounds `whiff`, `guardBreak`, `stagger` (`js/audio.js`); the glint, a four-pointed star at the weapon tip (`G.fig.weaponTip`) of the hero's current opponent and anyone winding up at the hero, off with Reduced effects. Tips `whiff` and `shieldPressure`; How to Play "Fighting".
+- **Poses:** the weapon guard (raised across the body), a shield pressed back by its pressure, lowered when broken, a stagger's sway; the two-handed grip from P11-04. Broken and staggered poses are never baked as standing frames.
+- **Parry (D-P11j):** setting `parry` (off; Settings → "Timed parry (an experiment)"): Block raised 0.15 s before a blow lands turns it aside and costs the attacker its swing.
+- **The tap buffer:** measured to the hero's next readiness (the swing's end or the cooldown), since a cooldown now outlasts the swing.
+- **Measured** (`docs/PHASE-11-VALIDATION.md` "Melee rhythm"): duels, the lists, the weapons, parity (two tries), `extras.js`, the bench. Duels: every pilot beats the footman, huscarl and legionary (5.0.0: none), the timer unhurt; the lists: the timer is champion every time, the masher wins two rounds and loses the final. Parity (the masher): +14, +11, +21, +21, +6 over the odds (the band held). `extras.js`: every extra still helps; the archer scenarios are harder (the high ground 30 / 20, was 58 / 45). Bench at 200: 3.47 ms (+9%). **The weapon matrix (plan §10.5) isn't met yet:** the axe and the mace lose to none of the five opponents; recorded for P11-10 and P11-11.
+- **Tests:** `tests/melee.test.js` (13). Updated where the numbers were the old shared ones: `combat` (the guard needs a shield kind; knockback from the striker's family; the sword's recovery; nearest first and the second at 70%; the buffer to readiness), `groups` (the reaction delay; no shield in its own recovery), `profile` (each family's timing; the fixtures re-recorded), `pilots` (the turtle against a huscarl), `items` (the tier ladder within a weapon family, plan §6.4), `character` (fists untrained), `battle-share` (the company charges: the band now holds against it), `art-gear`, `settings`; golden battles and fighters re-recorded on 5.5.0 (`node tests/helpers/golden.js --write`). Browser: `battle.spec.js` (+1: a whiff's words, a block, the greatsword slinging the shield), `gear.spec.js` (a two-hander's weapon guard enables BLOCK). `npm test` 1,007 pass; lint and typecheck clean; browser `battle`, `gear`, `tourney`, `extras`, `art` pass.
+- **Not done:** the optional Debug duel practice start. Pike's `minRange` (weak inside) waits for P11-11's troops.
+- **Asked:** the whole `battle-parity` (30–45 min): added to the night run (owner, 2026-11-26; `docs/PENDING-CHECKS.md`).
 
 ---
 

@@ -133,6 +133,18 @@
       },
     },
     down: { gap: 0.12, len: 0.3, play: (o, t) => tone(o, t, { type: 'sine', from: 140, to: 45, len: 0.28, peak: 0.7 }) },
+    // P11-05: a swing through empty air (softer and lower than a swing), a guard giving way, a stagger.
+    whiff: { gap: 0.2, len: 0.16, play: (o, t) => hiss(o, t, { len: 0.15, peak: 0.25, from: 900, to: 300, q: 1.2 }) },
+    guardBreak: {
+      gap: 0.15,
+      len: 0.3,
+      play: (o, t) => {
+        tone(o, t, { type: 'square', from: 520, to: 260, len: 0.22, peak: 0.14 });
+        hiss(o, t, { len: 0.12, peak: 0.45, filter: 'lowpass', from: 1800, to: 300 });
+        return tone(o, t + 0.04, { type: 'sine', from: 110, to: 60, len: 0.2, peak: 0.5 });
+      },
+    },
+    stagger: { gap: 0.12, len: 0.18, play: (o, t) => tone(o, t, { type: 'triangle', from: 300, to: 180, len: 0.16, peak: 0.35 }) },
     bow: {
       gap: 0.08,
       len: 0.2,

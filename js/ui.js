@@ -2214,7 +2214,7 @@
    */
   function gearButtons() {
     const g = CL.game;
-    $('#blockBtn').disabled = g.hero?.canBlock === false;
+    $('#blockBtn').disabled = (g.hero?.guardKind || (g.hero?.canBlock === false ? 'none' : 'shield')) === 'none'; // P11-05: a weapon guard blocks too
     const L = g.loadout;
     const sw = $('#switchBtn');
     sw.classList.toggle('hidden', !L?.can);
@@ -3631,6 +3631,7 @@
     $('#setPrepSkip').value = s.prepSkip ? 'skip' : 'prepare';
     $('#setHealthBars').checked = s.healthBars;
     $('#setReduced').checked = s.reducedEffects;
+    $('#setParry').checked = s.parry; // P11-05 (D-P11j)
     $('#setTips').checked = s.tips;
     $('#setMapSpeed').value = s.mapSpeed;
     $('#packResult').textContent = '';
@@ -3693,6 +3694,7 @@
     $('#setPrepSkip').onchange = () => CL.settings.set('prepSkip', $('#setPrepSkip').value === 'skip');
     $('#setHealthBars').onchange = () => CL.settings.set('healthBars', $('#setHealthBars').checked);
     $('#setReduced').onchange = () => CL.settings.set('reducedEffects', $('#setReduced').checked);
+    $('#setParry').onchange = () => CL.settings.set('parry', $('#setParry').checked);
     // P9-07: content packs (js/packs.js), kept in this browser.
     $('#packImportBtn').onclick = () => $('#packFile').click();
     $('#packFile').onchange = async () => {

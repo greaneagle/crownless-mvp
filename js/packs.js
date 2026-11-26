@@ -239,7 +239,7 @@
   // Tables of the format outside CL.content.TABLES (the blacksmith's rules, the founded realms' banners,
   // the gear check's words: P11-02, its codes fixed by the game; P11-03: the attributes' words and the
   // progression budget, its cap the game's own).
-  const WORLD_EXTRA = ['forge', 'realm_palette', 'gear_text', 'attributes', 'budget'];
+  const WORLD_EXTRA = ['forge', 'realm_palette', 'gear_text', 'attributes', 'budget', 'body'];
 
   /** Add the pack's entries to `content` and change the fields `merge` names. Pure data: nothing is run. */
   function apply(content, pack) {

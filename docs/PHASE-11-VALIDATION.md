@@ -197,3 +197,84 @@ _Waiting on the owner._
 ### Long runs (the night run, whenever the owner chooses)
 
 On `docs/PENDING-CHECKS.md`: the visual baselines by Docker, the whole `battle-parity`, `tests/slow/long-run.test.js` and `npm run long-run` on three seeds, and `progression.js` 360 days on three seeds. 5.0.0's own numbers for those, if wanted, from a worktree of commit 4c0a044.
+
+## Melee rhythm (5.5.0, P11-05)
+
+The rules of `docs/PHASE-11-PLAN.md` §10.1–§10.4, the numbers of §10.2a. Two tries, as the plan's rule asks: the first with a blow's second target at 60% and a sword striking two; the second at 70% and three (below, "the second try").
+
+### What the first measurements found (and changed)
+- **No shield ever blocked** with the AI's reaction at 0.22–0.3 s: a sword's windup is 0.16 s, so every blow landed before the shield came up. The reaction is now 0.2 / 0.13 / 0.1 s by tier: a trained soldier blocks a sword seen coming, a levy-tier one doesn't.
+- **Striking into recovery was always blocked**, because a soldier could raise its shield while recovering from its own swing. A shield now can't come up during its own swing: recovery (longer after a whiff) is the opening (§10.2's counter).
+- **The new weapons fought with fists' damage**: their ids (`greatsword`, `greataxe`, `spear`) were also families', and `weaponOf` read the family. Renamed (`great_sword`, `great_axe`, `ash_spear`); a content check refuses the clash.
+- **The outnumbered company fell to −39 under the odds** (5.0.0: +16). Measured one change at a time (20 seeds each): the hero's old 0.52 s attack rate and sweeping every foe in the arc were what had carried it. Both go on purpose (D-P11d; §10.4), so the second try gave the sword three targets at 70% for the second and third: +6 at 40 seeds.
+
+### Duels (`duel-lab.js 40`, the Arming Sword and medium armour, the tournament ground)
+
+| Opponent | masher: win / HP left | timer | turtle | 5.0.0 (all three) |
+|---|---|---|---|---|
+| Looter (T1) | 100% / 93% | 100% / 100% | 100% / 95% | 100% |
+| Footman (T2, shield) | 100% / 74% | 100% / 100% | 100% / 93% | 0% |
+| Huscarl (T3, shield, axe) | 100% / 13% | 100% / 100% | 100% / 71% | 0% |
+| Legionary (T3, shield) | 100% / 33% | 100% / 100% | 100% / 79% | – |
+| Pikeman (T2, pike) | 100% / 70% | 100% / 70% | 100% / 100% | – |
+
+Timing now pays: the *timer*, who steps out of a windup and strikes into the recovery, cuts down a huscarl or a legionary untouched; the *masher* wins on a sliver of health. The masher still beats looters as in 5.0.0.
+
+### The lists (`duel-lab.js 40 --tourney`, the loaner kit)
+
+| Earlier wins in the town | masher: champion (final won, HP left) | timer | turtle |
+|---|---|---|---|
+| 0 | 15% (rounds 1–2 always, the final 15%, 13%) | 100% (100%) | 100% (64%) |
+| 1–3 | 0% (rounds 1–2 always; the final never) | 100% | 100% |
+
+5.0.0: nobody ever won a bout.
+
+### Small skirmishes (`parity.js 40`, the masher)
+
+| Scenario | Odds | Simulated | Fought | Over the odds (5.0.0) | Lost: fought |
+|---|---|---|---|---|---|
+| lone-hero 1v3 | 86 | 83 | 100 | +14 (+14) | 0.00 |
+| small 6v6 | 89 | 85 | 100 | +11 (+11) | 0.28 |
+| close 7v8 | 79 | 73 | 100 | +21 (+19) | 0.45 |
+| veterans 10v10 | 79 | 73 | 100 | +21 (+4) | 1.00 |
+| outnumbered 6v11 | 61 | 60 | 68 | +6 (+16) | 2.90 |
+
+Plan §15's band: the masher no worse than about the odds holds everywhere. Close and veterans are further over the odds than B-01's 5–15 (the auto-resolve doesn't yet read the hero's new profile or the families: P11-20).
+
+### Extras (`extras.js 40`): win % on / off
+
+| Extra | 5.5.0 | 5.0.0 |
+|---|---|---|
+| Shield wall vs Reavers | 100 / 90 | 95 / 80 |
+| Shield wall vs crossbows | 78 / 5 | 85 / 43 |
+| Wedge | 100 / 100 | 100 / 100 |
+| High ground vs crossbows | 30 / 20 | 58 / 45 |
+| A ford breaks the wedge | 83 / 78 | 100 / 100 |
+| Soldiers mind the wagon | 93 / 93 | 78 / 80 |
+
+Every extra still helps when on. Melee now kills faster than archers shoot (the sword's cooldown is 0.68 s for everyone, was 0.86 for soldiers), so the battles with crossbows on the other side are harder (for P11-07 and P11-13).
+
+### Performance (`bench-battle.js 45`)
+
+| Size | Mean (5.0.0) | p95 | p99 |
+|---|---|---|---|
+| 40 | 0.54 (0.53) | 0.85 | 1.23 |
+| 100 | 1.40 (1.35) | 2.14 | 2.64 |
+| 200 | 3.47 (3.19, +9%) | 4.68 | 6.22 |
+
+Inside the task's 10% at 200.
+
+### Weapons (`duel-lab.js 40 --weapons`, every weapon against the five, masher / timer)
+
+The duels are decided by the seed's start, so each cell is all or nothing over 40 seeds. The hero is given what each weapon needs (a lab).
+
+| Weapon | Looter | Footman | Huscarl | Legionary | Pikeman |
+|---|---|---|---|---|---|
+| Worn Sword | win / win | win / win | **lose** / win | win / win | win / win |
+| Hand Axe, War Mace, Arming Sword, Knight's Sword | win / win | win / win | win / win | win / win | win / win |
+| Ash Spear | win / win | win / win | **lose** / win | win / win | win / win |
+| Greatsword | win / win | **lose** / win | **lose** / win | **lose** / win | win / win |
+| Greataxe | win / win | win / win | **lose** / win | **lose** / win | win / win |
+| Arming Sword, light or heavy armour | win / win | win / win | win / win | win / win | win / win |
+
+**The matrix (plan §10.5) is not met yet, recorded for P11-10 and P11-11.** Mashed, the two-handers and the spear lose to shield troops (a slow weapon swung into a shield), and timed every weapon wins; but the axe and the mace lose to none of these five, and every weapon wins against the pikeman. The opponents are troops with 5.0.0's own damage and reach, and no styles: the family against family matrix needs P11-10's styles and P11-11's troops on their families.

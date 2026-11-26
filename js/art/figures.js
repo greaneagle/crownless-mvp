@@ -755,6 +755,12 @@
         }
       }
     }
+    if (P.guard && !L.shield && kind && !atk) {
+      // P11-05: a weapon guard: the weapon raised across the body.
+      a = side ? -0.35 : up ? -Math.PI + 0.3 : -0.3;
+      hy = -17;
+      if (!side) hx = up ? 5 : -5;
+    }
     if (P.work) {
       // A smith's hammer or a labourer's tool: a steady downward beat.
       const k = (Math.sin(P.t * 5) + 1) / 2;
@@ -782,12 +788,13 @@
     if (!P.mounted) G.shadow(ctx, 0.8, 0.5, 8.2, 3.1, 0);
     if (face === 'left') ctx.scale(-1, 1);
     if (P.hit > 0) ctx.translate((face === 'down' ? 0 : -1.4) * P.hit, (face === 'down' ? -1.2 : 0) * P.hit); // a small recoil
+    if (P.stagger > 0) ctx.rotate(Math.sin(P.stagger * Math.PI * 3) * 0.12 * P.stagger); // P11-05: a short sway
     ctx.translate(0, -bob - (P.mounted ? 13 : 0));
 
     const wa = weaponArm(L, P, face);
     const ranged = SHOOTS.includes(L.weapon);
     const shoot = (x, y, pull, dir) => (L.weapon === 'crossbow' || L.weapon === 'arbalest' ? crossbow(ctx, x, y, pull, dir, L.weapon === 'arbalest') : bow(ctx, x, y, pull, dir, L.bowSize || 1, L.weapon === 'recurve'));
-    const guard = Boolean(P.guard && L.shield);
+    const guard = Boolean(P.guard && L.shield && !P.broken);
     const skin = L.gloves || L.skin || SKINS[0]; // P11-04: a glove's colour on the hands
     // P11-04: a two-handed weapon's other hand sits on the grip, behind the weapon hand.
     const grip = L.twoHanded && !ranged && L.weapon ? { x: wa.hx + Math.cos(wa.a) * (wa.ext - 3.5), y: wa.hy + Math.sin(wa.a) * (wa.ext - 3.5) } : null;
@@ -796,8 +803,11 @@
     const slung = () => L.shieldBack && shield(ctx, { ...L, shield: L.shieldBack }, side ? -4.5 : 0, -16.5, 6 * 0.92, !up);
     const sleeve = L.armour === 'mail' ? '#9aa3ab' : L.armour === 'leather' ? '#8a6240' : L.tunic || '#9c8a66';
 
-    // Shield position for the facing (character's left arm).
+    // Shield position for the facing (character's left arm). P11-05: pressed back toward the body under
+    // pressure; lowered when the guard is broken.
     const sh = shieldPos(face, guard, L);
+    if (guard && P.press) sh.x *= 1 - 0.35 * P.press;
+    if (P.broken && L.shield) sh.y += 4;
     const drawShield = () => L.shield && shield(ctx, L, sh.x, sh.y, sh.r * (guard ? 1.12 : 1), up && !guard);
     const drawWeapon = () => {
       if (ranged || !L.weapon) return;
@@ -902,6 +912,21 @@
       ctx.globalAlpha = 1;
     }
     ctx.restore();
+  }
+
+  /**
+   * P11-05: where a look's weapon tip is in a pose (figure coordinates, before its scale and mirror), for
+   * the windup glint. Null for no weapon or a bow. @param {any} L @param {any} P
+   */
+  function weaponTip(L, P) {
+    if (!L.weapon || SHOOTS.includes(L.weapon)) return null;
+    const face = P.face || 'down';
+    const wa = weaponArm(L, P, face);
+    const long = { greatsword: 27, greataxe: 23, spear: 41, pike: 55, lance: 47 }[L.weapon] || 17;
+    const d = wa.ext + long * (wa.len || 1) * (L.len || 1);
+    const x = wa.hx + Math.cos(wa.a) * d;
+    const y = wa.hy + Math.sin(wa.a) * d - (P.mounted ? 13 : 0);
+    return { x: face === 'left' ? -x : x, y };
   }
 
   function shieldPos(face, guard, L) {
@@ -1224,5 +1249,5 @@
     };
   }
 
-  G.fig = { SKINS, HAIRS, BODY, CLOAKS, ROLE_LOOKS, SHOOTS, figure, horse, fallen, defaultLook, troopLook, companionLook, heroLook, heroFrom, itemLook, dress, townLook, weapon, bow, crossbow };
+  G.fig = { weaponTip, SKINS, HAIRS, BODY, CLOAKS, ROLE_LOOKS, SHOOTS, figure, horse, fallen, defaultLook, troopLook, companionLook, heroLook, heroFrom, itemLook, dress, townLook, weapon, bow, crossbow };
 })(typeof window !== 'undefined' ? window : globalThis);

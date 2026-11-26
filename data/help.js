@@ -116,7 +116,7 @@
       controls: [
         ['Joystick', 'WASD / arrows', 'Move'],
         ['ATTACK', 'Space / left click', 'Swing'],
-        ['Hold BLOCK', 'Shift / right click', 'Block (needs a shield)'],
+        ['Hold BLOCK', 'Shift / right click', 'Block (a shield, or a two-handed weapon or spear)'],
         ['SWITCH', 'Q', 'Bring your second weapon to hand (if you carry one)'],
         ['ORDERS → group', '1 / 2 / 3', 'Infantry / Archers / Cavalry'],
         ['ORDERS → order', 'F / H / C', 'Follow / Hold / Charge'],
@@ -125,6 +125,21 @@
         ['MAP', 'Hold Tab, or M', 'Tactical overview: send a group to a spot'],
         ['Pinch, or the zoom button', 'Mouse wheel, or Z', 'Zoom the battle (large fields)'],
         ['Pause', 'Esc', 'Pause']
+      ]
+    },
+    fighting: {
+      id: 'fighting',
+      stage: 'captain',
+      order: 5.5,
+      title: 'Fighting',
+      body: [
+        'Every weapon has its own rhythm: a windup (it rises), a short strike (only then does it hurt), and a recovery. A sword is quick and middling in reach; an axe and a mace are shorter and slower; a greatsword or greataxe reaches further and hits harder, but takes longer to recover; a spear reaches furthest and strikes narrowly. Your reach, your speed with it and your walking pace are your own, from your weapon and your armour.',
+        'A swing that hits nobody takes longer to recover. Holding Attack still works against weak foes, but against a patient one it gives them openings: step out of reach while they wind up, and strike while they recover.',
+        'A blow strikes the nearest in front of you; a sword can catch up to three, the second and third a little less, an axe or mace one, a greatsword three.',
+        'A blow that lands while someone is winding up can interrupt them, if it is heavy enough for them: a mace or greataxe interrupts almost anyone, a sword only the unarmoured, and two-handed fighters are hard to shake. Nobody can be interrupted twice in quick succession, and repeated hits push less each time.',
+        'A shield stops blows from the front, but every blow it stops wears it down; enough of them break the guard and lower it for a moment. Axes press hardest. The Shield skill lets it take more, recover sooner and cover a little wider. Shield troops raise theirs a moment after they see a blow coming, quicker the better they are, and never while they are swinging themselves.',
+        'With a two-handed weapon or a spear and no shield, Block raises the weapon: it takes part of a frontal blow, in a narrower arc. Each weapon is trained by its skill (One-Handed, Two-Handed or Polearm): more damage and a slightly quicker recovery a point.',
+        'You will hear and read what happened: a miss, a blow out of reach, a block, a broken guard, an interruption. A glint on a weapon tip warns you of a blow being wound up at you.'
       ]
     },
     party: {
@@ -271,6 +286,8 @@
     captured: { id: 'captured', on: 'result', when: 'captured', help: 'start', title: 'Captured', text: 'A lost battle costs some crowns and gear, never the game. You are let go near a settlement; rest, hire and try again.' },
     trade: { id: 'trade', on: 'trade', help: 'trade', title: 'The market', text: 'Goods are cheap where plentiful and dear where short: buy low here, sell somewhere else. Cargo slows you down.' },
     contracts: { id: 'contracts', on: 'contracts', help: 'trade', title: 'Contracts', text: 'One job at a time: hunt a band, escort a caravan or deliver. Each shows its reward and time limit; failing costs renown.' },
+    whiff: { id: 'whiff', on: 'battle', when: 'whiff', help: 'fighting', title: 'A miss costs time', text: 'A swing that hits nobody takes longer to recover. Step in until they are in reach, or wait for their own swing to miss and strike while they recover.' },
+    shieldPressure: { id: 'shieldPressure', on: 'battle', when: 'shieldPressure', help: 'fighting', title: 'Shields give way', text: 'Every blow a shield stops wears it down; enough of them break the guard and lower it for a moment. Axes press hardest. Strike while it is down.' },
     character: { id: 'character', on: 'character', help: 'party', title: 'Party and gear', text: 'Equip what you find, spend skill and attribute points, and upgrade soldiers who have earned it.' },
     ransom: { id: 'ransom', on: 'ransom', help: 'lands', title: 'A ransom', text: 'A lord you beat is your prisoner. Accept the ransom, hold them for later (they may slip away), or let them go for nothing: renown, and a lord who remembers it.' },
     allegiance: { id: 'allegiance', on: 'contracts', when: 'atCapital', help: 'lands', title: 'Service and fealty', text: 'A capital’s board also offers Service: a month as the kingdom’s mercenary, paid weekly. Serve it well and you may swear fealty. Each card says first what will change and what stays yours.' },

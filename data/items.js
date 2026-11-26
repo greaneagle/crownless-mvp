@@ -23,6 +23,11 @@
     hand_axe: {id:'hand_axe',family:'axe',name:'Hand Axe',type:'weapon',slot:'weapon',tier:1,rarity:'common',value:45,weight:2,stats:{damage:19},look:{weapon:'axe'},questItem:false},
     arming_sword: {id:'arming_sword',family:'sword',name:'Arming Sword',type:'weapon',slot:'weapon',tier:2,rarity:'uncommon',value:80,weight:2,stats:{damage:21},look:{weapon:'sword'},questItem:false},
     war_mace: {id:'war_mace',family:'mace',name:'War Mace',type:'weapon',slot:'weapon',tier:2,rarity:'uncommon',value:110,weight:3,stats:{damage:22},req:{str:6},look:{weapon:'mace'},questItem:false},
+    // P11-05: the first two-handed weapons and a spear (a shield allowed). The greatsword and greataxe need
+    // their family's Strength 7 and Two-Handed 1.
+    ash_spear: {id:'ash_spear',family:'spear',name:'Ash Spear',type:'weapon',slot:'weapon',tier:1,rarity:'common',value:40,weight:3,stats:{damage:18},look:{weapon:'spear'},questItem:false},
+    great_sword: {id:'great_sword',family:'greatsword',name:'Greatsword',type:'weapon',slot:'weapon',tier:2,rarity:'uncommon',value:150,weight:4,stats:{damage:30},look:{weapon:'greatsword'},questItem:false},
+    great_axe: {id:'great_axe',family:'greataxe',name:'Greataxe',type:'weapon',slot:'weapon',tier:2,rarity:'uncommon',value:140,weight:5,stats:{damage:34},look:{weapon:'greataxe'},questItem:false},
     knights_sword: {id:'knights_sword',family:'sword',name:"Knight's Sword",type:'weapon',slot:'weapon',tier:3,rarity:'rare',value:260,weight:2,stats:{damage:25},req:{skills:{one_handed:3}},look:{weapon:'sword',len:1.1},questItem:false},
     // Shields (needed to block)
     oak_shield: {id:'oak_shield',name:'Oak Shield',type:'shield',slot:'offhand',tier:1,rarity:'common',value:25,weight:3,stats:{block:true},look:{shield:'wood'},questItem:false},
@@ -125,6 +130,7 @@
         { item: 'bascinet', weight: 1 },
         { item: 'mail_hauberk', weight: 1 },
         { item: 'heater_shield', weight: 1 },
+        { item: 'great_sword', weight: 1 }, // P11-05
         { item: 'rouncey', weight: 1 },
         { item: 'ring_of_roads', weight: 1 }
       ]

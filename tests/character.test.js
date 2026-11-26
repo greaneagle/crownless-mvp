@@ -60,7 +60,7 @@ test('equip swaps through the pack atomically; unequip returns the item', () => 
   assert.equal(CL.character.unequip('offhand'), false, 'slot already empty');
 
   CL.character.unequip('weapon');
-  assert.equal(CL.character.heroCombat().damage, CL.character.UNARMED_DAMAGE * 1.03);
+  assert.equal(CL.character.heroCombat().damage, CL.character.UNARMED_DAMAGE, 'P11-05: fists are trained by no skill');
 });
 
 test('travel factor: +3% per Pathfinding point, a horse and the Ring of Roads stack', () => {

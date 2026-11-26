@@ -26,7 +26,7 @@ test('the timer strikes into recovery and keeps out of reach: no worse off than 
 });
 
 test('the turtle raises its shield against a swing, and without a shield it cannot', () => {
-  const r = duel({ seed: 7, pilot: 'turtle', opponent: 'footman' });
+  const r = duel({ seed: 7, pilot: 'turtle', opponent: 'huscarl' }); // P11-05: a footman falls before it swings much
   assert.ok(r.blocked > 0, 'blocks counted');
   // Without a shield the turtle never holds Block up (the hero can't block).
   const { CL } = loadGame({ seed: 7 });

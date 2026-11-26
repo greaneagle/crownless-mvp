@@ -67,7 +67,13 @@ test('shield troops raise their shields at a swing coming at them from the front
   const e = g.enemies[0];
   Object.assign(f, { x: 300, y: 300, face: 'right' });
   Object.assign(e, { x: 340, y: 300, face: 'left', swing: { t: 0.05, hit: [] } }); // winding up
-  assert.equal(CL.groups.shouldGuard(f, g.enemies), true);
+  // P11-05: honestly: not in the same frame, but a reaction later (a footman, T2: 0.13 s).
+  g.t = 10;
+  assert.equal(CL.groups.shouldGuard(f, g.enemies), false, 'not the instant it is seen');
+  g.t = 10 + CL.combat.GUARD_DELAY.T2 - 0.01;
+  assert.equal(CL.groups.shouldGuard(f, g.enemies), false, 'still reacting');
+  g.t = 10 + CL.combat.GUARD_DELAY.T2;
+  assert.equal(CL.groups.shouldGuard(f, g.enemies), true, 'up a reaction later');
   assert.equal(CL.groups.shouldGuard(one(g.allies, 'hunter'), g.enemies), false, 'no shield, no block');
   Object.assign(e, { x: 260, y: 300, face: 'right' }); // behind the footman
   assert.equal(CL.groups.shouldGuard(f, g.enemies), false, 'a blow from behind is not seen coming');
@@ -76,6 +82,11 @@ test('shield troops raise their shields at a swing coming at them from the front
   Object.assign(e, { swing: { t: 0.05, hit: [] } });
   f.swing = { t: 0.2, hit: [] }; // mid-swing: committed
   assert.equal(CL.groups.shouldGuard(f, g.enemies), false);
+  f.swing = { t: 0.4, hit: [] }; // P11-05: and in its own recovery: the opening
+  g.t = 20;
+  CL.groups.shouldGuard(f, g.enemies);
+  g.t = 21;
+  assert.equal(CL.groups.shouldGuard(f, g.enemies), false, 'no shield in its own recovery');
 });
 
 test('braced spears stop a charging rider in front of them and hurt it; from behind the charge goes on', () => {

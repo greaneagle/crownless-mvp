@@ -16,10 +16,14 @@ test('about 30 definitions including goods and food, covering every gear slot', 
   assert.equal(items.filter((i) => i.questItem).length, 3, 'quest items');
 });
 
-test('within a slot, higher tiers cost more and do more', () => {
+test('within a slot (a weapon: within its family), higher tiers cost more and do more', () => {
   const power = (i) => (i.stats.damage || 0) + (i.stats.armor || 0) + (i.stats.travel || 0) * 10;
-  for (const slot of ['weapon', 'offhand', 'head', 'body', 'hands', 'feet', 'horse']) {
-    const ladder = bySlot(slot).sort((a, b) => a.tier - b.tier || a.value - b.value);
+  // P11-05 (plan §6.4): weapons of different families trade off reach, tempo and weight against damage,
+  // so the ladder is each family's (a greataxe hits harder than a knight's sword, and is slower).
+  const ladders = ['offhand', 'head', 'body', 'hands', 'feet', 'horse'].map((slot) => [slot, bySlot(slot)]);
+  for (const fam of new Set(bySlot('weapon').map((i) => i.family))) ladders.push([`weapon (${fam})`, bySlot('weapon').filter((i) => i.family === fam)]);
+  for (const [slot, items] of ladders) {
+    const ladder = items.sort((a, b) => a.tier - b.tier || a.value - b.value);
     for (let i = 1; i < ladder.length; i++) {
       assert.ok(ladder[i].value >= ladder[i - 1].value, `${slot}: ${ladder[i].id} cheaper than ${ladder[i - 1].id}`);
       assert.ok(power(ladder[i]) >= power(ladder[i - 1]), `${slot}: ${ladder[i].id} weaker than ${ladder[i - 1].id}`);

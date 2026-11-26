@@ -80,7 +80,7 @@
   function defaults() {
     const touch = isTouch();
     // Full screen is on by default on phones, where the address bar costs the most room.
-    return { music: 50, sfx: 70, battleSize: touch ? BATTLE_DEFAULT.touch : BATTLE_DEFAULT.desktop, battleSizeChosen: false, slowOffered: false, battlefield: 'large', prepPreset: 'auto', prepSkip: false, prepCustom: null, prepPlans: [], reducedEffects: false, healthBars: true, tips: true, fullscreen: touch, textSize: 'normal', mapZoom: null, battleZoom: 1, mapSpeed: 'normal', sharpness: 'balanced' };
+    return { music: 50, sfx: 70, battleSize: touch ? BATTLE_DEFAULT.touch : BATTLE_DEFAULT.desktop, battleSizeChosen: false, slowOffered: false, battlefield: 'large', prepPreset: 'auto', prepSkip: false, prepCustom: null, prepPlans: [], reducedEffects: false, parry: false, healthBars: true, tips: true, fullscreen: touch, textSize: 'normal', mapZoom: null, battleZoom: 1, mapSpeed: 'normal', sharpness: 'balanced' };
   }
 
   let current = defaults();
@@ -102,6 +102,7 @@
       prepCustom: customSetup(r.prepCustom),
       prepPlans: savedPlans(r.prepPlans),
       reducedEffects: typeof r.reducedEffects === 'boolean' ? r.reducedEffects : d.reducedEffects,
+      parry: typeof r.parry === 'boolean' ? r.parry : d.parry, // P11-05: the timed parry experiment (D-P11j), off by default
       healthBars: typeof r.healthBars === 'boolean' ? r.healthBars : d.healthBars,
       tips: typeof r.tips === 'boolean' ? r.tips : d.tips,
       fullscreen: typeof r.fullscreen === 'boolean' ? r.fullscreen : d.fullscreen,

@@ -140,7 +140,7 @@ The fix is not to make input unresponsive or to punish repeated presses, but to 
 | **P11-02** | Carried and wielded: loadouts and one gear check | M–L | P1 | P11-01 | 5.2.0 | M1 | ✅ Done |
 | **P11-03** | The progression budget and equipment requirements | M–L | P1 | P11-02 | 5.3.0 | M1 | ✅ Done |
 | **P11-04** | The equipment you see | M–L | P1 | P11-02 (parallel with P11-03) | 5.4.0 | M1 | ✅ Done |
-| **P11-05** | Melee rhythm and defence | L | P1 | P11-01, P11-04 | 5.5.0 | **M1 "The weapon in your hand"** | Ready (D-P11d decided) |
+| **P11-05** | Melee rhythm and defence | L | P1 | P11-01, P11-04 | 5.5.0 | **M1 "The weapon in your hand"** | ✅ Done (the owner's M1 play to come) |
 | **P11-06** | Armour, weight and movement | M | P2 | P11-05 | 5.6.0 | M2 | Specified |
 | **P11-07** | Bows and crossbows in your hands | L | P1 | P11-05, P11-06 | 5.7.0 | M2 | Specified |
 | **P11-08** | Fighting from the saddle | L | P1 | P11-06, P11-07 | 5.8.0 | **M2 "Bow and horse"** | Specified |
@@ -390,6 +390,22 @@ The results go in the new `docs/PHASE-11-VALIDATION.md` under "The 5.0.0 baselin
 - **Weapon guard** (two-handed and spear users with no shield): Block raises the weapon; it takes part of a frontal blow, not all, in a narrower arc. **Timed parry** (a guard raised just before the blow lands deflects it and opens the attacker) is an **experiment** in P11-05: kept only if the owner likes it at M1 (D-P11j); the game never requires it.
 - **Movement is defence:** stepping out of reach during the opponent's windup makes it whiff (and whiffs cost recovery); no separate dodge button.
 - **Counters by timing, not a button:** striking an opponent who is in recovery after a whiff or a blocked blow is the counter. No combos, no special attacks.
+
+### 10.2a The chosen numbers (P11-05, 5.5.0)
+Measured with `duel-lab.js` and `parity.js` in two tries (docs/PHASE-11-VALIDATION.md, "Melee rhythm"). Seconds; reach in px; `data/weapons.js`.
+
+| Family | Reach | Windup / active / recovery | Cooldown | Miss | Arc | Targets | Stagger / poise | Shield pressure | Knockback | Moving while committed | Guard |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| Sword | 52 | 0.16 / 0.12 / 0.26 | 0.68 | 0.20 | 90° | 3 | 1.2 / 1 | 1 | 6 | 50% | shield |
+| Axe | 46 | 0.20 / 0.12 / 0.28 | 0.74 | 0.24 | 80° | 1 | 1.6 / 1 | 2.5 | 8 | 45% | shield |
+| Mace | 46 | 0.20 / 0.12 / 0.28 | 0.74 | 0.24 | 70° | 1 | 2.6 / 1 | 1.5 | 9 | 45% | shield |
+| Greatsword | 64 | 0.26 / 0.16 / 0.36 | 0.92 | 0.30 | 120° | 3 | 2.2 / 2.5 | 2 | 10 | 30% | weapon |
+| Greataxe | 60 | 0.32 / 0.16 / 0.42 | 1.04 | 0.36 | 100° | 2 | 3 / 2.5 | 3.5 | 14 | 25% | weapon |
+| Spear | 70 | 0.18 / 0.10 / 0.24 | 0.68 | 0.18 | 40° | 1 | 1.1 / 1 | 1 | 5 | 50% | shield (weapon without one) |
+| Pike | 72 | 0.22 / 0.12 / 0.30 | 0.82 | 0.22 | 30° | 1 | 1 / 2 | 1 | 4 | 30% | weapon |
+| Fists | 40 | 0.14 / 0.10 / 0.20 | 0.60 | 0.15 | 90° | 1 | 0.5 / 1 | 0.5 | 4 | 60% | none |
+
+The bows, the crossbow and the lance keep 5.0.0's sword (P11-07, P11-08). A blow's second and later targets take 70% (0.6 left the outnumbered company 20 points under the odds). Stagger: the windup is lost and nothing new for 0.3 s; immune for 0.9 s. Knockback halves on each repeat inside 1.2 s. A shield's capacity is 4 (a sword's blow is 1), it sheds 1.5 a second while down and stays down 1 s once broken; the Shield skill adds 10% capacity and recovery and a degree each side a point. A weapon guard lets 45% through in a 90° arc. AI shields come up 0.2 / 0.13 / 0.1 s (T1 / T2 / T3) after a blow is seen coming, and never during their own swing (its recovery is the opening). The hero's body (D-P11d): a pace of 100 px a second (soldiers walk 82–94), +2% a point of Agility above 5, and 98% / 96% / 92% in a gambeson, leather and mail until P11-06's load; reach and cooldown are the weapon's, the same as everyone's. The skills: +3% damage and 2% less recovery a point for the weapon's own skill (at most a third). The tap buffer is measured to when the hero is next ready (the swing's end or the cooldown).
 
 ### 10.3 Armour and movement (P11-06)
 **Required:** a **personal load** (worn and wielded items' existing `weight`; cargo never counts) against a capacity from Strength. Load lowers foot speed and, for heavy pieces, recovery and draw; armour raises protection and poise. **Agility** lowers the movement and recovery penalties; **Riding** lowers them in the saddle; the horse carries the load for speed but not for turning or weapon handling. No stamina bar (the owner's exclusion of "mandatory complex stamina management"); if P11-06's measurements show a sprint is needed for light builds, a short, automatic, uncapped-in-time sprint may be proposed, not built by default.

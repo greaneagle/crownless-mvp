@@ -1,5 +1,5 @@
 {
-  "recordedOn": "5.0.1",
+  "recordedOn": "5.5.0",
   "troops": {
     "levy": {
       "role": "infantry",
@@ -449,7 +449,7 @@
     "unarmed": {
       "hp": 90,
       "maxhp": 90,
-      "damage": 6.18,
+      "damage": 6,
       "armor": 1,
       "canBlock": true
     },
@@ -541,8 +541,8 @@
       "maxhp": 90,
       "damage": 17.51,
       "armor": 1,
-      "reach": 67,
-      "speed": 142,
+      "reach": 52,
+      "speed": 100,
       "ranged": null,
       "canBlock": true
     },

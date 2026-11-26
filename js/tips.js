@@ -88,6 +88,9 @@
     diplomacyTab: () => CL.game.realmTab === 'diplomacy',
     // P9-03: the Your realm tab is open.
     ruleTab: () => CL.game.realmTab === 'rule',
+    // P11-05: the hero swung at nothing; the hero broke a shield's guard.
+    whiff: () => Boolean(CL.game.whiffed),
+    shieldPressure: () => Boolean(CL.game.brokeGuard),
   };
 
   /** The text for this device: touch phones get the touch wording, keyboards the key wording. */

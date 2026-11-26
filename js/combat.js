@@ -15,7 +15,28 @@
   // A missed shot (1 - accuracy) is thrown off by 0.12–0.25 rad: enough to miss a standing target.
   const MISS_ANGLE = [0.12, 0.25];
   const SHOT_FLASH = 0.2;
-  const KNOCKBACK = 6;
+  const KNOCKBACK = 6; // a blow's push when the striker has no profile (the family's `knockback` otherwise)
+  // P11-05 (docs/PHASE-11-PLAN.md §10.1–§10.4): the melee rhythm's limits. The numbers are measured
+  // (scripts/duel-lab.js), each with its test in tests/melee.test.js.
+  const MELEE = {
+    second: 0.7, // a blow's second and later targets take this share of its damage (nearest first; measured: 0.6 left the outnumbered company 20 points under the odds)
+  };
+  const STAGGER = {
+    sway: 0.3, // a staggered fighter's swing is lost, and they can't start another for this long (s)
+    immune: 0.9, // then no stagger again for this long: at most one in a window, no stunlock
+  };
+  const KNOCK = { window: 1.2, shrink: 0.5 }; // repeated pushes on one fighter in a window halve each time
+  const SHIELD = {
+    capacity: 4, // the pressure a raised shield takes before the guard breaks (a sword's blow is 1)
+    recover: 1.5, // pressure shed a second while the shield is down
+    broken: 1.0, // seconds the shield stays down once the guard breaks
+    skill: 0.1, // the Shield skill: +10% capacity and recovery a point
+    arcPerPoint: 2, // and a degree either side wider a point (from the 120° cover)
+  };
+  const WEAPON_GUARD = { arc: Math.cos(Math.PI / 4), take: 0.45 }; // a 90° guard that lets 45% through
+  const PARRY = { window: 0.15 }; // D-P11j, an experiment behind a setting (off): Block raised this soon before a blow
+  const GUARD_DELAY = { T1: 0.2, T2: 0.13, T3: 0.1 }; // an AI shield's reaction (by tier; by style from P11-10)
+  const FEEDBACK = { every: 1.5 }; // the hero's own whiff and out-of-reach words, at most this often (s)
   const INPUT_BUFFER = 0.1; // GDD §6: a press up to 100 ms before recovery ends still swings
   const DEPLOY_CAP = { infantry: 12, archer: 8, cavalry: 6 };
   // GDD §7: cavalry accelerate toward a target, pass through, and turn for another run.
@@ -190,6 +211,7 @@
     const heroProfile = P.resolve({ hero: CL.campaign, equipment: CL.gear.kitFor(CL.campaign, kit, lo.which) });
     P.apply(g.hero, heroProfile);
     g.hero.canBlock = heroProfile.canBlock;
+    g.hero.guardKind = heroProfile.guardKind; // P11-05: a shield, a weapon guard or none
     CL.gear.begin(g, CL.campaign, kit, lo.which);
     if (lo.message) CL.ui.message(lo.message);
     g.hero.face = 'right';
@@ -490,13 +512,94 @@
    * when the source is inside its 120° shield arc (GDD §6); hits from behind or the flanks land.
    * Returns 'blocked' | 'hit' | 'down' | null.
    */
+  /** P11-05: a fighter's guard: 'shield', 'weapon' (two-handed and spears with no shield) or 'none'. */
+  const guardOf = (u) => u.guardKind || P.of(u)?.guardKind || (u.canBlock ? 'shield' : 'none');
+  /** A raised shield's cover: 120°, a degree wider either side a point of the Shield skill. */
+  const blockArc = (u) => (P.of(u)?.shieldSkill ? Math.cos(Math.PI / 3 + (P.of(u).shieldSkill * SHIELD.arcPerPoint * Math.PI) / 180) : ARC.block);
+  /** Is a fighter's guard broken (the shield down for a moment)? */
+  const broken = (u) => (u.guardBrokenUntil ?? -1) > game().t;
+  /** The hero's own words in a fight (whiff, out of reach, blocked …), at most once in a while each. */
+  function feedback(kind, text) {
+    const g = game();
+    g.feedbackAt = g.feedbackAt || {};
+    if (g.t - (g.feedbackAt[kind] ?? -99) < FEEDBACK.every) return;
+    g.feedbackAt[kind] = g.t;
+    CL.ui.message(text);
+  }
+
+  /**
+   * P11-05: a blocked blow presses the shield by its weapon's `shieldPressure`; at the shield's capacity
+   * (more with the Shield skill) the guard breaks: the shield goes down for a moment and any windup is
+   * lost. The pressure drains while the shield is down (`tickTimers`).
+   */
+  function press(u, source) {
+    const g = game();
+    const skill = 1 + SHIELD.skill * (P.of(u)?.shieldSkill || 0);
+    u.press = (u.press || 0) + (P.of(source)?.shieldPressure ?? 1);
+    if (u.press < SHIELD.capacity * skill) return false;
+    u.press = 0;
+    u.guard = false;
+    u.guardBrokenUntil = g.t + SHIELD.broken;
+    if (swingPhase(u) === 'windup') u.swing = null;
+    sound('guardBreak', u, source);
+    g.effects.push({ x: u.x, y: u.y - 17, t: 0.45, color: '#f6daa6', kind: 'break' });
+    if (u.role === 'hero') feedback('broken', 'Your guard is broken!');
+    else if (source?.role === 'hero') {
+      feedback('break', 'You broke their guard');
+      g.brokeGuard = true; // the tip about shield pressure (data/help.js)
+    }
+    return true;
+  }
+
+  /**
+   * P11-05: a blow that lands during the target's windup interrupts it when its `stagger` beats the
+   * target's `poise`; then the target is immune for a while (no stunlock). A blow during the target's
+   * own active window doesn't (both land).
+   */
+  function stagger(target, source) {
+    const g = game();
+    if (!source || !target.alive || swingPhase(target) !== 'windup') return false;
+    if ((target.staggerUntil ?? -1) > g.t) return false;
+    if ((P.of(source)?.stagger ?? 1) <= (P.of(target)?.poise ?? 1)) return false;
+    target.swing = null;
+    target.attackCooldown = Math.max(target.attackCooldown, STAGGER.sway);
+    target.staggeredAt = g.t;
+    target.staggerUntil = g.t + STAGGER.immune;
+    sound('stagger', target, source);
+    g.effects.push({ x: target.x, y: target.y - 26, t: 0.35, color: '#efe4c4', kind: 'stagger' });
+    if (target.role === 'hero') feedback('staggered', 'Interrupted!');
+    else if (source.role === 'hero') feedback('stagger', 'You staggered them');
+    return true;
+  }
+
+  /** P11-05: the push of a landed blow, halving on each repeat inside a window (no knockback chains). */
+  function knock(target, source) {
+    const g = game();
+    const k = target.knock && g.t - target.knock.at < KNOCK.window ? target.knock : { n: 0, at: g.t };
+    const d = (P.of(source)?.knockback ?? KNOCKBACK) * KNOCK.shrink ** k.n;
+    target.knock = { n: k.n + 1, at: g.t };
+    if (d > 0.5) push(target, source.x, source.y, d);
+  }
+
   function hit(target, raw, source) {
     const g = game();
     if (!target.alive) return null;
     if (target === g.hero && g.godMode) return 'blocked'; // debug panel
-    if (target.guard && source && inArc(target, source, ARC.block)) {
+    const guard = target.guard ? guardOf(target) : 'none';
+    // D-P11j (an experiment, off by default): Block raised just before the blow lands deflects it.
+    if (target === g.hero && source && guard !== 'none' && CL.settings?.get?.('parry') && g.t - (g.blockPressedAt ?? -99) <= PARRY.window && inArc(target, source, ARC.block)) {
+      sound('block', target, source);
+      g.effects.push({ x: target.x, y: target.y - 17, t: 0.3, color: '#f6daa6', kind: 'block' });
+      if (source.swing) source.swing = null;
+      source.attackCooldown = Math.max(source.attackCooldown, STAGGER.sway * 1.5);
+      feedback('parry', 'Parried!');
+      return 'blocked';
+    }
+    if (guard === 'shield' && source && inArc(target, source, blockArc(target))) {
       sound('block', target, source);
       g.effects.push({ x: target.x, y: target.y - 17, t: 0.2, color: '#f6daa6', kind: 'block' });
+      if (source.role === 'hero') feedback('blocked', 'Blocked');
+      press(target, source);
       return 'blocked';
     }
     // Shield cover (V2-08a, owner idea): a raised shield beside the target, on its shield side, takes a
@@ -505,7 +608,14 @@
     if (cover) {
       sound('block', cover, source);
       g.effects.push({ x: cover.x, y: cover.y - 17, t: 0.2, color: '#f6daa6', kind: 'block' });
+      press(cover, source);
       return 'blocked';
+    }
+    // P11-05: a weapon guard takes part of a frontal blow, in a narrower arc, and isn't interrupted.
+    const parried = guard === 'weapon' && source && inArc(target, source, WEAPON_GUARD.arc);
+    if (parried) {
+      raw *= WEAPON_GUARD.take;
+      g.effects.push({ x: target.x, y: target.y - 17, t: 0.15, color: '#e8eef2', kind: 'block' });
     }
     if (g.practice && g.practice.firstHit == null) g.practice.firstHit = g.t; // camera test: time to contact
     target.hp = Math.max(0, target.hp - mitigate(CL.traits.blow(raw, source, target), target.armor)); // traits (P7-07)
@@ -516,7 +626,8 @@
     }
     target.flash = 0.14;
     g.lastBlowAt = g.t; // the stall guard (V2-T2)
-    if (source && !target.wagon) push(target, source.x, source.y, KNOCKBACK); // a wagon doesn't budge
+    if (source && !target.wagon) knock(target, source); // a wagon doesn't budge
+    if (source && !parried) stagger(target, source);
     g.effects.push({
       x: target.x,
       y: target.y - 23,
@@ -534,6 +645,7 @@
     target.downAt = g.t;
     target.swing = null;
     target.guard = false;
+    target.press = 0; // no stagger or pressure left over on the fallen
     if (target.wagon) {
       CL.objective.onDown(g); // the caravan is lost (P7-11)
       return 'down';
@@ -584,15 +696,25 @@
   function resolveSwing(u) {
     const wedge = CL.formations.blow(game(), u); // a wedge's first blow lands harder (P7-11)
     const arc = P.arcOf(u);
-    const most = P.targetsOf(u); // how many one blow can strike (every one in reach and arc, for now)
+    const most = P.targetsOf(u); // how many one blow can strike (P11-05: the family's, nearest first)
+    if (u.swing.hit.length >= most) return;
+    // P11-05: who is in reach and in the arc, nearest first; the second and later take less.
+    const near = [];
     for (const v of opponentsOf(u)) {
-      if (u.swing.hit.length >= most) break;
       if (!v?.alive || u.swing.hit.includes(v.id)) continue;
-      if (dist(u, v) > u.reach || !inArc(u, v, arc)) continue;
+      const d = dist(u, v);
+      if (d > u.reach || !inArc(u, v, arc)) continue;
+      near.push([d, v]);
+    }
+    if (near.length > 1) near.sort((a, b) => a[0] - b[0]);
+    for (const [, v] of near) {
+      if (u.swing.hit.length >= most) break;
+      const share = u.swing.hit.length ? MELEE.second : 1;
       u.swing.hit.push(v.id);
-      hit(v, u.damage * (u.chargeBonus || 1) * (u.moraleMul || 1) * wedge, u);
+      hit(v, u.damage * (u.chargeBonus || 1) * (u.moraleMul || 1) * wedge * share, u);
       if (wedge > 1) v.flankedAt = game().t; // the wedge's blow shakes them as a flank blow does
       u.wedgeArmed = false;
+      if (!u.swing) return; // the striker fell or was interrupted by what it struck (a guard broken back)
     }
   }
 
@@ -601,11 +723,32 @@
     u.swing.t += dt;
     const phase = swingPhase(u);
     if (phase === 'active') resolveSwing(u);
+    else if (phase === 'recovery' && !u.swing.done) whiff(u);
     else if (phase === null) u.swing = null;
+  }
+
+  /**
+   * P11-05: as the active window closes: a swing that struck nobody recovers longer (the family's
+   * `miss`), so a held Attack against a patient opponent gives openings. The hero hears and reads it.
+   */
+  function whiff(u) {
+    u.swing.done = true;
+    if (u.swing.hit.length || u.ranged) return;
+    u.swing.miss = P.of(u)?.miss || 0;
+    if (!u.swing.miss) return;
+    const g = game();
+    if (u.role !== 'hero') return;
+    sound('whiff', u);
+    g.effects.push({ x: u.x, y: u.y - 8, t: 0.3, color: '#d9c8a2', kind: 'whiff', face: u.face });
+    const foe = nearestAlive(u, opponentsOf(u));
+    const close = foe && dist(u, foe) < u.reach + 30 && inArc(u, foe, P.arcOf(u));
+    feedback('whiff', close ? 'Out of reach: step in, or wait for an opening' : 'Missed');
+    g.whiffed = true; // the tip about whiffs (data/help.js)
   }
 
   function tickTimers(u, dt) {
     u.attackCooldown = Math.max(0, u.attackCooldown - dt);
+    if (u.press && !u.guard) u.press = Math.max(0, u.press - SHIELD.recover * (1 + SHIELD.skill * (P.of(u)?.shieldSkill || 0)) * dt); // P11-05
     u.shot = Math.max(0, u.shot - dt);
     u.flash = Math.max(0, u.flash - dt);
     if (u.alive) advanceSwing(u, dt);
@@ -682,7 +825,7 @@
     if (u.team === 'ally') CL.formations.arm(game(), u); // a wedge ready for its first blow (P7-11)
     // Shield troops raise their shields against a swing coming at them (V2-08a), and a shield wall
     // against archers too (P7-11).
-    u.guard = CL.groups.shouldGuard(u, opponentsOf(u)) || (u.team === 'ally' && CL.formations.guard(game(), u, opponentsOf(u)));
+    u.guard = !broken(u) && (CL.groups.shouldGuard(u, opponentsOf(u)) || (u.team === 'ally' && CL.formations.guard(game(), u, opponentsOf(u))));
     if (!target) return;
     const p = u.role === 'archer' ? AI.archer : AI.melee;
     let dest = target;
@@ -732,6 +875,7 @@
     if (d > goal + 5) {
       const s = u.speed;
       if (u.guard) u.speed *= GUARD_SPEED; // a raised shield slows you, as it does the hero
+      if (isCommitted(u)) u.speed *= P.of(u)?.moveDuringAttack ?? 1; // P11-05: committed to a swing
       if (u.team === 'ally') u.speed *= CL.formations.speed(game(), u); // a wall walks slower, a wedge quicker (P7-11)
       if (u.team === 'enemy' && ENEMY.use.line && aheadOfLine(u, target)) u.speed *= ENEMY.lineWait; // B-01: wait for the line
       if (u.raider && !CL.objective.sprung(game())) u.speed *= CL.objective.WAGON.lurk; // P7-T: lie in wait for the front to close
@@ -809,9 +953,17 @@
     g.enemyLine = foot.length > 1 && !swarm ? { x: foot.reduce((n, e) => n + e.x, 0) / foot.length, y: foot.reduce((n, e) => n + e.y, 0) / foot.length } : null;
   }
 
-  /** Record an attack press so a tap during late recovery is not lost. */
+  /**
+   * Record an attack press so a tap during late recovery is not lost. P11-05: the window is measured to
+   * when the hero is next ready (the swing's end or the cooldown, whichever is later): a press up to
+   * 100 ms before that swings as soon as it can; an earlier one is dropped after 100 ms.
+   */
   function queueAttack() {
-    game().attackQueuedAt = game().t;
+    const g = game();
+    const h = g.hero;
+    g.attackQueuedAt = g.t;
+    const left = h ? Math.max(h.attackCooldown || 0, h.swing ? Math.max(0, P.timingOf(h).total + (h.swing.miss || 0) - h.swing.t) : 0) : 0;
+    g.attackQueuedUntil = g.t + (left <= INPUT_BUFFER ? left + 0.05 : INPUT_BUFFER);
   }
 
   function updateHero(h, dt) {
@@ -825,13 +977,16 @@
     // P11-02: bringing the other weapon to hand: no blow and no block until it is.
     if (g.loadout?.switching) CL.gear.tick(g);
     const drawing = CL.gear.switching(g);
-    // GDD §6: blocking needs a shield equipped.
-    h.guard = h.alive && blockInput && h.canBlock !== false && !isCommitted(h) && !drawing;
-    if (g.attackQueuedAt !== null && g.t - g.attackQueuedAt > INPUT_BUFFER) g.attackQueuedAt = null;
+    // GDD §6: blocking needs a shield equipped; P11-05: or a weapon that guards (two-handed, a spear).
+    if (blockInput && !g.blockWasHeld) g.blockPressedAt = g.t; // for the parry experiment (D-P11j)
+    g.blockWasHeld = blockInput;
+    h.guard = h.alive && blockInput && guardOf(h) !== 'none' && !isCommitted(h) && !drawing && !broken(h);
+    if (g.attackQueuedAt !== null && g.t > (g.attackQueuedUntil ?? g.attackQueuedAt + INPUT_BUFFER)) g.attackQueuedAt = null;
     if (!h.alive) return;
     if (x || y) {
       const old = h.speed;
       if (h.guard) h.speed *= GUARD_SPEED;
+      if (isCommitted(h)) h.speed *= P.of(h)?.moveDuringAttack ?? 1; // P11-05: a committed swing slows your feet
       move(h, x, y, dt);
       h.speed = old;
     }
@@ -979,6 +1134,15 @@
   }
 
   CL.combat = {
+    MELEE,
+    STAGGER,
+    KNOCK,
+    SHIELD,
+    WEAPON_GUARD,
+    PARRY,
+    GUARD_DELAY,
+    guardOf,
+    blockArc,
     ENEMY,
     AI,
     BATTLE,

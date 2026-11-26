@@ -83,6 +83,9 @@ test('played out: one side is beaten only when its field and reserve are spent; 
   const start = { roster: c.roster.length, enemy: 36 };
   CL.parties.attack();
   Object.assign(g, { hold: {}, joystick: { x: 0, y: 0 } });
+  // P11-05: the band holds its ground against this company now (its plan reads the hero's new profile),
+  // so the company charges, or a still hero and a holding enemy would stall: played out means fought out.
+  for (const div of ['infantry', 'archer', 'cavalry']) CL.combat.order(div, 'charge');
   let t = 0;
   let enemiesMet = 0;
   while (g.mode === 'battle' && t < 600) {

@@ -70,6 +70,7 @@ test('a guarding unit absorbs frontal hits; flank and rear hits land', () => {
   const defender = CL.units.makeUnit(100, 100, 'ally', 'hero');
   defender.face = 'right';
   defender.guard = true;
+  defender.guardKind = 'shield'; // P11-05: the hero's guard comes with what they carry (a shield here)
   const at = (x, y) => CL.units.makeUnit(x, y, 'enemy', 'reaver');
   assert.equal(CL.combat.hit(defender, 20, at(130, 115)), 'blocked', '~27° off-axis');
   assert.equal(defender.hp, 85);
@@ -91,9 +92,9 @@ test('a lethal hit downs the unit, cancels its swing and counts one kill', () =>
   assert.equal(CL.game.kills, 1);
 });
 
-test('melee hits push the target back', () => {
+test('melee hits push the target back by the weapon’s knockback (P11-05: the sword’s 6)', () => {
   const { CL } = setup();
-  const src = CL.units.makeUnit(100, 100, 'ally', 'hero');
+  const src = CL.units.makeUnit(100, 100, 'ally', 'footman');
   const v = CL.units.makeUnit(130, 100, 'enemy', 'looter');
   CL.combat.hit(v, 5, src);
   assert.equal(v.x, 136);
@@ -120,10 +121,13 @@ const step = (CL, seconds, dt = 0.02) => {
   for (let t = 0; t < seconds - 1e-9; t += dt) CL.combat.update(dt);
 };
 
-test('swing lifecycle: windup 0.16 → active 0.12 → recovery 0.24', () => {
+test('swing lifecycle: the sword’s windup 0.16 → active 0.12 → recovery (P11-05: 0.26, less a little a point of One-Handed)', () => {
   const { CL } = swingSetup([40, 0]);
   const hero = CL.game.hero;
   const e = CL.game.enemies[0];
+  const T = CL.profile.timingOf(hero);
+  assert.deepEqual([T.windup, T.active], [0.16, 0.12]);
+  assert.ok(T.recovery < 0.26 && T.recovery > 0.25, 'One-Handed 1: 2% quicker');
   CL.combat.queueAttack();
   step(CL, 0.02);
   assert.equal(CL.units.swingPhase(hero), 'windup');
@@ -135,16 +139,16 @@ test('swing lifecycle: windup 0.16 → active 0.12 → recovery 0.24', () => {
   step(CL, 0.14);
   assert.equal(CL.units.swingPhase(hero), 'recovery');
   assert.equal(e.hp, 60 - 16, 'one hit per target per swing');
-  step(CL, 0.22);
+  step(CL, 0.26);
   assert.equal(hero.swing, null, 'swing finished');
 });
 
-test('one swing hits every enemy in the 90° arc, each once; not those outside it', () => {
+test('one swing hits those in the 90° arc, nearest first, each once (P11-05: the second at 70%); not those outside it', () => {
   const { CL } = swingSetup([40, 0], [35, 20], [10, 50], [-40, 0]);
   CL.combat.queueAttack();
   step(CL, 0.4);
   const hp = CL.game.enemies.map((e) => e.hp);
-  assert.deepEqual(hp, [44, 44, 60, 60], 'reavers: 60 hp, armor 3 → 16 damage');
+  assert.deepEqual(hp, [44, 49, 60, 60], 'reavers: 60 hp, armor 3 → 16 damage, and 11 for the second');
 });
 
 test('facing locks while the swing is committed', () => {
@@ -184,23 +188,25 @@ test('guarding prevents starting an attack', () => {
   assert.equal(CL.game.enemies[0].hp, 60);
 });
 
-test('a tap within 100 ms of recovery ending is buffered; an earlier tap is dropped', () => {
+test('a tap within 100 ms of being ready again is buffered; an earlier tap is dropped', () => {
   const { CL } = swingSetup([200, 0]);
   const hero = CL.game.hero;
   CL.combat.queueAttack();
-  step(CL, 0.46); // swing began on the first frame (t=0.02): 0.08 s left
+  // P11-05: a swing at nothing whiffs (recovery 0.2 longer), and the sword's cooldown is 0.67 s: ready
+  // again at about 0.75 s. Pressed 0.08 s before that, it swings the moment it can.
+  step(CL, 0.66);
   CL.combat.queueAttack();
-  step(CL, 0.1);
+  step(CL, 0.14);
   assert.ok(hero.swing && hero.swing.t < 0.1, 'buffered press started a new swing');
 
-  step(CL, 0.6); // let it finish
+  step(CL, 0.9); // let it finish
   CL.combat.queueAttack();
   step(CL, 0.02);
   const second = hero.swing;
   assert.ok(second);
   step(CL, 0.1);
-  CL.combat.queueAttack(); // ~0.4 s before recovery ends → too early
-  step(CL, 0.6);
+  CL.combat.queueAttack(); // ~0.6 s before it is ready → too early
+  step(CL, 0.8);
   assert.equal(hero.swing, null, 'early press was dropped');
 });
 
