@@ -1,6 +1,6 @@
 # Crownless — Task specifications after 2.0
 
-_Written 2026-11-18 at build 2.0.0; **reviewed and corrected the same day against commit c66d94c** (NEXT-PLAN §11); **Phase 8 re-specified 2026-11-20 at build 2.23.0** (NEXT-PLAN §5, §11 items 21–28). The detailed companion to [`NEXT-PLAN.md`](NEXT-PLAN.md): one specification per task, in the design's ticket format (design Part 2 §26.8), shortened to what a developer needs. NEXT-PLAN gives the order, readiness, schema steps and the owner's decisions; this file gives what each task is._
+_Written 2026-11-18 at build 2.0.0; **reviewed and corrected the same day against commit c66d94c** (NEXT-PLAN §11); **Phase 8 re-specified 2026-11-20 at build 2.23.0** (NEXT-PLAN §5, §11 items 21–28); **Phase 11 specified 2026-11-26 at 5.0.0** (at the end of this file; its design in `PHASE-11-PLAN.md`). The detailed companion to [`NEXT-PLAN.md`](NEXT-PLAN.md): one specification per task, in the design's ticket format (design Part 2 §26.8), shortened to what a developer needs. NEXT-PLAN gives the order, readiness, schema steps and the owner's decisions; this file gives what each task is._
 
 **How to read a task:**
 - **Readiness:**
@@ -4021,3 +4021,1366 @@ The owner played the graphics demo (`docs/GRAPHICS-DEMO.md`, commit e5bae98) and
 - **Checks:** 942 fast pass; lint clean but the 2 old warnings; typecheck clean. Slow, each alone: `landed`, `world-sim`, `second-world`, `test-world`, `campaign-bots`, `happenings-bots`, `battle-extras`, `origins`, the three exits, Prototypes D and F pass; `gate-d-campaigns` (42, about 41 min) passes once the story bot plays a kept packet as a player would (the compromise ending came by chance once in 42 on 4.15.0, none on 5.0.0). Browser full suite 269 passed, 9 skipped, none failed.
 - **For the next night run** (`docs/PENDING-CHECKS.md`): the visual baselines, the long runs (runaway realms under the last-fort rule) and the whole `battle-parity`.
 - **Waiting on the owner's phone:** every scene in the new art, the battle benchmark and the map stress test against P10-G1's baseline, a new game in another kingdom and origin.
+
+## Phase 11 — The Art of War (specified 2026-11-26 at 5.0.0; not started)
+
+The aim: easy to fight, rewarding to fight well, meaningful to command. The player sees the equipment they actually use, understands every limitation, recognises different fighting styles, and wins battles and tournaments by good individual or group tactics without complicated controls. The design, the analyses and the strategies (profiles, progression budget, art, controls, tournaments, balance, saves, performance, playtests, acceptance, risks, decisions) are in [`PHASE-11-PLAN.md`](PHASE-11-PLAN.md); its section numbers are cited here as "plan §n". Nothing in this phase is built until the owner says so.
+
+**Rules for the phase** (Phase 10's, kept):
+- **Long runs:** none over 20 minutes and nothing overnight without the owner's yes; a task that needs one asks "now, or the next run?" and writes it in `docs/PENDING-CHECKS.md` (D-P10a, D-P10f).
+- **The way of working** is "How each task runs from P9-L1" above: read this introduction, the task's section and the files its Brief names; build in the Brief's order; each check once; **tuning time-boxed to two tries a number**; failures outside the task noted, not fixed; play only what "Play" names; a Done paragraph of at most eight bullets; report and ask to commit.
+- **Saves:** old saves are ignored (D-P11a, owner 2026-11-26: D-P10g kept). New saved state gets defaults through `sanitize`; no migrations, fixture folders or old-save tests. A task that changes the save's shape adds a line to SAVE-FORMAT (and may bump `VERSION`, with no migration).
+- **Art:** by D-P10k and `docs/ART-STYLE.md`. New looks and parts go into the kit and the Art gallery; no image; the drawing only reads the game. Art is part of each mechanic task, not a later pass.
+- **Every combat task measures** against P11-00's baseline with `scripts/duel-lab.js` (three pilots), `scripts/parity.js` (40 seeds) and, from P11-14, `scripts/tactics-lab.js`, and writes the numbers in its Done paragraph. The whole `battle-parity` only on the night run or at the owner's yes.
+- **Phones first:** every screen at 812×375 and desktop; every control 44 px or more; Larger text; no colour-only meaning; the battle benchmark against the task's budget.
+- **Versions:** P11-00 is 5.0.1; each task after it a minor version in build order from 5.1.0; P11-T ships 6.0.0 (D-P11l).
+
+**Order:** P11-00 → P11-01 → P11-02 → P11-03 (P11-04 may run beside it) → P11-04 → P11-05 (M1) → P11-06 → P11-07 → P11-08 → P11-09 (M2) → P11-10 → P11-11 → P11-12 (M3) → P11-13 → P11-14 → P11-15 (M4) → P11-16 → P11-17 → P11-18 → P11-19 (M5) → P11-20 → P11-T (M6). The owner plays each milestone (plan §5, §13) before the next task starts.
+
+| ID | Task | Size | Version | Readiness |
+|---|---|---|---|---|
+| P11-00 | Baseline, measuring tools and the inherited checkpoint | M | 5.0.1 | Ready |
+| P11-01 | One combat profile for every fighter (no change in play) | L | 5.1.0 | Ready |
+| P11-02 | Carried and wielded: loadouts and one gear check | M–L | 5.2.0 | Ready |
+| P11-03 | The progression budget and equipment requirements | M–L | 5.3.0 | Ready |
+| P11-04 | The equipment you see | M–L | 5.4.0 | Specified |
+| P11-05 | Melee rhythm and defence | L | 5.5.0 | Ready |
+| P11-06 | Armour, weight and movement | M | 5.6.0 | Specified |
+| P11-07 | Bows and crossbows in your hands | L | 5.7.0 | Specified |
+| P11-08 | Fighting from the saddle | L | 5.8.0 | Specified |
+| P11-09 | Controls, feedback and teaching | M | 5.9.0 | Specified |
+| P11-10 | Fighters who think: individual AI and styles | L | 5.10.0 | Specified |
+| P11-11 | Troops by their weapons | M–L | 5.11.0 | Specified |
+| P11-12 | Performance and art-cache checkpoint | M | 5.12.0 | Specified |
+| P11-13 | Formations and orders that hold | L | 5.13.0 | Specified |
+| P11-14 | Combined arms and the tactics lab | M–L | 5.14.0 | Specified |
+| P11-15 | Prepare and the battle report | M | 5.15.0 | Specified |
+| P11-16 | Regional arms | M | 5.16.0 | Specified |
+| P11-17 | Masters at arms: specialist training and the practice yard | L | 5.17.0 | Specified |
+| P11-18 | The walls and other special fields | M | 5.18.0 | Specified |
+| P11-19 | The lists: tournament formats | L | 5.19.0 | Specified |
+| P11-20 | Auto-resolve, military balance and the world | M–L | 5.20.0 | Specified |
+| P11-T | Tuning and acceptance | M | 6.0.0 | Specified |
+
+**Slow files by task** (the Brief's "Run" line names them; `battle-parity` is about 26–45 minutes, so it is asked for, not assumed):
+| Slow file | Run it in |
+|---|---|
+| `battle-parity`, `battle-extras` | the night run, whenever it comes; asked for at P11-05, P11-08, P11-14, P11-18, P11-20, P11-T |
+| `campaign-bots`, `origins` | P11-03 (progression), P11-20, P11-T |
+| `phase7-exit` | P11-19, P11-20 (tournaments and the economy) |
+| `landed`, `world-sim` | P11-20, P11-T |
+| `gate-d-campaigns` | P11-T only (the story's fights: asked for; about 41 minutes) |
+
+---
+
+### P11-00 · Baseline, measuring tools and the inherited checkpoint (M) — 5.0.1, Ready
+
+**Now (verified at 5.0.0).** Three checks are pending since P10-T (`docs/PENDING-CHECKS.md`: the Linux screenshot baselines, the whole `battle-parity`, the 10- and 30-year runs). The owner's phone play of 5.0.0 is still to come. `scripts/parity.js` measures fought against simulated with the campaign bot's hero, which walks at the nearest enemy and holds Attack inside 70 px (`tests/helpers/campaign-bot.js:318–330`). The benchmarks report averages and the slowest frame, not percentiles, caches or memory. Nobody has measured duels, equipment, command against charging, or how fast a character levels.
+
+**Problem.** Phase 11 must prove that timing, equipment and tactics matter more than in 5.0.0. Without a baseline taken before the first change, nothing can be compared, and inherited failures would be mistaken for regressions. The night run comes whenever the owner chooses (owner, 2026-11-26), so the baseline is made of the short runs, and P11-01 doesn't wait for it.
+
+**Outcome.** A recorded 5.0.0 baseline (plan §9) in a new `docs/PHASE-11-VALIDATION.md`, the tools that later tasks re-run, the inherited checks run (or scheduled), and the owner's first answers on how 5.0.0's fighting feels.
+
+**Build.**
+- **Required:**
+  - `scripts/duel-lab.js`: a hero against one fighter on the tourney ground or the open field, with three **pilots** in `tests/helpers/pilots.js` (the *masher*: today's bot; the *timer*: keeps at its weapon's reach edge, waits for the opponent's windup to pass or a whiff, then strikes; the *turtle*: blocks while an opponent winds up, strikes after). Options: `--opponents`, `--weapons` (each hero weapon and armour set), `--tourney` (the three rounds, with `townWins` 0 to 3), `--seeds`. Reports win rate, time, HP left, blows given and taken, per pilot.
+  - `scripts/tactics-lab.js`: two equal armies (by troop list) on a chosen map, several seeds; plans `charge` (every division Charge), `auto` (the game's Auto), `plan:<name>` (scripted layer-4 orders: a line holds, archers behind on high ground, cavalry on a flank after the first volley, a fall-back); `--hero passive|active`. Reports win rate, losses each side, duration and ground held (the share of the field's middle held at the end).
+  - `scripts/progression.js`: the campaign bots (`tests/helpers/campaign-bot.js`, every style) for 180 and 360 days on three seeds; game days to each level, XP per source.
+  - **Frame-time detail** in `scripts/bench-battle.js` and Debug → Battle benchmark: p50, p95 and p99 of the frame, frames over 16.7 and 33 ms, update and draw separately, bake-cache entries and hits (`G.cached`'s store), look-cache count, `performance.memory.usedJSHeapSize` where the browser has it.
+  - The questionnaire for the owner (plan §13 H-00) in `docs/PHASE-11-VALIDATION.md`.
+- **The night run** (on the owner's word, **whenever the owner chooses during Phase 11**, not before P11-01; owner 2026-11-26): the pending checks (visual baselines by Docker, the whole `battle-parity`, `tests/slow/long-run.test.js` and `npm run long-run` on three seeds), and `tactics-lab.js`/`duel-lab.js` at 80 seeds if their short runs show noise over ±8 points.
+- **Not changed:** any rule, number, look or screen.
+
+**Layers.** None (tools).
+
+**Art.** None; the visual baselines become the reference for P11-04 onward.
+
+**Information and controls.** The benchmark's report gains the new figures (Debug only).
+
+**Save and packs.** None.
+
+**Interactions.** The pilots drive `g.hold`, `g.attackHeld` and `g.blockHeld` exactly as input does, so later tasks' input changes are measured by the same code.
+
+**Edges.** A pilot that depends on internals (reading `u.swing.t`) is allowed (the player sees the pose); the *timer* reads only what is drawn (the opponent's phase, distance), never future rolls.
+
+**Measure** (plan §9, all under 20 minutes headless): duels (each pilot × the 5 weapons × 3 armours × looter, footman, huscarl, tournament rounds; 40 seeds), parity's five scenarios and `--big` (40 seeds), `extras.js`, the siege parity (30 seeds, about 15 min: ask), `tactics-lab.js` (charge, auto, plan; hero passive and active; open field and hills; 40 seeds), the benchmark (40, 100, 200 at each Sharpness, desktop and phone profile headless), progression (bots).
+
+**Tests.** `tests/pilots.test.js` (each pilot plays a short duel deterministically from a seed); `tests/bench.test.js` (new) checks the percentile fields' shape. No slow file changes.
+
+**Play.** The owner's H-00 session on the phone (plan §13): P10-T's seven items, then a contract battle, a lair and a tournament fought by holding Attack and fought carefully; the questionnaire.
+
+**Performance.** The baseline itself: no budget.
+
+**Acceptance.** `docs/PHASE-11-VALIDATION.md` has "The 5.0.0 baseline" with every row of plan §9 filled (the long ones marked "night run", filled when it comes); the three tools run from `npm run duel-lab`, `tactics-lab`, `progression`; the inherited checks are on the next night run (whenever it comes); the owner's H-00 notes are recorded.
+
+**Docs.** `docs/PHASE-11-VALIDATION.md` (new), `docs/PENDING-CHECKS.md` (what ran moved to Done), ROADMAP one line, RELEASE-NOTES ("Under the hood").
+
+**Out.** Any gameplay change; fixing inherited political tuning (Phase 12).
+
+**Decisions.** None (no fixtures: D-P11a).
+
+**Brief.**
+- **Start from:** `scripts/parity.js` (the scenario harness, `spread`, `loadGame`), `tests/helpers/campaign-bot.js` (`headlessUi`, the hero pilot at 318), `tests/helpers/load.js`, `scripts/bench-battle.js`, `js/debug.js` (the battle benchmark), `js/art/kit.js` (`cached`).
+- **Decided:** pilots read only drawn state; the *timer* waits until the opponent is in recovery or 0.1 s after its active window, and keeps at `reach − 4` otherwise; ground held = the share of living fighters of each side inside the middle third of the field at the end.
+- **Save:** none.
+- **Build order:** pilots → duel-lab → tactics-lab → progression → benchmark detail → validation doc.
+- **Write tests in:** `tests/pilots.test.js`.
+- **Run:** `node --test tests/pilots.test.js`; `npm test`, lint; the measurements above; no browser spec (Debug's benchmark text is checked by hand once at 812×375).
+- **Play:** the owner's H-00 only.
+- **Explain:** none.
+- **Not here:** any change to combat.
+
+---
+
+### P11-01 · One combat profile for every fighter (L) — 5.1.0, Ready
+
+**Now.** `CL.units.SWING` (0.16/0.12/0.24 s) is every melee attack's timing; `combat.COOLDOWN` gives the hero 0.52 s and every AI melee fighter 0.86 s; `resolveSwing` hits every opponent in reach and a 90° arc; reach and speed come from the troop row (the hero's from the `hero` row: 67 and 142); `character.heroCombat`, `companion.combat` and `retinue.combat` each compute their own HP, damage and armour; `js/art/battle.js` `poseOf` reads `CL.units.SWING`; `autoresolve.heroPower` calls `heroCombat`; a troop's weapon exists only in its `look`.
+
+**Problem.** There is no place where "what this fighter's weapon does" is defined, so every new weapon would mean new branches in combat, AI, art and auto-resolve, and they would drift apart.
+
+**Outcome.** One resolved **combat profile** per fighter, built from data (plan §6.1–§6.2), read by combat, AI, art, auto-resolve and the previews. **In this task it reproduces 5.0.0 exactly**: the same seeded battles give the same results.
+
+**Build.**
+- **Required:**
+  - `data/weapons.js` (`C.weapon_families`): the families of plan §6.3 with their fields; in this task every melee family's timing equals `SWING`, its `maxTargets` is unlimited and its `miss` 0, so nothing changes.
+  - Items: an optional `combat` block on weapons (overrides of the family) and a `family`; the five existing weapons get `family` (sword, axe, mace) and no override, their `stats.damage` stays the source of damage.
+  - Troops: a `weapon` reference (a family, or an item id) beside `damage`, `reach` and `ranged`, which **stay** and override the family for now (P11-11 moves troops onto profiles); derived from today's `look.weapon`.
+  - `js/profile.js` (`CL.profile`): `resolve(source, ctx)` → the profile object; `of(u)` (cached on the unit at `makeUnit` and on a loadout change); `attackProgress(u)` → `{ phase, k }` from the unit's own timing; `cooldownOf(u)` (the hero's `SWING.total` and the AI's 0.86 as profile fields for now: `cooldown.hero`, `cooldown.ai`, so D-P11d's change in P11-05 is one data change).
+  - `units.swingPhase`, `isCommitted`, `combat.startAttack`, `resolveSwing`, `cavalryAi`, `groups.shouldGuard` and `fireRange` read the unit's profile; `SWING` stays exported only as the sword family's default.
+  - `character.heroCombat`, `companion.combat`, `retinue.combat`, the tournament kit and a lord in person (`enc.leader`) build through `CL.profile.resolve`; they keep returning the same numbers.
+  - `js/art/battle.js` `poseOf` uses `CL.profile.attackProgress(u)`; nothing else in the art reads timing.
+  - `autoresolve.heroPower` from the resolved profile (same number).
+  - Content checks: every family complete and in range; every weapon item names a known family; every troop's `weapon` agrees with its look; packs may add families and item `combat` blocks; `docs/WORLD-FORMAT.md` documents both.
+  - Forged items (`addForged`) copy `family` and `combat` from their base.
+- **Optional:** a Debug panel line on the selected unit's profile.
+- **Not here:** any different timing, reach or rule.
+
+**Approach and files.** `js/profile.js` (new, `// @ts-check`, loaded before `js/units.js`), `data/weapons.js` (new, loaded with the data), `js/units.js`, `js/combat.js`, `js/groups.js`, `js/character.js`, `js/companion.js`, `js/retinue.js`, `js/tourney.js`, `js/autoresolve.js`, `js/content.js` (checks, `addForged`), `js/art/battle.js`, `types/crownless.d.ts` (`Profile`), `index.html` and `tests/helpers/load.js` (script order).
+
+**Layers.** None visible.
+
+**Art.** Poses read the profile's timing (identical today).
+
+**Information and controls.** None.
+
+**Save and packs.** No save step (profiles are content). Packs: new optional tables and fields.
+
+**Interactions.** Fine kit (`blacksmith.applyKit`) and traits (`traits.apply`) still modify the unit after its profile is built; they become profile modifiers in P11-11.
+
+**Edges.** A pack troop with no `weapon` gets one from its role (as `defaultLook` does); an item without a family is refused by the checks with its id.
+
+**Measure.** The golden comparison (below) is the measurement.
+
+**Tests.**
+- `tests/profile.test.js`: every family and item resolves; a troop's profile equals its 5.0.0 numbers; the hero's, Mara's, a retinue companion's, a lord's and a tournament kit's equal 5.0.0's; forged items keep the family; pack families and overrides are checked.
+- **Golden battles** (`tests/golden-battles.test.js`): with a fixed `Math.random` seed, the bench battle at 40 (30 s), each parity scenario fought by the masher, one tournament bout and one assault produce, frame for frame, the same unit positions, HP and result as 5.0.0. The expected values are recorded from 5.0.0 before the change (a JSON in `tests/fixtures/golden/`).
+- A grep test: no `SWING.`, `COOLDOWN.` or `.reach - 1` outside `js/profile.js` and the sword family's default.
+- The existing combat, cavalry, groups, tourney, art-battle and autoresolve tests unchanged.
+
+**Play.** None (no visible change); one battle seen in the preview to confirm the drawing.
+
+**Performance.** The profile is built once per unit; `attackProgress` is a few arithmetic operations; `npm run bench` at 200 within 5% of P11-00.
+
+**Acceptance.** The golden battles are identical; every listed module reads the profile; content and pack checks cover the new data.
+
+**Docs.** WORLD-FORMAT (families, item `combat`, troop `weapon`); ART-STYLE (poses read `attackProgress`); RELEASE-NOTES ("Under the hood").
+
+**Out.** New weapons, new rules, troop rebalancing (P11-05 onward).
+
+**Decisions.** None.
+
+**Brief.**
+- **Start from:** `js/units.js` (`SWING`, `swingPhase`, `isCommitted`, `makeUnit`), `js/combat.js` (`COOLDOWN`, `startAttack`, `resolveSwing`, `fireRange`, `cavalryAi`, `startBattle`'s hero, companion, retinue and leader blocks), `js/groups.js` (`shouldGuard`, `braceAgainst`), `js/character.js` (`heroCombat`), `js/companion.js` and `js/retinue.js` (`combat`), `js/tourney.js` (the duel kit), `js/autoresolve.js` (`heroPower`), `js/content.js` (`addForged`, the item and troop checks, `LOOK`), `js/art/battle.js` (`poseOf`).
+- **Decided:** families as plan §6.3 (melee timing all equal to `SWING` in this task); troops keep `damage`/`reach`/`ranged` as overrides; the hero's and AI's cooldowns as profile fields.
+- **Save:** none.
+- **Build order:** record the golden battles on 5.0.0 → `data/weapons.js` → `js/profile.js` → units and combat → hero, companions, lords, tournament → art → auto-resolve → content and pack checks → docs.
+- **Write tests in:** `tests/profile.test.js`, `tests/golden-battles.test.js`.
+- **Run:** those two; `npm test`, lint; browser `battle.spec.js`, `tourney.spec.js`, `art.spec.js`; `npm run bench` (200, 20 s); `node scripts/parity.js 40` (must equal P11-00's to the seed).
+- **Play:** one battle in the preview at 812×375; a screenshot.
+- **Explain:** none.
+- **Not here:** any change a player could notice.
+
+---
+
+### P11-02 · Carried and wielded: loadouts and one gear check (M–L) — 5.2.0, Ready
+
+**Now.** Eight slots; one weapon; the offhand a shield or nothing; `character.equip` moves one item between the pack and a slot atomically; `canBlock` follows the shield. The tournament fights in a loaner kit passed to `heroCombat`, the hero's own gear never moved. A disabled button with its reason exists for rights (`rights.may`), not for gear. `js/worlds.js` and `#worldPick` still carry the retired world chooser.
+
+**Problem.** A player can't carry a bow and a sword, can't use a two-handed weapon (none exists, and the shield would stay up), and nothing says why a piece of gear can't be used.
+
+**Outcome.** Carried versus wielded (plan §8.1): a primary and a secondary weapon, the shield stowed when the active weapon needs both hands or shoots, preferences kept, and **one gear check** (plan §8.2) that every screen and the battle use, with findings in words.
+
+**Build.**
+- **Required:**
+  - Slots: `weapon2` (a second carried weapon) and `ammo` (a quiver or bolt case; empty until P11-07 adds items); `SLOT_NAMES` "Second weapon", "Quiver".
+  - `c.loadout`: `{ start: 'primary' | 'secondary', ride: true, last: { [kind]: 'primary' | 'secondary' } }`; defaults choose the first valid loadout.
+  - `js/gear.js` (`CL.gear`): `active(c, kit, which)` (the weapon, the shield if allowed, the ammo); `check(c, kit, context)` → findings `{ kind: 'incompatible' | 'requirement' | 'penalty' | 'note' | 'advice', code, item, text, have, need, fix }`; `bestLoadout(c, kit, context)`; the rule table (hands, shield allowed, mounted use, armour limit) read from profiles; text from `data/gear_text.js` (so it can be edited and checked for length).
+  - **In battle:** the hero starts with the preferred valid loadout; **switching** (input from P11-09; a key Q and a temporary button now) takes the profile's `switch` time, cannot start while committed, and each weapon keeps its own "ready at" time, so switching never resets a cooldown or reload.
+  - **The check used by:** the character sheet (equip, the active loadout, a compare row: damage, reach, speed word, protection, weight, hands, mounted use), the armoury (findings before buying; buying an unusable item allowed after a confirmation that names the finding), the blacksmith (forging keeps everything), Prepare (a line naming the loadout and any finding; full Prepare work is P11-15), tournament registration (the loaner kit's findings), the battle start (an invalid preferred loadout falls back to the next valid one, with a message), save loading.
+  - **One place for each item:** `equip`, `unequip`, a new `swapWeapons`, selling, forging, capture's item loss, loot and the tournament kit keep the invariant.
+  - The retired world chooser removed (`js/worlds.js`'s chooser, `#worldPick`, `crownless_world`), as P10-02 intended.
+- **Optional:** "Equip best for…" (a sword-and-shield, two-handed or ranged preset) on the sheet.
+- **Not here:** attribute and skill requirements (P11-03), new weapons (P11-04 onward).
+
+**Layers.** Basic: gear equips as before; the second slot is optional; a battle uses the last valid loadout. Guided: choose the starting loadout, compare items in words. Expert: details with exact numbers; per-kind preferences.
+
+**Art.** None yet (P11-04 draws the stowed shield and the active weapon).
+
+**Information and controls.** Findings' text fits in two lines at 812×375 at Larger text; an icon per kind (a cross for incompatible, a lock for a requirement, a down arrow for a penalty, an "i" for a note); never colour alone.
+
+**Save and packs.** New fields `equipment.weapon2`, `equipment.ammo` (null) and `loadout` (defaults) through `sanitize`; no migration or fixtures (D-P11a). Packs: `data/gear_text.js` keys are fixed; packs can't add rule kinds.
+
+**Interactions.** `heroCombat` takes the active loadout; the tournament kit becomes a loadout of its own; capture (`party.js` takes an item) may take from any slot but never from the loaner kit; the merchant follower and quartermaster never touch equipment.
+
+**Edges.** Unequipping the active weapon mid-campaign makes the other loadout active; a sold or captured `weapon2` leaves `secondary` invalid and the preference falls back; an item in both slots is impossible (`equip` moves the old one to the pack).
+
+**Measure.** None (no balance change).
+
+**Tests.** `tests/gear.test.js`: every rule and finding; fallback order; text length; **the invariant test** (a seeded random sequence of 2,000 operations: equip, unequip, swap, buy, sell, forge, capture, loot, tournament entry and bout, export and import; the count of each item id over inventory and slots never changes except by buy, sell, loot and capture, and never goes negative); switching keeps "ready at" (a switch never makes a weapon ready sooner); the new fields' round trip and junk repaired. Browser `gear.spec.js` (new): equip a second weapon, see a finding on the sheet and in the armoury, the confirmation before buying, a switch in battle by key.
+
+**Play.** The sheet and the armoury at 812×375 by real taps: equip a second weapon, read a finding, buy after the warning.
+
+**Performance.** `gear.check` is called on screens and at battle start, never per frame.
+
+**Acceptance.** Every screen listed shows the same findings for the same kit; the invariant test passes; switching can't bypass a cooldown; nothing is silent.
+
+**Docs.** SAVE-FORMAT (the new fields); `data/help.js` topic "Your gear" (a sentence on loadouts); WORLD-FORMAT (the new slots); RELEASE-NOTES.
+
+**Out.** Requirements by attribute or skill, training, new items.
+
+**Decisions.** None.
+
+**Brief.**
+- **Start from:** `js/character.js` (`SLOTS`, `equip`, `unequip`, `heroCombat`, `sanitizeEquipment`), `js/ui.js` (the sheet: `#sheetEquip`, `#sheetPack`; the armoury: `#tradeArmoury`, `#tradeGear`), `js/blacksmith.js` (`forge`), `js/tourney.js` (the kit), `js/party.js` (capture's item), `js/save.js` (`sanitize`, the field list), `js/rights.js` (the reason pattern), `js/worlds.js`.
+- **Decided:** two weapon slots and an ammo slot; findings' kinds and icons as above; a buy of an unusable item needs one confirmation; switching 0.4 s for the sword family (P11-05 sets each family's).
+- **Save:** the new fields by `sanitize` defaults.
+- **Build order:** slots and their defaults → `js/gear.js` and its text → `heroCombat` from the active loadout → the sheet → the armoury → blacksmith, tournament, Prepare's line → battle start and switching → the chooser's removal.
+- **Write tests in:** `tests/gear.test.js`, `tests/browser/gear.spec.js`.
+- **Run:** those; `npm test`, lint; browser `gear`, `layout`, `text-size`, `settlement`, `tourney`, `blacksmith`, `load-save`; the full browser suite (the sheet is shared UI).
+- **Play:** as above.
+- **Explain:** `data/help.js` "Your gear".
+- **Not here:** requirements, new weapons, art.
+
+---
+
+### P11-03 · The progression budget and equipment requirements (M–L) — 5.3.0, Ready
+
+**Now.** Level cap 10; 9 skill points and 5 attribute points earned; Shield, Archery and Riding do nothing; Agility and Charisma do nothing in play; `character.skill` includes item, companion and retinue bonuses (plan §2.2, §7.1). P11-00 measured the days to each level.
+
+**Problem.** Requirements are only fair if the points to meet them exist and can't be lost by accident; today a Strength 10 requirement would take every attribute point of the game.
+
+**Outcome.** The budget of D-P11b, the skill set of D-P11c, requirements on items by plan §7.3's rule and §7.4's base values, shown everywhere through the gear check (old saves ignored, D-P11a; plan §7.5).
+
+**Build.**
+- **Required:**
+  - **The budget (D-P11b, owner 2026-11-26: raise the cap so it fits D-P11c's skills):** `MAX_LEVEL` raised (20 proposed) so the budget rule (plan §7.3) holds with all ten skills, which `tests/requirements.test.js` checks; `xpToNext` unchanged for levels 1–10; after 10, a curve set from P11-00's XP pace so the top level comes in a long campaign (the pace is shown to the owner from the measured table; two tries); grants unchanged (a skill point a level, an attribute point on even levels).
+  - **The skills (D-P11c, owner 2026-11-26):** `two_handed`, `polearm` added; the descriptions of all combat skills rewritten for what P11-05 to P11-08 will do (each says what it does once its task lands; until then "from 5.x.0").
+  - **Agility** given its job (used by P11-05 and P11-06): recovery and movement penalties; Strength: HP (as now), carry capacity, heavy draws; the creator and sheet say so.
+  - **Requirements** on items: `req: { str?, agi?, skills?: { id: n }, training?: id }`; families may give defaults; the gear check reports unmet ones with have, need and how to get it ("raise Strength: you have 2 points to spend", "train with … in …" from P11-17's data, or "not yet available" until it exists).
+  - `character.baseSkill(id)` and `baseAttribute(id)` (allocation, origin, training, story grants) used by every requirement; the effective `skill()` kept for performance.
+  - **Retraining** (D-P11i): `character.retrain(c)` returns every allocated point; used by P11-17's masters (for crowns); no free offer (old saves ignored).
+  - **The rule test** (plan §7.3): every item, family and pack item checked against the budget (ordinary: nothing above a new character; advanced: by the middle level with half the points; elite: by the late level with half the points, plus training; nothing unreachable).
+- **Optional:** a "plan your character" preview on the sheet (what a point would unlock).
+- **Not here:** what the skills do in combat (P11-05 to P11-08); instructors (P11-17).
+
+**Layers.** Basic: starter gear needs nothing; points can be spent anywhere without breaking anything. Guided: the sheet names what a point would unlock. Expert: exact requirements and the plan preview.
+
+**Art.** None.
+
+**Information and controls.** Requirement lines on the sheet, the shops, the blacksmith and Prepare (P11-02's findings); level-up says what new points could unlock.
+
+**Save and packs.** The two skills at 0 and `character.training: {}` through `sanitize`; no migration (D-P11a). Packs: `req` validated against the budget the same way.
+
+**Interactions.** `story.js`'s attribute and skill conditions read base values (as before); origins unchanged (their +1 counts as base); the companions' skill bonuses no longer meet requirements (they never did: no requirements existed).
+
+**Edges.** A level-10 character at the old cap with XP stored as 0 starts gaining again; retraining happens only at a master, for crowns (P11-17); retraining mid-battle is impossible (sheet only, not in battle).
+
+**Measure.** `node scripts/progression.js` after the curve change: days to levels 10, 15 and 20 on three seeds; the five origins' band (`tests/slow/origins.test.js`).
+
+**Tests.** `tests/progression.test.js` (new cases: the cap, the curve unchanged to 10, grants, `retrain` returns every point, base against effective); `tests/requirements.test.js` (the rule over all content and the sample pack); the new fields' defaults; browser `gear.spec.js` (a requirement line with have and need).
+
+**Play.** The sheet and the armoury at 812×375: a requirement unmet and its line.
+
+**Performance.** None.
+
+**Acceptance.** Every item meets the rule; requirements use base values only; a character who can't meet a requirement keeps the item; the five origins stay in their band.
+
+**Docs.** `data/help.js` "Your character" (levels, points, what each skill does); SAVE-FORMAT (the new fields); RELEASE-NOTES; plan §7 updated with the measured curve.
+
+**Out.** Proficiency from use (not adopted, plan §7.2); Phase 12's non-combat progression (P12 area D).
+
+**Decisions.** D-P11b, D-P11c (decided 2026-11-26).
+
+**Brief.**
+- **Start from:** `js/character.js` (`MAX_LEVEL`, `xpToNext`, `gainXp`, `skill`, `attribute`, `sanitize`), `data/character.js` (skills), `data/origins.js`, `js/story.js` (attribute and skill conditions and effects), `js/gear.js`, `js/ui.js` (the sheet's stats and level-up), `scripts/progression.js`.
+- **Decided:** D-P11b and D-P11c as the owner decided; the cap's exact value, and the middle and late levels for the rule, set from P11-00's table at the start of the task and written into `data/character.js` (`budget: { cap, middle, late }`).
+- **Save:** `sanitize` defaults.
+- **Build order:** skills and descriptions → base values → the cap and curve (measure, two tries) → `req` on items and the rule test → the gear check's requirement findings → `retrain` → the sheet and level-up text.
+- **Write tests in:** `tests/progression.test.js`, `tests/requirements.test.js`, `tests/browser/gear.spec.js`.
+- **Run:** those; `npm test`, lint; browser `gear`, `layout`, `text-size`; slow `origins`, `campaign-bots` (in the background).
+- **Play:** as above.
+- **Explain:** "Your character".
+- **Not here:** combat effects of skills; training.
+
+---
+
+### P11-04 · The equipment you see (M–L) — 5.4.0, Specified
+
+**Now.** `G.fig.heroFor(character, canBlock)` draws the hero in mail, a plumed helm, with a sword, and a kite shield unless `canBlock` is false; the creator's preview, the portrait (`G.ui.heroLook`) and the battle use it; a tournament's loaner kit shows only through the shield. `body()` draws a horse only for `role === 'cavalry'`. Looks are cached per battle in a `WeakMap` that is never invalidated; bake keys are `troop|realm|seed|face|step|team|pose|scale`. `content.lookAgrees` infers a crossbow from a projectile speed of 300. Items have no looks; the sheet and shops show item names and vector icons by slot.
+
+**Problem.** The hero doesn't look like what they carry, so equipment choices are invisible, and the art can't show the differences Phase 11 adds.
+
+**Outcome.** Every fighter is drawn in the gear and state they actually have (plan §11): the hero (weapon, shield active or slung, helmet, armour, mount), companions, tournament fighters in the format's kit; the same in portraits, the sheet, the creator's preview, the shops' item icons and Prepare. Caches stay correct and bounded.
+
+**Build.**
+- **Required:**
+  - An item `look` (kit part, length, colours; a helmet's kind, an armour's class) on every item, checked like troop looks; forged pieces share their base's look; packs may give one (else a default from the family or slot).
+  - `G.fig.heroFrom(character, activeKit, ctx)`: identity from the creator (face, skin, hair, presentation, cloak and trim, your banner's colours), the rest from the kit: helmet (or bare head), armour class, the active weapon, the shield in hand or **slung on the back**, the quiver, the mount; replaces `heroFor` everywhere (battle, portrait, sheet, creator, Art gallery).
+  - Companions and the retinue drawn from their gear (`gearSlots`) over their own look.
+  - Tournament fighters and the hero in a bout drawn in the format's kit (P11-19 adds formats; the current loaner kit now shows its real helm and gambeson).
+  - **Mounted is a state, not a role:** `u.mounted`, `u.mount` (a horse look); `body()` mounts for `u.mounted`; every `role === 'cavalry'` check in `js/units.js` (`mass`, `charging`), `js/combat.js` (`ai`), `js/groups.js`, `js/art/battle.js` and `js/art/worldmap.js` reviewed: those meaning "on a horse" become `CL.units.mounted(u)`; cavalry troops are `mounted` from their troop (identical behaviour). The hero is not mounted yet (P11-08).
+  - New kit parts (and gallery entries): greatsword, a mace head (distinct from the club), the two-handed grip, the slung shield, the quiver on the back, the recurve bow (for P11-16), the arbalest's windlass (for P11-16); helmets mapped from items (cap, nasal, kettle, great, bascinet as a new or mapped part).
+  - **Code-drawn item icons** (`G.ui`): weapon by family, shield, helmet, armour class, horse, quiver; in the sheet, the shops, the blacksmith and Prepare.
+  - **Caches:** the look's key gains an equipment signature (active weapon, shield state, helmet, armour class, mount); the per-battle `WeakMap` stores the signature and rebuilds the look when it changes; bake keys include the signature; the signature for soldiers comes from their troop and fine kit only.
+  - `lookAgrees` checks a troop's look against its profile's family (bow, crossbow, long, mounted), not projectile speed or reach.
+- **Optional:** a turn-around preview of the hero in the sheet.
+- **Not here:** new poses for defence, ranged or riding (their tasks); new troop looks (P11-11).
+
+**Layers.** None (presentation).
+
+**Art.** As above, by `docs/ART-STYLE.md`; checked at 812×375 and 2.2× in the gallery; one palette, outline and light.
+
+**Information and controls.** The sheet shows the hero as equipped; icons have text labels (accessible names).
+
+**Save and packs.** None. Packs: item `look` optional, validated.
+
+**Interactions.** P11-02's switch changes the active weapon: the hero's look updates the next frame; a stowed shield is drawn on the back.
+
+**Edges.** An item whose look a pack omits gets a default; a look that changes every frame (it shouldn't) would rebuild every frame: the test below catches it.
+
+**Tests.** `tests/art-gear.test.js`: every item's look valid; the hero drawn from each kit (counting fake canvas: the weapon part painted matches the family); a switch changes the signature and the look; a stowed shield draws on the back; the bake keys over a 200-fighter battle of every realm with switches stay under 3,000; `lookAgrees` by family; the portrait follows the helmet. Browser `art.spec.js`: the sheet, a battle and a tournament bout show no image request and the hero's look matches the kit (a test hook returns the drawn look). Visual (if the baselines exist): the sheet and a battle at 812×375.
+
+**Play.** The sheet with three kits; a battle after a switch; a tournament bout: the hero in the loaner kit.
+
+**Performance.** P10-G2's budget: drawing at 40 within 1.2× of P11-00; 200 not lower; the hero is drawn live as before.
+
+**Acceptance.** The hero is drawn in what they wield and wear in every listed scene; the cache test passes; content checks use profiles.
+
+**Docs.** ART-STYLE ("The hero", "Items", "Mounted"), ASSETS (unchanged rule: code only), RELEASE-NOTES.
+
+**Out.** New mechanics.
+
+**Decisions.** None.
+
+**Brief.**
+- **Start from:** `js/art/figures.js` (`weapon`, `weaponArm`, `shield`, `shieldPos`, `helmet`, `horse`, `heroFor`, `heroLook`, `companionLook`), `js/art/battle.js` (`lookOf`, `baked`, `body`, `unit`), `js/art/ui.js` (`heroLook`, `portrait`, `ICONS`), `js/content.js` (`LOOK`, `checkLook`, `lookAgrees`), `js/units.js` and `js/combat.js` (role checks), `js/gfx/gallery.js`.
+- **Decided:** the signature string `weapon|shield(on/back/none)|helmet|armour|mount`; soldiers' signature from troop and fine kit; the gallery's new page "Arms and armour".
+- **Save:** none.
+- **Build order:** item looks and checks → `heroFrom` → the sheet, creator and portrait → battle look and signature → mounted as a state → new parts → icons → `lookAgrees` → gallery.
+- **Write tests in:** `tests/art-gear.test.js`, `tests/browser/art.spec.js`.
+- **Run:** those; `npm test`, lint; browser `art`, `battle`, `tourney`, `gear`, `layout`; `npm run bench`.
+- **Play:** as above.
+- **Explain:** none.
+- **Not here:** combat changes.
+
+---
+
+### P11-05 · Melee rhythm and defence (L) — 5.5.0, Ready — **Milestone M1**
+
+**Now.** One timing for every swing; the hero swings every 0.52 s and the AI every 0.86 s; a swing hits every opponent in its cone; a hit pushes 6 px and nothing else; a raised shield stops every frontal blow for ever; the AI raises shields the instant an opponent winds up; the hero's reach (67) and speed (142) out-class nearly every soldier (plan §3). P11-00 measured how much the *timer* and *turtle* pilots gain over the *masher* (little, by the analysis).
+
+**Problem.** Holding Attack is the best play; weapons feel the same; blocking is either perfect or useless.
+
+**Outcome.** The rhythm of plan §10.1–§10.2 and its limits (§10.4): weapon-specific commitment, a costly whiff, limited targets, capped interruption, shield pressure and the Shield skill, weapon guard, honest guard reactions, the hero on the same body rules as everyone (D-P11d), the first new hero weapons, and the feedback to read it all.
+
+**Build.**
+- **Required:**
+  - **D-P11d** (owner, 2026-11-26): the hero's reach, timing and cooldown from the active weapon's profile; speed from a base walking speed (data: `data/character.js` `body`), lowered by load (P11-06 completes it; here a placeholder of armour class) and helped by Agility; the `hero` troop's `reach` and `speed` no longer used.
+  - **Families' timings, reach, arcs, `maxTargets`, `miss`, `stagger`, `poise`, `shieldPressure`, `knockback`, `moveDuringAttack`** for sword, axe, mace, greatsword, greataxe, spear (and pike for troops), set from duel-lab measurements (two tries a number), within plan §6.4's rules.
+  - **Whiff:** a swing whose active window hits nobody adds the family's `miss` to recovery.
+  - **Targets:** at most `maxTargets` per swing, nearest first, the second and later at reduced damage.
+  - **Stagger:** a blow landing during the target's windup interrupts it when `stagger > poise`; immunity after a stagger; at most one per window; knockback shrinking on repeats.
+  - **Shields:** pressure accumulates per blocked blow; a broken guard lowers the shield for a moment; it recovers when not blocking; **Shield skill** (capacity, recovery, a few degrees of arc).
+  - **Weapon guard** for two-handed and spear wielders: Block takes part of a frontal blow in a narrower arc.
+  - **Guard reactions:** AI shield troops raise their shields after a reaction delay (by tier now; by style in P11-10); no same-frame guard.
+  - **New hero weapons** (items): a greatsword, a two-handed axe (the plain greataxe; the regional longaxe is P11-16), a spear (short, shield allowed), with prices, `req` by plan §7.3 and looks from P11-04; sold in town armouries; one in the high loot table.
+  - **One-Handed, Two-Handed, Polearm** skills: damage as One-Handed does now (+3% a point), and a little faster recovery (the family's `skillRecovery`).
+  - **Feedback:** whiff, out of reach, blocked, guard broken, interrupted, stagger (plan §10.1); the glint on the hero's current opponent's and attackers' weapons during windup (off with Reduced effects unless the pose alone reads); distinct synthesized sounds for whiff, guard break and stagger in `js/audio.js`.
+  - **Poses** (art): two-handed grip swings and recovery, shield pushed back under pressure, guard broken, stagger, weapon guard.
+- **Investigate (D-P11j):** a timed parry (Block raised within a short window before an incoming active frame deflects it and opens the attacker). Built behind a setting off by default; kept only on the owner's word at M1.
+- **Optional:** a Debug "duel practice" start (any weapon against any troop) for the owner's M1 session (`js/debug.js`).
+
+**Layers.** Basic: hold Attack still works against weak foes; the shield still blocks. Guided: step back from a windup, strike after a whiff; pick a weapon for the foe. Expert: spacing to the reach edge, baiting whiffs, breaking shields with an axe, stagger timing.
+
+**Art.** As above; the dangerous part drawn exactly over the active window (test).
+
+**Information and controls.** No new button; Block and Attack as before; the feedback above; How to Play's "Fighting" topic (one paragraph per idea).
+
+**Save and packs.** None (content and rules). Packs: family fields validated with bounds (timing 0.05–1.5 s, reach 30–140, …).
+
+**Interactions.** Formations' shield wall uses the new pressure rule (P11-13 re-tunes); braced spears unchanged; morale's flank rule unchanged; auto-resolve reads the hero's profile (its power changes: measured, not tuned here); tournaments use it all (their opponents gain styles in P11-10); companions use their profiles.
+
+**Edges.** Plan §10.4's table, each with a test. A unit killed mid-swing: no stagger leftovers. A hit during the target's own active window: no interrupt (both land). Stagger while guarding: the guard drops only if broken.
+
+**Measure.** `duel-lab.js` (every pilot, every family against looter, footman, huscarl, legionary, pikeman, the tournament rounds; 40 seeds) against P11-00; `parity.js 40` (the masher's and the timer's fought rates against the odds); `extras.js`.
+
+**Tests.** `tests/melee.test.js` (new): timing per family; whiff recovery; target cap; stagger and its immunity and cap; knockback shrinking; shield pressure and recovery; Shield skill; weapon guard; guard reaction delay; the hero's body from the profile; drawn phase equals simulated phase on every frame (art hook). Existing `combat`, `groups`, `formations`, `extras`, `tourney`, `cavalry` tests updated where their numbers were the old shared ones (each change named in the Done paragraph). Browser `battle.spec.js`: a whiff message, a block, a switch to the greatsword (shield slung).
+
+**Play.** **M1** (plan §13 H-01 to H-03): the owner's duels on the phone, the shop with too little Strength, a switch mid-fight. The parry experiment if built.
+
+**Performance.** Per-unit work stays constant (a few comparisons per blow); `npm run bench` within 10% of P11-00 at 200.
+
+**Acceptance.** The *timer* beats the *masher* clearly against T2/T3 and tournament rounds; the masher still beats looters near its 5.0.0 rate; each family has a win and a loss in the matrix (plan §10.5); parity's band (plan §15) or the gap recorded for P11-20; the owner's M1 verdict.
+
+**Docs.** How to Play "Fighting"; `data/character.js` skill texts; RELEASE-NOTES; plan §10 with the chosen numbers.
+
+**Out.** Armour weight (P11-06), ranged and mounted (P11-07, P11-08), AI styles (P11-10).
+
+**Decisions.** D-P11d (decided 2026-11-26), D-P11j.
+
+**Brief.**
+- **Start from:** `data/weapons.js`, `js/profile.js`, `js/combat.js` (`startAttack`, `resolveSwing`, `hit`, `updateHero`, `COOLDOWN`), `js/units.js` (`push`, `move`), `js/groups.js` (`shouldGuard`, `coverFor`), `js/formations.js` (`guard`, `strikesOver`), `js/art/figures.js` (`weaponArm`, `shieldPos`), `js/art/battle.js` (`poseOf`, `effects`), `js/audio.js`, `scripts/duel-lab.js`.
+- **Decided:** D-P11d as the owner decided; stagger immunity and caps exist (their lengths set by measurement); whiff recovery per family; the glint is a shape, not a colour.
+- **Save:** none.
+- **Build order:** the hero's body (D-P11d) and measure → timing per family → whiff → targets → stagger and caps → shields and pressure → weapon guard → guard reactions → new items → feedback and poses → parry experiment → measure and tune (two tries) → docs.
+- **Write tests in:** `tests/melee.test.js`, `tests/browser/battle.spec.js`.
+- **Run:** those; `npm test`, lint; browser `battle`, `tourney`, `extras`, `art`; `npm run bench`; `duel-lab`, `parity 40`, `extras.js`; ask for `battle-parity`.
+- **Play:** M1.
+- **Explain:** "Fighting" in How to Play; tips `whiff` and `shieldPressure` (once each).
+- **Not here:** armour weight, bows, horses, AI styles.
+
+---
+
+### P11-06 · Armour, weight and movement (M) — 5.6.0, Specified
+
+**Now.** Armour is a sum with no weight; items' `weight` is unused in combat; Agility unused; a heavier hero is simply better.
+
+**Problem.** No armour choice is a trade-off, so the heaviest is always best and light builds don't exist.
+
+**Outcome.** Plan §10.3: a personal load from worn and wielded gear against a capacity from Strength; foot speed, recovery and draw affected by load; poise and protection from armour; Agility and Riding mitigate; seven styles viable.
+
+**Build.**
+- **Required:**
+  - `CL.profile` computes `load` (the existing `weight` of worn and wielded items; cargo and the pack excluded) and `capacity` (from base Strength); a few load bands (light, medium, heavy, overloaded) with effects on foot speed, acceleration (a short ramp, so heavy fighters start slower), recovery and draw; armour class gives poise.
+  - **Agility:** lowers the speed and recovery penalties; **Riding:** lowers them when mounted (P11-08 uses it).
+  - **Armour pierce** (maces, crossbows) in `mitigate`: a share of armour ignored.
+  - Items' weights reviewed (most stay); the light armour pieces stay cheap and useful.
+  - The gear check's `penalty` findings for heavy loads ("Your gear is heavy: you move slower").
+- **Optional:** one new light armour (a brigandine-like middle piece) if the matrix shows a gap; one heavy piece (plate) only if the requirements rule allows it.
+- **Investigate:** a sprint for light builds (plan §10.3): measured, proposed to the owner, not built.
+
+**Layers.** Basic: gear works; heavy is slower, said in words. Guided: choose light or heavy for a contract. Expert: tune load to a style with exact numbers.
+
+**Art.** None new (armour classes are already drawn by P11-04); heavy fighters' walk a little slower (from speed).
+
+**Information and controls.** The sheet's load bar (bands in words), findings; none in battle.
+
+**Save and packs.** None. Packs: item weights validated (0–20).
+
+**Interactions.** Troops keep their data speed (P11-11 checks consistency); companions get load from their gear; tournament kits are loads like any other.
+
+**Edges.** A character overloaded by their own gear can still walk (a floor on speed); a horse changes the load's effect on speed only.
+
+**Measure.** `duel-lab.js` styles matrix (plan §10.3's seven, foot styles here; mounted ones re-checked in P11-08); `parity.js 40`.
+
+**Tests.** `tests/encumbrance.test.js`: load and capacity; bands; Agility mitigation; pierce; poise; findings. Browser `gear.spec.js`: the load bar.
+
+**Play.** A contract as a light duelist and as heavy infantry (plan §13 is at M2; here one pass in the preview).
+
+**Performance.** Load computed at battle start and on a switch only.
+
+**Acceptance.** No armour set wins every matchup; light and heavy styles each win somewhere; the five origins' starting kits are light or medium and unpenalised.
+
+**Docs.** How to Play "Fighting" (weight); RELEASE-NOTES.
+
+**Out.** Stamina; body parts; durability.
+
+**Decisions.** None.
+
+**Brief.**
+- **Start from:** `js/profile.js`, `js/character.js` (`heroCombat`, attributes), `data/items.js` (weights), `js/combat.js` (`mitigate`), `js/units.js` (`move`).
+- **Decided:** four bands; pierce as a share of armour; a speed floor.
+- **Save:** none.
+- **Build order:** load and capacity → bands → Agility → pierce → findings → measure and tune.
+- **Write tests in:** `tests/encumbrance.test.js`.
+- **Run:** that; `npm test`, lint; browser `gear`; `duel-lab`, `parity 40`.
+- **Play:** one contract in the preview.
+- **Explain:** a sentence in "Fighting".
+- **Not here:** horses.
+
+---
+
+### P11-07 · Bows and crossbows in your hands (L) — 5.7.0, Specified
+
+**Now.** Only troops shoot: they fire when the nearest opponent is inside `range + 20`; the arrow flies 1.6 s whatever the range; a miss is an angle error; hit radius 19 px; a 0.05 s step (fast bolts could pass through a target); shields and cover stop arrows from the front; archers step aside for a clear shot; there is no ammunition. The art draws a bow over the reload and a crossbow wound back.
+
+**Problem.** The hero can't shoot; range is decided at the trigger, not in the flight; mobile aiming doesn't exist.
+
+**Outcome.** Plan §10.6: the hero's bows and crossbows with draw, reload, assisted aim (manual optional), ammunition, flight that respects range, swept collision, the Archery skill, and the feedback and poses.
+
+**Build.**
+- **Required:**
+  - Families' ranged fields for shortbow, longbow and crossbow (and their troop use, kept identical for troops until P11-11 unless the flight rule changes them: measured).
+  - **Hero input:** Attack held draws (or aims a loaded crossbow) and released looses; a tap shoots when ready; walking slowed while drawing; a crossbow reload on the spot for heavy ones.
+  - **Assisted aim:** the target in the facing cone (the nearest threat, else the last struck), shown by a target ring; lead for moving targets by the projectile's speed; **manual aim** on PC by the mouse pointer (a setting, on by default on desktop) and on phones as an optional setting (drag on the field with the right thumb).
+  - **Flight:** each projectile carries `maxRange` and the distance flown; damage falls past the effective range; it drops after `maxRange`; **swept collision** (segment against circle each step); shields and cover as now; line of sight for the assisted choice.
+  - **Ammunition (D-P11e):** a quiver count per battle from the weapon (and the `ammo` slot's item); refilled after the battle; empty: an automatic switch to the other loadout (or unarmed if none) and "Out of arrows"; switching can't refill or skip a reload.
+  - **Archery skill:** draw speed and spread; Strength: heavy draws and crossbow reload; load from P11-06 (armour limit findings: "your armour is heavy for this bow").
+  - **Items:** a shortbow, a hunting longbow, a crossbow and a quiver (an `ammo` item that raises the count), with requirements by the rule; sold in towns; in the loot tables.
+  - **AI archers** use the same flight rule (their target choice already checks range).
+  - **Feedback:** the draw ring, the target ring, "too far", "no clear shot", the quiver count on the HUD (in the frame by P10-G5's style).
+  - **Poses:** the hero's draw held at full, loose; crossbow aim and reload; the shield slung while shooting (P11-04).
+- **Optional:** a short "aim mode" toggle on PC (hold the right mouse to aim manually).
+- **Not here:** mounted shooting (P11-08); AI kiting (P11-10).
+
+**Layers.** Basic: hold and release; the game picks the target. Guided: choose the longbow for range, the shortbow for moving; switch to the sword when they close. Expert: manual aim, leading, firing positions on high ground.
+
+**Art.** As above.
+
+**Information and controls.** No new permanent button: ATTACK shoots when a bow is active; the switch control from P11-09 (a temporary key Q until then).
+
+**Save and packs.** None beyond P11-02's `ammo` slot. Packs: ranged fields validated (range 60–600, speed 120–900, draw 0.2–4 s).
+
+**Interactions.** Shield walls and cover block the hero's arrows as anyone's; high ground's range ×1.25 applies; reinforcements and morale unchanged; auto-resolve reads the hero's ranged profile (P11-20 tunes).
+
+**Edges.** Firing into one's own side: arrows still pass through friends (no friendly fire, kept); a target that dies in flight: the arrow flies on; reload interrupted by a switch keeps its progress or loses it (decided: loses it, so switching can't shorten a reload); a tournament format forbids bows: the gear check says so at registration.
+
+**Measure.** `duel-lab.js --ranged` (the hero with each bow against foot and riders, with and without a shield wall in front); `parity.js 40` (ranged-heavy company); the flight test's tunnelling check at 900 px/s.
+
+**Tests.** `tests/archery.test.js`: draw and release; assisted target choice; lead; range falloff and drop; swept hits at high speed; ammunition and its refill; switching can't skip a reload; Archery and Strength effects; armour limits. Browser `archery.spec.js` (new): shoot by holding and releasing on the phone project; the target ring; "Out of arrows" and the switch.
+
+**Play.** H-04 (at M2): a contract as a foot archer.
+
+**Performance.** Swept collision against the proximity grid (P9-B1's `proximity`), not every unit; `npm run bench` with 40% archers at 200 within the task's budget (10% of P11-00).
+
+**Acceptance.** The hero can win a contract as an archer; range matters in the flight; no projectile passes through a target at any speed; mobile needs no third touch; the matrix rows for bows have a win and a loss.
+
+**Docs.** How to Play "Bows and crossbows"; RELEASE-NOTES.
+
+**Out.** Throwing weapons; arrow purchase; mounted shooting.
+
+**Decisions.** D-P11e.
+
+**Brief.**
+- **Start from:** `js/combat.js` (`startAttack`'s ranged branch, `updateArrows`, `ARROW`, `MISS_ANGLE`), `js/groups.js` (`clearShot`), `js/formations.js` (`rangeOf`), `js/units.js` (`proximity`, `arrowBlocked`), `js/input.js` (Attack's hold and release, the mouse), `js/art/figures.js` (`bow`, `crossbow`), `js/art/battle.js` (`arrows`, `poseOf`'s draw), `js/ui.js` (the battle HUD).
+- **Decided:** hold to draw, release to loose; assisted by default; manual by the pointer on desktop; a quiver per battle; a switch loses a reload's progress.
+- **Save:** none.
+- **Build order:** families' ranged fields → flight and swept collision (troops first, measured) → the hero's draw and loose → assisted aim → ammunition → skills and limits → items → feedback and poses → manual aim → measure.
+- **Write tests in:** `tests/archery.test.js`, `tests/browser/archery.spec.js`.
+- **Run:** those; `npm test`, lint; browser `archery`, `battle`, `art`, `layout`; `npm run bench`; `duel-lab --ranged`, `parity 40`.
+- **Play:** a contract as an archer in the preview.
+- **Explain:** "Bows and crossbows"; tip `draw`.
+- **Not here:** horses.
+
+---
+
+### P11-08 · Fighting from the saddle (L) — 5.8.0, Specified — **Milestone M2 (with P11-09)**
+
+**Now.** The horse slot speeds the map only; AI cavalry ramp, charge (×1.2), ride through foot, wheel; braced spears and squares stop a charge in front; `u.mounted` exists from P11-04 (cavalry troops only).
+
+**Problem.** The hero and companions can't ride in battle; horses differ only in map speed.
+
+**Outcome.** Plan §10.7: the hero (and companions with a horse in their gear, if cheap) fights mounted; horses differ in battle; the lance; Riding matters; mounting rules per field; counterplay; mounted archery with weaknesses.
+
+**Build.**
+- **Required:**
+  - Mount profiles on horse items: speed, acceleration, turning, combat suitability (`battle: no | light | war`), HP (D-P11f), a Riding requirement by the rule; the nag `battle: no` (or a heavy penalty, decided by playtest), the rouncey light, the courser fast; **one new warhorse** (weight, charge) and the League's **light horse** mount in P11-16.
+  - The hero mounted when the horse can fight, the field allows it and the preference says ride (P11-02's `loadout.ride`); a "Ride / On foot" choice on Prepare (P11-15 completes Prepare).
+  - **Movement:** the joystick steers with momentum and a turning rate by mount and Riding; collision and ride-through by the same rule as cavalry (`charging`).
+  - **Mounted melee:** the profile's `mounted` field (yes, no, penalty); strikes on the side faced; the **lance** does damage from momentum (none at a standstill), couched by the art.
+  - **Counterplay:** braced spears and squares stop the hero's charge as anyone's; riders take damage from braces; spears' reach.
+  - **Mounted archery:** bows with `mounted: yes` or `penalty` (the shortbow light penalty; the composite bow in P11-16 none); shooting at a gallop costs spread; the longbow and heavy crossbow `no`.
+  - **Horse HP (D-P11f):** if it falls, the hero is unhorsed (a short stagger) and fights on foot; after the battle the horse is fine.
+  - **Fields:** no horses in the assault, the courtyard, the tourney lists unless the format allows, the town streets; said before the battle (Prepare's line and a message).
+  - **Dismount** by a button in the Orders panel (and a key, proposed X); no remount (D-P11k).
+  - **Riding skill:** turning, acceleration, the mounted weapon and bow penalties.
+  - **Companions** ride when their gear has a combat horse (if `companion.combat` can take it without a new system; else noted for P11-11).
+  - **Art:** the hero on their horse (from P11-04's mount look), rider poses with each weapon, the lance couched with momentum, the unhorsed fall.
+- **Investigate:** remounting (D-P11k: not in this version).
+
+**Layers.** Basic: equip a battle horse and ride; Prepare remembers. Guided: choose to ride or not for a field; a lance for charges. Expert: charge timing against braced lines, mounted archery positions.
+
+**Art.** As above.
+
+**Information and controls.** Dismount in Orders; findings for horses ("This horse is not trained for battle", "This bow can't be used from horseback", "Riding 4 needed; you have 2"); Prepare's "You will fight on foot: horses can't go onto the walls".
+
+**Save and packs.** None (mount preference in `loadout`, P11-02's schema). Packs: mount fields validated.
+
+**Interactions.** Map travel unchanged (`travelFactor`); cavalry AI unchanged (P11-10); reinforcements unchanged; auto-resolve reads the mounted hero (P11-20).
+
+**Edges.** Endless circling (turning rate, the stall guard; AI answers in P11-10); a mounted hero blocked in a crowd (ride-through only at charge speed, as cavalry); the hero unhorsed near the edge; a horse slot emptied between battles.
+
+**Measure.** `duel-lab.js --mounted` (knight with lance and sword, horse archer, against foot, spears, archers, riders); `parity.js 40` with a mounted hero; plan §10.3's mounted styles.
+
+**Tests.** `tests/mounted.test.js` (new): who rides where; momentum and turning; the lance; braces stop the hero; unhorsing; dismount; no remount; mounted bow penalties; Riding effects; the role/identity split (the mounted hero is the hero for morale, orders, the stall guard and hero-down). Browser `mounted.spec.js` (new): ride a battle on the phone project, dismount, the walls' message.
+
+**Play.** H-05 and H-06 at M2.
+
+**Performance.** One more mounted unit; `npm run bench` unchanged.
+
+**Acceptance.** Mounted knight and mounted archer styles viable and distinct; braced spears counter the hero's charge; no field allows a horse it forbids; circling can't win a battle by itself (the lab's circling pilot loses to archers or riders, or the stall guard ends it).
+
+**Docs.** How to Play "On horseback"; RELEASE-NOTES.
+
+**Out.** Horse management, injuries after battle, remounting, a horse market.
+
+**Decisions.** D-P11f, D-P11k.
+
+**Brief.**
+- **Start from:** `js/combat.js` (`cavalryAi`, `CAVALRY`, `updateHero`), `js/units.js` (`charging`, `passesThrough`, `mass`, `mounted`), `js/groups.js` (`braceAgainst`), `js/character.js` (`travelFactor`, the horse), `js/prep.js`, `js/arena.js` (map kinds), `js/assault.js`, `js/art/figures.js` (`horse`), `js/art/battle.js` (`body`).
+- **Decided:** D-P11f and D-P11k's defaults; the field rule by map kind in `data/battle_maps.js` (`mounts: false`).
+- **Save:** none.
+- **Build order:** mount profiles → riding the hero (movement) → field rules and messages → mounted melee and lance → counterplay → unhorsing → dismount → mounted bows → Riding → companions (if cheap) → art → measure.
+- **Write tests in:** `tests/mounted.test.js`, `tests/browser/mounted.spec.js`.
+- **Run:** those; `npm test`, lint; browser `mounted`, `battle`, `assault`, `art`, `layout`; `npm run bench`; `duel-lab --mounted`, `parity 40`; ask for `battle-parity`.
+- **Play:** a contract mounted in the preview.
+- **Explain:** "On horseback".
+- **Not here:** AI against riders (P11-10).
+
+---
+
+### P11-09 · Controls, feedback and teaching (M) — 5.9.0, Specified — **Milestone M2**
+
+**Now.** The battle's right side: Zoom, MAP, ORDERS, BLOCK, ATTACK; joystick left; keys for orders, R rally, Tab/M overview, Z zoom; input clears held buttons on blur (`input.js` 516–517). P11-02 to P11-08 added a switch (temporary Q and button), draw and release, aim, dismount.
+
+**Problem.** Three new input families arrived in three tasks; the layout, the stuck-input cases and the teaching need to be made whole before AI and troops change the fights again.
+
+**Outcome.** Plan §12: one consistent control scheme on phone and PC, no new permanent button beyond one context control (or none), every stuck-input case closed, the first fights teaching the new rhythm, How to Play by stage.
+
+**Build.**
+- **Required:**
+  - **The switch control** on the phone: try (a) a small control on ATTACK's edge showing the other weapon's icon and (b) a swipe across ATTACK; keep the one the owner prefers at M2 (both tested); PC Q (and the wheel when not zooming, if it doesn't conflict with zoom: else Q only).
+  - **Context:** ATTACK's icon follows the active weapon (sword, bow, lance); BLOCK's follows shield or weapon guard; the switch control hides when there is no second weapon.
+  - **Stuck input:** every case of plan §12 tested in the browser: releasing outside a button, pause, a modal, the overview, backgrounding (visibility change), orientation change, the battle ending mid-hold, a switch mid-hold, a lost pointer, a second finger cancelling.
+  - **Feedback audit:** every cue of plan §10 visible at 812×375 at 100 on the field, with shape and sound, not colour only; Reduced effects keeps the essential cues (the glint becomes part of the pose).
+  - **Teaching:** the origin quests' first fight (P10-05's opening quests) show the controls card as now, then single hints when first relevant (`whiff`, `shieldPressure`, `switch`, `draw`, `riders`); the guide's skip all/one kept; How to Play "Fighting" by stage (first fight, your second weapon, bows, horses).
+  - **Settings:** assisted aim (on), manual aim on phones (off), the glint (on), the parry (if kept).
+- **Optional:** an "attack on release" accessibility setting (strike when the button is released) if the owner's M2 play asks for it.
+
+**Layers.** Basic: the same two-thumb play; hints once. Guided: settings. Expert: keys and manual aim.
+
+**Art.** Button icons from the kit's icon set.
+
+**Information and controls.** As above.
+
+**Save and packs.** None (device settings).
+
+**Interactions.** The beginner guide (P10-07) and tips; text sizes (W-01).
+
+**Edges.** A hint never covers the joystick or ATTACK; a hint during a duel pauses nothing.
+
+**Measure.** None.
+
+**Tests.** Browser `controls.spec.js` (new): each stuck-input case; the switch control at every text size (44 px+); the context icons; on desktop and phone. `tests/tips.test.js`: the new hints once each.
+
+**Play.** **M2** (H-04 to H-06 with the final controls).
+
+**Performance.** None.
+
+**Acceptance.** No stuck input in any case; the controls fit 812×375 at Larger; a new player's opening fight teaches the rhythm (the owner's H-15 later confirms).
+
+**Docs.** How to Play; `data/help.js` tips; RELEASE-NOTES.
+
+**Out.** Controller support; key remapping (backlog).
+
+**Decisions.** The switch control's form (the owner at M2).
+
+**Brief.**
+- **Start from:** `js/input.js`, `index.html` (`#rightControls`), `style.css`, `data/help.js` (topics and tips), `js/tips.js`, `data/quests.js` (the origins' first fights), `js/ui.js` (the battle HUD).
+- **Decided:** both switch forms built, one kept; hints as named.
+- **Save:** none.
+- **Build order:** stuck-input tests (failing first) and fixes → the switch control (both) → context icons → hints and How to Play → settings → the feedback audit.
+- **Write tests in:** `tests/browser/controls.spec.js`, `tests/tips.test.js`.
+- **Run:** those; `npm test`, lint; the full browser suite (the HUD changed).
+- **Play:** M2.
+- **Explain:** as above.
+- **Not here:** new mechanics.
+
+---
+
+### P11-10 · Fighters who think: individual AI and styles (L) — 5.10.0, Specified
+
+**Now.** The AI retargets every 0.17–0.41 s, walks to the nearest (the enemy prefers archers, the wounded and a lone hero), swings in reach; shield troops guard on an opponent's windup (after P11-05, with a delay); archers step aside for a clear shot; cavalry charge, ride through and wheel; nothing waits for an opening or keeps a distance; tournament opponents differ by multipliers.
+
+**Problem.** P11-05 to P11-08's rules matter only if the AI uses them, and the AI is the same for a looter and a huscarl.
+
+**Outcome.** Individual AI by **style** (data), using the same rules as the player, with honest reactions, spacing, opportunism and retreat; recognisable tournament styles; cheap enough for 200.
+
+**Build.**
+- **Required:**
+  - `data/styles.js` (`C.fighting_styles`): a style is `{ reaction, patience, spacing, opportunism, guardUse, retreatAt, pursue, preferRange }` (values set by measurement). **Illustrative styles:** brawler (looters: aggressive, slow reactions), soldier (most T1–T2), veteran (T3: patient, guards well, strikes into recovery), spear (keeps its reach edge, braces at riders), heavy (waits for an opening, commits hard), skirmisher/archer (keeps range, retreats from melee, seeks a clear shot), rider (charge, disengage, wheel, avoid braced fronts, hunt archers), duelist variants for tournaments (counter-striker, rusher, shield-wall, reach-keeper).
+  - `js/combat.js` `ai` and `cavalryAi` read the unit's style: **reaction delay** before guarding or answering a windup (never 0); **spacing** at its weapon's reach edge against shorter weapons; **opportunity**: strike when the target whiffs or is staggered; **patience**: wait outside reach when the opponent is ready; **retreat** (archers back from melee, riders out after a pass); **guard use** by style.
+  - **No hidden advantages:** same profiles, same cooldowns, no knowledge of future input; the AI sees what is drawn (phase and distance), as the *timer* pilot does.
+  - **Detail by distance:** full style logic within a radius of the hero (and in duels); simpler logic further away (today's), chosen per frame by the proximity grid.
+  - **Tournament fighters** given styles by round and by the rival (who keeps theirs); their HP and damage multipliers reduced as styles carry the difficulty (measured, two tries).
+  - **Cavalry:** avoid braced fronts, prefer archers and flanks, disengage when engaged by foot too long.
+  - **Archers:** hold a range band, step back from melee, shoot over friends only with a clear line.
+- **Optional:** a Debug overlay showing a unit's style and intent (for the owner's checks).
+
+**Layers.** None directly (AI); the player sees enemies that fight differently.
+
+**Art.** None new (poses exist); optional intent overlay in Debug.
+
+**Information and controls.** The troop card's style word ("fights patiently, guards well") in the Party and troop tree.
+
+**Save and packs.** None. Packs: styles and a troop's `style` validated.
+
+**Interactions.** Morale (routing units keep morale's behaviour); formations override spacing inside a formed division (P11-13); orders (Hold, Follow, Charge) still decide where a division goes; B-01's enemy line and targeting kept.
+
+**Edges.** Two patient fighters who never close: the patience has a limit (they close after a time), and the stall guard still ends a battle; an AI that baits the hero forever: opportunism is bounded by patience.
+
+**Measure.** `duel-lab.js` (each style against each pilot); `parity.js 40` and `--big`; `npm run bench` (the detail radius).
+
+**Tests.** `tests/ai-styles.test.js` (new): reaction delay never zero; spacing; opportunity strikes; archers' retreat; riders avoid a braced front; tournament styles; the detail radius switches logic; determinism from a seed.
+
+**Play.** A tournament and two contracts in the preview: are the styles recognisable?
+
+**Performance.** At 200, the update time within 15% of P11-09's; the detail radius set by the bench.
+
+**Acceptance.** Each style is recognisable in a scripted duel (its own signature behaviour measured: a veteran's strikes into recovery, a spear's distance, an archer's retreat); the *masher* loses more to veterans than to brawlers by a clear margin; the update budget holds.
+
+**Docs.** RELEASE-NOTES; plan §10 (styles).
+
+**Out.** Soldier personalities (Phase 12, P12 area G).
+
+**Decisions.** None.
+
+**Brief.**
+- **Start from:** `js/combat.js` (`ai`, `cavalryAi`, `enemyTarget`, `ENEMY`, `AI`), `js/groups.js`, `js/morale.js`, `js/tourney.js` (rounds, rival), `data/tournaments.js`, `js/units.js` (`proximity`), `scripts/duel-lab.js`.
+- **Decided:** styles in data; detail by distance; reaction never zero.
+- **Save:** none.
+- **Build order:** styles data → reactions → spacing → opportunity and patience → archers → riders → detail by distance → tournament styles → measure and tune.
+- **Write tests in:** `tests/ai-styles.test.js`.
+- **Run:** that; `npm test`, lint; browser `battle`, `tourney`; `npm run bench`; `duel-lab`, `parity 40 --big`.
+- **Play:** as above.
+- **Explain:** the troop card's style word.
+- **Not here:** troop data changes (P11-11).
+
+---
+
+### P11-11 · Troops by their weapons (M–L) — 5.11.0, Specified
+
+**Now.** 41 troops whose weapon is drawing only; their damage, reach and speed are per-row numbers; `shield` and `brace` flags; fine kit adds armour and HP; traits modify blows; companions have their own numbers; women's lines are their own troops (D-P10d).
+
+**Problem.** An axeman fights like a footman; cultures differ in looks more than in battle.
+
+**Outcome.** Every troop defined by its weapon family (and item, where useful), armour class, style and tier; cultural lines distinct in play; experience valued by equipment and behaviour more than HP; fine kit and companions on profiles; every tree and the women's lines preserved.
+
+**Build.**
+- **Required:**
+  - Each troop's `weapon` (from P11-01) becomes authoritative: its timing, reach and properties from the family; the row keeps `damage` (or a family damage factor), `hp`, `armor`; `reach` and `ranged` overrides only where a troop is deliberately different. `shield` and `brace` become profile capabilities (a family's or the troop's).
+  - **Tiers re-derived:** HP rises less with tier; T3s gain better kit (a better item, more armour, a better style) instead; numbers set by `duel-lab` and `parity` (two tries).
+  - **Cultural identity** measured and adjusted where needed: Valedorn (knights, longbows), Aurelian (spear and shield, legionaries), Hrothmark (axes, shield pressure, heavy foot), Vessaro (crossbows, pavises, light horse), Ostrand (shieldmen, cliff bows), Saltreach (pikes, crossbows), outlaws (brawlers, huntresses), free cities (mercenaries). The Legionary's brace with a sword (reach 48) and the Pavisier's are reviewed (a short spear family, or the brace kept as a shield-line skill; the owner's call if it changes a troop's look).
+  - **Fine kit** (P7-03): a better item of the troop's family and an armour step, not only HP; auto-resolve's factor kept until P11-20.
+  - **Companions** (`data/companions.js`): their gear through profiles (and mounts if P11-08 deferred them).
+  - **Lords in person**: their realm's best kit and a veteran style (their HP multiplier reduced by measurement).
+  - The troop card shows the weapon family, armour class and style in words.
+  - `docs/WORLD-FORMAT.md`: troops' `weapon`, `style`, capabilities.
+- **Investigate:** an optional expert choice of a line's equipment emphasis (for example, a T2 line trained with spear or sword) only if it fits the existing upgrade choices without new screens; else Phase 12.
+- **Not here:** recruitment pools and manpower (Phase 12).
+
+**Layers.** Basic: troops fight sensibly by default; the troop tree shows what each does. Guided: choose lines for a purpose (spears against horse). Expert: composition by the matchup knowledge.
+
+**Art.** Troop looks agree with their profiles (P11-04's check); new parts only if a troop changes weapon.
+
+**Information and controls.** The troop card and tree.
+
+**Save and packs.** None (content). Packs: troops' `weapon` required (defaulted from role for old packs, with a warning).
+
+**Interactions.** Every battle; auto-resolve still by tier until P11-20 (a gap measured and recorded).
+
+**Edges.** A pack troop with an unknown family: refused by name.
+
+**Measure.** `duel-lab.js` (each realm's lines against each other at T2 and T3); `parity.js 40 --big`; the realms' matchup table in the Done paragraph.
+
+**Tests.** `tests/troops.test.js` (profiles authoritative; tiers; capabilities; women's lines unchanged: their trees, shares and names); `tests/women-soldiers.test.js` unchanged and passing; `tests/art.test.js` (looks agree).
+
+**Play.** H-07 (at M3).
+
+**Performance.** None new.
+
+**Acceptance.** Each realm's T2 and T3 lines have a measurable strength and weakness against the others; the trees and the women's lines are unchanged in shape; fine kit and lords on profiles.
+
+**Docs.** WORLD-FORMAT; RELEASE-NOTES.
+
+**Out.** Manpower, soldier personalities (Phase 12).
+
+**Decisions.** Any change to a troop's weapon that changes its look (the owner's word).
+
+**Brief.**
+- **Start from:** `data/troops.js`, `data/weapons.js`, `data/styles.js`, `js/units.js` (`makeUnit`), `js/blacksmith.js` (`applyKit`), `js/traits.js`, `data/companions.js`, `js/combat.js` (the leader block), `js/content.js`.
+- **Decided:** tiers by kit and style first, HP second; the Legionary and Pavisier reviewed.
+- **Save:** none.
+- **Build order:** weapons authoritative → capabilities → tiers → cultures (measure) → fine kit → companions → lords → cards → docs.
+- **Write tests in:** `tests/troops.test.js`.
+- **Run:** that; `npm test`, lint; browser `company`, `battle`, `art`; `duel-lab`, `parity 40 --big`.
+- **Play:** one battle against each realm in the preview.
+- **Explain:** the troop card's words.
+- **Not here:** formations.
+
+---
+
+### P11-12 · Performance and art-cache checkpoint (M) — 5.12.0, Specified — **Milestone M3**
+
+**Now.** P11-00's baseline (percentiles, caches, memory); P11-04 to P11-11 added gear signatures, styles, mounted heroes and archers, each measured against its own budget.
+
+**Problem.** The variety added in M1–M3 must hold on the phone before formations and sieges add more.
+
+**Outcome.** Plan §11's caching rules confirmed under load, the frame-time distribution at 40, 100 and 200 with mixed weapons, cavalry, archers, reinforcements, sieges and the hero's loadouts, on the owner's phone and the PC; any regression fixed.
+
+**Build.**
+- **Required:**
+  - Benchmarks extended to new scenarios: mixed-weapon armies of every realm, a mounted hero, an archer hero, cavalry-heavy, archer-heavy, a siege at 150, reinforcements arriving, at each Sharpness, zoom 1× and 0.75×.
+  - **Readability check** at 812×375 with 100 and 200: the live cues for the hero's attackers drawn (plan §11), the baked steps elsewhere.
+  - Fixes for what the measurements show (examples: bake keys, the AI detail radius, swept collision's grid, look rebuilds).
+  - Identical simulation at Sharp, Balanced and Fast (a seeded battle's results equal at each).
+- **Optional:** a Debug "frame graph".
+
+**Layers.** None.
+
+**Art.** Readability fixes only.
+
+**Information and controls.** The benchmark report.
+
+**Save and packs.** None.
+
+**Measure.** The benchmarks above; the owner's phone (Debug → Battle benchmark at 40, 100, 150, 200; H-08).
+
+**Tests.** `tests/art-gear.test.js` (the key bound under the new scenarios); `tests/sharpness-parity.test.js` (new): identical results at each Sharpness.
+
+**Play.** **M3** (H-07, H-08).
+
+**Performance.** The phase's budget (plan §19 criterion 16): 60 fps at 40 on the phone at Balanced; the largest size at 30 fps or better not lower than 200, or the owner accepts the measured size; p95 recorded.
+
+**Acceptance.** The budget holds on the phone (or the owner accepts the numbers); caches bounded; identical simulation at every Sharpness.
+
+**Docs.** `docs/PHASE-11-VALIDATION.md` (performance section); ART-STYLE ("What it costs"); RELEASE-NOTES.
+
+**Out.** Raising the battle size.
+
+**Decisions.** The owner's acceptance of the phone numbers.
+
+**Brief.**
+- **Start from:** `scripts/bench-battle.js`, `js/debug.js`, `js/art/battle.js` (`baked`, `lookOf`, `BAKE_MAX`), `js/art/kit.js` (`cached`), `js/combat.js` (`ai`'s detail radius), `js/render.js` (`busyBattle`).
+- **Decided:** the scenarios above; the budget as plan §19.
+- **Save:** none.
+- **Build order:** measure → fix → measure again (two tries) → the owner's phone.
+- **Write tests in:** `tests/sharpness-parity.test.js`, `tests/art-gear.test.js`.
+- **Run:** those; `npm test`, lint; browser `art`, `battle-size`; the benchmarks.
+- **Play:** M3.
+- **Explain:** none.
+- **Not here:** new features.
+
+---
+
+### P11-13 · Formations and orders that hold (L) — 5.13.0, Specified
+
+**Now.** Plan §2.1 and §3.8: loose, shield wall, wedge, line, column and square per division; line and column only change speed; Hold engages anything within 85 px (it chases); Follow keeps loose ranks; Charge goes to the nearest; timed orders on the tactical map; group states (forming, formed, advancing, engaged) reported to the Orders panel.
+
+**Problem.** Formations don't behave as their shapes promise, and orders give little feedback on whether they're being carried out.
+
+**Outcome.** Each formation's character shown in play, not as a small number: the wall holds and covers (and is weak on its flanks), the line holds a front, the wedge breaks a line, the square stops horse, the column marches (and is weak from the side), loose spreads against arrows; Hold holds; Follow keeps cohesion; Charge commits; every order shows accepted, executing, done or impossible.
+
+**Build.**
+- **Required:**
+  - **Slots and leash:** a formed division's soldiers hold slots; on Hold they fight only inside a leash of their slot (by formation: tight for a wall, loose for loose) and return; Follow keeps the slots around the hero; Charge leaves the slots.
+  - **Frontage:** a line's slots face the facing; enemies engaging the front meet one soldier a slot; a soldier whose slot's front is empty may step to help a neighbour (cohesion).
+  - **Flanks:** blows from a formed division's flank or rear count more (damage and morale; today's `flankedAt` extended); a wall's and a column's flanks expose them; a square has none.
+  - **Wedge impact:** a wedge on Charge that reaches a formed enemy line breaks its cohesion (the struck slots lose formation for a time); the first-blow bonus kept.
+  - **Loose:** more spacing; arrows aimed at a loose division hit fewer (spread targets).
+  - **Shield wall:** P11-05's pressure applies; a wall's shared cover spreads pressure across the shields (a wall holds longer than one shield).
+  - **Cohesion:** a measure per division (how many are in their slots); shown in the Orders panel and on the field (the division's flag frayed when broken); low cohesion lowers the formation's effects.
+  - **Order feedback:** each order's state shown by the division's flag on the field and the minimap (moving, holding, engaged, done, can't: with the reason) and in the Orders panel; impossible orders say why (as now) and are not silently dropped.
+  - **Terrain:** formations break in fords (kept) and in dense forest (new, by obstacle density); the column ignores the forest's break.
+- **Optional:** a new formation only if the audit shows a gap no existing one fills (not expected).
+
+**Layers.** Basic: Auto chooses formations; orders as now. Guided: choose a formation per division and see it hold. Expert: timing changes of formation, using flanks.
+
+**Art.** The division's flag on the field (code-drawn, small), frayed when broken; the formation's slots visible in the tactical overview.
+
+**Information and controls.** The flags; the Orders panel's states; no new buttons.
+
+**Save and packs.** None (formations last one battle; divisions are saved as now).
+
+**Interactions.** Morale (cohesion and flanks feed it); AI styles inside a division yield to the slot (P11-10); enemy plans (`enemyPlan`) use formations by the same rules.
+
+**Edges.** A division too small for a formation (fewer than about four) stays loose with a note; a formation on a ladder or a walkway (P11-18); a division ordered into an obstacle: the slot slides as units do.
+
+**Measure.** `extras.js` (each formation on and off), `tactics-lab.js` with formations per side (each formation against a plain charge, against cavalry, against archers); `parity.js 40 --big`.
+
+**Tests.** `tests/formations.test.js` (new: slots and leash; frontage; flank exposure; wedge breaking; loose spread; wall pressure sharing; cohesion; terrain breaks; order states). Browser `divisions.spec.js`: an order's state shown; an impossible order's reason.
+
+**Play.** A battle where a shield wall holds and is flanked; a square against riders.
+
+**Performance.** Slots computed once per order and on a formation change; cohesion every 0.25 s with the group states.
+
+**Acceptance.** Each formation shows its strength and its weakness in the tactics lab by more than the noise; Hold holds (no chasing beyond the leash); every order's state is visible.
+
+**Docs.** How to Play "Orders and formations"; RELEASE-NOTES.
+
+**Out.** New formations without a gap.
+
+**Decisions.** None.
+
+**Brief.**
+- **Start from:** `js/formations.js`, `js/divisions.js` (`shape`, `turn`), `js/groups.js` (`followSlot`, `updateStates`), `js/morale.js` (flanks), `js/combat.js` (`ai`'s order branch, `order`), `js/tactics.js` (timed orders), `js/ui.js` (Orders panel), `js/art/battle.js`, `scripts/extras.js`, `scripts/tactics-lab.js`.
+- **Decided:** slots and leash; flank damage and morale; cohesion; flags.
+- **Save:** none.
+- **Build order:** slots and leash → frontage → flanks → each formation's character → cohesion → order states and flags → terrain → measure.
+- **Write tests in:** `tests/formations.test.js` (new), `tests/browser/divisions.spec.js`.
+- **Run:** those; `npm test`, lint; browser `divisions`, `extras`, `battle`; `extras.js`, `tactics-lab`, `parity 40 --big`.
+- **Play:** as above.
+- **Explain:** "Orders and formations".
+- **Not here:** combined-arms acceptance (P11-14).
+
+---
+
+### P11-14 · Combined arms and the tactics lab (M–L) — 5.14.0, Specified
+
+**Now.** Archers on high ground shoot 25% further; fords break formations; braced spears stop horse; enemies prefer archers; Auto picks a plan from the odds; the enemy's army plan forms blocks; P11-13 made formations real.
+
+**Problem.** Group tactics must measurably beat indiscriminate charging, and command and fighting must each be enough on their own.
+
+**Outcome.** Terrain, flanks, screens and counters combine; the tactics lab proves it on controlled comparisons; Auto and the presets use it; the enemy's armies use it by the same rules.
+
+**Build.**
+- **Required:**
+  - **Terrain:** forest cover lowers arrow hits (by obstacle density near the target); high ground's range kept and a small melee edge to whoever stands higher only if measured useful; fords and marsh slow; open ground favours horse.
+  - **Screens:** archers behind a formed line are hard to reach (enemy foot must pass the line); enemy cavalry prefers exposed archers (B-01's preference extended to riders).
+  - **Counters:** spears and squares against horse (kept), horse against unscreened archers and flanks, archers against slow heavy foot in the open, shield walls against archers.
+  - **Auto and the presets** (`js/prep.js`): Balanced places a screen for archers, holds horse on a flank until the volley, uses high ground; Defensive a wall and a square if the enemy has horse; Aggressive a wedge; all from what the company can see.
+  - **The enemy's army plan** (`enemyPlan`) uses the same choices.
+  - **The tactics lab's comparisons** (each on equal armies, the same map and seeds, plan vs charge): (1) archers behind a line vs archers in front; (2) spears braced vs cavalry charge, and the same in loose order; (3) cavalry on the flank after the volley vs cavalry charging first; (4) a shield wall under archers vs loose; (5) high ground archers vs flat; (6) a column through forest vs a line; (7) hero passive with a good plan vs hero active with Auto vs hero active with a plan.
+- **Optional:** a "lessons" line in the battle report (P11-15) that names the counter that won.
+
+**Layers.** Basic: Auto's plan is good. Guided: presets. Expert: layer-4 timing.
+
+**Art.** None new.
+
+**Information and controls.** Prepare's preset descriptions say what each does against this enemy (P11-15).
+
+**Save and packs.** None.
+
+**Interactions.** Morale, reinforcements, the stall guard; auto-resolve (P11-20 reads the lab's measured effects).
+
+**Edges.** A plan that wins by never engaging (the stall guard ends it as a withdrawal, not a win for the passive side).
+
+**Measure.** The seven comparisons at 40 seeds (80 if noisy: ask); `parity.js 40 --big` (Auto vs the odds).
+
+**Tests.** `tests/tactics-lab.test.js` (each comparison's direction at a small seed count, as a fast regression guard); `tests/prep.test.js` (Auto's choices from what's seen).
+
+**Play.** **M4 part 1** (H-09 to H-11).
+
+**Performance.** None new.
+
+**Acceptance.** Each comparison's plan beats charging by more than the noise in win rate, losses or ground held; a passive hero with a good plan wins comparison (7); Auto is not worse than 5.0.0's Auto against the odds.
+
+**Docs.** `docs/PHASE-11-VALIDATION.md` (the lab's table); How to Play "Orders and formations"; RELEASE-NOTES.
+
+**Out.** New command layers.
+
+**Decisions.** None.
+
+**Brief.**
+- **Start from:** `js/prep.js` (`AUTO`, `SETUPS`, `plan`, `autoChoice`, `openFlank`), `js/combat.js` (`enemyPlan`, `enemyTarget`), `js/formations.js`, `js/arena.js`, `js/units.js` (obstacles), `scripts/tactics-lab.js`.
+- **Decided:** the seven comparisons; terrain effects only where measured.
+- **Save:** none.
+- **Build order:** the comparisons as tests (expected to fail on some) → terrain → screens → counters → Auto and presets → the enemy's plan → measure.
+- **Write tests in:** `tests/tactics-lab.test.js`, `tests/prep.test.js`.
+- **Run:** those; `npm test`, lint; browser `battle`, `divisions`; `tactics-lab` (40 seeds), `parity 40 --big`; ask for `battle-parity`.
+- **Play:** M4 part 1.
+- **Explain:** none new.
+- **Not here:** Prepare's screens (P11-15).
+
+---
+
+### P11-15 · Prepare and the battle report (M) — 5.15.0, Specified — **Milestone M4**
+
+**Now.** Prepare (V2-07, P9-B4): the real field, presets, Custom flags, captains, facings, three plans, Fight in two taps, Simulate with reasons, remember and skip; the result screen lists loot, casualties and "Who did what".
+
+**Problem.** The loadout, mount, ammunition and restrictions need a place before the fight, and the outcome needs explaining without overwhelming.
+
+**Outcome.** Plan's Area 18: Prepare shows the hero's loadout (and lets it change), ride or foot, the quiver, the gear check's findings for this field, known enemy composition (only what the company could know), terrain notes and the presets with what they do here; minor battles still start in two taps or skip; a short battle report with more on request.
+
+**Build.**
+- **Required:**
+  - Prepare: a hero line (the active loadout's icons, ride or foot, quiver), tap to change (primary/secondary, ride/foot); findings for this field ("Horses can't go onto the walls"); remembered per kind of battle (P11-02's `loadout.last`).
+  - **Enemy information** only from what is known: seen troops (V2-06's detection), the scout's estimate (P7-02), news; "about 30, mostly spears and some crossbows" when known, "unknown" otherwise.
+  - **Terrain notes** in words (a hill for archers, a ford, forest cover).
+  - Presets' short descriptions against this enemy.
+  - **The battle report:** a summary line (who won, losses each side, time), then "More": divisions' performance (kills, losses, morale breaks), the hero's (blows, blocks, staggers, shots, accuracy), notable events (a wall held against N arrows; a charge broken by spears; a flank that routed them), and loot, casualties and "Who did what" as now. Progressive disclosure: one screen by default.
+  - **Skip setup** stays for minor battles (V2-07's setting).
+- **Optional:** "lessons" from P11-14.
+
+**Layers.** Basic: Fight in two taps; the summary. Guided: change loadout or ride; a preset. Expert: Custom placement and timed plans as now; "More" in the report.
+
+**Art.** Icons; the field preview as now.
+
+**Information and controls.** As above; 812×375 at Larger.
+
+**Save and packs.** None beyond P11-02.
+
+**Interactions.** Detection (only known enemies), the scout, Simulate's odds (P11-20 adds composition words).
+
+**Edges.** An ambush (a smaller zone, as now) still shows the loadout line; a battle with no time to prepare (as now) uses the remembered loadout.
+
+**Measure.** Taps from Attack to Fight (unchanged at two by default).
+
+**Tests.** Browser `prep.spec.js` (new, or the existing prep tests extended): the hero line, a change, a finding, enemy information known and unknown, two-tap Fight, skip; the report's summary and More. `tests/prep.test.js`: what is known.
+
+**Play.** **M4** (H-09 to H-11 with Prepare and the report).
+
+**Performance.** None.
+
+**Acceptance.** Prepare shows only what the company knows; a minor battle starts in two taps or none; the report's summary fits one screen at 812×375.
+
+**Docs.** How to Play "Preparing for battle"; RELEASE-NOTES.
+
+**Out.** New command layers.
+
+**Decisions.** None.
+
+**Brief.**
+- **Start from:** `js/prep.js`, `js/ui.js` (`#prepPanel`, the result screen), `js/tactics.js` (detection), `js/scout.js`, `js/gear.js`, `js/chronicle.js` ("Who did what").
+- **Decided:** a hero line; a one-screen summary; More on request.
+- **Save:** none.
+- **Build order:** the hero line → findings → enemy information → terrain → presets' words → the report → More.
+- **Write tests in:** `tests/browser/prep.spec.js`, `tests/prep.test.js`.
+- **Run:** those; `npm test`, lint; the full browser suite (shared panels).
+- **Play:** M4.
+- **Explain:** "Preparing for battle".
+- **Not here:** new tactics.
+
+---
+
+### P11-16 · Regional arms (M) — 5.16.0, Specified
+
+**Now.** Every town armoury sells the same five weapons and three shields (by tier); realms differ in troops, not gear.
+
+**Problem.** Regions give no reason to seek their arms.
+
+**Outcome.** Plan §6.5: a limited set of regional pieces (six to eight), sold in their realm's towns (or the free ports), with requirements and, for some, training (P11-17); looks from the kit.
+
+**Build.**
+- **Required:** the pieces of plan §6.5 (working names until the owner names them): Valedorn's knight's lance and warhorse, its warbow; the Aurelian legion spear; the Hrothmark longaxe; the League's arbalest and light horse; Ostrand's cliff bow and kite; Saltreach's flats pike; the free ports' compact horse bow (D-P11g). Each a family member with its own trade-off (plan §6.4), requirements by the rule, `training` where marked, a price, a look (new kit parts: the recurve, the arbalest, the longaxe), sold in the realm's towns (`gear` lists), rarely in high loot.
+- **Required:** they are found by the realm's armouries (a "made here" line) and by the troops who carry the same (the troop card links to it).
+- **Optional:** one culturally distinctive armour if the matrix shows a gap.
+
+**Layers.** Basic: ignore them. Guided: buy one met on the road. Expert: plan a build around one.
+
+**Art.** New parts and their gallery page.
+
+**Information and controls.** The armoury's "made here" and the gear check's training finding (to P11-17's instructor).
+
+**Save and packs.** None (content). Packs: may add regional pieces.
+
+**Interactions.** Training (P11-17); troops (the same families); tournaments' own-arms formats.
+
+**Edges.** A realm that loses its towns: its pieces remain sold where its culture's towns are, or by the free ports (no permanent loss).
+
+**Measure.** `duel-lab.js` (each piece against its family's base and its counters).
+
+**Tests.** `tests/requirements.test.js` (the rule), `tests/items.test.js` (each piece sold somewhere at all times, including after a town changes hands), `tests/art-gear.test.js` (looks).
+
+**Play.** An armoury in Hrothgard and one in Vessara.
+
+**Performance.** None.
+
+**Acceptance.** Each piece has a niche (a win and a loss); each is reachable by some path at all times.
+
+**Docs.** WORLD-FORMAT (items); RELEASE-NOTES.
+
+**Out.** New troop lines; crafting.
+
+**Decisions.** D-P11g; the names.
+
+**Brief.**
+- **Start from:** `data/items.js`, `data/weapons.js`, `data/settlements.js` (`gear`), `js/trade.js` (the armoury), `js/art/figures.js`.
+- **Decided:** plan §6.5's list; sold by culture's towns.
+- **Save:** none.
+- **Build order:** items → parts and looks → armouries → measure.
+- **Write tests in:** `tests/items.test.js`, `tests/requirements.test.js`, `tests/art-gear.test.js`.
+- **Run:** those; `npm test`, lint; browser `settlement`, `gear`; `duel-lab`.
+- **Play:** as above.
+- **Explain:** a sentence in "Your gear".
+- **Not here:** training.
+
+---
+
+### P11-17 · Masters at arms: specialist training and the practice yard (L) — 5.17.0, Specified
+
+**Now.** Quests and dialogue run on `js/story.js`'s interpreter; town hubs have people by role; the tournament's duel runs a bout with no risk to the company; errands exist; nothing teaches a skill.
+
+**Problem.** Specialist weapons need training that is a goal, not a grind; players need a safe place to learn the controls.
+
+**Outcome.** Plan's Area 17: instructors in the right towns, short practical training quests on existing mechanics, permanent unlocks, paid retraining (D-P11i), and a practice yard for safe practice.
+
+**Build.**
+- **Required:**
+  - `data/training.js` (`C.training`): an instructor `{ id, teaches: [training ids], place (a town by culture or role), role, fee, needs: { renown?, req? }, steps }`; steps reuse quest words: talk, pay, a **practice bout** (the duel engine against a style: sparring, shield work), a **range** (the duel engine with standing targets: archery), a **riding course** (the duel engine with targets along a track, mounted), a **tournament challenge** (enter a format and reach a round), or a **short military favour** (an existing contract kind).
+  - Each regional piece marked `training` (P11-16) has one instructor; plus **retraining** (crowns) at any master.
+  - **Permanent unlocks** in `character.training`; idempotent; granted under a result id.
+  - **Rumours:** the news and town talk mention a master once you could use their training; the gear check names the master and the place.
+  - **Robustness:** instructors are cast by place and role (as the story's cast, P10-04), so a political change of owner leaves them (they serve whoever holds the town); a master's town lost to a realm at war with you: the master also teaches at the nearest free port; a failed step can be retried after a day; a quest can't be left half-done in a way that blocks it (abandon resets to the start); no duplicate rewards.
+  - **The practice yard:** at towns with a tournament ground or barracks, a "Practice" option: a bout against a chosen style with any of your weapons, or the range, or the course; no risk, no reward but a line in the hero's record; also the place the first-time hints point to.
+  - Two or three instructors may grant a capped +1 to a combat skill (D-P11b), once each.
+- **Optional:** a master's personal flavour line by culture (dialogue only).
+
+**Layers.** Basic: never needed for ordinary gear; the practice yard is there. Guided: follow a rumour to a master. Expert: plan a route through masters.
+
+**Art.** Masters as townsfolk looks (guard or veteran roles with their arms); targets and course posts as kit props.
+
+**Information and controls.** The gear check's training finding; the Journal lists known masters and steps; the practice yard in the town menu.
+
+**Save and packs.** Training progress (in `story`'s state) and unlocks in `character.training` through `sanitize`; no migration (D-P11a). Packs: instructors and steps validated (place, role, teaches).
+
+**Interactions.** Quests and the Journal; the tournament formats (a challenge step); contracts (a favour step); the guide's hints.
+
+**Edges.** Plan's Area 17 list: duplicate rewards, lost instructors, ownership changes, unavailable trainers, soft-locks, loss of access (all tested).
+
+**Measure.** Time to complete each training (bot or scripted); not a grind: one or two sessions each.
+
+**Tests.** `tests/training.test.js` (new): each instructor's steps; unlock once; retry; abandon; ownership change; a lost town's fallback; retraining; the practice yard leaves the save unchanged but the record. Browser `training.spec.js` (new): find a master from the gear check, do a practice bout, see the unlock.
+
+**Play.** H-12 at M5.
+
+**Performance.** None.
+
+**Acceptance.** Every specialist piece has a reachable master at all times; unlocks persist and are granted once; the practice yard risks nothing.
+
+**Docs.** How to Play "Masters at arms"; SAVE-FORMAT (the new fields); WORLD-FORMAT (training); RELEASE-NOTES.
+
+**Out.** Broader quests, relationships with masters (Phase 12).
+
+**Decisions.** D-P11b's capped +1; D-P11i's price.
+
+**Brief.**
+- **Start from:** `js/story.js` (the interpreter, conditions and effects), `data/quests.js`, `data/dialogue.js`, `data/town_hubs.js` (people by role), `js/tourney.js` (the duel), `js/contracts.js`, `js/news.js`, `js/gear.js`.
+- **Decided:** steps from existing words; masters by place and role; the free-port fallback.
+- **Save:** `sanitize` defaults.
+- **Build order:** data and checks → steps on the duel engine (bout, range, course) → unlocks and retraining → rumours and the gear check → robustness → the practice yard → the Journal.
+- **Write tests in:** `tests/training.test.js`, `tests/browser/training.spec.js`.
+- **Run:** those; `npm test`, lint; browser `training`, `settlement`, `tourney`; slow none.
+- **Play:** H-12 in the preview.
+- **Explain:** "Masters at arms".
+- **Not here:** tournaments' formats.
+
+---
+
+### P11-18 · The walls and other special fields (M) — 5.18.0, Specified
+
+**Now.** The assault (P8-06b, P9-B5): the wall, gate, ladders (two at a time, no blows from a ladder), the walkway as high ground, the courtyard, the keep line, the ram; 58% of the garrison storming, 95% defending (P10-T: +19 storming, +5 defending at 150); the escort's wagon; the ford and hills; the lair.
+
+**Problem.** The new rules (reach, two-handers, shields' pressure, mounts, archery, formations) must work on the walls and other special fields, and the siege balance must be re-checked.
+
+**Outcome.** Plan's Area 19: every special field works with the new rules; mounted limits said before the battle; long weapons, shields, archers and formations sensible around walls; fought and simulated sieges re-measured against 5.0.0.
+
+**Build.**
+- **Required:**
+  - No horses on the walls, ladders, courtyard and keep (P11-08's field rule) and the hero told at Prepare.
+  - Long weapons: pikes can't be used on a ladder (the climber switches to the secondary, or fights unarmed if none: said); spears and pikes reach over the parapet at climbers (their reach rule); two-handers on the walkway (allowed).
+  - Shields: the walkway's defenders' shields against arrows from below (cover rules as now); shield pressure at the gate.
+  - Archers on the walls: high ground's range; line of sight over the parapet (the existing `blocksArrows` rule reviewed for merlons).
+  - Formations: none on ladders; a wall or line on the walkway and at the gate; the courtyard's hold line.
+  - The wagon: the wagon's defence with the new rules (its HP and raiders' styles).
+  - **Re-measure:** siege parity (30 seeds, about 15 minutes: ask) storming and defending; the 95% and 58% shares re-tuned only if outside −5 to +25 (two tries).
+- **Optional:** none.
+
+**Layers.** As before.
+
+**Art.** None new beyond poses (climbing with a weapon slung).
+
+**Information and controls.** Prepare's field line.
+
+**Save and packs.** None.
+
+**Interactions.** Sieges on the map (unchanged), auto-resolve (P11-20).
+
+**Edges.** A hero with only a pike on a ladder; a mounted hero in a defence.
+
+**Measure.** `parity.js --siege 30`; `extras.js` (the wagon, the ford, the hills).
+
+**Tests.** `tests/assault.test.js` (each rule above); browser `assault.spec.js` (the field line, a climb with a pike).
+
+**Play.** H-13 at M5.
+
+**Performance.** The siege at 150 in the benchmark (P11-12's scenario).
+
+**Acceptance.** Every special field works; sieges inside −5 to +25; the hero always told before a horse is left.
+
+**Docs.** RELEASE-NOTES.
+
+**Out.** Siege engines, towers, construction.
+
+**Decisions.** None.
+
+**Brief.**
+- **Start from:** `js/assault.js`, `js/arena.js` (the wall), `js/objective.js` (the wagon), `js/sieges.js` (shares), `scripts/parity.js --siege`.
+- **Decided:** as above.
+- **Save:** none.
+- **Build order:** horses → long weapons → shields and archers → formations → the wagon → measure.
+- **Write tests in:** `tests/assault.test.js`, `tests/browser/assault.spec.js`.
+- **Run:** those; `npm test`, lint; browser `assault`, `sieges`, `extras`; `parity --siege 30` (ask), `extras.js`.
+- **Play:** a storming and a defence in the preview.
+- **Explain:** none.
+- **Not here:** campaign sieges.
+
+---
+
+### P11-19 · The lists: tournament formats (L) — 5.19.0, Specified — **Milestone M5**
+
+**Now.** Plan §2.4: one format (eight fighters, three foot bouts, one loaner kit), multipliers per round, fees and prizes, a cooldown, a rival.
+
+**Problem.** Tournaments are one of the owner's main activities and are all the same.
+
+**Outcome.** Plan §14: formats as data, traditions by host (D-P11h), the first three formats required, others as the engine allows; rules announced before the fee; styles for opponents; the anti-farm intent kept with attractive repeat play.
+
+**Build.**
+- **Required:**
+  - `data/tournaments.js` gains `formats` and each host a `tradition`; the schedule picks a host's format from its tradition (seeded, as today's roll).
+  - **The standard lists** (today's, loaner kit; meets plan §7.3 rule 1), **own-arms duels** (own kit through the gear check; foot, melee or mixed by format), **the archery contest** (targets on the battle engine; scored by hits and range within a time, against the other entrants' scores rolled from their skill).
+  - **Heavy weapons**, **mounted lists** (P11-08) and **the mounted archery course** if they need no engine work beyond P11-17's course and bout; **team melee** (2v2 or 3v3) investigated: only as a small fixed encounter with no orders.
+  - **Announcement:** the format's rules, kit, eligibility, prize and fee before paying, with the gear check's findings for the hero (and "the loaner kit is provided").
+  - **Opponents:** a style per round and format (P11-10); multipliers reduced as styles carry difficulty; the rival keeps their style and moves between formats.
+  - **Attractiveness:** with P11-00's numbers, the prize curve, the fee and the cooldown re-tuned only if repeat tournaments aren't worth it (two tries), keeping per-town-and-format diminishing prizes.
+  - **Safety:** loaned gear never enters the inventory; own gear never moves; one commit for results and rewards; a reload mid-bout forfeits (as now); time passes as now; injuries by format (none by default).
+  - **Art:** the hero and fighters in the format's kit; targets and course posts.
+- **Optional:** a host's tradition shown on the map's town card.
+
+**Layers.** Basic: the standard lists as today. Guided: choose a format that suits you. Expert: own-arms formats with builds; reading opponents' styles.
+
+**Art.** As above.
+
+**Information and controls.** The announcement; the bracket shows the format; results say why (style, kit).
+
+**Save and packs.** `tourney.hosts[*].format`, the bracket's format and loaned kit through `sanitize` (a bracket without a format is read as the standard lists); no migration (D-P11a). Packs: formats validated.
+
+**Interactions.** Training's challenge step; renown and standing as now; the chronicle.
+
+**Edges.** A format the hero can't enter (no bow): the board says so, the fee isn't taken; a format with mounts at a host whose lists are on foot only (data error refused).
+
+**Measure.** `duel-lab.js --tourney` per format and pilot; crowns and renown per tournament day against contracts (`npm run economy`).
+
+**Tests.** `tests/tourney.test.js` (formats, traditions, announcement, eligibility, loaned and own kit safety, exactly-once, forfeits, styles, prize curve); browser `tourney.spec.js` (each required format entered and fought by real taps, the announcement before the fee).
+
+**Play.** **M5** (H-14).
+
+**Performance.** None new.
+
+**Acceptance.** The three required formats work by their announced rules; a new character can win the standard lists; the hero is drawn in the format's kit; repeat play stays worthwhile and not farmable.
+
+**Docs.** How to Play "Tournaments"; SAVE-FORMAT (the new fields); RELEASE-NOTES.
+
+**Out.** The social tournament (Phase 12, P12 area L).
+
+**Decisions.** D-P11h.
+
+**Brief.**
+- **Start from:** `js/tourney.js`, `data/tournaments.js`, `js/combat.js` (`g.duel`), `data/styles.js`, `js/gear.js`, `js/ui.js` (`#tourneyHere`), P11-17's range and course.
+- **Decided:** three required formats; traditions as D-P11h; injuries none by default.
+- **Save:** `sanitize` defaults.
+- **Build order:** formats and traditions → announcement → own-arms → archery contest → styles → optional formats → attractiveness → safety tests.
+- **Write tests in:** `tests/tourney.test.js`, `tests/browser/tourney.spec.js`.
+- **Run:** those; `npm test`, lint; browser `tourney`, `settlement`; slow `phase7-exit` (background); `duel-lab --tourney`; `npm run economy`.
+- **Play:** M5.
+- **Explain:** "Tournaments".
+- **Not here:** nobles at the lists.
+
+---
+
+### P11-20 · Auto-resolve, military balance and the world (M–L) — 5.20.0, Specified
+
+**Now.** Plan §2.5: power by tier, the hero by HP × damage, no composition; odds by a power law; B-01's band; the world's fights by the same; P11-05 to P11-19 each measured their own effect and recorded gaps here.
+
+**Problem.** After the combat changes, Simulate must stay fair, honest and cheap; the world must not regress; the economy must still work.
+
+**Outcome.** Plan §15: profile-based troop power, composition effects where measured, honest odds with words, parity in B-01's band, the world and economy checked.
+
+**Build.**
+- **Required:**
+  - **Troop power** from the profile (HP, damage rate, armour, reach class), computed once per troop at content load and cached; the hero's from their profile; fine kit and traits as factors.
+  - **Composition:** a small table of measured effects from P11-14's comparisons (for example horse against unscreened archers, spears against horse), applied as a side's modifier from the two sides' shares of roles; only effects measured consistently; nothing per-battle-simulated.
+  - **The odds' explanation** names composition effects in words ("their spears blunt your horse").
+  - **Parity:** `parity.js 40` and `--big` with the masher and the timer; the band of plan §15; two tries.
+  - **The world:** `node scripts/landed.js 360 --seed 1..3` (about 3 minutes); the AI-vs-AI fights by the new power; a regression (realms losing forts faster, armies destroyed more often) fixed; inherited tuning left for Phase 12.
+  - **Economy:** `npm run economy`, the campaign bots; equipment prices (the new pieces), loot tables, tournament rewards, training fees, healing and replacement; recovery after a total defeat (the bot's capture path); the origins' band.
+- **Optional:** none.
+
+**Layers.** Basic: Simulate stays a fair choice for players who don't fight. Guided: the odds' words. Expert: composition matters in planning.
+
+**Art.** None.
+
+**Information and controls.** The odds' explanation.
+
+**Save and packs.** None.
+
+**Interactions.** Everything that calls `winChance`, `playerPower`, `troopsPower`, `resolveParties` (armies, sieges, reinforcements, detachments).
+
+**Edges.** A pack troop with an unusual profile (power from its profile, bounded).
+
+**Measure.** As above; ask for `battle-parity`; the long runs to the next night run.
+
+**Tests.** `tests/autoresolve.test.js` (new: power from profiles; composition table; explanation words); `tests/battle-balance.test.js` updated; slow `landed`, `world-sim`, `campaign-bots`, `origins`, `phase7-exit` in the background.
+
+**Play.** A few Simulated battles with their words.
+
+**Performance.** The world's day time unchanged (power cached).
+
+**Acceptance.** Plan §19 criteria 11–13.
+
+**Docs.** `docs/PHASE-11-VALIDATION.md` (balance); RELEASE-NOTES.
+
+**Out.** The trade rebalance, manpower and political tuning (Phase 12).
+
+**Decisions.** None.
+
+**Brief.**
+- **Start from:** `js/autoresolve.js`, `js/armies.js`, `js/sieges.js`, `js/reinforce.js`, `js/detachments.js`, `scripts/parity.js`, `scripts/landed.js`, `scripts/economy-report.js`.
+- **Decided:** power from profiles; composition only from P11-14's measured table.
+- **Save:** none.
+- **Build order:** power → composition → explanation → parity (two tries) → world → economy.
+- **Write tests in:** `tests/autoresolve.test.js` (new), `tests/battle-balance.test.js`.
+- **Run:** those; `npm test`, lint; slow as above (background); `parity 40 --big`, `landed 360 ×3`, `npm run economy`; ask for `battle-parity`.
+- **Play:** as above.
+- **Explain:** none.
+- **Not here:** Phase 12.
+
+---
+
+### P11-T · Tuning and acceptance (M) — 6.0.0, Specified — **Milestone M6**
+
+**Now.** Every Phase 11 task done, each with its numbers; `docs/PHASE-11-VALIDATION.md` has the baseline and each milestone's notes.
+
+**Problem.** Phase 11 ends only when its acceptance criteria (plan §19) hold, including the owner's play.
+
+**Outcome.** `docs/PHASE-11-VALIDATION.md` complete; the scenario matrix extended; the open numbers tuned within their tries; the night run; the owner's sessions; 6.0.0.
+
+**Build.**
+- **Required:**
+  - Every criterion of plan §19 with its evidence (or recorded as open with the owner's word).
+  - **The scenario matrix:** SC-53 onward (one per criterion area: profiles, loadouts and the invariant, requirements and paid retraining, the hero's look, melee rhythm, armour, archery, mounted, controls and stuck input, AI styles, troops, performance, formations, combined arms, Prepare and the report, regional arms, training, sieges, tournaments, auto-resolve, saves).
+  - **The night run** (on the owner's word): the whole slow suite (with `gate-d-campaigns`), the full browser suite, the visual tests, the long runs, `tactics-lab` and `duel-lab` at 80 seeds.
+  - **The owner's sessions** H-15 to H-17.
+  - **Packs:** the sample pack's engine range raised past 6.0.0 (it is `>=3.13.0 <6.0.0` today) and its new item played.
+  - Version 6.0.0 in its places; README's phase line.
+- **Not here:** new features.
+
+**Layers.** Prototype G's three player styles (hands-off, presets-only, expert) re-run with Phase 11's systems (`scripts/prototype-g.js`), plus a "fighter who never commands" and a "commander who never fights".
+
+**Tests.** As the criteria name.
+
+**Play.** H-15 to H-17.
+
+**Acceptance.** Plan §19.
+
+**Docs.** `docs/PHASE-11-VALIDATION.md`; NEXT-PLAN (§6c ✅); ROADMAP; RELEASE-NOTES (6.0.0); README; the pack docs.
+
+**Brief.**
+- **Start from:** `docs/PHASE-11-PLAN.md` §19, `docs/PHASE-11-VALIDATION.md`, `scripts/prototype-g.js`, `packs/` (the sample pack's manifest).
+- **Decided:** two tries a number; the night run on the owner's word.
+- **Save:** none.
+- **Build order:** the criteria table → open numbers → Prototype G → the night run → the owner's sessions → 6.0.0.
+- **Run:** `npm test`, lint; the night run (asked).
+- **Play:** H-15 to H-17.
+- **Explain:** How to Play reviewed whole once.
+- **Not here:** Phase 12.

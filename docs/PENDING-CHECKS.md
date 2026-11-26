@@ -4,6 +4,8 @@ _The owner's rule (D-P10f, 2026-11-24). A task that needs a run over 20 minutes 
 
 ## Pending
 
+**Phase 11 (planned 2026-11-26):** the three rows below run at the night run, **whenever the owner chooses during Phase 11** (owner, 2026-11-26), on the build current then; P11-01 doesn't wait for them. P11-00's short runs are the 5.0.0 reference; if 5.0.0's own `battle-parity` or long-run numbers are wanted, run them from a worktree of commit 4c0a044 (`git worktree add ../crownless-5.0 4c0a044`) beside the rest (`docs/PHASE-11-PLAN.md` §4, §9). P11-00 adds its own measurements (duel and tactics labs at 80 seeds, only if their short runs are noisy) to this list when it is built. Nothing was run by the planning task.
+
 | From | Run | Look for |
 |---|---|---|
 | P10-G6 (4.15.0) | The screenshot baselines. Docker Desktop must be running. `npm run test:visual:docker` (`scripts/visual-baselines.js`) runs `npx playwright test --grep @visual --update-snapshots=all` inside `mcr.microsoft.com/playwright:v<pinned>-noble`: about 2 GB to download the first time, then about 5 min. Then `npm run test:visual:docker -- --check` must pass, and the new `tests/browser/screenshots/` are reviewed and committed. Without Docker: the "Browser tests" workflow by hand with "update screenshots" ticked, and the baselines from its artifact | Every key screen in the new art at desktop and phone, Normal and Larger text: nothing clipped or misplaced, no blank canvas, no missing picture. Until they are committed the `@visual` tests skip. The asset guard (`tests/assets.test.js`) already allows `tests/browser/screenshots/` |

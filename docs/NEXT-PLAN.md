@@ -1,6 +1,6 @@
 # Crownless — Plan after 2.0: zoom and a bigger world, then Phases 7–9
 
-_Written 2026-11-18 at build 2.0.0 (commit 0415109); **reviewed and corrected the same day against commit c66d94c** (see §11, "Review log"); **Phase 8 re-specified 2026-11-20 at build 2.23.0** (§5; review log items 21–36). This is the working plan for everything after v2.0. It replaces the outlines in `docs/V2-PLAN.md` §6–§8; V2-PLAN stays the record of how v2.0 was built. Each task's specification is in [`NEXT-TASKS.md`](NEXT-TASKS.md). Sources: the owner's direction (2026-11-18), the v2 design documents (`Crownless_v2_0_Feature_and_Systems_Design_Part_1.md` and `_Part_2.md`, chiefly §11–§24, §26–§28) and the code._
+_Written 2026-11-18 at build 2.0.0 (commit 0415109); **reviewed and corrected the same day against commit c66d94c** (see §11, "Review log"); **Phase 8 re-specified 2026-11-20 at build 2.23.0** (§5; review log items 21–36); **Phase 11 specified and Phase 12 outlined 2026-11-26 at 5.0.0** (§6c, §6d, §8; review log item 50; `docs/PHASE-11-PLAN.md`, `docs/PHASE-12-ROADMAP.md`). This is the working plan for everything after v2.0. It replaces the outlines in `docs/V2-PLAN.md` §6–§8; V2-PLAN stays the record of how v2.0 was built. Each task's specification is in [`NEXT-TASKS.md`](NEXT-TASKS.md). Sources: the owner's direction (2026-11-18), the v2 design documents (`Crownless_v2_0_Feature_and_Systems_Design_Part_1.md` and `_Part_2.md`, chiefly §11–§24, §26–§28) and the code._
 
 ## 0. The owner's direction (2026-11-18)
 
@@ -126,6 +126,13 @@ Phase 10  "Ways In"             — map speed and a Wait screen, one world (the 
                                   into one common quest, the main story from anywhere, onboarding, the UI
                                   toward the references, women soldiers; the whole game re-drawn in code
                                   (the art kit, battles, towns, the map, the UI) and the old sprites removed
+Phase 11  "The Art of War"      — (planned, 6.0.0) one combat profile, loadouts and requirements, the gear you
+                                  see, a melee rhythm, armour weight, bows and horses for the hero, AI styles,
+                                  troops by their weapons, formations and combined arms that measurably matter,
+                                  regional arms and masters, sieges, tournament formats, auto-resolve
+Phase 12  "The Living World"    — (preliminary, 7.0.0) manpower, trade, businesses, contracts, events,
+                                  companions, politics, relationships and courtship, regions, history,
+                                  returning players, system links
 ```
 
 Each phase ends playable, measured and documented. The order follows the design's dependency map (Part 2 §26.6) with one change: **the world grows first**, at the owner's request.
@@ -332,6 +339,39 @@ Every Phase 9 task is **Specified** (2026-11-22; NEXT-TASKS has each in full). T
 | **P10-G6** | ✅ **Done in 4.15.0.** **The old graphics removed:** every sprite, the manifest, `js/assets.js`, the Graphics Demo and the `crownless-art` skill; the asset guard and visual baselines re-made | M | P10-G1–G5 |
 | **P10-T** | ✅ **Done in 5.0.0.** **Tuning and acceptance:** the world's open tuning (wars, risings, deaths), the old failures, the origins' balance, `docs/PHASE-10-VALIDATION.md`; ships 5.0.0 | M | all above |
 
+## 6c. Phase 11 — "The Art of War" (planned for 6.0.0)
+
+**Specified 2026-11-26 at 5.0.0 (commit 4c0a044); not started: every task waits for the owner's word.** Easy to fight, rewarding to fight well, meaningful to command. The design, the 5.0.0 assessment (why holding Attack wins), the progression budget, the art plan, the controls, the tournament framework, the balance, save, performance and playtest strategies, the acceptance criteria, the risks and the decisions are in [`PHASE-11-PLAN.md`](PHASE-11-PLAN.md); each task's specification and Brief in NEXT-TASKS ("Phase 11"). Six milestones the owner plays (M0–M6, plan §5).
+
+| ID | Task | Size | Needs |
+|---|---|---|---|
+| **P11-00** | **Baseline, measuring tools and the inherited checkpoint:** duel and tactics labs, frame-time percentiles, XP pace, the owner's 5.0.0 phone session (the pending night-run checks come whenever the night run does); `docs/PHASE-11-VALIDATION.md`. 5.0.1 | M | — |
+| **P11-01** | **One combat profile for every fighter,** read by combat, AI, art, auto-resolve and previews; identical battles to 5.0.0 (golden tests) | L | P11-00 |
+| **P11-02** | **Carried and wielded:** a second weapon and a quiver slot, the shield stowed for two-handed and ranged weapons, kept preferences, one gear check with findings in words everywhere, the one-place invariant | M–L | P11-01 |
+| **P11-03** | **The progression budget and requirements:** the cap and curve (D-P11b), Two-Handed and Polearm (D-P11c), Agility's job, requirements by a budget rule on base values | M–L | P11-02 (D-P11b, D-P11c decided) |
+| **P11-04** | **The equipment you see:** the hero, companions and tournament fighters drawn in their real gear and mount; mounted as a state not a role; item looks and icons; cache signatures | M–L | P11-02 |
+| **P11-05** | **Melee rhythm and defence** (M1): the hero on everyone's rules (D-P11d), timing per family, costly whiffs, target caps, capped stagger, shield pressure and the Shield skill, weapon guard, honest guard reactions, the first new weapons | L | P11-01, P11-04 (D-P11d decided) |
+| **P11-06** | **Armour, weight and movement:** personal load, Agility and Riding mitigation, armour pierce, seven viable styles | M | P11-05 |
+| **P11-07** | **Bows and crossbows in your hands:** hold to draw, assisted aim, range in the flight, swept collision, a quiver per battle, the Archery skill | L | P11-05, P11-06 |
+| **P11-08** | **Fighting from the saddle:** horses in battle, the lance, Riding, field rules, unhorsing, dismount, mounted archery with weaknesses | L | P11-06, P11-07 |
+| **P11-09** | **Controls, feedback and teaching** (M2): one switch control, context icons, every stuck-input case, the hints and How to Play | M | P11-05, P11-07, P11-08 |
+| **P11-10** | **Fighters who think:** AI styles in data, reaction delays, spacing, opportunism, archers and riders that behave, tournament styles, detail by distance | L | P11-05, P11-07, P11-08 |
+| **P11-11** | **Troops by their weapons:** profiles authoritative, tiers by kit and style, cultures distinct in battle, fine kit, companions and lords on profiles; trees and women's lines kept | M–L | P11-10 |
+| **P11-12** | **Performance and art-cache checkpoint** (M3): the phone and PC at 40, 100, 200 with everything; percentiles; caches bounded; identical results at every Sharpness | M | P11-11 |
+| **P11-13** | **Formations and orders that hold:** slots and leash, frontage, flanks, each formation's character, cohesion, order states on the field | L | P11-11 |
+| **P11-14** | **Combined arms and the tactics lab:** terrain, screens, counters, Auto and presets, the enemy's plan; seven controlled comparisons | M–L | P11-13 |
+| **P11-15** | **Prepare and the battle report** (M4): the hero's loadout and mount, known enemy information, terrain notes, a one-screen report with more on request | M | P11-14 |
+| **P11-16** | **Regional arms:** six to eight pieces from the realms' identities (D-P11g for the horse bow) | M | P11-11, P11-03 |
+| **P11-17** | **Masters at arms:** instructors, short practical training on the duel engine, permanent unlocks, paid retraining, the practice yard | L | P11-16 |
+| **P11-18** | **The walls and other special fields:** no horses on walls, long weapons on ladders, archers and shields on the walkway; siege parity re-measured | M | P11-13, P11-08 |
+| **P11-19** | **The lists** (M5): tournament formats as data, traditions by host (D-P11h), the standard lists, own-arms duels and an archery contest required; announced before the fee | L | P11-10, P11-17 |
+| **P11-20** | **Auto-resolve, military balance and the world:** troop power from profiles, measured composition effects, honest odds in words, parity, `landed`, the economy | M–L | P11-14, P11-18, P11-19 |
+| **P11-T** | **Tuning and acceptance** (M6): plan §19's criteria, SC-53 onward, the night run, the owner's sessions, the sample pack's range; ships **6.0.0** | M | all above |
+
+## 6d. Phase 12 — "The Living World" (preliminary, for 7.0.0)
+
+**Preliminary only** ([`PHASE-12-ROADMAP.md`](PHASE-12-ROADMAP.md)): the scope (manpower, trade, businesses, progression, contracts, events, companions, politics, relationships, courtship, fiefs and delegation, tournament society, regions, lore and legacy, returning players, system links, acceptance), its dependencies on Phase 11, the boundary matrix and the open questions. Tasks are specified only after 6.0.0, starting with a baseline (P12-00).
+
 ## 7. Order, versions, saves and the per-task contract
 
 ### Order
@@ -347,10 +387,12 @@ Every Phase 9 task is **Specified** (2026-11-22; NEXT-TASKS has each in full). T
 8. **Phase 8** in the build order of §5 (re-specified 2026-11-20): P8-02, P8-03, P8-01, P8-04, P8-05, P8-06a, P8-06b, P8-07, P8-08, P8-T. W-09 is not needed: sieges and lords move on passable terrain.
 9. **Phase 9** (specified 2026-11-22): **P9-B1, P9-B2, P9-B3, P9-B4, P9-B5**, then **P9-L1**, **P9-01, P9-02, P9-03, P9-04, P9-05, P9-06, P9-07, P9-08**, **P9-T**. P9-B1's phone measurement decides how far P9-B2 and P9-B3 can go. Each task is a minor version from 3.1.0; P9-T ships 4.0.0. Whole-suite checkpoints after P9-B2, P9-B4, P9-04 and P9-06; P9-T's moved to P10-00 (owner, 2026-11-24).
 10. **Phase 10** (specified 2026-11-24, re-ordered the same day): **P10-01** to **P10-09**, then **P10-T**. **P10-00** runs on the owner's night run, whenever asked. Then the art, in order (D-P10k, owner 2026-11-25): **P10-G1** to **P10-G6**, then **P10-T**. Each task is a minor version in build order from 4.1.0 (the art 4.10.0 to 4.15.0); P10-00 is a patch; P10-T ships 5.0.0. No fixed whole-suite checkpoints: a task that needs a long run asks "now, or the next run?", and deferred checks go in `docs/PENDING-CHECKS.md`.
+11. **Phase 11** (specified 2026-11-26, not started): **P11-00** (5.0.1; its short measurements only), then **P11-01** to **P11-20** in table order (P11-03 and P11-04 may run side by side), then **P11-T** (6.0.0). The owner plays each milestone (M1 after P11-05, M2 after P11-09, M3 after P11-12, M4 after P11-15, M5 after P11-19, M6 at P11-T) before the next task starts. Long runs as Phase 10 (D-P10a, D-P10f); **the night run comes whenever the owner chooses during Phase 11, not necessarily at its start** (owner, 2026-11-26), and runs `docs/PENDING-CHECKS.md` on the build current then.
+12. **Phase 12** (preliminary): specified after 6.0.0, from a baseline task (P12-00).
 
 ### Versions (owner decision D-V1)
 - Proposed: each finished task bumps the minor version (2.1.0, 2.2.0, …); fixes bump the patch.
-- The end of Phase 8 ships **3.0.0**, the end of Phase 9 **4.0.0**, the end of Phase 10 **5.0.0**.
+- The end of Phase 8 ships **3.0.0**, the end of Phase 9 **4.0.0**, the end of Phase 10 **5.0.0**; the end of Phase 11 is planned as **6.0.0** (P11-00 5.0.1, then 5.1.0 to 5.20.0; D-P11l) and Phase 12 as 7.0.0.
 - H-01 and documentation-only work bump the patch.
 
 ### Save schema steps (each with a migration, fixtures from the build before it, and SAVE-FORMAT updated)
@@ -374,6 +416,11 @@ Every Phase 9 task is **Specified** (2026-11-22; NEXT-TASKS has each in full). T
 | (none) | P9-07 | A save's packs: an optional `packs` field, so no schema step (3.13.0) |
 | (none) | P9-08 | A save's world was already recorded (`worldId`); a save of the other official world opens that world (3.14.0) |
 | later | Phase 9 | Re-specified at its start |
+| (none) | Phase 10 | Old saves ignored (D-P10g): new state by `sanitize` defaults; the world's edition 2 refuses saves from before 4.2.0. The code is at **v30** |
+| (none) | P11-02 | `equipment.weapon2`, `equipment.ammo`, `loadout` by `sanitize` defaults (D-P11a: old saves ignored, no migration or fixtures) |
+| (none) | P11-03 | Two new skills, `character.training` (defaults) |
+| (none) | P11-17 | Training progress and unlocks (defaults) |
+| (none) | P11-19 | Tournament formats per host, the bracket's format and loaned kit (defaults) |
 
 **Device settings** (text size, zoom levels) need no schema step. They live in `crownless_settings`, whose loader already fills missing keys with defaults.
 
@@ -458,6 +505,18 @@ Decisions marked **blocking** must be made before the named task starts. The oth
 | **D-P10i** | Wait | **Owner, 2026-11-24: decided.** A Wait screen with days and hours: the screen fades out, the world moves on as it would, it fades back and says how long passed. A band or lord reaching you stops the wait, says so, and opens the encounter | P10-01 |
 | **D-P10j** | Towns and the story | **Owner, 2026-11-24: decided.** Every capital and free city is walkable, none alike, before the story task. The story is cast to fit each kingdom, with characters added as needed; every origin's tutorial leads into the common quest (Q1, which keeps its ending), then the open world; the end is the same for every start. `gate-d-campaigns` splits and reduces its seeds | P10-03, P10-04 |
 | **D-P10k** | The art direction | **Owner, 2026-11-25: decided** (after playing the graphics demo, `docs/GRAPHICS-DEMO.md`). The code-drawn style becomes the game's art and replaces the sprite approach completely: no image files, no Sprite Studio or image generation; looks and specs in data, built from one kit; the drawing only reads the game. The whole of Phase 10's graphics and UI convert to it and the old graphics are removed before 5.0.0, in six tasks in order (P10-G1 to P10-G6) | P10-G1 to P10-G6, P10-T |
+| **D-P11a** | Save compatibility in Phase 11 | **Owner, 2026-11-26: decided.** "Ignore old saves! no migration needed, old saves don't need to work!" D-P10g stays: no migrations, fixtures or old-save tests; new state by `sanitize` defaults | — |
+| **D-P11b** | The progression budget | **Owner, 2026-11-26: decided.** Raise the level cap so the budget fits D-P11c's skills (20 proposed; P11-03 confirms the value with the budget rule, PHASE-11-PLAN §7.3); levels 1–10 unchanged, a measured flatter curve after 10; training unlocks (a capped +1 from a few masters); no skill growth from use | P11-03 |
+| **D-P11c** | The combat skills | **Owner, 2026-11-26: decided.** keep One-Handed, Shield, Archery, Riding; add Two-Handed and Polearm; crossbows by Strength, Archery only for their accuracy | P11-03 |
+| **D-P11d** | The hero's body | **Owner, 2026-11-26: decided.** reach, timing and attack rate from the active weapon; speed from a base walk, load and Agility; the `hero` troop's speed 142 and reach 67 retired; the hero stays stronger by HP, gear, skills and the player's timing | P11-05 |
+| D-P11e | Ammunition | A quiver of shots per battle, refilled free after it; quiver items raise it; no arrows to buy | P11-07 |
+| D-P11f | The hero's horse in battle | Has HP in battle; when it falls the hero is unhorsed; never lost or lamed afterwards | P11-08 |
+| D-P11g | Mounted archery's home | A compact horse bow taught by a foreign master in the free ports; no realm or troop line changes | P11-16, P11-17 |
+| D-P11h | Tournament traditions | Valedorn the mounted and standard lists; Aurelian standard and own-arms duels; Hrothmark heavy weapons; the Vessaro League and Saltreach crossbow and archery contests; Ostrand archery; the free ports open own-arms | P11-19 |
+| D-P11i | Retraining | For crowns at a master (no free retraining: old saves are ignored, D-P11a) | P11-17 |
+| D-P11j | Timed parry | An experiment in P11-05, kept only if the owner likes it at M1; never required | P11-05 |
+| D-P11k | Remounting | No remount in a battle in the first version | P11-08 |
+| D-P11l | Versions | P11-00 5.0.1; then a minor version a task in build order from 5.1.0; P11-T 6.0.0 | all of Phase 11 |
 
 ### D-P8b and D-P8c in full (owner, 2026-11-20: the defaults, accepted)
 
@@ -589,3 +648,5 @@ Decisions marked **blocking** must be made before the named task starts. The oth
 48. **Owner, 2026-11-23: the tasks take too long.** Most of each battle task's effort went around it: reading the whole plan, running suites again, tuning loops (P9-B5's third to fifth tries). From P9-L1 every task has a Brief in NEXT-TASKS with the code to start from, decided defaults, the save step, the build order and its exact checks, and a lean way of working: each check once, tuning time-boxed to two tries, failures outside the task noted rather than fixed, play only where there is a screen. No task was split; P9-03 and P9-05 got a build order in steps instead (P9-05 in two halves).
 49. **Owner, 2026-11-24: Phase 10 re-ordered** (after the orientation check). P10-00 leaves the order and runs on the night run. The Wait screen joins map speed (P10-01). Two tasks are new: one world, the coast joining the map (P10-02), and walkable capitals and free cities (P10-03), before the story. The art pass is split into the UI and menus (P10-08) and graphics (P10-G1, P10-G2, whenever they fit). Old saves are ignored. Tasks renumbered in build order (D-P10f to D-P10j).
 50. **Owner, 2026-11-25: the art drawn in code** (D-P10k). After playing the graphics demo (commit e5bae98), the owner chose its approach as the game's art and asked for Phase 10 to convert fully and remove the old graphics. P10-G1 and P10-G2 are re-specified as six tasks in order: the art kit in the game, battles, towns, the map, the UI and portraits, and the removal (P10-G1 to P10-G6), before P10-T.
+50. **2026-11-26, Phase 11 specified and Phase 12 outlined at 5.0.0 (commit 4c0a044, no later commits; the owner's planning instructions, planning only).** Phase 11, "The Art of War", is 22 tasks (P11-00 to P11-20 and P11-T) in six playable milestones, specified in NEXT-TASKS with Briefs; the design and strategies are a new document, `docs/PHASE-11-PLAN.md`. Found in the code: every melee attack shares one timing and hits every opponent in its arc; the hero's body comes from the `hero` troop row (speed 142, reach 67) and attacks 1.65 times as often as any soldier; a raised shield stops every frontal blow indefinitely; Shield, Archery, Riding and Agility do nothing; items' weight is unread in combat; the art reads the shared swing timing and mounts only the cavalry role; the parity bot holds Attack. Twelve decisions D-P11a to D-P11l, four blocking: **D-P11a** proposes reversing D-P10g (migrating saves from 5.0.0), **D-P11b** the progression budget, **D-P11c** the combat skills, **D-P11d** the hero's body. Phase 12, "The Living World", is a preliminary roadmap only (`docs/PHASE-12-ROADMAP.md`). Stale documents found: SAVE-FORMAT's header (v28; corrected to v30), ROADMAP's §1 (0.3-era; header corrected), the retired world chooser still in `js/worlds.js` and `index.html` (code: P11-02 removes it), the sample pack's engine range `<6.0.0` (P11-T).
+51. **Owner, 2026-11-26: the four blocking Phase 11 decisions.** D-P11a: old saves ignored, no migration (D-P10g kept; no `saves-5.0` fixtures, no schema migrations; the free retraining dropped, D-P11i reduced to paid retraining at a master). D-P11b: the level cap raised so the budget fits D-P11c's skills (20 proposed, confirmed by P11-03). D-P11c and D-P11d: as proposed. Nothing blocks Phase 11. **Owner, the same day: the night run comes at some point during Phase 11, not necessarily at the start**, so P11-00's 5.0.0 reference is its short runs (parity at 40 seeds, the duel and tactics labs), the inherited checks run on whatever build is current then, and 5.0.0's own numbers, if needed, come from a worktree of 4c0a044.

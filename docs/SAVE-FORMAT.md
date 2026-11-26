@@ -1,5 +1,7 @@
 # Crownless — Save Format
 
+_**Corrected 2026-11-26 (planning for Phase 11):** the code is at **schema v30** (v29 came with 3.11.0, P9-05; v30 with 3.12.0, P9-06; no schema step since: Phase 10 added state by `sanitize` defaults). From 4.2.0 (P10-02, D-P10g) every save from before that build is refused and kept, not migrated: the sentence at the end of this paragraph about older builds loading is true only for builds 4.2.0 to 5.0.0. Phase 11 keeps ignoring old saves (D-P11a, owner 2026-11-26): its new fields come by `sanitize` defaults, with no migration (`docs/PHASE-11-PLAN.md` §16). The history as first written:_
+
 _Current: **schema v28**, from build 3.10.0 (P9-04); v27 came with 3.9.0 (P9-03); v26 came with 3.8.0 (P9-02); v25 came with 3.7.0 (P9-01); v24 came with 2.31.0 (P8-07); v23 came with 2.29.0 (P8-06a); v22 came with 2.28.0 (P8-05); v21 came with 2.27.0 (P8-04); v20 came with 2.26.0 (P8-01); v19 came with 2.24.0 (P8-02); v18 came with 2.21.0 (P7-10); v17 came with 2.20.0 (P7-09); v16 came with 2.19.0 (P7-08); v9 came with build 1.16.0 (V2-12); v8 came with 1.15.0 (V2-11), v7 with 1.14.0 (V2-10), v6 with 1.5.0 (V2-03b), v5 with 1.4.0 (V2-03), v4 with 1.3.0 (V2-02), v3 with 1.2.0 (V2-01). Schema v2 was frozen with the v1.0 release (build 1.0.0, 2026-11-17); its full field list is kept below as the reference, because v3 to v9 only add fields to it. Saves from every older build still load: see "Loading" and the fixtures._
 
 ## Where saves live
