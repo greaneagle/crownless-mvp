@@ -267,7 +267,7 @@
     benchStop(null);
     const ok = rows.filter((r) => r.fps >= BENCH.target);
     const best = ok.length ? ok[ok.length - 1].cap : null;
-    const line = (r) => `${r.cap}: ${r.fps} fps, slowest ${r.worstFrameMs} ms, sim ${r.simMs} + draw ${r.drawMs} ms`;
+    const line = (r) => `${r.cap}: ${r.fps} fps, slowest ${r.worstFrameMs} ms, sim ${r.simMs} + draw ${r.drawMs} ms, p50/p95/p99 ${r.frameP50}/${r.frameP95}/${r.frameP99} ms, over 16.7/33 ${r.over16}/${r.over33}, cache ${r.cacheEntries ?? '–'} (${r.cacheHitRate == null ? '–' : `${Math.round(r.cacheHitRate * 100)}%`}), looks ${r.looks ?? '–'}, heap ${r.heapMB ?? '–'} MB`;
     const summary = `Battle benchmark: ${rows.map(line).join(' · ')} · best at ${BENCH.target} fps: ${best ?? 'none'} (canvas ${Math.round(960 * rows[0].canvas)}×${Math.round(540 * rows[0].canvas)}, ${rows[0].sharpness}, text ${rows[0].textSize})`;
     CL.diag.log('info', summary, { rows, best });
     const g = CL.game;
@@ -276,7 +276,7 @@
       practice: { bench: true, rows, best },
       html: [
         `<strong>Largest size at ${BENCH.target} fps or better: ${best ?? 'none of them'}</strong>`,
-        ...rows.map((r) => `${r.cap} at once (up to ${r.peak} on the field, those running away included): ${r.fps} fps · slowest frame ${r.worstFrameMs} ms · simulation ${r.simMs} ms, drawing ${r.drawMs} ms a frame`),
+        ...rows.map((r) => `${r.cap} at once (up to ${r.peak} on the field, those running away included): ${r.fps} fps · slowest frame ${r.worstFrameMs} ms · simulation ${r.simMs} ms, drawing ${r.drawMs} ms a frame · frames p50 ${r.frameP50}, p95 ${r.frameP95}, p99 ${r.frameP99} ms, ${r.over16} over 16.7 ms, ${r.over33} over 33 ms · bake cache ${r.cacheEntries ?? '–'}, ${r.cacheHitRate == null ? '–' : `${Math.round(r.cacheHitRate * 100)}%`} hits · looks ${r.looks ?? '–'} · heap ${r.heapMB ?? '–'} MB`),
         'The same line is in Logs (F3). Nothing in your campaign changed.',
       ].join('<br>'),
     };

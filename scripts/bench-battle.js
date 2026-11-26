@@ -1,8 +1,11 @@
 // Battle simulation benchmark (GDD §6 scaling; §12 performance targets; P9-B1). Runs the Debug
 // panel's battle benchmark headlessly (the same open-field battle at 40, 60, 80, 100, 120, 150 and 200 at
 // once, with reserves keeping the field full) at a fixed 60 Hz step, and reports the simulation's cost
-// per frame. Drawing is not included: measure that in the browser with Debug → Battle benchmark.
-//   node scripts/bench-battle.js [seconds=20] [--maps]   (--maps: also the forest and the courtyard)
+// per frame. Drawing is not included: measure that in the browser with Debug → Battle benchmark, or
+// headless with scripts/bench-browser.js (P11-00).
+//   node scripts/bench-battle.js [seconds=20] [--maps] [--sizes 40,100,200] [--json]
+//   (--maps: also the forest and the courtyard)
+// P11-00: the simulation's p50, p95 and p99 per frame, frames over 16.7 and 33 ms, and the JS heap.
 const { loadGame } = require('../tests/helpers/load');
 
 const SIZES = [40, 60, 80, 100, 120, 150, 200];
@@ -91,16 +94,17 @@ function bench(size, map, seconds) {
   }
   const sorted = [...times].sort((a, b) => a - b);
   const mean = times.reduce((a, b) => a + b, 0) / times.length;
-  return { size, map, deployed, peak, onField: fieldSum / times.length, frames: times.length, mean, p95: sorted[Math.floor(sorted.length * 0.95)], max: sorted.at(-1), stuck, ended: g.mode !== 'battle', CL };
+  const at = (q) => sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * q))];
+  return { size, map, deployed, peak, onField: fieldSum / times.length, frames: times.length, mean, p50: at(0.5), p95: at(0.95), p99: at(0.99), max: sorted.at(-1), over16: times.filter((x) => x > 16.7).length, over33: times.filter((x) => x > 33).length, heapMB: process.memoryUsage().heapUsed / 1048576, stuck, ended: g.mode !== 'battle', CL };
 }
 
-function run(seconds = 20, maps = MAPS.slice(0, 1)) {
+function run(seconds = 20, maps = MAPS.slice(0, 1), sizes = SIZES) {
   const rows = [];
-  for (const size of SIZES) {
+  for (const size of sizes) {
     for (const map of maps) {
       bench(size, map, 2); // warm up the JIT on this shape
       const r = bench(size, map, seconds);
-      rows.push({ size, map, deployed: r.deployed, 'on field': r.onField.toFixed(0), frames: r.frames, 'mean ms': r.mean.toFixed(3), 'p95 ms': r.p95.toFixed(3), 'max ms': r.max.toFixed(2), stuck: r.stuck });
+      rows.push({ size, map, deployed: r.deployed, 'on field': r.onField.toFixed(0), frames: r.frames, 'mean ms': r.mean.toFixed(3), 'p50 ms': r.p50.toFixed(3), 'p95 ms': r.p95.toFixed(3), 'p99 ms': r.p99.toFixed(3), 'max ms': r.max.toFixed(2), '>16.7': r.over16, '>33': r.over33, 'heap MB': r.heapMB.toFixed(0), stuck: r.stuck });
     }
   }
   return rows;
@@ -108,8 +112,15 @@ function run(seconds = 20, maps = MAPS.slice(0, 1)) {
 
 if (require.main === module) {
   const args = process.argv.slice(2);
-  const seconds = Number(args.find((a) => /^\d+$/.test(a)) || 20);
-  console.table(run(seconds, args.includes('--maps') ? MAPS : MAPS.slice(0, 1)));
+  const seconds = Number(args.find((a, i) => /^\d+$/.test(a) && args[i - 1] !== '--sizes') || 20);
+  const i = args.indexOf('--sizes');
+  const sizes = i >= 0 ? args[i + 1].split(',').map(Number) : SIZES;
+  const rows = run(seconds, args.includes('--maps') ? MAPS : MAPS.slice(0, 1), sizes);
+  if (args.includes('--json')) {
+    console.log(JSON.stringify(rows, null, 2));
+    process.exit(0);
+  }
+  console.table(rows);
   console.log("Budget: 33 ms a frame at 30 fps, 16.7 ms at 60, for everything (simulation and drawing). The owner's phone measured about this machine's speed (2.4 ms of simulation at 150, 3.1.1).");
 }
 

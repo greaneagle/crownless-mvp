@@ -341,7 +341,7 @@ Every Phase 9 task is **Specified** (2026-11-22; NEXT-TASKS has each in full). T
 
 ## 6c. Phase 11 — "The Art of War" (planned for 6.0.0)
 
-**Specified 2026-11-26 at 5.0.0 (commit 4c0a044); not started: every task waits for the owner's word.** Easy to fight, rewarding to fight well, meaningful to command. The design, the 5.0.0 assessment (why holding Attack wins), the progression budget, the art plan, the controls, the tournament framework, the balance, save, performance and playtest strategies, the acceptance criteria, the risks and the decisions are in [`PHASE-11-PLAN.md`](PHASE-11-PLAN.md); each task's specification and Brief in NEXT-TASKS ("Phase 11"). Six milestones the owner plays (M0–M6, plan §5).
+**Specified 2026-11-26 at 5.0.0 (commit 4c0a044); started the same day: P11-00 done in 5.0.1 (the 5.0.0 baseline in `docs/PHASE-11-VALIDATION.md`); every later task waits for the owner's word.** Easy to fight, rewarding to fight well, meaningful to command. The design, the 5.0.0 assessment (why holding Attack wins), the progression budget, the art plan, the controls, the tournament framework, the balance, save, performance and playtest strategies, the acceptance criteria, the risks and the decisions are in [`PHASE-11-PLAN.md`](PHASE-11-PLAN.md); each task's specification and Brief in NEXT-TASKS ("Phase 11"). Six milestones the owner plays (M0–M6, plan §5).
 
 | ID | Task | Size | Needs |
 |---|---|---|---|

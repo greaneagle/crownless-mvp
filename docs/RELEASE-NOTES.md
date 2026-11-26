@@ -1,5 +1,34 @@
 # Crownless — Release Notes
 
+## v5.0.1 — The Phase 11 baseline (P11-00) · 2026-11-26
+
+The first step of Phase 11, "The Art of War". Nothing in play changed. The tools that measure how much timing, equipment and command matter are built, and 5.0.0's numbers are recorded in `docs/PHASE-11-VALIDATION.md`.
+
+### Changed
+- **Debug → Battle benchmark** now also reports:
+  - the frame time's p50, p95 and p99;
+  - the frames that missed 60 fps and 30 fps;
+  - the simulation and the drawing at p95;
+  - the bake cache's size and hit rate, and the looks built;
+  - the memory in use (Chrome only).
+
+### Under the hood
+- **Pilots** (`tests/helpers/pilots.js`) fly the hero three ways through the player's own controls: the masher (today's bot), the timer and the turtle.
+- **The duel lab** (`npm run duel-lab`): the hero against one fighter, per pilot, weapon, armour set, opponent and tournament round.
+- **The tactics lab** (`npm run tactics-lab`): equal armies on Charge, on Auto, or under a scripted plan, with the hero fighting or staying back.
+- **The XP pace** (`npm run progression`): the day each level comes, by bot style.
+- **The headless browser benchmark** (`npm run bench:browser`): each Sharpness on the desktop and phone profiles. `npm run bench` gains percentiles and the heap.
+
+### Found
+- **A shield stops every frontal blow.** A shielded opponent (footman, huscarl, mercenary) is never beaten one on one by holding Attack, waiting for an opening or blocking. A new character can't win a tournament bout that way.
+- **Most weapons fight the same.** Four of the five take a looter in the same three blows. Armour only makes a lost fight last a few seconds longer.
+- **Command already pays.** With equal armies, a held shield wall, archers behind and cavalry sent in on the first volley win every time with the hero kept back. Charging wins about a third of the time. Auto is uneven: it wins 78% on open ground but 13% on the hills.
+- **Levels come fast.** The bots reach level 10, the cap, in about two months of game time.
+
+### Open
+- **The owner's 5.0.0 session on the phone** (H-00): P10-T's seven items, then a contract, a lair and a tournament fought both ways, and the questionnaire.
+- **For the next night run** (`docs/PENDING-CHECKS.md`): the siege parity and the XP pace over 360 days on three seeds, beside the checks already waiting.
+
 ## v5.0.0 — Ways In (P10-T) · 2026-11-26
 
 The end of Phase 10. You choose a kingdom and one of five origins; each origin's opening quest teaches the basics and leads into the same common quest; then the world is open, drawn entirely in code. The evidence is in `docs/PHASE-10-VALIDATION.md`.

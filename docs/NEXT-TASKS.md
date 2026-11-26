@@ -4039,7 +4039,7 @@ The aim: easy to fight, rewarding to fight well, meaningful to command. The play
 
 | ID | Task | Size | Version | Readiness |
 |---|---|---|---|---|
-| P11-00 | Baseline, measuring tools and the inherited checkpoint | M | 5.0.1 | Ready |
+| P11-00 | Baseline, measuring tools and the inherited checkpoint | M | 5.0.1 | ✅ Done (the owner's H-00 to come) |
 | P11-01 | One combat profile for every fighter (no change in play) | L | 5.1.0 | Ready |
 | P11-02 | Carried and wielded: loadouts and one gear check | M–L | 5.2.0 | Ready |
 | P11-03 | The progression budget and equipment requirements | M–L | 5.3.0 | Ready |
@@ -4129,6 +4129,31 @@ The aim: easy to fight, rewarding to fight well, meaningful to command. The play
 - **Play:** the owner's H-00 only.
 - **Explain:** none.
 - **Not here:** any change to combat.
+
+**Done (5.0.1).** The baseline is in `docs/PHASE-11-VALIDATION.md` ("The 5.0.0 baseline"). No rule, number, look or screen changed. The benchmark's result screen gains lines (Debug only).
+- **Built:**
+  - the pilots (`tests/helpers/pilots.js`: masher, timer, turtle, and passive for the tactics lab);
+  - `scripts/duel-lab.js` (`--weapons`, `--field`, `--tourney`, `--series`);
+  - `scripts/tactics-lab.js` (charge, Auto, `plan:line`, `plan:fallback` on request; hero passive or active);
+  - `scripts/progression.js` (the day of each level, XP at days 60, 120, 180 and 360, by source);
+  - frame-time detail in `scripts/bench-battle.js` and Debug → Battle benchmark (p50, p95 and p99; frames over 16.7 and 33 ms with 1 ms for jitter; simulation and drawing p95; the bake cache's size and hit rate, `CL.gfx.cacheStats`; looks built, `CL.gfx.battle.lookCount`; the heap);
+  - `scripts/bench-browser.js` (the Debug benchmark headless, each Sharpness, desktop and phone).
+
+  `npm run duel-lab`, `tactics-lab`, `progression` and `bench:browser`.
+- **Measured** (each run under 20 minutes, one at a time):
+  - duels (40 seeds; deterministic in 5.0.0), parity (5 scenarios and `--big`, 40 seeds) and `extras.js`;
+  - the tactics lab (40 seeds, about 10 min) and the XP pace (180 days, 1 seed, 4 styles, about 11 min);
+  - both benchmarks.
+- **Found:**
+  - **A shield stops every frontal blow.** No pilot beats a footman, huscarl or tournament mercenary, so a new character never wins a bout. The timer strikes into the recovery, but the AI raises its shield in its own recovery. A scratch check: a swing started into the opponent's windup gets through (20/20 against a footman). That is the only timing that pays in 5.0.0, the reverse of plan §10.1.
+  - **Equipment:** four of five weapons kill a looter in the same three blows, and armour only stretches a lost fight.
+  - **Command:** `plan:line` wins 100% with the hero back, against 30–35% for a charge. Auto wins 13% on the hills with a passive hero. A fighting hero drags good plans down (`heroDownOrders`).
+  - **XP:** level 10 comes on day 49–55, then about 170–205 XP a day goes unused.
+  - **The benchmark:** its battle's first ~20 s are the march (no blow before 19.7 s at 40), so short runs measure the approach. Its `stuck` count is the company on Follow round a still hero (as in 5.0.0, for P11-12).
+- **Tests:** `tests/pilots.test.js` (5) and `tests/bench.test.js` (1). `npm test` 948 pass; lint as before (2 old warnings); browser `battle-size.spec.js`'s benchmark test on desktop and phone; the result text checked at 812×375.
+- **Open:**
+  - the owner's H-00 phone session and questionnaire (in the validation doc);
+  - for the night run (`docs/PENDING-CHECKS.md`; the owner chose it for the siege parity, 2026-11-26): the siege parity (`parity.js --siege 30`, about 15 min) and the XP pace at 360 days on three seeds, beside the inherited checks.
 
 ---
 

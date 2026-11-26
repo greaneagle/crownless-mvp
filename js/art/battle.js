@@ -73,6 +73,7 @@
     }
     L.key = `${u.role === 'hero' ? 'hero' : u.companion || u.troop}|${typeof L.realm === 'object' ? L.realm.color : L.realm}|${L.seed}${L.lord ? `|lord${u.house || ''}` : ''}`;
     B.looks.set(u, L);
+    B.lookCount = (B.lookCount || 0) + 1; // P11-00: looks built this battle (Debug → Battle benchmark)
     return L;
   }
 
@@ -715,5 +716,5 @@
     return img;
   }
 
-  G.battle = { FIG, TEAM, water, draw, unit, fallen, ground, obstacle, arrows, effects, miniature, lookOf: (u) => lookOf(state(CL.game), u), sides, baseOf, lookName };
+  G.battle = { FIG, TEAM, water, draw, unit, fallen, ground, obstacle, arrows, effects, miniature, lookOf: (u) => lookOf(state(CL.game), u), lookCount: () => (battle && battle.g === CL.game ? battle.lookCount || 0 : 0), sides, baseOf, lookName };
 })(typeof window !== 'undefined' ? window : globalThis);

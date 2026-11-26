@@ -167,7 +167,7 @@
     g.share = Boolean(enc.share) && !enc.practice && !enc.duel; // P9-B2: one army a side, sharing the field
     g.reserveNoteAt = {};
     // A practice battle (the debug panel's stress test) brings its own soldiers and changes nothing.
-    g.practice = Array.isArray(enc.practice) ? { started: performance.now(), frames: 0, sim: 0, draw: 0, worst: 0, peak: 0 } : null;
+    g.practice = Array.isArray(enc.practice) ? { started: performance.now(), frames: 0, sim: 0, draw: 0, worst: 0, peak: 0, frameList: [], simList: [], drawList: [], cache: CL.gfx?.cacheStats?.() ?? null } : null;
     // A tournament bout (P7-09): the hero alone, in the loaner kit, against one fighter; its result goes
     // to the bracket (js/tourney.js), never the encounter commit path.
     g.duel = enc.duel ? { opponent: { ...enc.duel.opponent }, kit: { ...enc.duel.kit } } : null;

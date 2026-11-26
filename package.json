@@ -1,6 +1,6 @@
 {
   "name": "crownless-mvp",
-  "version": "5.0.0",
+  "version": "5.0.1",
   "private": true,
   "description": "Crownless — HTML5 Canvas party-battle RPG prototype. No runtime dependencies; the only development dependency is Playwright for the browser tests (W-00).",
   "scripts": {
@@ -21,6 +21,10 @@
     "bench:map": "node scripts/bench-map.js",
     "parity": "node scripts/parity.js",
     "extras": "node scripts/extras.js",
+    "duel-lab": "node scripts/duel-lab.js",
+    "tactics-lab": "node scripts/tactics-lab.js",
+    "progression": "node scripts/progression.js",
+    "bench:browser": "node scripts/bench-browser.js",
     "landed": "node scripts/landed.js",
     "economy": "node scripts/economy-report.js",
     "prototype-g": "node scripts/prototype-g.js",

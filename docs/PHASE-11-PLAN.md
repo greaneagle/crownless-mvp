@@ -135,7 +135,7 @@ The fix is not to make input unresponsive or to punish repeated presses, but to 
 
 | ID | Task | Size | Priority | Needs | Version | Milestone | Readiness |
 |---|---|---|---|---|---|---|---|
-| **P11-00** | Baseline, measuring tools and the inherited checkpoint | M | P1 | — | 5.0.1 | M0 Baseline | Ready |
+| **P11-00** | Baseline, measuring tools and the inherited checkpoint | M | P1 | — | 5.0.1 | M0 Baseline | ✅ Done (H-00 to come) |
 | **P11-01** | One combat profile for every fighter (no change in play) | L | P1 | P11-00 | 5.1.0 | M1 | Ready |
 | **P11-02** | Carried and wielded: loadouts and one gear check | M–L | P1 | P11-01 | 5.2.0 | M1 | Ready |
 | **P11-03** | The progression budget and equipment requirements | M–L | P1 | P11-02 | 5.3.0 | M1 | Ready (D-P11b, D-P11c decided) |

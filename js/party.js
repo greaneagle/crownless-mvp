@@ -508,12 +508,47 @@
     return { fps, size };
   }
 
+  /**
+   * P11-00: the frame-time detail of a practice battle: percentiles of the whole frame, frames over the
+   * 60 and 30 fps budgets, update and draw apart, the bake cache, the looks built and the JS heap.
+   * @param {any} p g.practice @returns {Record<string, any>}
+   */
+  function frameDetail(p) {
+    const pct = (list, q) => {
+      if (!list?.length) return 0;
+      const s = [...list].sort((a, b) => a - b);
+      return Number(s[Math.min(s.length - 1, Math.floor(s.length * q))].toFixed(1));
+    };
+    const f = p.frameList || [];
+    const cache = CL.gfx?.cacheStats?.() ?? null;
+    const was = p.cache || { hits: 0, misses: 0 };
+    const hits = cache ? cache.hits - (was.hits || 0) : 0;
+    const misses = cache ? cache.misses - (was.misses || 0) : 0;
+    const heap = /** @type {any} */ (root.performance)?.memory?.usedJSHeapSize; // Chromium only
+    return {
+      frameP50: pct(f, 0.5),
+      frameP95: pct(f, 0.95),
+      frameP99: pct(f, 0.99),
+      // A frame that missed 60 fps (or 30): over 16.7 ms (33.3), with 1 ms allowed for the display's timer jitter.
+      over16: f.filter((x) => x > 17.7).length,
+      over33: f.filter((x) => x > 34.3).length,
+      sampled: f.length,
+      simP95: pct(p.simList, 0.95),
+      drawP95: pct(p.drawList, 0.95),
+      cacheEntries: cache ? cache.entries : null,
+      cacheHitRate: hits + misses ? Number((hits / (hits + misses)).toFixed(3)) : null,
+      looks: CL.gfx?.battle?.lookCount?.() ?? null,
+      heapMB: Number.isFinite(heap) ? Number((heap / 1048576).toFixed(1)) : null,
+    };
+  }
+
   /** A stress test is over: report how it ran; nothing in the campaign changes and nothing is saved. */
   function endPractice(win) {
     const g = CL.game;
     const p = g.practice;
     const secs = Math.max(0.001, (performance.now() - p.started) / 1000);
     const avg = (x) => (p.frames ? x / p.frames : 0).toFixed(1);
+    /** @type {Record<string, any>} */
     const stats = {
       cap: CL.combat.BATTLE.activeCap,
       peak: p.peak,
@@ -525,6 +560,7 @@
       canvas: CL.render?.backingScale?.() ?? 1, // canvas pixels per game pixel (P10-G1's Sharpness)
       sharpness: CL.settings?.get('sharpness') ?? 'balanced',
       textSize: CL.settings?.get('textSize') ?? 'normal',
+      ...frameDetail(p),
     };
     // The camera test (PROTO-A) also reports the arena and how long the armies took to meet.
     const big = CL.camera.scrolls(g);
@@ -536,7 +572,8 @@
       `<strong>${stats.fps} fps average over ${stats.seconds} s</strong>`,
       `Up to ${stats.peak} units on the field (battle size ${stats.cap})`,
       `Per frame: simulation ${stats.simMs} ms · drawing ${stats.drawMs} ms (canvas ${Math.round(960 * stats.canvas)}×${Math.round(540 * stats.canvas)}, ${stats.sharpness}, text ${stats.textSize})`,
-      `Slowest frame: ${stats.worstFrameMs} ms`,
+      `Slowest frame: ${stats.worstFrameMs} ms · frames p50 ${stats.frameP50}, p95 ${stats.frameP95}, p99 ${stats.frameP99} ms · ${stats.over16} over 16.7 ms, ${stats.over33} over 33 ms (of ${stats.sampled})`,
+      `p95: simulation ${stats.simP95} ms, drawing ${stats.drawP95} ms · bake cache ${stats.cacheEntries ?? '–'} pictures, ${stats.cacheHitRate == null ? '–' : `${Math.round(stats.cacheHitRate * 100)}%`} hits · looks ${stats.looks ?? '–'} · heap ${stats.heapMB == null ? 'not reported' : `${stats.heapMB} MB`}`,
       ...(big ? [`Arena ${stats.arena}: first contact after ${stats.contactS ?? '–'} s, first fall after ${stats.firstDownS ?? '–'} s, battle ${stats.battleS} s of play`] : []),
       ...(g.joining?.length ? [`Parties that rode in: ${g.joining.filter((j) => j.arrived).map((j) => `${j.name} (${j.size}) at ${Math.round(j.arriveAt)} s`).join(', ') || 'none (the battle ended first)'}`] : []),
       'Nothing in your campaign changed.',

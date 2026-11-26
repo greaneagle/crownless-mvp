@@ -1080,6 +1080,7 @@
 
   /** A small offscreen-canvas cache for repeated static drawings (trees and peaks on the map). */
   const caches = new Map();
+  const cacheCount = { hits: 0, misses: 0 }; // P11-00: for Debug → Battle benchmark
   /**
    * Draw `paint(ctx)` (a drawing anchored at 0,0 inside a box of w×h around it, ox/oy from its
    * top-left to the anchor) once per pixel scale `k`, then reuse the image.
@@ -1088,10 +1089,12 @@
     const id = `${key}@${k.toFixed(2)}`;
     let c = caches.get(id);
     if (c) {
+      cacheCount.hits++;
       // Most recently used last, so the oldest is the one dropped when the cache is full.
       caches.delete(id);
       caches.set(id, c);
     } else {
+      cacheCount.misses++;
       c = root.document.createElement('canvas');
       c.width = Math.max(1, Math.ceil(w * k));
       c.height = Math.max(1, Math.ceil(h * k));
@@ -1105,6 +1108,12 @@
   }
   function dropCaches() {
     caches.clear();
+  }
+  /** P11-00: the bake cache's size and its hits and misses since the page loaded (or since `reset`). */
+  function cacheStats(reset = false) {
+    const out = { entries: caches.size, hits: cacheCount.hits, misses: cacheCount.misses };
+    if (reset) Object.assign(cacheCount, { hits: 0, misses: 0 });
+    return out;
   }
 
   CL.gfx = Object.assign(CL.gfx || {}, {
@@ -1147,6 +1156,7 @@
     wagon,
     glow,
     cached,
+    cacheStats,
     dropCaches,
     cacheSize: () => caches.size,
   });

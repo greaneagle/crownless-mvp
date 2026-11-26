@@ -93,7 +93,13 @@
           p.frames++;
           p.sim += t1 - t0;
           p.draw += t2 - t1;
-          if (CL.game.t > 1) p.worst = Math.max(p.worst, dt * 1000); // from the second second: not the frame that set the battle up (P9-B1)
+          if (CL.game.t > 1) {
+            p.worst = Math.max(p.worst, dt * 1000); // from the second second: not the frame that set the battle up (P9-B1)
+            // P11-00: each frame's time and its update and draw, for the percentiles.
+            p.frameList?.push(dt * 1000);
+            p.simList?.push(t1 - t0);
+            p.drawList?.push(t2 - t1);
+          }
           const g = CL.game;
           const live = (l) => l.reduce((n, u) => n + (u.alive ? 1 : 0), 0);
           p.peak = Math.max(p.peak, (g.hero.alive ? 1 : 0) + live(g.allies) + live(g.enemies));
