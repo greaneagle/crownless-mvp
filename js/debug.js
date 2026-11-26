@@ -440,12 +440,11 @@
     const n = Number(btn.dataset.n || 1);
     const mode = CL.game.mode;
     switch (act) {
-      case 'gfxDemo':
       case 'artGallery':
-        // The graphics demo and the Art gallery (js/gfx/): loaded only now, run on a copy of the campaign, never saved.
+        // The Art gallery (js/gfx/): loaded only now; it reads the content and never saves.
         if (mode === 'battle' || mode === 'prepare') return CL.ui.message('Finish the battle first');
         toggle(false);
-        openGfxDemo(act === 'artGallery' ? 'gallery' : 'map');
+        openGallery();
         return;
       case 'gold':
         addGold(n);
@@ -1011,14 +1010,14 @@
     CL.ui.message(`Debug: ${btn.textContent}`);
   }
 
-  /** The graphics demo's files, in order (an experiment: not loaded in normal play; the art kit it
-   * draws with, js/art/, is part of the game from P10-G1). */
-  const GFX_FILES = ['gallery', 'map', 'city', 'battle', 'demo'];
-  let gfxLoading = null;
-  /** Load the graphics demo once, then open it. @param {string} [scene] */
-  function openGfxDemo(scene = 'map') {
-    if (CL.gfxDemo) return CL.gfxDemo.enter(scene);
-    gfxLoading ??= GFX_FILES.reduce(
+  /** The Art gallery's files, in order (not loaded in normal play; the art kit it draws with, js/art/,
+   * is part of the game). */
+  const GALLERY_FILES = ['gallery', 'viewer'];
+  let galleryLoading = null;
+  /** Load the Art gallery once, then open it. */
+  function openGallery() {
+    if (CL.artGallery) return CL.artGallery.enter();
+    galleryLoading ??= GALLERY_FILES.reduce(
       (p, f) =>
         p.then(
           () =>
@@ -1032,12 +1031,12 @@
         ),
       Promise.resolve(),
     );
-    return gfxLoading.then(
-      () => CL.gfxDemo.enter(scene),
+    return galleryLoading.then(
+      () => CL.artGallery.enter(),
       (e) => {
-        gfxLoading = null;
-        log('graphics demo failed to load', { error: String(e) });
-        CL.ui.message('The graphics demo could not be loaded');
+        galleryLoading = null;
+        log('art gallery failed to load', { error: String(e) });
+        CL.ui.message('The Art gallery could not be loaded');
       },
     );
   }
@@ -1084,7 +1083,7 @@
     cameraTest,
     fordTest,
     mapTest,
-    openGfxDemo,
+    openGallery,
     wipeSave,
     toggle,
     bind,

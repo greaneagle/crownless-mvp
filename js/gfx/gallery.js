@@ -1,8 +1,8 @@
 /* Crownless Art gallery (Debug → Art gallery; P10-G1). Every part of the art kit (js/art/) on screen:
  * each realm's troops from their data looks, at the size a battle uses (1×) and enlarged, the hero,
  * the companions and townsfolk, buildings by culture, nature and props. It turns and cycles poses,
- * so the owner can judge a piece and an agent can see what exists before adding more. It runs inside
- * the isolated demo runtime (js/gfx/demo.js): it shows nothing of the campaign and saves nothing. */
+ * so the owner can judge a piece and an agent can see what exists before adding more. It runs in its
+ * own viewer (js/gfx/viewer.js): it shows nothing of the campaign and saves nothing. */
 (function (root) {
   'use strict';
   const CL = root.Crownless;

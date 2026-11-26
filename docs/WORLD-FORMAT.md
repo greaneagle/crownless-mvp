@@ -53,14 +53,14 @@ The official world has these (`js/content.js` `TABLES`, plus `forge` and `realm_
 | `markets` | Goods: `name`, `basePrice`, `weight`, `tradeGood`, `icon` |
 | `quests` | `title`, `giver`, `summary`, `stages`, `rewards`, `endings`, `side` (checked by `js/story.js`) |
 | `dialogue` | Conversation trees: `speaker`, `start`, `nodes`, `place`, `visible` (conditions and effects checked by `js/story.js`) |
-| `battle_maps` | A drawn map (`ground`, `decor`, `obstacles`, `spawn`) or a generated one (`generate { kind forest\|field\|ford\|hills, scale 1–4, seed }`, `small`) |
+| `battle_maps` | A drawn map (`ground`, `decor` rows `[kind, x, y, w, h]`, `obstacles` each with a `look` by name, never a sprite tile; `spawn`) or a generated one (`generate { kind forest\|field\|ford\|hills, scale 1–4, seed }`, `small`) |
 | `encounters` | Sites' fights: `name`, `enemyFaction`, `map`, `waves [{ troop: n }]`, `reward`, `loot` |
 | `world_map` | The world: `name`, `start`, `bounds { w, h }` (up to 1000), `factions` (the kingdoms), `outlaws`, `relations`, `regions`, `view`, `terrain` (a speed for every kind of ground), `areas`, `waters`, `coast`, `roads`, `river`, `forests`, `hills`, `battleMaps { open, fort, … }`, `sites`, `nobles`, `armies`, `simulation`, `time` |
 | `skills`, `origins`, `origin_rules` | The hero's skills; the origins a new hero chooses from (`attribute`, `skill`, `kit`, `start`, `begin`, `quest`, `situation`, `edge`; P10-05, were `backgrounds`), and the band every opening quest ends within |
 | `party_templates` | Map parties: `kind` (bandit, patrol, caravan, detachment, lord), `faction`, `count`, `speed`, `troops { troop: [min, max] }`, and by kind `lairs`, `home`, `route`, `goods`, `frontier`, `toll`, `reward`, `lootBySize` |
 | `contracts` | `kind` (hunt, escort, delivery), its band, troop pool, limits, distance, time limit and reward |
-| `town_hubs` | A walkable town: `settlement` (an `explorable` one), `ground`, `obstacles`, `spawn`, `exitZone`, `npcs` (each with an action, frames and words or a dialogue, and a `role`: innkeeper, merchant, recruiter, elder, official or guard). Every hub needs an innkeeper, a merchant, a recruiter and an elder or official (P10-03) |
-| `companions` | Mara and the retinue: `look`, `frames`, `hp`, `weaponFactor`, `skills`, `gearSlots`, `startGear`, wages and loyalty |
+| `town_hubs` | A walkable town: `settlement` (an `explorable` one), `ground`, `obstacles`, `spawn`, `exitZone`, `npcs` (each with an action, words or a dialogue, a `role` (innkeeper, merchant, recruiter, elder, official or guard), and optionally `gender: 'female'`; the art kit draws each by role). Each obstacle has a `look` by name (`tavern`, `barracks`, `house` with optional `colors` and a building `spec`; `tree`, `bush`, `rock`, `wall`, `fence`, `crates` …), and each `decor` row is `[kind, x, y, w, h]` with a kind's name. Sprite tiles are refused (P10-G6). Every hub needs an innkeeper, a merchant, a recruiter and an elder or official (P10-03) |
+| `companions` | Mara and the retinue: `look` (the art kit's vocabulary, `docs/ART-STYLE.md`), `hp`, `weaponFactor`, `skills`, `gearSlots`, `startGear`, wages and loyalty |
 | `news` | News kinds: `priority`, `lines` (and by ending) |
 | `world_events` | Happenings in places: where, how often, choices and outcomes |
 | `tournaments` | Hosts, rounds, fees and prizes |

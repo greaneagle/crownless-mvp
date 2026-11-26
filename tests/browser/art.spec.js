@@ -1,6 +1,6 @@
 // P10-G1 (D-P10k): the art kit in the game. The Sharpness setting sizes the canvas to the screen's
 // real pixels (Fast keeps the classic 960×540), kept on the device; the Art gallery opens from the
-// Debug panel, turns its pages, and closes with the save untouched.
+// Debug panel, turns its pages, and closes with the save untouched; from P10-G6 no screen asks for an image.
 const { test, expect, open, waitMode, game, press, pressAt, isTouch, newGame, toMap, debug } = require('./helpers');
 
 const storage = (page) => page.evaluate(() => Object.fromEntries(Object.keys(localStorage).sort().map((k) => [k, localStorage.getItem(k)])));
@@ -45,26 +45,74 @@ test('the map and a battle still draw at the new sharpness', async ({ page }) =>
   expect(r.errors).toBe(0);
 });
 
-test('the Art gallery: every realm’s troops and more, page by page, and the save untouched after', async ({ page }) => {
+test('the Art gallery: every realm’s troops and more, page by page; it closes with the game and save as they were', async ({ page }) => {
   await open(page);
   await newGame(page);
   await toMap(page);
-  const before = await storage(page);
+  const before = { storage: await storage(page), campaign: await game(page, (CL) => JSON.stringify(CL.campaign)) };
   await debug(page, '[data-cheat="artGallery"]');
-  await page.waitForFunction(() => window.Crownless.gfxDemo?.scene === 'gallery');
+  await page.waitForFunction(() => window.Crownless.artGallery?.active === true);
+  await expect(page.locator('#galleryCanvas')).toBeVisible();
   const pages = await game(page, (CL) => CL.gfx.scenes.gallery.pages().map((p) => p.realm || p.kind));
   expect(pages).toEqual(['valedorn', 'aurelian', 'hrothmark', 'vessaro', 'neutral', 'ostrand', 'saltreach', 'people', 'buildings', 'props']);
   // Next page: a tap on the bottom line (phone) or Tab (desktop).
   if (isTouch(page)) {
-    const b = await page.locator('#gfxCanvas').boundingBox();
+    const b = await page.locator('#galleryCanvas').boundingBox();
     await pressAt(page, b.x + b.width / 2, b.y + b.height * 0.97);
   } else await page.keyboard.press('Tab');
-  expect(await game(page, (CL) => CL.gfxDemo.state.gallery.page)).toBe(1);
+  expect(await game(page, (CL) => CL.artGallery.state.gallery.page)).toBe(1);
+  // While it is open nothing is saved, and the world stands still.
+  expect(await game(page, (CL) => CL.save.write())).toBe(false);
   expect(await game(page, (CL) => CL.diag.events.filter((e) => e.level === 'error').length)).toBe(0);
-  await press(page, '#gfxExit');
-  await page.waitForFunction(() => !window.Crownless.gfxDemo.active);
+  await press(page, '#galleryExit');
+  await page.waitForFunction(() => !window.Crownless.artGallery.active);
   await waitMode(page, 'map');
-  expect(await storage(page)).toEqual(before);
+  await expect(page.locator('#galleryCanvas')).toHaveCount(0);
+  await expect(page.locator('#galleryUi')).toHaveCount(0);
+  await expect(page.locator('#galleryCss')).toHaveCount(0);
+  expect(await game(page, (CL) => ({ listeners: CL.artGallery.listenerCount(), stage: document.querySelector('#stage').dataset.gallery ?? null, campaign: JSON.stringify(CL.campaign) }))).toEqual({ listeners: 0, stage: null, campaign: before.campaign });
+  expect(await storage(page)).toEqual(before.storage);
+  // Opened again, it is loaded once, and the old graphics demo is gone.
+  await debug(page, '[data-cheat="artGallery"]');
+  await page.waitForFunction(() => window.Crownless.artGallery.active);
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => !window.Crownless.artGallery.active);
+  expect(await game(page, (CL) => ({ entries: CL.artGallery.entries, viewer: [...document.scripts].filter((s) => s.src.includes('/js/gfx/viewer.js')).length, demo: typeof CL.gfxDemo, button: Boolean(document.querySelector('[data-cheat="gfxDemo"]')) }))).toEqual({ entries: 2, viewer: 1, demo: 'undefined', button: false });
+});
+
+test('P10-G6: no screen requests an image: the menus, the party sheet, the Realm, a town, talk, the map and a battle', async ({ page }) => {
+  const asked = [];
+  page.on('request', (r) => {
+    const url = r.url();
+    if (url.startsWith('data:') || /\/icons\//.test(url)) return; // drawn pictures, and the home-screen icons
+    if (r.resourceType() === 'image' || /\.(png|jpe?g|gif|webp|avif)(\?|$)/i.test(url)) asked.push(url.replace(/^https?:\/\/[^/]+/, ''));
+  });
+  await open(page, { settings: { sharpness: 'balanced' } });
+  await press(page, '#primaryBtn');
+  await waitMode(page, 'create');
+  await game(page, (CL) => (CL.game.plainStart = true));
+  await press(page, '#primaryBtn');
+  await waitMode(page, 'settlement');
+  await game(page, (CL) => CL.save.addSoldier(CL.campaign, 'levy'));
+  for (const mode of ['character', 'journal', 'realm', 'trade']) {
+    await game(page, (CL, m) => CL.ui.changeMode(m), mode);
+    await page.waitForTimeout(150);
+  }
+  await game(page, (CL) => CL.ui.changeMode('settlement'));
+  await press(page, page.locator('#secondaryBtn', { hasText: 'Walk the streets' }));
+  await waitMode(page, 'town');
+  await game(page, (CL) => CL.town.open(CL.game.town.npcs[0]));
+  await waitMode(page, 'talk');
+  await game(page, (CL) => {
+    CL.town.leave();
+  });
+  await waitMode(page, 'map');
+  await page.waitForTimeout(600);
+  await debug(page, '[data-cheat="camera"][data-n="30"]');
+  await waitMode(page, 'battle');
+  await page.waitForTimeout(800);
+  expect(asked).toEqual([]);
+  expect(await game(page, (CL) => CL.diag.events.filter((e) => e.level === 'error').length)).toBe(0);
 });
 
 test('a battle draws no sprite image: every soldier and obstacle is the art kit’s (P10-G2)', async ({ page }) => {

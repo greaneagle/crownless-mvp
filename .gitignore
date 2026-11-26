@@ -4,9 +4,8 @@ playwright-report/
 test-results/
 blob-report/
 
-# Local AI art workflow (.claude/skills/crownless-art): draft recipes, contact sheets, generation
-# logs, approved-asset ZIPs and candidate batches stay on this machine. Approved sprites committed
-# to assets/ are never ignored (see the last rule).
+# The old local AI art workflow (retired in P10-G6, D-P10k: all art is drawn in code). Its folders
+# may still be on the owner's machine; they are never committed.
 art-work/
 # The owner's art-direction reference images (local only, never committed or published with the site)
 art-reference/
@@ -20,7 +19,6 @@ contact-sheet*.png
 *.gguf
 ComfyUI/
 ComfyUI_windows_portable/
-!assets/**
 
 # The graphics demo's screenshots (docs/GRAPHICS-DEMO.md): about 11 MB, kept on this machine
 docs/graphics-demo/

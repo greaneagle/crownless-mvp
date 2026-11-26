@@ -1,6 +1,6 @@
 # Graphics demo: a code-drawn art direction (experiment)
 
-_Built 2026-11-25 on 4.9.0 (commit e5bae98). **Adopted by the owner the same day** (D-P10k): this approach becomes the game's art, and Phase 10 converts to it in P10-G1 to P10-G6 (`docs/NEXT-TASKS.md`). The demo itself changes nothing in normal play; it is retired in P10-G6._
+_**History of the decision.** Built 2026-11-25 on 4.9.0 (commit e5bae98). **Adopted by the owner the same day** (D-P10k): this approach became the game's art, and Phase 10 converted to it in P10-G1 to P10-G6 (`docs/NEXT-TASKS.md`). **The demo was retired in P10-G6 (4.15.0):** its map, city and battle are now the game itself, and only the Art gallery stays in the Debug panel (`js/gfx/gallery.js`, `js/gfx/viewer.js`). What follows describes the demo as it was, and its measurements; the files it names under `js/gfx/` (`demo.js`, `map.js`, `city.js`, `battle.js`) are in the history before 4.15.0._
 
 ## How to open it
 

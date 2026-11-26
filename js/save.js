@@ -782,9 +782,9 @@
    * @returns {boolean} true when the campaign is safely stored
    */
   function write() {
-    // The experimental graphics demo plays on a copy of the campaign: nothing it does may be saved.
-    if (CL.gfxDemo?.active) {
-      CL.diag.log('info', 'Save skipped: the graphics demo is open');
+    // While the Art gallery is open the game is paused: nothing is saved until it closes.
+    if (CL.artGallery?.active) {
+      CL.diag.log('info', 'Save skipped: the Art gallery is open');
       return false;
     }
     if (CL.save.stale) {

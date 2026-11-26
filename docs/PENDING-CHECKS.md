@@ -6,6 +6,8 @@ _The owner's rule (D-P10f, 2026-11-24). A task that needs a run over 20 minutes 
 
 | From | Run | Look for |
 |---|---|---|
+| P10-G6 (4.15.0) | The screenshot baselines. Docker Desktop must be running. `npm run test:visual:docker` (`scripts/visual-baselines.js`) runs `npx playwright test --grep @visual --update-snapshots=all` inside `mcr.microsoft.com/playwright:v<pinned>-noble`: about 2 GB to download the first time, then about 5 min. Then `npm run test:visual:docker -- --check` must pass, and the new `tests/browser/screenshots/` are reviewed and committed. Without Docker: the "Browser tests" workflow by hand with "update screenshots" ticked, and the baselines from its artifact | Every key screen in the new art at desktop and phone, Normal and Larger text: nothing clipped or misplaced, no blank canvas, no missing picture. Until they are committed the `@visual` tests skip. The asset guard (`tests/assets.test.js`) already allows `tests/browser/screenshots/` |
+| P10-G6 (4.15.0) | The full browser suite (`npx playwright test`, about 15 min) once more, on a quiet machine | 5 failed under load on 2026-11-26 and passed alone (37 of 37): `ford`, text size Normal and Larger on desktop, `world-map.spec.js:93` on both projects. If any fails again on a quiet run, it is a real fault for the next task |
 | P10-04 (4.4.0) | `node --test tests/slow/gate-d-campaigns.test.js`: 42 campaigns, 7 in each kingdom (about 15–20 min, not yet timed at this size) | Every run reaches an ending, from every kingdom; every stage, ending, Q1 route and branch reached; Mara saved and lost; the sandbox after the ending |
 
 ## Done

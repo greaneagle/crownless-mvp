@@ -6,7 +6,7 @@
   root.Crownless = root.Crownless || /** @type {CrownlessNS} */ ({}); // filled in by every module below
   const CL = root.Crownless;
 
-  CL.BUILD = '4.14.0';
+  CL.BUILD = '4.15.0';
 
   /**
    * Developer tools (the Logs and Debug buttons) show on a local dev server, and on any build when the
@@ -45,7 +45,6 @@
   CL.diag = {
     events: [],
     errors: [],
-    assets: { requested: 0, loaded: 0, failed: [] },
     fps: 0,
     frames: 0,
     simMs: 0,

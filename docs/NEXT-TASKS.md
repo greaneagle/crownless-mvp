@@ -3920,7 +3920,7 @@ The owner played the graphics demo (`docs/GRAPHICS-DEMO.md`, commit e5bae98) and
   - The full browser suite was not run this task.
 - **Seen** in screenshots of the creator, the settlement, the party sheet, the soldiers' list, a card, the troop tree, the Realm screen's Lords tab and dialogue, at 1280×720 and 812×375 @3×, Normal and Larger text (`docs/graphics-demo/g5-*`, git-ignored). They found one problem: the lords' rows wrapped round the floated pictures, so the rows are now a two-column grid. Not played by hand on a phone.
 
-### P10-G6 · The old graphics removed (M)
+### P10-G6 · The old graphics removed (M) — ✅ Done in 4.15.0
 
 **Build.**
 - **Delete:**
@@ -3950,6 +3950,40 @@ The owner played the graphics demo (`docs/GRAPHICS-DEMO.md`, commit e5bae98) and
 - `npm run lint` with no new warnings.
 
 **Version.** 4.15.0.
+
+**Done (4.15.0).**
+- **Deleted:**
+  - `assets/` (170 images and `manifest.json`), `js/assets.js` and `scripts/asset-manifest.js` (`npm run assets`);
+  - the asset counters in the diagnostics (`diag.assets`);
+  - the battle renderer's old tile-id fallback (`TILE_LOOK`);
+  - the last `frames` in the data's comments.
+- **Content checks:** a battle map's or town's obstacle `look` and each decor kind must be names. A sprite tile is refused.
+- **The guard:**
+  - `tests/assets.test.js`:
+    - nothing in the repository is an image but the three home-screen icons (the screenshot baselines are test data);
+    - `assets/`, the loader and the manifest script are gone;
+    - no code or data names an image file, a `u####`/`w####` sprite id, `new Image(` or a sprite tile;
+    - the web manifest names only the icons;
+    - nothing reaches another site.
+  - `tests/browser/art.spec.js`: a walk through the settlement menu, the party sheet, the Journal, the Realm screen, trade, the streets, a conversation, the map and a battle requests no image.
+- **Retired:**
+  - **The Graphics Demo:** `js/gfx/demo.js`, `demo.css`, `map.js`, `city.js` and `battle.js`, its Debug button, `tests/gfx-demo.test.js` and `tests/browser/gfx-demo.spec.js`.
+    - The **Art gallery** stays, in a small viewer of its own (`js/gfx/viewer.js`, `viewer.css`, `CL.artGallery`). It pauses the game and refuses saves while open (the same guard lines in `js/main.js` and `js/save.js`), and closes on Escape or Close gallery.
+    - `tests/art-gallery.test.js`: the save guard, loading on demand only, and every page drawing. The art spec's gallery test checks that the game, campaign, storage and listeners come back as they were.
+  - **The `crownless-art` skill** (`.claude/skills/crownless-art`).
+  - **The Sprite Studio, ComfyUI and LiliPixel instructions** (`docs/ASSETS.md`, the README, `docs/V1-DOCUMENTATION.md`, the `.gitignore` notes).
+  - `art-reference/` and `art-work/` are left for the owner to delete.
+- **Documents:**
+  - `docs/ASSETS.md` rewritten: everything is code; only the icons are files, drawn by a script; the old art requests are all met by the kit (the Fief tab's icons are still words);
+  - How to Play's Credits;
+  - the README's layout, art and known-limits lines;
+  - `docs/V1-DOCUMENTATION.md`'s module table, scripts, tests and recipes;
+  - `docs/WORLD-FORMAT.md`'s troops, companions, battle maps and town hubs (looks and specs, no frames or tiles);
+  - `docs/GRAPHICS-DEMO.md` marked as the history of the decision.
+- **Checks:**
+  - 942 fast pass; lint clean but the 2 old warnings; typecheck clean.
+  - Full browser suite: 264 passed, 9 skipped, 5 failed under load (`ford`, two `text-size` sizes, `world-map`'s band-cuts-the-wait on both projects). All three specs pass alone (37 of 37).
+- **Not run:** the visual baselines (`npm run test:visual:docker`, Linux Chromium in Docker). None are committed yet, so the screenshot specs still skip. Pending the owner's go-ahead for the run (`docs/PENDING-CHECKS.md`).
 
 **Then P10-T** takes the art into its acceptance: the owner's phone play of every scene (map, towns, battles, menus), the battle benchmark and map stress test on the phone, and the visual baselines.
 

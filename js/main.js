@@ -28,7 +28,6 @@
       CL.save.notice = `Your save belongs to ${CL.worlds.name(there)}, which could not be opened. It has been kept safe and nothing will overwrite it.`;
     }
     CL.save.bindTabs();
-    CL.assets.preload();
     CL.gfx.ui.installIcons(); // P10-G5: the stat and goods icons, drawn as vectors in one place
 
     CL.ui.$('#stage').dataset.dev = CL.dev ? 'on' : 'off';
@@ -63,10 +62,10 @@
       try {
         const dt = (ts - last) / 1000;
         last = ts;
-        // The experimental graphics demo (Debug panel) runs instead of the game while open: nothing of the
-        // real campaign updates, travels, autosaves or draws until it is closed (js/gfx/demo.js).
-        if (CL.gfxDemo?.active) {
-          CL.gfxDemo.frame(dt);
+        // The Art gallery (Debug panel) runs instead of the game while open: nothing of the real
+        // campaign updates, travels, autosaves or draws until it is closed (js/gfx/viewer.js).
+        if (CL.artGallery?.active) {
+          CL.artGallery.frame(dt);
           requestAnimationFrame(loop);
           return;
         }
@@ -120,7 +119,7 @@
     }
     if (CL.save.notice) CL.ui.message(CL.save.notice);
     if (CL.packs.problems().length) CL.ui.message(`A pack was left out: ${CL.packs.problems()[0]} (Settings lists your packs).`); // P9-07
-    diag.log('info', 'Crownless booted', { build: CL.BUILD, assetCount: diag.assets.requested });
+    diag.log('info', 'Crownless booted', { build: CL.BUILD });
     requestAnimationFrame(loop);
   }
 })(typeof window !== 'undefined' ? window : globalThis);

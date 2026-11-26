@@ -14,7 +14,7 @@
  * story (P10-04): how the main story casts the realm (js/story.js `castFor`): its `banner` and `colour`
  *   in text ("for the Crown", "the blue banner"), its `agent` (the envoy who offers its side of the
  *   story; met in its start town) and `caravan` master (met there when it is the rival), each
- *   { name, short, he: 'he' | 'she' | 'they', tag, frames }, its `patrol` template, and the troops of
+ *   { name, short, he: 'he' | 'she' | 'they', tag, role }, its `patrol` template, and the troops of
  *   its story `column` (Q3) and `host` (Q4). */
 (function (root) {
   root.CROWNLESS_CONTENT = root.CROWNLESS_CONTENT || {};

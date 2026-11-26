@@ -317,7 +317,7 @@ The sandbox carries on after the story ends.
 - Nobody ever breaks and runs in a battle (from 1.12.0 groups on both sides waver, fall back and rout, and the hero can rally the company, V2-08b).
 - A battle is between you and the one band or patrol you met; the rest of the world takes no part (from 1.13.0 nearby parties can join it, V2-09).
 - Shield, Archery and Riding skills have no effect yet.
-- No hairstyles (waiting for art).
+- Hairstyles: from P10-G1 the art kit draws them (`hairStyle`).
 - English only; no text size setting; pinch-zoom is off.
 
 ---
@@ -353,7 +353,7 @@ The sandbox carries on after the story ends.
 | `chronicle` | From 1.14.0: the company chronicle and the roll of honour, kept from events and bounded; retiring with honour; "who did what" on the battle result |
 | `troops` | From 1.5.0: the troop tree as discovered (seen or owned), learned from events and hiring offers |
 | `save` | Save service: schema v2 at 1.0 (v3 from 1.2.0), backup on every write, fallback to the backup, migration from 0.3.x; from 1.2.0 also structure checks, migration steps and the travel autosave |
-| `assets` | Sprite loading (`assets/u####.png` units, `w####.png` world) and frame tables |
+| `art/*` | From P10-G1 (4.10.0): the art kit, everything the game shows drawn in code (`kit`, `figures`, `battle`, `town`, `worldmap`, `ui`; `docs/ART-STYLE.md`). `assets` (sprite loading) was removed in 4.15.0 |
 | `camera` | From 1.7.0: the battle camera (follows the hero in arenas larger than a screen; one-screen maps stay at 0,0) |
 | `arena` | From 1.7.0: generated battlefields (the camera test's forest; from 1.8.0 the large Forest Wilds and Open Country, built from `generate` specs in `data/battle_maps.js`), and the Battlefield setting's swap to one-screen maps |
 | `groups` | From 1.11.0: group AI: soldiers raise shields; shield cover for the ally beside a raised shield; braced spears stop charges; archers' line of sight; loose Follow ranks; group states |
@@ -487,15 +487,14 @@ Quests are data. `js/story.js` interprets three small vocabularies; its header c
 | `npm run bench` | Battle simulation time per frame at 20/30/40/60 units on each map (drawing is measured on a device with the stress test) |
 | `npm run bench:map` | From 2.1.1: world simulation time per game hour for 10–200 parties on the map |
 | `npm run parity` | From 2.1.1: the same encounters fought by a bot and auto-resolved; win rates, losses and the gap against the stated odds |
-| `npm run assets` | Rebuilds `assets/manifest.json`; a test fails if it is stale |
-| `npm run icons` | Regenerates the home-screen icons |
+| `npm run icons` | Redraws the home-screen icons from the art kit (headless Chromium) |
 
 ### 4.2 What the tests cover
 - **Gameplay systems:** combat, cavalry and spacing; party and progression; upkeep, trade and contracts (escort and delivery); world and parties; realm, news and town; Mara.
 - **The story:** each quest (Q1–Q4) and the interpreter.
 - **Saves:** save, portable, save safety and the v1.0 fixtures.
 - **Gate acceptance:** `gate-d` (60 randomized whole-story runs, every ending reached, no soft-locks) and `gate-e` (definition of done, money and battle-result exploit probes).
-- **Consistency:** `content` (every reference resolves), `assets` (the manifest matches) and `version` (package, page title, HUD and footer agree).
+- **Consistency:** `content` (every reference resolves), `assets` (no image ships but the home-screen icons) and `version` (package, page title, HUD and footer agree).
 
 ### 4.3 Workflow
 - **Branching:** everything is on `main`. Each task ends green (tests and lint) and playable. Pushing deploys the test build through `.github/workflows/deploy.yml`, which runs the tests and lint first.
@@ -509,7 +508,7 @@ Quests are data. `js/story.js` interprets three small vocabularies; its header c
 - **A quest:** add stages to `data/quests.js` and conversations to `data/dialogue.js`, using the vocabulary in 3.5. Add a test like `tests/q1.test.js`, and run `npm run simulate:story` to prove nothing soft-locks.
 - **A tip or help topic:** add it to `data/help.js`.
 - **A name culture (from 1.4.0):** add it to `data/names.js` (given names, optional trades and epithets, weighted forms using `{given}`, `{trade}`, `{epithet}` and `{origin}`), then point a faction, settlement or troop at it with `culture`. `npm test` checks it.
-- **A sprite:** add the PNG to `assets/`, then run `npm run assets` and record its source in `docs/ASSETS.md`.
+- **Art:** everything is drawn in code. Give a troop a `look`, or a building a `spec`, from the vocabulary in `docs/ART-STYLE.md`, and check it in Debug → Art gallery. There are no image files to add.
 
 `npm test` catches broken references (`tests/content.test.js`). A change to anything saved needs a save-format thought; see `docs/SAVE-FORMAT.md`.
 
@@ -585,7 +584,7 @@ Quests are data. `js/story.js` interprets three small vocabularies; its header c
 | [`docs/ROADMAP.md`](ROADMAP.md) | Status of every phase and step, past and planned |
 | [`docs/V2-PLAN.md`](V2-PLAN.md) | The v2 plan: tasks, acceptance, risks, decisions |
 | [`docs/BASELINE.md`](BASELINE.md) | Recorded behaviour used as a regression reference |
-| [`docs/ASSETS.md`](ASSETS.md) | Where every sprite and sound comes from, and the rights |
+| [`docs/ASSETS.md`](ASSETS.md) | Where everything the game shows and plays comes from (all code), and the rights |
 | `docs/GATE-A-VALIDATION.md` … `GATE-E-VALIDATION.md` | The MVP acceptance gates and playtest checklists |
 | [`Crownless_MVP_GDD_v1.md`](../Crownless_MVP_GDD_v1.md) | The original MVP design (v1's spec) |
 | `Crownless_v2_0_Feature_and_Systems_Design_Part_1.md`, `_Part_2.md` | The v2 design documents |

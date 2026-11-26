@@ -69,7 +69,7 @@
     return { W, H, hero, enemies, obstacles, open, place };
   }
 
-  // A bush's shape is drawn from the arena's own stream, as its sprite was, so every map is laid out as before.
+  // A bush's shape is drawn from the arena's own stream (once its sprite), so every map is laid out as before.
   const bush = (rand) => (x, y) => ({ shape: 'circle', x, y, r: 14, blocksArrows: false, look: 'bush', seed: Math.floor(rand() * 3) });
   const rock = (x, y) => ({ shape: 'circle', x, y, r: 15, blocksArrows: false, look: 'rock' });
   const tree = (x, y) => ({ ...TREE, x, y });

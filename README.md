@@ -7,7 +7,7 @@ A single-player, top-down party-battle prototype in plain HTML5 Canvas and class
 - **Current behavior (regression reference):** [`docs/BASELINE.md`](docs/BASELINE.md)
 - **Status and plan:** [`docs/ROADMAP.md`](docs/ROADMAP.md); the v2 plan is [`docs/V2-PLAN.md`](docs/V2-PLAN.md), from the owner's v2.0 design documents
 - **Release notes:** [`docs/RELEASE-NOTES.md`](docs/RELEASE-NOTES.md); v2.0 acceptance: [`docs/V2-VALIDATION.md`](docs/V2-VALIDATION.md); Phase 7 acceptance: [`docs/PHASE-7-VALIDATION.md`](docs/PHASE-7-VALIDATION.md); Phase 8 acceptance: [`docs/PHASE-8-VALIDATION.md`](docs/PHASE-8-VALIDATION.md)
-- **What comes next:** [`docs/NEXT-PLAN.md`](docs/NEXT-PLAN.md): browser regression tests, zoom and a bigger world, then Phases 7–9 (Phase 8, the landed world, complete in 3.0.0: holdings and the people of the realms in 2.24.0, permissions in 2.25.0, lords on the map in 2.26.0, allegiance in 2.27.0, fiefs in 2.28.0, sieges in 2.29.0, the assault battle in 2.30.0, named nobles in 2.31.0, losing and retaking land in 2.32.0, tuning and acceptance in 3.0.0; Phase 9, kingdoms and houses, complete in 4.0.0: battles of 20 to 200 at once in 3.1.0 and 3.1.1, armies sharing the field by their numbers in 3.2.0, a company of up to 200 in 3.3.0, command in layers with divisions in 3.4.0, the walls at the world's scale in 3.5.0, the lords' loose ends in 3.6.0, realms with treasuries, laws and offices in 3.7.0, treaties and trust in 3.8.0, realms founded in play in 3.9.0, rebellion and deposition in 3.10.0, armies and campaigns in 3.11.0, houses, marriage and succession in 3.12.0, content packs in a declarative format in 3.13.0, creator tools and a second world in 3.14.0, tuning and acceptance in 4.0.0; Phase 10, ways in, under way: map speed and the Wait screen in 4.1.0, one world with the coast in 4.2.0, walkable capitals and free cities in 4.3.0, the night run and its fixes in 4.3.1, your kingdom and the story from anywhere in 4.4.0, origins and their opening quests in 4.5.0, the scout and the peddler in 4.6.0, a beginner guide and hints in 4.7.0, the UI toward the references and the fog of sight in 4.8.0, women soldiers and soldiers' portraits in 4.9.0, the art kit in the game in 4.10.0, battles in the new art in 4.11.0, towns in the new art in 4.12.0, the world map in the new art in 4.13.0, the UI and portraits in the new art in 4.14.0); every task specified, with its readiness, in [`docs/NEXT-TASKS.md`](docs/NEXT-TASKS.md)
+- **What comes next:** [`docs/NEXT-PLAN.md`](docs/NEXT-PLAN.md): browser regression tests, zoom and a bigger world, then Phases 7–9 (Phase 8, the landed world, complete in 3.0.0: holdings and the people of the realms in 2.24.0, permissions in 2.25.0, lords on the map in 2.26.0, allegiance in 2.27.0, fiefs in 2.28.0, sieges in 2.29.0, the assault battle in 2.30.0, named nobles in 2.31.0, losing and retaking land in 2.32.0, tuning and acceptance in 3.0.0; Phase 9, kingdoms and houses, complete in 4.0.0: battles of 20 to 200 at once in 3.1.0 and 3.1.1, armies sharing the field by their numbers in 3.2.0, a company of up to 200 in 3.3.0, command in layers with divisions in 3.4.0, the walls at the world's scale in 3.5.0, the lords' loose ends in 3.6.0, realms with treasuries, laws and offices in 3.7.0, treaties and trust in 3.8.0, realms founded in play in 3.9.0, rebellion and deposition in 3.10.0, armies and campaigns in 3.11.0, houses, marriage and succession in 3.12.0, content packs in a declarative format in 3.13.0, creator tools and a second world in 3.14.0, tuning and acceptance in 4.0.0; Phase 10, ways in, under way: map speed and the Wait screen in 4.1.0, one world with the coast in 4.2.0, walkable capitals and free cities in 4.3.0, the night run and its fixes in 4.3.1, your kingdom and the story from anywhere in 4.4.0, origins and their opening quests in 4.5.0, the scout and the peddler in 4.6.0, a beginner guide and hints in 4.7.0, the UI toward the references and the fog of sight in 4.8.0, women soldiers and soldiers' portraits in 4.9.0, the art kit in the game in 4.10.0, battles in the new art in 4.11.0, towns in the new art in 4.12.0, the world map in the new art in 4.13.0, the UI and portraits in the new art in 4.14.0, the old graphics removed in 4.15.0); every task specified, with its readiness, in [`docs/NEXT-TASKS.md`](docs/NEXT-TASKS.md)
 
 ## What is playable
 
@@ -108,7 +108,6 @@ js/               game runtime, attached to window.Crownless
   soldiers.js     named soldiers: culture names, service records kept from events, notes, filters, rename
   troops.js       the troop tree as discovered (seen or owned), from events and hiring offers
   save.js         save schema v6: structure checks, migrations (0.3, v2 to v5), last-known-good backup, autosave
-  assets.js       sprite preloading and frame tables
   camera.js       battle camera: follows the hero in arenas larger than a screen (one-screen maps stay put)
   arena.js        large battlefields generated from data (forest, open field), the Battlefield setting
   tactics.js      what the company can see, the minimap (tap to look) and the tactical overview (send a group)
@@ -144,7 +143,8 @@ js/               game runtime, attached to window.Crownless
   input.js        keyboard, mouse, touch buttons, joystick
   main.js         boot and main loop (loads last)
 data/             content definitions (window.CROWNLESS_CONTENT): troops, encounters, world map, items, backgrounds, name cultures…
-assets/           sprite PNGs (u#### units, w#### world tiles)
+js/art/           the art kit: everything the game shows, drawn in code (docs/ART-STYLE.md)
+icons/            the home-screen icons, drawn from the art kit by scripts/make-icons.js
 tests/            node:test suite (no dependencies); tests/browser/ holds the Playwright browser specs
 playwright.config.js  browser tests: Chromium, a desktop and a landscape-phone project, the test server
 scripts/static-server.js  the dependency-free static server the browser tests start
@@ -204,7 +204,7 @@ npm run economy
 
 `economy` plays bot campaigns (60 days, 12 seeds by default) and reports where the money comes from and goes, from every transfer in the ledger, with money, renown and level at days 15, 30 and the end. For tuning passes (V2-T1).
 
-`npm run assets` rebuilds `assets/manifest.json` (every image, its source, and whether the game uses it) after adding or removing art; a test fails if it is out of date.
+`npm run icons` redraws the home-screen icons from the art kit, in headless Chromium. The game ships no other image, and `tests/assets.test.js` fails if one appears.
 
 `bench` times the battle simulation per frame at 20, 30, 40 and 60 units on each battle map. Drawing isn't included; measure that on a device with the Debug panel's stress test, which reports fps, simulation and drawing time without touching the campaign.
 
@@ -263,4 +263,4 @@ On every push to `main`, [`.github/workflows/deploy.yml`](.github/workflows/depl
 
 ## Known limits
 
-v1.0.0 is the complete MVP: Gates A–E passed (see `docs/RELEASE-NOTES.md`). v2 is under way on `main` (builds 1.1.0 onward; `docs/V2-PLAN.md`). Hairstyles wait for sprite art. The music is three short synthesized loops, a placeholder the GDD allows until final polish. Ally commands are simple, not a formation system. The sprites were made with AI by the project owner using Sprite Studio (their own tool); some animations are not yet hand-aligned. See [`docs/ASSETS.md`](docs/ASSETS.md) for where every asset comes from. Browser saves can be cleared by the browser.
+v1.0.0 is the complete MVP: Gates A–E passed (see `docs/RELEASE-NOTES.md`). v2 is under way on `main` (builds 1.1.0 onward; `docs/V2-PLAN.md`). The music is three short synthesized loops, a placeholder the GDD allows until final polish. Ally commands are simple, not a formation system. All the art is drawn in code by the art kit (`js/art/`, [`docs/ART-STYLE.md`](docs/ART-STYLE.md)); see [`docs/ASSETS.md`](docs/ASSETS.md) for where everything comes from. Browser saves can be cleared by the browser.

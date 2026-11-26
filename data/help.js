@@ -191,7 +191,7 @@
       title: 'Credits',
       body: [
         'Crownless: The Border March. Design, story and code by the game’s developer.',
-        'Character and world sprites were made with AI using Sprite Studio, the developer’s own sprite tool. Sound effects and music are synthesized live in your browser; the map and interface are drawn in code.',
+        'Everything you see is drawn in code, made for this game: the soldiers, towns, battles, the map and the interface. Sound effects and music are synthesized live in your browser.',
         'No third-party art, music, fonts or libraries are used, and the game loads nothing from other sites.'
       ]
     },

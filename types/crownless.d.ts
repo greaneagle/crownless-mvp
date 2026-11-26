@@ -620,7 +620,6 @@ declare global {
   interface DiagAPI {
     events: DiagEvent[];
     errors: unknown[];
-    assets: { requested: number; loaded: number; failed: string[] };
     fps: number;
     frames: number;
     simMs: number;

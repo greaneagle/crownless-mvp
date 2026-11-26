@@ -1,5 +1,30 @@
 # Crownless — Release Notes
 
+## v4.15.0 — The old graphics removed (P10-G6) · 2026-11-26
+
+The last step of the code-drawn art (D-P10k). Every sprite is gone, and everything the game shows is drawn in code. The game looks and plays as in 4.14.0.
+
+### Changed
+- **No image files:** the 170 sprite images, their manifest, the sprite loader and the manifest script are deleted. The game ships only its three home-screen icons, and a script draws those with the art kit.
+- **The Graphics Demo is retired:** its map, city and battle are the game now. **Debug → Art gallery** stays, in its own small viewer.
+- **How to Play → Credits** says the art is drawn in code.
+- **Packs:** a map's obstacle `look` and decor kind must be names. Sprite tiles are refused by the content checks.
+
+### Under the hood
+- **The asset guard:** `tests/assets.test.js` fails if:
+  - any image ships but the icons (the screenshot baselines are test data);
+  - code or data names an image, a sprite id or a sprite tile;
+  - the page reaches another site.
+- **The browser check:** a walk through the menus, the party sheet, the Realm screen, a town, a conversation, the map and a battle must request no image.
+- **Retired:**
+  - the `crownless-art` skill and the Sprite Studio, ComfyUI and LiliPixel instructions;
+  - `npm run assets`;
+  - the old tile-id fallback in the battle renderer.
+- **Documents:**
+  - `docs/ASSETS.md` is rewritten (everything is code);
+  - the README, `docs/V1-DOCUMENTATION.md` and `docs/WORLD-FORMAT.md` describe looks and specs instead of sprites;
+  - `docs/GRAPHICS-DEMO.md` is marked as the history of the decision.
+
 ## v4.14.0 — The UI and portraits in the new art (P10-G5) · 2026-11-26
 
 The fifth step toward the code-drawn art (D-P10k). The screens' pictures are now drawn by the art kit, like the map, the towns and the battles.

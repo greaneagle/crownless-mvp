@@ -372,7 +372,9 @@
       for (const o of m.obstacles || []) {
         const ok = o.shape === 'circle' ? o.r > 0 : o.shape === 'rect' && o.w > 0 && o.h > 0;
         if (!ok) err(`battle_map ${m.id}: bad obstacle`);
+        if (o.look != null && typeof o.look !== 'string') err(`battle_map ${m.id}: an obstacle's look is a name (P10-G6: no sprite tiles)`);
       }
+      for (const d of m.decor || []) if (typeof d?.[0] !== 'string') err(`battle_map ${m.id}: decor is [kind, x, y, w, h] with a kind's name (no sprite tiles)`);
     }
     for (const h of Object.values(C.town_hubs || {})) {
       if (!C.settlements?.[h.settlement]?.explorable) err(`town_hub ${h.id}: settlement ${h.settlement} is not explorable`);
@@ -393,6 +395,8 @@
       const ACT = { innkeeper: 'tavern', merchant: 'trade', recruiter: 'recruit', guard: 'leave' };
       for (const n of h.npcs || []) if (ACT[n.role] && n.action !== ACT[n.role]) err(`town_hub ${h.id}: the ${n.role} ${n.id} should ${ACT[n.role]}`);
       for (const r of h.obstacles || []) if (r.colors && !['tavern', 'barracks', 'house'].includes(r.look)) err(`town_hub ${h.id}: only buildings take colours`);
+      for (const r of h.obstacles || []) if (r.look != null && typeof r.look !== 'string') err(`town_hub ${h.id}: an obstacle's look is a name (no sprite tiles)`);
+      for (const d of h.decor || []) if (typeof d?.[0] !== 'string') err(`town_hub ${h.id}: decor kinds are names (no sprite tiles)`);
     }
     for (const k of Object.values(C.contracts || {})) {
       if (!['hunt', 'escort', 'delivery'].includes(k.kind)) err(`contract ${k.id}: unknown kind ${k.kind}`);

@@ -3021,7 +3021,6 @@
         group: g.group,
         campaign: CL.campaign,
       },
-      assets: CL.diag.assets,
       fps: CL.diag.fps,
       events: CL.diag.events,
     };

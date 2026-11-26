@@ -178,7 +178,7 @@
     }
   }
 
-  /** Draw one living unit at its place (feet at u.y + 5, as the game's sprites stood). */
+  /** Draw one living unit at its place (feet at u.y + 5, as the soldiers have always stood). */
   function unit(ctx, u, t, k, reduced) {
     const B = battle;
     const L = lookOf(B, u);
@@ -259,9 +259,8 @@
 
   // ---- The ground ----
 
-  /** Old tile ids (a pack's map may still use them) to the kit's looks. */
-  const TILE_LOOK = { w0132: 'tree', w0001: 'bush', w0002: 'bush', w0003: 'bush', w0012: 'rock', w0091: 'flowers', w0110: 'flowers', w0121: 'flowers', w0034: 'flowers', w0050: 'flowers', w0147: 'ferns', w0167: 'ferns' };
-  const lookName = (o) => (typeof o.look === 'string' ? o.look : TILE_LOOK[o.look?.tile] || 'rock');
+  /** An obstacle's look by name (P10-G6: there are no sprite tiles; the content checks refuse anything else). */
+  const lookName = (o) => (typeof o.look === 'string' ? o.look : 'rock');
 
   /** The field under everyone, in view: grass, its soft patches, rises, water, a courtyard, decor. */
   function ground(ctx, m, v, t) {
@@ -316,7 +315,7 @@
     // Decor: flowers and ferns where the map puts them; tufts of grass everywhere, from fixed spots.
     for (const [kind, x, y, w, h] of m.decor || []) {
       if (!seen(x + w / 2, y + h / 2, 40)) continue;
-      const k = TILE_LOOK[kind] || kind;
+      const k = kind;
       const cx = x + w / 2;
       const cy = y + h * 0.8;
       if (k === 'ferns') for (let i = 0; i < 3; i++) G.tuft(ctx, cx + (i - 1) * 7, cy + (i % 2) * 3, 1.4, PAL.forestDark);
@@ -716,5 +715,5 @@
     return img;
   }
 
-  G.battle = { FIG, TEAM, TILE_LOOK, water, draw, unit, fallen, ground, obstacle, arrows, effects, miniature, lookOf: (u) => lookOf(state(CL.game), u), sides, baseOf, lookName };
+  G.battle = { FIG, TEAM, water, draw, unit, fallen, ground, obstacle, arrows, effects, miniature, lookOf: (u) => lookOf(state(CL.game), u), sides, baseOf, lookName };
 })(typeof window !== 'undefined' ? window : globalThis);

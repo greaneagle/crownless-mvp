@@ -1,0 +1,11 @@
+/* Crownless Art gallery (Debug → Art gallery). Loaded with it and removed with it: nothing here applies
+ * to normal play. Navy, gold and cream, kept plain. */
+#galleryCanvas{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:1;touch-action:none;cursor:pointer;background:#97b875}
+#stage[data-gallery] #game{visibility:hidden}
+#stage[data-gallery] #hud,#stage[data-gallery] #overlay,#stage[data-gallery] #prepPanel{display:none!important}
+#galleryUi{position:absolute;inset:0;pointer-events:none;z-index:5;font:calc(12px * var(--ui-scale,1)) system-ui,sans-serif;color:#f7ecd2}
+#galleryBar{position:absolute;top:5px;right:6px;display:flex;gap:4px;padding:2px;border-radius:8px;background:#0c1a26b8}
+#galleryUi button{pointer-events:auto;font:inherit;font-weight:600;padding:calc(4px * var(--ui-scale,1)) calc(8px * var(--ui-scale,1));min-height:36px;border-radius:6px;border:1.5px solid #c9a977;background:#1b2c3dec;color:#fff2cb}
+#galleryExit{border-color:#e0a48f!important;background:#5a2b25ec!important}
+#galleryStats{position:absolute;top:52px;right:6px;background:#0c1a26d8;border:1px solid #8a7348;border-radius:6px;padding:4px 10px;font:12px ui-monospace,monospace;white-space:nowrap}
+#galleryUi .hidden{display:none!important}
