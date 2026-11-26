@@ -12,6 +12,9 @@
  *   hat 'brim' | 'cap' | 'kerchief' | 'coif' (townsfolk), apron (a colour), cloak (a colour), plume
  *   shield 'kite' | 'round' | 'heater' | 'wood', realm (whose colours the shield and tabard wear)
  *   weapon 'sword' | 'axe' | 'greataxe' | 'spear' | 'bow' | 'hammer' | 'staff' | 'club' | null; quiver
+ *   P11-04: weapon also 'mace' | 'greatsword' | 'recurve' | 'arbalest'; len (a blade's length), twoHanded
+ *   (the other hand on the grip), shieldBack (a shield slung on the back), helmet 'bascinet', gloves (a
+ *   colour), mount (a horse's look, drawn when mounted), sig (the kit's signature, for the caches)
  *   female, scale
  * Pose: face 'down' | 'up' | 'left' | 'right', walk (phase, radians), move (0..1), t (seconds),
  *   atk { phase 'windup' | 'active' | 'recovery', k 0..1 }, guard, draw (bow, 0..1), shot (0..1),
@@ -30,11 +33,14 @@
   const BODY = { head: 6.6, headY: -28.5, shoulder: -21.5, hem: -8.5, hip: -10, width: 6.2, leg: 3.2 };
 
   const steel = PAL.steel;
+  /** The look parts that shoot (P11-04: the recurve and the arbalest too). */
+  const SHOOTS = ['bow', 'crossbow', 'recurve', 'arbalest'];
 
   // ---- Small parts ----
 
   /** An arm from shoulder to hand: a round-capped stroke with the one outline, then the hand. */
   function arm(ctx, sx, sy, hx, hy, sleeve, skin) {
+    // P11-04: `skin` is the hand's colour: a glove's when one is worn.
     ctx.lineCap = 'round';
     ctx.strokeStyle = STYLE.outline;
     ctx.lineWidth = 4.6;
@@ -90,6 +96,26 @@
         ellipse(ctx, 12.5, 0, 3.5, 2.6);
         fillLine(ctx, PAL.woodShade, 0.9);
       }
+    } else if (kind === 'mace') {
+      // P11-04: a flanged iron head on a short haft (the club is wood).
+      stroke(-3, 12, 2, PAL.wood);
+      ellipse(ctx, 13.5, 0, 3, 3);
+      fillLine(ctx, '#7d858d', 0.9);
+      for (const [fx, fy] of [[13.5, -3.6], [13.5, 3.6], [16.9, 0]]) {
+        poly(ctx, [fx - 1.4, fy * 0.6, fx, fy, fx + 1.4, fy * 0.6]);
+        fillLine(ctx, steel, 0.7);
+      }
+    } else if (kind === 'greatsword') {
+      // P11-04: a long two-handed grip, a wide guard and a long blade.
+      stroke(-8, 1, 2.3, PAL.timber);
+      ellipse(ctx, -8.5, 0, 1.6, 1.6);
+      fillLine(ctx, PAL.gold, 0.7);
+      rrect(ctx, 0.5, -4.2, 2.2, 8.4, 1);
+      fillLine(ctx, PAL.gold, 0.8);
+      poly(ctx, [2.8, -1.6, 24 * len, -1.3, 27 * len, 0, 24 * len, 1.3, 2.8, 1.6]);
+      fillLine(ctx, steel, 0.9);
+      ctx.fillStyle = '#e8eef2';
+      ctx.fillRect(3.5, -0.5, 19 * len, 0.7);
     } else if (kind === 'greataxe') {
       stroke(-8, 20, 2.2, PAL.wood);
       poly(ctx, [15, -1, 19, -8, 23, -7, 23, 6, 19, 7, 15, 1]);
@@ -110,7 +136,7 @@
   }
 
   /** A bow held upright at (x, y); `pull` 0..1 draws the string back toward -x (local), with an arrow. */
-  function bow(ctx, x, y, pull, dir = 1, size = 1) {
+  function bow(ctx, x, y, pull, dir = 1, size = 1, recurve = false) {
     const h = 13 * size;
     ctx.save();
     ctx.translate(x, y);
@@ -120,9 +146,15 @@
     ctx.lineWidth = 3.2;
     ctx.beginPath();
     ctx.moveTo(-1, -h);
-    ctx.quadraticCurveTo(7, 0, -1, h);
+    if (recurve) {
+      // P11-04: the horse archer's short bow: the tips curl forward, away from the archer.
+      ctx.moveTo(2, -h - 1.5);
+      ctx.quadraticCurveTo(-1.5, -h + 0.5, 1.5, -h * 0.55);
+      ctx.quadraticCurveTo(6, 0, 1.5, h * 0.55);
+      ctx.quadraticCurveTo(-1.5, h - 0.5, 2, h + 1.5);
+    } else ctx.quadraticCurveTo(7, 0, -1, h);
     ctx.stroke();
-    ctx.strokeStyle = PAL.wood;
+    ctx.strokeStyle = recurve ? '#6b4a2e' : PAL.wood;
     ctx.lineWidth = 1.9;
     ctx.stroke();
     const sx = -1 - pull * 7;
@@ -151,7 +183,7 @@
    * string drawn back to the nut while it is loaded (`pull` 1), with the bolt on top. A crossbow loads
    * slowly (the troop's cooldown), so `pull` rises over the whole reload.
    */
-  function crossbow(ctx, x, y, pull, dir = 1) {
+  function crossbow(ctx, x, y, pull, dir = 1, windlass = false) {
     ctx.save();
     ctx.translate(x, y);
     ctx.scale(dir, 1);
@@ -185,6 +217,12 @@
     ctx.lineTo(nx, 0);
     ctx.lineTo(10, 7);
     ctx.stroke();
+    if (windlass) {
+      // P11-04: the arbalest's windlass at the butt: a drum and its two cranks.
+      ellipse(ctx, -6, 1.5, 2.4, 2.4);
+      fillLine(ctx, PAL.steelShade, 0.8);
+      line(-6, -2.5, -6, 5.5, 1, steel);
+    }
     if (pull > 0.95) {
       line(nx, -0.8, 14, -0.8, 1.1, PAL.wood);
       poly(ctx, [14, -2.2, 16.5, -0.8, 14, 0.6]);
@@ -257,7 +295,7 @@
     helmet(ctx, L, face, r, y, t);
   }
 
-  const hides = (L) => ['great', 'hood', 'furhat', 'coif'].includes(L.helmet) || L.hat === 'coif';
+  const hides = (L) => ['great', 'hood', 'furhat', 'coif', 'bascinet'].includes(L.helmet) || L.hat === 'coif';
 
   function hairTop(ctx, L, face, r, y, hair) {
     if (L.hairStyle === 'bald' || hides(L)) return;
@@ -352,6 +390,27 @@
         }
         fillLine(ctx, color, 0.9);
       }
+      return;
+    }
+    if (kind === 'bascinet') {
+      // P11-04: a pointed skull drawn down over the ears, an open face, and a mail aventail at the neck.
+      ctx.fillStyle = '#9aa3ab';
+      rrect(ctx, -r * 1.15, y - 0.5, r * 2.3, 4.2, 1.5);
+      fillLine(ctx, '#9aa3ab', 0.8);
+      ctx.beginPath();
+      ctx.moveTo(-r * 1.1, y + 1.5);
+      ctx.quadraticCurveTo(-r * 1.15, y - r * 1.2, 0, y - r * 1.75);
+      ctx.quadraticCurveTo(r * 1.15, y - r * 1.2, r * 1.1, y + 1.5);
+      if (face === 'down') {
+        ctx.lineTo(r * 0.7, y + 1.5);
+        ctx.quadraticCurveTo(r * 0.7, y - r * 0.55, 0, y - r * 0.6);
+        ctx.quadraticCurveTo(-r * 0.7, y - r * 0.55, -r * 0.7, y + 1.5);
+      } else if (side) ctx.lineTo(r * 0.3, y + 1.5);
+      ctx.closePath();
+      fillLine(ctx, steel);
+      ctx.fillStyle = PAL.steelShade;
+      ellipse(ctx, r * 0.5, y - r * 0.6, r * 0.3, r * 0.5);
+      ctx.fill();
       return;
     }
     if (kind === 'sallet') {
@@ -657,7 +716,7 @@
     if (kind === 'staff') a = -Math.PI / 2;
     if (P.mounted && spear) a = side ? -0.35 : up ? -1.4 : -1.75;
     const tilt = P.mounted && side ? (P.aim === 'up' ? -0.6 : P.aim === 'down' ? 0.5 : 0) : 0;
-    if (kind === 'greataxe') {
+    if (kind === 'greataxe' || kind === 'greatsword') {
       a = side ? -1.0 : up ? -1.0 : -2.1;
       hy = -14;
     }
@@ -726,10 +785,15 @@
     ctx.translate(0, -bob - (P.mounted ? 13 : 0));
 
     const wa = weaponArm(L, P, face);
-    const ranged = L.weapon === 'bow' || L.weapon === 'crossbow';
-    const shoot = (x, y, pull, dir) => (L.weapon === 'crossbow' ? crossbow(ctx, x, y, pull, dir) : bow(ctx, x, y, pull, dir, L.bowSize || 1));
+    const ranged = SHOOTS.includes(L.weapon);
+    const shoot = (x, y, pull, dir) => (L.weapon === 'crossbow' || L.weapon === 'arbalest' ? crossbow(ctx, x, y, pull, dir, L.weapon === 'arbalest') : bow(ctx, x, y, pull, dir, L.bowSize || 1, L.weapon === 'recurve'));
     const guard = Boolean(P.guard && L.shield);
-    const skin = L.skin || SKINS[0];
+    const skin = L.gloves || L.skin || SKINS[0]; // P11-04: a glove's colour on the hands
+    // P11-04: a two-handed weapon's other hand sits on the grip, behind the weapon hand.
+    const grip = L.twoHanded && !ranged && L.weapon ? { x: wa.hx + Math.cos(wa.a) * (wa.ext - 3.5), y: wa.hy + Math.sin(wa.a) * (wa.ext - 3.5) } : null;
+    // P11-04: a shield slung on the back (a two-handed weapon or a bow in hand): its back toward the
+    // viewer unless they face away.
+    const slung = () => L.shieldBack && shield(ctx, { ...L, shield: L.shieldBack }, side ? -4.5 : 0, -16.5, 6 * 0.92, !up);
     const sleeve = L.armour === 'mail' ? '#9aa3ab' : L.armour === 'leather' ? '#8a6240' : L.tunic || '#9c8a66';
 
     // Shield position for the facing (character's left arm).
@@ -746,7 +810,7 @@
       ctx.strokeStyle = P.trail || 'rgba(255,248,226,0.55)';
       ctx.lineWidth = 2.2;
       ctx.lineCap = 'round';
-      const r = L.weapon === 'greataxe' ? 22 : 15;
+      const r = L.weapon === 'greataxe' || L.weapon === 'greatsword' ? 22 : 15;
       const back = side ? -2.55 : up ? -0.35 : -2.75;
       ctx.beginPath();
       ctx.arc(wa.hx, wa.hy, r, Math.min(back, wa.a), Math.max(back, wa.a));
@@ -755,6 +819,7 @@
     };
 
     // Back layer: what is behind the body for this facing.
+    if (!up) slung();
     cloak(ctx, L, face, move, t, false);
     if (up) {
       drawWeapon();
@@ -779,6 +844,7 @@
       ctx.fillRect(2, -27, 3, 2.5);
     }
     cloak(ctx, L, face, move, t, true);
+    if (up) slung(); // seen from behind: on the back, over the cloak
 
     // Arms. The shield arm reaches its shield; the weapon arm its hand.
     const shoulderY = BODY.shoulder + 2 + breathe;
@@ -792,11 +858,13 @@
       } else {
         drawTrail();
         if (guard) drawShield();
+        if (grip) arm(ctx, -1, shoulderY, grip.x, grip.y, tone(sleeve, -0.12), skin); // the far arm, on the grip
         arm(ctx, 0, shoulderY, wa.hx + swingA * 0.5, wa.hy, sleeve, skin);
         drawWeapon();
       }
     } else if (up) {
-      arm(ctx, -BODY.width + 0.8, shoulderY, -6.5 + (ranged ? 1 : 0), ranged ? -17 : -13 + swingA, sleeve, skin);
+      if (grip) arm(ctx, -BODY.width + 0.8, shoulderY, grip.x, grip.y, sleeve, skin);
+      else arm(ctx, -BODY.width + 0.8, shoulderY, -6.5 + (ranged ? 1 : 0), ranged ? -17 : -13 + swingA, sleeve, skin);
       arm(ctx, BODY.width - 0.8, shoulderY, ranged ? 2 : wa.hx, ranged ? -18 : wa.hy - swingA, sleeve, skin);
     } else {
       // Facing the viewer.
@@ -804,7 +872,8 @@
         arm(ctx, BODY.width - 0.8, shoulderY, 6, -17, sleeve, skin);
         arm(ctx, -BODY.width + 0.8, shoulderY, -1 + (P.draw || 0) * 2, -17.5, sleeve, skin);
       } else {
-        arm(ctx, BODY.width - 0.8, shoulderY, guard ? 2.5 : 6.6, guard ? -15 : -12.5 + swingA, sleeve, skin);
+        if (grip) arm(ctx, BODY.width - 0.8, shoulderY, grip.x, grip.y, sleeve, skin);
+        else arm(ctx, BODY.width - 0.8, shoulderY, guard ? 2.5 : 6.6, guard ? -15 : -12.5 + swingA, sleeve, skin);
         arm(ctx, -BODY.width + 0.8, shoulderY, wa.hx, wa.hy - swingA, sleeve, skin);
       }
     }
@@ -995,23 +1064,106 @@
     return L;
   }
 
-  /** A companion's look (data/companions.js), on the side they fight for. */
-  function companionLook(id, side = 'player') {
+  /**
+   * A companion's look (data/companions.js), on the side they fight for; P11-04: over it, what they
+   * carry (`equipment`, their gear slots): a slot with an item is drawn from it, an empty one keeps
+   * their own look's.
+   */
+  function companionLook(id, side = 'player', equipment = null) {
     const m = CL.content.table('companions')[id];
     const base = m?.look || {};
-    return { ...base, seed: id.length * 31, realm: side, tabard: base.tabard ? side : null, beard: base.beard ? tone(base.hair || HAIRS[0], -0.1) : null };
+    const L = { ...base, seed: id.length * 31, realm: side, tabard: base.tabard ? side : null, beard: base.beard ? tone(base.hair || HAIRS[0], -0.1) : null };
+    if (equipment) dress(L, CL.gear.kitFor(null, equipment, 'primary'), null, { only: true });
+    return L;
+  }
+
+  // ---- Looks from gear (P11-04; docs/ART-STYLE.md "The hero", "Items") ----
+
+  /** The defaults for a piece with no look of its own (a pack's), by its slot and tier. */
+  const SLOT_LOOK = {
+    offhand: () => ({ shield: 'round' }),
+    head: (it) => ({ helmet: (it.tier || 1) >= 3 ? 'bascinet' : (it.tier || 1) >= 2 ? 'nasal' : 'cap' }),
+    body: (it) => ({ armour: [null, 'gambeson', 'leather', 'mail'][Math.min(3, it.tier || 1)] }),
+    hands: () => ({ gloves: '#7a5a3a' }),
+    feet: () => ({ boots: '#4a3424' }),
+    horse: () => ({ coat: '#8a5a3a', mane: '#2e2119' }),
+    ammo: () => ({ quiver: true }),
+  };
+
+  /**
+   * How a piece is drawn: its own `look` (a forged piece its base's), else its family's part (a weapon)
+   * or its slot's default. @param {string | null} id @returns {any}
+   */
+  function itemLook(id) {
+    const items = CL.content.table('items');
+    let it = id ? items[id] : null;
+    if (!it) return {};
+    if (it.forgedFrom && items[it.forgedFrom]) it = items[it.forgedFrom];
+    if (it.look) return it.look;
+    if (it.slot === 'weapon') return { weapon: CL.content.table('weapon_families')[it.family]?.look ?? 'sword' };
+    return SLOT_LOOK[it.slot]?.(it) || {};
+  }
+
+  /**
+   * Put a kit on a look. `used`: the equipment as fought in (js/gear.js `kitFor`: the weapon in hand,
+   * the shield only if in hand, nothing whose requirement isn't met); `back`: a shield slung on the
+   * back. `only`: change only the slots that hold something (a companion keeps their own look's
+   * otherwise). Sets `sig`, the kit's signature: `weapon|shield(on/back/none)|helmet|armour|mount`.
+   */
+  function dress(L, used, back, { only = false, hero = false } = {}) {
+    const has = (slot) => Boolean(used?.[slot]);
+    if (!only || has('weapon')) {
+      const w = used?.weapon || null;
+      const p = CL.profile.weaponOf(w);
+      const hands = p.item?.combat?.hands ?? p.family.hands;
+      const shoots = Boolean(p.item?.combat?.ranged ?? p.family.ranged);
+      const wl = itemLook(w);
+      L.weapon = w ? wl.weapon || p.family.look || 'sword' : null;
+      L.len = wl.len || 1;
+      L.twoHanded = Boolean(w) && hands === 2 && !shoots;
+      L.bowSize = p.family.id === 'longbow' ? 1.2 : undefined;
+      L.quiver = shoots || has('ammo') || (only ? Boolean(L.quiver) : false);
+    }
+    if (!only || has('offhand') || back) {
+      L.shield = has('offhand') ? itemLook(used.offhand).shield || 'round' : null;
+      L.shieldBack = back ? itemLook(back).shield || 'round' : null;
+    }
+    if (!only || has('head')) {
+      const h = has('head') ? itemLook(used.head).helmet || 'cap' : null;
+      L.helmet = hero && h === 'nasal' ? 'plumed' : h; // the hero's own mark: a plume on a nasal helm
+      if (h) L.hat = null;
+    }
+    if (!only || has('body')) {
+      const a = has('body') ? itemLook(used.body).armour || null : null;
+      L.armour = a === 'cloth' ? null : a;
+      if (hero) L.pauldrons = L.armour === 'mail';
+    }
+    if (!only || has('hands')) L.gloves = has('hands') ? itemLook(used.hands).gloves || null : null;
+    if (has('feet')) L.boots = itemLook(used.feet).boots || L.boots;
+    if (!only || has('horse')) L.mount = has('horse') ? { coat: itemLook(used.horse).coat || '#8a5a3a', mane: itemLook(used.horse).mane || '#2e2119' } : null;
+    L.sig = [used?.weapon || 'none', L.shield ? 'on' : L.shieldBack ? 'back' : 'none', used?.head || 'none', used?.body || 'none', used?.horse || 'none'].join('|');
+    return L;
   }
 
   /** The hero: the player's own cloak colour, a plumed helm, gold trim, a sword and kite shield. */
   const CLOAKS = { crimson: '#a8423a', forest: '#4f7b4f', violet: '#6b4f8a', ash: '#7f8387' };
   /**
-   * The hero, from the creator's choices: the cloak colour and presentation, and a shield only when one
-   * is carried (`canBlock`, js/character.js heroCombat). Gold trim and a plumed helm mark them out.
+   * P11-04: the hero as they are: who they are from the creator (presentation, skin, hair, cloak and its
+   * gold trim), everything else from the kit (`kit`: equipment, the campaign's or a tournament's loaner
+   * kit): the weapon in hand (`ctx.which`, the loadout), the shield in hand or slung, the helmet or a
+   * bare head, the armour, gloves and boots, the quiver and the horse. A piece whose requirement isn't met
+   * isn't worn (it stays with the baggage, js/gear.js). `ctx.campaign`: whose requirements (by default the
+   * game's, when `character` is its hero). Replaces 5.3.0's `heroFor`.
+   * @param {any} character @param {any} [kit] @param {{ which?: string, campaign?: any }} [ctx]
    */
-  function heroFor(character, canBlock = true) {
+  function heroFrom(character, kit = {}, ctx = {}) {
     const L = heroLook(character?.cloak, character?.gender === 'woman');
-    if (!canBlock) L.shield = null;
-    return L;
+    const c = 'campaign' in ctx ? ctx.campaign : CL.campaign?.character && CL.campaign.character === character ? CL.campaign : null;
+    const which = ctx.which || 'primary';
+    const a = CL.gear.active(c, kit || {}, which);
+    const used = CL.gear.kitFor(c, kit || {}, which);
+    const back = a.stowed && CL.gear.meets(c, kit.offhand) ? kit.offhand : null;
+    return dress(L, used, back, { hero: true });
   }
   function heroLook(cloak = 'crimson', female = false) {
     return {
@@ -1072,5 +1224,5 @@
     };
   }
 
-  G.fig = { SKINS, HAIRS, BODY, CLOAKS, ROLE_LOOKS, figure, horse, fallen, defaultLook, troopLook, companionLook, heroLook, heroFor, townLook, weapon, bow, crossbow };
+  G.fig = { SKINS, HAIRS, BODY, CLOAKS, ROLE_LOOKS, SHOOTS, figure, horse, fallen, defaultLook, troopLook, companionLook, heroLook, heroFrom, itemLook, dress, townLook, weapon, bow, crossbow };
 })(typeof window !== 'undefined' ? window : globalThis);

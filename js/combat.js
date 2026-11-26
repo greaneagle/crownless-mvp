@@ -665,7 +665,7 @@
   }
 
   function ai(u, dt) {
-    if (u.role === 'cavalry' && u.alive) return cavalryAi(u, dt);
+    if (CL.units.mounted(u) && u.alive) return cavalryAi(u, dt); // P11-04: a rider's way of fighting
     if (!u.alive) return;
     tickTimers(u, dt);
     u.aiTimer -= dt;

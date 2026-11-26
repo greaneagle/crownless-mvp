@@ -4043,7 +4043,7 @@ The aim: easy to fight, rewarding to fight well, meaningful to command. The play
 | P11-01 | One combat profile for every fighter (no change in play) | L | 5.1.0 | ✅ Done |
 | P11-02 | Carried and wielded: loadouts and one gear check | M–L | 5.2.0 | ✅ Done |
 | P11-03 | The progression budget and equipment requirements | M–L | 5.3.0 | ✅ Done |
-| P11-04 | The equipment you see | M–L | 5.4.0 | Specified |
+| P11-04 | The equipment you see | M–L | 5.4.0 | ✅ Done |
 | P11-05 | Melee rhythm and defence | L | 5.5.0 | Ready |
 | P11-06 | Armour, weight and movement | M | 5.6.0 | Specified |
 | P11-07 | Bows and crossbows in your hands | L | 5.7.0 | Specified |
@@ -4416,7 +4416,7 @@ The aim: easy to fight, rewarding to fight well, meaningful to command. The play
 
 ---
 
-### P11-04 · The equipment you see (M–L) — 5.4.0, Specified
+### P11-04 · The equipment you see (M–L) — 5.4.0, ✅ Done
 
 **Now.** `G.fig.heroFor(character, canBlock)` draws the hero in mail, a plumed helm, with a sword, and a kite shield unless `canBlock` is false; the creator's preview, the portrait (`G.ui.heroLook`) and the battle use it; a tournament's loaner kit shows only through the shield. `body()` draws a horse only for `role === 'cavalry'`. Looks are cached per battle in a `WeakMap` that is never invalidated; bake keys are `troop|realm|seed|face|step|team|pose|scale`. `content.lookAgrees` infers a crossbow from a projectile speed of 300. Items have no looks; the sheet and shops show item names and vector icons by slot.
 
@@ -4474,6 +4474,20 @@ The aim: easy to fight, rewarding to fight well, meaningful to command. The play
 - **Play:** as above.
 - **Explain:** none.
 - **Not here:** combat changes.
+
+**Done (5.4.0).**
+- **Item looks:** a `look` on all 22 pieces of gear (`data/items.js`), by slot (`CL.content.LOOK.item`) and checked by `checkItemLook` (only what the slot may say, known parts, a weapon drawn as its family: `LOOK.shot` lists a shooting family's parts). `G.fig.itemLook`: a forged piece wears its base's; a pack's piece gets its family's `look` or its slot's default. The families' `look` now names the new parts (mace, greatsword, recurve); `LOOK_FAMILY` maps them.
+- **The hero:** `G.fig.heroFrom(character, kit, { which, campaign })` and `dress` (identity from the creator, the rest from `CL.gear.kitFor`: a piece not met isn't drawn). Used by the battle, `G.ui.heroLook` (portrait and sheet), the creator (the origin's kit), the town, the world map's company (its cache key gains the signature), `scripts/make-icons.js` and the gallery. `heroFor` removed.
+- **Others:** `companionLook(id, side, equipment)` over their own look (an empty slot keeps it); in battle from `c.companion` or `CL.retinue.find`. A tournament fighter and the hero in a bout in the loaner kit (its helm now plumed, its gambeson shown).
+- **Mounted as a state:** `u.mounted` and `u.mount` from `makeUnit` (`role === 'cavalry'`); `CL.units.mounted`. Changed: `mass`, `charging` (units), the rider's AI (combat), the art's walk, dust, horse, ring, bake size, pennant and marks. Kept as roles (they mean a division, not a horse): `groups.js`'s follow spots, `combat.js`'s flank placement, the world map's troop choice (troop data). Golden battles identical.
+- **Parts:** mace, greatsword (with the other hand on the grip: `twoHanded`), the slung shield (`shieldBack`: behind the body, over the cloak from behind), recurve, arbalest (windlass), bascinet, gloves' colour. The quiver was already there. Gallery page "Arms and armour".
+- **Icons:** `G.ui.itemIcon` (weapon by family, body armour by class, shield, helmet, gloves, boots, horse, ring, quiver; 12 new shapes), with an accessible name, on the sheet's rows, the pack, the armoury, selling, the blacksmith and Prepare.
+- **Caches:** the look's key gains the signature `weapon|shield(on/back/none)|helmet|armour|mount`; the per-battle `WeakMap` keeps a look with its `sigKey` (the hero's loadout in hand) and rebuilds it when that changes. Soldiers' looks are their troop's (fine kit isn't drawn, so it isn't in the signature).
+- **`lookAgrees`** by the troop's family (shooting parts, long weapons, a mount for cavalry), not projectile speed or reach.
+- **Tests:** `tests/art-gear.test.js` (8): item looks and defaults; the hero from each kit (every weapon painted, bare head, armour, gloves, the signature, a piece not met); the slung shield in every facing and the grip; a switch rebuilding the look and the bout's loaner kit; companions and the portrait's helmet; mounted; **2,006 bake keys** over 30 s of a 200-fighter battle of each of the 7 realms with switches (under 3,000); `lookAgrees`. `tests/browser/art.spec.js` (+2): the sheet's portrait and icons follow the kit, the battle's look, no image asked for; a bout in the loaner kit. Changed: `tests/art.test.js` (the new wording, `heroFrom`), the gallery's page list. `npm test` 994 pass; lint and typecheck clean (2 old warnings); browser `art`, `battle`, `tourney`, `gear`, `layout` pass.
+- **Performance:** `bench-browser.js 30`, Balanced: drawing 0.9 ms a frame at 40, 100 and 200 (P11-00 0.8–0.9), 60 fps, bake cache 287 / 921 / 1,082 on the desktop.
+- **Also fixed:** P11-03 left a typecheck error in `js/gear.js` (a finding's `stat`); the lint run's tail had hidden it.
+- **Not done:** the optional turn-around preview.
 
 ---
 

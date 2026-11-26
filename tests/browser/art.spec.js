@@ -54,7 +54,7 @@ test('the Art gallery: every realm’s troops and more, page by page; it closes 
   await page.waitForFunction(() => window.Crownless.artGallery?.active === true);
   await expect(page.locator('#galleryCanvas')).toBeVisible();
   const pages = await game(page, (CL) => CL.gfx.scenes.gallery.pages().map((p) => p.realm || p.kind));
-  expect(pages).toEqual(['valedorn', 'aurelian', 'hrothmark', 'vessaro', 'neutral', 'ostrand', 'saltreach', 'people', 'buildings', 'props']);
+  expect(pages).toEqual(['valedorn', 'aurelian', 'hrothmark', 'vessaro', 'neutral', 'ostrand', 'saltreach', 'people', 'arms', 'buildings', 'props']); // P11-04: arms and armour
   // Next page: a tap on the bottom line (phone) or Tab (desktop).
   if (isTouch(page)) {
     const b = await page.locator('#galleryCanvas').boundingBox();
@@ -180,4 +180,65 @@ test('the world map draws no sprite image: terrain, places, parties and your com
   });
   expect(sprites).toEqual([]);
   expect(await game(page, (CL) => CL.diag.events.filter((e) => e.level === 'error').length)).toBe(0);
+});
+
+test('P11-04: the hero is drawn in what they carry: the sheet, a battle and a tournament bout, with no image asked for', async ({ page }) => {
+  const asked = [];
+  page.on('request', (r) => {
+    const url = r.url();
+    if (url.startsWith('data:') || /\/icons\//.test(url)) return;
+    if (r.resourceType() === 'image' || /\.(png|jpe?g|gif|webp|avif)(\?|$)/i.test(url)) asked.push(url);
+  });
+  await open(page);
+  await newGame(page);
+  // Test setup: a known kit (the pieces need nothing of a new Farmhand).
+  await game(page, (CL) => Object.assign(CL.campaign.equipment, { weapon: 'hand_axe', offhand: 'oak_shield', head: 'leather_cap', body: 'gambeson' }));
+  await press(page, '#gearBtn');
+  await waitMode(page, 'character');
+  await expect(page.locator('#sheetStats .heroPortrait')).toHaveAttribute('data-sig', 'hand_axe|on|leather_cap|gambeson|none');
+  // The sheet's gear rows have their icons, named in words.
+  await expect(page.locator('#sheetEquip li', { hasText: 'Hand Axe' }).locator('.itemIco')).toHaveAttribute('aria-label', 'Axe');
+  await expect(page.locator('#sheetEquip li', { hasText: 'Oak Shield' }).locator('.itemIco')).toHaveAttribute('aria-label', 'Shield');
+  // Another kit, and the portrait follows.
+  await game(page, (CL) => {
+    Object.assign(CL.campaign.equipment, { head: null, body: 'clothing' });
+    CL.ui.refresh();
+  });
+  await expect(page.locator('#sheetStats .heroPortrait')).toHaveAttribute('data-sig', 'hand_axe|on|none|clothing|none');
+  // A battle: the look the battle draws.
+  await game(page, (CL) => CL.ui.changeMode('settlement'));
+  await toMap(page);
+  await debug(page, '[data-cheat="camera"][data-n="30"]');
+  await waitMode(page, 'battle');
+  const look = () => game(page, (CL) => {
+    const L = CL.gfx.battle.lookOf(CL.game.hero);
+    return [L.weapon, L.shield, L.helmet, L.armour];
+  });
+  expect(await look()).toEqual(['axe', 'wood', null, null]);
+  await page.waitForTimeout(400);
+  expect(asked).toEqual([]);
+});
+
+test('P11-04: in a tournament bout the hero is drawn in the loaner kit, not their own', async ({ page }) => {
+  await open(page);
+  await newGame(page);
+  await game(page, (CL) => {
+    const c = CL.campaign;
+    const s = CL.content.get('settlements', 'stonebridge');
+    Object.assign(c.world, { x: s.mapX, y: s.mapY, location: 'stonebridge' });
+    Object.assign(c.equipment, { weapon: 'hand_axe', head: null, body: 'clothing' });
+    c.gold = 300;
+    c.tourney.hosts.stonebridge.next = c.day;
+    CL.tourney.tick(c);
+    CL.ui.refreshRoster();
+  });
+  await page.locator('#tourneyHere .tourney').scrollIntoViewIfNeeded();
+  await press(page, '#tourneyEnter');
+  await press(page, '#tourneyFight');
+  await waitMode(page, 'battle');
+  const looks = await game(page, (CL) => [CL.game.hero, CL.game.enemies[0]].map((u) => {
+    const L = CL.gfx.battle.lookOf(u);
+    return [L.weapon, L.shield, L.helmet, L.armour];
+  }));
+  expect(looks).toEqual([['sword', 'kite', 'plumed', 'gambeson'], ['sword', 'kite', 'plumed', 'gambeson']]);
 });

@@ -8,7 +8,7 @@ _GDD §11–§12 art bible ("No real Pokémon sprites, tiles, trademarks, or ass
 
 | What | Files | Origin | Rights |
 |---|---|---|---|
-| **Everything drawn in play:** troops, the hero, companions, lords, townsfolk, horses, buildings, towns, battle maps, the world map, banners, house arms, portraits, small troop figures, icons | `js/art/` (`kit.js`, `figures.js`, `battle.js`, `town.js`, `worldmap.js`, `ui.js`) | Canvas drawing code, from the owner's adopted art direction (D-P10k, 2026-11-25; `docs/ART-STYLE.md`) | Code, written for this project |
+| **Everything drawn in play:** troops, the hero, companions, lords, townsfolk, horses, buildings, towns, battle maps, the world map, banners, house arms, portraits, small troop figures, icons (P11-04: every item drawn on whoever wears it, and its icon) | `js/art/` (`kit.js`, `figures.js`, `battle.js`, `town.js`, `worldmap.js`, `ui.js`) | Canvas drawing code, from the owner's adopted art direction (D-P10k, 2026-11-25; `docs/ART-STYLE.md`) | Code, written for this project |
 | **Looks** (what each troop, companion and building is drawn as) | `data/troops.js` (`LOOKS`), `data/companions.js`, `data/town_hubs.js` (`spec`) | Plain data the art kit reads | Written for this project |
 | **Home-screen icons** (Add to Home Screen, the web app manifest) | `icons/icon-192.png`, `icons/icon-512.png`, `icons/apple-touch-icon.png` | Drawn by `scripts/make-icons.js` (`npm run icons`): the art kit's hero by their banner, rendered in headless Chromium (Playwright, a development tool) | Code output, owned by the project owner |
 | **Interface** (panels, buttons, HUD, cards) | `style.css` | CSS | Written for this project |

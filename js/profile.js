@@ -16,7 +16,7 @@
   const DEFAULT_ARC = Math.cos(Math.PI / 4);
 
   /** A look's weapon part to its family (troops, and a pack troop's look). */
-  const LOOK_FAMILY = { sword: 'sword', axe: 'axe', greataxe: 'greataxe', spear: 'spear', pike: 'pike', lance: 'lance', crossbow: 'crossbow', hammer: 'mace', club: 'mace', staff: 'mace' };
+  const LOOK_FAMILY = { sword: 'sword', axe: 'axe', greataxe: 'greataxe', spear: 'spear', pike: 'pike', lance: 'lance', crossbow: 'crossbow', hammer: 'mace', club: 'mace', staff: 'mace', mace: 'mace', greatsword: 'greatsword', recurve: 'composite', arbalest: 'crossbow' }; // P11-04: the new parts
 
   const families = () => CL.content.table('weapon_families');
 

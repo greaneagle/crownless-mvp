@@ -404,9 +404,9 @@
     return L;
   }
 
-  /** The hero's portrait look, from the creator's choices. */
-  function heroLook(ch, canBlock = true) {
-    const L = G.fig.heroFor(ch, canBlock);
+  /** The hero's portrait look: the creator's choices, in their gear (P11-04: `kit` and `ctx` as G.fig.heroFrom). */
+  function heroLook(ch, kit = CL.campaign?.equipment || {}, ctx = {}) {
+    const L = G.fig.heroFrom(ch, kit, ctx);
     return { ...L, face: faceOf(`hero|${ch?.name || ''}`, 0), beardKind: 0 };
   }
 
@@ -537,7 +537,36 @@
     flour: [['M6 7 C6 5 8 4.5 12 4.5 C16 4.5 18 5 18 7 L19.5 19 C19.5 21 17 21.5 12 21.5 C7 21.5 4.5 21 4.5 19 Z', GOLD], ['M12 4.5 C16 4.5 18 5 18 7 L19.5 19 C19.5 21 17 21.5 12 21.5 Z', GOLD_LO], ['M8 4 L16 4 L15 2.5 L9 2.5 Z', GOLD_LO]],
     food_ration: [['M3 14 C3 8.5 7 5.5 12 5.5 C17 5.5 21 8.5 21 14 L21 17 C21 18.5 20 19 18.5 19 L5.5 19 C4 19 3 18.5 3 17 Z', GOLD], ['M8 9 L9.5 12.5 M12 8.5 L13 12 M16 9 L16.5 12.5', null]],
     medicine: [['M9 3 L15 3 L15 9 L21 9 L21 15 L15 15 L15 21 L9 21 L9 15 L3 15 L3 9 L9 9 Z', GOLD], ['M12 3 L15 3 L15 9 L21 9 L21 15 L15 15 L15 21 L12 21 Z', GOLD_LO]],
+    // P11-04: items by what they are (a weapon by its family, armour by its class), for the gear lists.
+    axe: [['M5 21 L7 22.5 L18 6 L16 4.5 Z', GOLD_LO], ['M13 3 C17 1.5 21 3.5 22 7.5 L17.5 10 L12.5 6.5 Z', GOLD]],
+    mace: [['M5 21.5 L7 22.5 L14.5 11 L12.5 10 Z', GOLD_LO], ['M16 2.5 A5 5 0 1 1 15.99 2.5 Z', GOLD], ['M16 2.5 L16 0.8 M21 7.5 L22.8 7.5 M11 7.5 L9.2 7.5', null]],
+    spear: [['M3.5 21.5 L5 23 L16.5 10 L15 8.5 Z', GOLD_LO], ['M14.5 8.5 L22 2 L17.5 11 Z', GOLD]],
+    crossbow: [['M2.5 12.5 L17 12.5 L17 15 L2.5 15 Z', GOLD_LO], ['M15 3 C19.5 6.5 19.5 20.5 15 22 L17 22.5 C22 20.5 22 4.5 17 2.5 Z', GOLD], ['M16 3.5 L9 13.7 L16 21.5', null]],
+    helmet: [['M4 15 C4 8 7.5 4 12 4 C16.5 4 20 8 20 15 Z', GOLD], ['M3 14.5 L21 14.5 L21 17 L3 17 Z', GOLD_LO], ['M11 14.5 L13 14.5 L13 21 L11 21 Z', GOLD_LO]],
+    tunic: [['M8 3 L16 3 L21 7 L18.5 10.5 L17 9.5 L17 21 L7 21 L7 9.5 L5.5 10.5 L3 7 Z', GOLD], ['M12 3 L16 3 L21 7 L18.5 10.5 L17 9.5 L17 21 L12 21 Z', GOLD_LO]],
+    jerkin: [['M8 3 L16 3 L21 7 L18.5 10.5 L17 9.5 L17 21 L7 21 L7 9.5 L5.5 10.5 L3 7 Z', GOLD_LO], ['M7 13 L17 13 L17 15 L7 15 Z', GOLD], ['M12 3 L12 13', null]],
+    mail: [['M8 3 L16 3 L21 7 L18.5 10.5 L17 9.5 L17 21 L7 21 L7 9.5 L5.5 10.5 L3 7 Z', GOLD], ['M8 9 L16 9 M8 12 L16 12 M8 15 L16 15 M8 18 L16 18', null]],
+    glove: [['M7 21.5 L7 11 L5 8 L6.5 6.8 L9 9.5 L9 3.5 L11 3.5 L11 9 L12.5 2.5 L14.5 2.5 L13.5 9 L15.5 3.5 L17.5 4 L15.5 10 L18 7.5 L19.5 8.5 L16.5 14 L16.5 21.5 Z', GOLD]],
+    horse: [['M5 21.5 L8 13 C6 11 6 7.5 9 5.5 L11 2.5 L12.5 5 C16 5 19 8 21 13 L18.5 14.5 L15 11.5 L14 21.5 Z', GOLD], ['M9 5.5 L11 2.5 L12.5 5 Z', GOLD_LO]],
+    ring: [['M12 6 A7.5 7.5 0 1 1 11.99 6 Z M12 9 A4.5 4.5 0 1 0 12.01 9 Z', GOLD], ['M9.5 2 L14.5 2 L13.5 5.5 L10.5 5.5 Z', HI]],
+    quiver: [['M8 6 L14 6 L15.5 21.5 L9.5 21.5 Z', GOLD_LO], ['M9 6 L10 1.5 M11.5 6 L12 1.5 M13.5 6 L14.5 2', null], ['M8.5 10 L14.5 10', null]],
   };
+
+  /** P11-04: the icon for each weapon family. */
+  const FAMILY_ICON = { sword: 'sword', greatsword: 'sword', axe: 'axe', greataxe: 'axe', mace: 'mace', spear: 'spear', pike: 'spear', lance: 'spear', shortbow: 'bow', longbow: 'bow', composite: 'bow', crossbow: 'crossbow' };
+  /** And for each slot (body armour by its class). */
+  const SLOT_ICON = { offhand: 'shield', head: 'helmet', hands: 'glove', feet: 'boot', horse: 'horse', ring: 'ring', ammo: 'quiver' };
+  const ARMOUR_ICON = { cloth: 'tunic', gambeson: 'tunic', leather: 'jerkin', mail: 'mail' };
+  /** What each item icon is called (its accessible name). */
+  const ICON_NAMES = { sword: 'Sword', axe: 'Axe', mace: 'Mace', spear: 'Spear', bow: 'Bow', crossbow: 'Crossbow', shield: 'Shield', helmet: 'Helmet', tunic: 'Clothing', jerkin: 'Leather armour', mail: 'Mail', glove: 'Gloves', boot: 'Boots', horse: 'Horse', ring: 'Ring', quiver: 'Quiver' };
+
+  /** P11-04: an item's icon: its name in ICONS, and what it shows in words. @param {string} id */
+  function itemIcon(id) {
+    const it = CL.content.table('items')[id];
+    if (!it?.slot) return null;
+    const name = it.slot === 'weapon' ? FAMILY_ICON[it.family] || 'sword' : it.slot === 'body' ? ARMOUR_ICON[G.fig.itemLook(id).armour] || 'tunic' : SLOT_ICON[it.slot];
+    return name ? { name, label: ICON_NAMES[name] } : null;
+  }
 
   /** An icon as SVG markup: its shapes in gold, the one dark outline, a small highlight on the upper left. */
   function iconSvg(name) {
@@ -566,5 +595,5 @@
     doc.head.append(st);
   }
 
-  G.ui = { faceOf, portrait, soldierLook, lordLook, speakerLook, heroLook, houseArms, arms, DEVICES, canvas, url, portraitUrl, figure, troopUrl, ICONS, iconSvg, iconCss, installIcons };
+  G.ui = { itemIcon, ICON_NAMES, faceOf, portrait, soldierLook, lordLook, speakerLook, heroLook, houseArms, arms, DEVICES, canvas, url, portraitUrl, figure, troopUrl, ICONS, iconSvg, iconCss, installIcons };
 })(typeof window !== 'undefined' ? window : globalThis);

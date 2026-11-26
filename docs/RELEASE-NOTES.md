@@ -1,5 +1,23 @@
 # Crownless — Release Notes
 
+## v5.4.0 — The equipment you see (P11-04) · 2026-11-26
+
+The hero now looks like what they carry, everywhere. Nothing about how battles play changed.
+
+### New
+- **The hero in their gear.** The weapon in hand, the shield in hand or **slung on the back** (a two-handed weapon or a bow), the helmet or a bare head, the armour, gloves and boots: in battle, the portrait, Party, the creator (in your origin's starting kit), the town's streets and your company on the world map. A switch in battle shows the other weapon at once.
+- **Companions** wear the gear you give them; **tournament fighters**, you too, fight in the lists' loaner kit (its helm and gambeson now show).
+- **Item icons**, drawn in code, beside every piece of gear in Party, the armoury, the blacksmith and Prepare: a weapon by its kind, body armour by its class, named in words for screen readers.
+- **New parts** for what Phase 11 brings: a mace head, the greatsword with both hands on its grip, the slung shield, the recurve bow and the arbalest's windlass, and the bascinet. **Debug → Art gallery → Arms and armour** shows them all.
+
+### Under the hood
+- Every item has a `look` (`data/items.js`), checked by slot and against its family; a pack's piece without one gets a default. `G.fig.heroFrom` replaces `heroFor`.
+- **Mounted is a state** (`u.mounted`, `CL.units.mounted`), set from the troop: cavalry rides exactly as before.
+- **Caches:** a look's key carries the kit's signature; a big battle of every realm with switches stays under 3,000 baked pictures (2,006 measured). Drawing at 40 fighters 0.9 ms a frame (P11-00: 0.8–0.9).
+- A troop's look is checked against its weapon family, not its shot's speed or reach.
+- Fixed: 5.3.0's typecheck error in `js/gear.js` (a finding's `stat`).
+- **Golden battles unchanged.**
+
 ## v5.3.0 — The progression budget and equipment requirements (P11-03) · 2026-11-26
 
 Levels go to 20, two new skills join, and the better gear needs a little Strength or skill to use. Ordinary gear needs nothing, and battles fight as before with it.

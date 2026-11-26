@@ -65,8 +65,9 @@ test('the checks refuse a look that is not the kit’s, or that disagrees with t
   assert.match(CL.content.checkLook({ tunic: 'blue' }, 'x')[0], /tunic must be a colour/);
   assert.match(CL.content.lookAgrees({ ...footman, look: { ...footman.look, shield: null } })[0], /needs a shield/);
   assert.match(CL.content.lookAgrees({ ...CL.content.troop('levy'), look: { weapon: 'club', shield: 'round' } })[0], /may not have a shield/);
-  assert.ok(CL.content.lookAgrees({ ...CL.content.troop('hunter'), look: { weapon: 'crossbow' } }).some((e) => /carries a bow/.test(e)));
-  assert.ok(CL.content.lookAgrees({ ...CL.content.troop('pikeman'), look: { weapon: 'sword' } }).some((e) => /long reach/.test(e)));
+  // P11-04: by the troop's family, not its shot's speed or its reach.
+  assert.ok(CL.content.lookAgrees({ ...CL.content.troop('hunter'), look: { weapon: 'crossbow' } }).some((e) => /a shortbow is drawn as bow, not crossbow/.test(e)));
+  assert.ok(CL.content.lookAgrees({ ...CL.content.troop('pikeman'), look: { weapon: 'sword' } }).some((e) => /needs a spear, pike or lance/.test(e)));
   assert.ok(CL.content.lookAgrees({ ...CL.content.troop('rider'), look: { weapon: 'lance' } }).some((e) => /needs a mount/.test(e)));
   assert.ok(CL.content.lookAgrees({ ...CL.content.troop('shieldmaiden'), look: { ...CL.content.troop('shieldmaiden').look, female: true } }).some((e) => /gender/.test(e)));
 });
@@ -133,10 +134,11 @@ test('looks: stable by seed, a woman’s troop is drawn as a woman, colours from
   assert.equal(d.weapon, 'crossbow');
   assert.equal(CL.content.lookAgrees({ id: 'x', role: 'cavalry', reach: 70, look: F.defaultLook({ role: 'cavalry', reach: 70, tier: 'T3', faction: 'valedorn' }) }).length, 0);
   assert.equal(CL.content.lookAgrees({ id: 'y', role: 'infantry', reach: 48, shield: true, look: F.defaultLook({ role: 'infantry', reach: 48, shield: true, tier: 'T2', faction: 'aurelian' }) }).length, 0);
-  // The hero: the creator's cloak and presentation; a shield only when one is carried.
-  assert.equal(F.heroFor({ cloak: 'forest', gender: 'woman' }).cloak, F.CLOAKS.forest);
-  assert.equal(F.heroFor({ cloak: 'forest', gender: 'woman' }).female, true);
-  assert.equal(F.heroFor({ cloak: 'ash' }, false).shield, null);
+  // The hero: the creator's cloak and presentation; a shield only when one is carried (P11-04: heroFrom).
+  const kit = { weapon: 'arming_sword', offhand: 'kite_shield' };
+  assert.equal(F.heroFrom({ cloak: 'forest', gender: 'woman' }, kit, { campaign: null }).cloak, F.CLOAKS.forest);
+  assert.equal(F.heroFrom({ cloak: 'forest', gender: 'woman' }, kit, { campaign: null }).female, true);
+  assert.equal(F.heroFrom({ cloak: 'ash' }, { weapon: 'arming_sword' }, { campaign: null }).shield, null);
 });
 
 test('Sharpness is a device setting: Balanced by default, kept, and only its three values', () => {

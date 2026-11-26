@@ -598,12 +598,13 @@
     ellipse(ctx, x, y + 2, 17, 6);
     ctx.stroke();
     const ch = c?.character;
-    const key = `mcompany:${ch?.cloak}:${ch?.gender}:${realm}:${roster.join(',')}:${face}:${step}`;
+    const heroL = ch ? G.fig.heroFrom(ch, c.equipment, { which: CL.gear.bestLoadout(c), campaign: c }) : G.fig.heroLook(); // P11-04: in their gear
+    const key = `mcompany:${ch?.cloak}:${ch?.gender}:${heroL.sig || ''}:${realm}:${roster.join(',')}:${face}:${step}`;
     const img = G.cached(key, k, 74, 66, 37, 54, (cx) => {
       const pose = { face, walk: step >= 0 ? ((step + 0.5) * Math.PI) / 2 : 0, move: step >= 0 ? 1 : 0, t: 0, scale: FIGURE * 1.05 };
       G.banner(cx, 14, 2, 0.7, { color: G.fig.CLOAKS[ch?.cloak] || G.fig.CLOAKS.crimson, trim: PAL.gold, device: 'coin' }, 0, 46);
       for (const [i, id] of roster.entries()) G.fig.figure(cx, i ? 8 : -9, -3, G.fig.troopLook(id, realm, i + 1), { ...pose, walk: pose.walk + (i + 1) * 1.3 });
-      G.fig.figure(cx, 0, 2, G.fig.heroFor(ch, true), pose);
+      G.fig.figure(cx, 0, 2, heroL, pose);
     });
     ctx.drawImage(img, x - 37, y - 52, 74, 66);
     return { x: x - 16, y: y - 40, w: 32, h: 42 };

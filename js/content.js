@@ -156,14 +156,19 @@
    */
   const LOOK = {
     armour: ['gambeson', 'mail', 'leather', 'fur', 'rags'],
-    helmet: ['nasal', 'kettle', 'great', 'cap', 'hood', 'spangen', 'crest', 'plumed', 'furhat', 'sallet'],
+    helmet: ['nasal', 'kettle', 'great', 'cap', 'hood', 'spangen', 'crest', 'plumed', 'furhat', 'sallet', 'bascinet'],
     hat: ['brim', 'cap', 'kerchief', 'coif'],
     shield: ['kite', 'round', 'heater', 'wood', 'pavise'],
-    weapon: ['sword', 'axe', 'greataxe', 'spear', 'pike', 'lance', 'bow', 'crossbow', 'hammer', 'staff', 'club'],
+    // P11-04: a mace head (not the club), a greatsword, the recurve bow and the arbalest (P11-16's regional arms).
+    weapon: ['sword', 'axe', 'greataxe', 'spear', 'pike', 'lance', 'bow', 'crossbow', 'hammer', 'staff', 'club', 'mace', 'greatsword', 'recurve', 'arbalest'],
     hairStyle: ['short', 'long', 'braid', 'bun', 'bald', 'tied'],
     colours: ['tunic', 'legs', 'boots', 'hoodColor', 'capColor', 'hatColor', 'band', 'cloak', 'cloakTrim', 'plume', 'apron', 'hair', 'skin'],
     flags: ['tabard', 'quiver', 'fur', 'pauldrons', 'beard', 'female'],
     long: ['spear', 'pike', 'lance'],
+    /** P11-04: what an item's look may say, by its slot (docs/ART-STYLE.md "Items"). */
+    item: { weapon: ['weapon', 'len'], offhand: ['shield'], head: ['helmet'], body: ['armour'], hands: ['gloves'], feet: ['boots'], horse: ['coat', 'mane'], ammo: ['quiver'], ring: [] },
+    /** The parts a family of shooting weapons may be drawn with. */
+    shot: { shortbow: ['bow'], longbow: ['bow'], composite: ['bow', 'recurve'], crossbow: ['crossbow', 'arbalest'] },
   };
   /**
    * P11-01: a weapon family's fields, or an item's `combat` overrides of them (`partial`: only what it
@@ -221,15 +226,55 @@
     }
     return out;
   }
-  /** A troop's look agrees with what it does: shield, reach, shot, mount. @param {any} t */
-  function lookAgrees(t) {
+  /**
+   * P11-04: problems with an item's look: only what its slot may say, each part known, a weapon drawn as
+   * its family. @param {any} it @param {any} C the content
+   */
+  function checkItemLook(it, C) {
+    const L = it.look;
+    const at = `item ${it.id}: look`;
+    if (L == null) return [];
+    if (typeof L !== 'object' || Array.isArray(L)) return [`${at} must be an object`];
+    const out = [];
+    const may = LOOK.item[it.slot] || [];
+    for (const [k, v] of Object.entries(L)) {
+      if (!may.includes(k)) out.push(`${at}: a ${it.slot} item's look can't say ${k}`);
+      else if (['weapon', 'shield', 'helmet', 'armour'].includes(k)) {
+        if (!(LOOK[k].includes(v) || (k === 'armour' && v === 'cloth'))) out.push(`${at}: unknown ${k} '${v}'`);
+      } else if (k === 'len') {
+        if (!(Number.isFinite(v) && v >= 0.6 && v <= 1.5)) out.push(`${at}: len between 0.6 and 1.5`);
+      } else if (k === 'quiver') {
+        if (typeof v !== 'boolean') out.push(`${at}: quiver must be true or false`);
+      } else if (!isColour(v)) out.push(`${at}: ${k} must be a colour like '#a59273'`);
+    }
+    if (it.slot === 'weapon' && L.weapon && CL.profile) {
+      const fam = C.weapon_families?.[it.family];
+      const agrees = fam && (fam.look === L.weapon || CL.profile.familyOfLook({ weapon: L.weapon }) === it.family || (LOOK.shot[it.family] || []).includes(L.weapon));
+      if (fam && !agrees) out.push(`${at}: a ${it.family} isn't drawn as a ${L.weapon}`);
+    }
+    return out;
+  }
+
+  /**
+   * A troop's look agrees with what it does: its shield, and (P11-04) its profile's family: a bow or
+   * crossbow only for a family that shoots (the crossbow's for a crossbow), a long weapon for a long
+   * family; a mount for cavalry. @param {any} t @param {any} [C]
+   */
+  function lookAgrees(t, C = raw()) {
     const L = t.look || {};
     const out = [];
     if (Boolean(L.shield) !== Boolean(t.shield)) out.push(`troop ${t.id}: its look ${t.shield ? 'needs' : 'may not have'} a shield (shield: ${Boolean(t.shield)})`);
-    if (t.role === 'archer' && L.weapon !== (t.ranged?.projectileSpeed >= 300 ? 'crossbow' : 'bow')) out.push(`troop ${t.id}: an archer whose shot flies at ${t.ranged?.projectileSpeed} carries a ${t.ranged?.projectileSpeed >= 300 ? 'crossbow' : 'bow'}`);
-    if (t.role !== 'archer' && ['bow', 'crossbow'].includes(L.weapon)) out.push(`troop ${t.id}: only archers carry a bow or crossbow`);
-    if (t.role !== 'archer' && t.reach >= 70 && !LOOK.long.includes(L.weapon)) out.push(`troop ${t.id}: a long reach (${t.reach}) needs a spear, pike or lance`);
-    if (t.role !== 'archer' && t.reach < 55 && LOOK.long.includes(L.weapon)) out.push(`troop ${t.id}: a spear, pike or lance needs a reach of 55 or more (${t.reach})`);
+    const ref = CL.profile ? CL.profile.troopWeapon(t) : null;
+    const famId = C.weapon_families?.[ref] ? ref : C.items?.[ref]?.family;
+    const fam = C.weapon_families?.[famId];
+    if (fam) {
+      const shots = LOOK.shot[famId] || (fam.ranged ? ['bow'] : []);
+      const shooting = ['bow', 'crossbow', 'recurve', 'arbalest'].includes(L.weapon);
+      if (fam.ranged && !shots.includes(L.weapon)) out.push(`troop ${t.id}: a ${famId} is drawn as ${shots.join(' or ')}, not ${L.weapon ?? 'nothing'}`);
+      if (!fam.ranged && shooting) out.push(`troop ${t.id}: only a family that shoots carries a bow or crossbow (${famId})`);
+      const long = LOOK.long.includes(famId);
+      if (!fam.ranged && long !== LOOK.long.includes(L.weapon)) out.push(`troop ${t.id}: ${long ? `a ${famId} needs a spear, pike or lance` : `a ${famId} isn't drawn as a spear, pike or lance`}`);
+    }
     if (L.female != null) out.push(`troop ${t.id}: a troop's look doesn't say female: its gender does`);
     if ((t.role === 'cavalry') !== Boolean(L.mount)) out.push(`troop ${t.id}: ${t.role === 'cavalry' ? 'cavalry needs a mount' : 'only cavalry has a mount'}`);
     return out;
@@ -258,7 +303,7 @@
       if (t.shield && t.role === 'archer') err(`troop ${t.id}: archers carry no shield`);
       // P10-G1: a troop's look, when it has one, is the kit's vocabulary and agrees with the troop. A pack's
       // troop may leave it out: the kit then draws one from its role, reach, shot and shield (figures.js).
-      if (t.look != null) for (const e of [...checkLook(t.look, `troop ${t.id}`), ...lookAgrees(t)]) err(e);
+      if (t.look != null) for (const e of [...checkLook(t.look, `troop ${t.id}`), ...lookAgrees(t, C)]) err(e);
       for (const s of ['hp', 'damage', 'armor', 'speed', 'reach']) {
         if (!(Number.isFinite(t[s]) && t[s] >= 0)) err(`troop ${t.id}: bad ${s}`);
       }
@@ -374,6 +419,7 @@
       if (it.slot === 'weapon' && !C.weapon_families?.[it.family]) err(`item ${it.id}: a weapon needs a known family (${it.family ?? 'none'})`);
       if (it.family != null && it.slot !== 'weapon') err(`item ${it.id}: only a weapon has a family`);
       if (it.combat != null) for (const e of checkCombat(it.combat, `item ${it.id}: combat`, true)) err(e);
+      for (const e of checkItemLook(it, C)) err(e); // P11-04
     }
     // P11-02: the gear check's words (data/gear_text.js): exactly its codes, each a line that fits.
     if (C.gear_text && CL.gear) {
@@ -547,5 +593,5 @@
     return errors;
   }
 
-  CL.content = { TABLES, OPTIONAL, LAWS, LOOK, checkLook, checkCombat, lookAgrees, table, get, troop, item, encounter, lootTable, validate, compose, init };
+  CL.content = { TABLES, OPTIONAL, LAWS, LOOK, checkLook, checkItemLook, checkCombat, lookAgrees, table, get, troop, item, encounter, lootTable, validate, compose, init };
 })(typeof window !== 'undefined' ? window : globalThis);

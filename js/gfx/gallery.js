@@ -17,7 +17,7 @@
   function pages() {
     const troops = Object.values(CL.content.table('troops')).filter((t) => t.role !== 'hero');
     const realms = [...new Set(troops.map((t) => t.faction))];
-    return [...realms.map((f) => ({ kind: 'troops', realm: f, troops: troops.filter((t) => t.faction === f) })), { kind: 'people' }, { kind: 'buildings' }, { kind: 'props' }];
+    return [...realms.map((f) => ({ kind: 'troops', realm: f, troops: troops.filter((t) => t.faction === f) })), { kind: 'people' }, { kind: 'arms' }, { kind: 'buildings' }, { kind: 'props' }];
   }
 
   const scene = {
@@ -63,6 +63,7 @@
       const pose = POSES[q.pose];
       if (pg.kind === 'troops') troopsPage(ctx, q, pg, face, pose, api);
       else if (pg.kind === 'people') peoplePage(ctx, q, face, pose, api);
+      else if (pg.kind === 'arms') armsPage(ctx, q, face, pose, api);
       else if (pg.kind === 'buildings') buildingsPage(ctx, q, api);
       else propsPage(ctx, q, api);
       label(ctx, `Page ${q.page + 1} of ${all.length}: ${title(pg)} · pose ${pose}, facing ${face}`, 480, 506, api);
@@ -73,7 +74,7 @@
 
   function title(pg) {
     if (pg.kind === 'troops') return `${CL.content.table('factions')[pg.realm]?.name || pg.realm}'s troops`;
-    return { people: 'the hero, companions and townsfolk', buildings: 'buildings by culture', props: 'nature and props' }[pg.kind];
+    return { people: 'the hero, companions and townsfolk', arms: 'arms and armour', buildings: 'buildings by culture', props: 'nature and props' }[pg.kind];
   }
 
   /** A pose for the gallery: the same parts a battle drives from its state, cycled by time. */
@@ -82,7 +83,7 @@
     if (pose === 'walk') Object.assign(P, { move: 1, walk: t * 9 });
     if (pose === 'attack') {
       const c = (t * 1.2) % 1;
-      if (L.weapon === 'bow' || L.weapon === 'crossbow') Object.assign(P, { draw: Math.min(1, c * 1.3), shot: c > 0.8 ? (1 - c) * 5 : 0 });
+      if (G.fig.SHOOTS.includes(L.weapon)) Object.assign(P, { draw: Math.min(1, c * 1.3), shot: c > 0.8 ? (1 - c) * 5 : 0 });
       else {
         const k = c * 1.4;
         const SW = CL.units?.SWING || { windup: 0.16, active: 0.12, recovery: 0.24, total: 0.52 };
@@ -140,13 +141,79 @@
     }
   }
 
+  /** P11-04: kits to dress the hero in (the gallery's own: no campaign, no requirements). */
+  const KITS = [
+    { weapon: 'arming_sword', offhand: 'kite_shield', head: 'iron_helm', body: 'mail_hauberk', hands: 'mail_mittens', feet: 'greaves' },
+    { weapon: 'hand_axe', offhand: 'oak_shield', head: 'leather_cap', body: 'gambeson', feet: 'boots' },
+    { weapon: 'war_mace', offhand: 'heater_shield', head: 'bascinet', body: 'leather_chest', hands: 'gloves', feet: 'boots' },
+    { weapon: 'worn_sword', body: 'clothing' },
+  ];
+
+  /**
+   * P11-04: "Arms and armour": every weapon part and helmet the kit draws, a two-handed weapon with the
+   * shield slung, the bows and crossbows, and the hero in each kit (docs/ART-STYLE.md "Items").
+   */
+  function armsPage(ctx, q, face, pose, api) {
+    const t = q.t;
+    const who = { cloak: 'crimson', gender: 'man' };
+    const parts = ['sword', 'axe', 'mace', 'club', 'hammer', 'greatsword', 'greataxe', 'spear', 'pike', 'lance', 'bow', 'recurve', 'crossbow', 'arbalest'];
+    label(ctx, 'Weapon parts (a two-handed one slings the shield; bows and crossbows carry a quiver)', 480, 70, api);
+    parts.forEach((w, i) => {
+      const L = { ...G.fig.heroFrom(who, KITS[1], { campaign: null }), weapon: w, twoHanded: ['greatsword', 'greataxe', 'pike'].includes(w), quiver: G.fig.SHOOTS.includes(w) };
+      if (L.twoHanded || G.fig.SHOOTS.includes(w)) [L.shield, L.shieldBack] = [null, 'round'];
+      const x = 45 + i * 63;
+      ctx.save();
+      ctx.translate(x, 160);
+      ctx.scale(1.12, 1.12);
+      G.fig.figure(ctx, 0, 0, L, poseFor(pose, face, t + i * 0.2, L));
+      ctx.restore();
+      small(ctx, w, x, 182, api);
+    });
+    const helms = ['cap', 'nasal', 'plumed', 'kettle', 'bascinet', 'great', 'sallet', 'spangen', 'hood', null];
+    label(ctx, 'Helmets (the hero bare-headed last); the hero in four kits', 480, 222, api);
+    helms.forEach((h, i) => {
+      const L = { ...G.fig.heroFrom(who, KITS[0], { campaign: null }), helmet: h };
+      const x = 60 + i * 52;
+      ctx.save();
+      ctx.translate(x, 300);
+      ctx.scale(1.5, 1.5);
+      G.fig.figure(ctx, 0, 0, L, poseFor('idle', face, t, L));
+      ctx.restore();
+      small(ctx, h || 'bare', x, 322, api);
+    });
+    KITS.forEach((k, i) => {
+      const L = G.fig.heroFrom({ cloak: 'forest', gender: i % 2 ? 'woman' : 'man' }, k, { campaign: null });
+      const x = 600 + i * 90;
+      ctx.save();
+      ctx.translate(x, 300);
+      ctx.scale(1.5, 1.5);
+      G.fig.figure(ctx, 0, 0, L, poseFor(pose, face, t + i * 0.3, L));
+      ctx.restore();
+      small(ctx, CL.content.item(k.weapon).name, x, 322, api);
+    });
+    label(ctx, 'Enlarged 2.2×: greatsword (shield slung), arbalest, recurve bow, mace and heater', 480, 360, api);
+    const big = [
+      { ...G.fig.heroFrom(who, KITS[0], { campaign: null }), weapon: 'greatsword', twoHanded: true, shield: null, shieldBack: 'kite' },
+      { ...G.fig.heroFrom(who, KITS[1], { campaign: null }), weapon: 'arbalest', shield: null, shieldBack: 'round', quiver: true },
+      { ...G.fig.heroFrom(who, KITS[3], { campaign: null }), weapon: 'recurve', quiver: true },
+      G.fig.heroFrom({ cloak: 'violet', gender: 'woman' }, KITS[2], { campaign: null }),
+    ];
+    big.forEach((L, i) => {
+      ctx.save();
+      ctx.translate(180 + i * 200, 490);
+      ctx.scale(2.2, 2.2);
+      G.fig.figure(ctx, 0, 0, L, poseFor(pose, face, t + i * 0.4, L));
+      ctx.restore();
+    });
+  }
+
   function peoplePage(ctx, q, face, pose, api) {
     const t = q.t;
     label(ctx, 'The hero: each cloak colour, a man and a woman, with and without a shield', 480, 70, api);
     const cloaks = Object.keys(G.fig.CLOAKS);
     cloaks.forEach((c, i) => {
       for (const [j, gender] of [[0, 'man'], [1, 'woman']].entries()) {
-        const L = G.fig.heroFor({ cloak: c, gender: gender[1] }, !(i === 3 && j === 1));
+        const L = G.fig.heroFrom({ cloak: c, gender: gender[1] }, i === 3 && j === 1 ? { ...KITS[0], offhand: null } : KITS[(i * 2 + j) % KITS.length], { campaign: null });
         const x = 120 + (i * 2 + j) * 52;
         ctx.save();
         ctx.translate(x, 158);
@@ -173,7 +240,7 @@
       small(ctx, role, x, 310, api);
     });
     label(ctx, 'Enlarged 2.4×', 480, 350, api);
-    const big = [G.fig.heroFor({ cloak: 'crimson', gender: 'man' }), G.fig.companionLook('mara', 'valedorn'), G.fig.companionLook('iacopo', 'valedorn'), G.fig.townLook('smith', 4), G.fig.townLook('innkeeper', 5), G.fig.townLook('noble', 14)];
+    const big = [G.fig.heroFrom({ cloak: 'crimson', gender: 'man' }, KITS[0], { campaign: null }), G.fig.companionLook('mara', 'valedorn'), G.fig.companionLook('iacopo', 'valedorn'), G.fig.townLook('smith', 4), G.fig.townLook('innkeeper', 5), G.fig.townLook('noble', 14)];
     big.forEach((L, i) => {
       ctx.save();
       ctx.translate(110 + i * 148, 490);

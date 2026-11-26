@@ -55,23 +55,49 @@
   /** The tournament's colours: each fighter their own, from their name. */
   const TOURNEY = ['#8a3b5a', '#2d6a6a', '#7a5a2a', '#4a4a8a', '#6a7a3a', '#8a4a2a'];
 
+  /** P11-04: is a unit on a horse (a state, js/units.js)? */
+  const mounted = (u) => CL.units.mounted(u);
+
+  /** A companion's gear (yours, or one of the retinue's), for their look. */
+  function companionGear(u) {
+    const c = CL.campaign;
+    if (!c) return null;
+    if (c.companion?.id === u.companion) return c.companion.equipment || null;
+    return CL.retinue?.find?.(c, u.companion)?.equipment || null;
+  }
+
+  /**
+   * What a unit's look depends on that can change in a battle (P11-04): the hero's loadout in hand (a
+   * switch rebuilds the look the next frame). Everyone else's gear is fixed for the battle (a soldier's
+   * look is their troop's), so theirs is ''.
+   */
+  const sigOf = (B, u) => (u.role === 'hero' ? B.g.loadout?.which || 'primary' : '');
+
   /** A unit's look: the hero, a companion, a lord in person, a tournament fighter, or a soldier of a side. */
   function lookOf(B, u) {
+    const sig = sigOf(B, u);
     let L = B.looks.get(u);
-    if (L) return L;
+    if (L && L.sigKey === sig) return L;
     const side = u.team === 'ally' ? B.allySide : B.enemySide;
-    if (u.role === 'hero') L = G.fig.heroFor(CL.campaign?.character, u.canBlock);
-    else if (u.companion && CL.content.table('companions')[u.companion]) L = G.fig.companionLook(u.companion, side);
+    const c = CL.campaign;
+    // P11-04: the hero in the kit they fight in (a tournament's loaner kit in a bout), the weapon in hand.
+    if (u.role === 'hero') L = G.fig.heroFrom(c?.character, B.g.loadout?.kit || c?.equipment || {}, { which: sig, campaign: c || null });
+    else if (u.companion && CL.content.table('companions')[u.companion]) L = G.fig.companionLook(u.companion, side, companionGear(u));
     else {
       L = G.fig.troopLook(u.troop, side, ((u.soldierId ?? u.id) % 4) + 1);
       if (u.named) Object.assign(L, { helmet: L.helmet === 'great' ? 'great' : 'plumed', plume: PAL.gold, cloak: G.realm(side).color, cloakTrim: PAL.gold, lord: true });
       if (u.duelist) {
+        // P11-04: a tournament fighter in the format's kit (the loaner kit), in colours of their own.
+        if (B.g.duel?.kit) G.fig.dress(L, CL.gear.kitFor(null, B.g.duel.kit, 'primary'), null);
         const n = [...String(u.duelist)].reduce((a, ch) => a + ch.charCodeAt(0), 0);
         const colour = TOURNEY[n % TOURNEY.length];
-        Object.assign(L, { realm: { color: colour, trim: '#efe4c4', device: ['chevron', 'bar', 'lozenge', 'cross'][n % 4], shield: 'heater' }, tabard: { color: colour, trim: '#efe4c4', device: 'bar' }, helmet: 'plumed', plume: '#efe4c4' });
+        Object.assign(L, { realm: { color: colour, trim: '#efe4c4', device: ['chevron', 'bar', 'lozenge', 'cross'][n % 4], shield: 'heater' }, tabard: { color: colour, trim: '#efe4c4', device: 'bar' }, plume: '#efe4c4' });
+        if (!L.helmet || L.helmet === 'nasal') L.helmet = 'plumed';
       }
     }
-    L.key = `${u.role === 'hero' ? 'hero' : u.companion || u.troop}|${typeof L.realm === 'object' ? L.realm.color : L.realm}|${L.seed}${L.lord ? `|lord${u.house || ''}` : ''}`;
+    // P11-04: the key carries the kit's signature, so a look in other gear is baked apart.
+    L.key = `${u.role === 'hero' ? 'hero' : u.companion || u.troop}|${typeof L.realm === 'object' ? L.realm.color : L.realm}|${L.seed}${L.lord ? `|lord${u.house || ''}` : ''}${L.sig ? `|${L.sig}` : ''}`;
+    L.sigKey = sig;
     B.looks.set(u, L);
     B.lookCount = (B.lookCount || 0) + 1; // P11-00: looks built this battle (Debug → Battle benchmark)
     return L;
@@ -91,12 +117,12 @@
       const d = Math.hypot(u.x - tr.x, u.y - tr.y);
       const speed = dt > 0 ? d / dt : 0;
       tr.move += (Math.min(1, speed / 55) - tr.move) * Math.min(1, dt * 12);
-      tr.walk += dt * (u.role === 'cavalry' ? 11 : 10) * Math.min(1.4, speed / 70);
+      tr.walk += dt * (mounted(u) ? 11 : 10) * Math.min(1.4, speed / 70);
       tr.x = u.x;
       tr.y = u.y;
       if (u.face === 'left' || u.face === 'right') tr.hface = u.face;
       if (u.alive && speed > 80 && !reduced && !busy && now > tr.dustAt && B.dust.length < 40) {
-        tr.dustAt = now + (u.role === 'cavalry' ? 120 : 300);
+        tr.dustAt = now + (mounted(u) ? 120 : 300);
         B.dust.push({ x: u.x + (G.hash(u.id, now) - 0.5) * 8, y: u.y + 4, t: 0 });
       }
     }
@@ -127,16 +153,17 @@
 
   /** Draw a unit's body (figure, or horse and rider) at 0,0 in the current transform. */
   function body(ctx, u, L, P) {
-    if (u.role === 'cavalry' && L.mount) {
+    const horse = mounted(u) && (u.mount || L.mount);
+    if (horse) {
       const sideFace = u.face === 'left' || u.face === 'right' ? u.face : P.hface;
-      G.fig.horse(ctx, 0, 0, { ...L.mount, cloth: L.realm }, P, () => G.fig.figure(ctx, 0, 0, L, { ...P, face: sideFace, mounted: true }));
+      G.fig.horse(ctx, 0, 0, { ...horse, cloth: L.realm }, P, () => G.fig.figure(ctx, 0, 0, L, { ...P, face: sideFace, mounted: true }));
     } else G.fig.figure(ctx, 0, 0, L, P);
   }
 
   /** The team ring under the feet: blue for yours, red for theirs, gold for the hero. */
   function ring(ctx, u) {
     const hero = u.role === 'hero';
-    const cav = u.role === 'cavalry';
+    const cav = mounted(u);
     ctx.lineWidth = hero ? 2.2 : 1.6;
     ctx.strokeStyle = hero ? TEAM.hero : TEAM[u.team] || TEAM.enemy;
     ellipse(ctx, 0, 0, cav ? 17 : 11, cav ? 6 : 4.2);
@@ -150,7 +177,7 @@
    * step. A struck soldier's flash is laid over the image.
    */
   function baked(ctx, u, L, P, k, act = false) {
-    const cav = u.role === 'cavalry';
+    const cav = mounted(u);
     const step = P.move > 0.35 && !P.atk ? Math.floor((((P.walk % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2)) / ((Math.PI * 2) / WALK_FRAMES)) : -1;
     const face = cav && (u.face === 'up' || u.face === 'down') ? `${u.face}${P.hface}` : u.face;
     const kq = Math.round(k * 10) / 10;
@@ -200,13 +227,13 @@
     // Their house's arms when they have a house (P10-G5), else their realm's colours with a gold device.
     const H = u.house && CL.gfx.ui?.houseArms(CL.campaign, u.house);
     const R = H || G.realm(lookOf(battle, u).realm);
-    G.banner(ctx, -10, -2, 0.85, H ? { ...H, edge: PAL.gold } : { color: R.color, trim: PAL.gold, device: R.device }, t, u.role === 'cavalry' ? 70 : 56);
+    G.banner(ctx, -10, -2, 0.85, H ? { ...H, edge: PAL.gold } : { color: R.color, trim: PAL.gold, device: R.device }, t, mounted(u) ? 70 : 56);
   }
 
   /** Health, morale and a lord's name over the head. */
   function marks(ctx, u, y) {
     const hero = u.role === 'hero';
-    const top = y - (u.role === 'cavalry' ? 58 : 46);
+    const top = y - (mounted(u) ? 58 : 46);
     const busy = CL.render?.busyBattle?.();
     const hurt = u.hp < u.maxhp && (hero || (CL.settings?.get('healthBars') !== false && (!busy || u.hp < u.maxhp * (CL.render?.BUSY?.hurt ?? 0.5) || u.companion)));
     if (hurt) {

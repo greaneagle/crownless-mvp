@@ -38,6 +38,9 @@
       team,
       troop: t.id,
       role: t.role, // 'hero' | 'infantry' | 'archer' | 'cavalry'
+      // P11-04: on a horse is a state, not a role (cavalry troops ride; the hero doesn't yet, P11-08).
+      mounted: t.role === 'cavalry',
+      mount: t.role === 'cavalry' ? t.look?.mount || null : null,
       soldierId,
       alive: true,
       hp: p.hp,
@@ -228,12 +231,14 @@
   const SPACING = UNIT_RADIUS * 2 * 0.5;
   const PUSH = 0.5; // share of an overlap removed each frame: firm but smooth, no jitter
   // Heavier units give way less: the hero isn't shoved around by their own soldiers, riders less than footmen.
-  const mass = (u) => (u.role === 'hero' ? 3 : u.role === 'cavalry' ? 2 : 1);
+  /** P11-04: is this fighter on a horse? (A state: `u.mounted`, from the troop for now.) */
+  const mounted = (u) => Boolean(u?.mounted);
+  const mass = (u) => (u.role === 'hero' ? 3 : mounted(u) ? 2 : 1);
   const GOLDEN = 2.399963; // spreads units that stand on exactly the same point, deterministically
   // GDD §7: cavalry "accelerate toward a target, pass through, and turn for another run". A rider at
   // charge speed (or riding on after a pass) goes through enemy bodies; it still keeps clear of its own side.
   const CHARGE_THROUGH = 0.6; // = CAVALRY.chargeMomentum in combat.js
-  const charging = (u) => u.role === 'cavalry' && (u.overrun > 0 || (u.momentum || 0) >= CHARGE_THROUGH);
+  const charging = (u) => mounted(u) && (u.overrun > 0 || (u.momentum || 0) >= CHARGE_THROUGH);
   const passesThrough = (u, v) => u.team !== v.team && (charging(u) || charging(v));
 
   /**
@@ -356,6 +361,7 @@
   }
 
   CL.units = {
+    mounted,
     FACE_VECTORS,
     BOUNDS,
     proximity,

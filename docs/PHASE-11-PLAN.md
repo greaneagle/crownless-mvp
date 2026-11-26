@@ -139,7 +139,7 @@ The fix is not to make input unresponsive or to punish repeated presses, but to 
 | **P11-01** | One combat profile for every fighter (no change in play) | L | P1 | P11-00 | 5.1.0 | M1 | ✅ Done |
 | **P11-02** | Carried and wielded: loadouts and one gear check | M–L | P1 | P11-01 | 5.2.0 | M1 | ✅ Done |
 | **P11-03** | The progression budget and equipment requirements | M–L | P1 | P11-02 | 5.3.0 | M1 | ✅ Done |
-| **P11-04** | The equipment you see | M–L | P1 | P11-02 (parallel with P11-03) | 5.4.0 | M1 | Specified |
+| **P11-04** | The equipment you see | M–L | P1 | P11-02 (parallel with P11-03) | 5.4.0 | M1 | ✅ Done |
 | **P11-05** | Melee rhythm and defence | L | P1 | P11-01, P11-04 | 5.5.0 | **M1 "The weapon in your hand"** | Ready (D-P11d decided) |
 | **P11-06** | Armour, weight and movement | M | P2 | P11-05 | 5.6.0 | M2 | Specified |
 | **P11-07** | Bows and crossbows in your hands | L | P1 | P11-05, P11-06 | 5.7.0 | M2 | Specified |

@@ -32,21 +32,36 @@ One renderer, `figure(ctx, x, y, look, pose)`, draws everyone.
 - **Troops** have one in `data/troops.js` (the `LOOKS` table, one row a troop; packs may give their own).
 - **Companions** have one in `data/companions.js`.
 - **Townsfolk** get one by role, from `townLook(role, seed)`.
-- **The hero** gets one from the creator's choices, from `heroFor(character, canBlock)`.
+- **The hero** gets one from `heroFrom(character, kit, { which, campaign })` (P11-04; see "The hero" below).
 
 The vocabulary is `CL.content.LOOK` (`js/content.js`), and the content checks refuse anything else:
 
 | Part | Values |
 |---|---|
 | `armour` | gambeson, mail, leather, fur, rags (none: a plain tunic) |
-| `helmet` | nasal, kettle, great, cap, hood, spangen, crest, plumed, furhat, sallet |
+| `helmet` | nasal, kettle, great, cap, hood, spangen, crest, plumed, furhat, sallet, bascinet (P11-04: a pointed skull, an open face, a mail aventail) |
 | `hat` | brim, cap, kerchief, coif (townsfolk, and some militia) |
 | `shield` | kite, round, heater, wood, pavise (only on a troop with `shield: true`) |
-| `weapon` | sword, axe, greataxe, spear, pike, lance, bow, crossbow, hammer, staff, club |
+| `weapon` | sword, axe, greataxe, spear, pike, lance, bow, crossbow, hammer, staff, club; P11-04: mace (a flanged iron head, not the club), greatsword (a long grip and blade), recurve (the tips curl forward), arbalest (a crossbow with its windlass) |
 | `hairStyle` | short, long, braid, bun, bald, tied |
 | colours (`#rrggbb`) | tunic, legs, boots, hoodColor, capColor, hatColor, band, cloak, cloakTrim, plume, apron, hair, skin |
 | flags (`true`/`false`) | tabard (in the side's colours, with its device), quiver, fur (a collar), pauldrons, beard, female (companions and townsfolk; a troop's comes from its `gender`) |
 | others | `bowSize` (0.8–1.4), `mount { coat, mane, pony }` (cavalry only) |
+| from gear (P11-04; set by `dress`, not in data) | `len` (a blade's length), `twoHanded` (the other hand on the grip), `shieldBack` (a shield slung on the back), `gloves` (the hands' colour), `sig` (the kit's signature) |
+
+### Items (P11-04)
+
+Every item has a `look` by its slot (`data/items.js`; `CL.content.LOOK.item` says what each slot may give, and `checkItemLook` checks it): a weapon's `weapon` part (it must be its family's) and `len`; a shield's `shield`; a helmet's `helmet`; body armour's `armour` class (`cloth` for plain clothes); gloves' and boots' colour; a horse's `coat` and `mane`; a quiver's `quiver`. `itemLook(id)` reads it: a forged piece wears its base's, and a pack's piece without one gets its family's part or its slot's default.
+
+### The hero (P11-04)
+
+`heroFrom(character, kit, ctx)` keeps who the hero is from the creator (presentation, skin, hair, the cloak with its gold trim) and takes everything else from the kit, through `CL.gear.kitFor`: the weapon of the loadout in hand, the shield in hand or **slung on the back** (a two-handed weapon or a bow), the helmet or a bare head (a nasal helm wears the hero's gold plume), the armour class (mail with pauldrons), gloves and boots, a quiver with a bow, and the horse. A piece whose requirement isn't met isn't drawn, as it isn't worn. The battle, the portrait, the sheet, the creator (in the origin's kit), the town, the world map's company and the gallery all use it. Companions are drawn the same way over their own look (`companionLook(id, side, equipment)`: an empty slot keeps their look's), and a tournament's fighters, the hero too, in the format's kit.
+
+**The signature** `weapon|shield(on/back/none)|helmet|armour|mount` (item ids) is part of a look's key, so a look in other gear is baked apart; in battle the hero's look is rebuilt when the loadout in hand changes (a switch shows the next frame), and everyone else's gear is fixed for the battle. A big battle of every realm with switches stays under 3,000 bake keys (`tests/art-gear.test.js`).
+
+### Mounted (P11-04)
+
+On a horse is a state: `u.mounted` and `u.mount` (the horse's look), set from the troop for now (cavalry troops ride; the hero walks until P11-08). `CL.units.mounted(u)` is what the art, the push between units, the charge and the rider's way of fighting ask. A troop's look is checked against its profile's family (`lookAgrees`): a bow or crossbow only for a family that shoots, a long weapon for a long family, a mount for cavalry.
 
 **Faces, skin, hair and beards** vary by the soldier's seed (the unit's or soldier's id), within the culture's range.
 
@@ -157,7 +172,7 @@ Icons keep about their old size on screen, so taps and labels stay put. Every mi
 
 **Arms.** `houseArms(c, house)` gives a realm-like colours object: the realm's colour, a charge from `DEVICES` and a tincture, by the house's place among its realm's houses. The same object works with `shieldShape`, `banner` (add `edge` for a gold edge) and `device`.
 
-**Icons.** `ICONS` holds 24×24 paths in gold with the one outline. `installIcons()` writes the `.ico-<name>` rules at boot. A good with an entry in `ICONS` shows its drawing; a pack's good without one shows its emoji.
+**Icons.** `ICONS` holds 24×24 paths in gold with the one outline. `installIcons()` writes the `.ico-<name>` rules at boot. A good with an entry in `ICONS` shows its drawing; a pack's good without one shows its emoji. P11-04: `itemIcon(id)` names an item's icon (a weapon by its family, body armour by its class, the rest by slot) and its words (`ICON_NAMES`, its accessible name); the sheet, the armoury, the blacksmith and Prepare show them.
 
 **Images on the screens.** `canvas(w, h, paint)` and `url(key, w, h, paint)` draw at the screen's resolution. Image URLs are cached by key.
 

@@ -39,7 +39,7 @@ function paint(size, bg, safe) {
   ctx.fill();
   G.banner(ctx, -14, 0, 1.25, { color: G.fig.CLOAKS.crimson, trim: G.PAL.gold, device: 'coin', edge: G.PAL.gold }, 0.4, 44);
   G.shadow(ctx, 3, 0, 10, 2.6, 6);
-  G.fig.figure(ctx, 4, 0, G.fig.heroFor({ cloak: 'crimson', gender: 'unspecified' }), { face: 'down', t: 0, scale: 1.05 });
+  G.fig.figure(ctx, 4, 0, G.fig.heroFrom({ cloak: 'crimson', gender: 'unspecified' }, { weapon: 'arming_sword', offhand: 'kite_shield', head: 'iron_helm', body: 'mail_hauberk' }, { campaign: null }), { face: 'down', t: 0, scale: 1.05 });
   ctx.restore();
   return cv.toDataURL('image/png');
 }

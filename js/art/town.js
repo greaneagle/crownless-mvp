@@ -334,12 +334,21 @@
     }
     const h = t.hero;
     const htr = stride(h, dt);
+    // P11-04: the hero in their own gear (the loadout they'd fight in), the look kept while it is the same.
+    const heroInTown = () => {
+      const c = CL.campaign;
+      const which = c ? CL.gear.bestLoadout(c) : 'primary';
+      const L = c ? G.fig.heroFrom(c.character, c.equipment, { which, campaign: c }) : G.fig.heroLook();
+      if (t.heroLook?.sig === L.sig && t.heroLook.cloak === L.cloak) return t.heroLook;
+      t.heroLook = L;
+      return L;
+    };
     items.push([h.y, () => {
       ctx.strokeStyle = 'rgba(216,178,90,0.85)';
       ctx.lineWidth = 1.6;
       ellipse(ctx, h.x, h.y + 5, 11, 4.2);
       ctx.stroke();
-      G.fig.figure(ctx, h.x, h.y + 5, G.fig.heroFor(CL.campaign?.character, opts.canBlock ?? true), { face: h.face || 'down', walk: htr.walk, move: htr.move, t: time, scale: 1.05 });
+      G.fig.figure(ctx, h.x, h.y + 5, heroInTown(), { face: h.face || 'down', walk: htr.walk, move: htr.move, t: time, scale: 1.05 });
     }]);
     items.sort((a, b) => a[0] - b[0]);
     for (const [, paint] of items) paint();

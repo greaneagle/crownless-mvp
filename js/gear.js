@@ -154,6 +154,7 @@
     return out;
   }
 
+  /** @returns {any} a finding (P11-03 adds `stat` to a requirement's) */
   const finding = (kind, code, itemId, fill, extra = {}) => ({ kind, code, item: itemId || null, text: words(code, fill), have: null, need: null, fix: null, ...extra });
 
   /**

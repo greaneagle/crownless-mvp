@@ -1343,7 +1343,7 @@
           return mk(
             'div',
             { className: 'row qmRule' },
-            mk('span', { textContent: `${name} → ${CL.content.item(o.to).name}` }, ...findingRows(CL.gear.unmet(c, o.to), 'span')), // P11-03: forging keeps requirements
+            withIco(mk('span', { textContent: `${name} → ${CL.content.item(o.to).name}` }, ...findingRows(CL.gear.unmet(c, o.to), 'span')), o.from), // P11-03: forging keeps requirements; P11-04: its icon
             btn(`Forge · ${o.crowns} crowns, ${o.iron} iron`, () => {
               const r = B.forge(c, o.slot);
               message(r.ok ? `${CL.content.item(o.to).name} is ready` : `Can't forge: ${r.reason}`);
@@ -1818,7 +1818,7 @@
         // after a second tap that says why.
         const findings = CL.gear.checkItem(c, id);
         const stop = CL.gear.stops(findings) ? findings.find((f) => f.kind === 'incompatible' || f.kind === 'requirement') : null;
-        const row = li(`${it.name}${itemSummary(it)}${vs}`, `Buy · ${price}`, null);
+        const row = li(`${it.name}${itemSummary(it)}${vs}`, `Buy · ${price}`, null, id);
         const b = row.querySelector('button');
         b.onclick = () => {
           if (stop && !b.dataset.confirm) {
@@ -1846,7 +1846,7 @@
         ? gear.map(([id, n]) =>
             li(`${n > 1 ? `${n}× ` : ''}${CL.content.item(id).name}`, `Sell · ${T.gearPrice(c, id)}`, () =>
               tradeAction(() => T.sellGear(c, sid, id)),
-            ),
+            id),
           )
         : [li('Nothing to sell. Equipped gear must be removed first; quest items cannot be sold.')]),
     );
@@ -1935,7 +1935,8 @@
     const x = cv.getContext('2d');
     x.setTransform(k, 0, 0, k, 0, 0);
     x.clearRect(0, 0, 72, 92);
-    const L = CL.gfx.fig.heroFor({ cloak: draft.cloak, gender: $('#heroGender')?.value });
+    // P11-04: in the chosen origin's starting kit.
+    const L = CL.gfx.fig.heroFrom({ cloak: draft.cloak, gender: $('#heroGender')?.value }, CL.content.get('origins', draft.origin)?.kit?.equipment || {}, { campaign: null });
     CL.gfx.ui.figure(x, 72, 92, L);
   }
 
@@ -1946,9 +1947,26 @@
 
   // ---- Character sheet ----
 
-  function li(text, buttonLabel, onClick) {
+  /** P11-04: an item's icon, drawn in code, named in words for a screen reader (none for goods). */
+  function itemIco(id) {
+    const ic = id ? CL.gfx.ui.itemIcon(id) : null;
+    return ic ? el('span', { className: `ico itemIco ico-${ic.name}`, role: 'img', ariaLabel: ic.label, title: ic.label }) : null;
+  }
+
+  /** P11-04: an element with an item's icon in front. */
+  function withIco(node, id) {
+    const ic = itemIco(id);
+    if (ic) node.prepend(ic);
+    return node;
+  }
+
+  /** A row: its words (after an item's icon, when `itemId` names one), and a button. */
+  function li(text, buttonLabel, onClick, itemId = null) {
     const row = document.createElement('li');
-    row.append(Object.assign(document.createElement('span'), { textContent: text }));
+    const words = Object.assign(document.createElement('span'), { textContent: text });
+    const ic = itemIco(itemId);
+    if (ic) words.prepend(ic);
+    row.append(words);
     if (buttonLabel) {
       const b = Object.assign(document.createElement('button'), { type: 'button', textContent: buttonLabel });
       b.onclick = onClick;
@@ -2088,11 +2106,12 @@
     const cap = CL.party.partyCap(c);
     // P10-08 (reference 04): a framed portrait, the name, level and origin, the road to the next level.
     // P10-G5: the hero's portrait, drawn by the art kit from the creator's choices and what they carry.
-    const heroL = { ...CL.gfx.ui.heroLook(ch, hero.canBlock), realm: { color: CL.gfx.fig.CLOAKS[ch.cloak] || CL.gfx.fig.CLOAKS.crimson, dark: '#3a2a22', trim: '#d8b25a', device: 'coin' } };
+    const heroL = { ...CL.gfx.ui.heroLook(ch, c.equipment, { which: CL.gear.bestLoadout(c), campaign: c }), realm: { color: CL.gfx.fig.CLOAKS[ch.cloak] || CL.gfx.fig.CLOAKS.crimson, dark: '#3a2a22', trim: '#d8b25a', device: 'coin' } };
     const portrait = CL.gfx.ui.canvas(64, 80, (x) => {
       CL.gfx.ui.portrait(x, -8, 0, 80, heroL);
     });
     portrait.className = 'heroPortrait';
+    portrait.dataset.sig = heroL.sig || ''; // P11-04: the kit it is drawn in (a test hook, and nothing else reads it)
     const origin = CL.content.get('origins', ch.origin);
     const toNext = ch.level >= C.MAX_LEVEL ? 1 : ch.xp / next;
     const card = el('div', { className: 'heroCard' },
@@ -2162,7 +2181,7 @@
         return li(`${C.SLOT_NAMES[slot]}: ${it ? it.name + itemSummary(it) : '—'}`, it ? 'Remove' : null, () => {
           C.unequip(slot);
           after();
-        });
+        }, id);
       }),
       loadoutRow(c, starts, after),
     );
@@ -2176,7 +2195,7 @@
             const row = li(`${n > 1 ? `${n}× ` : ''}${it.name}${itemSummary(it)}`, equippable ? 'Equip' : null, () => {
               C.equip(id);
               after();
-            });
+            }, id);
             if (it.slot === 'weapon') {
               // A weapon can also be carried second; the compare line says how it differs from yours.
               row.append(el('button', { type: 'button', className: 'carrySecond', textContent: 'Carry second', onclick: () => C.equip(id, c, 'weapon2') && after() }));
@@ -2210,7 +2229,10 @@
   function gearLine() {
     const c = CL.campaign;
     const lo = CL.gear.battleLoadout(c);
-    const box = el('div', { id: 'prepGear', className: 'setNote' }, el('p', { textContent: `You fight with your ${CL.gear.LOADOUT_NAMES[lo.which]}: ${CL.gear.describe(c, c.equipment, lo.which)}.${lo.message ? ` ${lo.message}` : ''}` }));
+    const line = el('p', { textContent: `You fight with your ${CL.gear.LOADOUT_NAMES[lo.which]}: ${CL.gear.describe(c, c.equipment, lo.which)}.${lo.message ? ` ${lo.message}` : ''}` });
+    const ic = itemIco(CL.gear.active(c, c.equipment, lo.which).weapon); // P11-04: what's in hand, drawn
+    if (ic) line.prepend(ic);
+    const box = el('div', { id: 'prepGear', className: 'setNote' }, line);
     box.append(...findingRows(CL.gear.check(c, c.equipment, { which: lo.which }), 'p'));
     return box;
   }
