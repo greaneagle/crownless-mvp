@@ -115,7 +115,8 @@ test('meeting a lord: their words, a −25 reputation cost to attack, sides like
   const e = CL.parties.current(c);
   assert.equal(e.name, 'Lord Hamon Greymantle');
   assert.match(e.text, /^Lord Hamon Greymantle, holder of Greywall Fort and Highmere, resting at Greywall Fort\. "Hold there\. You ride on Lord Hamon Greymantle’s land/);
-  assert.deepEqual(plain(e.def.leader), { troop: 'guard', name: 'Lord Hamon Greymantle', hp: 2, damage: 1.35 });
+  assert.deepEqual(plain(e.def.leader), { troop: 'guard', name: 'Lord Hamon Greymantle', hp: 2, damage: 1.35, house: e.def.leader.house });
+  assert.equal(typeof e.def.leader.house, 'string', 'P10-G5: the lord rides under their house’s arms');
   const rep = c.reputation.valedorn;
   CL.parties.attack();
   assert.equal(c.reputation.valedorn, rep - 25);

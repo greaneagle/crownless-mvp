@@ -29,6 +29,7 @@
     }
     CL.save.bindTabs();
     CL.assets.preload();
+    CL.gfx.ui.installIcons(); // P10-G5: the stat and goods icons, drawn as vectors in one place
 
     CL.ui.$('#stage').dataset.dev = CL.dev ? 'on' : 'off';
     root.addEventListener('resize', () => CL.ui.fitHud());

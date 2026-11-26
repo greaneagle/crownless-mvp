@@ -71,7 +71,7 @@
         Object.assign(L, { realm: { color: colour, trim: '#efe4c4', device: ['chevron', 'bar', 'lozenge', 'cross'][n % 4], shield: 'heater' }, tabard: { color: colour, trim: '#efe4c4', device: 'bar' }, helmet: 'plumed', plume: '#efe4c4' });
       }
     }
-    L.key = `${u.role === 'hero' ? 'hero' : u.companion || u.troop}|${typeof L.realm === 'object' ? L.realm.color : L.realm}|${L.seed}${L.lord ? '|lord' : ''}`;
+    L.key = `${u.role === 'hero' ? 'hero' : u.companion || u.troop}|${typeof L.realm === 'object' ? L.realm.color : L.realm}|${L.seed}${L.lord ? `|lord${u.house || ''}` : ''}`;
     B.looks.set(u, L);
     return L;
   }
@@ -201,8 +201,10 @@
 
   /** A lord's pennant on a staff behind them (P8-01's lords in person). */
   function pennant(ctx, u, t) {
-    const R = G.realm(lookOf(battle, u).realm);
-    G.banner(ctx, -10, -2, 0.85, { color: R.color, trim: PAL.gold, device: R.device }, t, u.role === 'cavalry' ? 70 : 56);
+    // Their house's arms when they have a house (P10-G5), else their realm's colours with a gold device.
+    const H = u.house && CL.gfx.ui?.houseArms(CL.campaign, u.house);
+    const R = H || G.realm(lookOf(battle, u).realm);
+    G.banner(ctx, -10, -2, 0.85, H ? { ...H, edge: PAL.gold } : { color: R.color, trim: PAL.gold, device: R.device }, t, u.role === 'cavalry' ? 70 : 56);
   }
 
   /** Health, morale and a lord's name over the head. */

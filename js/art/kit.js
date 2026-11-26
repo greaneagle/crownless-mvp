@@ -441,6 +441,12 @@
     ctx.quadraticCurveTo(x + w * 0.5, y - H + fh + wave, x, y - H + fh);
     ctx.closePath();
     fillLine(ctx, R.color, STYLE.line * 0.9);
+    if (R.edge) {
+      // A lord's banner: a gold edge inside the outline (P10-G5).
+      ctx.strokeStyle = R.edge;
+      ctx.lineWidth = 1.1 * s;
+      ctx.stroke();
+    }
     device(ctx, x + w * 0.42, y - H + fh * 0.55 + wave * 0.5, 3.6 * s, R);
   }
 
@@ -482,6 +488,22 @@
       ctx.lineTo(x, y + r);
       ctx.lineTo(x - r * 0.75, y);
       ctx.closePath();
+      ctx.fill();
+    } else if (R.device === 'pale') {
+      ctx.moveTo(x, y - r);
+      ctx.lineTo(x, y + r);
+      ctx.lineWidth = r * 0.7;
+      ctx.stroke();
+    } else if (R.device === 'chief') {
+      // A band across the top, and a roundel under it (P10-G5's house arms).
+      ctx.fillRect(x - r * 1.2, y - r * 1.25, r * 2.4, r * 0.8);
+      ctx.arc(x, y + r * 0.35, r * 0.45, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (R.device === 'roundels') {
+      for (const [dx, dy] of [[-0.5, -0.4], [0.5, -0.4], [0, 0.5]]) {
+        ctx.moveTo(x + dx * r + r * 0.32, y + dy * r);
+        ctx.arc(x + dx * r, y + dy * r, r * 0.32, 0, Math.PI * 2);
+      }
       ctx.fill();
     } else if (R.device === 'wave') {
       ctx.moveTo(x - r, y);

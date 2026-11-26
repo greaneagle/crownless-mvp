@@ -143,6 +143,24 @@ A new obstacle look is a branch in `obstacle()` and a name in the maps' comment 
 
 Icons keep about their old size on screen, so taps and labels stay put. Every miniature is baked once per kind, culture, side, facing, step and scale.
 
+## Portraits, figures, arms and icons (`js/art/ui.js`)
+
+**Portraits.** `portrait(ctx, x, y, w, look, { helm })` draws a bust in a 100-unit square: shoulders in the look's clothes, the neck, the face and the hair or headgear.
+- **A face** is `faceOf(seed)`: a shape (round, long, broad), brows, a nose and a mouth by kind. `beardKind` is 0 for none, 1 stubble, 2 short, 3 full. `crown` marks a ruler.
+- **The looks:**
+  - `soldierLook(s, side)` reads the soldier's `portrait` id (P10-09) over their troop's look;
+  - `heroLook(character)` is the hero;
+  - `lordLook(c, pid)` is a lord or ruler;
+  - `speakerLook(npc)` is a townsperson by role, a companion, or a lord.
+
+**Figures.** `figure(ctx, w, h, look)` fits a standing or mounted figure into a box. `troopUrl(id)` is a troop's small figure.
+
+**Arms.** `houseArms(c, house)` gives a realm-like colours object: the realm's colour, a charge from `DEVICES` and a tincture, by the house's place among its realm's houses. The same object works with `shieldShape`, `banner` (add `edge` for a gold edge) and `device`.
+
+**Icons.** `ICONS` holds 24×24 paths in gold with the one outline. `installIcons()` writes the `.ico-<name>` rules at boot. A good with an entry in `ICONS` shows its drawing; a pack's good without one shows its emoji.
+
+**Images on the screens.** `canvas(w, h, paint)` and `url(key, w, h, paint)` draw at the screen's resolution. Image URLs are cached by key.
+
 ## What it costs
 
 Drawing in code costs more than stamping sprites. Measure before and after a change:

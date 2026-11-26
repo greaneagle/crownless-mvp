@@ -194,7 +194,8 @@
     ctx.save();
     // P10-G4: the party as a miniature: its figures and banner by kind, a ring by stance.
     const friendly = !hostile && (t.kind === 'detachment' || CL.realm.faction(t.faction)?.id === (CL.allegiance?.sworn?.(CL.campaign) || CL.allegiance?.serves?.(CL.campaign)));
-    CL.gfx.worldmap.party(ctx, x, y, p, { kind: t.kind, realm: t.kind === 'bandit' ? 'reavers' : t.faction, template: t, hostile, friendly, army: Boolean(army) }, backing, performance.now() / 1000);
+    const arms = p.lordId ? CL.gfx.ui.houseArms(CL.campaign, CL.houses?.houseOf(CL.campaign, p.lordId)) : null; // P10-G5: a lord's house
+    CL.gfx.worldmap.party(ctx, x, y, p, { kind: t.kind, realm: t.kind === 'bandit' ? 'reavers' : t.faction, template: t, hostile, friendly, army: Boolean(army), arms }, backing, performance.now() / 1000);
     if (p.chasing === 'player') {
       ctx.fillStyle = '#ffd34d';
       ctx.font = font(16);

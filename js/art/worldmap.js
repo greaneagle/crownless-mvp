@@ -534,10 +534,10 @@
   }
 
   /** The party's miniature, baked (kind, side, the troops it shows, facing, step, scale) and stamped. */
-  function partyBody(ctx, x, y, kind, realm, fig, face, step, k) {
+  function partyBody(ctx, x, y, kind, realm, fig, face, step, k, arms = null) {
     const P = PARTY[kind] || PARTY.patrol;
     const side = kind === 'bandit' ? 'reavers' : kind === 'detachment' ? 'player' : realm;
-    const key = `mparty:${kind}:${typeof side === 'object' ? side.color : side}:${fig.foot.join(',')}:${fig.mounted || ''}:${face}:${step}`;
+    const key = `mparty:${kind}:${typeof side === 'object' ? side.color : side}:${arms ? `${arms.house}.${arms.device}.${arms.trim}` : ''}:${fig.foot.join(',')}:${fig.mounted || ''}:${face}:${step}`;
     const img = G.cached(key, k, 70, 64, 35, 50, (c) => {
       const pose = { face, walk: step >= 0 ? ((step + 0.5) * Math.PI) / 2 : 0, move: step >= 0 ? 1 : 0, t: 0, scale: FIGURE };
       if (P.wagon) {
@@ -545,7 +545,8 @@
         G.fig.figure(c, -12, 2, G.fig.townLook('merchant', 5, side), pose);
         return;
       }
-      if (P.banner) G.banner(c, kind === 'army' ? -16 : -13, 2, 0.62 * P.banner, side, 0, 44);
+      // A lord rides under their house's arms (P10-G5, asset row 10), others under their realm's.
+      if (P.banner) G.banner(c, kind === 'army' ? -16 : -13, 2, 0.62 * P.banner, arms ? { ...arms, edge: PAL.gold } : side, 0, 44);
       const foot = fig.foot.map((id, i) => G.fig.troopLook(id, side, i + 3));
       const offs = [[-6, -2], [6, 0]];
       for (let i = 0; i < Math.min(P.troops, foot.length + (P.troops > foot.length ? 1 : 0)); i++) {
@@ -575,7 +576,7 @@
     ellipse(ctx, x, y + 4, 15, 5.5);
     ctx.stroke();
     const kind = info.army ? 'army' : info.kind;
-    partyBody(ctx, x, y + 4, kind, info.realm, figuresOf(info.template, info.realm), f.face, step, k);
+    partyBody(ctx, x, y + 4, kind, info.realm, figuresOf(info.template, info.realm), f.face, step, k, info.arms || null);
   }
 
   /** Where the company last saw a party: its banner faded, and a question mark. */

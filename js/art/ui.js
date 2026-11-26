@@ -1,0 +1,570 @@
+/* Crownless art kit: the UI's pictures (P10-G5, D-P10k). Portraits drawn from the figure parts at a larger
+ * scale with a face, small troop figures, house arms and banners, and the vector icons (the stats and the
+ * trade goods). Everything here is drawn in code; a screen asks for a canvas or an image URL, cached. */
+(function (root) {
+  'use strict';
+  const CL = root.Crownless;
+  const G = CL.gfx;
+  const { PAL, STYLE, tone, ellipse, rrect, fillLine } = G;
+
+  const num = (seed) => {
+    let h = 2166136261;
+    for (const ch of String(seed)) h = Math.imul(h ^ ch.charCodeAt(0), 16777619);
+    return h >>> 0;
+  };
+
+  // ---- Faces ----
+
+  /**
+   * What a face is made of, by kind: its shape (0 round, 1 long, 2 broad), brows (0 straight, 1 arched,
+   * 2 heavy), nose (0 straight, 1 broad, 2 hooked) and mouth (0 level, 1 wide, 2 small).
+   */
+  function faceOf(seed, shape) {
+    const n = num(seed);
+    return { shape: shape ?? n % 3, brow: (n >>> 3) % 3, nose: (n >>> 6) % 3, mouth: (n >>> 9) % 3 };
+  }
+
+  const HEADS = [
+    { rx: 17, ry: 19.5 },
+    { rx: 15, ry: 21.5 },
+    { rx: 18.5, ry: 19 },
+  ];
+
+  /** The clothes on the shoulders: armour, a tabard or tunic, a cloak, a collar. */
+  function shoulders(ctx, L, R, female) {
+    const body = L.tabard ? R.color : L.tunic || PAL.wool || '#8a7a5a';
+    const armour = L.armour;
+    // The cloak behind, over the shoulders' ends.
+    if (L.cloak) {
+      ctx.beginPath();
+      ctx.moveTo(2, 100);
+      ctx.quadraticCurveTo(6, 74, 28, 70);
+      ctx.lineTo(72, 70);
+      ctx.quadraticCurveTo(94, 74, 98, 100);
+      ctx.closePath();
+      fillLine(ctx, L.cloak);
+    }
+    ctx.beginPath();
+    const w = female ? 32 : 36;
+    ctx.moveTo(50 - w - 4, 100);
+    ctx.quadraticCurveTo(50 - w, 76, 38, 72);
+    ctx.lineTo(62, 72);
+    ctx.quadraticCurveTo(50 + w, 76, 50 + w + 4, 100);
+    ctx.closePath();
+    const metal = armour === 'mail' ? PAL.steel || '#9aa3a8' : null;
+    fillLine(ctx, metal || (armour === 'leather' ? '#8a6240' : armour === 'fur' ? '#7a5a3c' : armour === 'rags' ? tone(body, -0.15) : body));
+    // One shade on the right shoulder.
+    ctx.save();
+    ctx.clip();
+    ctx.fillStyle = '#0000001f';
+    ctx.fillRect(60, 70, 40, 30);
+    if (metal) {
+      // Mail rings as a few rows of dots, a tabard over them.
+      ctx.fillStyle = '#ffffff26';
+      for (let yy = 78; yy < 100; yy += 4) for (let xx = 14 + (yy % 8); xx < 90; xx += 6) ctx.fillRect(xx, yy, 1.6, 1.6);
+      if (L.tabard) {
+        rrect(ctx, 34, 80, 32, 24, 3);
+        fillLine(ctx, R.color, STYLE.line * 0.8);
+        G.device(ctx, 50, 90, 6, R);
+      }
+    } else if (L.tabard) G.device(ctx, 50, 90, 6, R);
+    if (L.apron) {
+      ctx.fillStyle = L.apron;
+      ctx.fillRect(38, 86, 24, 14);
+    }
+    ctx.restore();
+    // The collar: fur, a mail coif's edge, a gambeson's padding, or a plain neck.
+    if (L.fur || armour === 'fur') {
+      ellipse(ctx, 50, 74, 22, 6);
+      fillLine(ctx, '#a08665');
+    } else if (armour === 'gambeson') {
+      ellipse(ctx, 50, 74, 17, 4.5);
+      fillLine(ctx, tone(body, 0.12));
+    }
+    if (L.pauldrons) {
+      for (const sx of [-1, 1]) {
+        ellipse(ctx, 50 + sx * 30, 80, 11, 7);
+        fillLine(ctx, PAL.steel || '#9aa3a8');
+      }
+    }
+    if (L.cloak && L.cloakTrim) {
+      ctx.strokeStyle = L.cloakTrim;
+      ctx.lineWidth = 2.2;
+      ctx.beginPath();
+      ctx.moveTo(26, 71);
+      ctx.lineTo(74, 71);
+      ctx.stroke();
+    }
+  }
+
+  function hairBack(ctx, L, H, hair) {
+    if (L.hairStyle === 'long' || L.hairStyle === 'braid') {
+      rrect(ctx, 50 - H.rx - 3, 36, (H.rx + 3) * 2, L.hairStyle === 'long' ? 40 : 30, 10);
+      fillLine(ctx, hair);
+    }
+  }
+
+  function features(ctx, L, F, H, cy) {
+    const skin = L.skin || G.fig.SKINS[1];
+    const ink = '#2c211b';
+    // Ears, then the shade on the right of the face and a highlight on the upper left.
+    for (const sx of [-1, 1]) {
+      ellipse(ctx, 50 + sx * H.rx, cy + 2, 3.2, 5);
+      fillLine(ctx, sx > 0 ? tone(skin, -0.08) : skin, STYLE.line * 0.8);
+    }
+    ellipse(ctx, 50, cy, H.rx, H.ry);
+    fillLine(ctx, skin);
+    ctx.save();
+    ellipse(ctx, 50, cy, H.rx, H.ry);
+    ctx.clip();
+    ctx.fillStyle = tone(skin, -0.1);
+    ellipse(ctx, 50 + H.rx * 0.95, cy + 3, H.rx * 0.55, H.ry * 1.05);
+    ctx.fill();
+    ctx.fillStyle = tone(skin, 0.1);
+    ellipse(ctx, 50 - H.rx * 0.45, cy - H.ry * 0.25, H.rx * 0.3, H.ry * 0.22);
+    ctx.fill();
+    ctx.restore();
+    // Eyes: a white, an iris, and the brows by kind.
+    const ey = cy + 1;
+    for (const sx of [-1, 1]) {
+      const ex = 50 + sx * 6.8;
+      ellipse(ctx, ex, ey, 3, 1.9);
+      ctx.fillStyle = '#efe6d6';
+      ctx.fill();
+      ellipse(ctx, ex + 0.4, ey + 0.1, 1.5, 1.6);
+      ctx.fillStyle = L.eyes || ink;
+      ctx.fill();
+      ctx.strokeStyle = L.brows || tone(L.hair || ink, -0.15);
+      ctx.lineWidth = F.brow === 2 ? 2.6 : 1.7;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      if (F.brow === 1) {
+        ctx.moveTo(ex - 3.6, ey - 3.5);
+        ctx.quadraticCurveTo(ex, ey - 6.2, ex + 3.6, ey - 3.8);
+      } else {
+        ctx.moveTo(ex - 3.6, ey - (sx < 0 ? 4.6 : 4.2));
+        ctx.lineTo(ex + 3.6, ey - (sx < 0 ? 4.2 : 4.6));
+      }
+      ctx.stroke();
+    }
+    // The nose: a shade down its right side and the tip.
+    ctx.strokeStyle = tone(skin, -0.25);
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    const nw = F.nose === 1 ? 4 : 2.8;
+    if (F.nose === 2) {
+      ctx.moveTo(51, ey + 1);
+      ctx.quadraticCurveTo(54.5, ey + 6, 52.5, ey + 9.5);
+    } else {
+      ctx.moveTo(51.5, ey + 1);
+      ctx.lineTo(52, ey + 8.5);
+    }
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(50 - nw, ey + 9.6);
+    ctx.quadraticCurveTo(50, ey + 11.2, 50 + nw, ey + 9.6);
+    ctx.stroke();
+    // The mouth.
+    const my = cy + H.ry * 0.55;
+    const mw = F.mouth === 1 ? 6.5 : F.mouth === 2 ? 3.6 : 5;
+    ctx.strokeStyle = L.female ? '#9a4a42' : '#6e3b2e';
+    ctx.lineWidth = L.female ? 2 : 1.6;
+    ctx.beginPath();
+    ctx.moveTo(50 - mw, my);
+    ctx.quadraticCurveTo(50, my + (L.talk ? 2.4 : 1.4), 50 + mw, my);
+    ctx.stroke();
+  }
+
+  /** A man's beard: stubble, short or full, in the hair's colour. */
+  function beard(ctx, kind, H, cy, colour) {
+    if (!kind) return;
+    ctx.save();
+    ellipse(ctx, 50, cy, H.rx + 0.5, H.ry + 0.5);
+    ctx.clip();
+    ctx.beginPath();
+    const top = cy + (kind === 3 ? 3 : 6);
+    ctx.moveTo(50 - H.rx - 1, top - 2);
+    ctx.lineTo(50 - H.rx + 5, top);
+    ctx.quadraticCurveTo(50, top + 5, 50 + H.rx - 5, top);
+    ctx.lineTo(50 + H.rx + 1, top - 2);
+    ctx.lineTo(50 + H.rx + 1, cy + H.ry + 2);
+    ctx.lineTo(50 - H.rx - 1, cy + H.ry + 2);
+    ctx.closePath();
+    ctx.globalAlpha = kind === 1 ? 0.35 : 1;
+    ctx.fillStyle = colour;
+    ctx.fill();
+    ctx.restore();
+    if (kind === 3) {
+      ctx.beginPath();
+      ctx.moveTo(50 - H.rx + 2, cy + H.ry * 0.55);
+      ctx.quadraticCurveTo(50, cy + H.ry + 12, 50 + H.rx - 2, cy + H.ry * 0.55);
+      fillLine(ctx, colour, STYLE.line * 0.8);
+    }
+    if (kind >= 2) {
+      // The moustache over the mouth.
+      ctx.beginPath();
+      ctx.moveTo(43, cy + H.ry * 0.5);
+      ctx.quadraticCurveTo(50, cy + H.ry * 0.3, 57, cy + H.ry * 0.5);
+      ctx.quadraticCurveTo(50, cy + H.ry * 0.44, 43, cy + H.ry * 0.5);
+      ctx.strokeStyle = colour;
+      ctx.lineWidth = 2.6;
+      ctx.stroke();
+    }
+  }
+
+  function hairTop(ctx, L, H, cy, hair) {
+    if (L.hairStyle === 'bald') {
+      ctx.fillStyle = '#ffffff22';
+      ellipse(ctx, 45, cy - H.ry * 0.7, 5, 2.5);
+      ctx.fill();
+      return;
+    }
+    ctx.beginPath();
+    ctx.ellipse(50, cy - 2, H.rx + 1.5, H.ry * 0.95, 0, Math.PI * 1.03, Math.PI * 1.97);
+    ctx.quadraticCurveTo(50 + H.rx * 0.4, cy - H.ry * 0.55, 50 - H.rx * 0.1, cy - H.ry * 0.5);
+    ctx.quadraticCurveTo(50 - H.rx * 0.6, cy - H.ry * 0.4, 50 - H.rx - 1, cy - 1);
+    ctx.closePath();
+    fillLine(ctx, hair, STYLE.line * 0.9);
+    if (L.hairStyle === 'bun') {
+      ellipse(ctx, 50, cy - H.ry - 3, 6, 5);
+      fillLine(ctx, hair, STYLE.line * 0.8);
+    }
+    if (L.hairStyle === 'braid') {
+      rrect(ctx, 50 + H.rx - 2, cy + 2, 6, 30, 3);
+      fillLine(ctx, hair, STYLE.line * 0.8);
+    }
+  }
+
+  /** Headgear seen from the front: a hood, a cap or hat, a helm, a fur hat; a crown for a ruler. */
+  function headgear(ctx, L, H, cy, R) {
+    const k = L.helmet;
+    const metal = PAL.steel || '#9aa3a8';
+    if (k === 'hood' || L.hat === 'coif') {
+      ctx.beginPath();
+      ctx.moveTo(50 - H.rx - 6, cy + H.ry + 8);
+      ctx.quadraticCurveTo(50 - H.rx - 9, cy - H.ry - 9, 50, cy - H.ry - 8);
+      ctx.quadraticCurveTo(50 + H.rx + 9, cy - H.ry - 9, 50 + H.rx + 6, cy + H.ry + 8);
+      ctx.lineTo(50 + H.rx - 1, cy + H.ry * 0.3);
+      ctx.quadraticCurveTo(50, cy - H.ry - 1, 50 - H.rx + 1, cy + H.ry * 0.3);
+      ctx.closePath();
+      fillLine(ctx, k === 'hood' ? L.hoodColor || '#5c5a44' : '#e6dcc4');
+    } else if (k === 'furhat') {
+      rrect(ctx, 50 - H.rx - 3, cy - H.ry - 7, (H.rx + 3) * 2, 14, 6);
+      fillLine(ctx, '#8a6a48');
+    } else if (k === 'cap' || L.hat) {
+      const c = L.capColor || L.hatColor || tone(R.color, -0.1);
+      ctx.beginPath();
+      ctx.ellipse(50, cy - H.ry * 0.45, H.rx + 1.5, H.ry * 0.75, 0, Math.PI, Math.PI * 2);
+      ctx.closePath();
+      fillLine(ctx, c);
+      if (L.hat === 'brim') {
+        ellipse(ctx, 50, cy - H.ry * 0.45, H.rx + 9, 3.5);
+        fillLine(ctx, c);
+      } else if (L.hat === 'kerchief') {
+        ctx.fillStyle = tone(c, 0.15);
+        ctx.fillRect(50 - H.rx, cy - H.ry * 0.55, H.rx * 2, 3);
+      }
+    } else if (k && k !== 'great') {
+      // A helm: a dome with a band, a nasal for the northern and nasal helms, a brim for a kettle hat.
+      ctx.beginPath();
+      ctx.ellipse(50, cy - H.ry * 0.3, H.rx + 2.5, H.ry * 0.95, 0, Math.PI, Math.PI * 2);
+      ctx.closePath();
+      fillLine(ctx, metal);
+      ctx.fillStyle = '#ffffff40';
+      ellipse(ctx, 50 - H.rx * 0.4, cy - H.ry * 0.85, 4, 2.4);
+      ctx.fill();
+      ctx.fillStyle = tone(metal, -0.2);
+      ctx.fillRect(50 - H.rx - 2.5, cy - H.ry * 0.38, (H.rx + 2.5) * 2, 3.2);
+      if (k === 'kettle' || k === 'sallet') {
+        ellipse(ctx, 50, cy - H.ry * 0.3, H.rx + 10, 4);
+        fillLine(ctx, metal);
+      }
+      if (k === 'nasal' || k === 'spangen' || k === 'plumed' || k === 'crest') {
+        rrect(ctx, 48.4, cy - H.ry * 0.35, 3.2, 12, 1.4);
+        fillLine(ctx, metal, STYLE.line * 0.7);
+      }
+      if (k === 'plumed' || k === 'crest') {
+        ctx.beginPath();
+        ctx.moveTo(48, cy - H.ry * 1.2);
+        ctx.quadraticCurveTo(60, cy - H.ry * 2.2, 70, cy - H.ry * 1.25);
+        ctx.quadraticCurveTo(60, cy - H.ry * 1.5, 52, cy - H.ry * 1.05);
+        ctx.closePath();
+        fillLine(ctx, L.plume || R.color);
+      }
+    }
+    if (L.crown) {
+      // A ruler's circlet: gold, with three points.
+      ctx.beginPath();
+      const y0 = cy - H.ry * 0.62;
+      ctx.moveTo(50 - H.rx + 1, y0 + 4);
+      for (let i = 0; i <= 4; i++) ctx.lineTo(50 - H.rx + 1 + ((H.rx - 1) * 2 * i) / 4, y0 - (i % 2 ? 1 : 6));
+      ctx.lineTo(50 + H.rx - 1, y0 + 4);
+      ctx.closePath();
+      fillLine(ctx, PAL.gold, STYLE.line * 0.8);
+    }
+  }
+
+  /**
+   * A portrait: a bust in a 100×100 box at (x, y), w wide. `L` is a figure look (`js/art/figures.js`) with,
+   * for the face, `face` (faceOf), `beardKind` (0 none, 1 stubble, 2 short, 3 full) and `crown`.
+   * `helm` false shows the face bare; a portrait keeps its look's helmet otherwise.
+   */
+  function portrait(ctx, x, y, w, L, { helm = true, back = true } = {}) {
+    const R = G.realm(L.realm || 'neutral');
+    const F = L.face || faceOf(L.seed || 1);
+    const H = HEADS[F.shape] || HEADS[0];
+    const hair = L.hair || G.fig.HAIRS[0];
+    const female = Boolean(L.female);
+    const look = helm ? L : { ...L, helmet: L.helmet === 'hood' ? 'hood' : null, hat: L.hat === 'coif' ? null : L.hat };
+    const cy = 46;
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(w / 100, w / 100);
+    if (back) {
+      // The backdrop: a dark wash of the realm's colour, and a lighter disc behind the head (one light).
+      ctx.fillStyle = tone(R.color, -0.62);
+      ctx.fillRect(0, 0, 100, 100);
+      ellipse(ctx, 44, 40, 40, 40);
+      ctx.fillStyle = tone(R.color, -0.45);
+      ctx.fill();
+    }
+    shoulders(ctx, look, R, female);
+    // The neck, with the jaw's shadow.
+    rrect(ctx, 50 - 7, cy + H.ry - 6, 14, 18, 4);
+    fillLine(ctx, tone(look.skin || G.fig.SKINS[1], -0.08));
+    const hidden = ['hood', 'furhat'].includes(look.helmet) || (look.helmet && look.helmet !== 'cap' && look.helmet !== 'great');
+    if (!hidden) hairBack(ctx, look, H, hair);
+    features(ctx, look, F, H, cy);
+    const beardKind = female ? 0 : look.beardKind ?? (look.beard ? 2 : 0);
+    beard(ctx, beardKind, H, cy, typeof look.beard === 'string' ? look.beard : tone(hair, -0.05));
+    if (!hidden && !(look.hat && look.hat !== 'kerchief')) hairTop(ctx, look, H, cy, hair);
+    headgear(ctx, look, H, cy, R);
+    ctx.restore();
+  }
+
+  /** A soldier's look for their portrait: their troop's clothes and their own face (P10-09's `portrait` id). */
+  const SKIN_OF = [1, 2, 3];
+  const HAIR_OF = [5, 1, 6, 3, 4]; // black, brown, auburn, fair, grey
+  function soldierLook(s, side) {
+    const t = CL.content.troop(s.troop);
+    const realm = side || t?.faction || 'neutral';
+    const L = { ...G.fig.troopLook(s.troop, realm, s.id || 1) };
+    const [sex, skin, face, hair, extra] = String(s.portrait || 'm-0-0-0-0').split('-');
+    const female = sex === 'f';
+    Object.assign(L, {
+      female,
+      skin: G.fig.SKINS[SKIN_OF[+skin] ?? 1],
+      hair: G.fig.HAIRS[HAIR_OF[+hair] ?? 1],
+      face: faceOf(`${s.id}|${s.troop}`, +face || 0),
+      hairStyle: female ? (+extra ? 'braid' : 'long') : 'short',
+      beardKind: female ? 0 : +extra || 0,
+      beard: null,
+      seed: s.id,
+    });
+    return L;
+  }
+
+  /** A lord's or ruler's look: their realm's colours and culture, a face from their id, a crown when they rule. */
+  function lordLook(c, pid) {
+    const p = CL.realm.person?.(pid, c) || c?.people?.[pid] || {};
+    const f = CL.realm.faction?.(p.realm);
+    const n = num(pid);
+    const female = p.gender === 'female';
+    const north = f?.culture === 'hrothmark' || f?.culture === 'ostrand';
+    const R = G.realm(p.realm || 'neutral');
+    return {
+      seed: n % 997,
+      realm: p.realm || 'neutral',
+      female,
+      skin: G.fig.SKINS[(north ? 0 : 1) + (n % 2)],
+      hair: G.fig.HAIRS[[0, 1, 2, 3, 4, 5][(n >>> 4) % 6]],
+      hairStyle: female ? ['long', 'braid', 'bun'][(n >>> 7) % 3] : (n >>> 7) % 5 ? 'short' : 'bald',
+      beardKind: female ? 0 : [0, 2, 3, 2][(n >>> 9) % 4],
+      face: faceOf(pid),
+      tunic: R.color,
+      cloak: R.dark,
+      cloakTrim: PAL.gold,
+      fur: north,
+      crown: Boolean(CL.realm.rules?.(pid, c)),
+    };
+  }
+
+  /** Whoever speaks in a conversation: a companion, a lord, a townsperson by role. */
+  function speakerLook(npc, c) {
+    if (!npc) return null;
+    if (npc.companion || CL.content.table('companions')[npc.id]) return G.fig.companionLook(npc.companion || npc.id);
+    if (npc.person && c?.people?.[npc.person]) return lordLook(c, npc.person);
+    const realm = CL.realm.owner?.(c?.world?.location, c) || 'valedorn';
+    const role = G.town?.ROLE_LOOK?.[npc.role] || npc.role || 'townsman';
+    if (!G.fig.ROLE_LOOKS[role]) return null;
+    const L = G.fig.townLook(role, num(npc.id) % 997, realm);
+    L.female = npc.gender === 'female'; // as in the streets: a woman only when the data says so
+    if (L.female) Object.assign(L, { beard: null, beardKind: 0, hairStyle: L.hairStyle === 'short' || L.hairStyle === 'bald' ? 'long' : L.hairStyle });
+    L.face = faceOf(npc.id);
+    return L;
+  }
+
+  /** The hero's portrait look, from the creator's choices. */
+  function heroLook(ch, canBlock = true) {
+    const L = G.fig.heroFor(ch, canBlock);
+    return { ...L, face: faceOf(`hero|${ch?.name || ''}`, 0), beardKind: 0 };
+  }
+
+  // ---- House arms ----
+
+  const DEVICES = ['chevron', 'pale', 'bar', 'quarter', 'lozenge', 'wave', 'cross', 'coin', 'chief', 'slash', 'roundels'];
+  const TINCTURES = ['#ecdfbd', '#d8b25a', '#2d2620'];
+  const armsCache = new Map();
+  /**
+   * A house's arms (asset row 8): its realm's colour for the field, a charge and a tincture of its own, by
+   * the house's place among its realm's houses (so a realm's houses never share arms). Returns a realm-like
+   * colours object for `shieldShape`, `banner` and `device`.
+   */
+  function houseArms(c, house) {
+    const h = typeof house === 'string' ? CL.houses?.list?.(c)?.find((x) => x.id === house) : house;
+    if (!h) return null;
+    const pid = h.members?.[0];
+    const realm = pid === 'player' ? CL.allegiance?.sworn?.(c) || 'player' : CL.realm.person?.(pid, c)?.realm || 'neutral';
+    const all = (CL.houses?.list?.(c) || []).filter((x) => {
+      const m = x.members?.[0];
+      const r = m === 'player' ? CL.allegiance?.sworn?.(c) || 'player' : CL.realm.person?.(m, c)?.realm || 'neutral';
+      return r === realm;
+    });
+    const i = Math.max(0, all.findIndex((x) => x.id === h.id));
+    const key = `${h.id}|${realm}|${i}`;
+    if (armsCache.has(key)) return armsCache.get(key);
+    const base = realm === 'player' ? { color: PAL.gold, dark: tone(PAL.gold, -0.3), culture: 'border', shield: 'heater' } : G.realm(realm);
+    const d = (num(realm) + i * 4) % DEVICES.length;
+    const trim = TINCTURES[(i + (num(h.id) % 2)) % TINCTURES.length];
+    const shield = base.shield === 'round' || base.shield === 'wood' || !base.shield ? 'heater' : base.shield === 'pavise' ? 'heater' : base.shield;
+    const R = { color: base.color, dark: base.dark || tone(base.color, -0.25), trim: trim === base.color ? '#ecdfbd' : trim, device: DEVICES[d], shield, culture: base.culture, house: h.id };
+    armsCache.set(key, R);
+    return R;
+  }
+
+  /** A house's shield, at (x, y) with radius r. */
+  function arms(ctx, x, y, r, R) {
+    G.shieldShape(ctx, x, y, r, R.shield || 'heater', R);
+  }
+
+  // ---- Canvases and image URLs for the screens ----
+
+  const urls = new Map();
+  const DPR = () => Math.min(3, Math.max(2, Math.ceil(root.devicePixelRatio || 1)));
+  /** A canvas w×h CSS px, drawn at the screen's resolution. `paint(ctx)` draws in CSS px. */
+  function canvas(w, h, paint) {
+    const k = DPR();
+    const cv = Object.assign(document.createElement('canvas'), { width: Math.round(w * k), height: Math.round(h * k) });
+    cv.style.width = `${w}px`;
+    cv.style.height = `${h}px`;
+    const ctx = cv.getContext('2d');
+    ctx.scale(k, k);
+    paint(ctx);
+    return cv;
+  }
+  /** The same as an image URL, cached by key (lists of soldiers draw each face once). */
+  function url(key, w, h, paint) {
+    const id = `${key}@${w}x${h}`;
+    let u = urls.get(id);
+    if (u) return u;
+    u = canvas(w, h, paint).toDataURL();
+    if (urls.size > 400) urls.delete(urls.keys().next().value);
+    urls.set(id, u);
+    return u;
+  }
+
+  const lookKey = (L) => JSON.stringify(L, (k, v) => (typeof v === 'object' && v && k === 'realm' ? v.color : v));
+  /** A portrait image URL, `size` CSS px square. */
+  function portraitUrl(L, size = 64, opts) {
+    return url(`p|${lookKey(L)}|${opts?.helm ?? 1}`, size, size, (ctx) => portrait(ctx, 0, 0, size, L, opts));
+  }
+
+  /** A full figure standing, drawn to fit a w×h box (the creator's preview, a troop's small figure). */
+  function figure(ctx, w, h, L, pose = {}) {
+    const mounted = Boolean(L.mount);
+    const tall = mounted ? 66 : 50; // the figure with its helmet and weapon
+    const s = Math.min((h * 0.9) / tall, (w * 0.95) / (mounted ? 70 : 36));
+    ctx.save();
+    ctx.translate(w / 2, h - 3);
+    ctx.scale(s, s);
+    G.shadow(ctx, 2, 0, mounted ? 22 : 11, 3, 6);
+    const P = { face: 'down', t: 0, ...pose };
+    if (mounted) G.fig.horse(ctx, 0, 0, { ...L.mount, cloth: L.realm }, { face: 'right', t: 0 }, () => G.fig.figure(ctx, 0, 0, L, { face: 'right', t: 0, mounted: true }));
+    else G.fig.figure(ctx, 0, 0, L, P);
+    ctx.restore();
+  }
+  /** A troop's small figure as an image URL, in its own realm's colours (or a side's). */
+  function troopUrl(troopId, side, w = 40, h = 48) {
+    const t = CL.content.troop(troopId);
+    const realm = side || t?.faction || 'neutral';
+    const L = G.fig.troopLook(troopId, realm, 3);
+    return url(`t|${troopId}|${typeof realm === 'string' ? realm : realm.color}`, w, h, (ctx) => {
+      try {
+        figure(ctx, w, h, L);
+      } catch (e) {
+        CL.diag?.log('warn', 'Troop figure failed', { troop: troopId, error: String(e) });
+      }
+    });
+  }
+
+  // ---- Icons: small vector shapes, gold on navy, with the one outline and one light ----
+
+  const GOLD = '#d8b45a';
+  const GOLD_LO = '#8a6a2c';
+  const LINE = '#2a1d10';
+  const HI = '#f3dc9a';
+  // Each icon in a 24×24 box: its paths ([d, fill]), outlined, then its highlight strokes.
+  const ICONS = {
+    heart: [['M12 21 C5 15 2 11.5 2 8 C2 5 4.3 3 7 3 C9 3 11 4.3 12 6 C13 4.3 15 3 17 3 C19.7 3 22 5 22 8 C22 11.5 19 15 12 21 Z', GOLD]],
+    sword: [['M19.5 2.5 L21.5 4.5 L10 16 L8 14 Z', GOLD], ['M5 13 L11 19 L9.6 20.4 L3.6 14.4 Z', GOLD_LO], ['M6 17.5 L3 20.5 L4.5 22 L7.5 19 Z', GOLD_LO]],
+    bow: [['M6 2.5 C15 4 20 9 21.5 18 L19.5 18.4 C18.2 10.5 13.8 6.2 5.6 4.5 Z', GOLD], ['M5.5 3.5 L20.5 18.2 L20 18.9 L4.8 4.2 Z', HI], ['M4 11 L13 11 L13 12.6 L4 12.6 Z', GOLD_LO]],
+    shield: [['M4 3.5 L20 3.5 L20 10 C20 15.5 16.5 19.5 12 21.5 C7.5 19.5 4 15.5 4 10 Z', GOLD], ['M12 3.5 L20 3.5 L20 10 C20 15.5 16.5 19.5 12 21.5 Z', GOLD_LO]],
+    boot: [['M7 2.5 L14 2.5 L14 13 L20 15.5 C21.5 16.2 22 17.5 22 19 L22 21.5 L5 21.5 L5 18 L7 15 Z', GOLD], ['M5 19 L22 19 L22 21.5 L5 21.5 Z', GOLD_LO]],
+    people: [['M16 4 A3.4 3.4 0 1 1 15.99 4 Z', GOLD_LO], ['M10.5 13 C10.5 10.5 13 9.5 16 9.5 C19 9.5 21.5 10.5 21.5 13 L21.5 18 L10.5 18 Z', GOLD_LO], ['M8.5 5 A3.8 3.8 0 1 1 8.49 5 Z', GOLD], ['M2 15 C2 12 5 11 8.5 11 C12 11 15 12 15 15 L15 21 L2 21 Z', GOLD]],
+    coin: [['M12 2.5 A9.5 9.5 0 1 1 11.99 2.5 Z', GOLD], ['M12 6 A6 6 0 1 1 11.99 6 Z', GOLD_LO], ['M10.5 8.5 L13.5 8.5 L13.5 15.5 L10.5 15.5 Z', GOLD]],
+    star: [['M12 2 L14.9 8.6 L22 9.3 L16.6 14 L18.2 21 L12 17.3 L5.8 21 L7.4 14 L2 9.3 L9.1 8.6 Z', GOLD]],
+    banner: [['M4 2 L5.8 2 L5.8 22 L4 22 Z', GOLD_LO], ['M5.8 3 L20 3 L20 15 L13 12.5 L5.8 15 Z', GOLD], ['M10 6.5 L12.9 9 L10 11.5 L7.1 9 Z', GOLD_LO]],
+    book: [['M2.5 4 C6 3 9.5 3.5 12 5.5 C14.5 3.5 18 3 21.5 4 L21.5 19.5 C18 18.5 14.5 19 12 21 C9.5 19 6 18.5 2.5 19.5 Z', GOLD], ['M12 5.5 L12 21 C14.5 19 18 18.5 21.5 19.5 L21.5 4 C18 3 14.5 3.5 12 5.5 Z', GOLD_LO]],
+    // The trade goods (asset row 7, once emoji).
+    grain: [['M11 22 L13 22 L13 8 L11 8 Z', GOLD_LO], ['M12 2 C14.5 4 14.5 7 12 9 C9.5 7 9.5 4 12 2 Z', GOLD], ['M6.5 7 C9.5 7.5 11 10 10.5 12.5 C7.5 12 6 9.8 6.5 7 Z', GOLD], ['M17.5 7 C14.5 7.5 13 10 13.5 12.5 C16.5 12 18 9.8 17.5 7 Z', GOLD], ['M6.5 12.5 C9.5 13 11 15.5 10.5 18 C7.5 17.5 6 15.3 6.5 12.5 Z', GOLD], ['M17.5 12.5 C14.5 13 13 15.5 13.5 18 C16.5 17.5 18 15.3 17.5 12.5 Z', GOLD]],
+    salt: [['M7 9 L17 9 L19 21 L5 21 Z', GOLD], ['M12 9 L17 9 L19 21 L12 21 Z', GOLD_LO], ['M8 4 L16 4 L17 9 L7 9 Z', GOLD_LO], ['M10 13 L14 13 L14 15 L10 15 Z', HI]],
+    wool: [['M4 14 A5 5 0 0 1 8 6 A5 5 0 0 1 16 6 A5 5 0 0 1 20 14 A4 4 0 0 1 16 19 L8 19 A4 4 0 0 1 4 14 Z', GOLD], ['M8 19 L8 22 L10 22 L10 19 Z M14 19 L14 22 L16 22 L16 19 Z', GOLD_LO]],
+    iron: [['M3 13 L7 9 L21 9 L21 14 L17 18 L3 18 Z', GOLD_LO], ['M3 13 L7 9 L21 9 L17 13 Z', GOLD]],
+    cloth: [['M3 6 L18 6 C20 6 21 7.5 21 9.5 L21 18 L6 18 C4 18 3 16.5 3 14.5 Z', GOLD], ['M18 6 C20 6 21 7.5 21 9.5 C21 11.5 20 13 18 13 C16 13 15 11.5 15 9.5 C15 7.5 16 6 18 6 Z', GOLD_LO], ['M6 10 L13 10 M6 14 L13 14', null]],
+    tools: [['M13.5 9 L16 11.5 L6 21.5 L3.5 19 Z', GOLD_LO], ['M10 3.5 L16 3 L21 8 L18.5 10.5 L15.5 8 L12.5 8.5 Z', GOLD]],
+    timber: [['M3 9 L17 9 L17 18 L3 18 Z', GOLD_LO], ['M3 9 L17 9 L17 11.5 L3 11.5 Z', GOLD], ['M17 9 A3 4.5 0 1 1 16.99 9 Z', GOLD], ['M18 12 A1.2 1.6 0 1 1 17.99 12 Z', GOLD_LO]],
+    wine: [['M6 3 L18 3 C18 9 16 13 12.8 13.6 L12.8 19 L16.5 20 L16.5 21.5 L7.5 21.5 L7.5 20 L11.2 19 L11.2 13.6 C8 13 6 9 6 3 Z', GOLD], ['M6.6 6.5 L17.4 6.5 C17 10 15 12.3 12 12.3 C9 12.3 7 10 6.6 6.5 Z', '#8b3d2e']],
+    flour: [['M6 7 C6 5 8 4.5 12 4.5 C16 4.5 18 5 18 7 L19.5 19 C19.5 21 17 21.5 12 21.5 C7 21.5 4.5 21 4.5 19 Z', GOLD], ['M12 4.5 C16 4.5 18 5 18 7 L19.5 19 C19.5 21 17 21.5 12 21.5 Z', GOLD_LO], ['M8 4 L16 4 L15 2.5 L9 2.5 Z', GOLD_LO]],
+    food_ration: [['M3 14 C3 8.5 7 5.5 12 5.5 C17 5.5 21 8.5 21 14 L21 17 C21 18.5 20 19 18.5 19 L5.5 19 C4 19 3 18.5 3 17 Z', GOLD], ['M8 9 L9.5 12.5 M12 8.5 L13 12 M16 9 L16.5 12.5', null]],
+    medicine: [['M9 3 L15 3 L15 9 L21 9 L21 15 L15 15 L15 21 L9 21 L9 15 L3 15 L3 9 L9 9 Z', GOLD], ['M12 3 L15 3 L15 9 L21 9 L21 15 L15 15 L15 21 L12 21 Z', GOLD_LO]],
+  };
+
+  /** An icon as SVG markup: its shapes in gold, the one dark outline, a small highlight on the upper left. */
+  function iconSvg(name) {
+    const parts = ICONS[name];
+    if (!parts) return null;
+    const body = parts
+      .map(([d, fill]) => (fill ? `<path d="${d}" fill="${fill}" stroke="${LINE}" stroke-width="1.3" stroke-linejoin="round"/>` : `<path d="${d}" fill="none" stroke="${LINE}" stroke-width="1.3" stroke-linecap="round"/>`))
+      .join('');
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">${body}<path d="M6 6.5 Q7.5 4.8 9.5 4.6" fill="none" stroke="${HI}" stroke-width="1.2" stroke-linecap="round" opacity=".55"/></svg>`;
+  }
+  const iconUrl = (name) => {
+    const svg = iconSvg(name);
+    return svg ? `url("data:image/svg+xml,${encodeURIComponent(svg)}")` : null;
+  };
+  /** The stylesheet for `.ico-<name>` (installed once at boot, so the icons live in one place). */
+  function iconCss() {
+    return Object.keys(ICONS)
+      .map((n) => `.ico-${n}{background-image:${iconUrl(n)}}`)
+      .join('\n');
+  }
+  function installIcons(doc = root.document) {
+    if (!doc || doc.getElementById('artIcons')) return;
+    const st = doc.createElement('style');
+    st.id = 'artIcons';
+    st.textContent = iconCss();
+    doc.head.append(st);
+  }
+
+  G.ui = { faceOf, portrait, soldierLook, lordLook, speakerLook, heroLook, houseArms, arms, DEVICES, canvas, url, portraitUrl, figure, troopUrl, ICONS, iconSvg, iconCss, installIcons };
+})(typeof window !== 'undefined' ? window : globalThis);

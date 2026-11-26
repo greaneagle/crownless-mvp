@@ -1,5 +1,38 @@
 # Crownless — Release Notes
 
+## v4.14.0 — The UI and portraits in the new art (P10-G5) · 2026-11-26
+
+The fifth step toward the code-drawn art (D-P10k). The screens' pictures are now drawn by the art kit, like the map, the towns and the battles.
+
+### New
+- **Portraits with faces:**
+  - **Soldiers:** each soldier's own face (skin, face shape, hair, a beard or a woman's hair) in their troop's clothes and your company's colours, in the soldiers' list and on their card.
+  - **You:** the hero, in your cloak's colour, armour and helm, on the party sheet.
+  - **Companions:** each in their own look, on the party sheet.
+  - **Lords and rulers:** on the Realm screen's Lords tab, a ruler with a crown.
+  - **Whoever you talk to:** beside their name in every conversation: the innkeeper, the elder, a companion.
+- **The hero in the creator** is drawn by the kit and changes at once with the cloak and with presentation.
+- **Troops' small figures:**
+  - on the hiring buttons (the settlement menu and the recruiter);
+  - in the troop tree;
+  - on each soldier's card.
+- **House arms:**
+  - every lord's house has a shield of its own on its realm's colour, and no two houses of a realm share one;
+  - they show beside each lord on the Realm screen, and on your house's card;
+  - a lord's party on the map and a lord fighting in person fly their house's banner, with a gold edge.
+- **Icons:** the stats on the party sheet and in the company summary, and the trade goods (once emoji), are small drawn icons: gold, one outline, one light.
+- **The battle HUD and the Prepare panel** have the same frame as the other panels: navy, a double gold border and cream lettering.
+- **The home-screen icon** is the kit's hero beside their banner.
+
+### Under the hood
+- **`js/art/ui.js`:** portraits, small figures, house arms and the icons. Images are drawn at the screen's resolution and cached.
+- **`scripts/make-icons.js`:** draws the home-screen icons with the kit in headless Chromium.
+- **Gone:**
+  - the 16×16 portrait drawing;
+  - the hero sprite and its cloak recolouring (`js/assets.js` now loads nothing);
+  - the pixel icon masks and every `image-rendering: pixelated` rule in `style.css`.
+- A lord's battle leader carries their house (`leader.house`).
+
 ## v4.13.0 — The world map in the new art (P10-G4) · 2026-11-26
 
 The fourth step toward the code-drawn art (D-P10k): the world map is drawn by it. What it shows, and when, is as before.

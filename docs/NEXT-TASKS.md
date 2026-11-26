@@ -3854,7 +3854,7 @@ The owner played the graphics demo (`docs/GRAPHICS-DEMO.md`, commit e5bae98) and
   - Browser: 274 passed, 9 skipped, 3 failed. Two were the banner test (updated, then passing). The third, the battle benchmark's report, failed once under load reading the battle size mid-run, and passes alone (world-map and battle-size: 24 of 24).
 - **Seen** in screenshots of the whole world, 1×, 2.4×, the north, the coast and at night, at 1280×720 and 812×375 @3×. Not played by hand on a phone.
 
-### P10-G5 · The UI and portraits in the new art (M–L)
+### P10-G5 · The UI and portraits in the new art (M–L) — ✅ Done in 4.14.0
 
 **Build.**
 - **Portraits from the figure parts,** at a larger scale with a face (eyes, brows, nose, mouth by kind):
@@ -3881,6 +3881,44 @@ The owner played the graphics demo (`docs/GRAPHICS-DEMO.md`, commit e5bae98) and
 - Screenshots of the creator, the party sheet, the soldiers' list, a card, the Realm screen and dialogue at 812×375 and on desktop, at Normal and Larger text.
 
 **Version.** 4.14.0.
+
+**Done (4.14.0).**
+- **The module** `js/art/ui.js` (`CL.gfx.ui`): portraits, small figures, house arms, icons, and the canvases and cached image URLs the screens use.
+- **Portraits** (a bust in the kit's style; the face shaded on the right with one highlight; eyes, brows, a nose and a mouth by kind):
+  - soldiers: P10-09's `portrait` id maps to skin, face shape, hair and a beard or a woman's hair style, over their troop's look in the company's colours (the soldiers' list, the card);
+  - the hero, from the creator's choices and whether they carry a shield (the party sheet's frame);
+  - the companions (the party sheet);
+  - every lord and ruler, a ruler crowned (the Realm screen's Lords tab);
+  - whoever speaks, beside their name (`#talkPortrait`): a townsperson by role and gender, a companion, the story's cast by `lookOf`.
+- **The hero in the creator** is drawn by the kit (`#heroPreview`) and redraws on a cloak or presentation change.
+- **Small troop figures** on the settlement's hiring buttons, the recruiter's options, the troop tree's seen and known troops, and the soldier's card.
+- **House arms** (asset rows 8 and 10):
+  - from `houseArms`: the realm's colour, a charge (`chevron`, `pale`, `bar`, `quarter`, `lozenge`, `wave`, `cross`, `coin`, `chief`, `slash`, `roundels`; `pale`, `chief` and `roundels` are new in `device()`) and a tincture, by the house's place among its realm's houses, so a realm's houses never share arms;
+  - on the Realm screen beside each lord and on your house's card;
+  - a lord's party on the map and a lord fighting in person fly their house's banner with a gold edge (`banner`'s `edge`; `lords.leaderFor` gives `house`).
+  - Row 6's realm banners were already the kit's since P10-G2/G4.
+- **Icons:** the ten stat icons and the eleven goods (row 7) as 24×24 vectors, gold with the one outline and a small highlight, installed as `.ico-<name>` at boot. The trade cards show them; a pack's good without a drawing keeps its emoji.
+- **The frame:** the battle HUD (`#topLeft`, the health bar, the orders' heading, the attack button) and the Prepare panel in P10-08's navy and double gold. `style.css` has no `image-rendering: pixelated` and no pixel masks left. The canvas's Fast sharpness (P10-01) keeps its pixelated scaling in `js/render.js`, as that setting promises.
+- **Not done:** the title screen's small drawn scene. The spec said "if it fits", and on an 812×375 phone the title panel has no room without crowding its buttons. The home-screen icon carries the scene instead.
+- **Home-screen icons:** `scripts/make-icons.js` draws the kit's hero by their banner on a mound in headless Chromium (Playwright) at 512, 192 and 180 px. This replaces the sprite scaling.
+- **Removed:**
+  - the 16×16 face drawing (`FACE`);
+  - `assets.heroSprite`, `CLOAK_TINT` and `heroFrames`: `js/assets.js` is an empty loader, and the manifest shows 0 files used;
+  - the pixel icon masks in `style.css`.
+- **Tests:**
+  - `tests/art-ui.test.js`:
+    - every combination of a soldier's face draws (100+ different looks), and the look is the same after a save and load;
+    - the hero in every cloak and presentation, every companion, every lord (a ruler crowned) and every town speaker (a woman only when the data says so);
+    - every troop's small figure;
+    - every house's arms on its realm's colour and unique within its realm, the lord's banner in them, and the battle leader's house;
+    - the icons are vectors with the outline and every trade good has one;
+    - no `pixelated` in `style.css`, and no sprite or 16×16 face drawing in `js/ui.js`.
+  - `tests/lords.test.js`: the leader now carries a house.
+- **Checks:**
+  - 944 fast pass; lint clean but the 2 old warnings; typecheck clean.
+  - Browser: layout, text-size, company, realm, lords, nobles, look, art, startup, settlement and retinue pass (119, 5 skipped); after the Realm layout fix, realm, layout, text-size and nobles pass again (49).
+  - The full browser suite was not run this task.
+- **Seen** in screenshots of the creator, the settlement, the party sheet, the soldiers' list, a card, the troop tree, the Realm screen's Lords tab and dialogue, at 1280×720 and 812×375 @3×, Normal and Larger text (`docs/graphics-demo/g5-*`, git-ignored). They found one problem: the lords' rows wrapped round the floated pictures, so the rows are now a two-column grid. Not played by hand on a phone.
 
 ### P10-G6 · The old graphics removed (M)
 

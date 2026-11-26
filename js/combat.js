@@ -272,7 +272,7 @@
     enemyPlan(g); // P9-B4: the enemy's own plan (layer 1, and layer 3's placement), in a battle with an army
     // P8-01: a lord fights in person, at the head of the first wave: their realm's best foot soldier, stronger, with their name.
     const lead = enc.leader && !g.duel ? g.enemies.find((u) => u.troop === enc.leader.troop) || g.enemies[0] : null;
-    if (lead) Object.assign(lead, { hp: Math.round(lead.hp * enc.leader.hp), maxhp: Math.round(lead.maxhp * enc.leader.hp), damage: lead.damage * enc.leader.damage, named: enc.leader.name });
+    if (lead) Object.assign(lead, { hp: Math.round(lead.hp * enc.leader.hp), maxhp: Math.round(lead.maxhp * enc.leader.hp), damage: lead.damage * enc.leader.damage, named: enc.leader.name, house: enc.leader.house || null });
     if (g.wagon) CL.ui.message('Keep the Reavers off the wagon: if it burns, the caravan is lost');
     CL.assault?.announce(g); // the walls (P8-06b)
     if (g.duel) Object.assign(g.enemies[0], { hp: g.duel.opponent.hp, maxhp: g.duel.opponent.hp, damage: g.duel.opponent.damage, armor: g.duel.opponent.armor, duelist: g.duel.opponent.name });

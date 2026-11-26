@@ -431,7 +431,7 @@
   /** The lord in battle: the realm's best foot soldier, with their name and more of everything. */
   function leaderFor(c, p) {
     const t = CL.content.get('party_templates', p.template);
-    return { troop: t.leader, name: R().titled(p.lordId, c), hp: LEADER.hp, damage: LEADER.damage };
+    return { troop: t.leader, name: R().titled(p.lordId, c), hp: LEADER.hp, damage: LEADER.damage, house: CL.houses?.houseOf(c, p.lordId)?.id || null };
   }
 
   /** What breaks the lords' rules (P8-01), for the daily invariants: [] when all hold. */

@@ -226,6 +226,7 @@
     $('#realmScreen').classList.toggle('hidden', mode !== 'realm');
     $('#savesScreen').classList.toggle('hidden', mode !== 'saves');
     $('#talkOptions').classList.toggle('hidden', mode !== 'talk');
+    $('#talkPortrait')?.classList.toggle('hidden', mode !== 'talk');
     $('#ransomOptions').classList.toggle('hidden', !['ransom', 'grant', 'conquest', 'siegeAlarm'].includes(mode)); // the decisions that interrupt the map
     $('#titleExtras').classList.toggle('hidden', mode !== 'title');
     $('#waitScreen').classList.toggle('hidden', mode !== 'wait');
@@ -461,8 +462,9 @@
     const U = CL.upkeep;
     const n = CL.game.talk.npc;
     const opts = [];
-    const opt = (label, onClick, disabled = false, note = '') => {
+    const opt = (label, onClick, disabled = false, note = '', troop = null) => {
       const b = Object.assign(document.createElement('button'), { type: 'button', disabled });
+      if (troop) b.append(troopImg(troop, null, 'troopFig btn')); // P10-G5
       b.append(Object.assign(document.createElement('b'), { textContent: label }));
       if (note) b.append(Object.assign(document.createElement('small'), { textContent: note }));
       b.onclick = onClick;
@@ -492,7 +494,7 @@
     } else if (n.action === 'recruit') {
       for (const id of P.recruitsHere()) {
         const t = CL.content.troop(id);
-        opt(`Hire a ${t.name} · ${t.recruitCost} crowns`, () => P.recruit(id) && redo(), !P.canRecruit(c, id), `${t.tier} ${t.role} · wage ${t.wage}/week`);
+        opt(`Hire a ${t.name} · ${t.recruitCost} crowns`, () => P.recruit(id) && redo(), !P.canRecruit(c, id), `${t.tier} ${t.role} · wage ${t.wage}/week`, id);
         // P9-B3: five at once, for a company that has room for many.
         if (P.partyCap(c) - P.headcount(c) >= HIRE_MANY) opt(`Hire ${HIRE_MANY} ${plural(t.name, HIRE_MANY)} · ${HIRE_MANY * t.recruitCost} crowns`, () => P.recruitMany(id, HIRE_MANY) && redo(), P.canHireMany(c, id, HIRE_MANY) < HIRE_MANY, `wages ${HIRE_MANY * t.wage}/week`);
       }
@@ -522,6 +524,21 @@
     }
     opt('Goodbye', () => CL.town.backToPlace());
     $('#talkOptions').replaceChildren(...opts);
+    talkPortrait(n);
+  }
+
+  /** P10-G5: who you are talking to, as a portrait beside their name (a companion, a lord, a townsperson). */
+  function talkPortrait(n) {
+    let img = $('#talkPortrait');
+    if (!img) {
+      img = Object.assign(document.createElement('img'), { id: 'talkPortrait', className: 'portrait', alt: '' });
+      $('#overlayTitle').before(img);
+    }
+    const tree = CL.content.table('dialogue')[n.dialogue || n.id];
+    const cast = !n.role && !n.companion && tree ? CL.story.lookOf(tree) : {};
+    const L = CL.gfx.ui.speakerLook({ ...cast, ...n, role: n.role || cast.role, companion: n.companion || cast.companion, gender: n.gender || cast.gender }, CL.campaign);
+    img.classList.toggle('hidden', !L);
+    if (L) img.src = CL.gfx.ui.portraitUrl(L, 72, { helm: false });
   }
 
   // ---- Save & export (GDD §13) ----
@@ -589,6 +606,14 @@
     return Object.entries(troops)
       .map(([id, n]) => `${n} ${CL.content.troop(id).name}${n > 1 ? 's' : ''}`)
       .join(', ');
+  }
+
+  /** A trade good's name with its icon (P10-G5: drawn, or a pack's own emoji when it has no drawing). */
+  function goodName(g) {
+    const b = document.createElement('b');
+    if (CL.gfx.ui.ICONS[g.id]) b.append(Object.assign(document.createElement('span'), { className: `ico ico-${g.id}` }), g.name);
+    else b.textContent = `${g.icon || ''} ${g.name}`.trim();
+    return b;
   }
 
   function contractCard(title, lines, buttons) {
@@ -1760,7 +1785,7 @@
         const word = T.priceWord(T.scarcity(c, sid, g.id));
         const head = Object.assign(document.createElement('div'), { className: 'tradeHead' });
         head.append(
-          Object.assign(document.createElement('b'), { textContent: `${g.icon} ${g.name}` }),
+          goodName(g),
           Object.assign(document.createElement('span'), { className: `tag ${word}`, textContent: word }),
         );
         const info = Object.assign(document.createElement('div'), {
@@ -1895,14 +1920,17 @@
     drawPreview();
   }
 
+  /** P10-G5: the hero in the creator, drawn by the art kit: the cloak, presentation and a shield. */
   function drawPreview() {
     const cv = $('#heroPreview');
+    $('#heroGender').onchange = drawPreview; // a man or a woman shows at once
+    const k = Math.min(3, Math.max(2, Math.ceil(window.devicePixelRatio || 1)));
+    [cv.width, cv.height] = [72 * k, 92 * k];
     const x = cv.getContext('2d');
-    x.imageSmoothingEnabled = false;
-    x.clearRect(0, 0, cv.width, cv.height);
-    const sprite = CL.assets.heroSprite(CL.assets.key('u', CL.assets.heroFrames.down[0]), draft.cloak);
-    if (sprite) x.drawImage(sprite, 8, 6, 56, 80);
-    else setTimeout(drawPreview, 200); // sprite still loading
+    x.setTransform(k, 0, 0, k, 0, 0);
+    x.clearRect(0, 0, 72, 92);
+    const L = CL.gfx.fig.heroFor({ cloak: draft.cloak, gender: $('#heroGender')?.value });
+    CL.gfx.ui.figure(x, 72, 92, L);
   }
 
   function creatorChoices() {
@@ -1936,6 +1964,12 @@
   }
 
   /** The companion's card on the Party sheet: her numbers, her gear, and what you can give her. */
+  /** A companion's portrait (P10-G5), in their own look. */
+  function companionPic(id) {
+    if (!CL.content.table('companions')[id]) return document.createTextNode('');
+    return Object.assign(document.createElement('img'), { className: 'portrait small companionPic', src: CL.gfx.ui.portraitUrl(CL.gfx.fig.companionLook(id, companySide()), 64), alt: '' });
+  }
+
   function renderCompanion() {
     const c = CL.campaign;
     const M = CL.companion;
@@ -1955,6 +1989,7 @@
       const card = el('div');
       card.className = 'retinueCard';
       card.dataset.companion = r.id;
+      card.append(companionPic(r.id));
       card.append(
         el('p', `${rd.name}, ${rd.title} · ${R.mood(r)} (${r.loyalty}) · ${where} · HP ${rs.hp} · Damage ${Math.round(rs.damage * 10) / 10} · Armor ${rs.armor}${lend ? ` · ${lend} while fit` : ''} · ${rd.wage} crowns a week`),
         el('p', `Cares about: ${rd.motive}${r.loyalty < R.WARN_BELOW && r.why ? `. Unhappy: ${R.REASONS[r.why] || r.why}` : ''}`),
@@ -1980,7 +2015,7 @@
     const bonus = Object.entries(d.skills || {})
       .map(([k, n]) => `+${n} ${CL.content.get('skills', k).name}`)
       .join(', ');
-    const rows = [el('p', `${d.name}, ${d.title} · ${status} · HP ${s.hp} · Damage ${Math.round(s.damage * 10) / 10} · Armor ${s.armor}${bonus ? ` · ${bonus} while fit` : ''}`)];
+    const rows = [companionPic(m.id), el('p', `${d.name}, ${d.title} · ${status} · HP ${s.hp} · Damage ${Math.round(s.damage * 10) / 10} · Armor ${s.armor}${bonus ? ` · ${bonus} while fit` : ''}`)];
     for (const slot of d.gearSlots) {
       const id = m.equipment[slot];
       const row = el('div', `${CL.character.SLOT_NAMES[slot]}: ${id ? CL.content.item(id).name + itemSummary(CL.content.item(id)) : '—'}`);
@@ -2034,11 +2069,12 @@
     ].filter(Boolean);
     const cap = CL.party.partyCap(c);
     // P10-08 (reference 04): a framed portrait, the name, level and origin, the road to the next level.
-    const portrait = Object.assign(document.createElement('canvas'), { width: 64, height: 80 });
-    const px = portrait.getContext('2d');
-    px.imageSmoothingEnabled = false;
-    const sprite = CL.assets.heroSprite(CL.assets.key('u', CL.assets.heroFrames.down[0]), ch.cloak);
-    if (sprite) px.drawImage(sprite, 4, 2, 56, 76);
+    // P10-G5: the hero's portrait, drawn by the art kit from the creator's choices and what they carry.
+    const heroL = { ...CL.gfx.ui.heroLook(ch, hero.canBlock), realm: { color: CL.gfx.fig.CLOAKS[ch.cloak] || CL.gfx.fig.CLOAKS.crimson, dark: '#3a2a22', trim: '#d8b25a', device: 'coin' } };
+    const portrait = CL.gfx.ui.canvas(64, 80, (x) => {
+      CL.gfx.ui.portrait(x, -8, 0, 80, heroL);
+    });
+    portrait.className = 'heroPortrait';
     const origin = CL.content.get('origins', ch.origin);
     const toNext = ch.level >= C.MAX_LEVEL ? 1 : ch.xp / next;
     const card = el('div', { className: 'heroCard' },
@@ -2286,50 +2322,17 @@
   }
 
   /** One soldier's profile card: who they are, their record and notes, rename and upgrade. */
-  // ---- P10-09: soldiers' portraits (placeholders until the graphics pass): a few generic faces ----
+  // ---- Soldiers' portraits (P10-09's faces, drawn by the art kit from P10-G5) ----
 
-  const FACE = {
-    skins: ['#e8c19a', '#c79a6c', '#8d5a3b'],
-    hair: ['#2a1d16', '#5b3a22', '#8a4b26', '#c9a45a', '#9a958c'], // black, brown, auburn, fair, grey
-    // 16×16: H hair, S skin, E eyes, M mouth, C clothes; two face shapes.
-    faces: [
-      ['................', '.....HHHHHH.....', '....HHHHHHHH....', '...HHHHHHHHHH...', '...HSSSSSSSSH...', '...SSSSSSSSSS...', '...SSESSSSESS...', '...SSSSSSSSSS...', '...SSSSSSSSSS...', '...SSSSSSSSSS...', '....SSSMMSSS....', '.....SSSSSS.....', '......SSSS......', '...CCCCCCCCCC...', '..CCCCCCCCCCCC..', '..CCCCCCCCCCCC..'],
-      ['................', '.....HHHHHH.....', '....HHHHHHHH....', '....HHHHHHHH....', '....HSSSSSSH....', '....SSSSSSSS....', '....SESSSSES....', '....SSSSSSSS....', '....SSSSSSSS....', '....SSSSSSSS....', '....SSSMMSSS....', '.....SSSSSS.....', '......SSSS......', '...CCCCCCCCCC...', '..CCCCCCCCCCCC..', '..CCCCCCCCCCCC..'],
-    ],
-    // Over the face: a man's beard (none, stubble, short, full) or a woman's hair (long, braided).
-    beards: [[], [[9, 4], [9, 11], [10, 5], [10, 10], [11, 6], [11, 9]], [[10, 5], [10, 6], [10, 9], [10, 10], [11, 5], [11, 6], [11, 7], [11, 8], [11, 9], [11, 10]], [[8, 4], [8, 11], [9, 4], [9, 5], [9, 10], [9, 11], [10, 4], [10, 5], [10, 6], [10, 9], [10, 10], [10, 11], [11, 5], [11, 6], [11, 7], [11, 8], [11, 9], [11, 10], [12, 6], [12, 7], [12, 8], [12, 9]]],
-    styles: [
-      [[4, 2], [5, 2], [6, 2], [7, 2], [8, 2], [9, 2], [10, 2], [11, 3], [4, 13], [5, 13], [6, 13], [7, 13], [8, 13], [9, 13], [10, 13], [11, 12]],
-      [[4, 2], [5, 2], [6, 2], [7, 2], [8, 13], [9, 13], [10, 13], [11, 13], [12, 13], [13, 14], [4, 13], [5, 13], [6, 13], [7, 13]],
-    ],
+  /** The colours a soldier of the company wears: your realm's when sworn or serving, else your own banner. */
+  const companySide = () => {
+    const c = CL.campaign;
+    return (c && (CL.allegiance?.sworn?.(c) || CL.allegiance?.serves?.(c))) || 'player';
   };
-  const faceCache = new Map();
-  /** A soldier's portrait as an image URL: drawn once per kind of face, from its `portrait` id. */
-  function portraitSrc(s) {
-    const t = CL.content.troop(s.troop);
-    const cloth = CL.realm.faction(t?.faction)?.color || '#4b5563';
-    const key = `${s.portrait}|${cloth}`;
-    if (faceCache.has(key)) return faceCache.get(key);
-    const [sex, skin, face, hair, extra] = String(s.portrait).split('-');
-    const cv = Object.assign(document.createElement('canvas'), { width: 16, height: 16 });
-    const x = cv.getContext('2d');
-    const paint = { H: FACE.hair[+hair] || FACE.hair[0], S: FACE.skins[+skin] || FACE.skins[0], E: '#1b1410', M: '#6e3b2e', C: cloth };
-    const rows = FACE.faces[+face] || FACE.faces[0];
-    for (let y = 0; y < rows.length; y++) {
-      for (let i = 0; i < rows[y].length; i++) {
-        const colour = paint[rows[y][i]];
-        if (!colour) continue;
-        x.fillStyle = colour;
-        x.fillRect(i, y, 1, 1);
-      }
-    }
-    x.fillStyle = paint.H;
-    for (const [y, i] of (sex === 'f' ? FACE.styles[+extra] : FACE.beards[+extra]) || []) x.fillRect(i, y, 1, 1);
-    const url = cv.toDataURL();
-    faceCache.set(key, url);
-    return url;
-  }
+  const portraitSrc = (s) => CL.gfx.ui.portraitUrl(CL.gfx.ui.soldierLook(s, companySide()), 64);
   const portraitImg = (s, cls = 'portrait') => (s.portrait ? el('img', { className: cls, src: portraitSrc(s), alt: '' }) : null);
+  /** A troop's small figure (P10-G5): in the recruit screens, the troop tree and the soldiers' cards. */
+  const troopImg = (id, side, cls = 'troopFig') => el('img', { className: cls, src: CL.gfx.ui.troopUrl(id, side), alt: '' });
 
   function soldierCard(s) {
     const g = CL.game;
@@ -2365,7 +2368,7 @@
       input.select();
     };
     nameRow.append(renameBtn);
-    const portrait = portraitImg(s); // P10-09
+    const portrait = el('div', { className: 'soldierPics' }, portraitImg(s), troopImg(s.troop, companySide())); // P10-09, P10-G5
     const stat = (label, n) => el('span', {}, el('b', { textContent: String(n) }), ` ${label}`);
     const upgrades = P.soldierUpgrades(s, c).map((o) => {
       const to = CL.content.troop(o.to);
@@ -2558,7 +2561,7 @@
     const node = (n) => {
       const kids = n.children.length ? el('ul', {}, ...n.children.map(node)) : null;
       if (n.level === 'unknown') return el('li', { className: 'treeNode unknown' }, el('span', { textContent: '? An unknown troop' }), kids);
-      if (n.level === 'seen') return el('li', { className: 'treeNode seen' }, el('b', { textContent: n.name }), el('span', { className: 'muted', textContent: ' · seen, not yet known' }), kids);
+      if (n.level === 'seen') return el('li', { className: 'treeNode seen' }, troopImg(n.id, null, 'troopFig small'), el('b', { textContent: n.name }), el('span', { className: 'muted', textContent: ' · seen, not yet known' }), kids);
       const st = n.stats;
       const company = n.count ? `In your company: ${n.count}${n.ready ? ` (${n.ready} ready)` : ''}` : 'None in your company';
       const ways = n.maxTier
@@ -2568,6 +2571,7 @@
       return el(
         'li',
         { className: 'treeNode owned' },
+        troopImg(n.id, companySide(), 'troopFig small'),
         el('b', { textContent: n.name }),
         el('span', { textContent: ` · ${n.tier} ${n.role} · HP ${st.hp} · damage ${st.damage} · armour ${st.armor} · wage ${st.wage}/week` }),
         el('div', { className: 'muted', textContent: `${company} · ${ways}` }),
@@ -2666,7 +2670,7 @@
       if (!id) return;
       const t = CL.content.troop(id);
       b.dataset.troop = id;
-      b.textContent = `Hire ${t.name} · ${t.recruitCost} crowns`;
+      b.replaceChildren(troopImg(id, null, 'troopFig btn'), `Hire ${t.name} · ${t.recruitCost} crowns`); // P10-G5: the troop's figure
       b.disabled = !hire.ok || !p.canRecruit(c, id);
       b.title = hire.ok ? '' : hire.why;
     });
@@ -3110,6 +3114,23 @@
     changeMode('journal');
   }
 
+  /** P10-G5: a lord's portrait and their house's arms, drawn by the art kit. */
+  function lordPics(c, pid) {
+    const box = Object.assign(document.createElement('span'), { className: 'lordPics' });
+    box.append(Object.assign(document.createElement('img'), { className: 'portrait small', src: CL.gfx.ui.portraitUrl(CL.gfx.ui.lordLook(c, pid), 64, { helm: false }), alt: '' }));
+    const h = CL.houses?.houseOf(c, pid);
+    const arms = h && CL.gfx.ui.houseArms(c, h);
+    if (arms) box.append(armsPic(arms, h));
+    return box;
+  }
+  /** A house's shield as a small image. */
+  function armsPic(arms, h, size = 26) {
+    const img = Object.assign(document.createElement('img'), { className: 'arms', alt: '', src: CL.gfx.ui.url(`arms|${arms.house}|${arms.device}|${arms.trim}|${arms.color}`, size, size + 4, (x) => CL.gfx.ui.arms(x, size / 2, size / 2 + 1, size * 0.4, arms)) });
+    img.dataset.house = h.id;
+    img.title = CL.houses.name(h);
+    return img;
+  }
+
   function renderRealm() {
     const c = CL.campaign;
     const R = CL.realm;
@@ -3198,7 +3219,7 @@
           const li = el('li', 'lordRow');
           li.dataset.person = p.id;
           const [first, ...rest] = CL.nobles.lordLines(c, p.id);
-          li.append(el('b', '', first), ...rest.map((l) => el('span', 'lordLine', l)));
+          li.append(lordPics(c, p.id), el('b', '', first), ...rest.map((l) => el('span', 'lordLine', l)));
           if (!R.rules(p.id, c) && p.status !== 'dead') {
             const b = el('button', 'lordAskBtn', 'Ask…');
             b.type = 'button';
@@ -3255,6 +3276,8 @@
     for (const sid of H.restorable(c, 'player').slice(0, 2)) buttons.push([`Petition for ${CL.content.get('settlements', sid).name}`, say(() => H.petition(c, 'player', sid))]);
     const card = contractCard(H.name(h), lines, buttons);
     card.classList.add('houseCard');
+    const myArms = CL.gfx.ui.houseArms(c, h);
+    if (myArms) card.querySelector('h3').prepend(armsPic(myArms, h, 30)); // P10-G5: your house's arms
     card.dataset.house = h.id;
     // Its name: yours to choose.
     const row = el('div', 'row');
