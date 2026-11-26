@@ -138,7 +138,7 @@ The fix is not to make input unresponsive or to punish repeated presses, but to 
 | **P11-00** | Baseline, measuring tools and the inherited checkpoint | M | P1 | — | 5.0.1 | M0 Baseline | ✅ Done (H-00 to come) |
 | **P11-01** | One combat profile for every fighter (no change in play) | L | P1 | P11-00 | 5.1.0 | M1 | ✅ Done |
 | **P11-02** | Carried and wielded: loadouts and one gear check | M–L | P1 | P11-01 | 5.2.0 | M1 | ✅ Done |
-| **P11-03** | The progression budget and equipment requirements | M–L | P1 | P11-02 | 5.3.0 | M1 | Ready (D-P11b, D-P11c decided) |
+| **P11-03** | The progression budget and equipment requirements | M–L | P1 | P11-02 | 5.3.0 | M1 | ✅ Done |
 | **P11-04** | The equipment you see | M–L | P1 | P11-02 (parallel with P11-03) | 5.4.0 | M1 | Specified |
 | **P11-05** | Melee rhythm and defence | L | P1 | P11-01, P11-04 | 5.5.0 | **M1 "The weapon in your hand"** | Ready (D-P11d decided) |
 | **P11-06** | Armour, weight and movement | M | P2 | P11-05 | 5.6.0 | M2 | Specified |
@@ -308,6 +308,18 @@ Consequences:
 - Equipped items that don't meet their requirements stay equipped, are carried into battle **only if the gear check allows it** (otherwise the next valid loadout is used, §8), and the sheet says why with a way to fix it. **Nothing is ever removed from the inventory by a requirement.**
 
 ---
+
+### 7.6 The measured curve (P11-03, 5.3.0)
+**Decided:** cap 20, middle level 10, late level 15 (`data/character.js` `budget`). Levels 1–10 cost what they did (8,428 XP); from 10, each level costs 550 XP more than the one before (2,239 for 10→11, 7,189 for 19→20): 25,123 XP to level 15 and 55,568 to 20. Set from P11-00's pace (170–205 XP a day, about the same past the cap) and measured on the first try with `node scripts/progression.js 180 1` (11.5 min), so no second try was needed:
+
+| Style | L10 | L12 | L14 | L15 | L16 | Level / XP by day 60 · 120 · 180 |
+|---|---|---|---|---|---|---|
+| hands-off | 54 | 82 | 120 | 144 | 175 | 10 / 9,868 · 14 / 20,847 · 16 / 30,701 |
+| presets | 49 | 83 | 119 | 140 | 168 | 10 / 10,180 · 14 / 21,031 · 16 / 32,933 |
+| expert | 58 | 82 | 116 | 135 | 154 | 10 / 9,083 · 14 / 21,901 · 17 / 36,369 |
+| ruler | 54 | 82 | 120 | 144 | 175 | as hands-off |
+
+At that pace level 20 comes around day 280–325: a long campaign, as D-P11b asks. The 360-day run on three seeds (the night run) confirms the far end.
 
 ## 8. Loadouts and the gear check (P11-02, P11-03)
 

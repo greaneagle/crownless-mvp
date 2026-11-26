@@ -87,6 +87,9 @@ test('buying gear: priced above its resale value, atomic, Trade discount applies
 test('heavy gear makes the hero much harder to hurt (GDD armor formula)', () => {
   const { CL } = loadGame();
   const c = CL.campaign;
+  // P11-03: what the rare pieces need (the Farmhand starts with Strength 6).
+  Object.assign(c.character.attributes, { str: 7 });
+  c.character.skills.shield = 2;
   for (const id of ['bascinet', 'mail_hauberk', 'mail_mittens', 'greaves', 'heater_shield']) {
     c.inventory[id] = 1;
     CL.character.equip(id);

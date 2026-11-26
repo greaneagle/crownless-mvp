@@ -4042,7 +4042,7 @@ The aim: easy to fight, rewarding to fight well, meaningful to command. The play
 | P11-00 | Baseline, measuring tools and the inherited checkpoint | M | 5.0.1 | ✅ Done (the owner's H-00 to come) |
 | P11-01 | One combat profile for every fighter (no change in play) | L | 5.1.0 | ✅ Done |
 | P11-02 | Carried and wielded: loadouts and one gear check | M–L | 5.2.0 | ✅ Done |
-| P11-03 | The progression budget and equipment requirements | M–L | 5.3.0 | Ready |
+| P11-03 | The progression budget and equipment requirements | M–L | 5.3.0 | ✅ Done |
 | P11-04 | The equipment you see | M–L | 5.4.0 | Specified |
 | P11-05 | Melee rhythm and defence | L | 5.5.0 | Ready |
 | P11-06 | Armour, weight and movement | M | 5.6.0 | Specified |
@@ -4341,7 +4341,7 @@ The aim: easy to fight, rewarding to fight well, meaningful to command. The play
 
 ---
 
-### P11-03 · The progression budget and equipment requirements (M–L) — 5.3.0, Ready
+### P11-03 · The progression budget and equipment requirements (M–L) — 5.3.0, ✅ Done
 
 **Now.** Level cap 10; 9 skill points and 5 attribute points earned; Shield, Archery and Riding do nothing; Agility and Charisma do nothing in play; `character.skill` includes item, companion and retinue bonuses (plan §2.2, §7.1). P11-00 measured the days to each level.
 
@@ -4399,6 +4399,20 @@ The aim: easy to fight, rewarding to fight well, meaningful to command. The play
 - **Play:** as above.
 - **Explain:** "Your character".
 - **Not here:** combat effects of skills; training.
+
+**Done (5.3.0).**
+- **The budget (D-P11b):** `MAX_LEVEL` 20, `data/character.js` `budget { cap: 20, middle: 10, late: 15 }`. `xpToNext` is 5.0.0's to level 10; from 10 a line, `2239 + 550 × (L − 10)` (`CURVE_FROM`, `CURVE_STEP`): 8,428 XP to level 10, 25,123 to 15, 55,568 to 20. Grants unchanged: 19 skill and 10 attribute points by the cap. `xpTotal` and `pointsAt`. Measured on the first try (`progression.js 180 1`, 11.5 min): level 10 on day 49–58 as before, 15 on day 135–144, 16 on 154–175; at 170–200 XP a day, 20 around day 280–325 (`docs/PHASE-11-VALIDATION.md`, plan §7.6).
+- **The skills (D-P11c):** `two_handed` and `polearm` added; every skill's and attribute's `effect` rewritten in the player's words, the combat skills' "From 5.x.0". Agility's job (recovery, armour) and Strength's (health, heavy weapons, armour and crossbows, carrying) said in the creator's note, Party's fold-out and How to Play.
+- **Base values (plan §7.4):** `character.baseSkill` (points, origin, story, training grants by `C.training[id].skills`, P11-17's) and `baseAttribute`; requirements read only these. `skill()` stays effective (items, companions, retinue) for what a skill does. `story.js`'s conditions are as before.
+- **Requirements:** `req { str?, agi?, skills?, training? }` on five items (War Mace Str 6, Knight's Sword One-Handed 3, Iron-Rimmed Heater Shield 2, Bascinet Str 6, Mail Hauberk Str 7) and as family defaults (greatsword and greataxe Str 7 and Two-Handed 1, pike Str 6 and Polearm 1, lance Riding 2, longbow Str 6 and Archery 1, composite Archery 2, crossbow Str 6) for the weapons to come; an item's `req: {}` overrides its family's. Forged pieces keep them.
+- **The gear check:** `CL.gear.reqOf`, `unmet`, `meets`, `unlocks`; codes `attribute`, `skill`, `training`, `no_weapon` and the ways to meet them (`fix_spend`, `fix_level`, `fix_untaught`, `fix_teacher`, `CL.gear.LINES`). A piece not met stays where it is; `kitFor` leaves it with the baggage in battle (its armour or block not counted). Only what stops the weapon in hand stops a loadout (`blocked`): a weapon not met gives way to the other, or to fists, said (`no_weapon`). Shown on the sheet, in the armoury (a second tap to buy), the blacksmith's forge rows, Prepare and the lists.
+- **The rule (plan §7.3):** `CL.gear.ruleProblems` and `classOf`, run by `content.validate` (so at load, for packs and for worlds): ordinary (tier 1, a village's gear, an origin's or a tournament's kit) needs nothing; advanced (tier 2) at most level 10's half points (2 attribute, 4 skill); elite (tier 3 or a region's own) level 15's half (3 and 7), plus training someone teaches; nothing past the cap; a sword, spear, shortbow and crossbow (where any exist), a shield and a horse that need nothing. `attributes` and `budget` are world tables (`WORLD_EXTRA`).
+- **Retraining (D-P11i):** `character.retrain(c)` gives back every point in `spent` (recorded by `spendSkill` and `spendAttribute`); the origin's and story's grants stay; never in battle. No free offer; P11-17's masters use it.
+- **Shown:** Party's "Your points would unlock: …" and "What each attribute and skill does"; a level-up after a battle names what the new points would unlock; How to Play → "Your character" (new) and "Your gear" (what happens to a piece not met); the points tip.
+- **Save:** `character.spent`, `character.training`, the two skills at 0, `level` to 20, by `sanitize` (no migration, D-P11a).
+- **Tests:** `tests/requirements.test.js` (7: the budget fits ten skills; the rule over all content; what it fails; pack items; base against effective; the gear check's lines, kept and left behind; unlocks); `tests/progression.test.js` (+4: the curve and grants, gaining past the old cap, retraining, the save). `tests/browser/gear.spec.js` (+2, desktop and phone): the armoury's requirement line; on the sheet the line kept though not met, the unlock line, three points meeting it, two lines at 812×375. Changed: the golden fighters' hero rows read the profile itself (what a weapon gives), and the heavy-gear and P11-02 gear tests meet their pieces' needs. Golden battles identical; `npm test` 986 pass; lint as before; browser `gear`, `layout`, `text-size` pass; slow `origins` and `campaign-bots` pass.
+- **Not done:** the optional plan preview beyond the unlock line.
+- **Found, not this task's:** at Larger text on 812×375 the market's goods grid is 13 px wider than the screen ("Sell all"), so the trade screen scrolls sideways a little.
 
 ---
 

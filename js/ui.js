@@ -1343,7 +1343,7 @@
           return mk(
             'div',
             { className: 'row qmRule' },
-            mk('span', { textContent: `${name} → ${CL.content.item(o.to).name}` }),
+            mk('span', { textContent: `${name} → ${CL.content.item(o.to).name}` }, ...findingRows(CL.gear.unmet(c, o.to), 'span')), // P11-03: forging keeps requirements
             btn(`Forge · ${o.crowns} crowns, ${o.iron} iron`, () => {
               const r = B.forge(c, o.slot);
               message(r.ok ? `${CL.content.item(o.to).name} is ready` : `Can't forge: ${r.reason}`);
@@ -1919,8 +1919,9 @@
     const kit = o.kit;
     const gear = Object.values(kit.equipment).map((id) => CL.content.item(id).name);
     // P10-05: an origin's start is its opening quest; its edge is what it keeps.
+    const plus = `${CL.content.get('attributes', o.attribute).name}: ${CL.content.get('attributes', o.attribute).effect}. ${CL.content.get('skills', o.skill).name}: ${CL.content.get('skills', o.skill).effect}.`; // P11-03
     $('#createNote').textContent = CL.game.newGame
-      ? `${o.description} You start with ${kit.gold} crowns, ${gear.join(', ')} and ${CL.party.describeItems(kit.items)}.${o.quest ? ` Your first steps are your own story; then the common one. Its edge: ${o.edge}` : ' Your story begins with the common quest.'}`
+      ? `${o.description} ${plus} You start with ${kit.gold} crowns, ${gear.join(', ')} and ${CL.party.describeItems(kit.items)}.${o.quest ? ` Your first steps are your own story; then the common one. Its edge: ${o.edge}` : ' Your story begins with the common quest.'}`
       : 'Your gold, soldiers and gear are kept.';
     drawPreview();
   }
@@ -2036,6 +2037,18 @@
     $('#sheetCompanion').replaceChildren(...rows, ...retinueRows);
   }
 
+  /** P11-03: "Your points would unlock: War Mace (Strength 6)", or '' when they unlock nothing you have. */
+  function unlockWords(c) {
+    const u = CL.gear.unlocks(c);
+    return u.length ? `Your points would unlock: ${u.map((x) => `${CL.content.item(x.item).name} (${x.needs})`).join(', ')}` : '';
+  }
+
+  /** P11-03: what each attribute and skill does, folded away (data/character.js `effect`). */
+  function statHelp() {
+    const rows = [...Object.values(CL.content.table('attributes')), ...Object.values(CL.content.table('skills'))].map((s) => el('li', {}, el('b', { textContent: `${s.name}: ` }), s.effect));
+    return el('details', { className: 'statHelp' }, el('summary', { textContent: 'What each attribute and skill does' }), el('ul', {}, ...rows));
+  }
+
   function renderSheet() {
     const c = CL.campaign;
     const C = CL.character;
@@ -2117,6 +2130,9 @@
           spendable(`${sk.name} ${C.skill(sk.id)}`, ch.skillPoints > 0 && ch.skills[sk.id] < C.MAX_SKILL, () => C.spendSkill(sk.id)),
         ),
       ),
+      // P11-03: what the points you have would let you use, of the gear you have (Guided).
+      line(unlockWords(c) ? [unlockWords(c)] : []),
+      statHelp(),
       line([
         `Party size ${CL.party.headcount(c)}/${cap} (${limitWords(c)})`,
       ]),

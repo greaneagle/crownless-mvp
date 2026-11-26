@@ -9,9 +9,10 @@ const { headlessUi } = require('./helpers/campaign-bot');
 
 const plain = (v) => JSON.parse(JSON.stringify(v));
 
-/** Two weapons the 5.x game doesn't sell yet: a two-handed sword and a shortbow (test data). */
+/** Two weapons the 5.x game doesn't sell yet: a two-handed sword and a shortbow (test data). The sword
+ * needs nothing (`req: {}`, over its family's): requirements are tests/requirements.test.js's. */
 function withTestWeapons(C) {
-  C.items.test_greatsword = { id: 'test_greatsword', name: 'Test Greatsword', type: 'weapon', slot: 'weapon', family: 'greatsword', tier: 2, rarity: 'uncommon', value: 120, weight: 4, stats: { damage: 28 }, questItem: false };
+  C.items.test_greatsword = { id: 'test_greatsword', name: 'Test Greatsword', type: 'weapon', slot: 'weapon', family: 'greatsword', tier: 2, rarity: 'uncommon', value: 120, weight: 4, stats: { damage: 28 }, req: {}, questItem: false };
   C.items.test_bow = { id: 'test_bow', name: 'Test Shortbow', type: 'weapon', slot: 'weapon', family: 'shortbow', tier: 1, rarity: 'common', value: 40, weight: 1, stats: { damage: 12 }, questItem: false };
   C.settlements.stonebridge.gear = [...(C.settlements.stonebridge.gear || []), 'test_greatsword', 'test_bow'];
 }
@@ -63,6 +64,7 @@ test('horseback and heavy armour: incompatible, penalty, from the profile (P11-0
     },
   });
   const c = CL.campaign;
+  c.character.attributes.str = 7; // P11-03: what the hauberk needs
   const G = CL.gear;
   const kit = (w, body = 'gambeson') => ({ ...c.equipment, weapon: w, offhand: null, body });
   assert.deepEqual(codes(G.check(c, kit('test_bow'), { mounted: true, which: 'primary' })), [['incompatible', 'mounted']]);
@@ -136,12 +138,15 @@ test('every finding fits two lines with the longest names; the words are the gam
   const G = CL.gear;
   const items = Object.values(CL.content.table('items'));
   const longest = items.reduce((a, b) => (b.name.length > a.name.length ? b : a)).name;
+  // P11-03: a requirement's line with the longest skill, numbers and way to meet it.
+  const fix = G.FIXES.map((k) => G.words(k, { n: '12 attribute points', master: 'Master Hrolf the Elder', place: 'Castel Verro' })).reduce((a, b) => (b.length > a.length ? b : a));
+  const stat = [...Object.values(CL.content.table('skills')).map((s) => s.name), ...Object.values(CL.character.ATTRIBUTE_NAMES)].reduce((a, b) => (b.length > a.length ? b : a));
   for (const code of G.CODES) {
-    const text = G.words(code, { item: longest, shield: longest, other: longest, loadout: 'second weapon' });
+    const text = G.words(code, { item: longest, shield: longest, other: longest, loadout: 'second weapon', stat, need: '10', have: '5', fix });
     assert.ok(text.length <= G.TEXT_MAX, `${code}: ${text.length} letters`);
     assert.ok(!/\{\w+\}/.test(text), `${code}: every name filled`);
   }
-  assert.deepEqual(Object.keys(CL.content.table('gear_text')).sort(), [...G.CODES].sort());
+  assert.deepEqual(Object.keys(CL.content.table('gear_text')).sort(), [...G.LINES].sort());
   // The checks hold a world's words to the codes and the length.
   const C = plain({ ...Object.fromEntries(CL.content.TABLES.map((t) => [t, CL.content.table(t)])), forge: CL.content.table('forge'), gear_text: CL.content.table('gear_text') });
   assert.deepEqual(plain(CL.content.validate(C)), []);

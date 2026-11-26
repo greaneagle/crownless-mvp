@@ -620,7 +620,10 @@
     if (wagon === 'saved') lines.push('<strong>The wagon came through.</strong> The caravan rolls on');
     else if (wagon === 'lost') lines.push('<strong>The wagon is lost,</strong> and your escort contract with it');
     if (r.xp) {
-      const lv = r.xp.levels ? ` · <strong>Level up! Now level ${CL.campaign.character.level}</strong>` : '';
+      // P11-03: a level-up says what the new points could unlock, of the gear you have.
+      const un = r.xp.levels ? CL.gear.unlocks(CL.campaign) : [];
+      const unlock = un.length ? ` (your points would unlock ${escapeHtml(un.map((x) => CL.content.item(x.item).name).join(', '))})` : '';
+      const lv = r.xp.levels ? ` · <strong>Level up! Now level ${CL.campaign.character.level}</strong>${unlock}` : '';
       const ready = r.xp.ready ? ` · ${r.xp.ready} soldier${r.xp.ready === 1 ? '' : 's'} ready to upgrade` : '';
       lines.push(`+${r.xp.heroXp} XP${lv}${r.xp.troopXp ? ` · troops +${r.xp.troopXp} XP` : ''}${ready}`);
     }

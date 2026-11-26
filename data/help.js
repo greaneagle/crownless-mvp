@@ -150,6 +150,18 @@
         'Party also shows your hero: equip loot, and spend skill and attribute points as you level.'
       ]
     },
+    character: {
+      id: 'character',
+      stage: 'captain',
+      order: 6.4,
+      title: 'Your character',
+      body: [
+        'Experience comes from battles and contracts. Each level gives a skill point, and each even level an attribute point as well; Party shows what you have to spend. Levels come quickly to 10 and more slowly after, up to 20: a long campaign gets there.',
+        'Attributes start at 5 and your origin adds 1 to one of them. Strength gives health (5 a point) and is what heavy weapons, heavy armour and crossbows need. Agility will give a quicker recovery after each blow and less slowing in armour (from 5.5.0 and 5.6.0). Intelligence adds experience; Charisma opens some of what people in the story ask of you.',
+        'Skills start at 0, with 1 from your origin. One-Handed adds 3% damage a point; Two-Handed, Polearm, Shield, Archery and Riding will each make their weapons and horses work better as the coming updates arrive (Party says from which). Leadership leads more soldiers, Tactics improves simulated battles, Pathfinding speeds travel and Trade lowers prices.',
+        'Some gear needs a little Strength or skill before you can use it: the better weapons, shields and armour of the towns and the rarest pieces. Party and the armoury say what a piece needs, what you have and how to get there. Ordinary gear needs nothing, and you can spend your points however you like without losing a usable weapon, shield or horse. What counts is your own: points, your origin, the story and training, never a ring or a companion’s help.'
+      ]
+    },
     gear: {
       id: 'gear',
       stage: 'captain',
@@ -157,7 +169,8 @@
       title: 'Your gear',
       body: [
         'You can carry two weapons: equip one as your weapon and another as your second weapon (Carry second, in Party). A battle starts with the one you choose on the sheet; SWITCH (Q) brings the other to hand in a moment, and neither is ready again any sooner for it. A weapon that needs both hands, or a bow, slings your shield on your back until you switch back.',
-        'Party and the armoury say in words what a piece of gear means for you: what it can’t do, what it needs, what it does less well, and anything you might not expect. You can still buy a piece you can’t use yet, after a second tap.'
+        'Party and the armoury say in words what a piece of gear means for you: what it can’t do, what it needs, what it does less well, and anything you might not expect. You can still buy a piece you can’t use yet, after a second tap.',
+        'A piece you don’t yet meet the needs of is never taken from you: it stays on you or in your pack, and in battle it stays with the baggage. A weapon you can’t wield yet gives way to your other one, or to your fists if neither will do, and the battle says so.'
       ]
     },
     trade: {
@@ -270,7 +283,7 @@
     journal: { id: 'journal', on: 'journal', help: 'story', title: 'The Journal', text: 'Your quests, with the next step in gold, your company’s chronicle, and the regional news.' },
     saves: { id: 'saves', on: 'saves', help: 'saving', title: 'Keep a copy', text: 'The game saves itself in this browser, but browsers can clear it. Export a copy now and then — it also moves your game to another device.' },
     speed: { id: 'speed', on: 'map', when: 'originDone', help: 'map', title: 'Map speed', text: 'Time on the map runs at Normal speed, an hour a second. The ▶ button beside the zoom makes it Fast, four hours a second, and tapping it again slows it back. Wait lets whole days pass at once.' },
-    points: { id: 'points', on: 'map', when: 'points', help: 'party', title: 'Points to spend', text: 'You have skill or attribute points to spend. Open Party: Leadership lets you lead more soldiers, One-Handed hits harder.' },
+    points: { id: 'points', on: 'map', when: 'points', help: 'party', title: 'Points to spend', text: 'You have skill or attribute points to spend. Open Party: Leadership lets you lead more soldiers, One-Handed hits harder, and Party says what each does and what your points would unlock.' },
     beyond: { id: 'beyond', on: 'map', when: 'awayFromHome', help: 'lands', title: 'Beyond the March', text: 'A new land, with its own kingdom, troops and prices. Its capital posts contracts and someone there has work for you. Zoom out to see the whole realm; Centre brings you back.' },
     wounded: { id: 'wounded', on: 'map', when: 'wounded', help: 'party', title: 'Wounded soldiers', text: 'The wounded sit out battles for about two days. Resting in a settlement passes the time safely.' },
     fief: { id: 'fief', on: 'realm', when: 'fiefTab', help: 'lands', title: 'Your fief', text: 'What you hold, how it is doing and what it pays: prosperity, its garrison and its policies. It runs itself, with a line a week; set its policies here.' },

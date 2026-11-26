@@ -98,7 +98,12 @@ function snapshot() {
   const C = CL.character;
   const c = CL.campaign;
   out.hero = {};
-  for (const w of [null, 'worn_sword', 'hand_axe', 'arming_sword', 'war_mace', 'knights_sword']) out.hero[w || 'unarmed'] = { ...C.heroCombat(c, { ...c.equipment, weapon: w }) };
+  // P11-03: what each weapon gives, from the profile itself (requirements, which decide whether it's used, are tests/requirements.test.js's).
+  const own = (equipment) => {
+    const p = CL.profile.resolve({ hero: c, equipment });
+    return { hp: p.hp, maxhp: p.maxhp, damage: p.damage, armor: p.armor, canBlock: p.canBlock };
+  };
+  for (const w of [null, 'worn_sword', 'hand_axe', 'arming_sword', 'war_mace', 'knights_sword']) out.hero[w || 'unarmed'] = own({ ...c.equipment, weapon: w });
   out.hero.kit = { ...C.heroCombat(c, CL.content.get('tournaments', 'lists').kit) };
   out.heroPower = CL.autoresolve.heroPower(c);
   // Mara, a retinue companion and a lord in person, as the lord's battle starts them.

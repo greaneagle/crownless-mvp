@@ -32,7 +32,12 @@
   const UNARMED_DAMAGE = 6;
   const SKILL_DAMAGE = 0.03; // GDD §6: × (1 + 0.03 × WeaponSkill)
   const PATHFINDING_SPEED = 0.03; // per point; GDD names the skill, the rate is our starting value
-  const MAX_LEVEL = 10; // GDD §5 MVP cap
+  // P11-03 (D-P11b): the cap raised from the GDD's 10 so the points fit ten skills (data/character.js
+  // `budget.cap`, checked equal by tests/requirements.test.js). Levels 1–10 cost what they did.
+  const MAX_LEVEL = 20;
+  /** Past level 10 each level costs STEP more than the one before, from 10's own cost (measured, §7). */
+  const CURVE_FROM = 10;
+  const CURVE_STEP = 550;
   const INT_XP = 0.02; // GDD: INT modestly influences XP — +2% per point above 5
 
   const camp = () => CL.campaign;
@@ -71,13 +76,27 @@
       xp: 0, // toward the next level
       skillPoints: 0,
       attributePoints: 0,
+      // P11-03: the points spent on each (what retraining gives back), and the training done (P11-17).
+      spent: { attributes: {}, skills: {} },
+      training: {},
     };
   }
 
   // ---- Levels (GDD §5) ----
 
-  /** XP needed to go from level L to L + 1: round(100 × L^1.35). */
-  const xpToNext = (level) => Math.round(100 * level ** 1.35);
+  /**
+   * XP needed to go from level L to L + 1: round(100 × L^1.35) to level 10 (as the GDD); from 10, a
+   * flatter line, CURVE_STEP more each level (P11-03, set from P11-00's measured pace).
+   */
+  const xpToNext = (level) => (level < CURVE_FROM ? Math.round(100 * level ** 1.35) : Math.round(100 * CURVE_FROM ** 1.35) + CURVE_STEP * (level - CURVE_FROM));
+  /** All the XP from level 1 to `level`. */
+  const xpTotal = (level) => {
+    let n = 0;
+    for (let L = 1; L < level; L++) n += xpToNext(L);
+    return n;
+  };
+  /** The points a character has earned by a level: a skill point each level, an attribute point each even one. */
+  const pointsAt = (level) => ({ skills: level - 1, attributes: Math.floor(level / 2) });
 
   /**
    * Add XP (scaled by Intelligence). Each level: +1 skill point; every 2nd level: +1 attribute
@@ -106,6 +125,7 @@
     if (!ch?.skillPoints || !(id in ch.skills) || ch.skills[id] >= MAX_SKILL) return false;
     ch.skills[id]++;
     ch.skillPoints--;
+    ch.spent.skills[id] = (ch.spent.skills[id] || 0) + 1;
     return true;
   }
 
@@ -114,7 +134,31 @@
     if (!ch?.attributePoints || !ATTRIBUTES.includes(id) || ch.attributes[id] >= MAX_ATTRIBUTE) return false;
     ch.attributes[id]++;
     ch.attributePoints--;
+    ch.spent.attributes[id] = (ch.spent.attributes[id] || 0) + 1;
     return true;
+  }
+
+  /**
+   * P11-03 (D-P11i): give back every point spent, to spend again. Only a master does it, for crowns
+   * (P11-17); never in battle. The origin's and the story's grants stay. Returns the points returned.
+   */
+  function retrain(c = camp()) {
+    const ch = c.character;
+    if (!ch || CL.game?.mode === 'battle') return null;
+    const back = { attributes: 0, skills: 0 };
+    for (const [a, n] of Object.entries(ch.spent.attributes)) {
+      ch.attributes[a] -= n;
+      back.attributes += n;
+    }
+    for (const [k, n] of Object.entries(ch.spent.skills)) {
+      ch.skills[k] -= n;
+      back.skills += n;
+    }
+    ch.attributePoints += back.attributes;
+    ch.skillPoints += back.skills;
+    ch.spent = { attributes: {}, skills: {} };
+    CL.diag.log('info', 'Retrained', back);
+    return back;
   }
 
   /** Apply an origin's starting kit to a fresh campaign (gold, equipped gear, pack items). */
@@ -137,7 +181,23 @@
       .filter(Boolean)
       .map((id) => CL.content.item(id));
 
-  /** Skill level including bonuses from equipped items (e.g. Ring of Roads → pathfinding). */
+  /**
+   * P11-03 (plan §7.4): a skill's **base** value, what requirements read: the points spent, the origin's,
+   * the story's and training's grants; never an item's, a companion's or the retinue's bonus.
+   */
+  function baseSkill(id, c = camp()) {
+    const ch = c.character;
+    if (!ch) return 0;
+    const taught = CL.content.table('training');
+    let n = ch.skills?.[id] ?? 0;
+    for (const t of Object.keys(ch.training || {})) n += taught[t]?.skills?.[id] || 0;
+    return n;
+  }
+
+  /** P11-03: an attribute's base value (the same as `attribute`: nothing yet adds to one for a while). */
+  const baseAttribute = (id, c = camp()) => c.character?.attributes?.[id] ?? BASE_ATTRIBUTE;
+
+  /** Skill level including bonuses from equipped items (e.g. Ring of Roads → pathfinding): effective, for what a skill does. */
   function skill(id, c = camp()) {
     const base = c.character?.skills?.[id] ?? 0;
     return base + equippedItems(c).reduce((sum, it) => sum + (it.stats[id] || 0), 0) + (CL.companion?.skillBonus(id, c) || 0) + (CL.retinue?.skillBonus(id, c) || 0);
@@ -236,6 +296,10 @@
     if (isInt(d.xp, 0, 1e9)) ch.xp = d.xp;
     if (isInt(d.skillPoints, 0, 99)) ch.skillPoints = d.skillPoints;
     if (isInt(d.attributePoints, 0, 99)) ch.attributePoints = d.attributePoints;
+    // P11-03: what was spent on each (never more than it holds), and the training done.
+    for (const a of ATTRIBUTES) if (isInt(d.spent?.attributes?.[a], 1, ch.attributes[a])) ch.spent.attributes[a] = d.spent.attributes[a];
+    for (const k of skillIds()) if (isInt(d.spent?.skills?.[k], 1, ch.skills[k])) ch.spent.skills[k] = d.spent.skills[k];
+    if (d.training && typeof d.training === 'object') for (const [t, v] of Object.entries(d.training)) if (v === true && /^[a-z0-9_]{1,32}$/.test(t)) ch.training[t] = true;
     return ch;
   }
 
@@ -263,8 +327,15 @@
     MAX_ATTRIBUTE,
     UNARMED_DAMAGE,
     SKILL_DAMAGE,
+    CURVE_FROM,
+    CURVE_STEP,
     xpToNext,
+    xpTotal,
+    pointsAt,
     gainXp,
+    retrain,
+    baseSkill,
+    baseAttribute,
     spendSkill,
     spendAttribute,
     create,

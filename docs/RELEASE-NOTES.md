@@ -1,5 +1,24 @@
 # Crownless — Release Notes
 
+## v5.3.0 — The progression budget and equipment requirements (P11-03) · 2026-11-26
+
+Levels go to 20, two new skills join, and the better gear needs a little Strength or skill to use. Ordinary gear needs nothing, and battles fight as before with it.
+
+### New
+- **Level 20.** Levels 1–10 come as before (level 10 around day 50); after 10 each level costs 550 XP more than the last, so level 15 comes around day 135–145 and level 20 in a long campaign (around day 280–325, measured). A skill point each level and an attribute point each even one, as before: 19 and 10 by the cap.
+- **Two-Handed and Polearm**, two new skills (D-P11c). Every combat skill now says what it does, and from which update it starts working (Two-Handed, Polearm and Shield from 5.5.0, Archery 5.7.0, Riding 5.8.0).
+- **Agility and Strength have their jobs.** Strength: health, and what heavy weapons, armour and crossbows need. Agility: a quicker recovery and less slowing in armour, from 5.5.0 and 5.6.0. The creator and Party say so.
+- **Requirements.** The War Mace needs Strength 6; the Knight's Sword One-Handed 3; the Iron-Rimmed Heater Shield 2; the Bascinet Strength 6; the Mail Hauberk Strength 7. Party, the armoury, the blacksmith and Prepare say what a piece needs, what you have and how to get there ("Spend 3 skill points on it", or "More points come as you level"), with a lock mark as well as words.
+- **Kept, never taken.** A piece you can't use yet stays on you or in your pack; in battle it stays with the baggage. A weapon you can't wield gives way to your other one, or to your fists, and the battle says so.
+- **What your points would unlock.** Party names the gear you have that your points to spend would let you use, and so does a level-up after a battle.
+- **Party → What each attribute and skill does**, and **How to Play → Your character**.
+
+### Under the hood
+- `data/character.js`: the ten skills' and the four attributes' words, and `budget { cap: 20, middle: 10, late: 15 }`. `character.baseSkill` and `baseAttribute` (what requirements read: points, origin, story, training; never an item's, a companion's or the retinue's bonus) beside the effective `skill`. `character.retrain` gives back every point spent, for P11-17's masters; `spent` records them.
+- **Requirements** on items (`req { str?, agi?, skills?, training? }`) or as a family's default (greatsword, greataxe, pike, lance, longbow, composite bow and crossbow, for the weapons to come), held to the rule of `docs/PHASE-11-PLAN.md` §7.3 by `CL.gear.ruleProblems`: at load, for packs and for worlds. Village and kit gear needs nothing; a town's at most what level 10 reaches with half its points; a rare piece level 15's.
+- **The save** gains `character.spent`, `character.training` and the two skills by defaults (no schema step).
+- **Golden battles unchanged.**
+
 ## v5.2.0 — Carried and wielded (P11-02) · 2026-11-26
 
 You can carry two weapons, and the game tells you in words what your gear means. Battles fight as before unless you carry a second weapon.

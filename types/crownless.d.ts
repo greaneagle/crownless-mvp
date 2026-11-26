@@ -85,6 +85,10 @@ declare global {
     xp: number;
     skillPoints: number;
     attributePoints: number;
+    /** P11-03: the points spent on each attribute and skill (what retraining gives back). */
+    spent: { attributes: Record<string, number>; skills: Record<string, number> };
+    /** P11-03: the training done, by id (P11-17's masters). */
+    training: Record<string, true>;
   }
 
   type EquipmentSlot = 'weapon' | 'weapon2' | 'offhand' | 'head' | 'body' | 'hands' | 'feet' | 'horse' | 'ring' | 'ammo';

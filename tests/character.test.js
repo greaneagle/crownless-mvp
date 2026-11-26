@@ -15,7 +15,7 @@ test('origins add +1 attribute and +1 skill to the 5/5/5/5 base', () => {
   const p = make('peddler');
   assert.equal(p.attributes.cha, 6);
   assert.equal(p.skills.trade, 1);
-  assert.equal(Object.keys(f.skills).length, 8, 'the 8 MVP skills');
+  assert.equal(Object.keys(f.skills).length, 10, 'the 8 MVP skills, and Two-Handed and Polearm (P11-03, D-P11c)');
   assert.equal(make('wizard').origin, 'farmhand', 'unknown origin falls back');
 });
 

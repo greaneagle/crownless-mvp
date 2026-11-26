@@ -55,8 +55,14 @@ test("every troop's unit has 5.0.0's numbers, and the weapon its look carries", 
 test("the hero in each weapon, unarmed and in the tournament's kit, Mara and the retinue: 5.0.0's numbers", () => {
   const { CL } = loadGame({ seed: 1 });
   const c = CL.campaign;
+  // What each weapon gives, from the profile (P11-03: whether it's used is the requirement's, tests/requirements.test.js).
+  const own = (equipment) => {
+    const p = CL.profile.resolve({ hero: c, equipment });
+    return { hp: p.hp, maxhp: p.maxhp, damage: p.damage, armor: p.armor, canBlock: p.canBlock };
+  };
   for (const w of ['unarmed', 'worn_sword', 'hand_axe', 'arming_sword', 'war_mace', 'knights_sword']) {
-    assert.deepEqual(plain(CL.character.heroCombat(c, { ...c.equipment, weapon: w === 'unarmed' ? null : w })), want.hero[w], w);
+    assert.deepEqual(plain(own({ ...c.equipment, weapon: w === 'unarmed' ? null : w })), want.hero[w], w);
+    if (CL.gear.meets(c, w === 'unarmed' ? null : w)) assert.deepEqual(plain(CL.character.heroCombat(c, { ...c.equipment, weapon: w === 'unarmed' ? null : w })), want.hero[w], `${w}: met, so the same in battle`);
   }
   assert.deepEqual(plain(CL.character.heroCombat(c, CL.content.get('tournaments', 'lists').kit)), want.hero.kit, 'kit');
   assert.equal(CL.autoresolve.heroPower(c), want.heroPower);

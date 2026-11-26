@@ -55,6 +55,9 @@
 #createNote{font-size:calc(12px * var(--ui-scale));color:#c9ae7a;margin:8px 0 0}
 #sheetStats{line-height:1.5}
 #sheetStats .statLine{display:flex;flex-wrap:wrap;gap:4px 14px}
+.statHelp{margin:4px 0;font-size:calc(12px * var(--ui-scale));color:#d9c9a4}
+.statHelp summary{cursor:pointer;color:#ecd6a4;min-height:calc(28px * var(--ui-scale));display:flex;align-items:center}
+.statHelp ul{margin:2px 0 0;padding-left:16px}
 .sheetCols{display:flex;gap:16px;flex-wrap:wrap;margin-top:8px}
 .sheetCols>div{flex:1;min-width:calc(200px * var(--ui-grow))}
 .sheetCols h3{margin:4px 0;font-size:calc(15px * var(--ui-scale));color:#ecd6a4}

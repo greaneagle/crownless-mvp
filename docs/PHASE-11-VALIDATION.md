@@ -162,6 +162,19 @@ A new Farmhand (`scripts/simulate-campaign.js`'s start) played by each bot style
 - **Battles give two thirds of the XP**, contracts the rest; the story none (the bots play the plain start).
 - The 360-day pace on three seeds is on the next night run.
 
+### XP pace past level 10 (5.3.0, P11-03: `progression.js 180 1`, 11.5 min)
+
+The curve from P11-03 (levels 1–10 as before; then 550 XP more a level). The same bots and seed as above; the day each level came:
+
+| Style | L10 | L12 | L14 | L15 | L16 | Level / XP by day 60 · 120 · 180 |
+|---|---|---|---|---|---|---|
+| hands-off | 54 | 82 | 120 | 144 | 175 | 10 / 9,868 · 14 / 20,847 · 16 / 30,701 |
+| presets | 49 | 83 | 119 | 140 | 168 | 10 / 10,180 · 14 / 21,031 · 16 / 32,933 |
+| expert | 58 | 82 | 116 | 135 | 154 | 10 / 9,083 · 14 / 21,901 · 17 / 36,369 |
+| ruler | 54 | 82 | 120 | 144 | 175 | as hands-off |
+
+Levels 1–10 came on the same days as at 5.0.1 for hands-off, presets and the ruler; expert reached 10 on day 58 instead of 55 (its XP by day 60 is 9,083 against 9,289; the cause was not looked into). Level 15 on days 135–144, level 16 on 154–175; at 170–200 XP a day, level 20 comes around day 280–325. The 360-day run on three seeds is on the night run.
+
 ### Touch usability and how 5.0.0 feels (H-00)
 
 The owner's session on the phone (Zenfone 10, Chrome), and once on a PC (`docs/PHASE-11-PLAN.md` §13):

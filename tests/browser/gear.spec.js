@@ -2,14 +2,16 @@
 // pack, read the gear check's finding on the sheet and in the armoury, choose the loadout a battle
 // starts with, buy a piece the check warns about only after a second tap, and switch weapons in battle
 // (Q on the desktop, the SWITCH button on the phone). The rules are in tests/gear.test.js.
-// The game sells no two-handed weapon yet (P11-04 onward): a test greatsword is added as test setup.
+// The game sells no two-handed weapon yet (P11-04 onward): a test greatsword is added as test setup
+// (needing nothing, over its family's requirement). P11-03: a requirement's line, with what it needs,
+// what you have and how to get there; the piece kept, and met by spending a point.
 const { test, expect, open, waitMode, game, press, newGame, toMap, debug, isTouch } = require('./helpers');
 
 /** Test setup: a two-handed sword the armoury sells, one in the pack, and a shield worn. */
 async function withGreatsword(page) {
   await game(page, (CL) => {
     const items = CL.content.table('items');
-    items.test_greatsword = { id: 'test_greatsword', name: 'Test Greatsword', type: 'weapon', slot: 'weapon', family: 'greatsword', tier: 2, rarity: 'uncommon', value: 120, weight: 4, stats: { damage: 28 }, questItem: false };
+    items.test_greatsword = { id: 'test_greatsword', name: 'Test Greatsword', type: 'weapon', slot: 'weapon', family: 'greatsword', tier: 2, rarity: 'uncommon', value: 120, weight: 4, stats: { damage: 28 }, req: {}, questItem: false };
     const s = CL.content.table('settlements')[CL.campaign.world.location];
     s.gear = [...(s.gear || []), 'test_greatsword'];
     CL.campaign.inventory.test_greatsword = 1;
@@ -75,6 +77,61 @@ test('the armoury: the finding before you buy; a piece you could not use needs a
   expect(await game(page, (CL) => CL.campaign.inventory.test_greatsword)).toBe(n);
   await press(page, buy);
   expect(await game(page, (CL) => CL.campaign.inventory.test_greatsword)).toBe(n + 1);
+});
+
+/** Test setup: the Knight's Sword (One-Handed 3) in the pack and the armoury, One-Handed at 0. */
+async function withKnightsSword(page) {
+  await game(page, (CL) => {
+    const c = CL.campaign;
+    c.character.skills.one_handed = 0;
+    c.character.skillPoints = 0;
+    c.inventory.knights_sword = 1;
+    c.gold = 2000;
+    const s = CL.content.table('settlements')[c.world.location];
+    s.gear = [...new Set([...(s.gear || []), 'knights_sword'])];
+  });
+}
+
+test('a requirement in the armoury: what it needs, what you have, how to get there', async ({ page }) => {
+  await open(page);
+  await newGame(page);
+  await withKnightsSword(page);
+  await press(page, '#tradeBtn');
+  await waitMode(page, 'trade');
+  const offer = page.locator('#tradeArmoury li', { hasText: "Knight's Sword" });
+  await expect(offer.locator('.finding')).toContainText("needs One-Handed 3; you have 0. More points come as you level.");
+  await expect(offer.locator('.finding .findingMark')).toHaveText('🔒');
+});
+
+test('a requirement on the sheet: kept though not met, what points would unlock, a point meets it', async ({ page }) => {
+  await open(page);
+  await newGame(page);
+  await withKnightsSword(page);
+  await press(page, '#gearBtn');
+  await waitMode(page, 'character');
+  const row = page.locator('#sheetPack li', { hasText: "Knight's Sword" });
+  await press(page, row.locator('button', { hasText: 'Equip' }));
+  const findings = page.locator('#sheetFindings');
+  await expect(findings.locator('.finding')).toHaveCount(1);
+  await expect(findings.locator('.finding')).toContainText("The Knight's Sword needs One-Handed 3; you have 0.");
+  expect(await game(page, (CL) => CL.campaign.equipment.weapon)).toBe('knights_sword'); // kept, though not met
+  // A finding fits its row (two lines at most) on the phone.
+  const box = await findings.locator('.finding').boundingBox();
+  const lh = await findings.locator('.finding').evaluate((e) => parseFloat(getComputedStyle(e).lineHeight));
+  expect(box.height).toBeLessThanOrEqual(lh * 2 + 4);
+  // Three points to spend: the sheet names what they'd unlock; spending them meets it.
+  await game(page, (CL) => {
+    CL.campaign.character.skillPoints = 3;
+    CL.ui.refresh();
+  });
+  await expect(page.locator('#sheetStats')).toContainText("Your points would unlock: Knight's Sword (One-Handed 3)");
+  await expect(findings.locator('.finding')).toContainText('Spend 3 skill points on it.');
+  for (let i = 0; i < 3; i++) await press(page, page.locator('#sheetStats button[aria-label^="Raise One-Handed"]'));
+  await expect(findings.locator('.finding')).toHaveCount(0);
+  await expect(page.locator('#sheetStats')).not.toContainText('Your points would unlock');
+  // What each skill does, folded away.
+  await press(page, page.locator('#sheetStats .statHelp summary'));
+  await expect(page.locator('#sheetStats .statHelp')).toContainText('Two-Handed: From 5.5.0');
 });
 
 test('in battle: SWITCH (Q) brings the second weapon to hand, the shield slung, and back', async ({ page }) => {

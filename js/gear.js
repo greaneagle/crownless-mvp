@@ -5,7 +5,7 @@
  * (a two-handed weapon or a bow slings it on the back). **One gear check** says, in words, what a kit
  * means: every screen, the shops, Prepare, the lists and the battle ask it, so they say the same.
  * Findings: { kind, code, item, text, have, need, fix }; kinds `incompatible` (can't be used, or not
- * here), `requirement` (not yet met, P11-03), `penalty` (works, but worse), `note` (a consequence you
+ * here), `requirement` (not yet met: P11-03's attribute, skill and training needs, on base values), `penalty` (works, but worse), `note` (a consequence you
  * may not expect), `advice`. Text from data/gear_text.js. Pure logic except `switchWeapon`/`tick`,
  * which drive the hero in battle. */
 (function (root) {
@@ -14,7 +14,17 @@
 
   const LOADOUTS = ['primary', 'secondary'];
   /** The findings' codes (data/gear_text.js has a line for each, and no other). */
-  const CODES = ['two_hands', 'shoots', 'unarmed', 'no_second', 'fallback', 'loaner', 'mounted', 'heavy'];
+  const CODES = ['two_hands', 'shoots', 'unarmed', 'no_second', 'fallback', 'loaner', 'mounted', 'heavy', 'attribute', 'skill', 'training', 'no_weapon'];
+  /** P11-03: the ways to meet a requirement, the last sentence of its finding (data/gear_text.js too). */
+  const FIXES = ['fix_spend', 'fix_level', 'fix_untaught', 'fix_teacher'];
+  /** Every line data/gear_text.js has, and no other. */
+  const LINES = [...CODES, ...FIXES];
+  /** What a requirement may name (P11-03): two attributes, skills by id, a master's training. */
+  const REQ_KEYS = ['str', 'agi', 'skills', 'training'];
+  /** The requirement rule's classes of gear (docs/PHASE-11-PLAN.md §7.3). */
+  const CLASSES = ['ordinary', 'advanced', 'elite'];
+  /** Families the rule keeps a piece of that needs nothing, whatever a character spends (§7.3 rule 5). */
+  const ALWAYS = ['sword', 'spear', 'shortbow', 'crossbow'];
   /** The most letters a finding may have once its names are in: two lines at 812×375, Larger text. */
   const TEXT_MAX = 120;
   const KINDS = ['incompatible', 'requirement', 'penalty', 'note', 'advice'];
@@ -32,6 +42,81 @@
   function words(code, fill = {}) {
     const t = CL.content.table('gear_text')[code] || code;
     return t.replace(/\{(\w+)\}/g, (_, k) => fill[k] ?? '');
+  }
+
+  // ---- Requirements (P11-03) ----
+
+  /** A piece's requirement: its own `req` (`{}` for none), else its family's (a weapon), else none. @param {string | null} id */
+  function reqOf(id) {
+    const it = item(id);
+    if (!it) return null;
+    if (it.req) return it.req;
+    return it.slot === 'weapon' ? CL.content.table('weapon_families')[it.family]?.req || null : null;
+  }
+
+  const plural = (n, what) => `${n} ${what} point${n === 1 ? '' : 's'}`;
+
+  /** How to meet a need of `gap` more: spend the points you have, or the points to come. */
+  function fixFor(ch, kind, gap) {
+    const have = kind === 'attribute' ? ch.attributePoints : ch.skillPoints;
+    return have >= gap ? words('fix_spend', { n: plural(gap, kind) }) : words('fix_level');
+  }
+
+  /**
+   * What a character doesn't yet meet of a piece's requirement, as findings (base values only, plan
+   * §7.4). None for a piece that needs nothing, or with no hero. @param {any} c @param {string | null} id
+   */
+  function unmet(c, id) {
+    const r = reqOf(id);
+    const ch = c?.character;
+    if (!r || !ch) return [];
+    const C = CL.character;
+    const out = [];
+    const name = nameOf(id);
+    for (const a of ['str', 'agi']) {
+      if (r[a] == null) continue;
+      const have = C.baseAttribute(a, c);
+      if (have >= r[a]) continue;
+      const fix = fixFor(ch, 'attribute', r[a] - have);
+      out.push(finding('requirement', 'attribute', id, { item: name, stat: C.ATTRIBUTE_NAMES[a], need: String(r[a]), have: String(have), fix }, { have, need: r[a], fix, stat: a }));
+    }
+    for (const [k, n] of Object.entries(r.skills || {})) {
+      const have = C.baseSkill(k, c);
+      if (have >= n) continue;
+      const fix = fixFor(ch, 'skill', n - have);
+      out.push(finding('requirement', 'skill', id, { item: name, stat: CL.content.table('skills')[k]?.name || k, need: String(n), have: String(have), fix }, { have, need: n, fix, stat: k }));
+    }
+    if (r.training && !ch.training?.[r.training]) {
+      const t = CL.content.table('training')[r.training];
+      const fix = t?.master ? words('fix_teacher', { master: t.master, place: CL.content.table('settlements')[t.place]?.name || t.place }) : words('fix_untaught');
+      out.push(finding('requirement', 'training', id, { item: name, fix }, { have: 0, need: 1, fix, stat: r.training }));
+    }
+    return out;
+  }
+
+  /** Does the character meet a piece's requirement (so it's used in battle)? */
+  const meets = (c, id) => !id || unmet(c, id).length === 0;
+
+  /**
+   * The pieces a character has (worn or in the pack) that the points they have to spend now would
+   * unlock (no training needed): what the sheet and a level-up name. @param {any} c
+   * @returns {{ item: string, needs: string }[]}
+   */
+  function unlocks(c) {
+    const ch = c?.character;
+    if (!ch || (!ch.attributePoints && !ch.skillPoints)) return [];
+    const ids = new Set([...Object.values(c.equipment || {}).filter(Boolean), ...Object.keys(c.inventory || {})]);
+    const out = [];
+    for (const id of ids) {
+      const u = unmet(c, id);
+      if (!u.length || u.some((f) => f.code === 'training')) continue;
+      const gapA = u.filter((f) => f.code === 'attribute').reduce((n, f) => n + f.need - f.have, 0);
+      const gapS = u.filter((f) => f.code === 'skill').reduce((n, f) => n + f.need - f.have, 0);
+      if (gapA > ch.attributePoints || gapS > ch.skillPoints) continue;
+      const needs = u.map((f) => `${f.code === 'attribute' ? CL.character.ATTRIBUTE_NAMES[f.stat] : CL.content.table('skills')[f.stat]?.name || f.stat} ${f.need}`).join(', ');
+      out.push({ item: id, needs });
+    }
+    return out.sort((a, b) => nameOf(a.item).localeCompare(nameOf(b.item)));
   }
 
   /** The weapon a loadout holds. @param {any} kit equipment @param {string} which */
@@ -63,7 +148,10 @@
    */
   function kitFor(c, kit = c.equipment, which = 'primary') {
     const a = active(c, kit, which);
-    return { ...kit, weapon: a.weapon, weapon2: null, offhand: a.shield };
+    const out = { ...kit, weapon: a.weapon, weapon2: null, offhand: a.shield };
+    // P11-03: a piece whose requirement isn't met stays with the baggage (it's never taken away).
+    for (const s of Object.keys(out)) if (out[s] && !meets(c, out[s])) out[s] = null;
+    return out;
   }
 
   const finding = (kind, code, itemId, fill, extra = {}) => ({ kind, code, item: itemId || null, text: words(code, fill), have: null, need: null, fix: null, ...extra });
@@ -80,6 +168,11 @@
     const w = weaponProfile(a.weapon);
     const shield = kit?.offhand || null;
     if (!a.weapon) out.push(finding('note', 'unarmed', null, {}));
+    // P11-03: what the hero doesn't yet meet, of what's in hand and worn.
+    for (const s of ['weapon', 'offhand', 'head', 'body', 'hands', 'feet', 'horse', 'ring', 'ammo']) {
+      const id = s === 'weapon' ? a.weapon : s === 'offhand' ? a.shield : kit?.[s];
+      if (id) out.push(...unmet(c, id));
+    }
     if (a.stowed) {
       const ranged = Boolean(w.family.ranged);
       out.push(finding('note', ranged ? 'shoots' : 'two_hands', a.weapon, { item: nameOf(a.weapon), shield: nameOf(shield) }));
@@ -99,7 +192,13 @@
   /** Can this loadout fight? (It holds a weapon, or both slots are empty, and nothing makes it unusable.) */
   function usable(c, kit, which, context = {}) {
     if (which === 'secondary' && !kit?.weapon2) return false;
-    return !check(c, kit, { ...context, which }).some((f) => f.kind === 'incompatible' || f.kind === 'requirement');
+    return !blocked(c, kit, which, context);
+  }
+
+  /** Does something stop the weapon this loadout holds (a piece of armour not met doesn't: it stays behind)? */
+  function blocked(c, kit, which, context = {}) {
+    const w = weaponIn(kit, which);
+    return check(c, kit, { ...context, which }).some((f) => (f.kind === 'incompatible' || f.kind === 'requirement') && f.item === w);
   }
 
   /**
@@ -111,7 +210,7 @@
     const order = pref === 'secondary' ? ['secondary', 'primary'] : ['primary', 'secondary'];
     for (const which of order) {
       if (which === 'secondary' && !kit?.weapon2) continue;
-      if (!check(c, kit, { ...context, which }).some((f) => f.kind === 'incompatible' || f.kind === 'requirement')) return which;
+      if (!blocked(c, kit, which, context)) return which;
     }
     return 'primary';
   }
@@ -123,7 +222,9 @@
   function battleLoadout(c, kit = c.equipment, context = {}) {
     const which = bestLoadout(c, kit, context);
     const pref = context.loaner ? 'primary' : c?.loadout?.start === 'secondary' && kit?.weapon2 ? 'secondary' : 'primary';
-    const message = which !== pref ? words('fallback', { loadout: LOADOUT_NAMES[pref], other: nameOf(weaponIn(kit, which)) }) : null;
+    const w = weaponIn(kit, which);
+    // P11-03: neither weapon can be wielded yet: fists, and say so.
+    const message = w && !meets(c, w) ? words('no_weapon', { item: nameOf(w) }) : which !== pref ? words('fallback', { loadout: LOADOUT_NAMES[pref], other: nameOf(w) }) : null;
     return { which, message };
   }
 
@@ -144,7 +245,7 @@
     const out = [];
     for (const which of LOADOUTS) {
       if (which === 'secondary' && !kit?.weapon2) continue;
-      for (const f of check(c, kit, { ...context, which })) if (!out.some((g) => g.code === f.code && g.item === f.item)) out.push({ ...f, loadout: which });
+      for (const f of check(c, kit, { ...context, which })) if (!out.some((g) => g.code === f.code && g.item === f.item && g.text === f.text)) out.push({ ...f, loadout: which });
     }
     return out.sort((x, y) => ORDER[x.kind] - ORDER[y.kind]);
   }
@@ -185,6 +286,92 @@
     parts.push(a.hands === 2 ? 'both hands' : 'one hand');
     const line = parts.join(', ');
     return b ? `Against your ${nameOf(against)}: ${line}` : line[0].toUpperCase() + line.slice(1);
+  }
+
+  // ---- The requirement rule (P11-03; docs/PHASE-11-PLAN.md §7.3) ----
+
+  /**
+   * A piece's class for the rule: `ordinary` (tier 1, sold in a village, an origin's kit or a
+   * tournament's), `elite` (tier 3, or a region's own, P11-16), else `advanced` (a town's). A forged
+   * piece is its base's. @param {any} it @param {any} C the content
+   */
+  function classOf(it, C) {
+    const base = it.forgedFrom ? C.items?.[it.forgedFrom] || it : it;
+    const id = base.id;
+    const kits = [...Object.values(C.origins || {}).flatMap((o) => [...Object.values(o.kit?.equipment || {}), ...Object.keys(o.kit?.items || {})]), ...Object.values(C.tournaments || {}).flatMap((t) => Object.values(t.kit || {}))];
+    const village = Object.values(C.settlements || {}).some((s) => s.type === 'village' && (s.gear || []).includes(id));
+    if ((base.tier ?? 1) <= 1 || village || kits.includes(id)) return 'ordinary';
+    if ((base.tier ?? 1) >= 3 || base.region) return 'elite';
+    return 'advanced';
+  }
+
+  /**
+   * Everything wrong with the requirements of a content set: their shape, and the rule (an ordinary
+   * piece needs nothing; an advanced one no more than the middle level reaches with half its points;
+   * an elite one the late level's, plus training that someone teaches; nothing past the cap; and a
+   * piece of each everyday family, a shield and a horse that need nothing). @param {any} C @returns {string[]}
+   */
+  function ruleProblems(C) {
+    const errs = [];
+    const err = (m) => errs.push(m);
+    const CH = CL.character;
+    // A content set without a budget (a world or pack checked on its own) is held to the game's.
+    const own = CL.content.table('budget');
+    const B = C.budget || (own.cap ? own : { cap: CH?.MAX_LEVEL ?? 20, middle: 10, late: 15 });
+    const isInt = (n) => Number.isInteger(n);
+    if (!(isInt(B.cap) && isInt(B.middle) && isInt(B.late) && B.middle > 1 && B.middle < B.late && B.late <= B.cap)) err('budget: needs whole levels with 1 < middle < late ≤ cap');
+    else if (CH && B.cap !== CH.MAX_LEVEL) err(`budget: the cap ${B.cap} isn't the game's ${CH.MAX_LEVEL}`);
+    if (errs.length) return errs;
+    const BASE = 5;
+    const top = BASE + 1 + Math.floor(B.cap / 2); // the most an attribute can be: start, origin, every point
+    const maxSkill = CH?.MAX_SKILL ?? 10;
+    const shape = (r, where) => {
+      if (r == null) return;
+      if (typeof r !== 'object' || Array.isArray(r)) return err(`${where}: req must be an object`);
+      for (const k of Object.keys(r)) if (!REQ_KEYS.includes(k)) err(`${where}: req can't name ${k}`);
+      for (const a of ['str', 'agi']) if (r[a] != null && !(isInt(r[a]) && r[a] > BASE && r[a] <= top)) err(`${where}: req.${a} must be a whole number from ${BASE + 1} to ${top}`);
+      for (const [k, n] of Object.entries(r.skills || {})) {
+        if (!C.skills?.[k]) err(`${where}: req names an unknown skill ${k}`);
+        if (!(isInt(n) && n >= 1 && n <= maxSkill)) err(`${where}: req.skills.${k} must be from 1 to ${maxSkill}`);
+      }
+      if (r.training != null && !C.training?.[r.training]) err(`${where}: no one teaches the training ${r.training}`);
+    };
+    for (const fam of Object.values(C.weapon_families || {})) shape(fam.req, `weapon family ${fam.id}`);
+    const reqOfIn = (it) => it.req ?? (it.slot === 'weapon' ? C.weapon_families?.[it.family]?.req : null) ?? null;
+    const needsNothing = (it) => {
+      const r = reqOfIn(it);
+      return !r || (!r.str && !r.agi && !r.training && !Object.keys(r.skills || {}).length);
+    };
+    for (const it of Object.values(C.items || {})) {
+      if (!it.slot) continue;
+      const where = `item ${it.id}`;
+      if (it.req != null) shape(it.req, where);
+      const r = reqOfIn(it);
+      if (!r || needsNothing(it)) continue;
+      const cls = classOf(it, C);
+      if (cls === 'ordinary') {
+        err(`${where}: ordinary gear (sold in a village, a kit, or tier 1) must need nothing`);
+        continue;
+      }
+      const level = cls === 'advanced' ? B.middle : B.late;
+      const pts = CH ? CH.pointsAt(level) : { skills: level - 1, attributes: Math.floor(level / 2) };
+      const attrs = Math.max(0, (r.str || BASE) - BASE) + Math.max(0, (r.agi || BASE) - BASE);
+      const skills = Object.values(r.skills || {}).reduce((a, b) => a + b, 0);
+      if (attrs > Math.floor(pts.attributes / 2)) err(`${where}: an ${cls} piece may need ${Math.floor(pts.attributes / 2)} attribute points of level ${level}'s ${pts.attributes}, not ${attrs}`);
+      if (skills > Math.floor(pts.skills / 2)) err(`${where}: an ${cls} piece may need ${Math.floor(pts.skills / 2)} skill points of level ${level}'s ${pts.skills}, not ${skills}`);
+      if (r.training && cls !== 'elite') err(`${where}: only an elite piece may need training`);
+    }
+    // Rule 5: basic play never depends on points.
+    const items = Object.values(C.items || {}).filter((it) => it.slot && !it.questItem);
+    for (const fam of ALWAYS) {
+      const of = items.filter((it) => it.slot === 'weapon' && it.family === fam);
+      if (of.length && !of.some(needsNothing)) err(`items: no ${fam} needs nothing (a character who spends nothing on fighting must have one)`);
+    }
+    for (const [slot, what] of [['offhand', 'shield'], ['horse', 'horse']]) {
+      const of = items.filter((it) => it.slot === slot);
+      if (of.length && !of.some(needsNothing)) err(`items: no ${what} needs nothing`);
+    }
+    return errs;
   }
 
   // ---- In battle: switching weapons ----
@@ -258,5 +445,5 @@
     return 'You carry no second weapon now: battles start with your first.';
   }
 
-  CL.gear = { LOADOUTS, CODES, TEXT_MAX, KINDS, ICONS, KIND_NAMES, LOADOUT_NAMES, words, active, kitFor, check, checkAll, checkItem, usable, bestLoadout, battleLoadout, stops, describe, speedWord, compare, begin, switchWeapon, tick, switching, sanitize, repair };
+  CL.gear = { FIXES, LINES, REQ_KEYS, CLASSES, ALWAYS, reqOf, unmet, meets, unlocks, classOf, ruleProblems, blocked, LOADOUTS, CODES, TEXT_MAX, KINDS, ICONS, KIND_NAMES, LOADOUT_NAMES, words, active, kitFor, check, checkAll, checkItem, usable, bestLoadout, battleLoadout, stops, describe, speedWord, compare, begin, switchWeapon, tick, switching, sanitize, repair };
 })(typeof window !== 'undefined' ? window : globalThis);

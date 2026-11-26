@@ -4,7 +4,11 @@
  * Equipment stats: weapon `damage` is the GDD WeaponDamage (sword baseline ~14-17); `armor` adds to the
  * hero's armor; shields need `block` to allow blocking; skill names (e.g. `pathfinding`) add skill points;
  * a horse's `travel` is a fractional world-map speed bonus; `food` is rations (one feeds 5 people a day).
- * Slots: weapon, offhand, head, body, hands, feet, horse, ring. `tier` 1–3 drives loot and shops. */
+ * Slots: weapon, offhand, head, body, hands, feet, horse, ring. `tier` 1–3 drives loot and shops.
+ * P11-03 `req`: what a piece needs to be used ({ str?, agi?, skills?: { id: n }, training? }, base values;
+ * a weapon's family may give a default). Gear sold in a village or in a kit needs nothing; a town's
+ * (tier 2) at most what level 10 reaches with half its points; a rare piece (tier 3) level 15's
+ * (data/character.js `budget`, js/gear.js `ruleProblems`, tests/requirements.test.js). */
 (function (root) {
   root.CROWNLESS_CONTENT = root.CROWNLESS_CONTENT || {};
   var C = root.CROWNLESS_CONTENT;
@@ -13,21 +17,21 @@
     worn_sword: {id:'worn_sword',family:'sword',name:'Worn Sword',type:'weapon',slot:'weapon',tier:1,rarity:'common',value:12,weight:2,stats:{damage:17},questItem:false},
     hand_axe: {id:'hand_axe',family:'axe',name:'Hand Axe',type:'weapon',slot:'weapon',tier:1,rarity:'common',value:45,weight:2,stats:{damage:19},questItem:false},
     arming_sword: {id:'arming_sword',family:'sword',name:'Arming Sword',type:'weapon',slot:'weapon',tier:2,rarity:'uncommon',value:80,weight:2,stats:{damage:21},questItem:false},
-    war_mace: {id:'war_mace',family:'mace',name:'War Mace',type:'weapon',slot:'weapon',tier:2,rarity:'uncommon',value:110,weight:3,stats:{damage:22},questItem:false},
-    knights_sword: {id:'knights_sword',family:'sword',name:"Knight's Sword",type:'weapon',slot:'weapon',tier:3,rarity:'rare',value:260,weight:2,stats:{damage:25},questItem:false},
+    war_mace: {id:'war_mace',family:'mace',name:'War Mace',type:'weapon',slot:'weapon',tier:2,rarity:'uncommon',value:110,weight:3,stats:{damage:22},req:{str:6},questItem:false},
+    knights_sword: {id:'knights_sword',family:'sword',name:"Knight's Sword",type:'weapon',slot:'weapon',tier:3,rarity:'rare',value:260,weight:2,stats:{damage:25},req:{skills:{one_handed:3}},questItem:false},
     // Shields (needed to block)
     oak_shield: {id:'oak_shield',name:'Oak Shield',type:'shield',slot:'offhand',tier:1,rarity:'common',value:25,weight:3,stats:{block:true},questItem:false},
     kite_shield: {id:'kite_shield',name:'Kite Shield',type:'shield',slot:'offhand',tier:2,rarity:'uncommon',value:70,weight:4,stats:{block:true,armor:1},questItem:false},
-    heater_shield: {id:'heater_shield',name:'Iron-Rimmed Heater',type:'shield',slot:'offhand',tier:3,rarity:'rare',value:150,weight:4,stats:{block:true,armor:2},questItem:false},
+    heater_shield: {id:'heater_shield',name:'Iron-Rimmed Heater',type:'shield',slot:'offhand',tier:3,rarity:'rare',value:150,weight:4,stats:{block:true,armor:2},req:{skills:{shield:2}},questItem:false},
     // Helmets
     leather_cap: {id:'leather_cap',name:'Leather Cap',type:'armor',slot:'head',tier:1,rarity:'common',value:12,weight:1,stats:{armor:1},questItem:false},
     iron_helm: {id:'iron_helm',name:'Iron Helm',type:'armor',slot:'head',tier:2,rarity:'uncommon',value:55,weight:2,stats:{armor:2},questItem:false},
-    bascinet: {id:'bascinet',name:'Bascinet',type:'armor',slot:'head',tier:3,rarity:'rare',value:140,weight:3,stats:{armor:3},questItem:false},
+    bascinet: {id:'bascinet',name:'Bascinet',type:'armor',slot:'head',tier:3,rarity:'rare',value:140,weight:3,stats:{armor:3},req:{str:6},questItem:false},
     // Body armour
     clothing: {id:'clothing',name:'Clothing',type:'armor',slot:'body',tier:1,rarity:'common',value:5,weight:1,stats:{armor:1},questItem:false},
     gambeson: {id:'gambeson',name:'Padded Gambeson',type:'armor',slot:'body',tier:1,rarity:'common',value:25,weight:2,stats:{armor:2},questItem:false},
     leather_chest: {id:'leather_chest',name:'Leather Jerkin',type:'armor',slot:'body',tier:2,rarity:'uncommon',value:60,weight:3,stats:{armor:3},questItem:false},
-    mail_hauberk: {id:'mail_hauberk',name:'Mail Hauberk',type:'armor',slot:'body',tier:3,rarity:'rare',value:220,weight:6,stats:{armor:5},questItem:false},
+    mail_hauberk: {id:'mail_hauberk',name:'Mail Hauberk',type:'armor',slot:'body',tier:3,rarity:'rare',value:220,weight:6,stats:{armor:5},req:{str:7},questItem:false},
     // Gloves
     gloves: {id:'gloves',name:'Work Gloves',type:'armor',slot:'hands',tier:1,rarity:'common',value:10,weight:1,stats:{armor:0},questItem:false},
     mail_mittens: {id:'mail_mittens',name:'Mail Mittens',type:'armor',slot:'hands',tier:2,rarity:'uncommon',value:45,weight:1,stats:{armor:1},questItem:false},

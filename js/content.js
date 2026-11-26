@@ -197,7 +197,7 @@
     if (!partial && typeof f.name !== 'string') out.push(`${at}: needs a name`);
     const r = f.ranged;
     if (r != null && !(r.range > 0 && r.projectileSpeed > 0 && r.cooldown > 0 && r.accuracy > 0 && r.accuracy <= 1)) out.push(`${at}: ranged needs {range, projectileSpeed, cooldown, accuracy}`);
-    const known = [...Object.keys(RULES), 'ranged', ...(partial ? [] : ['id', 'name'])];
+    const known = [...Object.keys(RULES), 'ranged', ...(partial ? [] : ['id', 'name', 'req'])]; // P11-03: a family's default requirement (js/gear.js checks it)
     for (const k of Object.keys(f)) if (!known.includes(k)) out.push(`${at}: unknown field ${k}`);
     return out;
   }
@@ -377,7 +377,7 @@
     }
     // P11-02: the gear check's words (data/gear_text.js): exactly its codes, each a line that fits.
     if (C.gear_text && CL.gear) {
-      const codes = CL.gear.CODES;
+      const codes = CL.gear.LINES; // P11-03: the findings' codes and the ways to meet a requirement
       for (const k of Object.keys(C.gear_text)) if (!codes.includes(k)) err(`gear_text: unknown code ${k}`);
       for (const k of codes) {
         const t = C.gear_text[k];
@@ -385,6 +385,8 @@
         else if (t.length > CL.gear.TEXT_MAX - 24) err(`gear_text.${k}: too long for two lines (${t.length})`);
       }
     }
+    // P11-03: requirements on items and families, by their shape and the budget's rule (plan §7.3).
+    if (CL.gear && C.items) for (const e of CL.gear.ruleProblems(C)) err(e);
     // P11-01: weapon families (data/weapons.js), complete and in range.
     for (const f of Object.values(C.weapon_families || {})) for (const e of checkCombat(f, `weapon family ${f.id}`, false)) err(e);
     // A troop's weapon is a family or a weapon item, and agrees with what its look carries.

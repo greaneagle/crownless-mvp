@@ -24,14 +24,14 @@ test('levelling: +1 skill point per level, +1 attribute point every 2nd level', 
   assert.equal(ch.level, 8);
 });
 
-test('Intelligence adds 2% XP per point above 5; level 10 is the cap', () => {
+test('Intelligence adds 2% XP per point above 5; level 20 is the cap (P11-03)', () => {
   const { CL } = loadGame();
   const ch = CL.campaign.character;
   ch.attributes.int = 10;
   CL.character.gainXp(50);
   assert.equal(ch.xp, 55);
   CL.character.gainXp(1e7);
-  assert.equal(ch.level, 10);
+  assert.equal(ch.level, 20);
   assert.equal(ch.xp, 0);
   assert.equal(CL.character.gainXp(500), 0);
 });
@@ -174,4 +174,74 @@ test('saved level and points are validated', () => {
   assert.equal(ch.xp, 30);
   assert.equal(ch.skillPoints, 3);
   assert.equal(ch.attributePoints, 0);
+});
+
+// ---- P11-03: the budget (D-P11b) ----
+
+test('P11-03: the curve is unchanged to level 10, then a flatter line; the grants to the cap', () => {
+  const { CL } = loadGame();
+  const C = CL.character;
+  for (let L = 1; L < 10; L++) assert.equal(C.xpToNext(L), Math.round(100 * L ** 1.35));
+  assert.equal(C.xpToNext(10), Math.round(100 * 10 ** 1.35), "10 to 11 costs what the old formula's 10 did");
+  for (let L = 11; L < C.MAX_LEVEL; L++) assert.equal(C.xpToNext(L) - C.xpToNext(L - 1), C.CURVE_STEP, `level ${L}: ${C.CURVE_STEP} more than the one before`);
+  assert.deepEqual([C.xpTotal(10), C.xpTotal(15), C.xpTotal(20)], [8428, 25123, 55568]);
+  const ch = CL.campaign.character;
+  const pts = [ch.skillPoints, ch.attributePoints];
+  CL.character.gainXp(C.xpTotal(20));
+  assert.equal(ch.level, 20);
+  assert.deepEqual([ch.skillPoints - pts[0], ch.attributePoints - pts[1]], [19, 10], 'a skill point a level, an attribute point each even one');
+  assert.deepEqual([ch.xp, CL.character.gainXp(1e6)], [0, 0], 'nothing past the cap');
+});
+
+test('P11-03: a character at the old cap starts gaining again', () => {
+  const { CL } = loadGame();
+  const ch = CL.campaign.character;
+  CL.character.gainXp(CL.character.xpTotal(10));
+  Object.assign(ch, { level: 10, xp: 0 }); // as 5.2.0 left one at its cap
+  assert.equal(CL.character.gainXp(CL.character.xpToNext(10)), 1);
+  assert.equal(ch.level, 11);
+});
+
+test('P11-03: retraining gives back every point spent, and only those; never in battle', () => {
+  const { CL } = loadGame();
+  const c = CL.campaign;
+  const ch = c.character;
+  const start = JSON.parse(JSON.stringify({ a: ch.attributes, s: ch.skills }));
+  ch.skillPoints = 4;
+  ch.attributePoints = 2;
+  for (const k of ['one_handed', 'one_handed', 'polearm', 'leadership']) assert.ok(CL.character.spendSkill(k));
+  for (const a of ['str', 'agi']) assert.ok(CL.character.spendAttribute(a));
+  ch.attributes.cha += 1; // a story's grant (js/story.js): stays
+  CL.game.mode = 'battle';
+  assert.equal(CL.character.retrain(c), null, 'not in battle');
+  CL.game.mode = 'map';
+  assert.deepEqual(JSON.parse(JSON.stringify(CL.character.retrain(c))), { attributes: 2, skills: 4 });
+  assert.deepEqual([ch.skillPoints, ch.attributePoints], [4, 2]);
+  assert.deepEqual(JSON.parse(JSON.stringify(ch.skills)), start.s, 'the origin’s +1 stays');
+  assert.deepEqual(JSON.parse(JSON.stringify(ch.attributes)), { ...start.a, cha: start.a.cha + 1 }, 'the story’s grant stays');
+  assert.deepEqual(JSON.parse(JSON.stringify(CL.character.retrain(c))), { attributes: 0, skills: 0 }, 'nothing twice');
+});
+
+test('P11-03: the save: the two new skills at 0, spent and training repaired, no migration', () => {
+  const { CL } = loadGame();
+  const C = CL.character;
+  const ch = CL.campaign.character;
+  ch.skillPoints = 2;
+  C.spendSkill('two_handed');
+  ch.training.sword_school = true;
+  const back = C.sanitize(JSON.parse(JSON.stringify(ch)));
+  assert.equal(back.skills.two_handed, 1);
+  assert.deepEqual(JSON.parse(JSON.stringify([back.spent, back.training])), [{ attributes: {}, skills: { two_handed: 1 } }, { sword_school: true }]);
+  // An older character: no new skills, no spent, no training; and junk.
+  const old = JSON.parse(JSON.stringify(ch));
+  delete old.skills.two_handed;
+  delete old.skills.polearm;
+  delete old.spent;
+  delete old.training;
+  const o = C.sanitize(old);
+  assert.deepEqual([o.skills.two_handed, o.skills.polearm], [0, 0]);
+  assert.deepEqual(JSON.parse(JSON.stringify([o.spent, o.training])), [{ attributes: {}, skills: {} }, {}]);
+  const junk = C.sanitize({ ...old, level: 20, spent: { attributes: { str: 99 }, skills: { trade: -1, polearm: 'x' } }, training: { '<b>': true, ok_one: 'yes', fine: true } });
+  assert.equal(junk.level, 20);
+  assert.deepEqual(JSON.parse(JSON.stringify([junk.spent, junk.training])), [{ attributes: {}, skills: {} }, { fine: true }]);
 });

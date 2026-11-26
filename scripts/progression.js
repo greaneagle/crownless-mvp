@@ -69,9 +69,11 @@ if (require.main === module) {
   if (args.includes('--json')) console.log(JSON.stringify({ days, seeds, rows }, null, 2));
   else {
     console.log(`XP pace: the campaign bots, ${days} days, ${seeds} seeds a style. The day each level came (– never)`);
-    console.log(`${'style'.padEnd(10)}seed  L2   L3   L4   L5   L6   L7   L8   L9   L10  ${MARKS.filter((d) => d <= days).map((d) => `L/XP@${d}`.padStart(11)).join('')}   XP: battles contracts story other`);
+    // P11-03: the levels to the cap of 20 (the curve flattens after 10).
+    const LEVELS = [2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 15, 16, 18, 20];
+    console.log(`${'style'.padEnd(10)}seed ${LEVELS.map((L) => `L${L}`.padStart(4)).join(' ')}  ${MARKS.filter((d) => d <= days).map((d) => `L/XP@${d}`.padStart(11)).join('')}   XP: battles contracts story other`);
     for (const r of rows) {
-      const cells = [2, 3, 4, 5, 6, 7, 8, 9, 10].map((L) => String(r.levelDay[L] != null ? Math.round(r.levelDay[L]) : '–').padStart(4)).join(' ');
+      const cells = LEVELS.map((L) => String(r.levelDay[L] != null ? Math.round(r.levelDay[L]) : '–').padStart(4)).join(' ');
       const marks = MARKS.filter((d) => d <= days).map((d) => `${r.at[d].level}/${r.at[d].xp}`.padStart(11)).join('');
       console.log(`${r.style.padEnd(10)}${String(r.seed).padStart(4)} ${cells} ${marks}   ${[r.xp.battles, r.xp.contracts, r.xp.story, r.xp.other].map((n) => String(Math.round(n)).padStart(7)).join(' ')}`);
     }
