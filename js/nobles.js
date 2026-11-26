@@ -83,7 +83,7 @@
     abandoned: -20,
     paid: 6,
     conceded: 15, // P9-04: the ruler gave the faction what it asked
-    mediated: 5, // P9-T: 10 eased every faction back below its grudge, and none rose in a year
+    mediated: 2, // P10-T: 5 (P9-T; 10 before) eased nearly every faction back below its grudge (no rising in three years of the world alone); 2 and 0 gave the same: AI rulers now meet most demands
     pardoned: 10,
     kept_peace: 10, // a ruler who conceded rather than fought
     marriage_ended: -40, // P9-06: they ended the marriage

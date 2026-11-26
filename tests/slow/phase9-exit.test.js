@@ -174,9 +174,11 @@ test('the Phase 9 exit: rule, command, treat, appoint and grant; a lord declines
 
   // 6. You lose: the rising's army takes Westholt while you are away at Stonebridge, and you are deposed.
   // Its lords' households grow strong enough (test setup: what a longer civil war would bring them) that
-  // the rising's own army, which fights its crown first, marches on Westholt.
+  // the rising's own army, which fights its crown first, marches on Westholt. P10-T: each twice what a
+  // siege needs to begin, so an assault that fails on the walls cannot lift it (in the one world one did,
+  // and the army turned to the vassals' other forts).
   const strong = () => {
-    const need = CL.armies.needed(c, FORT, rising);
+    const need = 2 * CL.armies.needed(c, FORT, rising);
     for (const q of c.parties.filter((p) => p.lordId && c.people[p.lordId].realm === rising)) {
       let k = 1.5;
       while (CL.autoresolve.troopsPower(CL.lords.troopsFor(c, q.lordId, k)) < need && k < 12) k += 0.5;

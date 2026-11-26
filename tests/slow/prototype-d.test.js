@@ -67,7 +67,12 @@ test('Prototype D: lose the fort while away, lose the office, live landless, cha
   const cap = CL.content.get('settlements', R.capitalOf('aurelian'));
   Object.assign(c.world, { x: cap.mapX, y: cap.mapY, location: cap.id });
   assert.ok(CL.allegiance.act(c, 'serve', 'aurelian'), 'take service with Aurelia');
+  // P10-T: while you serve, Aurelia raises no army of its own (on some rolls of the one world its lords
+  // took Westholt themselves and left you nothing to retake).
+  const { plan } = CL.armies;
+  CL.armies.plan = (cc, f) => (f === 'aurelian' ? null : plan(cc, f));
   for (let d = 0; d < 21; d++) hours(24);
+  Object.assign(CL.armies, { plan });
   if (CL.allegiance.state(c).kind !== 'mercenary') CL.allegiance.act(c, 'serve', 'aurelian');
   Object.assign(c.world, { x: cap.mapX, y: cap.mapY, location: cap.id });
   const sworn = CL.allegiance.act(c, 'swear', 'aurelian');
@@ -81,7 +86,9 @@ test('Prototype D: lose the fort while away, lose the office, live landless, cha
   const w = CL.content.get('settlements', 'westholt_castle');
   Object.assign(c.world, { x: w.mapX, y: w.mapY, location: 'westholt_castle' });
   CL.game.mode = 'settlement';
-  for (let i = 0; i < 12; i++) CL.save.addSoldier(c, 'footman');
+  // P10-T: with Aurelia's army held back (step 5) Westholt's garrison is whole (59 men), so you bring
+  // what a season in Aurelia's service would give you: enough to storm it.
+  for (let i = 0; i < 48; i++) CL.save.addSoldier(c, 'footman');
   const s = CL.sieges.begin(c, 'westholt_castle');
   assert.ok(s, `besiege: ${CL.rights.why(c, 'player', 'besiege', 'westholt_castle')}`);
   for (let d = 0; d < 20 && CL.sieges.at(c, 'westholt_castle'); d++) {

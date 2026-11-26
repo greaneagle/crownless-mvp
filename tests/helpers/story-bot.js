@@ -134,7 +134,15 @@ function makeStoryBot(CL, rnd, { winChance = 0.85, reloadChance = 0.04, until = 
     for (let i = 0; conv && i < 14; i++) {
       const options = conv.options.filter((o) => !errand(o));
       if (!options.length) break;
-      const o = pick(options);
+      // P10-T: a bot that kept the courier's packet as evidence (Q2) plays like a player who kept it for a
+      // reason: it declares for the road half the time, and lays both charters on the table when it can.
+      // Left to chance, the compromise ending (the road, the packet and the evidence) came once in 42
+      // campaigns, and none on 5.0.0's rolls.
+      const sets = (x, flag, to) => (x.do || []).some((e) => e.set === flag && e.to === to);
+      const evidence = CL.story.state(c()).flags.has_evidence;
+      const road = evidence ? options.find((x) => sets(x, 'q4_side', 'road')) : null;
+      const charters = evidence ? options.find((x) => (x.do || []).some((e) => e.ending === 'compromise' || e.take === 'courier_packet')) : null;
+      const o = charters || (road && rnd() < 0.5 ? road : pick(options));
       stats.choices++;
       note(`  → ${o.text.slice(0, 50)}`);
       conv = CL.story.choose(conv, o.index);

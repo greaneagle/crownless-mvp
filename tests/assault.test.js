@@ -193,7 +193,7 @@ test('storming: the garrison on the stretch of wall under assault, as one army s
   // Defending, the besiegers come on whole.
   const d = CL.assault.encounter(c, 'castra_nova', 'defend', { enemyTroops: { footman: 30, hunter: 10 } });
   assert.equal(Object.values(d.waves[0]).reduce((a, b) => a + b, 0), 40);
-  assert.deepEqual(CL.assault.onThisWall(Array(10).fill('levy'), 'defend').length, 9);
+  assert.deepEqual(CL.assault.onThisWall(Array(20).fill('levy'), 'defend').length, 19); // 95% from 5.0.0 (P10-T)
 });
 
 test('the ladders: two climb at a time, slowly, and a climber cannot strike; the rest wait at the foot', () => {

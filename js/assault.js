@@ -13,7 +13,7 @@
  *   cannot strike; the others wait at its foot.
  * - **The armies (P9-B5):** one army a side sharing the field, with reserves (P9-B2), no longer waves
  *   of 8. Storming, you meet the part of the garrison on the stretch of wall you strike (58%); the rest
- *   hold the other walls. Defending, the garrison runs to where the enemy climbs (90% of it beside you),
+ *   hold the other walls. Defending, the garrison runs to where the enemy climbs (95% of it beside you; P10-T),
  *   counted on your side of the field, the rest waiting in reserve.
  * - **Winning:** the attackers win by routing the defenders, or by holding the courtyard: three or more
  *   of them in it, outnumbering the defenders still standing there 1.5 to one, for 12 seconds. The
@@ -27,7 +27,7 @@
   'use strict';
   const CL = root.Crownless;
 
-  const RULES = { ramSeconds: 25, ramReach: 70, hold: { seconds: 12, min: 3, ratio: 1.5 }, ramEvery: 3, garrisonShare: { attack: 0.58, defend: 0.9 }, ladder: { at: 2, foot: 20, wait: 30 } };
+  const RULES = { ramSeconds: 25, ramReach: 70, hold: { seconds: 12, min: 3, ratio: 1.5 }, ramEvery: 3, garrisonShare: { attack: 0.58, defend: 0.95 }, ladder: { at: 2, foot: 20, wait: 30 } };
 
   /**
    * The battle definition for an assault on (or defence of) a fort. `side`: 'attack' or 'defend'.
@@ -55,7 +55,8 @@
 
   /**
    * The part of a garrison on the stretch of wall under assault; the rest hold the other walls. Storming,
-   * you choose where to strike (P9-B5: 58%); defending, the garrison runs to where the enemy climbs (90%).
+   * you choose where to strike (P9-B5: 58%); defending, the garrison runs to where the enemy climbs (95%;
+   * P10-T: at 90% a fought defence came out 12 under the odds, at 100% 21 over).
    * @param {string[]} list @param {'attack' | 'defend'} side
    */
   const onThisWall = (list, side) => list.slice(0, Math.ceil(list.length * RULES.garrisonShare[side]));

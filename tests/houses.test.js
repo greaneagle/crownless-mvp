@@ -134,12 +134,12 @@ test('a contested succession: the second keeps claims, and three lords behind th
   }
 });
 
-test('a lord beaten in battle dies of wounds now and then (6% from 4.0.0); you never die', () => {
+test('a lord beaten in battle dies of wounds now and then (12% from 5.0.0); you never die', () => {
   const { CL, c, H, key } = world();
   const pid = key('serlo_fernby');
   const q = CL.lords.partyOf(c, pid);
-  assert.equal(H.RULES.woundDeath, 0.06);
-  CL.autoresolve.next = () => 0.01; // under 6%
+  assert.equal(H.RULES.woundDeath, 0.12);
+  CL.autoresolve.next = () => 0.01; // under 12%
   assert.equal(CL.lords.beaten(c, q, 'aurelian'), null);
   assert.equal(c.people[pid].status, 'dead');
   assert.equal(c.people[pid].cause, 'wounds');

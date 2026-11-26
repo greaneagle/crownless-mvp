@@ -13,6 +13,8 @@ test('Prototype F: the same order, one obeys and one refuses, for reasons you ca
   const c = CL.campaign;
   const N = CL.nobles;
   const id = (k) => Object.keys(c.people).find((x) => c.people[x].key === k);
+  // P10-T: the lords this test takes prisoner must not die of their wounds (P9-06's chance) in the setup.
+  CL.houses.RULES.woundDeath = 0;
   c.partySpawns = {};
   for (const t of Object.values(CL.content.table('party_templates'))) if (t.kind !== 'lord') c.partySpawns[t.id] = 1e9;
   CL.lords.ensure(c, c.day, true);
@@ -57,10 +59,19 @@ test('Prototype F: the same order, one obeys and one refuses, for reasons you ca
   assert.ok(s.lords.includes(avice));
   assert.equal(s.lords.includes(hamon), false, 'not without his price');
   const before = CL.sieges.attack(c, s);
+  // P10-T: in the one world (4.2.0) Aurelia's lords ride near Castra Nova and relieve it within a day.
+  // This prototype is about two lords' answers, not relief (tests/sieges.test.js has that), so for these
+  // two days none answers the call and no realm raises an army (Aurelia's would relieve it as one).
+  const { answersRelief } = CL.nobles;
+  const { plan } = CL.armies;
+  CL.nobles.answersRelief = () => false;
+  CL.armies.plan = () => null;
   for (let i = 0; i < 48 && CL.sieges.at(c, 'castra_nova'); i++) {
     CL.party.advanceDays(1 / 24);
     CL.game.contactParty = null;
   }
+  Object.assign(CL.nobles, { answersRelief });
+  Object.assign(CL.armies, { plan });
   const still = CL.sieges.at(c, 'castra_nova');
   assert.ok(still, 'the siege holds two days');
   assert.ok(CL.sieges.attack(c, still) > before, 'her household adds to the siege');

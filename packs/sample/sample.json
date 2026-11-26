@@ -4,7 +4,7 @@
     "title": "Highcairn (sample pack)",
     "author": "Crownless",
     "version": "1.0.0",
-    "engine": ">=3.13.0 <5.0.0",
+    "engine": ">=3.13.0 <6.0.0",
     "requires": []
   },
   "troops": {

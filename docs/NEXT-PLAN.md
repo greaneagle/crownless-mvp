@@ -330,7 +330,7 @@ Every Phase 9 task is **Specified** (2026-11-22; NEXT-TASKS has each in full). T
 | **P10-G4** | ✅ **Done in 4.13.0.** **The world map in the new art:** terrain, settlements and parties as miniatures, siege camps; the fog, labels and taps kept | L | P10-G3 |
 | **P10-G5** | ✅ **Done in 4.14.0.** **The UI and portraits in the new art:** portraits from the figure parts, the hero, troops, house arms and banners, vector icons, the battle HUD and Prepare in the frame, home-screen icons | M–L | P10-G2 |
 | **P10-G6** | ✅ **Done in 4.15.0.** **The old graphics removed:** every sprite, the manifest, `js/assets.js`, the Graphics Demo and the `crownless-art` skill; the asset guard and visual baselines re-made | M | P10-G1–G5 |
-| **P10-T** | **Tuning and acceptance:** the world's open tuning (wars, risings, deaths), the old failures, the origins' balance, `docs/PHASE-10-VALIDATION.md`; ships 5.0.0 | M | all above |
+| **P10-T** | ✅ **Done in 5.0.0.** **Tuning and acceptance:** the world's open tuning (wars, risings, deaths), the old failures, the origins' balance, `docs/PHASE-10-VALIDATION.md`; ships 5.0.0 | M | all above |
 
 ## 7. Order, versions, saves and the per-task contract
 

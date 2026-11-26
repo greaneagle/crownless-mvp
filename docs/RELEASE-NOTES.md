@@ -1,5 +1,27 @@
 # Crownless — Release Notes
 
+## v5.0.0 — Ways In (P10-T) · 2026-11-26
+
+The end of Phase 10. You choose a kingdom and one of five origins; each origin's opening quest teaches the basics and leads into the same common quest; then the world is open, drawn entirely in code. The evidence is in `docs/PHASE-10-VALIDATION.md`.
+
+### Changed
+- **Lords die of their wounds more often:** a lord beaten in battle dies 12% of the time (6% before). A year of the world sees about three to eight deaths, and their heirs inherit.
+- **A realm's last fort holds:** a siege of it needs three times its defence to begin (twice before). No realm loses all its land in its first months.
+- **A mediator eases a faction less:** its members think 2 better of their ruler (5 before).
+- **Defending a fort's walls:** 95% of the garrison fights beside you on the stretch of wall under attack (90% before). A fought defence was 12 points under its odds; now it is about 5 over.
+
+### Under the hood
+- **Old failures fixed:** `landed`, the Phase 7, 8 and 9 exits and Prototypes D and F pass. Three tests' setups were brought to the one world's bigger armies (no rule changed for them).
+- **The 42 campaigns** (`gate-d-campaigns`, 7 a kingdom) reach every ending; the story bot plays a kept packet as a player would.
+- **The origins' balance** confirmed over all five from every kingdom.
+- **The scenario matrix** gains SC-45 to SC-52, the new starts and the art.
+- **Packs:** the sample pack's engine range is now `>=3.13.0 <6.0.0`.
+
+### Open
+- Risings stay rare (about one in three years of the world alone): AI rulers meet most factions' demands.
+- Waiting on the owner's phone: every scene in the new art, the battle benchmark and the map stress test.
+- For the next night run (`docs/PENDING-CHECKS.md`): the visual baselines, `battle-parity` and the long runs.
+
 ## v4.15.0 — The old graphics removed (P10-G6) · 2026-11-26
 
 The last step of the code-drawn art (D-P10k). Every sprite is gone, and everything the game shows is drawn in code. The game looks and plays as in 4.14.0.

@@ -38,7 +38,7 @@
 
   const RULES = {
     gatherRatio: 1.5,
-    lastFortRatio: 2,
+    lastFortRatio: 3, // P10-T: 2 let a realm lose its last fort in its first months (Valedorn, seed 3)
     gatherDays: 5,
     minLords: 2,
     reach: 45, // map units: lords this near gather, or ride to relieve

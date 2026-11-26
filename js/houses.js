@@ -24,7 +24,7 @@
   const CL = root.Crownless;
 
   const RULES = {
-    woundDeath: 0.06, // P9-T: 0.03 gave 0–2 deaths in a year of the world alone (the target 2–6)
+    woundDeath: 0.12, // P10-T: 0.06 (P9-T; 0.03 before) gave 0–2 deaths a year of the world alone (the target 2–6)
     oldAge: false, // a setting, off by default (D-P9g)
     oldAgeWeekly: 0.002,
     contested: 10,

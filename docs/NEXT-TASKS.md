@@ -3987,7 +3987,7 @@ The owner played the graphics demo (`docs/GRAPHICS-DEMO.md`, commit e5bae98) and
 
 **Then P10-T** takes the art into its acceptance: the owner's phone play of every scene (map, towns, battles, menus), the battle benchmark and map stress test on the phone, and the visual baselines.
 
-### P10-T · Phase 10 tuning and acceptance (M)
+### P10-T · Phase 10 tuning and acceptance (M) — ✅ Done in 5.0.0
 
 **Build.**
 - **The world's tuning,** moved here (the owner's rule), with P9-T's targets:
@@ -4005,3 +4005,19 @@ The owner played the graphics demo (`docs/GRAPHICS-DEMO.md`, commit e5bae98) and
 **Runs.** Each run over 20 minutes is asked about, or added to the next night run.
 
 **Version.** 5.0.0.
+
+**Done (5.0.0).** The evidence is in `docs/PHASE-10-VALIDATION.md`. The owner's word for the task: no run over an hour (the longest here, the 42 campaigns, about 41 minutes).
+- **Tuned** (`landed.js 360 --seed n`, seeds 1–3, at most two tries a number):
+  - Deaths of wounds 6% → 12%: 2, 0, 1 deaths a year → 6, 5, 3 (a second measurement 5, 7, 8). ✅
+  - A realm's last fort: a siege needs 3× its defence to begin (`lastFortRatio`, was 2). Valedorn lost both its forts by day 87 on seed 3; now every realm keeps one on every seed, and `landed` passes. ✅
+  - Risings: a mediator eases a faction by 2 (was 5); the second try (0) gave the same and was undone. 0, 1, 0 a year: ❌ open. AI rulers meet most demands they fear.
+  - Wars: 22%, 27%, 15% of days (23–34% before; seed 3 fell once Valedorn was no longer overrun). Two of three in 20–50%; the war rules had their tries in P9-T.
+  - The coast: Ostrand and Saltreach at war 13–19 days a year, and with the rest of the world 20–85 days a pair. ✅
+  - Siege defence (`parity.js`, 30 seeds): 95% of the garrison beside you on the stretch under attack (was 90%): fought −12 → +5 over the odds (+21 at the whole garrison, the first try). Storming unchanged (+19).
+- **The old failures:** `landed`, the Phase 7, 8 and 9 exits and Prototypes D and F pass. The Phase 7 and 8 exits passed with no change. Three tests' setups met the one world's bigger armies: the Phase 9 exit's rising twice what a siege needs; Prototype D with Aurelia raising no army while you serve and 48 men for Westholt's whole garrison; Prototype F with no relief or army for its two days and no death of wounds in the setup.
+- **The origins' balance** over all five and every kingdom (`slow/origins`, 30 openings): worth 121–182, every row in the band. No retune.
+- **The scenario matrix:** SC-45 to SC-52 (each kingdom, each origin, the story from far away, the guide, the Wait screen, every town, women soldiers, the code-drawn art); SC-30 is now the refusal of an older world.
+- **The sample pack's engine range** `>=3.13.0 <6.0.0`.
+- **Checks:** 942 fast pass; lint clean but the 2 old warnings; typecheck clean. Slow, each alone: `landed`, `world-sim`, `second-world`, `test-world`, `campaign-bots`, `happenings-bots`, `battle-extras`, `origins`, the three exits, Prototypes D and F pass; `gate-d-campaigns` (42, about 41 min) passes once the story bot plays a kept packet as a player would (the compromise ending came by chance once in 42 on 4.15.0, none on 5.0.0). Browser full suite 269 passed, 9 skipped, none failed.
+- **For the next night run** (`docs/PENDING-CHECKS.md`): the visual baselines, the long runs (runaway realms under the last-fort rule) and the whole `battle-parity`.
+- **Waiting on the owner's phone:** every scene in the new art, the battle benchmark and the map stress test against P10-G1's baseline, a new game in another kingdom and origin.
