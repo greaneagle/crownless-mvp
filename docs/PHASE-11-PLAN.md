@@ -140,8 +140,8 @@ The fix is not to make input unresponsive or to punish repeated presses, but to 
 | **P11-02** | Carried and wielded: loadouts and one gear check | M–L | P1 | P11-01 | 5.2.0 | M1 | ✅ Done |
 | **P11-03** | The progression budget and equipment requirements | M–L | P1 | P11-02 | 5.3.0 | M1 | ✅ Done |
 | **P11-04** | The equipment you see | M–L | P1 | P11-02 (parallel with P11-03) | 5.4.0 | M1 | ✅ Done |
-| **P11-05** | Melee rhythm and defence | L | P1 | P11-01, P11-04 | 5.5.0 | **M1 "The weapon in your hand"** | ✅ Done (the owner's M1 play to come) |
-| **P11-06** | Armour, weight and movement | M | P2 | P11-05 | 5.6.0 | M2 | Specified |
+| **P11-05** | Melee rhythm and defence | L | P1 | P11-01, P11-04 | 5.5.0 | **M1 "The weapon in your hand"** | ✅ Done (M1 played, owner 2026-11-26: good) |
+| **P11-06** | Armour, weight and movement | M | P2 | P11-05 | 5.6.0 | M2 | ✅ Done |
 | **P11-07** | Bows and crossbows in your hands | L | P1 | P11-05, P11-06 | 5.7.0 | M2 | Specified |
 | **P11-08** | Fighting from the saddle | L | P1 | P11-06, P11-07 | 5.8.0 | **M2 "Bow and horse"** | Specified |
 | **P11-09** | Controls, feedback and teaching (consolidation) | M | P1 | P11-05, P11-07, P11-08 | 5.9.0 | M2 | Specified |
@@ -605,7 +605,7 @@ Each is played by the owner on the phone (Zenfone 10, Chrome) and once on a PC, 
 | D-P11g | Where mounted archery comes from | A compact horse bow taught by a foreign master in the free ports (Merrow, Gullhaven); no realm's identity or troop lines change | P11-16, P11-17 |
 | D-P11h | Tournament traditions by host | Valedorn's towns the mounted lists and the standard lists; Aurelian the standard and own-arms duels; Hrothmark heavy weapons; the Vessaro League and Saltreach crossbow and archery contests; Ostrand archery; the free ports open own-arms | P11-19 |
 | D-P11i | Retraining | Retraining for crowns at a master (no free retraining: old saves are ignored, D-P11a) | P11-17 |
-| D-P11j | Timed parry | An experiment in P11-05, kept only if the owner likes it at M1; never required | P11-05 |
+| D-P11j | Timed parry | An experiment in P11-05, kept only if the owner likes it at M1; never required. **M1 (owner, 2026-11-26): "everything is good"**; the parry stays as built (a setting, off by default) until the owner says otherwise | P11-05 |
 | D-P11k | Mid-battle remount | No remount in a battle in the first version (dismount only) | P11-08 |
 | D-P11l | Versions | Each task a minor version from 5.1.0 in build order; P11-00 the patch 5.0.1; P11-T ships 6.0.0 (as D-V1) | all |
 

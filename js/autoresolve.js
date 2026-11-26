@@ -102,7 +102,7 @@
   }
 
   function heroPower(c = CL.campaign) {
-    const h = CL.profile.resolve({ hero: c, equipment: CL.gear.kitFor(c, c.equipment, CL.gear.bestLoadout(c)) }); // P11-01: the hero's profile; P11-02: in the loadout they fight with
+    const h = CL.profile.resolve({ hero: c, equipment: CL.gear.kitFor(c, c.equipment, CL.gear.bestLoadout(c)), carried: c.equipment }); // P11-01: the hero's profile; P11-02: in the loadout they fight with
     return ((h.hp * h.damage) / T1_BASELINE) * (h.canBlock ? SHIELD_FACTOR : 1);
   }
 

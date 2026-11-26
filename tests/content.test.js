@@ -15,7 +15,7 @@ test('every content module loads and every table is non-empty', () => {
 
 test('record keys match their id fields', () => {
   for (const m of Object.keys(C)) {
-    if (m === 'forge' || m === 'gear_text' || m === 'budget' || m === 'body') continue; // the blacksmith's rules (P7-03), the gear check's words (P11-02) and the progression budget (P11-03), not tables of records
+    if (m === 'forge' || m === 'gear_text' || m === 'budget' || m === 'body' || m === 'encumbrance') continue; // the blacksmith's rules (P7-03), the gear check's words (P11-02) and the progression budget (P11-03), not tables of records
     for (const [key, rec] of Object.entries(C[m])) {
       assert.equal(rec.id, key, `${m}.${key} has id '${rec.id}'`);
     }

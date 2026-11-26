@@ -341,7 +341,7 @@ Every Phase 9 task is **Specified** (2026-11-22; NEXT-TASKS has each in full). T
 
 ## 6c. Phase 11 — "The Art of War" (planned for 6.0.0)
 
-**Specified 2026-11-26 at 5.0.0 (commit 4c0a044); started the same day: P11-00 done in 5.0.1 (the 5.0.0 baseline in `docs/PHASE-11-VALIDATION.md`), P11-01 in 5.1.0 (one combat profile, battles identical), P11-02 in 5.2.0 (two weapons, one gear check), P11-03 in 5.3.0 (level 20, two skills, requirements), P11-04 in 5.4.0 (the equipment you see), P11-05 in 5.5.0 (melee rhythm and defence: milestone M1, for the owner to play); every later task waits for the owner's word.** Easy to fight, rewarding to fight well, meaningful to command. The design, the 5.0.0 assessment (why holding Attack wins), the progression budget, the art plan, the controls, the tournament framework, the balance, save, performance and playtest strategies, the acceptance criteria, the risks and the decisions are in [`PHASE-11-PLAN.md`](PHASE-11-PLAN.md); each task's specification and Brief in NEXT-TASKS ("Phase 11"). Six milestones the owner plays (M0–M6, plan §5).
+**Specified 2026-11-26 at 5.0.0 (commit 4c0a044); started the same day: P11-00 done in 5.0.1 (the 5.0.0 baseline in `docs/PHASE-11-VALIDATION.md`), P11-01 in 5.1.0 (one combat profile, battles identical), P11-02 in 5.2.0 (two weapons, one gear check), P11-03 in 5.3.0 (level 20, two skills, requirements), P11-04 in 5.4.0 (the equipment you see), P11-05 in 5.5.0 (melee rhythm and defence: milestone M1, played and approved), P11-06 in 5.6.0 (armour, weight and movement); every later task waits for the owner's word.** Easy to fight, rewarding to fight well, meaningful to command. The design, the 5.0.0 assessment (why holding Attack wins), the progression budget, the art plan, the controls, the tournament framework, the balance, save, performance and playtest strategies, the acceptance criteria, the risks and the decisions are in [`PHASE-11-PLAN.md`](PHASE-11-PLAN.md); each task's specification and Brief in NEXT-TASKS ("Phase 11"). Six milestones the owner plays (M0–M6, plan §5).
 
 | ID | Task | Size | Needs |
 |---|---|---|---|
@@ -515,7 +515,7 @@ Decisions marked **blocking** must be made before the named task starts. The oth
 | D-P11g | Mounted archery's home | A compact horse bow taught by a foreign master in the free ports; no realm or troop line changes | P11-16, P11-17 |
 | D-P11h | Tournament traditions | Valedorn the mounted and standard lists; Aurelian standard and own-arms duels; Hrothmark heavy weapons; the Vessaro League and Saltreach crossbow and archery contests; Ostrand archery; the free ports open own-arms | P11-19 |
 | D-P11i | Retraining | For crowns at a master (no free retraining: old saves are ignored, D-P11a) | P11-17 |
-| D-P11j | Timed parry | An experiment in P11-05, kept only if the owner likes it at M1; never required | P11-05 |
+| D-P11j | Timed parry | An experiment in P11-05, kept only if the owner likes it at M1; never required. **M1 (owner, 2026-11-26): "everything is good"**; the parry stays as built (a setting, off by default) until the owner says otherwise | P11-05 |
 | D-P11k | Remounting | No remount in a battle in the first version | P11-08 |
 | D-P11l | Versions | P11-00 5.0.1; then a minor version a task in build order from 5.1.0; P11-T 6.0.0 | all of Phase 11 |
 

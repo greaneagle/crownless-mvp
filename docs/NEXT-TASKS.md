@@ -4044,8 +4044,8 @@ The aim: easy to fight, rewarding to fight well, meaningful to command. The play
 | P11-02 | Carried and wielded: loadouts and one gear check | M–L | 5.2.0 | ✅ Done |
 | P11-03 | The progression budget and equipment requirements | M–L | 5.3.0 | ✅ Done |
 | P11-04 | The equipment you see | M–L | 5.4.0 | ✅ Done |
-| P11-05 | Melee rhythm and defence | L | 5.5.0 | ✅ Done (M1 play to come) |
-| P11-06 | Armour, weight and movement | M | 5.6.0 | Specified |
+| P11-05 | Melee rhythm and defence | L | 5.5.0 | ✅ Done (M1 played: good) |
+| P11-06 | Armour, weight and movement | M | 5.6.0 | ✅ Done |
 | P11-07 | Bows and crossbows in your hands | L | 5.7.0 | Specified |
 | P11-08 | Fighting from the saddle | L | 5.8.0 | Specified |
 | P11-09 | Controls, feedback and teaching | M | 5.9.0 | Specified |
@@ -4491,7 +4491,7 @@ The aim: easy to fight, rewarding to fight well, meaningful to command. The play
 
 ---
 
-### P11-05 · Melee rhythm and defence (L) — 5.5.0, ✅ Done (the owner's M1 play to come) — **Milestone M1**
+### P11-05 · Melee rhythm and defence (L) — 5.5.0, ✅ Done (M1 played, owner 2026-11-26: "everything is good") — **Milestone M1**
 
 **Now.** One timing for every swing; the hero swings every 0.52 s and the AI every 0.86 s; a swing hits every opponent in its cone; a hit pushes 6 px and nothing else; a raised shield stops every frontal blow for ever; the AI raises shields the instant an opponent winds up; the hero's reach (67) and speed (142) out-class nearly every soldier (plan §3). P11-00 measured how much the *timer* and *turtle* pilots gain over the *masher* (little, by the analysis).
 
@@ -4573,7 +4573,7 @@ The aim: easy to fight, rewarding to fight well, meaningful to command. The play
 
 ---
 
-### P11-06 · Armour, weight and movement (M) — 5.6.0, Specified
+### P11-06 · Armour, weight and movement (M) — 5.6.0, ✅ Done
 
 **Now.** Armour is a sum with no weight; items' `weight` is unused in combat; Agility unused; a heavier hero is simply better.
 
@@ -4629,6 +4629,19 @@ The aim: easy to fight, rewarding to fight well, meaningful to command. The play
 - **Play:** one contract in the preview.
 - **Explain:** a sentence in "Fighting".
 - **Not here:** horses.
+
+**Done (5.6.0).**
+- **Load and capacity** (`js/profile.js`, `data/character.js` `encumbrance`): the load is the `weight` of every slot but the horse (the carried second weapon and the slung shield too; the pack and cargo never; a forged piece its base's); the capacity 12 + 1.2 a point of base Strength above 5. Four bands by load ÷ capacity: light (≤ 0.6: nothing), medium (≤ 1: speed 95%, a 0.1 s ramp), heavy (≤ 1.4: 85%, 0.25 s, recovery +8%, draw +10%), overloaded (70%, 0.4 s, +18%, +20%). Agility lessens each penalty 6% a point above 5; speed never under 60%. P11-05's armour-class placeholder in `heroSpeed` is gone. The resolve takes `carried` (the whole kit) beside `equipment` (what's in hand): combat, the switch, `heroCombat` and the auto-resolve pass it. Computed at battle start and on a switch only.
+- **The ramp:** in battle the hero starts a walk at 40% and reaches full pace over the band's ramp.
+- **Poise from armour:** cloth 0, gambeson and fur 0.25, leather 0.5, mail 1, for the hero, companions and troops (by their look).
+- **Pierce:** `pierce` on the families (mace 0.3, crossbow 0.3 for P11-07); `mitigate(raw, armour, pierce)` ignores that share of the armour; `checkCombat` bounds it.
+- **Companions:** their gear's load against the base capacity (no Agility): speed and recovery.
+- **The gear check:** `load_heavy` and `load_over` (penalties, never a stop), on the sheet, Prepare, and in the armoury when a piece changes the band. The sheet's load line: "Load 11 / 13 · medium" and a bar (striped when heavy; its accessible name says the band).
+- **Items' weights** reviewed and kept (the light pieces stay light and cheap); `content.validate` holds them to 0–20. No new armour: the styles below show no gap a middle piece would fill.
+- **Measured:** `duel-lab.js --styles` (new: light duelist, shield infantry, heavy infantry, spearman, two-hander) against eight opponents on the field, and `parity.js 40`: `docs/PHASE-11-VALIDATION.md` "Armour and weight". Origins: all five start light (6 of 12–13).
+- **The sprint (investigated, not built):** the light duelist wins as often as the shield infantry and only loses to a rider; on foot nothing shows a light build needing a sprint to be viable. Proposed only if P11-08's riders or P11-07's archers show otherwise.
+- **Tests:** `tests/encumbrance.test.js` (8: the load and what it leaves out; capacity and bands; the floor; Agility; the ramp in battle; poise; pierce; the findings; the origins light; weights checked). Browser `gear.spec.js` (+1, desktop and phone): the load line and bar, and a heavy kit's words. Golden battles and fighters recorded again on 5.6.0. `npm test` 1,015 pass; lint and typecheck clean; browser `gear`, `battle`, `layout` pass, `text-size` with its known flake (one case a run, also on 5.5.0). Bench at 200: 3.51 ms (5.5.0 3.47).
+- **Not done:** a brigandine or plate piece (not needed by the matrix; plate would need the requirements rule's elite budget).
 
 ---
 

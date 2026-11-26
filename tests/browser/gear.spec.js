@@ -134,6 +134,26 @@ test('a requirement on the sheet: kept though not met, what points would unlock,
   await expect(page.locator('#sheetStats .statHelp')).toContainText('Two-Handed: +3% damage and a little quicker recovery');
 });
 
+test('P11-06: the sheet shows the load in words and a bar; heavy gear says so', async ({ page }) => {
+  await open(page);
+  await newGame(page);
+  await press(page, '#gearBtn');
+  await waitMode(page, 'character');
+  const load = page.locator('#sheetStats .loadStat');
+  await expect(load).toContainText(/Load\s*6 \/ 1\d · light/);
+  await expect(load.locator('.loadBar')).toHaveAttribute('aria-label', /^Load 6 of 1\d, light$/);
+  // Test setup: a heavy kit (what it needs, met).
+  await game(page, (CL) => {
+    const c = CL.campaign;
+    c.character.attributes.str = 7;
+    c.character.skills.shield = 2;
+    Object.assign(c.equipment, { weapon: 'arming_sword', offhand: 'heater_shield', head: 'iron_helm', body: 'mail_hauberk', hands: 'mail_mittens', feet: 'greaves' });
+    CL.ui.refresh();
+  });
+  await expect(load).toContainText('heavy: slower');
+  await expect(page.locator('#sheetFindings')).toContainText('Your gear is heavy (18 of 14): you move and recover slower.');
+});
+
 test('in battle: SWITCH (Q) brings the second weapon to hand, the shield slung, and back', async ({ page }) => {
   await open(page);
   await newGame(page);

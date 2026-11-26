@@ -79,6 +79,7 @@
       guardKind: pick('guard') || 'none',
       skill: pick('skill') || null,
       skillRecovery: pick('skillRecovery') || 0,
+      pierce: pick('pierce') || 0, // P11-06: the share of armour a blow ignores
       // 90° is cos(π/4) exactly as 5.0.0's ARC.attack (not cos of 45° in degrees, which differs in the last bit).
       arc: arcDeg === 90 ? DEFAULT_ARC : Math.cos(((arcDeg / 2) * Math.PI) / 180),
       maxTargets: pick('maxTargets') || Infinity,
@@ -110,6 +111,7 @@
       const part = weaponPart(w.family, w.item);
       // A troop's own damage, reach and shot override the family (P11-11 moves troops onto profiles).
       p = { ...part, hp: t.hp, maxhp: t.hp, damage: t.damage, armor: t.armor, speed: t.speed, reach: t.reach, ranged: t.ranged || null, canBlock: Boolean(t.shield), guardKind: t.shield ? 'shield' : 'none' };
+      p.poise += armourPoise(t.look?.armour); // P11-06: armour steadies (troops keep their data's speed)
     } else if (source.hero) {
       const c = source.hero;
       const eq = source.equipment;
@@ -122,9 +124,13 @@
       // P11-05: the weapon's own skill trains it: +3% damage a point (One-Handed did for every weapon),
       // and a little less recovery (the family's skillRecovery a point, at most a third).
       const trained = part.skill ? H.skill(part.skill, c) : 0;
-      const quicker = Math.min(part.timing.recovery / 3, part.timing.recovery * part.skillRecovery * trained);
-      const timing = { ...part.timing, recovery: part.timing.recovery - quicker, total: part.timing.total - quicker };
-      const cd = Math.max(timing.total, part.cooldown.hero - quicker);
+      // P11-06: the load carried (the whole kit, not only what's in hand) slows the recovery when heavy.
+      const enc = encumbrance(c, source.carried || eq);
+      const slower = part.timing.recovery * (enc.recovery - 1);
+      const rec0 = part.timing.recovery + slower;
+      const quicker = Math.min(rec0 / 3, rec0 * part.skillRecovery * trained);
+      const timing = { ...part.timing, recovery: rec0 - quicker, total: part.timing.total + slower - quicker };
+      const cd = Math.max(timing.total, part.cooldown.hero + slower - quicker);
       const canBlock = Boolean(shield?.stats.block);
       p = {
         ...part,
@@ -136,8 +142,14 @@
         armor: H.equippedItems(c, eq).reduce((sum, it) => sum + (it.stats.armor || 0), 0),
         // D-P11d: the body is the hero's own, not the `hero` troop's: reach from the weapon, speed from a
         // walking pace, Agility and (until P11-06's load) the armour's class.
-        speed: heroSpeed(c, eq),
+        speed: heroSpeed(c, source.carried || eq),
         reach: part.familyReach,
+        poise: part.poise + armourPoise(armourClass(eq?.body)),
+        load: enc.load,
+        capacity: enc.capacity,
+        band: enc.band.id,
+        ramp: enc.ramp,
+        drawFactor: enc.draw, // P11-07's bows
         ranged: null,
         canBlock,
         guardKind: canBlock ? 'shield' : part.guardKind === 'weapon' ? 'weapon' : 'none',
@@ -153,7 +165,11 @@
       const w = weaponOf(eq.weapon || null);
       const part = weaponPart(w.family, w.item);
       const armor = d.armor + d.gearSlots.reduce((sum, slot) => sum + (item(slot)?.stats.armor || 0), 0);
-      p = { ...part, hp: d.hp, maxhp: d.hp, damage: weapon ? weapon.stats.damage * d.weaponFactor : d.unarmedDamage, armor, speed: d.speed, reach: d.reach, ranged: null, canBlock: false, guardKind: 'none' };
+      // P11-06: their gear is a load like anyone's (no attributes: the base capacity, no Agility).
+      const enc = encumbrance(null, eq);
+      const slower = part.timing.recovery * (enc.recovery - 1);
+      const timing = { ...part.timing, recovery: part.timing.recovery + slower, total: part.timing.total + slower };
+      p = { ...part, timing, cooldown: { hero: part.cooldown.hero + slower, ai: part.cooldown.ai + slower }, hp: d.hp, maxhp: d.hp, damage: weapon ? weapon.stats.damage * d.weaponFactor : d.unarmedDamage, armor, speed: d.speed * enc.speed, reach: d.reach, ranged: null, canBlock: false, guardKind: 'none', poise: part.poise + armourPoise(armourClass(eq.body)), load: enc.load, capacity: enc.capacity, band: enc.band.id };
     } else throw new Error('A profile needs a troop, the hero or a companion');
     if (ctx.leader) Object.assign(p, { hp: Math.round(p.hp * ctx.leader.hp), maxhp: Math.round(p.maxhp * ctx.leader.hp), damage: p.damage * ctx.leader.damage });
     if (ctx.duel) Object.assign(p, { hp: ctx.duel.hp, maxhp: ctx.duel.hp, damage: ctx.duel.damage, armor: ctx.duel.armor });
@@ -162,17 +178,65 @@
     return p;
   }
 
+  /** P11-06: a body armour piece's class (its look's, a forged piece its base's; by tier without one). */
+  function armourClass(id) {
+    const items = CL.content.table('items');
+    let it = id ? items[id] : null;
+    if (!it) return 'cloth';
+    if (it.forgedFrom && items[it.forgedFrom]) it = items[it.forgedFrom];
+    return it.look?.armour || ['cloth', 'gambeson', 'leather', 'mail'][Math.min(3, it.tier || 1)];
+  }
+
+  /** P11-06: the poise an armour class adds. */
+  const armourPoise = (cls) => CL.content.table('encumbrance').poise?.[cls] || 0;
+
+  /** P11-06: the weight a kit puts on its wearer: every slot but the horse (the pack and cargo never). */
+  function loadOf(kit) {
+    const items = CL.content.table('items');
+    let n = 0;
+    for (const [slot, id] of Object.entries(kit || {})) if (id && slot !== 'horse') n += items[id]?.weight || 0;
+    return n;
+  }
+
+  /** P11-06: what a character carries easily, from base Strength (the base capacity with no character). */
+  function capacityOf(c) {
+    const E = CL.content.table('encumbrance');
+    const str = c?.character ? CL.character.baseAttribute('str', c) : 5;
+    return E.capacity.base + E.capacity.perStr * (str - 5);
+  }
+
   /**
-   * P11-05 (D-P11d): the hero's walking speed: data/character.js `body`'s pace, Agility's share a point
-   * above 5, and the body armour's class (a placeholder P11-06 replaces with the load). @param {any} c @param {any} eq
+   * P11-06: a kit's load on a character: its band and what the band does, less Agility's share. Speed,
+   * the walk's ramp, the recovery and the draw are factors (1: unchanged). @param {any} c @param {any} kit
    */
-  function heroSpeed(c, eq) {
+  function encumbrance(c, kit) {
+    const E = CL.content.table('encumbrance');
+    const load = loadOf(kit);
+    const capacity = capacityOf(c);
+    const ratio = load / capacity;
+    const band = E.bands.find((b) => b.upTo == null || ratio <= b.upTo + 1e-9) || E.bands[E.bands.length - 1];
+    const agi = c?.character ? CL.character.attribute('agi', c) - 5 : 0;
+    const eased = Math.max(0, 1 - (E.agility || 0) * agi); // Agility lessens what the load costs
+    return {
+      load,
+      capacity,
+      ratio,
+      band,
+      speed: Math.max(E.floor ?? 0.6, 1 - (1 - band.speed) * eased),
+      ramp: band.ramp * eased,
+      recovery: 1 + (band.recovery - 1) * eased,
+      draw: 1 + (band.draw - 1) * eased,
+    };
+  }
+
+  /**
+   * P11-05 (D-P11d): the hero's walking speed: data/character.js `body`'s pace and Agility's share a point
+   * above 5; P11-06: under the load of what they carry. @param {any} c @param {any} kit
+   */
+  function heroSpeed(c, kit) {
     const B = CL.content.table('body');
     const agi = CL.character.attribute('agi', c) - 5;
-    const it = eq?.body ? CL.content.table('items')[eq.body] : null;
-    const look = it ? (it.forgedFrom ? CL.content.table('items')[it.forgedFrom] : it)?.look : null;
-    const cls = look?.armour || (it ? ['cloth', 'gambeson', 'leather', 'mail'][Math.min(3, it.tier || 1)] : 'cloth');
-    return (B.speed || 100) * (1 + (B.agility || 0) * agi) * (B.armour?.[cls] ?? 1);
+    return (B.speed || 100) * (1 + (B.agility || 0) * agi) * encumbrance(c, kit).speed;
   }
 
   /** The body and weapon numbers a profile puts on a unit (what combat reads off the unit). */
@@ -234,5 +298,5 @@
   /** How close a melee fighter must be to strike: just inside its reach. @param {any} u */
   const strikeRange = (u) => u.reach - 1;
 
-  CL.profile = { heroSpeed, SWORD, DEFAULT_TIMING, DEFAULT_COOLDOWN, LOOK_FAMILY, UNIT_FIELDS, familyOfLook, troopWeapon, weaponOf, resolve, apply, of, timingOf, phaseOf, attackProgress, cooldownOf, arcOf, targetsOf, strikeRange };
+  CL.profile = { heroSpeed, loadOf, capacityOf, encumbrance, armourClass, armourPoise, SWORD, DEFAULT_TIMING, DEFAULT_COOLDOWN, LOOK_FAMILY, UNIT_FIELDS, familyOfLook, troopWeapon, weaponOf, resolve, apply, of, timingOf, phaseOf, attackProgress, cooldownOf, arcOf, targetsOf, strikeRange };
 })(typeof window !== 'undefined' ? window : globalThis);

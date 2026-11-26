@@ -213,7 +213,7 @@
    */
   function heroCombat(c = camp(), equipment = c.equipment, which = CL.gear.bestLoadout(c, equipment)) {
     // P11-01: one profile (js/profile.js); P11-02: from the loadout in hand (a slung shield doesn't count).
-    const p = CL.profile.resolve({ hero: c, equipment: CL.gear.kitFor(c, equipment, which) });
+    const p = CL.profile.resolve({ hero: c, equipment: CL.gear.kitFor(c, equipment, which), carried: equipment });
     return { hp: p.hp, maxhp: p.maxhp, damage: p.damage, armor: p.armor, canBlock: p.canBlock };
   }
 

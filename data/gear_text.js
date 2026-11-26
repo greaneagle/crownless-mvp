@@ -5,7 +5,7 @@
  * the longest names). The codes are the gear check's own: a pack can't add or remove one.
  * P11-03: a requirement's lines also have {stat} (an attribute's or skill's name), {need}, {have} and
  * {fix}, its last sentence: one of the fix_ lines ({n} the points to spend; {master} and {place} a
- * master's, from P11-17). */
+ * master's, from P11-17). P11-06: the load's lines have {load} and {capacity}. */
 (function (root) {
   root.CROWNLESS_CONTENT = root.CROWNLESS_CONTENT || {};
   var C = root.CROWNLESS_CONTENT;
@@ -22,6 +22,8 @@
     skill: 'The {item} needs {stat} {need}; you have {have}. {fix}',
     training: 'The {item} needs a master’s training. {fix}',
     no_weapon: 'You can’t wield your {item} yet: you fight with your fists.',
+    load_heavy: 'Your gear is heavy ({load} of {capacity}): you move and recover slower.',
+    load_over: 'Your gear is too heavy ({load} of {capacity}): you move and recover much slower.',
     fix_spend: 'Spend {n} on it.',
     fix_level: 'More points come as you level.',
     fix_untaught: 'No one teaches it yet.',

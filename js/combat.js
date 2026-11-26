@@ -148,8 +148,9 @@
   /** Battle sounds: the hero's own are loudest, everyone else's quieter (js/audio.js rate-limits them). */
   const sound = (name, ...units) => CL.audio?.play(name, units.some((u) => u?.role === 'hero') ? 1 : 0.4);
 
-  function mitigate(raw, armor) {
-    return Math.max(1, Math.round((raw * 100) / (100 + 4 * (armor || 0))));
+  /** P11-06: `pierce`, the share of the armour a blow ignores (a mace, a crossbow's bolt). */
+  function mitigate(raw, armor, pierce = 0) {
+    return Math.max(1, Math.round((raw * 100) / (100 + 4 * (armor || 0) * (1 - pierce))));
   }
 
   /** Deploy the hero plus healthy roster soldiers and start the encounter's first wave. */
@@ -208,7 +209,7 @@
     // P11-02: in the loadout you prefer if it can be used here, else the other (said, never silent).
     const kit = g.duel ? g.duel.kit : CL.campaign?.equipment;
     const lo = CL.gear.battleLoadout(CL.campaign, kit, { loaner: Boolean(g.duel) });
-    const heroProfile = P.resolve({ hero: CL.campaign, equipment: CL.gear.kitFor(CL.campaign, kit, lo.which) });
+    const heroProfile = P.resolve({ hero: CL.campaign, equipment: CL.gear.kitFor(CL.campaign, kit, lo.which), carried: kit }); // P11-06: the whole kit is carried
     P.apply(g.hero, heroProfile);
     g.hero.canBlock = heroProfile.canBlock;
     g.hero.guardKind = heroProfile.guardKind; // P11-05: a shield, a weapon guard or none
@@ -618,7 +619,7 @@
       g.effects.push({ x: target.x, y: target.y - 17, t: 0.15, color: '#e8eef2', kind: 'block' });
     }
     if (g.practice && g.practice.firstHit == null) g.practice.firstHit = g.t; // camera test: time to contact
-    target.hp = Math.max(0, target.hp - mitigate(CL.traits.blow(raw, source, target), target.armor)); // traits (P7-07)
+    target.hp = Math.max(0, target.hp - mitigate(CL.traits.blow(raw, source, target), target.armor, P.of(source)?.pierce || 0)); // traits (P7-07); P11-06: pierce
     if (source && !inArc(target, source, ARC.block)) target.flankedAt = g.t; // hit from the flank or behind (morale, V2-08b)
     if (source && source.team !== target.team) {
       if (!target.hitBy) target.hitBy = new Set();
@@ -983,8 +984,12 @@
     h.guard = h.alive && blockInput && guardOf(h) !== 'none' && !isCommitted(h) && !drawing && !broken(h);
     if (g.attackQueuedAt !== null && g.t > (g.attackQueuedUntil ?? g.attackQueuedAt + INPUT_BUFFER)) g.attackQueuedAt = null;
     if (!h.alive) return;
+    // P11-06: a loaded hero takes a moment to reach full pace (the band's ramp, less with Agility).
+    const ramp = P.of(h)?.ramp || 0;
+    h.walkFor = x || y ? (h.walkFor || 0) + dt : 0;
     if (x || y) {
       const old = h.speed;
+      if (ramp > 0) h.speed *= Math.min(1, 0.4 + (0.6 * h.walkFor) / ramp);
       if (h.guard) h.speed *= GUARD_SPEED;
       if (isCommitted(h)) h.speed *= P.of(h)?.moveDuringAttack ?? 1; // P11-05: a committed swing slows your feet
       move(h, x, y, dt);

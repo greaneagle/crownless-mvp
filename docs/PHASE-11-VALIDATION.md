@@ -278,3 +278,29 @@ The duels are decided by the seed's start, so each cell is all or nothing over 4
 | Arming Sword, light or heavy armour | win / win | win / win | win / win | win / win | win / win |
 
 **The matrix (plan §10.5) is not met yet, recorded for P11-10 and P11-11.** Mashed, the two-handers and the spear lose to shield troops (a slow weapon swung into a shield), and timed every weapon wins; but the axe and the mace lose to none of these five, and every weapon wins against the pikeman. The opponents are troops with 5.0.0's own damage and reach, and no styles: the family against family matrix needs P11-10's styles and P11-11's troops on their families.
+
+## Armour and weight (5.6.0, P11-06)
+
+### Foot styles (`duel-lab.js 20 --styles --field`, masher / timer: win %)
+
+| Style (kit) | Load, band | Looter | Footman | Huscarl | Legionary | Pikeman | Hunter | Crossbowman | Rider | Reaver |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Light duelist (arming sword, clothing) | 4, light | 100 / 100 | 100 / 100 | **0** / 100 | 100 / 100 | 100 / 100 | 100 / 100 | 100 / 100 | 85 / **0** | 100 / 100 |
+| Shield infantry (arming sword, kite, medium) | 11, medium | 100 / 100 | 100 / 100 | **0** / 100 | 100 / 100 | 100 / 100 | 100 / 100 | 100 / 100 | 100 / 95 | 100 / 100 |
+| Heavy infantry (war mace, heater, mail) | 18, heavy | 100 / 100 | 100 / 100 | 100 / 100 | 100 / **0** | 100 / 100 | 95 / 95 | 95 / 95 | 100 / 100 | 100 / 100 |
+| Spearman (ash spear, kite, medium) | 13, medium | 80 / 95 | 80 / 95 | **0** / 85 | 80 / 85 | 85 / 95 | 80 / 80 | 80 / 80 | 80 / **0** | 80 / 95 |
+| Two-hander (greatsword, helm, leather) | 12, medium | 100 / 100 | **5** / 100 | **0** / 100 | **5** / 100 | 100 / 100 | 100 / 100 | 100 / 100 | 100 / 100 | 100 / 100 |
+
+Every style loses somewhere and wins somewhere: no armour set wins every matchup. Heavy armour carries a masher through a huscarl that beats every lighter style, and loses a legionary the light styles beat (shorter reach and a slower tempo against a quick sword); the light duelist loses to a rider that heavy armour shrugs off. The shield infantry's only loss is a mashed huscarl: the middle way, as intended. With no AI styles yet (P11-10), opponents don't exploit a heavy fighter's slowness, so the differences are smaller than they will be.
+
+### Small skirmishes (`parity.js 40`, the masher)
+
+| Scenario | Odds | Fought | Over the odds (5.5.0) |
+|---|---|---|---|
+| lone-hero 1v3 | 86 | 100 | +14 (+14) |
+| small 6v6 | 89 | 100 | +11 (+11) |
+| close 7v8 | 79 | 100 | +21 (+21) |
+| veterans 10v10 | 79 | 100 | +21 (+21) |
+| outnumbered 6v11 | 61 | 63 | +1 (+6) |
+
+The band (the masher no worse than about the odds) holds. The parity company's hero starts light (the Farmhand's kit), so the load itself doesn't change these; troops' poise and the mace's pierce do, a little.

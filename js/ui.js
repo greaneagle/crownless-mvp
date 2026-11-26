@@ -2055,6 +2055,15 @@
     $('#sheetCompanion').replaceChildren(...rows, ...retinueRows);
   }
 
+  /** P11-06: the load you carry, its band in words, and a bar to the capacity (a mark at heavy). */
+  const BAND_WORDS = { light: 'light', medium: 'medium', heavy: 'heavy: slower', overloaded: 'too heavy: much slower' };
+  function loadStat(c) {
+    const e = CL.profile.encumbrance(c, c.equipment);
+    const share = Math.min(1, e.load / (e.capacity * 1.4));
+    const bar = el('span', { className: `loadBar load-${e.band.id}`, role: 'img', ariaLabel: `Load ${e.load} of ${Math.round(e.capacity)}, ${BAND_WORDS[e.band.id]}` }, Object.assign(document.createElement('span'), { style: `width:${Math.round(share * 100)}%` }));
+    return el('div', { className: 'loadStat' }, el('span', { className: 'ico ico-boot' }), 'Load', el('b', { textContent: `${e.load} / ${Math.round(e.capacity)} · ${BAND_WORDS[e.band.id]}` }), bar);
+  }
+
   /** P11-03: "Your points would unlock: War Mace (Strength 6)", or '' when they unlock nothing you have. */
   function unlockWords(c) {
     const u = CL.gear.unlocks(c);
@@ -2129,6 +2138,7 @@
       stat('sword', 'Damage', Math.round(hero.damage * 10) / 10),
       stat('shield', 'Armour', `${hero.armor}${hero.canBlock ? '' : ' · no block'}`),
       stat('boot', 'Travel', `×${C.travelFactor().toFixed(2)}`),
+      loadStat(c),
       stat('people', 'Company', `${CL.party.headcount(c)} / ${cap}`),
       stat('star', 'Renown', c.renown),
       stat('coin', 'Crowns', c.gold),

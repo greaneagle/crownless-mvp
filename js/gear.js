@@ -14,7 +14,7 @@
 
   const LOADOUTS = ['primary', 'secondary'];
   /** The findings' codes (data/gear_text.js has a line for each, and no other). */
-  const CODES = ['two_hands', 'shoots', 'unarmed', 'no_second', 'fallback', 'loaner', 'mounted', 'heavy', 'attribute', 'skill', 'training', 'no_weapon'];
+  const CODES = ['two_hands', 'shoots', 'unarmed', 'no_second', 'fallback', 'loaner', 'mounted', 'heavy', 'attribute', 'skill', 'training', 'no_weapon', 'load_heavy', 'load_over'];
   /** P11-03: the ways to meet a requirement, the last sentence of its finding (data/gear_text.js too). */
   const FIXES = ['fix_spend', 'fix_level', 'fix_untaught', 'fix_teacher'];
   /** Every line data/gear_text.js has, and no other. */
@@ -187,6 +187,9 @@
     const body = item(kit?.body);
     if (limit != null && body && (body.stats.armor || 0) > limit) out.push(finding('penalty', 'heavy', a.weapon, { item: nameOf(a.weapon) }, { have: body.stats.armor || 0, need: limit }));
     if (context.loaner) out.push(finding('note', 'loaner', a.weapon, { item: nameOf(kit?.weapon), shield: nameOf(kit?.offhand) }));
+    // P11-06: the load of everything carried.
+    const enc = CL.profile.encumbrance(c, kit);
+    if (enc.band.id === 'heavy' || enc.band.id === 'overloaded') out.push(finding('penalty', enc.band.id === 'heavy' ? 'load_heavy' : 'load_over', null, { load: String(enc.load), capacity: String(Math.round(enc.capacity)) }, { have: enc.load, need: Math.round(enc.capacity) }));
     return out.sort((x, y) => ORDER[x.kind] - ORDER[y.kind]);
   }
 
@@ -238,7 +241,10 @@
     if (!it?.slot) return [];
     const kit = { ...c.equipment, [it.slot]: itemId };
     const which = it.slot === 'weapon' ? 'primary' : bestLoadout(c, kit, context);
-    return check(c, kit, { ...context, which }).filter((f) => f.item === itemId || (it.slot === 'offhand' && (f.code === 'two_hands' || f.code === 'shoots')));
+    // P11-06: and the load, when the piece makes it heavier than it was.
+    const band = (k) => CL.profile.encumbrance(c, k).band.id;
+    const heavier = band(kit) !== band(c.equipment);
+    return check(c, kit, { ...context, which }).filter((f) => f.item === itemId || (it.slot === 'offhand' && (f.code === 'two_hands' || f.code === 'shoots')) || (heavier && f.code.startsWith('load_')));
   }
 
   /** Every finding of both loadouts a kit can use, each marked with its loadout (the character sheet). */
@@ -413,7 +419,7 @@
     L.which = to;
     const c = CL.campaign;
     const h = g.hero;
-    const p = CL.profile.resolve({ hero: c, equipment: kitFor(c, L.kit, to) });
+    const p = CL.profile.resolve({ hero: c, equipment: kitFor(c, L.kit, to), carried: L.kit });
     CL.profile.apply(h, p, ['damage', 'armor', 'reach', 'speed', 'ranged']); // the body (HP) stays as it is
     h.canBlock = p.canBlock;
     h.guardKind = p.guardKind; // P11-05: the guard comes with the weapon in hand

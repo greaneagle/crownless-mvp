@@ -13,6 +13,8 @@
 //                from --town-wins (each 0 to 3 by default)
 //   --series     five tournaments in a row in one town, each pilot: how often a new character wins, and
 //                the fees and prizes
+//   --styles     P11-06: the foot styles of docs/PHASE-11-PLAN.md §10.3 (light duelist, shield infantry,
+//                heavy infantry, spearman, two-hander), each in its own weapon and armour
 //
 // Reports, per pilot: win rate (opponent cut down), left% (no blow for 45 s: the opponent slipped
 // away, which the game counts as a win), seconds, HP left (share of the hero's), blows given and taken.
@@ -32,6 +34,17 @@ const ARMOUR = {
   light: { offhand: 'oak_shield', head: null, body: 'clothing', hands: null, feet: 'boots' },
   medium: { offhand: 'kite_shield', head: 'leather_cap', body: 'gambeson', hands: 'gloves', feet: 'boots' },
   heavy: { offhand: 'heater_shield', head: 'iron_helm', body: 'mail_hauberk', hands: 'mail_mittens', feet: 'greaves' },
+  // P11-06: the styles' own (no shield for the duelist and the two-hander).
+  bare: { offhand: null, head: null, body: 'clothing', hands: null, feet: 'boots' },
+  leather: { offhand: null, head: 'iron_helm', body: 'leather_chest', hands: 'gloves', feet: 'boots' },
+};
+/** P11-06: the foot styles (plan §10.3), each a weapon and an armour set. */
+const STYLES = {
+  duelist: { weapon: 'arming_sword', armour: 'bare' },
+  shield: { weapon: 'arming_sword', armour: 'medium' },
+  heavy: { weapon: 'war_mace', armour: 'heavy' },
+  spearman: { weapon: 'ash_spear', armour: 'medium' },
+  twohander: { weapon: 'great_sword', armour: 'leather' },
 };
 const DEFAULT = { weapon: 'arming_sword', armour: 'medium' };
 const TOURNEY_TOWN = 'stonebridge';
@@ -44,10 +57,12 @@ function game(seed, weapon, armour) {
   c.roster = [];
   c.companions = c.companions || {};
   Object.assign(c.equipment, { weapon, ...ARMOUR[armour] });
-  // P11-05: what the weapon needs (P11-03), given, so each weapon is measured in the hand (a lab).
-  const r = CL.gear.reqOf(weapon) || {};
-  for (const a of ['str', 'agi']) if (r[a]) c.character.attributes[a] = Math.max(c.character.attributes[a], r[a]);
-  for (const [k, v] of Object.entries(r.skills || {})) c.character.skills[k] = Math.max(c.character.skills[k] || 0, v);
+  // P11-05: what the kit needs (P11-03), given, so each piece is measured as worn (a lab).
+  for (const id of Object.values(c.equipment)) {
+    const r = id ? CL.gear.reqOf(id) || {} : {};
+    for (const a of ['str', 'agi']) if (r[a]) c.character.attributes[a] = Math.max(c.character.attributes[a], r[a]);
+    for (const [k, v] of Object.entries(r.skills || {})) c.character.skills[k] = Math.max(c.character.skills[k] || 0, v);
+  }
   return CL;
 }
 
@@ -138,7 +153,7 @@ function runDuels({ seeds = 40, pilots = PILOTS, opponents = OPPONENTS, kits = [
       for (const pilot of pilots) {
         const rows = [];
         for (let i = 1; i <= seeds; i++) rows.push(duel({ seed: spread(i), pilot, opponent, weapon: kit.weapon, armour: kit.armour, field }));
-        out.push({ weapon: kit.weapon, armour: kit.armour, opponent, pilot, ...sum(rows) });
+        out.push({ style: kit.style, weapon: kit.weapon, armour: kit.armour, opponent, pilot, ...sum(rows) });
       }
     }
   }
@@ -206,16 +221,16 @@ if (require.main === module) {
   } else {
     const opponents = list('--opponents', OPPONENTS);
     const armours = list('--armour', null);
-    const kits = args.includes('--weapons') ? [...WEAPONS.map((weapon) => ({ weapon, armour: DEFAULT.armour })), ...Object.keys(ARMOUR).filter((a) => a !== DEFAULT.armour).map((armour) => ({ weapon: DEFAULT.weapon, armour }))] : (armours || [DEFAULT.armour]).map((armour) => ({ weapon: DEFAULT.weapon, armour }));
+    const kits = args.includes('--styles') ? Object.entries(STYLES).map(([style, k]) => ({ ...k, style })) : args.includes('--weapons') ? [...WEAPONS.map((weapon) => ({ weapon, armour: DEFAULT.armour })), ...Object.keys(ARMOUR).filter((a) => a !== DEFAULT.armour).map((armour) => ({ weapon: DEFAULT.weapon, armour }))] : (armours || [DEFAULT.armour]).map((armour) => ({ weapon: DEFAULT.weapon, armour }));
     const out = runDuels({ seeds, pilots, opponents, kits, field: args.includes('--field') });
     if (json) console.log(JSON.stringify({ seeds, field: args.includes('--field'), duels: out }, null, 2));
     else {
       console.log(`Duels on the ${args.includes('--field') ? 'open field' : 'tournament ground'}, ${seeds} seeds each`);
       console.log(`${'weapon'.padEnd(14)}${'armour'.padEnd(8)}${'opponent'.padEnd(9)}${'pilot'.padEnd(8)}  win%  left%  secs  hp-left%  given  taken  blocked`);
-      for (const r of out) console.log(`${r.weapon.padEnd(14)}${r.armour.padEnd(8)}${r.opponent.padEnd(9)}${r.pilot.padEnd(8)}${f(r.win)}${f(r.withdrew).padStart(7)}${f(r.seconds, 1)}${f(r.hpLeft).padStart(10)}${f(r.given, 1).padStart(7)}${f(r.taken, 1).padStart(7)}${f(r.blocked, 1).padStart(9)}${r.unfinished ? `  (${r.unfinished} never ended)` : ''}`);
+      for (const r of out) console.log(`${(r.style || r.weapon).padEnd(14)}${r.armour.padEnd(8)}${r.opponent.padEnd(9)}${r.pilot.padEnd(8)}${f(r.win)}${f(r.withdrew).padStart(7)}${f(r.seconds, 1)}${f(r.hpLeft).padStart(10)}${f(r.given, 1).padStart(7)}${f(r.taken, 1).padStart(7)}${f(r.blocked, 1).padStart(9)}${r.unfinished ? `  (${r.unfinished} never ended)` : ''}`);
     }
   }
   if (!json) console.log(`(${((Date.now() - t0) / 1000).toFixed(0)} s)`);
 }
 
-module.exports = { PILOTS, OPPONENTS, WEAPONS, ARMOUR, DEFAULT, duel, tourney, series, runDuels, runTourney, runSeries };
+module.exports = { STYLES, PILOTS, OPPONENTS, WEAPONS, ARMOUR, DEFAULT, duel, tourney, series, runDuels, runTourney, runSeries };

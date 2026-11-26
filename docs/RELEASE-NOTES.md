@@ -1,5 +1,24 @@
 # Crownless — Release Notes
 
+## v5.6.0 — Armour, weight and movement (P11-06) · 2026-11-26
+
+What you carry now weighs on you. Heavy armour still protects, but it costs pace and tempo, so light and heavy are both ways to fight.
+
+### New
+- **Your load.** Party shows what you wear and wield against what your Strength carries easily, in words and a bar: light, medium, heavy (slower) or too heavy (much slower). A carried second weapon and a slung shield count; your pack and your horse never do.
+- **What the load does:** light costs nothing; medium slows you a little; heavy and too heavy slow your walk, your start (a moment to reach full pace) and your recovery after a blow. You can always walk.
+- **Strength** now also raises what you carry easily; **Agility** lessens everything a heavy load costs.
+- **Armour steadies you:** mail (and less so leather and a gambeson) makes you harder to interrupt, troops too.
+- **Maces hit through armour:** a mace's blow ignores a share of the target's armour, as a crossbow's bolt will.
+- **The gear check says so:** "Your gear is heavy (18 of 14): you move and recover slower", on the sheet, and in the armoury when a piece would tip you into it.
+- Every origin starts light.
+
+### Under the hood
+- `data/character.js` `encumbrance`: the capacity (12, +1.2 a point of Strength above 5), the four bands, Agility's 6% a point, a speed floor of 60%, armour's poise. `CL.profile.loadOf`, `capacityOf`, `encumbrance`; the hero's profile carries `load`, `capacity`, `band`, `ramp` and `drawFactor` (for 5.7.0's bows). Companions' gear is a load too.
+- `pierce` on the families (the mace 30%, the crossbow 30%); `mitigate(raw, armour, pierce)`.
+- `duel-lab.js --styles`: five foot styles. Item weights are checked (0 to 20).
+- **Golden battles recorded again** (troops' poise and the mace's pierce change them).
+
 ## v5.5.0 — Melee rhythm and defence (P11-05) · 2026-11-26
 
 How you fight now matters. Every weapon has its own rhythm, a miss costs time, shields can be worn down, and the hero fights on the same body rules as everyone else. This is milestone M1, "The weapon in your hand", for the owner to play.

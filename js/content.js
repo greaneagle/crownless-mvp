@@ -199,11 +199,12 @@
       guard: (v) => ['shield', 'weapon', 'none'].includes(v),
       skill: (v) => v === null || (typeof v === 'string' && /^[a-z_]+$/.test(v)),
       skillRecovery: (v) => Number.isFinite(v) && v >= 0 && v <= 0.1,
+      pierce: (v) => Number.isFinite(v) && v >= 0 && v <= 0.8, // P11-06: a share of armour ignored
       look: (v) => v === null || LOOK.weapon.includes(v),
     };
     for (const [k, ok] of Object.entries(RULES)) {
       if (f[k] == null) {
-        if (!partial && !['look', 'mounted', 'armourLimit', 'skill'].includes(k)) out.push(`${at}: needs ${k}`);
+        if (!partial && !['look', 'mounted', 'armourLimit', 'skill', 'pierce'].includes(k)) out.push(`${at}: needs ${k}`);
         continue;
       }
       if (!ok(f[k])) out.push(`${at}: bad ${k}`);
@@ -424,6 +425,7 @@
     for (const it of Object.values(C.items || {})) {
       if (it.slot && !SLOTS.includes(it.slot)) err(`item ${it.id}: unknown slot ${it.slot}`);
       if (it.slot === 'weapon' && !(it.stats?.damage > 0)) err(`item ${it.id}: weapon needs stats.damage`);
+      if (it.weight != null && !(Number.isFinite(it.weight) && it.weight >= 0 && it.weight <= 20)) err(`item ${it.id}: weight must be from 0 to 20`); // P11-06: it's carried in battle now
       // P11-01: a weapon is of a known family, and its `combat` block overrides that family within range.
       if (it.slot === 'weapon' && !C.weapon_families?.[it.family]) err(`item ${it.id}: a weapon needs a known family (${it.family ?? 'none'})`);
       if (it.family != null && it.slot !== 'weapon') err(`item ${it.id}: only a weapon has a family`);

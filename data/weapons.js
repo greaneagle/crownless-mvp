@@ -21,6 +21,7 @@
  *   guard       'shield' (a shield in the other hand blocks), 'weapon' (Block raises the weapon: it takes
  *               part of a frontal blow, in a narrower arc), 'none'
  *   skill       the skill that trains it (+3% damage a point, and `skillRecovery` less recovery a point)
+ *   pierce      P11-06: the share of the target's armour a blow ignores (a mace's weight, a crossbow's bolt)
  *   shield      whether a shield can be carried with it (a two-handed weapon or a bow slings it on the back)
  *   switch      seconds to bring it to hand from the other weapon (P11-02; 0.4 for every family until P11-05)
  *   ranged      a bow's or crossbow's shot (range, projectileSpeed, cooldown, accuracy) when the troop gives none
@@ -31,10 +32,10 @@
   root.CROWNLESS_CONTENT = root.CROWNLESS_CONTENT || {};
   var C = root.CROWNLESS_CONTENT;
   // 5.0.0's one-handed sword: the bows, crossbow and lance keep it until their tasks.
-  var OLD = { windup: 0.16, active: 0.12, recovery: 0.24, cooldown: 0.86, miss: 0, arc: 90, maxTargets: 0, stagger: 1, poise: 1, shieldPressure: 1, knockback: 6, moveDuringAttack: 1, guard: 'none', skill: null, skillRecovery: 0 };
+  var OLD = { windup: 0.16, active: 0.12, recovery: 0.24, cooldown: 0.86, miss: 0, arc: 90, maxTargets: 0, stagger: 1, poise: 1, shieldPressure: 1, knockback: 6, moveDuringAttack: 1, guard: 'none', skill: null, skillRecovery: 0, pierce: 0 };
   function family(id, name, hands, reach, look, rhythm, more) {
     var r = rhythm || OLD;
-    var f = { id: id, name: name, hands: hands, reach: reach, windup: r.windup, active: r.active, recovery: r.recovery, miss: r.miss, arc: r.arc, maxTargets: r.maxTargets, cooldown: { hero: r.cooldown, ai: r.cooldown }, stagger: r.stagger, poise: r.poise, shieldPressure: r.shieldPressure, knockback: r.knockback, moveDuringAttack: r.moveDuringAttack, guard: r.guard, skill: r.skill, skillRecovery: r.skillRecovery, shield: hands === 1, switch: 0.4, look: look };
+    var f = { id: id, name: name, hands: hands, reach: reach, windup: r.windup, active: r.active, recovery: r.recovery, miss: r.miss, arc: r.arc, maxTargets: r.maxTargets, cooldown: { hero: r.cooldown, ai: r.cooldown }, stagger: r.stagger, poise: r.poise, shieldPressure: r.shieldPressure, knockback: r.knockback, moveDuringAttack: r.moveDuringAttack, guard: r.guard, skill: r.skill, skillRecovery: r.skillRecovery, pierce: r.pierce || 0, shield: hands === 1, switch: 0.4, look: look };
     for (var k in more || {}) f[k] = more[k];
     return f;
   }
@@ -45,7 +46,7 @@
     // Shield pressure and impact; shorter, one target.
     axe: { windup: 0.2, active: 0.12, recovery: 0.28, cooldown: 0.74, miss: 0.24, arc: 80, maxTargets: 1, stagger: 1.6, poise: 1, shieldPressure: 2.5, knockback: 8, moveDuringAttack: 0.45, guard: 'shield', skill: 'one_handed', skillRecovery: 0.02 },
     // Staggers; short, one target.
-    mace: { windup: 0.2, active: 0.12, recovery: 0.28, cooldown: 0.74, miss: 0.24, arc: 70, maxTargets: 1, stagger: 2.6, poise: 1, shieldPressure: 1.5, knockback: 9, moveDuringAttack: 0.45, guard: 'shield', skill: 'one_handed', skillRecovery: 0.02 },
+    mace: { windup: 0.2, active: 0.12, recovery: 0.28, cooldown: 0.74, miss: 0.24, arc: 70, maxTargets: 1, stagger: 2.6, poise: 1, shieldPressure: 1.5, knockback: 9, moveDuringAttack: 0.45, guard: 'shield', skill: 'one_handed', skillRecovery: 0.02, pierce: 0.3 },
     // Longer reach, a wide arc and three targets; slow to recover; a steady grip; a weapon guard.
     greatsword: { windup: 0.26, active: 0.16, recovery: 0.36, cooldown: 0.92, miss: 0.3, arc: 120, maxTargets: 3, stagger: 2.2, poise: 2.5, shieldPressure: 2, knockback: 10, moveDuringAttack: 0.3, guard: 'weapon', skill: 'two_handed', skillRecovery: 0.02 },
     // Heavy impact and knockback, a long commitment.
@@ -69,7 +70,7 @@
     shortbow: family('shortbow', 'Shortbow', 2, 48, 'bow', null, { shield: false, ranged: { range: 225, projectileSpeed: 240, cooldown: 1.6, accuracy: 0.6 } }),
     longbow: family('longbow', 'Longbow', 2, 48, 'bow', null, { req: { str: 6, skills: { archery: 1 } }, shield: false, ranged: { range: 225, projectileSpeed: 240, cooldown: 1.6, accuracy: 0.6 } }),
     composite: family('composite', 'Composite bow', 2, 48, 'recurve', null, { req: { skills: { archery: 2 } }, shield: false, ranged: { range: 215, projectileSpeed: 240, cooldown: 1.6, accuracy: 0.6 } }),
-    crossbow: family('crossbow', 'Crossbow', 2, 48, 'crossbow', null, { req: { str: 6 }, shield: false, ranged: { range: 240, projectileSpeed: 300, cooldown: 2.2, accuracy: 0.7 } }),
+    crossbow: family('crossbow', 'Crossbow', 2, 48, 'crossbow', null, { pierce: 0.3, req: { str: 6 }, shield: false, ranged: { range: 240, projectileSpeed: 300, cooldown: 2.2, accuracy: 0.7 } }),
     unarmed: family('unarmed', 'Unarmed', 1, 40, null, R.unarmed)
   };
 })(typeof window !== 'undefined' ? window : globalThis);
