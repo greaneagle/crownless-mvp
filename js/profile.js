@@ -132,6 +132,23 @@
       const timing = { ...part.timing, recovery: rec0 - quicker, total: part.timing.total + slower - quicker };
       const cd = Math.max(timing.total, part.cooldown.hero + slower - quicker);
       const canBlock = Boolean(shield?.stats.block);
+      // P11-07: a bow or crossbow in hand: the hero's own shot. Archery draws a bow faster and aims
+      // truer; Strength loads a crossbow (Archery only aims it); a heavy load and armour heavier than the
+      // bow allows draw slower.
+      let ranged = null;
+      if (part.familyRanged) {
+        const fr = { ...part.familyRanged, ...(w.item?.combat?.ranged || {}) };
+        const archery = H.skill('archery', c);
+        const crossbow = part.family === 'crossbow';
+        let draw = fr.draw ?? fr.cooldown;
+        draw *= crossbow ? Math.max(0.6, 1 - 0.04 * (H.baseAttribute('str', c) - 6)) : Math.max(0.6, 1 - 0.03 * archery);
+        draw *= enc.draw;
+        const limit = w.item?.combat?.armourLimit ?? w.family.armourLimit;
+        const body = eq?.body ? CL.content.table('items')[eq.body] : null;
+        if (limit != null && (body?.stats.armor || 0) > limit) draw *= 1.25;
+        // The hero aims (assisted, or by hand): truer than a troop's volley, 75% at the least.
+        ranged = { ...fr, draw, maxRange: fr.maxRange ?? fr.range * 1.5, accuracy: Math.min(0.95, Math.max(0.75, fr.accuracy) + 0.03 * archery), crossbow };
+      }
       p = {
         ...part,
         timing,
@@ -144,13 +161,13 @@
         // walking pace, Agility and (until P11-06's load) the armour's class.
         speed: heroSpeed(c, source.carried || eq),
         reach: part.familyReach,
+        ranged,
         poise: part.poise + armourPoise(armourClass(eq?.body)),
         load: enc.load,
         capacity: enc.capacity,
         band: enc.band.id,
         ramp: enc.ramp,
         drawFactor: enc.draw, // P11-07's bows
-        ranged: null,
         canBlock,
         guardKind: canBlock ? 'shield' : part.guardKind === 'weapon' ? 'weapon' : 'none',
         // The Shield skill: more a shield takes before it breaks, a quicker recovery, a little wider.

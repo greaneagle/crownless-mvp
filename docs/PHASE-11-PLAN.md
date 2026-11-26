@@ -142,7 +142,7 @@ The fix is not to make input unresponsive or to punish repeated presses, but to 
 | **P11-04** | The equipment you see | M–L | P1 | P11-02 (parallel with P11-03) | 5.4.0 | M1 | ✅ Done |
 | **P11-05** | Melee rhythm and defence | L | P1 | P11-01, P11-04 | 5.5.0 | **M1 "The weapon in your hand"** | ✅ Done (M1 played, owner 2026-11-26: good) |
 | **P11-06** | Armour, weight and movement | M | P2 | P11-05 | 5.6.0 | M2 | ✅ Done |
-| **P11-07** | Bows and crossbows in your hands | L | P1 | P11-05, P11-06 | 5.7.0 | M2 | Specified |
+| **P11-07** | Bows and crossbows in your hands | L | P1 | P11-05, P11-06 | 5.7.0 | M2 | ✅ Done |
 | **P11-08** | Fighting from the saddle | L | P1 | P11-06, P11-07 | 5.8.0 | **M2 "Bow and horse"** | Specified |
 | **P11-09** | Controls, feedback and teaching (consolidation) | M | P1 | P11-05, P11-07, P11-08 | 5.9.0 | M2 | Specified |
 | **P11-10** | Fighters who think: individual AI and styles | L | P1 | P11-05, P11-07, P11-08 | 5.10.0 | M3 | Specified |

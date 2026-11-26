@@ -3642,6 +3642,8 @@
     $('#setHealthBars').checked = s.healthBars;
     $('#setReduced').checked = s.reducedEffects;
     $('#setParry').checked = s.parry; // P11-05 (D-P11j)
+    $('#setAimMouse').checked = s.aimMouse; // P11-07
+    $('#setAimTouch').checked = s.aimTouch;
     $('#setTips').checked = s.tips;
     $('#setMapSpeed').value = s.mapSpeed;
     $('#packResult').textContent = '';
@@ -3705,6 +3707,8 @@
     $('#setHealthBars').onchange = () => CL.settings.set('healthBars', $('#setHealthBars').checked);
     $('#setReduced').onchange = () => CL.settings.set('reducedEffects', $('#setReduced').checked);
     $('#setParry').onchange = () => CL.settings.set('parry', $('#setParry').checked);
+    $('#setAimMouse').onchange = () => CL.settings.set('aimMouse', $('#setAimMouse').checked);
+    $('#setAimTouch').onchange = () => CL.settings.set('aimTouch', $('#setAimTouch').checked);
     // P9-07: content packs (js/packs.js), kept in this browser.
     $('#packImportBtn').onclick = () => $('#packFile').click();
     $('#packFile').onchange = async () => {

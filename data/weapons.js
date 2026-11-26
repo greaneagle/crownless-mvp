@@ -24,7 +24,10 @@
  *   pierce      P11-06: the share of the target's armour a blow ignores (a mace's weight, a crossbow's bolt)
  *   shield      whether a shield can be carried with it (a two-handed weapon or a bow slings it on the back)
  *   switch      seconds to bring it to hand from the other weapon (P11-02; 0.4 for every family until P11-05)
- *   ranged      a bow's or crossbow's shot (range, projectileSpeed, cooldown, accuracy) when the troop gives none
+ *   ranged      a bow's or crossbow's shot when the troop gives none: `range` (effective: full damage to here),
+ *               `maxRange` (it falls after this; damage halves on the way), `projectileSpeed`, `cooldown`
+ *               (a troop's between shots), `accuracy` (the chance a shot flies true), and for the hero
+ *               (P11-07): `draw` (s to a full draw; a crossbow's reload, on the spot) and `ammo` (a quiver)
  *   look        the art kit's weapon part
  *   req         P11-03: what a piece of the family needs unless it says (`req` on the item; `{}` for nothing):
  *               { str?, agi?, skills?: { id: n }, training? }, held to the budget's rule (js/gear.js) */
@@ -67,10 +70,12 @@
     spear: family('spear', 'Spear', 1, 70, 'spear', R.spear),
     pike: family('pike', 'Pike', 2, 72, 'pike', R.pike, { req: { str: 6, skills: { polearm: 1 } } }),
     lance: family('lance', 'Lance', 1, 70, 'lance', null, { req: { skills: { riding: 2 } } }),
-    shortbow: family('shortbow', 'Shortbow', 2, 48, 'bow', null, { shield: false, ranged: { range: 225, projectileSpeed: 240, cooldown: 1.6, accuracy: 0.6 } }),
-    longbow: family('longbow', 'Longbow', 2, 48, 'bow', null, { req: { str: 6, skills: { archery: 1 } }, shield: false, ranged: { range: 225, projectileSpeed: 240, cooldown: 1.6, accuracy: 0.6 } }),
-    composite: family('composite', 'Composite bow', 2, 48, 'recurve', null, { req: { skills: { archery: 2 } }, shield: false, ranged: { range: 215, projectileSpeed: 240, cooldown: 1.6, accuracy: 0.6 } }),
-    crossbow: family('crossbow', 'Crossbow', 2, 48, 'crossbow', null, { pierce: 0.3, req: { str: 6 }, shield: false, ranged: { range: 240, projectileSpeed: 300, cooldown: 2.2, accuracy: 0.7 } }),
+    // P11-07: the shortbow quick and light, the longbow far and slow to draw (and poor in heavy armour),
+    // the crossbow slow to load (on the spot), flat and fast, piercing, aimed by anyone (Strength loads it).
+    shortbow: family('shortbow', 'Shortbow', 2, 48, 'bow', null, { skill: 'archery', armourLimit: 5, shield: false, ranged: { range: 225, maxRange: 330, projectileSpeed: 260, cooldown: 1.6, accuracy: 0.6, draw: 0.55, ammo: 24 } }),
+    longbow: family('longbow', 'Longbow', 2, 48, 'bow', null, { skill: 'archery', armourLimit: 3, req: { str: 6, skills: { archery: 1 } }, shield: false, ranged: { range: 270, maxRange: 420, projectileSpeed: 300, cooldown: 1.6, accuracy: 0.6, draw: 0.9, ammo: 20 } }),
+    composite: family('composite', 'Composite bow', 2, 48, 'recurve', null, { skill: 'archery', armourLimit: 5, req: { skills: { archery: 2 } }, shield: false, ranged: { range: 215, maxRange: 310, projectileSpeed: 270, cooldown: 1.6, accuracy: 0.6, draw: 0.5, ammo: 24 } }),
+    crossbow: family('crossbow', 'Crossbow', 2, 48, 'crossbow', null, { pierce: 0.3, req: { str: 6 }, shield: false, ranged: { range: 260, maxRange: 440, projectileSpeed: 420, cooldown: 2.2, accuracy: 0.7, draw: 2.0, ammo: 16 } }),
     unarmed: family('unarmed', 'Unarmed', 1, 40, null, R.unarmed)
   };
 })(typeof window !== 'undefined' ? window : globalThis);

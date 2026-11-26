@@ -388,7 +388,20 @@
    * @param {any} g @param {any} c @param {any} kit @param {string} which
    */
   function begin(g, c, kit, which) {
-    g.loadout = { which, kit, ready: { primary: 0, secondary: 0 }, switching: null, can: Boolean(kit?.weapon2) && usable(c, kit, which === 'primary' ? 'secondary' : 'primary', { loaner: kit !== c.equipment }) };
+    g.loadout = { which, kit, ready: { primary: 0, secondary: 0 }, switching: null, can: Boolean(kit?.weapon2) && usable(c, kit, which === 'primary' ? 'secondary' : 'primary', { loaner: kit !== c.equipment }), ammo: { primary: ammoOf(kit, 'primary'), secondary: ammoOf(kit, 'secondary') } };
+    CL.ui.quiverCount?.();
+  }
+
+  /**
+   * P11-07 (D-P11e): a loadout's shots for the battle: its bow's or crossbow's quiver, and the `ammo`
+   * slot's (a full quiver) on top; null for a melee weapon. Fresh each battle: arrows are never bought.
+   */
+  function ammoOf(kit, which) {
+    const w = weaponIn(kit, which);
+    const p = w ? CL.profile.weaponOf(w) : null;
+    const r = p?.family.ranged;
+    if (!r) return null;
+    return (r.ammo ?? 20) + (item(kit?.ammo)?.stats?.ammo || 0);
   }
 
   /**
@@ -405,6 +418,10 @@
     const p = CL.profile.weaponOf(weaponIn(L.kit, to));
     L.switching = { to, at: g.t + (p.item?.combat?.switch ?? p.family.switch ?? 0.4) };
     h.guard = false;
+    // P11-07: a draw or a crossbow's reload is lost on a switch (it can't be shortened by switching).
+    h.drawT = 0;
+    h.loaded = false;
+    g.looseQueued = false;
     CL.ui.message(`Drawing your ${nameOf(weaponIn(L.kit, to))}…`);
     CL.ui.gearButtons?.();
     return true;
@@ -453,5 +470,5 @@
     return 'You carry no second weapon now: battles start with your first.';
   }
 
-  CL.gear = { FIXES, LINES, REQ_KEYS, CLASSES, ALWAYS, reqOf, unmet, meets, unlocks, classOf, ruleProblems, blocked, LOADOUTS, CODES, TEXT_MAX, KINDS, ICONS, KIND_NAMES, LOADOUT_NAMES, words, active, kitFor, check, checkAll, checkItem, usable, bestLoadout, battleLoadout, stops, describe, speedWord, compare, begin, switchWeapon, tick, switching, sanitize, repair };
+  CL.gear = { ammoOf, FIXES, LINES, REQ_KEYS, CLASSES, ALWAYS, reqOf, unmet, meets, unlocks, classOf, ruleProblems, blocked, LOADOUTS, CODES, TEXT_MAX, KINDS, ICONS, KIND_NAMES, LOADOUT_NAMES, words, active, kitFor, check, checkAll, checkItem, usable, bestLoadout, battleLoadout, stops, describe, speedWord, compare, begin, switchWeapon, tick, switching, sanitize, repair };
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -3,7 +3,8 @@
 // once, with reserves keeping the field full) at a fixed 60 Hz step, and reports the simulation's cost
 // per frame. Drawing is not included: measure that in the browser with Debug → Battle benchmark, or
 // headless with scripts/bench-browser.js (P11-00).
-//   node scripts/bench-battle.js [seconds=20] [--maps] [--sizes 40,100,200] [--json]
+//   node scripts/bench-battle.js [seconds=20] [--maps] [--sizes 40,100,200] [--archers] [--json]
+//   --archers  P11-07: two in five of each side shoot (the shots' swept flight under load)
 //   (--maps: also the forest and the courtyard)
 // P11-00: the simulation's p50, p95 and p99 per frame, frames over 16.7 and 33 ms, and the JS heap.
 const { loadGame } = require('../tests/helpers/load');
@@ -25,10 +26,20 @@ function mulberry(seed) {
 }
 
 /** The benchmark's battle at `size`, on its open field (or another map's large version). @param {number} size @param {string} [map] */
-function setupBench(size, map = 'open_country') {
+function setupBench(size, map = 'open_country', archers = ARCHERS) {
   const { CL } = loadGame({ random: mulberry(size * 101 + map.length) });
   CL.combat.setActiveCap(size);
   const def = CL.debugTools.benchDef(size);
+  if (archers) {
+    // P11-07: two in five shooting on each side.
+    const mine = ['footman', 'hunter', 'guard', 'longbowman', 'levy'];
+    def.practice = def.practice.map((_, i) => mine[i % mine.length]);
+    const theirs = ['reaver', 'skirmisher', 'looter', 'crossbowman', 'mercenary'];
+    const n = Object.values(def.waves[0]).reduce((a, b) => a + b, 0);
+    const wave = {};
+    for (let i = 0; i < n; i++) wave[theirs[i % theirs.length]] = (wave[theirs[i % theirs.length]] || 0) + 1;
+    def.waves = [wave];
+  }
   if (map !== 'open_country') def.mapDef = CL.arena.build(CL.content.get('battle_maps', map), size);
   CL.combat.startBattle(def);
   const g = CL.game;
@@ -110,8 +121,10 @@ function run(seconds = 20, maps = MAPS.slice(0, 1), sizes = SIZES) {
   return rows;
 }
 
+let ARCHERS = false;
 if (require.main === module) {
   const args = process.argv.slice(2);
+  ARCHERS = args.includes('--archers');
   const seconds = Number(args.find((a, i) => /^\d+$/.test(a) && args[i - 1] !== '--sizes') || 20);
   const i = args.indexOf('--sizes');
   const sizes = i >= 0 ? args[i + 1].split(',').map(Number) : SIZES;

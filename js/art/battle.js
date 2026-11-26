@@ -137,7 +137,13 @@
     const atk = CL.profile.attackProgress(u); // the unit's own timing (P11-01): nothing else in the art reads it
     if (atk) P.atk = atk;
     P.guard = Boolean(u.guard);
-    if (u.ranged) {
+    if (u.ranged && u.role === 'hero') {
+      // P11-07: the hero's own draw (held at full until loosed) and a crossbow wound back once loaded.
+      const r = u.ranged;
+      P.draw = r.crossbow && u.loaded ? 1 : Math.min(1, (u.drawT || 0) / (r.draw || 1));
+      P.shot = Math.min(1, (u.shot || 0) / 0.2);
+      if (P.shot > 0.2) P.draw = 0;
+    } else if (u.ranged) {
       const cd = u.ranged.cooldown || 1.6;
       const aiming = u.target?.alive || u.role === 'hero';
       P.draw = aiming ? Math.max(0, Math.min(1, 1 - u.attackCooldown / cd)) : 0;
@@ -713,6 +719,42 @@
     }
   }
 
+  /**
+   * P11-07: while the hero draws, a ring round them filling with the draw (gold at full), and a ring
+   * of four marks under the target the shot would go to: shapes, not colours.
+   */
+  function aimRings(ctx, g) {
+    const h = g.hero;
+    const r = h?.ranged;
+    if (!r || !h.alive) return;
+    const k = r.crossbow && h.loaded ? 1 : Math.min(1, (h.drawT || 0) / (r.draw || 1));
+    if (k > 0) {
+      ctx.save();
+      ctx.lineWidth = 2.4;
+      ctx.strokeStyle = 'rgba(30,22,14,0.55)';
+      ctx.beginPath();
+      ctx.arc(h.x, h.y + 5, 15, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * k);
+      ctx.stroke();
+      ctx.lineWidth = 1.4;
+      ctx.strokeStyle = k >= 1 ? PAL.gold : '#efe4c4';
+      ctx.stroke();
+      ctx.restore();
+    }
+    const v = g.aimTarget;
+    if (v?.alive) {
+      ctx.save();
+      ctx.strokeStyle = '#fff3d6';
+      ctx.lineWidth = 1.8;
+      for (let i = 0; i < 4; i++) {
+        const a = (i * Math.PI) / 2 + 0.4;
+        ctx.beginPath();
+        ctx.arc(v.x, v.y + 5, 13, a, a + 0.75);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+  }
+
   /** P11-05: the enemy the hero is facing and close to (for the glint). */
   function heroFoe(g) {
     const h = g.hero;
@@ -764,6 +806,7 @@
       if (x.team) unit(ctx, x, t, k, reduced);
       else obstacle(ctx, x, t, g);
     }
+    aimRings(ctx, g);
     arrows(ctx, g.arrows, seen);
     effects(ctx, g.effects, seen, reduced || busy ? 'rally' : null);
   }

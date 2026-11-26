@@ -212,6 +212,14 @@
     if (!partial && typeof f.name !== 'string') out.push(`${at}: needs a name`);
     const r = f.ranged;
     if (r != null && !(r.range > 0 && r.projectileSpeed > 0 && r.cooldown > 0 && r.accuracy > 0 && r.accuracy <= 1)) out.push(`${at}: ranged needs {range, projectileSpeed, cooldown, accuracy}`);
+    // P11-07: in bounds (range 60–600, speed 120–900, a draw 0.2–4 s), the far reach past the effective.
+    if (r != null) {
+      if (!(r.range >= 60 && r.range <= 600)) out.push(`${at}: ranged.range from 60 to 600`);
+      if (!(r.projectileSpeed >= 120 && r.projectileSpeed <= 900)) out.push(`${at}: ranged.projectileSpeed from 120 to 900`);
+      if (r.maxRange != null && !(r.maxRange >= r.range && r.maxRange <= 900)) out.push(`${at}: ranged.maxRange from its range to 900`);
+      if (r.draw != null && !(r.draw >= 0.2 && r.draw <= 4)) out.push(`${at}: ranged.draw from 0.2 to 4 s`);
+      if (r.ammo != null && !(Number.isInteger(r.ammo) && r.ammo >= 1 && r.ammo <= 99)) out.push(`${at}: ranged.ammo a whole number from 1 to 99`);
+    }
     const known = [...Object.keys(RULES), 'ranged', ...(partial ? [] : ['id', 'name', 'req'])]; // P11-03: a family's default requirement (js/gear.js checks it)
     for (const k of Object.keys(f)) if (!known.includes(k)) out.push(`${at}: unknown field ${k}`);
     return out;

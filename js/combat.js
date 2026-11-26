@@ -12,6 +12,11 @@
   // fighter's profile (`P.cooldownOf`). These are the defaults of a fighter without one.
   const COOLDOWN = { hero: P.DEFAULT_COOLDOWN.hero, melee: P.DEFAULT_COOLDOWN.ai };
   const ARROW = { life: 1.6, hitRadius: 19, rangeSlack: 20, aimHeight: 16 };
+  // P11-07 (docs/PHASE-11-PLAN.md §10.6): a shot's flight. Past its effective range its damage falls to
+  // `farDamage` at the far end, where it drops; a troop's far end is its range × `far` unless it says.
+  const FLIGHT = { far: 1.5, farDamage: 0.5, cell: 64 };
+  // The hero's bow: walking while drawing, the arc a target is chosen in, how far a shot may lead.
+  const BOW = { drawWalk: 0.5, cone: Math.cos(Math.PI / 3), leadMax: 0.9 };
   // A missed shot (1 - accuracy) is thrown off by 0.12–0.25 rad: enough to miss a standing target.
   const MISS_ANGLE = [0.12, 0.25];
   const SHOT_FLASH = 0.2;
@@ -680,7 +685,7 @@
           const off = rand(MISS_ANGLE[0], MISS_ANGLE[1]) * (Math.random() < 0.5 ? -1 : 1);
           [dx, dy] = [dx * Math.cos(off) - dy * Math.sin(off), dx * Math.sin(off) + dy * Math.cos(off)];
         }
-        game().arrows.push({ x: u.x, y: u.y - 20, dx, dy, speed: r.projectileSpeed, team: u.team, life: ARROW.life, source: u, damage: u.damage * (u.moraleMul || 1) });
+        loose(u, dx, dy, u.damage * (u.moraleMul || 1));
         if (u.team === 'ally' && !u.outside) game().lastVolley = game().t; // the company's archers loose (P9-B4's timed orders)
       }
       return true;
@@ -992,36 +997,260 @@
       if (ramp > 0) h.speed *= Math.min(1, 0.4 + (0.6 * h.walkFor) / ramp);
       if (h.guard) h.speed *= GUARD_SPEED;
       if (isCommitted(h)) h.speed *= P.of(h)?.moveDuringAttack ?? 1; // P11-05: a committed swing slows your feet
+      if (h.ranged && !h.ranged.crossbow && (h.drawT || 0) > 0) h.speed *= BOW.drawWalk; // P11-07: drawing a bow
       move(h, x, y, dt);
       h.speed = old;
     }
     const wantsAttack = g.attackHeld || k.Space || g.attackQueuedAt !== null;
+    if (h.ranged) {
+      // P11-07: the bow or crossbow in hand (a tap queues a loose; Space held draws like the button).
+      if (g.attackQueuedAt !== null && !g.attackHeld && !k.Space) {
+        g.looseQueued = true;
+        g.attackQueuedAt = null;
+      }
+      if (!drawing) heroShoot(h, dt, Boolean(g.attackHeld || k.Space), Boolean(x || y));
+      return;
+    }
     if (wantsAttack && !h.guard && !drawing && startAttack(h)) g.attackQueuedAt = null;
   }
 
+  /**
+   * P11-07: a shot leaves `u` along (dx, dy): it carries its effective and far range, so how far it flies
+   * decides its damage, not the moment it was loosed. @param {Unit} u
+   */
+  function loose(u, dx, dy, damage) {
+    const r = u.ranged;
+    const far = r.maxRange ?? r.range * FLIGHT.far;
+    game().arrows.push({ x: u.x, y: u.y - 20, dx, dy, speed: r.projectileSpeed, team: u.team, life: far / r.projectileSpeed + 0.2, source: u, damage, flown: 0, range: r.range, far });
+  }
+
+  /** The units of a list in a grid of cells (P9-B1's idea), for the shots' swept test. */
+  function gridOf(list) {
+    const cells = new Map();
+    for (const v of list) {
+      if (!v?.alive) continue;
+      const k = Math.floor(v.x / FLIGHT.cell) * 4096 + Math.floor((v.y - ARROW.aimHeight) / FLIGHT.cell);
+      const b = cells.get(k);
+      if (b) b.push(v);
+      else cells.set(k, [v]);
+    }
+    return cells;
+  }
+
+  /**
+   * Where along a segment (0 to 1) it first passes within r of a point, or null. @returns {number | null}
+   */
+  function sweep(x0, y0, x1, y1, cx, cy, r) {
+    const [dx, dy] = [x1 - x0, y1 - y0];
+    const [fx, fy] = [x0 - cx, y0 - cy];
+    const a = dx * dx + dy * dy;
+    const b = 2 * (fx * dx + fy * dy);
+    const c = fx * fx + fy * fy - r * r;
+    if (c < 0) return 0; // already inside
+    if (a === 0) return null;
+    const disc = b * b - 4 * a * c;
+    if (disc < 0) return null;
+    const t = (-b - Math.sqrt(disc)) / (2 * a);
+    return t >= 0 && t <= 1 ? t : null;
+  }
+
+  /**
+   * P11-07: shots fly their path each step, swept (a segment against each target's circle, through a
+   * grid), so no speed passes through anyone; past the effective range their damage falls, and after the
+   * far range they drop. Terrain stops them along the way, as before.
+   */
   function updateArrows(h, dt) {
     const g = game();
+    const grids = { ally: null, enemy: null };
+    const gridFor = (team) => {
+      if (!grids[team]) grids[team] = gridOf(team === 'ally' ? g.enemies : g.wagon?.alive ? [h, ...g.allies, g.wagon] : [h, ...g.allies]);
+      return grids[team];
+    };
     for (const a of g.arrows) {
-      a.x += a.dx * a.speed * dt;
-      a.y += a.dy * a.speed * dt;
+      const step = a.speed * dt;
+      const [x0, y0] = [a.x, a.y];
+      const left = (a.far ?? Infinity) - (a.flown || 0);
+      const len = Math.min(step, Math.max(0, left));
+      const [x1, y1] = [x0 + a.dx * len, y0 + a.dy * len];
       a.life -= dt;
-      if (CL.units.arrowBlocked(a.x, a.y)) {
-        // GDD §6: arrows collide with terrain — trees, walls and crates stop them.
+      // Terrain along the way (GDD §6: trees, walls and crates stop them).
+      let stopAt = null;
+      for (let d = 10; d < len + 10; d += 10) {
+        const k = Math.min(1, d / Math.max(len, 1e-9));
+        if (CL.units.arrowBlocked(x0 + (x1 - x0) * k, y0 + (y1 - y0) * k)) {
+          stopAt = k;
+          break;
+        }
+      }
+      // The first fighter the path crosses before that.
+      const cells = gridFor(a.team);
+      let best = null;
+      let bt = stopAt ?? 1;
+      const [cx0, cx1] = [Math.floor((Math.min(x0, x1) - ARROW.hitRadius) / FLIGHT.cell), Math.floor((Math.max(x0, x1) + ARROW.hitRadius) / FLIGHT.cell)];
+      const [cy0, cy1] = [Math.floor((Math.min(y0, y1) - ARROW.hitRadius) / FLIGHT.cell), Math.floor((Math.max(y0, y1) + ARROW.hitRadius) / FLIGHT.cell)];
+      for (let cx = cx0; cx <= cx1; cx++) {
+        for (let cy = cy0; cy <= cy1; cy++) {
+          for (const v of cells.get(cx * 4096 + cy) || []) {
+            if (!v.alive) continue;
+            const t = sweep(x0, y0, x1, y1, v.x, v.y - ARROW.aimHeight, ARROW.hitRadius);
+            if (t != null && t <= bt) [best, bt] = [v, t];
+          }
+        }
+      }
+      a.x = x0 + (x1 - x0) * bt;
+      a.y = y0 + (y1 - y0) * bt;
+      a.flown = (a.flown || 0) + len * bt;
+      if (best) {
+        const past = Math.max(0, a.flown - (a.range ?? Infinity));
+        const span = Math.max(1, (a.far ?? Infinity) - (a.range ?? 0));
+        hit(best, a.damage * (1 - (1 - FLIGHT.farDamage) * Math.min(1, past / span)), a.source);
+        a.life = 0;
+        continue;
+      }
+      if (stopAt != null) {
         a.life = 0;
         sound('thunk');
         g.effects.push({ x: a.x, y: a.y, t: 0.15, color: '#d9c8a2', kind: 'thunk' });
         continue;
       }
-      const targets = a.team === 'ally' ? g.enemies : g.wagon?.alive ? [h, ...g.allies, g.wagon] : [h, ...g.allies];
-      for (const v of targets) {
-        if (v.alive && Math.hypot(a.x - v.x, a.y - (v.y - ARROW.aimHeight)) < ARROW.hitRadius) {
-          hit(v, a.damage, a.source);
-          a.life = 0;
-          break;
-        }
+      if (a.far != null && a.flown >= a.far - 1e-6) {
+        a.life = 0; // spent: it falls
+        g.effects.push({ x: a.x, y: a.y + 14, t: 0.15, color: '#d9c8a2', kind: 'thunk' });
       }
     }
     g.arrows = g.arrows.filter((a) => a.life > 0);
+  }
+
+  // ---- P11-07: the hero's bow and crossbow ----
+
+  /** The best target for an assisted shot: in the facing cone, in reach of the far range, a clear shot; the last struck first. */
+  function aimTarget(h) {
+    const g = game();
+    const r = h.ranged;
+    const far = r.maxRange ?? r.range * FLIGHT.far;
+    const ok = (v) => v?.alive && !v.wagon && dist(h, v) <= far && inArc(h, v, BOW.cone) && CL.groups.clearShot(h, v);
+    if (ok(h.lastShot)) return h.lastShot;
+    let best = null;
+    let bd = Infinity;
+    for (const v of g.enemies) {
+      if (!ok(v)) continue;
+      const d = dist(h, v);
+      if (d < bd) [best, bd] = [v, d];
+    }
+    return best;
+  }
+
+  /** Where to aim at a moving target: ahead by its pace over the flight (a little short of it). */
+  function lead(h, v) {
+    const g = game();
+    const tr = g.aimTrack;
+    let [vx, vy] = [0, 0];
+    if (tr && tr.id === v.id && g.t > tr.t) [vx, vy] = [(v.x - tr.x) / (g.t - tr.t), (v.y - tr.y) / (g.t - tr.t)];
+    const t = Math.min(BOW.leadMax, dist(h, v) / h.ranged.projectileSpeed);
+    return { x: v.x + vx * t, y: v.y + vy * t };
+  }
+
+  /** The hero's quiver for the weapon in hand (null for a melee weapon). */
+  const quiver = (g) => (g.loadout?.ammo ? g.loadout.ammo[g.loadout.which] : null);
+
+  /** Out of arrows: the other weapon to hand, or fists if there's none (and it's said). */
+  function outOfArrows(g, h) {
+    if (g.outOfArrowsAt === g.t) return;
+    g.outOfArrowsAt = g.t;
+    const L = g.loadout;
+    const other = L.which === 'primary' ? 'secondary' : 'primary';
+    const otherAmmo = L.ammo?.[other];
+    const switched = L.can && otherAmmo !== 0 && CL.gear.switchWeapon(g);
+    // One line, after the switch's own: what happened and what comes to hand.
+    CL.ui.message(switched ? `Out of arrows: drawing your ${CL.content.item(other === 'secondary' ? L.kit.weapon2 : L.kit.weapon).name}` : 'Out of arrows: you fight with your fists');
+    g.feedbackAt = g.feedbackAt || {};
+    g.feedbackAt.whiff = g.t; // a held Attack's first swing with the other weapon doesn't talk over it
+    if (switched) return;
+    // Nothing else to use: fists.
+    L.empty = true;
+    P.apply(h, P.resolve({ hero: CL.campaign, equipment: { ...CL.gear.kitFor(CL.campaign, L.kit, L.which), weapon: null }, carried: L.kit }), ['damage', 'reach', 'ranged']);
+    h.guardKind = 'none';
+  }
+
+  /**
+   * P11-07: the hero with a bow or crossbow. A bow draws while Attack is held and looses when it's let go
+   * (a tap looses as soon as the draw is full); walking is slower while drawing. A crossbow loads itself
+   * on the spot (not while walking), then Attack held aims it and letting go looses. Assisted aim picks
+   * the target (the ring shows it) and leads it; with manual aim the shot goes where you point.
+   */
+  function heroShoot(h, dt, held, moving) {
+    const g = game();
+    const r = h.ranged;
+    const n = quiver(g);
+    if (n != null && n <= 0) return outOfArrows(g, h);
+    const released = g.attackWas && !held;
+    g.attackWas = held;
+    if (held && !g.attackWasDown) g.looseQueued = false;
+    g.attackWasDown = held;
+    if (r.crossbow) {
+      if (!h.loaded) {
+        if (!moving) h.drawT = Math.min(r.draw, (h.drawT || 0) + dt); // on the spot
+        if (h.drawT >= r.draw) h.loaded = true;
+      }
+      if (released) g.looseQueued = true;
+      if (h.loaded && g.looseQueued) return shootNow(h);
+    } else {
+      if (released) {
+        if (h.drawT >= r.draw - 1e-9) return shootNow(h); // let go at full draw: it flies
+        g.looseQueued = true; // let go early (a tap): it flies as soon as the draw is full
+      }
+      if (held || g.looseQueued) h.drawT = Math.min(r.draw, (h.drawT || 0) + dt);
+      else h.drawT = Math.max(0, (h.drawT || 0) - dt * 2); // eased off
+      if (g.looseQueued && h.drawT >= r.draw - 1e-9) return shootNow(h);
+    }
+    // The target the shot would go to, for the ring (and its pace, for the lead).
+    const v = manualAim(g) ? null : aimTarget(h);
+    g.aimTarget = v;
+    if (v) {
+      if (!g.aimTrack || g.aimTrack.id !== v.id || g.t - g.aimTrack.t > 0.25) g.aimTrack = { id: v.id, x: v.x, y: v.y, t: g.t };
+    }
+  }
+
+  /** Manual aim: where the pointer (desktop) or the aiming finger (phone, a setting) is, if anywhere. */
+  function manualAim(g) {
+    if (!g.aimPoint) return null;
+    const on = g.aimPoint.touch ? CL.settings?.get?.('aimTouch') : CL.settings?.get?.('aimMouse') !== false;
+    return on ? g.aimPoint : null;
+  }
+
+  function shootNow(h) {
+    const g = game();
+    const r = h.ranged;
+    g.looseQueued = false;
+    const point = manualAim(g);
+    const v = point ? null : aimTarget(h);
+    let to = point || (v ? lead(h, v) : null);
+    if (!to) {
+      // Nothing in the cone in reach: say why (too far, or nothing to shoot at), and shoot ahead.
+      const near = nearestAlive(h, g.enemies);
+      if (near && inArc(h, near, BOW.cone)) {
+        const far = r.maxRange ?? r.range * FLIGHT.far;
+        feedback('far', dist(h, near) > far ? 'Too far' : 'No clear shot');
+      }
+      const f = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] }[h.face] || [1, 0];
+      to = { x: h.x + f[0] * 100, y: h.y + f[1] * 100 };
+    }
+    let [dx, dy] = normalize(to.x - h.x, to.y - h.y);
+    if (Math.random() > r.accuracy) {
+      const off = rand(MISS_ANGLE[0], MISS_ANGLE[1]) * (Math.random() < 0.5 ? -1 : 1);
+      [dx, dy] = [dx * Math.cos(off) - dy * Math.sin(off), dx * Math.sin(off) + dy * Math.cos(off)];
+    }
+    h.face = Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? 'left' : 'right') : dy < 0 ? 'up' : 'down';
+    loose(h, dx, dy, h.damage * (h.moraleMul || 1));
+    h.shot = SHOT_FLASH;
+    h.drawT = 0;
+    h.loaded = false;
+    if (v) h.lastShot = v;
+    if (g.loadout?.ammo && g.loadout.ammo[g.loadout.which] != null) g.loadout.ammo[g.loadout.which]--;
+    sound('bow', h);
+    CL.ui.quiverCount?.();
+    g.drew = true; // the tip about drawing (data/help.js)
+    return true;
   }
 
   function update(dt) {
@@ -1139,6 +1368,11 @@
   }
 
   CL.combat = {
+    FLIGHT,
+    BOW,
+    sweep,
+    aimTarget,
+    lead,
     MELEE,
     STAGGER,
     KNOCK,

@@ -4046,7 +4046,7 @@ The aim: easy to fight, rewarding to fight well, meaningful to command. The play
 | P11-04 | The equipment you see | M–L | 5.4.0 | ✅ Done |
 | P11-05 | Melee rhythm and defence | L | 5.5.0 | ✅ Done (M1 played: good) |
 | P11-06 | Armour, weight and movement | M | 5.6.0 | ✅ Done |
-| P11-07 | Bows and crossbows in your hands | L | 5.7.0 | Specified |
+| P11-07 | Bows and crossbows in your hands | L | 5.7.0 | ✅ Done |
 | P11-08 | Fighting from the saddle | L | 5.8.0 | Specified |
 | P11-09 | Controls, feedback and teaching | M | 5.9.0 | Specified |
 | P11-10 | Fighters who think: individual AI and styles | L | 5.10.0 | Specified |
@@ -4645,7 +4645,7 @@ The aim: easy to fight, rewarding to fight well, meaningful to command. The play
 
 ---
 
-### P11-07 · Bows and crossbows in your hands (L) — 5.7.0, Specified
+### P11-07 · Bows and crossbows in your hands (L) — 5.7.0, ✅ Done
 
 **Now.** Only troops shoot: they fire when the nearest opponent is inside `range + 20`; the arrow flies 1.6 s whatever the range; a miss is an angle error; hit radius 19 px; a 0.05 s step (fast bolts could pass through a target); shields and cover stop arrows from the front; archers step aside for a clear shot; there is no ammunition. The art draws a bow over the reload and a crossbow wound back.
 
@@ -4706,6 +4706,18 @@ The aim: easy to fight, rewarding to fight well, meaningful to command. The play
 - **Play:** a contract as an archer in the preview.
 - **Explain:** "Bows and crossbows"; tip `draw`.
 - **Not here:** horses.
+
+**Done (5.7.0).**
+- **Families:** shortbow (range 225, far 330, 260 px/s, draw 0.55 s, 24 shots), longbow (270, 420, 300, 0.9 s, 20; `armourLimit` 3), composite (215, 310, 270, 0.5 s, 24), crossbow (260, 440, 420, a 2 s reload on the spot, 16; pierce 0.3); the bows trained by Archery. Troops keep their own range, speed, cooldown and accuracy; their far end is their range × 1.5.
+- **Flight** (`js/combat.js`): each shot carries its range, far end and distance flown; full damage to the range, falling to half at the far end, where it drops. **Swept**: a segment against each target's circle (`sweep`) through a per-frame grid of 64 px cells, terrain sampled every 10 px along the path. No friendly fire (kept); a target that falls mid-flight is flown past.
+- **The hero:** `heroShoot`: a bow draws while held and looses on release at full (a tap queues it: it looses at full); half pace while drawing; a crossbow loads only standing still and looses on a press and release. **Assisted aim** (`aimTarget`): the last shot target while fair, else the nearest in the 120° cone in reach with a clear shot; **lead** (`lead`) by its pace over the flight, at most 0.9 s. **Manual aim**: settings `aimMouse` (on) and `aimTouch` (off): the pointer, or one finger dragged on the field. The hero's own accuracy at least 75% (+3% a point of Archery, at most 95%).
+- **The profile:** the hero's `ranged`: the draw 3% shorter a point of Archery (a crossbow's 4% a point of Strength above 6; at least 60%), × the load's draw factor, × 1.25 in armour over the bow's limit; damage +3% a point of Archery for bows.
+- **Quiver (D-P11e):** `CL.gear.ammoOf` per loadout (the family's, and the `ammo` slot's `stats.ammo`), fresh every battle; empty: the other loadout (said: "Out of arrows: drawing your …"), or fists. A switch loses the draw or reload. The HUD's health line carries "Arrows n" / "Bolts n".
+- **Items:** Shortbow (`short_bow`, tier 1, 45), Hunting Longbow (`hunting_longbow`, tier 2, 120, the family's Strength 6 and Archery 1), Light Crossbow (`light_crossbow`, tier 2, 130, `req: {}`: the rule's everyday crossbow), Full Quiver (`arrow_quiver`, the `ammo` slot, +12). The shortbow and quiver in every town, the other two in the bigger towns; the shortbow in the mid loot, the longbow in the high.
+- **Feedback and art:** the draw ring (gold at full) and the four-mark target ring (`aimRings`); "Too far", "No clear shot"; the hero's drawn pose from the draw itself, held at full, the loose's flash, a crossbow wound back once loaded. Tip `draw`; How to Play "Bows and crossbows".
+- **Measured** (`docs/PHASE-11-VALIDATION.md` "Bows and crossbows"): `duel-lab.js 20 --ranged` (each bow wins an archers' duel and loses one-to-one to melee in the open); the hero as an archer in the skirmishes (bows win 100% of small, close and veterans; the crossbow 60–65%); `parity.js 40` (+14, +11, +21, +21, −4); `bench-battle.js --archers` at 200: 3.30 ms; the tunnelling check at 900 px/s.
+- **Tests:** `tests/archery.test.js` (10); `tests/browser/archery.spec.js` (2, desktop and phone); the settings test's defaults. Golden battles and fighters recorded again on 5.7.0. `npm test` 1,025 pass; lint and typecheck clean; browser `archery`, `battle`, `art`, `layout`, `gear` pass.
+- **Not done:** the optional PC aim-mode toggle (the pointer aims already); a tournament format forbidding bows (formats are P11-19).
 
 ---
 

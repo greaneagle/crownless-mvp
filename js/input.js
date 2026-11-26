@@ -305,6 +305,12 @@
       g.blockHeld = false;
     });
     canvas.addEventListener('pointermove', (e) => {
+      // P11-07: manual aim: the mouse pointer on the field, or (a setting) one finger dragged on it.
+      if (g.mode === 'battle' && (e.pointerType === 'mouse' || (battleGestures.count === 1 && CL.settings.get('aimTouch')))) {
+        const r = canvas.getBoundingClientRect();
+        const w = CL.camera.toWorld(g, ((e.clientX - r.left) * CL.W) / r.width, ((e.clientY - r.top) * CL.H) / r.height);
+        g.aimPoint = { x: w.x, y: w.y, touch: e.pointerType !== 'mouse' };
+      }
       if (battleGestures.count) {
         if (g.mode === 'battle') battleGestures.move(e);
         else battleGestures.cancel();
@@ -319,6 +325,7 @@
       CL.prep.moveFlag(g.prep.plan, g.prep.map, g.prep.drag, ((e.clientX - r.left) * CL.W) / r.width, ((e.clientY - r.top) * CL.H) / r.height);
     });
     canvas.addEventListener('pointerup', (e) => {
+      if (e.pointerType !== 'mouse' && g.aimPoint?.touch) g.aimPoint = null; // the aiming finger lifted
       if (battleGestures.count) battleGestures.up(e);
       if (mapGestures.count) {
         if (g.mode === 'map') mapGestures.up(e);

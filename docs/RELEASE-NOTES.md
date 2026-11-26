@@ -1,5 +1,24 @@
 # Crownless — Release Notes
 
+## v5.7.0 — Bows and crossbows in your hands (P11-07) · 2026-11-27
+
+You can fight as an archer. Every shot now flies by its range, and nothing passes through a target however fast it flies.
+
+### New
+- **Bows for the hero.** Hold ATTACK to draw (a ring round you fills), let go to loose; a tap looses as soon as the bow is drawn. You walk at half pace while drawing. New in the armouries: the **Shortbow** (every town), the **Hunting Longbow** and the **Light Crossbow** (the bigger towns), and a **Full Quiver** (more arrows); the bows turn up as loot too.
+- **The game aims for you:** the nearest foe in front with a clear shot (or the one you last shot), shown by a ring of marks under them, and it leads anyone moving. On a computer you can aim with the mouse instead (Settings, on by default); on a phone a setting (off by default) lets a finger on the field aim while the other thumb moves. "Too far" and "No clear shot" say why a shot has nothing to go to.
+- **A crossbow** loads itself while you stand still, then a press looses it: slow, but flat, fast and piercing. **Strength** loads it faster; **Archery** draws a bow faster, aims truer and hits harder. A longbow draws slower in mail.
+- **A quiver each battle:** your count is beside your health ("Arrows 24"), filled again after every battle (arrows are never bought). When it runs out, your other weapon comes to hand, or your fists ("Out of arrows: drawing your Arming Sword"). A switch loses a draw or a reload.
+- **How to Play → Bows and crossbows**, and a hint the first time you hold a bow.
+
+### Changed
+- **Every shot flies by its range:** full damage to its effective range, then weaker, and it falls at the end of its flight. Shots are swept along their path each step, so no speed passes through anyone; terrain stops them along the way too. Soldiers' arrows follow the same rule (the golden battles are recorded again).
+
+### Under the hood
+- `data/weapons.js`: the bows' and crossbow's `maxRange`, `draw` and `ammo` (bounded for packs: range 60–600, speed 120–900, draw 0.2–4 s). `js/combat.js`: `loose`, the swept `updateArrows` through a grid, `aimTarget`, `lead`, `heroShoot`, the quiver. `js/gear.js` `ammoOf`.
+- The **archer** pilot (`tests/helpers/pilots.js`); `duel-lab.js --ranged`; `bench-battle.js --archers` (two in five shooting: 3.30 ms a frame at 200).
+- `tests/archery.test.js` (10), `tests/browser/archery.spec.js` (2).
+
 ## v5.6.0 — Armour, weight and movement (P11-06) · 2026-11-26
 
 What you carry now weighs on you. Heavy armour still protects, but it costs pace and tempo, so light and heavy are both ways to fight.

@@ -143,6 +143,18 @@
         'You will hear and read what happened: a miss, a blow out of reach, a block, a broken guard, an interruption. A glint on a weapon tip warns you of a blow being wound up at you.'
       ]
     },
+    archery: {
+      id: 'archery',
+      stage: 'captain',
+      order: 5.6,
+      title: 'Bows and crossbows',
+      body: [
+        'With a bow in hand, hold ATTACK to draw and let go to loose; a quick tap looses as soon as the bow is drawn. A ring round you fills as you draw. You walk at half pace while drawing, and your shield is slung on your back.',
+        'The game picks the target for you: the nearest foe in front of you with a clear shot, or the one you last shot, shown by a ring of marks under them, and it aims ahead of anyone moving. On a computer you can aim with the mouse pointer instead (Settings); on a phone, a setting lets you drag a finger on the field to aim while the other thumb moves.',
+        'A shot flies true to its range and then weakens, and falls at the end of its flight: a shortbow is quick and short, a longbow far and slow to draw, and poor in heavy armour. A crossbow loads itself while you stand still, then a press looses it: slow, but flat, fast, and it goes through some armour. Strength loads it faster; Archery draws a bow faster, aims truer and hits harder.',
+        'You have a quiver for each battle (a Full Quiver in your quiver slot adds to it), filled again after: arrows are never bought. Your count is beside your health. When it runs out you draw your other weapon, or fight with your fists if you carry none. Switching weapons loses a draw or a crossbow’s reload.'
+      ]
+    },
     party: {
       id: 'party',
       stage: 'captain',
@@ -287,6 +299,7 @@
     captured: { id: 'captured', on: 'result', when: 'captured', help: 'start', title: 'Captured', text: 'A lost battle costs some crowns and gear, never the game. You are let go near a settlement; rest, hire and try again.' },
     trade: { id: 'trade', on: 'trade', help: 'trade', title: 'The market', text: 'Goods are cheap where plentiful and dear where short: buy low here, sell somewhere else. Cargo slows you down.' },
     contracts: { id: 'contracts', on: 'contracts', help: 'trade', title: 'Contracts', text: 'One job at a time: hunt a band, escort a caravan or deliver. Each shows its reward and time limit; failing costs renown.' },
+    draw: { id: 'draw', on: 'battle', when: 'bowInHand', help: 'archery', title: 'Drawing a bow', textTouch: 'Hold ATTACK to draw, let go to loose. The game picks the target (the ring under them); a tap looses as soon as you have drawn.', textKeys: 'Hold Space or the left button to draw, let go to loose. The game picks the target (the ring under them), or aim with the mouse pointer.' },
     whiff: { id: 'whiff', on: 'battle', when: 'whiff', help: 'fighting', title: 'A miss costs time', text: 'A swing that hits nobody takes longer to recover. Step in until they are in reach, or wait for their own swing to miss and strike while they recover.' },
     shieldPressure: { id: 'shieldPressure', on: 'battle', when: 'shieldPressure', help: 'fighting', title: 'Shields give way', text: 'Every blow a shield stops wears it down; enough of them break the guard and lower it for a moment. Axes press hardest. Strike while it is down.' },
     character: { id: 'character', on: 'character', help: 'party', title: 'Party and gear', text: 'Equip what you find, spend skill and attribute points, and upgrade soldiers who have earned it.' },

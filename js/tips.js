@@ -90,6 +90,7 @@
     ruleTab: () => CL.game.realmTab === 'rule',
     // P11-05: the hero swung at nothing; the hero broke a shield's guard.
     whiff: () => Boolean(CL.game.whiffed),
+    bowInHand: () => Boolean(CL.game.hero?.ranged), // P11-07
     shieldPressure: () => Boolean(CL.game.brokeGuard),
   };
 

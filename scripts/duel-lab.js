@@ -13,6 +13,8 @@
 //                from --town-wins (each 0 to 3 by default)
 //   --series     five tournaments in a row in one town, each pilot: how often a new character wins, and
 //                the fees and prizes
+//   --ranged     P11-07: each bow and the crossbow (the archer pilot, and the masher) against foot and a
+//                rider, on the open field; with `--wall`, against a shield wall of three footmen
 //   --styles     P11-06: the foot styles of docs/PHASE-11-PLAN.md §10.3 (light duelist, shield infantry,
 //                heavy infantry, spearman, two-hander), each in its own weapon and armour
 //
@@ -67,9 +69,9 @@ function game(seed, weapon, armour) {
 }
 
 /** One duel on the ground: the hero alone against one fighter (a practice battle: nothing in the campaign changes). */
-function duel({ seed, pilot, opponent, weapon = DEFAULT.weapon, armour = DEFAULT.armour, field = false }) {
+function duel({ seed, pilot, opponent, weapon = DEFAULT.weapon, armour = DEFAULT.armour, field = false, count = 1 }) {
   const CL = game(seed, weapon, armour);
-  CL.combat.startBattle({ id: 'duel_lab', name: 'Duel lab', map: field ? 'grass_field' : 'tourney_lists', waves: [{ [opponent]: 1 }], practice: [], reward: { goldBase: 0, goldPerKill: 0, renown: 0 }, loot: 'low' });
+  CL.combat.startBattle({ id: 'duel_lab', name: 'Duel lab', map: field ? 'grass_field' : 'tourney_lists', waves: [{ [opponent]: count }], practice: [], reward: { goldBase: 0, goldPerKill: 0, renown: 0 }, loot: 'low' });
   return fly(CL, pilot);
 }
 
@@ -146,13 +148,13 @@ function sum(rows) {
   };
 }
 
-function runDuels({ seeds = 40, pilots = PILOTS, opponents = OPPONENTS, kits = [DEFAULT], field = false } = {}) {
+function runDuels({ seeds = 40, pilots = PILOTS, opponents = OPPONENTS, kits = [DEFAULT], field = false, wall = false } = {}) {
   const out = [];
   for (const kit of kits) {
     for (const opponent of opponents) {
       for (const pilot of pilots) {
         const rows = [];
-        for (let i = 1; i <= seeds; i++) rows.push(duel({ seed: spread(i), pilot, opponent, weapon: kit.weapon, armour: kit.armour, field }));
+        for (let i = 1; i <= seeds; i++) rows.push(duel({ seed: spread(i), pilot, opponent, weapon: kit.weapon, armour: kit.armour, field, count: wall ? 3 : 1 }));
         out.push({ style: kit.style, weapon: kit.weapon, armour: kit.armour, opponent, pilot, ...sum(rows) });
       }
     }
@@ -221,8 +223,9 @@ if (require.main === module) {
   } else {
     const opponents = list('--opponents', OPPONENTS);
     const armours = list('--armour', null);
-    const kits = args.includes('--styles') ? Object.entries(STYLES).map(([style, k]) => ({ ...k, style })) : args.includes('--weapons') ? [...WEAPONS.map((weapon) => ({ weapon, armour: DEFAULT.armour })), ...Object.keys(ARMOUR).filter((a) => a !== DEFAULT.armour).map((armour) => ({ weapon: DEFAULT.weapon, armour }))] : (armours || [DEFAULT.armour]).map((armour) => ({ weapon: DEFAULT.weapon, armour }));
-    const out = runDuels({ seeds, pilots, opponents, kits, field: args.includes('--field') });
+    const ranged = args.includes('--ranged');
+    const kits = ranged ? ['short_bow', 'hunting_longbow', 'light_crossbow'].map((weapon) => ({ weapon, armour: 'light' })) : args.includes('--styles') ? Object.entries(STYLES).map(([style, k]) => ({ ...k, style })) : args.includes('--weapons') ? [...WEAPONS.map((weapon) => ({ weapon, armour: DEFAULT.armour })), ...Object.keys(ARMOUR).filter((a) => a !== DEFAULT.armour).map((armour) => ({ weapon: DEFAULT.weapon, armour }))] : (armours || [DEFAULT.armour]).map((armour) => ({ weapon: DEFAULT.weapon, armour }));
+    const out = runDuels({ seeds, pilots: ranged && !opt('--pilots') ? ['archer', 'masher'] : pilots, opponents: ranged && !opt('--opponents') ? (args.includes('--wall') ? ['footman'] : ['looter', 'footman', 'huscarl', 'hunter', 'rider']) : opponents, kits, field: ranged || args.includes('--field'), wall: args.includes('--wall') });
     if (json) console.log(JSON.stringify({ seeds, field: args.includes('--field'), duels: out }, null, 2));
     else {
       console.log(`Duels on the ${args.includes('--field') ? 'open field' : 'tournament ground'}, ${seeds} seeds each`);

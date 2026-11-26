@@ -74,7 +74,10 @@
     const g = CL.game;
     const $ = CL.ui.$;
     const maxHp = g.hero.maxhp;
-    $('#hptext').textContent = `Hero HP: ${Math.max(0, Math.ceil(g.hero.hp))} / ${maxHp}`;
+    // P11-07: the quiver's count beside the health, while a bow or crossbow is in hand.
+    const shots = g.loadout?.ammo?.[g.loadout.which];
+    const quiver = shots != null && g.hero.ranged ? ` · ${g.hero.ranged.crossbow ? 'Bolts' : 'Arrows'} ${shots}` : '';
+    $('#hptext').textContent = `Hero HP: ${Math.max(0, Math.ceil(g.hero.hp))} / ${maxHp}${quiver}`;
     $('#hpfill').style.width = `${(g.hero.hp / maxHp) * 100}%`;
     const [allies, enemies] = [g.allies.filter((x) => x.alive).length, g.enemies.filter((x) => x.alive).length];
     const reserves = g.allyReserve?.length || g.enemyReserve?.length ? [g.allyReserve?.length || 0, g.enemyReserve?.length || 0] : null;

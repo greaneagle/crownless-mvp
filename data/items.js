@@ -28,6 +28,10 @@
     ash_spear: {id:'ash_spear',family:'spear',name:'Ash Spear',type:'weapon',slot:'weapon',tier:1,rarity:'common',value:40,weight:3,stats:{damage:18},look:{weapon:'spear'},questItem:false},
     great_sword: {id:'great_sword',family:'greatsword',name:'Greatsword',type:'weapon',slot:'weapon',tier:2,rarity:'uncommon',value:150,weight:4,stats:{damage:30},look:{weapon:'greatsword'},questItem:false},
     great_axe: {id:'great_axe',family:'greataxe',name:'Greataxe',type:'weapon',slot:'weapon',tier:2,rarity:'uncommon',value:140,weight:5,stats:{damage:34},look:{weapon:'greataxe'},questItem:false},
+    // P11-07: bows and a crossbow for the hero (the ids aren't the families'), and a quiver.
+    short_bow: {id:'short_bow',family:'shortbow',name:'Shortbow',type:'weapon',slot:'weapon',tier:1,rarity:'common',value:45,weight:1,stats:{damage:14},look:{weapon:'bow'},questItem:false},
+    hunting_longbow: {id:'hunting_longbow',family:'longbow',name:'Hunting Longbow',type:'weapon',slot:'weapon',tier:2,rarity:'uncommon',value:120,weight:2,stats:{damage:20},look:{weapon:'bow'},questItem:false},
+    light_crossbow: {id:'light_crossbow',family:'crossbow',name:'Light Crossbow',type:'weapon',slot:'weapon',tier:2,rarity:'uncommon',value:130,weight:4,stats:{damage:26},req:{},look:{weapon:'crossbow'},questItem:false},
     knights_sword: {id:'knights_sword',family:'sword',name:"Knight's Sword",type:'weapon',slot:'weapon',tier:3,rarity:'rare',value:260,weight:2,stats:{damage:25},req:{skills:{one_handed:3}},look:{weapon:'sword',len:1.1},questItem:false},
     // Shields (needed to block)
     oak_shield: {id:'oak_shield',name:'Oak Shield',type:'shield',slot:'offhand',tier:1,rarity:'common',value:25,weight:3,stats:{block:true},look:{shield:'wood'},questItem:false},
@@ -53,6 +57,7 @@
     rouncey: {id:'rouncey',name:'Rouncey',type:'horse',slot:'horse',tier:2,rarity:'uncommon',value:120,weight:0,stats:{travel:0.2},look:{coat:'#8a5a3a',mane:'#2e2119'},questItem:false},
     courser: {id:'courser',name:'Courser',type:'horse',slot:'horse',tier:3,rarity:'rare',value:300,weight:0,stats:{travel:0.35},look:{coat:'#3a2a22',mane:'#1e1612'},questItem:false},
     // Accessory
+    arrow_quiver: {id:'arrow_quiver',name:'Full Quiver',type:'accessory',slot:'ammo',tier:1,rarity:'common',value:20,weight:1,stats:{ammo:12},look:{quiver:true},questItem:false},
     ring_of_roads: {id:'ring_of_roads',name:'Ring of Roads',type:'accessory',slot:'ring',tier:2,rarity:'uncommon',value:40,weight:0,stats:{pathfinding:1},questItem:false},
     // Food (goes straight into the ration stock)
     food_3_days: {id:'food_3_days',name:'Three Days of Food',type:'consumable',slot:null,tier:1,rarity:'common',value:24,weight:3,stats:{food:3},questItem:false},
@@ -106,6 +111,7 @@
         { item: 'leather_cap', weight: 3 },
         { item: 'boots', weight: 2 },
         { item: 'hand_axe', weight: 3 },
+        { item: 'short_bow', weight: 2 }, // P11-07
         { item: 'leather_chest', weight: 2 },
         { item: 'iron_helm', weight: 2 },
         { item: 'mail_mittens', weight: 2 },
@@ -131,6 +137,7 @@
         { item: 'mail_hauberk', weight: 1 },
         { item: 'heater_shield', weight: 1 },
         { item: 'great_sword', weight: 1 }, // P11-05
+        { item: 'hunting_longbow', weight: 1 }, // P11-07
         { item: 'rouncey', weight: 1 },
         { item: 'ring_of_roads', weight: 1 }
       ]

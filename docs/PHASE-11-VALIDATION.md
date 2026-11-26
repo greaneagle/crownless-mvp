@@ -304,3 +304,29 @@ Every style loses somewhere and wins somewhere: no armour set wins every matchup
 | outnumbered 6v11 | 61 | 63 | +1 (+6) |
 
 The band (the masher no worse than about the odds) holds. The parity company's hero starts light (the Farmhand's kit), so the load itself doesn't change these; troops' poise and the mace's pierce do, a little.
+
+## Bows and crossbows (5.7.0, P11-07)
+
+### Duels (`duel-lab.js 20 --ranged`, the archer pilot, light armour, the open field): win %
+
+| Weapon | Looter | Footman | Huscarl | Hunter | Rider |
+|---|---|---|---|---|---|
+| Shortbow | 20 | 0 | 0 | 100 | 5 |
+| Hunting Longbow | 25 | 0 | 0 | 100 | 0 |
+| Light Crossbow | 0 | 0 | 0 | 100 | 0 |
+
+Alone in the open, an archer wins an archers' duel and loses to anyone who closes: a drawing archer walks at half pace, and a footman closes 200 px in two draws. That is the trade the plan wants: a bow needs its company in front of it.
+
+### The hero as an archer in a company (the parity skirmishes, 20 seeds, the archer pilot, a worn sword carried second)
+
+| Scenario | Shortbow | Longbow | Crossbow |
+|---|---|---|---|
+| small 6v6 | 100 | 100 | 60 |
+| close 7v8 | 100 | 100 | 65 |
+| veterans 10v10 | 100 | 100 | 65 |
+
+The hero can win a contract as an archer. The crossbow's 2 s reload, standing still, gets the pilot caught.
+
+### Parity and performance
+
+`parity.js 40` (the masher, a sword): +14, +11, +21, +21 and −4 over the odds (outnumbered 58 against 61; inside the ±8 points of 40 seeds). Every troop's shot now flies by its range and is swept; the outnumbered company's hunters lose a little at the far end. `bench-battle.js 45 --sizes 200 --archers` (two in five shooting on each side): 3.30 ms a frame (P11-00's mixed battle 3.19).

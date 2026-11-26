@@ -15,13 +15,17 @@
 //            when nobody near is (a hero without a shield can't block, and only strikes in the gaps).
 //   passive  (tactics-lab's `--hero passive`) a commander who stays back: walks to the rear of the
 //            company and holds there, swinging only at what comes within 70 px.
+//   archer   P11-07: a bow or crossbow in hand: keeps its distance (steps back from anyone closer than
+//            the keep), draws to full (it sees the ring fill) and lets go; a crossbow loads standing still.
+//            With a melee weapon in hand (out of arrows) it fights as the masher.
 
 const STEP = 0.02; // the same step as scripts/parity.js and the campaign bot
 const TIMER = { edge: 4, band: 5, after: 0.1, stale: 1.5 };
 const TURTLE = { threat: 22 }; // px beyond the opponent's reach at which their swing is a threat
 const PASSIVE = { back: 160, fight: 70 };
+const ARCHER = { keep: 130, close: 70 };
 
-const KINDS = ['masher', 'timer', 'turtle', 'passive'];
+const KINDS = ['masher', 'timer', 'turtle', 'passive', 'archer'];
 
 /** The nearest opponent still fighting (or any left alive). */
 function nearestFoe(g, h) {
@@ -136,7 +140,20 @@ function makePilot(CL, kind = 'masher') {
     g.joystick = Math.hypot(post.x - h.x, post.y - h.y) > 12 ? toward(h, post.x, post.y) : still;
   }
 
-  const drive = { masher, timer, turtle, passive }[kind];
+  function archer(g, h, foe) {
+    const r = h.ranged;
+    if (!r) return masher(g, h, foe);
+    const d = Math.hypot(foe.x - h.x, foe.y - h.y);
+    const full = r.crossbow ? Boolean(h.loaded) : (h.drawT || 0) >= r.draw - 1e-9; // the ring is full
+    g.blockHeld = false;
+    // Too close: step back (a crossbow keeps loading only while still, so it backs off only when pressed).
+    const back = d < (r.crossbow && !h.loaded ? ARCHER.close : ARCHER.keep);
+    g.joystick = back ? toward(h, 2 * h.x - foe.x, 2 * h.y - foe.y) : d > (r.range || 200) * 0.9 ? toward(h, foe.x, foe.y) : U.inArc(h, foe, U.ARC.block) ? still : toward(h, foe.x, foe.y);
+    // Hold to draw and let go at full; a crossbow: a press once it is loaded, let go the next frame.
+    g.attackHeld = r.crossbow ? full && !g.attackHeld : !full;
+  }
+
+  const drive = { masher, timer, turtle, passive, archer }[kind];
 
   return {
     kind,
