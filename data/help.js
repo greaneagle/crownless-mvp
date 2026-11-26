@@ -117,6 +117,7 @@
         ['Joystick', 'WASD / arrows', 'Move'],
         ['ATTACK', 'Space / left click', 'Swing'],
         ['Hold BLOCK', 'Shift / right click', 'Block (needs a shield)'],
+        ['SWITCH', 'Q', 'Bring your second weapon to hand (if you carry one)'],
         ['ORDERS → group', '1 / 2 / 3', 'Infantry / Archers / Cavalry'],
         ['ORDERS → order', 'F / H / C', 'Follow / Hold / Charge'],
         ['ORDERS → Rally', 'R', 'Steady the soldiers near you (every 30 s)'],
@@ -147,6 +148,16 @@
         'You can buy a mill in a village (300 crowns) or a town (600) with a market, from the town screen; one at a time. Its card says what the village miller would make there at today’s prices. The miller grinds grain into flour and sells it in that market every payday on their own, through the same prices as you, paying for grain and the wage from the mill’s own money: put crowns in, or take them out, at the mill. They grind only while a sack of flour still pays for its sack of grain, so a busy week makes grain dearer and flour cheaper there and the next week is smaller; where grain is dear a mill may earn nothing. The owner of the place takes a tenth of the sales. Each week’s report, good or bad, and why, is on the card and in Accounts. A master miller (60 crowns, 12 a week) gets more flour from each sack. Price rules (expert) cap what they pay for grain or the least they take for flour. If the place changes hands you are told; if its owner turns Hostile to you they will seize the mill and its money in seven days unless you sell it (from anywhere, for 60% of what you paid) or mend relations.',
         'Troop tree shows every troop line as you discover it: troops you have met by name, troops you have hired or trained in full, with their upgrade costs. A troop at the end of its line is at max tier. Upgrade all ready upgrades everyone who has earned it, after showing you the total.',
         'Party also shows your hero: equip loot, and spend skill and attribute points as you level.'
+      ]
+    },
+    gear: {
+      id: 'gear',
+      stage: 'captain',
+      order: 6.5,
+      title: 'Your gear',
+      body: [
+        'You can carry two weapons: equip one as your weapon and another as your second weapon (Carry second, in Party). A battle starts with the one you choose on the sheet; SWITCH (Q) brings the other to hand in a moment, and neither is ready again any sooner for it. A weapon that needs both hands, or a bow, slings your shield on your back until you switch back.',
+        'Party and the armoury say in words what a piece of gear means for you: what it can’t do, what it needs, what it does less well, and anything you might not expect. You can still buy a piece you can’t use yet, after a second tap.'
       ]
     },
     trade: {

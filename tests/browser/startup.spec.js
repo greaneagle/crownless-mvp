@@ -64,7 +64,7 @@ test('P10-02: one world: a new game asks no world, and the coast is on the map',
   await open(page);
   await press(page, '#primaryBtn');
   await waitMode(page, 'create');
-  await expect(page.locator('#worldPick')).toBeHidden();
+  await expect(page.locator('#worldPick')).toHaveCount(0); // P11-02: the retired chooser is gone
   expect(await game(page, (CL) => CL.worlds.installed().map((w) => w.id))).toEqual(['sundered_realm']);
   expect(await game(page, (CL) => ['gullhaven', 'harrowgate', 'calder'].map((id) => CL.content.get('settlements', id)?.name))).toEqual(['Gullhaven', 'Harrowgate', 'Calder']);
 });

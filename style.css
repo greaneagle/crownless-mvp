@@ -297,6 +297,8 @@
 /* 1.9.0 — minimap and tactical overview (V2-06) */
 #stage:not([data-field="large"]) #mapBtn,#stage[data-mode="town"] #mapBtn{display:none}
 #rightControls #mapBtn{align-self:flex-start;width:clamp(50px,6.6vw,82px);height:clamp(50px,6.6vw,82px);font-size:calc(clamp(9px,1.1vw,14px) * var(--ui-scale))}
+#rightControls #switchBtn{align-self:flex-start;width:clamp(50px,6.6vw,82px);height:clamp(50px,6.6vw,82px);font-size:calc(clamp(9px,1.1vw,14px) * var(--ui-scale))}
+#stage:not([data-mode="battle"]) #switchBtn{display:none}
 #rightControls #mapBtn.active{background:#5c4a28;color:#fff3d6}
 #rightControls:has(#mapBtn.active){opacity:1}
 
@@ -336,6 +338,19 @@
 @media(max-height:430px){.modal>.row:last-child{bottom:calc(-6px * var(--ui-scale));margin:8px calc(-15px * var(--ui-scale)) calc(-6px * var(--ui-scale));padding:calc(6px * var(--ui-scale)) calc(15px * var(--ui-scale))}}
 /* Buttons in flexible rows keep room for their label. */
 .sheetCols li button,#tradeGear li button,#tradeArmoury li button{flex:none}
+/* P11-02: the gear check's findings (a mark and words, never colour alone), the compare line, the loadout */
+.sheetCols li,#tradeArmoury li{flex-wrap:wrap}
+.sheetCols li .compare,.sheetCols li .finding,#tradeArmoury li .compare,#tradeArmoury li .finding{flex-basis:100%;text-align:left}
+.findings{list-style:none;margin:6px 0 0;padding:0}
+.finding{display:flex;flex-wrap:nowrap!important;gap:6px;align-items:flex-start;font-size:calc(13px * var(--ui-scale));line-height:1.3;color:#f3e4c0}
+li.finding{justify-content:flex-start!important}
+.findingText{flex:1 1 auto;min-width:0}
+.findingMark{flex:none;display:inline-block;min-width:1.4em;height:1.4em;line-height:1.4em;text-align:center;border:1px solid currentColor;border-radius:50%;font-size:.85em}
+.finding-incompatible .findingMark{border-radius:3px}
+.finding-penalty .findingMark{border-style:dashed}
+.compare{font-size:calc(12px * var(--ui-scale))}
+.loadoutRow span{flex:1 1 60%;text-align:left}
+.visuallyHidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 /* On touch every control is at least 44×44 CSS px (WCAG 2.5.5), growing with the text size: a floor,
    so it overrides the smaller desktop minimums set on particular buttons above. */
 @media(pointer:coarse){button,select,summary,input[type=range]{min-height:calc(44px * var(--ui-grow))!important}button{min-width:calc(44px * var(--ui-grow))!important}}

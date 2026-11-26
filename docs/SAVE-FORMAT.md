@@ -168,7 +168,8 @@ Every field is validated on load by `CL.save.sanitize` and the modules it calls,
 | `lastResolvedBattle` | integer | party | Battle IDs at or below it are already applied (exactly once) |
 | `world` | `{ x, y, location, sites }` | world | Map position; `location` is a settlement ID or `null`; `sites[id].clearedUntil` |
 | `character` | `{ name, gender, cloak, background, attributes, skills, level, xp, skillPoints, attributePoints }` | character | `null` before character creation |
-| `equipment` | `{ weapon, offhand, head, body, hands, feet, horse, ring }` | character | Item IDs or `null`, checked against each slot |
+| `equipment` | `{ weapon, weapon2, offhand, head, body, hands, feet, horse, ring, ammo }` | character | Item IDs or `null`, checked against each slot. P11-02 (5.2.0): `weapon2` is a second weapon carried (any weapon), `ammo` a quiver or bolt case (none yet); both `null` when missing |
+| `loadout` | `{ start: 'primary' | 'secondary', ride, last: { [kind]: 'primary' | 'secondary' } }` | gear | P11-02 (5.2.0): the weapon a battle starts with (`primary` the first, `secondary` the second), on horse or foot, the last choice by kind of battle. By `sanitize` defaults (no schema step, D-P11a); a `secondary` with no second weapon becomes `primary` on load, with a message, no item removed |
 | `food`, `morale`, `nextWagesDay`, `starving` | numbers / boolean | upkeep | Rations; morale 0–100 |
 | `markets` | `{ settlementId: { good: scarcity } }` | trade | Scarcity clamped to 0.8–1.4 |
 | `cargo` | `{ good: count }` | trade | Trade goods carried |

@@ -10,7 +10,8 @@
  *   arc         the cone of a blow (degrees, the whole cone); 90 for now
  *   maxTargets  how many a blow can strike; 0 = every one in reach and arc (as now)
  *   cooldown    from one attack's start to the next (s): `hero` for the hero, `ai` for everyone else
- *   shield      whether a shield can be carried with it
+ *   shield      whether a shield can be carried with it (a two-handed weapon or a bow slings it on the back)
+ *   switch      seconds to bring it to hand from the other weapon (P11-02; 0.4 for every family until P11-05)
  *   ranged      a bow's or crossbow's shot (range, projectileSpeed, cooldown, accuracy) when the troop gives none
  *   look        the art kit's weapon part */
 (function (root) {
@@ -19,7 +20,7 @@
   var SWING = { windup: 0.16, active: 0.12, recovery: 0.24 };
   var COOLDOWN = { hero: 0.52, ai: 0.86 };
   function family(id, name, hands, reach, look, more) {
-    var f = { id: id, name: name, hands: hands, reach: reach, windup: SWING.windup, active: SWING.active, recovery: SWING.recovery, miss: 0, arc: 90, maxTargets: 0, cooldown: { hero: COOLDOWN.hero, ai: COOLDOWN.ai }, shield: hands === 1, look: look };
+    var f = { id: id, name: name, hands: hands, reach: reach, windup: SWING.windup, active: SWING.active, recovery: SWING.recovery, miss: 0, arc: 90, maxTargets: 0, cooldown: { hero: COOLDOWN.hero, ai: COOLDOWN.ai }, shield: hands === 1, switch: 0.4, look: look };
     for (var k in more || {}) f[k] = more[k];
     return f;
   }

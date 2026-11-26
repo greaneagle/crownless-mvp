@@ -87,7 +87,7 @@ declare global {
     attributePoints: number;
   }
 
-  type EquipmentSlot = 'weapon' | 'offhand' | 'head' | 'body' | 'hands' | 'feet' | 'horse' | 'ring';
+  type EquipmentSlot = 'weapon' | 'weapon2' | 'offhand' | 'head' | 'body' | 'hands' | 'feet' | 'horse' | 'ring' | 'ammo';
   type Equipment = Record<EquipmentSlot, ContentId | null>;
 
   /** A patrol, caravan or Reaver band on the map. Optional fields depend on the kind. */
@@ -186,6 +186,8 @@ declare global {
     startRealm: string | null;
     character: Character | null;
     equipment: Equipment;
+    /** P11-02: which weapon starts a battle, on horse or on foot, and the last choice by kind of battle. */
+    loadout: { start: 'primary' | 'secondary'; ride: boolean; last: Record<string, 'primary' | 'secondary'> };
     food: number;
     morale: number;
     nextWagesDay: number;
@@ -561,6 +563,8 @@ declare global {
     cooldown: { hero: number; ai: number };
     /** Whether a shield can be carried with it. */
     shield: boolean;
+    /** Seconds to bring this weapon to hand from the other (P11-02). */
+    switch: number;
     /** The art kit's weapon part. */
     look: string | null;
   }

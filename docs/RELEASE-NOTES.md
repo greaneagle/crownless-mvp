@@ -1,5 +1,33 @@
 # Crownless — Release Notes
 
+## v5.2.0 — Carried and wielded (P11-02) · 2026-11-26
+
+You can carry two weapons, and the game tells you in words what your gear means. Battles fight as before unless you carry a second weapon.
+
+### New
+- **A second weapon.** In Party, **Carry second** puts a weapon in the new second-weapon slot.
+  - Choose which weapon a battle starts with, or **Swap weapons**.
+  - In battle, **SWITCH** (Q) brings the other to hand in 0.4 s: no blow or block meanwhile, and not while you swing.
+  - Each weapon keeps its own cooldown, so switching never makes one ready sooner.
+- **The gear check.** Party, the armoury, Prepare and the tournament card say what a kit means, each with a mark as well as words:
+  - a weapon that needs both hands, or a bow, slings your shield on your back (it doesn't protect or block until you switch back);
+  - you carry no weapon;
+  - the lists' loaner kit.
+- **Compare.** A weapon in your pack or the armoury says how it differs from yours: damage, reach, speed in a word, one hand or two.
+- **Buying with a warning.** A piece the check says you couldn't use can still be bought, after a second tap that names why. Nothing the game sells does so yet: requirements come in 5.3.0.
+- **How to Play → Your gear.**
+
+### Changed
+- **A new slot for a quiver** (empty until bows come, P11-07). It shows on the sheet only once something is in it.
+- Taking off your weapon makes your second weapon the first.
+
+### Under the hood
+- `js/gear.js`: the loadouts, the one gear check (`check`, `checkItem`, `checkAll`, `bestLoadout`, `battleLoadout`) and the switch in battle. Its words are in `data/gear_text.js`: fixed codes, each line short enough for two lines at 812×375.
+- **The save** gains `equipment.weapon2`, `equipment.ammo` and `loadout` by defaults (no schema step).
+- **One place for each item:** a seeded run of 2,000 operations (equipping, swapping, buying, selling, forging, battles' loot and capture, tournament bouts, export and import) accounts for every item after each one. It found that an imported save refused a second weapon; fixed.
+- **The retired world chooser is gone** ("Which world?", its kept choice in the browser); a save of another world is kept untouched, as before.
+- **Golden battles unchanged.** Correction to 5.1.0's notes: there are nine golden battles, not ten.
+
 ## v5.1.0 — One combat profile for every fighter (P11-01) · 2026-11-26
 
 Nothing a player can see or feel changed: every battle plays exactly as in 5.0.1. Each fighter now has one **combat profile** that says what their weapon does. Every later Phase 11 weapon and rule is a change to it.
@@ -9,7 +37,7 @@ Nothing a player can see or feel changed: every battle plays exactly as in 5.0.1
   - Every weapon item names its family.
   - Every troop names its weapon, the one its look carries. Its own damage, reach and shot still apply.
 - **One profile** (`js/profile.js`) is read by the combat, the AI, the shields, the art's poses and the auto-resolve: timing, cooldowns, the cone of a blow, how many it strikes, the strike range. The hero, Mara, the retinue, a lord in person and a tournament's fighter are all built through it.
-- **Golden battles** (`tests/golden-battles.test.js`): ten seeded battles are compared frame by frame with 5.0.1 and are identical. They include the benchmark's, the five parity scenarios, a tournament bout, a lord's battle with the companions, and an assault.
+- **Golden battles** (`tests/golden-battles.test.js`): nine seeded battles are compared frame by frame with 5.0.1 and are identical. They include the benchmark's, the five parity scenarios, a tournament bout, a lord's battle with the companions, and an assault.
 - **Packs** may add weapon families and give a weapon a `combat` block of overrides; the checks keep them in range (`docs/WORLD-FORMAT.md`).
 
 ## v5.0.1 — The Phase 11 baseline (P11-00) · 2026-11-26

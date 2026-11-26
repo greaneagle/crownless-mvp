@@ -182,11 +182,14 @@
       maxTargets: (v) => Number.isInteger(v) && v >= 0 && v <= 20,
       cooldown: (v) => v && typeof v === 'object' && ['hero', 'ai'].every((k) => (partial && v[k] == null) || (Number.isFinite(v[k]) && v[k] > 0 && v[k] <= 5)),
       shield: (v) => typeof v === 'boolean',
+      switch: (v) => Number.isFinite(v) && v >= 0 && v <= 3, // P11-02: seconds to bring it to hand
+      mounted: (v) => ['yes', 'no', 'penalty'].includes(v), // from horseback (P11-08 sets them)
+      armourLimit: (v) => Number.isFinite(v) && v >= 0, // the heaviest armour it works well with (P11-06)
       look: (v) => v === null || LOOK.weapon.includes(v),
     };
     for (const [k, ok] of Object.entries(RULES)) {
       if (f[k] == null) {
-        if (!partial && k !== 'look') out.push(`${at}: needs ${k}`);
+        if (!partial && !['look', 'mounted', 'armourLimit'].includes(k)) out.push(`${at}: needs ${k}`);
         continue;
       }
       if (!ok(f[k])) out.push(`${at}: bad ${k}`);
@@ -363,7 +366,7 @@
       }
       checkWorld(m, C, err);
     }
-    const SLOTS = ['weapon', 'offhand', 'head', 'body', 'hands', 'feet', 'horse', 'ring'];
+    const SLOTS = ['weapon', 'offhand', 'head', 'body', 'hands', 'feet', 'horse', 'ring', 'ammo']; // P11-02: a quiver or bolt case (none yet); a second weapon is a 'weapon'
     for (const it of Object.values(C.items || {})) {
       if (it.slot && !SLOTS.includes(it.slot)) err(`item ${it.id}: unknown slot ${it.slot}`);
       if (it.slot === 'weapon' && !(it.stats?.damage > 0)) err(`item ${it.id}: weapon needs stats.damage`);
@@ -371,6 +374,16 @@
       if (it.slot === 'weapon' && !C.weapon_families?.[it.family]) err(`item ${it.id}: a weapon needs a known family (${it.family ?? 'none'})`);
       if (it.family != null && it.slot !== 'weapon') err(`item ${it.id}: only a weapon has a family`);
       if (it.combat != null) for (const e of checkCombat(it.combat, `item ${it.id}: combat`, true)) err(e);
+    }
+    // P11-02: the gear check's words (data/gear_text.js): exactly its codes, each a line that fits.
+    if (C.gear_text && CL.gear) {
+      const codes = CL.gear.CODES;
+      for (const k of Object.keys(C.gear_text)) if (!codes.includes(k)) err(`gear_text: unknown code ${k}`);
+      for (const k of codes) {
+        const t = C.gear_text[k];
+        if (typeof t !== 'string' || !t.trim()) err(`gear_text: needs the line for ${k}`);
+        else if (t.length > CL.gear.TEXT_MAX - 24) err(`gear_text.${k}: too long for two lines (${t.length})`);
+      }
     }
     // P11-01: weapon families (data/weapons.js), complete and in range.
     for (const f of Object.values(C.weapon_families || {})) for (const e of checkCombat(f, `weapon family ${f.id}`, false)) err(e);

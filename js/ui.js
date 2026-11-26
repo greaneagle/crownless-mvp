@@ -1740,6 +1740,7 @@
       Object.assign(document.createElement('p'), { textContent: `${e.name}: ${foes} against your ${own} fit soldier${own === 1 ? '' : 's'}.${p.ambush ? ' Ambush! Little room to form up.' : ''}` }),
       ...(e.def.share ? [Object.assign(document.createElement('p'), { id: 'prepShare', className: 'setNote', textContent: shareLine(e.def) })] : []),
       actions, // first, so Fight is always in reach (two taps from the encounter)
+      gearLine(), // P11-02: the loadout you fight with, and what the gear check finds
       presets,
       Object.assign(document.createElement('p'), { className: 'setNote', textContent: PRESET_ABOUT[p.plan.preset] + auto }),
       ...rows,
@@ -1813,10 +1814,25 @@
         const price = T.gearBuyPrice(c, id);
         const worn = it.slot ? c.equipment[it.slot] : null;
         const vs = worn ? ` — wearing ${CL.content.item(worn).name}` : it.slot ? ' — slot empty' : '';
-        return li(`${it.name}${itemSummary(it)}${vs}`, `Buy · ${price}`, () => {
+        // P11-02: what the gear check finds before you buy. A piece you couldn't use can still be bought,
+        // after a second tap that says why.
+        const findings = CL.gear.checkItem(c, id);
+        const stop = CL.gear.stops(findings) ? findings.find((f) => f.kind === 'incompatible' || f.kind === 'requirement') : null;
+        const row = li(`${it.name}${itemSummary(it)}${vs}`, `Buy · ${price}`, null);
+        const b = row.querySelector('button');
+        b.onclick = () => {
+          if (stop && !b.dataset.confirm) {
+            b.dataset.confirm = '1';
+            b.textContent = `Buy anyway · ${price}`;
+            message(`${stop.text} Tap again to buy it.`);
+            return;
+          }
           tradeAction(() => T.buyGear(c, sid, id));
           if (it.slot) message(`Bought ${it.name} — equip it from Character & gear.`);
-        });
+        };
+        if (it.slot === 'weapon') row.append(el('small', { className: 'compare muted', textContent: CL.gear.compare(c, id, c.equipment.weapon) }));
+        row.append(...findingRows(findings, 'span'));
+        return row;
       }),
     );
     for (const b of document.querySelectorAll('#tradeArmoury button')) {
@@ -1860,17 +1876,6 @@
   }
 
   function renderCreator() {
-    // P9-08: which world, at a new game, when this build has more than one. Another world reloads the page.
-    const worlds = CL.worlds.installed();
-    const pick = $('#worldPick');
-    pick.classList.toggle('hidden', !(CL.game.newGame && worlds.length > 1));
-    $('#worldChoices').replaceChildren(
-      ...worlds.map((w) =>
-        choiceButton(w.name, w.id === CL.worlds.current(), () => {
-          if (w.id !== CL.worlds.current()) CL.worlds.switchTo(w.id, { newGame: true });
-        }, [Object.assign(document.createElement('b'), { textContent: w.name }), w.sandbox ? 'A sandbox: no story, the realms as they are.' : 'The story of the Crownless, and the realms beyond it.']),
-      ),
-    );
     // P10-04: which kingdom you begin in, at a new game: you start in its start town, and the story
     // is told from there.
     const realms = CL.story.startRealms();
@@ -2126,31 +2131,101 @@
     renderTroops();
     renderCompanion();
     stats.lastChild.append(...supplyParts(c));
+    const after = () => {
+      CL.save.write();
+      renderSheet();
+    };
+    // P11-02: the slots (a second weapon and a quiver among them), the loadout a battle starts with,
+    // and what the gear check finds, in words with a mark for each kind.
+    const G = CL.gear;
+    const starts = G.bestLoadout(c);
     $('#sheetEquip').replaceChildren(
-      ...C.SLOTS.map((slot) => {
+      ...C.SLOTS.filter((slot) => slot !== 'ammo' || c.equipment.ammo).map((slot) => {
         const id = c.equipment[slot];
         const it = id ? CL.content.item(id) : null;
         return li(`${C.SLOT_NAMES[slot]}: ${it ? it.name + itemSummary(it) : '—'}`, it ? 'Remove' : null, () => {
           C.unequip(slot);
-          CL.save.write();
-          renderSheet();
+          after();
         });
       }),
+      loadoutRow(c, starts, after),
     );
+    $('#sheetFindings').replaceChildren(...findingRows(G.checkAll(c))); // full width: two lines at most
     const pack = Object.entries(c.inventory);
     $('#sheetPack').replaceChildren(
       ...(pack.length
         ? pack.map(([id, n]) => {
             const it = CL.content.item(id);
             const equippable = it.slot && C.SLOTS.includes(it.slot);
-            return li(`${n > 1 ? `${n}× ` : ''}${it.name}${itemSummary(it)}`, equippable ? 'Equip' : null, () => {
+            const row = li(`${n > 1 ? `${n}× ` : ''}${it.name}${itemSummary(it)}`, equippable ? 'Equip' : null, () => {
               C.equip(id);
-              CL.save.write();
-              renderSheet();
+              after();
             });
+            if (it.slot === 'weapon') {
+              // A weapon can also be carried second; the compare line says how it differs from yours.
+              row.append(el('button', { type: 'button', className: 'carrySecond', textContent: 'Carry second', onclick: () => C.equip(id, c, 'weapon2') && after() }));
+              row.append(el('small', { className: 'compare muted', textContent: G.compare(c, id, c.equipment.weapon) }));
+              row.append(...findingRows(G.checkItem(c, id), 'span'));
+            }
+            return row;
           })
         : [li('Empty')]),
     );
+  }
+
+  /**
+   * P11-02: the battle's gear buttons: SWITCH only when a second weapon can be brought to hand (its name
+   * on it), BLOCK only with a shield in hand (no shield, no block).
+   */
+  function gearButtons() {
+    const g = CL.game;
+    $('#blockBtn').disabled = g.hero?.canBlock === false;
+    const L = g.loadout;
+    const sw = $('#switchBtn');
+    sw.classList.toggle('hidden', !L?.can);
+    if (L?.can) {
+      const other = L.which === 'primary' ? L.kit?.weapon2 : L.kit?.weapon;
+      sw.disabled = Boolean(L.switching);
+      sw.setAttribute('aria-label', `Switch to ${other ? CL.content.item(other).name : 'fists'} (Q)`);
+    }
+  }
+
+  /** P11-02: Prepare's line: the loadout this battle starts with, and any finding (the full work is P11-15). */
+  function gearLine() {
+    const c = CL.campaign;
+    const lo = CL.gear.battleLoadout(c);
+    const box = el('div', { id: 'prepGear', className: 'setNote' }, el('p', { textContent: `You fight with your ${CL.gear.LOADOUT_NAMES[lo.which]}: ${CL.gear.describe(c, c.equipment, lo.which)}.${lo.message ? ` ${lo.message}` : ''}` }));
+    box.append(...findingRows(CL.gear.check(c, c.equipment, { which: lo.which }), 'p'));
+    return box;
+  }
+
+  /**
+   * P11-02: the loadout a battle starts with, in words, and the choice of the other one (with a swap of
+   * the two weapons) when a second weapon is carried. @param {any} c @param {string} starts @param {() => void} after
+   */
+  function loadoutRow(c, starts, after) {
+    const G = CL.gear;
+    const row = el('li', { className: 'loadoutRow' }, el('span', { textContent: `Battles start with your ${G.LOADOUT_NAMES[starts]}: ${G.describe(c, c.equipment, starts)}` }));
+    if (c.equipment.weapon2) {
+      const other = starts === 'primary' ? 'secondary' : 'primary';
+      row.append(
+        el('button', { type: 'button', className: 'startWith', textContent: `Start with ${G.LOADOUT_NAMES[other]}`, onclick: () => {
+          c.loadout.start = other;
+          after();
+        } }),
+        el('button', { type: 'button', className: 'swapWeapons', textContent: 'Swap weapons', onclick: () => CL.character.swapWeapons(c) && after() }),
+      );
+    }
+    return row;
+  }
+
+  /**
+   * The gear check's findings as rows: a mark (a shape, not a colour) and the words.
+   * @param {any[]} findings @param {string} [tag] 'li' in a list, 'span' inside a row
+   */
+  function findingRows(findings, tag = 'li') {
+    const G = CL.gear;
+    return findings.map((f) => el(tag, { className: `finding finding-${f.kind}`, title: G.KIND_NAMES[f.kind] }, el('b', { className: 'findingMark', ariaHidden: 'true', textContent: G.ICONS[f.kind] }), el('span', { className: 'findingText' }, el('span', { className: 'visuallyHidden', textContent: `${G.KIND_NAMES[f.kind]}: ` }), f.text)));
   }
 
   /** Levy → Levies, Footman → Footmen, Hunter → Hunters. */
@@ -2751,6 +2826,9 @@
     card.dataset.tourney = v.kind;
     card.append(el('b', '', v.title));
     for (const l of v.lines) card.append(el('p', '', l));
+    // P11-02: the lists' loaner kit, through the gear check (what you fight with, and anything it finds).
+    const kit = CL.content.get('tournaments', 'lists').kit;
+    card.append(...findingRows(CL.gear.check(c, kit, { loaner: true }), 'p'));
     const row = el('div', 'row');
     const button = (text, id, fn, reason = '') => {
       const b = el('button', '', text);
@@ -2908,7 +2986,7 @@
     setTimeout(() => CL.tips?.check('battle'), 0); // at once: the first battle waits on its card (battles don't start through changeMode)
     requestAnimationFrame(fitHud);
     $('#attackBtn').textContent = 'ATTACK';
-    $('#blockBtn').disabled = CL.game.hero?.canBlock === false; // no shield, no block
+    gearButtons();
     $('#overlay').classList.add('hidden');
     $('#ordersPanel').classList.add('hidden');
     $('#prepPanel').classList.add('hidden'); // the battle starts from the preparation screen (V2-07)
@@ -3742,6 +3820,7 @@
   }
 
   CL.ui = {
+    gearButtons, // P11-02
     refreshFullscreen,
     showStale,
     showTip,

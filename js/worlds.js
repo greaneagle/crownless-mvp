@@ -5,14 +5,14 @@
  * in data/worlds/*.js (`CROWNLESS_WORLDS`), in the world format (docs/WORLD-FORMAT.md): each gives the
  * tables it replaces whole, and `merge` changes fields of the shared tables it leaves as they are.
  *
- * The world is chosen at a new game ("Which world?") and kept in localStorage (`crownless_world`). It is
- * put in place here, at load, before anything reads the content: choosing another world, or opening a
- * save of another world, reloads the page. A save records its world (`worldId`, js/save.js).
+ * One world is played (P10-02): the built-in one. `use` puts another world package in its place (the
+ * tests and scripts do, as `loadGame({ world })`); the game itself no longer offers a choice (P11-02
+ * removed the retired "Which world?" chooser and its kept choice, `crownless_world`). A save records its
+ * world (`worldId`, js/save.js): one of another world is kept untouched.
  */
 (function (root) {
   'use strict';
   const CL = root.Crownless;
-  const KEY = 'crownless_world';
 
   const raw = () => root.CROWNLESS_CONTENT || {};
   const packages = () => root.CROWNLESS_WORLDS || {};
@@ -31,53 +31,15 @@
   }
   const known = (id) => installed().some((w) => w.id === id);
 
-  function chosen() {
-    try {
-      const id = root.localStorage?.getItem(KEY);
-      return id && known(id) ? id : BUILTIN;
-    } catch {
-      return BUILTIN;
-    }
-  }
-
-  /** Keep `id` as the world to play from the next load. */
-  function choose(id) {
-    if (!known(id)) return false;
-    try {
-      if (id === BUILTIN) root.localStorage?.removeItem(KEY);
-      else root.localStorage?.setItem(KEY, id);
-      return true;
-    } catch (e) {
-      CL.diag?.log('warn', 'World choice not kept', { error: String(e) });
-      return false;
-    }
-  }
-
   const name = (id) => installed().find((w) => w.id === id)?.name || id;
 
-  // ---- In the browser: another world means a reload ----
-
-  const NEW_KEY = 'crownless_world_new';
-  /** Play `id` from now: kept, and the page reloads into it (with `newGame`, straight to the creator). */
-  function switchTo(id, { newGame = false } = {}) {
-    if (!choose(id)) return false;
+  /** The retired chooser's kept choices (P9-08 to P10-02), cleared from a browser that still has them. */
+  function forget() {
     try {
-      if (newGame) root.sessionStorage?.setItem(NEW_KEY, id);
+      root.localStorage?.removeItem('crownless_world');
+      root.sessionStorage?.removeItem('crownless_world_new');
     } catch {
-      // no session storage: the title opens instead of the creator
-    }
-    CL.diag?.log('info', 'World chosen', { world: id, newGame });
-    root.location?.reload();
-    return true;
-  }
-  /** Was this load a new game in a world just chosen? (Read once.) */
-  function takeNewGame() {
-    try {
-      const id = root.sessionStorage?.getItem(NEW_KEY);
-      root.sessionStorage?.removeItem(NEW_KEY);
-      return Boolean(id) && id === current();
-    } catch {
-      return false;
+      // no storage: nothing kept
     }
   }
 
@@ -95,7 +57,5 @@
     return true;
   }
 
-  use(chosen());
-
-  CL.worlds = { KEY, BUILTIN, installed, known, name, chosen, choose, current, use, switchTo, takeNewGame, package: (id) => packages()[id] || null };
+  CL.worlds = { BUILTIN, installed, known, name, current, use, forget, package: (id) => packages()[id] || null };
 })(typeof window !== 'undefined' ? window : globalThis);

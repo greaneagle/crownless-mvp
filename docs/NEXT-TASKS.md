@@ -4041,7 +4041,7 @@ The aim: easy to fight, rewarding to fight well, meaningful to command. The play
 |---|---|---|---|---|
 | P11-00 | Baseline, measuring tools and the inherited checkpoint | M | 5.0.1 | ✅ Done (the owner's H-00 to come) |
 | P11-01 | One combat profile for every fighter (no change in play) | L | 5.1.0 | ✅ Done |
-| P11-02 | Carried and wielded: loadouts and one gear check | M–L | 5.2.0 | Ready |
+| P11-02 | Carried and wielded: loadouts and one gear check | M–L | 5.2.0 | ✅ Done |
 | P11-03 | The progression budget and equipment requirements | M–L | 5.3.0 | Ready |
 | P11-04 | The equipment you see | M–L | 5.4.0 | Specified |
 | P11-05 | Melee rhythm and defence | L | 5.5.0 | Ready |
@@ -4246,7 +4246,7 @@ The aim: easy to fight, rewarding to fight well, meaningful to command. The play
   - a practice assault.
 
   `node scripts/parity.js 40` gives P11-00's table to the digit. `npm run bench` at 200: 3.18 ms mean (P11-00: 3.15, +1%).
-- **Tests:** `tests/profile.test.js` (9), including every fighter's numbers against `tests/fixtures/golden/fighters.json` and the grep for `SWING.`, `COOLDOWN.` and `.reach - 1` outside the profile; `tests/golden-battles.test.js` (11). `tests/content.test.js` counts 23 data files. `npm test` 967 pass; lint as before (2 old warnings); browser `battle`, `tourney` and `art` specs, 30 on desktop and phone. A practice battle looked at headless at 812×375: drawn as before.
+- **Tests:** `tests/profile.test.js` (9), including every fighter's numbers against `tests/fixtures/golden/fighters.json` and the grep for `SWING.`, `COOLDOWN.` and `.reach - 1` outside the profile; `tests/golden-battles.test.js` (10: the nine battles, and one that each is recorded; 5.2.0 corrected this from "11" and "ten battles"). `tests/content.test.js` counts 23 data files. `npm test` 967 pass; lint as before (2 old warnings); browser `battle`, `tourney` and `art` specs, 30 on desktop and phone. A practice battle looked at headless at 812×375: drawn as before.
 - **Not done:** the optional Debug line on a unit's profile.
 - **Slow files:** none run (none changed). The golden battles stand in for `battle-parity`, which stays on the night run.
 
@@ -4310,6 +4310,34 @@ The aim: easy to fight, rewarding to fight well, meaningful to command. The play
 - **Play:** as above.
 - **Explain:** `data/help.js` "Your gear".
 - **Not here:** requirements, new weapons, art.
+
+**Done (5.2.0).**
+- **Built:**
+  - Slots `weapon2` ("Second weapon", any weapon) and `ammo` ("Quiver", shown once filled). `character.fits`; `equip(id, c, slot)`; `unequip` (the first weapon off: the second takes its place); `swapWeapons`. `c.loadout` by `CL.gear.sanitize`.
+  - `js/gear.js`: `active` and `kitFor` (a slung shield neither protects nor blocks); `check`, `checkItem` and `checkAll`, with findings `{ kind, code, item, text, have, need, fix }`; `bestLoadout` and `battleLoadout` (the fallback said); `describe`, `compare`, `speedWord`; `begin`, `switchWeapon` and `tick` in battle; `sanitize` and `repair`.
+  - The rules read the profile: hands and shield (`two_hands`, `shoots`), `unarmed`, the lists' `loaner` kit, and `mounted` and `heavy` ready for P11-08 and P11-06 (no family sets them yet).
+  - The words in `data/gear_text.js`. The codes are fixed (`CL.gear.CODES`): a world may reword them, a pack can't add any, and each line must stay short enough for two lines at 812×375. `switch: 0.4` on every family.
+- **Used by:**
+  - the sheet: the slots, the loadout line with "Start with second weapon" and "Swap weapons", the findings in a full-width list (`#sheetFindings`), and a pack weapon's Carry second, compare line and findings;
+  - the armoury: the compare line, the findings, and a second tap that names the stopping finding;
+  - Prepare: one line with the loadout and its findings;
+  - the tournament card: the loaner kit's finding;
+  - `heroCombat`, `autoresolve.heroPower` and the battle start: the loadout you prefer, or the other with a message;
+  - save loading: a `secondary` with no second weapon becomes `primary`, with a message.
+- **In battle:** Q and a temporary SWITCH button (shown only with a second weapon, named in its label). 0.4 s with no blow or block, never while swinging. The weapon put away keeps "ready at" (now + its cooldown), and the one drawn gets the rest of its own. BLOCK is greyed with no shield in hand.
+- **Removed:** the retired world chooser (`#worldPick`, `CL.worlds.choose`, `chosen`, `switchTo`, `takeNewGame`, the `crownless_world` keys, cleared by `CL.worlds.forget` at boot). A save of another world gets a notice and is kept.
+- **Found by the invariant test and fixed:** `portable.unknownIds` refused an imported save with a second weapon (it required an item's own slot).
+- **Tests:** `tests/gear.test.js` (8):
+  - every rule and finding;
+  - the fallback order and the repaired save;
+  - the words' length and the content checks of `gear_text`;
+  - the 2,000-operation invariant (seeded: equip, unequip, swap, buy, sell, forge, battle loot and capture, a tournament bout, export and import), with a check that each kind of move really happened;
+  - switching never makes a weapon ready sooner;
+  - the battle start.
+
+  `tests/browser/gear.spec.js` (3, desktop and phone): carry second, findings and the loadout on the sheet; the armoury's finding and the two-tap buy; SWITCH by Q and by the button. The game sells no two-handed weapon yet, so the specs add a test greatsword, and the two-tap buy is shown by telling the check a piece can't be used. Golden battles identical; `npm test` 975 pass; lint as before (2 old warnings); the full browser suite (below).
+- **Not done:** the optional "Equip best for…".
+- **Corrected:** P11-01's notes said ten golden battles: there are nine (and 10 tests).
 
 ---
 

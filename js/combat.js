@@ -184,9 +184,14 @@
     const anchor = g.battleMap.spawn.hero;
     g.hero = makeUnit(anchor.x, anchor.y, 'ally', 'hero');
     // HP, damage, armour, shield and weapon from the character (and the kit worn): the hero's profile (P11-01).
-    const heroProfile = P.resolve({ hero: CL.campaign, equipment: g.duel ? g.duel.kit : CL.campaign?.equipment });
+    // P11-02: in the loadout you prefer if it can be used here, else the other (said, never silent).
+    const kit = g.duel ? g.duel.kit : CL.campaign?.equipment;
+    const lo = CL.gear.battleLoadout(CL.campaign, kit, { loaner: Boolean(g.duel) });
+    const heroProfile = P.resolve({ hero: CL.campaign, equipment: CL.gear.kitFor(CL.campaign, kit, lo.which) });
     P.apply(g.hero, heroProfile);
     g.hero.canBlock = heroProfile.canBlock;
+    CL.gear.begin(g, CL.campaign, kit, lo.which);
+    if (lo.message) CL.ui.message(lo.message);
     g.hero.face = 'right';
     // Units start with a random cooldown so the AI's first blows are staggered; the player's hero must
     // be ready at once, or an Attack pressed in the first moments outlasts the 100 ms input buffer and
@@ -817,8 +822,11 @@
     const y = (k.KeyS || k.ArrowDown ? 1 : 0) - (k.KeyW || k.ArrowUp ? 1 : 0) + g.joystick.y;
     // Block input cannot interrupt a committed swing (GDD §6); it takes effect in recovery.
     const blockInput = Boolean(g.blockHeld || k.ShiftLeft || k.ShiftRight);
+    // P11-02: bringing the other weapon to hand: no blow and no block until it is.
+    if (g.loadout?.switching) CL.gear.tick(g);
+    const drawing = CL.gear.switching(g);
     // GDD §6: blocking needs a shield equipped.
-    h.guard = h.alive && blockInput && h.canBlock !== false && !isCommitted(h);
+    h.guard = h.alive && blockInput && h.canBlock !== false && !isCommitted(h) && !drawing;
     if (g.attackQueuedAt !== null && g.t - g.attackQueuedAt > INPUT_BUFFER) g.attackQueuedAt = null;
     if (!h.alive) return;
     if (x || y) {
@@ -828,7 +836,7 @@
       h.speed = old;
     }
     const wantsAttack = g.attackHeld || k.Space || g.attackQueuedAt !== null;
-    if (wantsAttack && !h.guard && startAttack(h)) g.attackQueuedAt = null;
+    if (wantsAttack && !h.guard && !drawing && startAttack(h)) g.attackQueuedAt = null;
   }
 
   function updateArrows(h, dt) {

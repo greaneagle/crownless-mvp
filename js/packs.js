@@ -236,8 +236,9 @@
     for (const e of CL.content.validate(CL.content.compose(JSON.parse(JSON.stringify(base)), world))) err(`${file} › ${e}`);
     return errors;
   }
-  // Tables of the format outside CL.content.TABLES (the blacksmith's rules, the founded realms' banners).
-  const WORLD_EXTRA = ['forge', 'realm_palette'];
+  // Tables of the format outside CL.content.TABLES (the blacksmith's rules, the founded realms' banners,
+  // the gear check's words: P11-02, its codes fixed by the game).
+  const WORLD_EXTRA = ['forge', 'realm_palette', 'gear_text'];
 
   /** Add the pack's entries to `content` and change the fields `merge` names. Pure data: nothing is run. */
   function apply(content, pack) {

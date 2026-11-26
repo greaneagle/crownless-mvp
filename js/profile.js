@@ -73,6 +73,7 @@
       maxTargets: pick('maxTargets') || Infinity,
       cooldown: { hero: cd.hero, ai: cd.ai },
       shield: pick('shield'),
+      switch: pick('switch'), // P11-02: seconds to bring this weapon to hand
       look: pick('look'),
       familyReach: pick('reach'),
       familyRanged: family.ranged || null,

@@ -7,9 +7,11 @@
 
   const ATTRIBUTES = ['str', 'agi', 'int', 'cha'];
   const ATTRIBUTE_NAMES = { str: 'Strength', agi: 'Agility', int: 'Intelligence', cha: 'Charisma' };
-  const SLOTS = ['weapon', 'offhand', 'head', 'body', 'hands', 'feet', 'horse', 'ring'];
+  // P11-02: `weapon2`, a second weapon carried (any weapon); `ammo`, a quiver or bolt case (P11-07).
+  const SLOTS = ['weapon', 'weapon2', 'offhand', 'head', 'body', 'hands', 'feet', 'horse', 'ring', 'ammo'];
   const SLOT_NAMES = {
     weapon: 'Weapon',
+    weapon2: 'Second weapon',
     offhand: 'Shield',
     head: 'Helmet',
     body: 'Chest',
@@ -17,7 +19,10 @@
     feet: 'Boots',
     horse: 'Horse',
     ring: 'Ring',
+    ammo: 'Quiver',
   };
+  /** Does an item go in this slot? A weapon also goes in the second weapon's. @param {any} it @param {string} slot */
+  const fits = (it, slot) => Boolean(it?.slot) && (it.slot === slot || (slot === 'weapon2' && it.slot === 'weapon'));
   const GENDERS = ['man', 'woman', 'unspecified'];
   const CLOAKS = ['crimson', 'forest', 'violet', 'ash'];
   const BASE_ATTRIBUTE = 5;
@@ -146,8 +151,9 @@
    * The hero's battle numbers (GDD §5–6). `equipment`: the gear to fight in (the hero's own, or the
    * tournament's loaner kit, P7-09); the hero's own gear is never moved for it.
    */
-  function heroCombat(c = camp(), equipment = c.equipment) {
-    const p = CL.profile.resolve({ hero: c, equipment }); // P11-01: one profile (js/profile.js)
+  function heroCombat(c = camp(), equipment = c.equipment, which = CL.gear.bestLoadout(c, equipment)) {
+    // P11-01: one profile (js/profile.js); P11-02: from the loadout in hand (a slung shield doesn't count).
+    const p = CL.profile.resolve({ hero: c, equipment: CL.gear.kitFor(c, equipment, which) });
     return { hp: p.hp, maxhp: p.maxhp, damage: p.damage, armor: p.armor, canBlock: p.canBlock };
   }
 
@@ -159,15 +165,17 @@
 
   // ---- Equipment (atomic: an item is always in exactly one place) ----
 
-  function equip(itemId, c = camp()) {
+  /** Put an item from the pack in its slot (a weapon in `weapon2` to carry it second); what was there goes to the pack. */
+  function equip(itemId, c = camp(), slot = null) {
     const it = CL.content.table('items')[itemId];
-    if (!it?.slot || !SLOTS.includes(it.slot) || !(c.inventory[itemId] > 0)) return false;
-    const previous = c.equipment[it.slot];
+    const to = slot || it?.slot;
+    if (!fits(it, to) || !SLOTS.includes(to) || !(c.inventory[itemId] > 0)) return false;
+    const previous = c.equipment[to];
     c.inventory[itemId] -= 1;
     if (!c.inventory[itemId]) delete c.inventory[itemId];
     if (previous) c.inventory[previous] = (c.inventory[previous] || 0) + 1;
-    c.equipment[it.slot] = itemId;
-    CL.diag.log('info', 'Equipped', { item: itemId, replaced: previous });
+    c.equipment[to] = itemId;
+    CL.diag.log('info', 'Equipped', { item: itemId, slot: to, replaced: previous });
     return true;
   }
 
@@ -177,6 +185,19 @@
     c.equipment[slot] = null;
     c.inventory[id] = (c.inventory[id] || 0) + 1;
     CL.diag.log('info', 'Unequipped', { item: id, slot });
+    // P11-02: the active weapon taken off: the second weapon becomes the first.
+    if (slot === 'weapon' && c.equipment.weapon2) swapWeapons(c);
+    if (c.loadout?.start === 'secondary' && !c.equipment.weapon2) c.loadout.start = 'primary';
+    return true;
+  }
+
+  /** P11-02: the first and second weapons change places (nothing goes to the pack). */
+  function swapWeapons(c = camp()) {
+    const eq = c.equipment;
+    if (!eq || (!eq.weapon && !eq.weapon2)) return false;
+    [eq.weapon, eq.weapon2] = [eq.weapon2 || null, eq.weapon || null];
+    if (!eq.weapon2 && c.loadout?.start === 'secondary') c.loadout.start = 'primary';
+    CL.diag.log('info', 'Weapons swapped', { weapon: eq.weapon, weapon2: eq.weapon2 });
     return true;
   }
 
@@ -224,7 +245,7 @@
     const eq = blankEquipment();
     for (const s of SLOTS) {
       const it = CL.content.table('items')[d[s]];
-      if (it && it.slot === s) eq[s] = it.id;
+      if (fits(it, s)) eq[s] = it.id;
     }
     return eq;
   }
@@ -258,6 +279,8 @@
     travelFactor,
     equip,
     unequip,
+    swapWeapons,
+    fits,
     sanitize,
     sanitizeEquipment,
   };

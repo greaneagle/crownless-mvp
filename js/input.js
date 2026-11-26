@@ -145,6 +145,8 @@
       CL.morale.rally(game);
       ui.showSelectedGroup(game.group);
     };
+    // P11-02: a temporary button for the second weapon (P11-09 settles the controls).
+    $('#switchBtn').onclick = () => CL.gear.switchWeapon(game);
   }
 
   /** Save & export screen: manual save, export file, copy text, import file/text, restore. */
@@ -238,6 +240,7 @@
       if (g.mode === 'map' && e.code === 'KeyH' && !e.repeat) CL.world.toggleHide(); // P7-04
       if (g.mode === 'battle' && e.code === 'KeyZ' && !e.repeat && CL.camera.scrolls(g)) CL.camera.toggleZoom(g); // W-03
       if (g.mode === 'battle' && e.code === 'KeyR' && !e.repeat) CL.morale.rally(g); // V2-08b
+      if (g.mode === 'battle' && e.code === 'KeyQ' && !e.repeat) CL.gear.switchWeapon(g); // P11-02: the other weapon to hand
       const o = KEY_ORDERS[e.code];
       if (o) CL.combat.order(o[0], o[1]);
       if (g.mode === 'town' && ['Space', 'Enter', 'KeyE'].includes(e.code) && !e.repeat) {

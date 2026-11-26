@@ -95,6 +95,7 @@
       startRealm, // the kingdom the game began in (P10-04)
       character: null, // set by the character creator
       equipment: CL.character.blankEquipment(),
+      loadout: CL.gear.sanitize(null), // P11-02: which weapon starts a battle, on horse or on foot
       food: 0, // rations; one feeds 5 people for a day
       morale: CL.upkeep.MORALE.start,
       nextWagesDay: CL.upkeep.WAGE_INTERVAL,
@@ -546,6 +547,13 @@
     s.world = CL.world.sanitize(d.world);
     s.character = CL.character.sanitize(d.character);
     s.equipment = CL.character.sanitizeEquipment(d.equipment);
+    // P11-02: the loadout preferences; one that can't be used now falls back, saying so (no item is removed).
+    s.loadout = CL.gear.sanitize(d.loadout);
+    const gearNote = CL.gear.repair(s);
+    if (gearNote) {
+      CL.diag.log('warn', 'Loadout repaired', { note: gearNote });
+      CL.ui?.message?.(gearNote);
+    }
     s.inventory = {};
     if (isObject(d.inventory)) {
       for (const [id, n] of Object.entries(d.inventory)) {
