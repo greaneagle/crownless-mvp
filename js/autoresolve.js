@@ -102,7 +102,7 @@
   }
 
   function heroPower(c = CL.campaign) {
-    const h = CL.character.heroCombat(c);
+    const h = CL.profile.resolve({ hero: c, equipment: c.equipment }); // P11-01: the hero's profile
     return ((h.hp * h.damage) / T1_BASELINE) * (h.canBlock ? SHIELD_FACTOR : 1);
   }
 

@@ -10,11 +10,11 @@
   var C = root.CROWNLESS_CONTENT;
   C.items = {
     // Weapons (one active melee weapon)
-    worn_sword: {id:'worn_sword',name:'Worn Sword',type:'weapon',slot:'weapon',tier:1,rarity:'common',value:12,weight:2,stats:{damage:17},questItem:false},
-    hand_axe: {id:'hand_axe',name:'Hand Axe',type:'weapon',slot:'weapon',tier:1,rarity:'common',value:45,weight:2,stats:{damage:19},questItem:false},
-    arming_sword: {id:'arming_sword',name:'Arming Sword',type:'weapon',slot:'weapon',tier:2,rarity:'uncommon',value:80,weight:2,stats:{damage:21},questItem:false},
-    war_mace: {id:'war_mace',name:'War Mace',type:'weapon',slot:'weapon',tier:2,rarity:'uncommon',value:110,weight:3,stats:{damage:22},questItem:false},
-    knights_sword: {id:'knights_sword',name:"Knight's Sword",type:'weapon',slot:'weapon',tier:3,rarity:'rare',value:260,weight:2,stats:{damage:25},questItem:false},
+    worn_sword: {id:'worn_sword',family:'sword',name:'Worn Sword',type:'weapon',slot:'weapon',tier:1,rarity:'common',value:12,weight:2,stats:{damage:17},questItem:false},
+    hand_axe: {id:'hand_axe',family:'axe',name:'Hand Axe',type:'weapon',slot:'weapon',tier:1,rarity:'common',value:45,weight:2,stats:{damage:19},questItem:false},
+    arming_sword: {id:'arming_sword',family:'sword',name:'Arming Sword',type:'weapon',slot:'weapon',tier:2,rarity:'uncommon',value:80,weight:2,stats:{damage:21},questItem:false},
+    war_mace: {id:'war_mace',family:'mace',name:'War Mace',type:'weapon',slot:'weapon',tier:2,rarity:'uncommon',value:110,weight:3,stats:{damage:22},questItem:false},
+    knights_sword: {id:'knights_sword',family:'sword',name:"Knight's Sword",type:'weapon',slot:'weapon',tier:3,rarity:'rare',value:260,weight:2,stats:{damage:25},questItem:false},
     // Shields (needed to block)
     oak_shield: {id:'oak_shield',name:'Oak Shield',type:'shield',slot:'offhand',tier:1,rarity:'common',value:25,weight:3,stats:{block:true},questItem:false},
     kite_shield: {id:'kite_shield',name:'Kite Shield',type:'shield',slot:'offhand',tier:2,rarity:'uncommon',value:70,weight:4,stats:{block:true,armor:1},questItem:false},

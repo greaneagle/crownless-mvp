@@ -53,7 +53,7 @@
       const phase = CL.units.swingPhase(o);
       if (phase !== 'windup' && phase !== 'active') continue;
       if (Math.hypot(o.x - u.x, o.y - u.y) > o.reach * SHIELD_LOOKOUT) continue;
-      if (!CL.units.inArc(o, u, CL.units.ARC.attack)) continue; // not aimed at us
+      if (!CL.units.inArc(o, u, CL.profile.arcOf(o))) continue; // not aimed at us (the cone of its blow, from its profile)
       if (CL.units.inArc(u, o, CL.units.ARC.block)) return true; // in front: raise it
     }
     return false;

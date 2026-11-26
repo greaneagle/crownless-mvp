@@ -17,6 +17,7 @@
     'settlements',
     'troops',
     'items',
+    'weapon_families', // P11-01 (data/weapons.js)
     'markets',
     'quests',
     'dialogue',
@@ -64,6 +65,7 @@
         const stats = { ...it.stats };
         for (const [k, v] of Object.entries(F.slots[it.slot])) stats[k] = (stats[k] || 0) + v * n;
         items[id] = { ...it, id, name: `${it.name} +${n}`, value: Math.round(it.value * (1 + F.valuePerLevel * n)), stats, forgedFrom: it.id, forgeLevel: n };
+        if (it.combat) items[id].combat = JSON.parse(JSON.stringify(it.combat)); // P11-01: its family and its overrides, its own copy
       }
     }
   }
@@ -163,6 +165,39 @@
     flags: ['tabard', 'quiver', 'fur', 'pauldrons', 'beard', 'female'],
     long: ['spear', 'pike', 'lance'],
   };
+  /**
+   * P11-01: a weapon family's fields, or an item's `combat` overrides of them (`partial`: only what it
+   * gives), each in range. @param {any} f @param {string} at @param {boolean} partial
+   */
+  function checkCombat(f, at, partial) {
+    const out = [];
+    const RULES = {
+      hands: (v) => v === 1 || v === 2,
+      reach: (v) => Number.isFinite(v) && v > 0 && v <= 200,
+      windup: (v) => Number.isFinite(v) && v > 0 && v <= 2,
+      active: (v) => Number.isFinite(v) && v > 0 && v <= 2,
+      recovery: (v) => Number.isFinite(v) && v > 0 && v <= 3,
+      miss: (v) => Number.isFinite(v) && v >= 0 && v <= 2,
+      arc: (v) => Number.isFinite(v) && v > 0 && v <= 360,
+      maxTargets: (v) => Number.isInteger(v) && v >= 0 && v <= 20,
+      cooldown: (v) => v && typeof v === 'object' && ['hero', 'ai'].every((k) => (partial && v[k] == null) || (Number.isFinite(v[k]) && v[k] > 0 && v[k] <= 5)),
+      shield: (v) => typeof v === 'boolean',
+      look: (v) => v === null || LOOK.weapon.includes(v),
+    };
+    for (const [k, ok] of Object.entries(RULES)) {
+      if (f[k] == null) {
+        if (!partial && k !== 'look') out.push(`${at}: needs ${k}`);
+        continue;
+      }
+      if (!ok(f[k])) out.push(`${at}: bad ${k}`);
+    }
+    if (!partial && typeof f.name !== 'string') out.push(`${at}: needs a name`);
+    const r = f.ranged;
+    if (r != null && !(r.range > 0 && r.projectileSpeed > 0 && r.cooldown > 0 && r.accuracy > 0 && r.accuracy <= 1)) out.push(`${at}: ranged needs {range, projectileSpeed, cooldown, accuracy}`);
+    const known = [...Object.keys(RULES), 'ranged', ...(partial ? [] : ['id', 'name'])];
+    for (const k of Object.keys(f)) if (!known.includes(k)) out.push(`${at}: unknown field ${k}`);
+    return out;
+  }
   const isColour = (v) => typeof v === 'string' && /^#[0-9a-f]{6}$/i.test(v);
   /** Problems with a look, each starting with `at`. @param {any} look @param {string} at */
   function checkLook(look, at) {
@@ -332,6 +367,20 @@
     for (const it of Object.values(C.items || {})) {
       if (it.slot && !SLOTS.includes(it.slot)) err(`item ${it.id}: unknown slot ${it.slot}`);
       if (it.slot === 'weapon' && !(it.stats?.damage > 0)) err(`item ${it.id}: weapon needs stats.damage`);
+      // P11-01: a weapon is of a known family, and its `combat` block overrides that family within range.
+      if (it.slot === 'weapon' && !C.weapon_families?.[it.family]) err(`item ${it.id}: a weapon needs a known family (${it.family ?? 'none'})`);
+      if (it.family != null && it.slot !== 'weapon') err(`item ${it.id}: only a weapon has a family`);
+      if (it.combat != null) for (const e of checkCombat(it.combat, `item ${it.id}: combat`, true)) err(e);
+    }
+    // P11-01: weapon families (data/weapons.js), complete and in range.
+    for (const f of Object.values(C.weapon_families || {})) for (const e of checkCombat(f, `weapon family ${f.id}`, false)) err(e);
+    // A troop's weapon is a family or a weapon item, and agrees with what its look carries.
+    for (const t of Object.values(C.troops || {})) {
+      if (t.weapon == null) continue; // a pack's troop may leave it out: one from its look or role (js/profile.js)
+      const fam = C.weapon_families?.[t.weapon] ? t.weapon : C.items?.[t.weapon]?.slot === 'weapon' ? C.items[t.weapon].family : null;
+      if (!fam) err(`troop ${t.id}: unknown weapon ${t.weapon}`);
+      else if (t.look?.weapon && CL.profile && CL.profile.familyOfLook(t.look) !== fam) err(`troop ${t.id}: its weapon (${fam}) isn't what its look carries (${t.look.weapon})`);
+      if (fam && t.role === 'archer' && !C.weapon_families?.[fam]?.ranged) err(`troop ${t.id}: an archer's weapon must shoot (${fam})`);
     }
     // P10-05: origins (data/origins.js), which replace the backgrounds.
     for (const b of Object.values(C.origins || {})) {
@@ -483,5 +532,5 @@
     return errors;
   }
 
-  CL.content = { TABLES, OPTIONAL, LAWS, LOOK, checkLook, lookAgrees, table, get, troop, item, encounter, lootTable, validate, compose, init };
+  CL.content = { TABLES, OPTIONAL, LAWS, LOOK, checkLook, checkCombat, lookAgrees, table, get, troop, item, encounter, lootTable, validate, compose, init };
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -112,4 +112,13 @@
     saltreach_crossbow: { tunic: '#e2d2a8', armour: 'leather', hat: 'brim', hatColor: '#c9a55e', band: '#b0782a', weapon: 'crossbow', quiver: true },
   };
   for (var lookId in LOOKS) C.troops[lookId].look = LOOKS[lookId];
+  // P11-01: each troop's weapon (a family of data/weapons.js), the one its look carries: a club or a
+  // hammer is a mace; a bow of size 1.15 a longbow, a smaller one a shortbow. The troop's own damage,
+  // reach and shot still override the family's (P11-11 moves troops onto their weapons).
+  var LOOK_WEAPON = { sword: 'sword', axe: 'axe', greataxe: 'greataxe', spear: 'spear', pike: 'pike', lance: 'lance', crossbow: 'crossbow', club: 'mace', hammer: 'mace' };
+  Object.keys(C.troops).forEach(function (tid) {
+    var t = C.troops[tid];
+    var w = t.look?.weapon;
+    t.weapon = t.role === 'hero' ? 'unarmed' : w === 'bow' ? ((t.look.bowSize || 1) >= 1.15 ? 'longbow' : 'shortbow') : LOOK_WEAPON[w];
+  });
 })(typeof window !== 'undefined' ? window : globalThis);

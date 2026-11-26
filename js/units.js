@@ -16,9 +16,9 @@
     block: Math.cos(Math.PI / 3), // 120° frontal shield cover
   };
 
-  // GDD §6 one-handed sword timing (seconds).
-  const SWING = { windup: 0.16, active: 0.12, recovery: 0.24 };
-  SWING.total = SWING.windup + SWING.active + SWING.recovery;
+  // GDD §6 one-handed sword timing (seconds): only the sword family's default now. Every unit's own
+  // timing is its combat profile's (js/profile.js, P11-01).
+  const SWING = CL.profile.DEFAULT_TIMING;
 
   let uid = 0;
 
@@ -30,6 +30,7 @@
    */
   function makeUnit(x, y, team, troopId, soldierId = null) {
     const t = CL.content.troop(troopId);
+    const p = CL.profile.resolve({ troop: t.id }); // P11-01: the troop's combat profile
     return {
       id: ++uid,
       x,
@@ -39,13 +40,14 @@
       role: t.role, // 'hero' | 'infantry' | 'archer' | 'cavalry'
       soldierId,
       alive: true,
-      hp: t.hp,
-      maxhp: t.hp,
-      speed: t.speed,
-      damage: t.damage,
-      armor: t.armor,
-      reach: t.reach,
-      ranged: t.ranged || null,
+      hp: p.hp,
+      maxhp: p.maxhp,
+      speed: p.speed,
+      damage: p.damage,
+      armor: p.armor,
+      reach: p.reach,
+      ranged: p.ranged,
+      profile: p,
       face: 'down',
       anim: rand(0, 1),
       swing: null, // { t, hit: [ids] } while a melee swing is in progress
@@ -72,12 +74,7 @@
 
   /** 'windup' | 'active' | 'recovery' | null */
   function swingPhase(u) {
-    if (!u.swing) return null;
-    const t = u.swing.t;
-    if (t < SWING.windup) return 'windup';
-    if (t < SWING.windup + SWING.active) return 'active';
-    if (t < SWING.total) return 'recovery';
-    return null;
+    return CL.profile.phaseOf(u); // the unit's own timing (P11-01)
   }
 
   /** Windup and active frames commit the unit: facing locks and block is unavailable. */

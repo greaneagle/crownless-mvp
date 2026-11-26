@@ -1,0 +1,766 @@
+{
+  "recordedOn": "5.0.1",
+  "troops": {
+    "levy": {
+      "role": "infantry",
+      "hp": 45,
+      "damage": 7,
+      "armor": 1,
+      "reach": 48,
+      "speed": 90,
+      "ranged": null
+    },
+    "footman": {
+      "role": "infantry",
+      "hp": 60,
+      "damage": 10,
+      "armor": 3,
+      "reach": 48,
+      "speed": 90,
+      "ranged": null
+    },
+    "guard": {
+      "role": "infantry",
+      "hp": 80,
+      "damage": 14,
+      "armor": 6,
+      "reach": 48,
+      "speed": 90,
+      "ranged": null
+    },
+    "hunter": {
+      "role": "archer",
+      "hp": 60,
+      "damage": 10,
+      "armor": 2,
+      "reach": 48,
+      "speed": 84,
+      "ranged": {
+        "projectileSpeed": 240,
+        "range": 225,
+        "cooldown": 1.6,
+        "accuracy": 0.6
+      }
+    },
+    "longbowman": {
+      "role": "archer",
+      "hp": 80,
+      "damage": 14,
+      "armor": 5,
+      "reach": 48,
+      "speed": 84,
+      "ranged": {
+        "projectileSpeed": 240,
+        "range": 225,
+        "cooldown": 1.6,
+        "accuracy": 0.6
+      }
+    },
+    "rider": {
+      "role": "cavalry",
+      "hp": 90,
+      "damage": 14,
+      "armor": 6,
+      "reach": 70,
+      "speed": 135,
+      "ranged": null
+    },
+    "recruit": {
+      "role": "infantry",
+      "hp": 45,
+      "damage": 7,
+      "armor": 1,
+      "reach": 48,
+      "speed": 90,
+      "ranged": null
+    },
+    "spearman": {
+      "role": "infantry",
+      "hp": 60,
+      "damage": 11,
+      "armor": 3,
+      "reach": 70,
+      "speed": 88,
+      "ranged": null
+    },
+    "legionary": {
+      "role": "infantry",
+      "hp": 80,
+      "damage": 14,
+      "armor": 6,
+      "reach": 48,
+      "speed": 90,
+      "ranged": null
+    },
+    "skirmisher": {
+      "role": "archer",
+      "hp": 60,
+      "damage": 10,
+      "armor": 2,
+      "reach": 48,
+      "speed": 84,
+      "ranged": {
+        "projectileSpeed": 240,
+        "range": 225,
+        "cooldown": 1.6,
+        "accuracy": 0.6
+      }
+    },
+    "marksman": {
+      "role": "archer",
+      "hp": 80,
+      "damage": 14,
+      "armor": 5,
+      "reach": 48,
+      "speed": 84,
+      "ranged": {
+        "projectileSpeed": 240,
+        "range": 225,
+        "cooldown": 1.6,
+        "accuracy": 0.6
+      }
+    },
+    "horse_scout": {
+      "role": "cavalry",
+      "hp": 90,
+      "damage": 14,
+      "armor": 6,
+      "reach": 70,
+      "speed": 135,
+      "ranged": null
+    },
+    "clansman": {
+      "role": "infantry",
+      "hp": 48,
+      "damage": 7,
+      "armor": 1,
+      "reach": 48,
+      "speed": 86,
+      "ranged": null
+    },
+    "shieldmaiden": {
+      "role": "infantry",
+      "hp": 46,
+      "damage": 7,
+      "armor": 1,
+      "reach": 48,
+      "speed": 90,
+      "ranged": null
+    },
+    "shield_sister": {
+      "role": "infantry",
+      "hp": 60,
+      "damage": 11,
+      "armor": 3,
+      "reach": 48,
+      "speed": 88,
+      "ranged": null
+    },
+    "hearth_maiden": {
+      "role": "infantry",
+      "hp": 82,
+      "damage": 15,
+      "armor": 6,
+      "reach": 48,
+      "speed": 86,
+      "ranged": null
+    },
+    "axeman": {
+      "role": "infantry",
+      "hp": 62,
+      "damage": 12,
+      "armor": 3,
+      "reach": 48,
+      "speed": 84,
+      "ranged": null
+    },
+    "huscarl": {
+      "role": "infantry",
+      "hp": 86,
+      "damage": 15,
+      "armor": 7,
+      "reach": 48,
+      "speed": 82,
+      "ranged": null
+    },
+    "fell_archer": {
+      "role": "archer",
+      "hp": 60,
+      "damage": 10,
+      "armor": 2,
+      "reach": 48,
+      "speed": 82,
+      "ranged": {
+        "projectileSpeed": 240,
+        "range": 215,
+        "cooldown": 1.6,
+        "accuracy": 0.6
+      }
+    },
+    "fell_warden": {
+      "role": "archer",
+      "hp": 82,
+      "damage": 14,
+      "armor": 5,
+      "reach": 48,
+      "speed": 82,
+      "ranged": {
+        "projectileSpeed": 240,
+        "range": 215,
+        "cooldown": 1.6,
+        "accuracy": 0.6
+      }
+    },
+    "hill_rider": {
+      "role": "cavalry",
+      "hp": 94,
+      "damage": 15,
+      "armor": 6,
+      "reach": 70,
+      "speed": 125,
+      "ranged": null
+    },
+    "militia": {
+      "role": "infantry",
+      "hp": 44,
+      "damage": 7,
+      "armor": 1,
+      "reach": 48,
+      "speed": 92,
+      "ranged": null
+    },
+    "popolana": {
+      "role": "infantry",
+      "hp": 42,
+      "damage": 7,
+      "armor": 1,
+      "reach": 48,
+      "speed": 94,
+      "ranged": null
+    },
+    "balestriera": {
+      "role": "archer",
+      "hp": 56,
+      "damage": 13,
+      "armor": 2,
+      "reach": 48,
+      "speed": 86,
+      "ranged": {
+        "projectileSpeed": 300,
+        "range": 240,
+        "cooldown": 2.2,
+        "accuracy": 0.72
+      }
+    },
+    "arbalestriera": {
+      "role": "archer",
+      "hp": 76,
+      "damage": 18,
+      "armor": 5,
+      "reach": 48,
+      "speed": 86,
+      "ranged": {
+        "projectileSpeed": 300,
+        "range": 240,
+        "cooldown": 2.2,
+        "accuracy": 0.72
+      }
+    },
+    "pikeman": {
+      "role": "infantry",
+      "hp": 58,
+      "damage": 11,
+      "armor": 3,
+      "reach": 72,
+      "speed": 88,
+      "ranged": null
+    },
+    "pavisier": {
+      "role": "infantry",
+      "hp": 80,
+      "damage": 13,
+      "armor": 6,
+      "reach": 48,
+      "speed": 88,
+      "ranged": null
+    },
+    "crossbowman": {
+      "role": "archer",
+      "hp": 58,
+      "damage": 13,
+      "armor": 2,
+      "reach": 48,
+      "speed": 84,
+      "ranged": {
+        "projectileSpeed": 300,
+        "range": 240,
+        "cooldown": 2.2,
+        "accuracy": 0.7
+      }
+    },
+    "arbalester": {
+      "role": "archer",
+      "hp": 78,
+      "damage": 18,
+      "armor": 5,
+      "reach": 48,
+      "speed": 84,
+      "ranged": {
+        "projectileSpeed": 300,
+        "range": 240,
+        "cooldown": 2.2,
+        "accuracy": 0.7
+      }
+    },
+    "light_horse": {
+      "role": "cavalry",
+      "hp": 80,
+      "damage": 13,
+      "armor": 4,
+      "reach": 70,
+      "speed": 150,
+      "ranged": null
+    },
+    "outlaw_huntress": {
+      "role": "archer",
+      "hp": 52,
+      "damage": 10,
+      "armor": 1,
+      "reach": 48,
+      "speed": 92,
+      "ranged": {
+        "projectileSpeed": 240,
+        "range": 215,
+        "cooldown": 1.6,
+        "accuracy": 0.6
+      }
+    },
+    "looter": {
+      "role": "infantry",
+      "hp": 45,
+      "damage": 7,
+      "armor": 1,
+      "reach": 48,
+      "speed": 90,
+      "ranged": null
+    },
+    "reaver": {
+      "role": "infantry",
+      "hp": 60,
+      "damage": 10,
+      "armor": 3,
+      "reach": 48,
+      "speed": 90,
+      "ranged": null
+    },
+    "mercenary": {
+      "role": "infantry",
+      "hp": 60,
+      "damage": 10,
+      "armor": 3,
+      "reach": 48,
+      "speed": 92,
+      "ranged": null
+    },
+    "sellsword": {
+      "role": "infantry",
+      "hp": 80,
+      "damage": 15,
+      "armor": 5,
+      "reach": 48,
+      "speed": 92,
+      "ranged": null
+    },
+    "ostrand_levy": {
+      "role": "infantry",
+      "hp": 45,
+      "damage": 7,
+      "armor": 1,
+      "reach": 48,
+      "speed": 90,
+      "ranged": null
+    },
+    "ostrand_shieldman": {
+      "role": "infantry",
+      "hp": 62,
+      "damage": 10,
+      "armor": 4,
+      "reach": 48,
+      "speed": 88,
+      "ranged": null
+    },
+    "ostrand_bowman": {
+      "role": "archer",
+      "hp": 58,
+      "damage": 10,
+      "armor": 2,
+      "reach": 48,
+      "speed": 84,
+      "ranged": {
+        "projectileSpeed": 240,
+        "range": 230,
+        "cooldown": 1.6,
+        "accuracy": 0.6
+      }
+    },
+    "saltreach_militia": {
+      "role": "infantry",
+      "hp": 44,
+      "damage": 7,
+      "armor": 1,
+      "reach": 48,
+      "speed": 92,
+      "ranged": null
+    },
+    "saltreach_pikeman": {
+      "role": "infantry",
+      "hp": 58,
+      "damage": 11,
+      "armor": 3,
+      "reach": 72,
+      "speed": 88,
+      "ranged": null
+    },
+    "saltreach_crossbow": {
+      "role": "archer",
+      "hp": 58,
+      "damage": 13,
+      "armor": 2,
+      "reach": 48,
+      "speed": 84,
+      "ranged": {
+        "projectileSpeed": 300,
+        "range": 240,
+        "cooldown": 2.2,
+        "accuracy": 0.7
+      }
+    },
+    "hero": {
+      "role": "hero",
+      "hp": 85,
+      "damage": 18,
+      "armor": 0,
+      "reach": 67,
+      "speed": 142,
+      "ranged": null
+    }
+  },
+  "hero": {
+    "unarmed": {
+      "hp": 90,
+      "maxhp": 90,
+      "damage": 6.18,
+      "armor": 1,
+      "canBlock": true
+    },
+    "worn_sword": {
+      "hp": 90,
+      "maxhp": 90,
+      "damage": 17.51,
+      "armor": 1,
+      "canBlock": true
+    },
+    "hand_axe": {
+      "hp": 90,
+      "maxhp": 90,
+      "damage": 19.57,
+      "armor": 1,
+      "canBlock": true
+    },
+    "arming_sword": {
+      "hp": 90,
+      "maxhp": 90,
+      "damage": 21.63,
+      "armor": 1,
+      "canBlock": true
+    },
+    "war_mace": {
+      "hp": 90,
+      "maxhp": 90,
+      "damage": 22.66,
+      "armor": 1,
+      "canBlock": true
+    },
+    "knights_sword": {
+      "hp": 90,
+      "maxhp": 90,
+      "damage": 25.75,
+      "armor": 1,
+      "canBlock": true
+    },
+    "kit": {
+      "hp": 90,
+      "maxhp": 90,
+      "damage": 21.63,
+      "armor": 6,
+      "canBlock": true
+    }
+  },
+  "heroPower": 7.504285714285715,
+  "mara": {
+    "hp": 80,
+    "maxhp": 80,
+    "damage": 12.75,
+    "armor": 3,
+    "speed": 100,
+    "reach": 50
+  },
+  "retinue": {
+    "sigrun": {
+      "hp": 88,
+      "maxhp": 88,
+      "damage": 15.200000000000001,
+      "armor": 5,
+      "speed": 96,
+      "reach": 52
+    },
+    "iacopo": {
+      "hp": 76,
+      "maxhp": 76,
+      "damage": 16.8,
+      "armor": 3,
+      "speed": 98,
+      "reach": 50
+    },
+    "livia": {
+      "hp": 80,
+      "maxhp": 80,
+      "damage": 11.899999999999999,
+      "armor": 5,
+      "speed": 96,
+      "reach": 50
+    }
+  },
+  "lordBattle": [
+    {
+      "troop": "hero",
+      "role": "hero",
+      "companion": null,
+      "named": null,
+      "hp": 90,
+      "maxhp": 90,
+      "damage": 17.51,
+      "armor": 1,
+      "reach": 67,
+      "speed": 142,
+      "ranged": null,
+      "canBlock": true
+    },
+    {
+      "troop": "levy",
+      "role": "infantry",
+      "companion": null,
+      "named": null,
+      "hp": 45,
+      "maxhp": 45,
+      "damage": 7,
+      "armor": 1,
+      "reach": 48,
+      "speed": 90,
+      "ranged": null,
+      "canBlock": null
+    },
+    {
+      "troop": "levy",
+      "role": "infantry",
+      "companion": null,
+      "named": null,
+      "hp": 45,
+      "maxhp": 45,
+      "damage": 7,
+      "armor": 1,
+      "reach": 48,
+      "speed": 90,
+      "ranged": null,
+      "canBlock": null
+    },
+    {
+      "troop": "levy",
+      "role": "infantry",
+      "companion": null,
+      "named": null,
+      "hp": 45,
+      "maxhp": 45,
+      "damage": 7,
+      "armor": 1,
+      "reach": 48,
+      "speed": 90,
+      "ranged": null,
+      "canBlock": null
+    },
+    {
+      "troop": "hunter",
+      "role": "archer",
+      "companion": null,
+      "named": null,
+      "hp": 60,
+      "maxhp": 60,
+      "damage": 10,
+      "armor": 2,
+      "reach": 48,
+      "speed": 84,
+      "ranged": {
+        "projectileSpeed": 240,
+        "range": 225,
+        "cooldown": 1.6,
+        "accuracy": 0.6
+      },
+      "canBlock": null
+    },
+    {
+      "troop": "hunter",
+      "role": "archer",
+      "companion": null,
+      "named": null,
+      "hp": 60,
+      "maxhp": 60,
+      "damage": 10,
+      "armor": 2,
+      "reach": 48,
+      "speed": 84,
+      "ranged": {
+        "projectileSpeed": 240,
+        "range": 225,
+        "cooldown": 1.6,
+        "accuracy": 0.6
+      },
+      "canBlock": null
+    },
+    {
+      "troop": "mercenary",
+      "role": "infantry",
+      "companion": "mara",
+      "named": null,
+      "hp": 80,
+      "maxhp": 80,
+      "damage": 12.75,
+      "armor": 3,
+      "reach": 50,
+      "speed": 100,
+      "ranged": null,
+      "canBlock": null
+    },
+    {
+      "troop": "mercenary",
+      "role": "infantry",
+      "companion": "sigrun",
+      "named": null,
+      "hp": 88,
+      "maxhp": 88,
+      "damage": 15.200000000000001,
+      "armor": 5,
+      "reach": 52,
+      "speed": 96,
+      "ranged": null,
+      "canBlock": null
+    },
+    {
+      "troop": "footman",
+      "role": "infantry",
+      "companion": null,
+      "named": "Lord Golden",
+      "hp": 120,
+      "maxhp": 120,
+      "damage": 13.5,
+      "armor": 3,
+      "reach": 48,
+      "speed": 90,
+      "ranged": null,
+      "canBlock": null
+    },
+    {
+      "troop": "footman",
+      "role": "infantry",
+      "companion": null,
+      "named": null,
+      "hp": 60,
+      "maxhp": 60,
+      "damage": 10,
+      "armor": 3,
+      "reach": 48,
+      "speed": 90,
+      "ranged": null,
+      "canBlock": null
+    },
+    {
+      "troop": "footman",
+      "role": "infantry",
+      "companion": null,
+      "named": null,
+      "hp": 60,
+      "maxhp": 60,
+      "damage": 10,
+      "armor": 3,
+      "reach": 48,
+      "speed": 90,
+      "ranged": null,
+      "canBlock": null
+    },
+    {
+      "troop": "footman",
+      "role": "infantry",
+      "companion": null,
+      "named": null,
+      "hp": 60,
+      "maxhp": 60,
+      "damage": 10,
+      "armor": 3,
+      "reach": 48,
+      "speed": 90,
+      "ranged": null,
+      "canBlock": null
+    },
+    {
+      "troop": "hunter",
+      "role": "archer",
+      "companion": null,
+      "named": null,
+      "hp": 60,
+      "maxhp": 60,
+      "damage": 10,
+      "armor": 2,
+      "reach": 48,
+      "speed": 84,
+      "ranged": {
+        "projectileSpeed": 240,
+        "range": 225,
+        "cooldown": 1.6,
+        "accuracy": 0.6
+      },
+      "canBlock": null
+    },
+    {
+      "troop": "hunter",
+      "role": "archer",
+      "companion": null,
+      "named": null,
+      "hp": 60,
+      "maxhp": 60,
+      "damage": 10,
+      "armor": 2,
+      "reach": 48,
+      "speed": 84,
+      "ranged": {
+        "projectileSpeed": 240,
+        "range": 225,
+        "cooldown": 1.6,
+        "accuracy": 0.6
+      },
+      "canBlock": null
+    },
+    {
+      "troop": "rider",
+      "role": "cavalry",
+      "companion": null,
+      "named": null,
+      "hp": 90,
+      "maxhp": 90,
+      "damage": 14,
+      "armor": 6,
+      "reach": 70,
+      "speed": 135,
+      "ranged": null,
+      "canBlock": null
+    }
+  ]
+}

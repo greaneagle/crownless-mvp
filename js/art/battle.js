@@ -107,14 +107,9 @@
   // ---- Poses ----
 
   function poseOf(u, tr, t, reduced) {
-    const SW = CL.units.SWING;
     const P = { face: u.face, walk: tr?.walk || 0, move: tr?.move || 0, t: t + (u.id % 7), reduced, scale: FIG, hface: tr?.hface || 'right', aim: u.face };
-    const ph = CL.units.swingPhase(u);
-    if (ph) {
-      const st = u.swing.t;
-      const k = ph === 'windup' ? st / SW.windup : ph === 'active' ? (st - SW.windup) / SW.active : (st - SW.windup - SW.active) / SW.recovery;
-      P.atk = { phase: ph, k: Math.max(0, Math.min(1, k)) };
-    }
+    const atk = CL.profile.attackProgress(u); // the unit's own timing (P11-01): nothing else in the art reads it
+    if (atk) P.atk = atk;
     P.guard = Boolean(u.guard);
     if (u.ranged) {
       const cd = u.ranged.cooldown || 1.6;

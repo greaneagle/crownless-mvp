@@ -7,7 +7,7 @@ const { loadContent, CONTENT_MODULES } = require('./helpers/load');
 const C = loadContent();
 
 test('every content module loads and every table is non-empty', () => {
-  assert.equal(CONTENT_MODULES.length, 22); // 4.5.0 added data/origins.js (P10-05); 1.4.0 added data/names.js (V2-03); 2.19.0 data/world_events.js (P7-08); 2.20.0 data/tournaments.js (P7-09); 2.21.0 data/businesses.js (P7-10)
+  assert.equal(CONTENT_MODULES.length, 23); // 5.1.0 added data/weapons.js (P11-01); 4.5.0 added data/origins.js (P10-05); 1.4.0 added data/names.js (V2-03); 2.19.0 data/world_events.js (P7-08); 2.20.0 data/tournaments.js (P7-09); 2.21.0 data/businesses.js (P7-10)
   for (const [name, table] of Object.entries(C)) {
     assert.ok(Object.keys(table).length > 0, `empty table: ${name}`);
   }

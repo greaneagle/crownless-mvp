@@ -55,7 +55,7 @@ The vocabulary is `CL.content.LOOK` (`js/content.js`), and the content checks re
 **A pose** is what happens this frame:
 - `face`;
 - `walk` and `move` (the stride);
-- `atk { phase: windup | active | recovery, k }` (the swing: a blade rises, sweeps and returns; a spear levels and thrusts);
+- `atk { phase: windup | active | recovery, k }` (the swing: a blade rises, sweeps and returns; a spear levels and thrusts), from `CL.profile.attackProgress(u)`: the unit's own weapon timing (P11-01). Nothing else in the art reads a timing;
 - `guard` (the shield across the body);
 - `draw` and `shot` (a bow drawn while reloading and loosed; a crossbow's string drawn back over its slower load);
 - `hit` (a pale flash and a small recoil);

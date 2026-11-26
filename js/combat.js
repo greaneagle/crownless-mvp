@@ -5,11 +5,12 @@
   'use strict';
   const CL = root.Crownless;
   const { rand, dist, normalize } = CL.util;
-  const { ARC, SWING, makeUnit, inArc, swingPhase, isCommitted, aim, move, push } = CL.units;
+  const { ARC, makeUnit, inArc, swingPhase, isCommitted, aim, move, push } = CL.units;
+  const P = CL.profile; // P11-01: each fighter's timing, cooldown, arc and targets come from its profile
 
-  // Time from one melee attack start to the next (archers use their troop's ranged.cooldown).
-  // Melee swings can't restart before SWING.total.
-  const COOLDOWN = { hero: SWING.total, melee: 0.86 };
+  // Time from one melee attack start to the next (archers use their troop's ranged.cooldown): each
+  // fighter's profile (`P.cooldownOf`). These are the defaults of a fighter without one.
+  const COOLDOWN = { hero: P.DEFAULT_COOLDOWN.hero, melee: P.DEFAULT_COOLDOWN.ai };
   const ARROW = { life: 1.6, hitRadius: 19, rangeSlack: 20, aimHeight: 16 };
   // A missed shot (1 - accuracy) is thrown off by 0.12–0.25 rad: enough to miss a standing target.
   const MISS_ANGLE = [0.12, 0.25];
@@ -120,7 +121,7 @@
   }
   // Start a swing just inside reach; archers loose at their troop range.
   // An archer on high ground shoots further (P7-11, js/formations.js).
-  const fireRange = (u) => (u.ranged ? CL.formations.rangeOf(u) : u.reach - 1);
+  const fireRange = (u) => (u.ranged ? CL.formations.rangeOf(u) : P.strikeRange(u));
 
   /** GDD §6: Damage = max(1, round(Raw × 100 / (100 + 4 × Armor))). */
   /** Battle sounds: the hero's own are loudest, everyone else's quieter (js/audio.js rate-limits them). */
@@ -182,7 +183,10 @@
     CL.assault?.begin(g, enc); // a siege's assault (P8-06b): the gate, the ram, the courtyard
     const anchor = g.battleMap.spawn.hero;
     g.hero = makeUnit(anchor.x, anchor.y, 'ally', 'hero');
-    Object.assign(g.hero, CL.character.heroCombat(CL.campaign, g.duel ? g.duel.kit : CL.campaign?.equipment)); // HP, damage, armor, shield from the character (and the kit worn)
+    // HP, damage, armour, shield and weapon from the character (and the kit worn): the hero's profile (P11-01).
+    const heroProfile = P.resolve({ hero: CL.campaign, equipment: g.duel ? g.duel.kit : CL.campaign?.equipment });
+    P.apply(g.hero, heroProfile);
+    g.hero.canBlock = heroProfile.canBlock;
     g.hero.face = 'right';
     // Units start with a random cooldown so the AI's first blows are staggered; the player's hero must
     // be ready at once, or an Attack pressed in the first moments outlasts the 100 ms input buffer and
@@ -242,13 +246,15 @@
     if (!alone && CL.companion.fit()) {
       const m = CL.companion.get();
       const u = makeUnit(anchor.x - 40, anchor.y + 34, 'ally', 'mercenary');
-      Object.assign(u, CL.companion.combat(), { companion: m.id, role: 'infantry', div: 'infantry' });
+      P.apply(u, P.resolve({ companion: CL.content.table('companions')[m.id], equipment: m.equipment }));
+      Object.assign(u, { companion: m.id, role: 'infantry', div: 'infantry' });
       CL.units.resolveObstacles(u);
       g.allies.push(u);
     }
     retinue.forEach((m, i) => {
       const u = makeUnit(anchor.x - 40 - (i + 1) * 30, anchor.y + 34 + ((i % 2) * 2 - 1) * 26, 'ally', 'mercenary');
-      Object.assign(u, CL.retinue.combat(m), { companion: m.id, role: 'infantry', div: 'infantry' });
+      P.apply(u, P.resolve({ companion: CL.content.table('companions')[m.id], equipment: m.equipment }));
+      Object.assign(u, { companion: m.id, role: 'infantry', div: 'infantry' });
       CL.units.resolveObstacles(u);
       g.allies.push(u);
     });
@@ -272,10 +278,17 @@
     enemyPlan(g); // P9-B4: the enemy's own plan (layer 1, and layer 3's placement), in a battle with an army
     // P8-01: a lord fights in person, at the head of the first wave: their realm's best foot soldier, stronger, with their name.
     const lead = enc.leader && !g.duel ? g.enemies.find((u) => u.troop === enc.leader.troop) || g.enemies[0] : null;
-    if (lead) Object.assign(lead, { hp: Math.round(lead.hp * enc.leader.hp), maxhp: Math.round(lead.maxhp * enc.leader.hp), damage: lead.damage * enc.leader.damage, named: enc.leader.name, house: enc.leader.house || null });
+    if (lead) {
+      P.apply(lead, P.resolve({ troop: lead.troop }, { leader: enc.leader }), ['hp', 'maxhp', 'damage']); // a lord's profile: their troop's, stronger
+      Object.assign(lead, { named: enc.leader.name, house: enc.leader.house || null });
+    }
     if (g.wagon) CL.ui.message('Keep the Reavers off the wagon: if it burns, the caravan is lost');
     CL.assault?.announce(g); // the walls (P8-06b)
-    if (g.duel) Object.assign(g.enemies[0], { hp: g.duel.opponent.hp, maxhp: g.duel.opponent.hp, damage: g.duel.opponent.damage, armor: g.duel.opponent.armor, duelist: g.duel.opponent.name });
+    if (g.duel) {
+      const f = g.enemies[0];
+      P.apply(f, P.resolve({ troop: f.troop }, { duel: g.duel.opponent }), ['hp', 'maxhp', 'damage', 'armor']); // the round's fighter (js/tourney.js)
+      f.duelist = g.duel.opponent.name;
+    }
     CL.reinforce.begin(g); // nearby parties that will join, and when (V2-09)
     Object.assign(g, { overview: false, cameraFocus: null, scanIn: 0 });
     CL.camera.snap(g); // one-screen maps keep the camera at 0,0
@@ -556,7 +569,7 @@
     }
     // AI soldiers turn to their target as they wind up; the hero swings where they face.
     if (u.role !== 'hero' && u.target?.alive) aim(u, u.target);
-    u.attackCooldown = u.role === 'hero' ? COOLDOWN.hero : COOLDOWN.melee;
+    u.attackCooldown = P.cooldownOf(u);
     u.swing = { t: 0, hit: [] };
     sound('swing', u);
     return true;
@@ -565,9 +578,12 @@
   /** During the active window, hit every opponent in reach and arc — each at most once per swing. */
   function resolveSwing(u) {
     const wedge = CL.formations.blow(game(), u); // a wedge's first blow lands harder (P7-11)
+    const arc = P.arcOf(u);
+    const most = P.targetsOf(u); // how many one blow can strike (every one in reach and arc, for now)
     for (const v of opponentsOf(u)) {
+      if (u.swing.hit.length >= most) break;
       if (!v?.alive || u.swing.hit.includes(v.id)) continue;
-      if (dist(u, v) > u.reach || !inArc(u, v, ARC.attack)) continue;
+      if (dist(u, v) > u.reach || !inArc(u, v, arc)) continue;
       u.swing.hit.push(v.id);
       hit(v, u.damage * (u.chargeBonus || 1) * (u.moraleMul || 1) * wedge, u);
       if (wedge > 1) v.flankedAt = game().t; // the wedge's blow shakes them as a flank blow does
@@ -636,7 +652,7 @@
     u.momentum = Math.min(1, u.momentum + dt / CAVALRY.rampSeconds);
     if (was < CAVALRY.chargeMomentum && u.momentum >= CAVALRY.chargeMomentum) sound('horse', u); // hooves at full gallop
     ride(u, dx, dy, dt, 0.5 + 0.5 * u.momentum);
-    if (dist(u, target) < u.reach - 1 && !u.swing && u.attackCooldown <= 1e-6) {
+    if (dist(u, target) < P.strikeRange(u) && !u.swing && u.attackCooldown <= 1e-6) {
       u.chargeBonus = u.momentum >= CAVALRY.chargeMomentum ? CAVALRY.chargeBonus : 1;
       startAttack(u);
     }

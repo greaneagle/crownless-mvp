@@ -147,17 +147,8 @@
    * tournament's loaner kit, P7-09); the hero's own gear is never moved for it.
    */
   function heroCombat(c = camp(), equipment = c.equipment) {
-    const weapon = equipment?.weapon ? CL.content.item(equipment.weapon) : null;
-    const shield = equipment?.offhand ? CL.content.item(equipment.offhand) : null;
-    const hp = 60 + 5 * attribute('str', c);
-    const baseDamage = weapon ? weapon.stats.damage : UNARMED_DAMAGE;
-    return {
-      hp,
-      maxhp: hp,
-      damage: baseDamage * (1 + SKILL_DAMAGE * skill('one_handed', c)),
-      armor: equippedItems(c, equipment).reduce((sum, it) => sum + (it.stats.armor || 0), 0),
-      canBlock: Boolean(shield?.stats.block),
-    };
+    const p = CL.profile.resolve({ hero: c, equipment }); // P11-01: one profile (js/profile.js)
+    return { hp: p.hp, maxhp: p.maxhp, damage: p.damage, armor: p.armor, canBlock: p.canBlock };
   }
 
   /** World-map speed multiplier from Pathfinding and a horse. */
@@ -250,6 +241,7 @@
     MAX_SKILL,
     MAX_ATTRIBUTE,
     UNARMED_DAMAGE,
+    SKILL_DAMAGE,
     xpToNext,
     gainXp,
     spendSkill,

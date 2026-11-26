@@ -4040,7 +4040,7 @@ The aim: easy to fight, rewarding to fight well, meaningful to command. The play
 | ID | Task | Size | Version | Readiness |
 |---|---|---|---|---|
 | P11-00 | Baseline, measuring tools and the inherited checkpoint | M | 5.0.1 | ✅ Done (the owner's H-00 to come) |
-| P11-01 | One combat profile for every fighter (no change in play) | L | 5.1.0 | Ready |
+| P11-01 | One combat profile for every fighter (no change in play) | L | 5.1.0 | ✅ Done |
 | P11-02 | Carried and wielded: loadouts and one gear check | M–L | 5.2.0 | Ready |
 | P11-03 | The progression budget and equipment requirements | M–L | 5.3.0 | Ready |
 | P11-04 | The equipment you see | M–L | 5.4.0 | Specified |
@@ -4224,6 +4224,31 @@ The aim: easy to fight, rewarding to fight well, meaningful to command. The play
 - **Play:** one battle in the preview at 812×375; a screenshot.
 - **Explain:** none.
 - **Not here:** any change a player could notice.
+
+**Done (5.1.0).** Every battle plays as in 5.0.1, frame for frame.
+- **Built:**
+  - `data/weapons.js` (`C.weapon_families`, 13 families including `unarmed`). Every melee timing equals 5.0.0's sword: `maxTargets` 0 (everyone), `miss` 0, `arc` 90°, `cooldown { hero: 0.52, ai: 0.86 }`.
+  - A `family` on the five weapons. A `weapon` on every troop, derived in `data/troops.js` from its look: a club is a mace; a bow of size 1.15 a longbow, else a shortbow; the hero `unarmed`. The troop's `damage`, `reach` and `ranged` still override the family.
+  - `js/profile.js`: `resolve` for a troop, the hero in any gear and a companion, with `leader` and `duel` contexts; `apply` and `of`; `phaseOf` and `attackProgress`; `cooldownOf`, `arcOf`, `targetsOf`, `strikeRange`. `SWING` is now only `CL.profile.DEFAULT_TIMING`.
+- **Moved onto the profile:**
+  - `units.makeUnit` and `swingPhase`;
+  - `combat` (`startAttack`'s cooldown; `resolveSwing`'s arc and target cap; `fireRange` and `cavalryAi`'s strike range; the hero, Mara, the retinue, a lord and a tournament fighter at battle start);
+  - `groups.shouldGuard` (the attacker's arc);
+  - `character.heroCombat`, `companion.combat` and `retinue.combat` (each now a view of `resolve`);
+  - `autoresolve.heroPower`;
+  - the art's `poseOf` (`attackProgress`).
+- **Content checks:** a weapon needs a known family and only a weapon has one; every family is complete and in range, as is an item's `combat` block (unknown fields refused); a troop's `weapon` is known, agrees with its look, and shoots if it's an archer. Forged pieces keep their family and get their own copy of the `combat` block. Packs may add families and overrides. A pack's troop without a weapon gets one from its look or role.
+- **Measured:** the golden battles (`tests/golden-battles.test.js`, `tests/fixtures/golden/battles.json`, recorded on 5.0.1 before any change) are identical frame for frame:
+  - the benchmark's battle at 40 for 30 s;
+  - the five parity scenarios fought by the masher;
+  - a tournament bout;
+  - a lord's battle with Mara and Sigrun (added to cover the companions and the leader);
+  - a practice assault.
+
+  `node scripts/parity.js 40` gives P11-00's table to the digit. `npm run bench` at 200: 3.18 ms mean (P11-00: 3.15, +1%).
+- **Tests:** `tests/profile.test.js` (9), including every fighter's numbers against `tests/fixtures/golden/fighters.json` and the grep for `SWING.`, `COOLDOWN.` and `.reach - 1` outside the profile; `tests/golden-battles.test.js` (11). `tests/content.test.js` counts 23 data files. `npm test` 967 pass; lint as before (2 old warnings); browser `battle`, `tourney` and `art` specs, 30 on desktop and phone. A practice battle looked at headless at 812×375: drawn as before.
+- **Not done:** the optional Debug line on a unit's profile.
+- **Slow files:** none run (none changed). The golden battles stand in for `battle-parity`, which stays on the night run.
 
 ---
 

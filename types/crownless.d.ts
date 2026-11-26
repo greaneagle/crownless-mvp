@@ -533,6 +533,38 @@ declare global {
 
   // ---- Battles ----
 
+  /**
+   * A fighter's combat profile (P11-01, js/profile.js; docs/PHASE-11-PLAN.md §6.2): what its weapon
+   * does and the numbers its body starts a battle with, resolved from a weapon family (data/weapons.js),
+   * the item or troop that overrides it, and the wielder.
+   */
+  interface Profile {
+    family: string;
+    hands: 1 | 2;
+    hp: number;
+    maxhp: number;
+    damage: number;
+    armor: number;
+    speed: number;
+    reach: number;
+    ranged: Record<string, number> | null;
+    canBlock: boolean;
+    /** Seconds: the swing's three parts and their sum. */
+    timing: { windup: number; active: number; recovery: number; total: number };
+    /** Extra recovery when a swing hits nothing (seconds). */
+    miss: number;
+    /** The cone of a blow, as the minimum dot product against the facing. */
+    arc: number;
+    /** How many one blow can strike (Infinity: every one in reach and arc). */
+    maxTargets: number;
+    /** From one attack's start to the next: the hero's and everyone else's. */
+    cooldown: { hero: number; ai: number };
+    /** Whether a shield can be carried with it. */
+    shield: boolean;
+    /** The art kit's weapon part. */
+    look: string | null;
+  }
+
   /** A unit on the battlefield (hero, ally or enemy). Built by CL.units.makeUnit. */
   interface Unit {
     id: number;
@@ -552,6 +584,8 @@ declare global {
     armor: number;
     reach: number;
     ranged: Record<string, number> | null;
+    /** Its combat profile (P11-01): CL.profile.of(u). The wagon has none. */
+    profile?: Profile;
     face: 'up' | 'down' | 'left' | 'right';
     kills?: number;
     companion?: ContentId;

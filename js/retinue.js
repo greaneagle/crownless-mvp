@@ -176,11 +176,8 @@
 
   /** Their battle numbers from their own stats and gear (as js/companion.js does for Mara). */
   function combat(m) {
-    const d = def(m.id);
-    const item = (slot) => (m.equipment[slot] ? CL.content.item(m.equipment[slot]) : null);
-    const weapon = item('weapon');
-    const armor = d.armor + d.gearSlots.reduce((sum, slot) => sum + (item(slot)?.stats.armor || 0), 0);
-    return { hp: d.hp, maxhp: d.hp, damage: weapon ? weapon.stats.damage * d.weaponFactor : d.unarmedDamage, armor, speed: d.speed, reach: d.reach };
+    const p = CL.profile.resolve({ companion: def(m.id), equipment: m.equipment }); // P11-01: one profile
+    return { hp: p.hp, maxhp: p.maxhp, damage: p.damage, armor: p.armor, speed: p.speed, reach: p.reach };
   }
 
   /** Auto-resolve strength of one (about a tier 3 soldier). */

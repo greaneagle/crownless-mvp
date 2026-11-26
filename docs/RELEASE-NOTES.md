@@ -1,5 +1,17 @@
 # Crownless — Release Notes
 
+## v5.1.0 — One combat profile for every fighter (P11-01) · 2026-11-26
+
+Nothing a player can see or feel changed: every battle plays exactly as in 5.0.1. Each fighter now has one **combat profile** that says what their weapon does. Every later Phase 11 weapon and rule is a change to it.
+
+### Under the hood
+- **Weapon families** (`data/weapons.js`): sword, axe, mace, greatsword, greataxe, spear, pike, lance, shortbow, longbow, composite bow, crossbow, unarmed. For now each melee family keeps 5.0.0's timing.
+  - Every weapon item names its family.
+  - Every troop names its weapon, the one its look carries. Its own damage, reach and shot still apply.
+- **One profile** (`js/profile.js`) is read by the combat, the AI, the shields, the art's poses and the auto-resolve: timing, cooldowns, the cone of a blow, how many it strikes, the strike range. The hero, Mara, the retinue, a lord in person and a tournament's fighter are all built through it.
+- **Golden battles** (`tests/golden-battles.test.js`): ten seeded battles are compared frame by frame with 5.0.1 and are identical. They include the benchmark's, the five parity scenarios, a tournament bout, a lord's battle with the companions, and an assault.
+- **Packs** may add weapon families and give a weapon a `combat` block of overrides; the checks keep them in range (`docs/WORLD-FORMAT.md`).
+
 ## v5.0.1 — The Phase 11 baseline (P11-00) · 2026-11-26
 
 The first step of Phase 11, "The Art of War". Nothing in play changed. The tools that measure how much timing, equipment and command matter are built, and 5.0.0's numbers are recorded in `docs/PHASE-11-VALIDATION.md`.
