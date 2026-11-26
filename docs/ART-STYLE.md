@@ -133,6 +133,16 @@ A new obstacle look is a branch in `obstacle()` and a name in the maps' comment 
 - **Life:** smoke from chimneys, banners, a child at the well, gulls over water, hens in the northern and salt towns. The light follows the campaign's hour (`nightOf`).
 - **To add a town:** lay out its footprints in the data as before. To give a building more character, add a `spec`.
 
+## The world map (`js/art/worldmap.js`)
+
+`terrain(ctx, map, extent, k)` draws the land into the renderer's cached layer (one per zoom step): grass, fields, the sea, areas, forests, hills, waters and crossings, roads. The renderer still decides what shows, where and when, and draws the labels and badges; the module draws:
+- `settlement` (a miniature by type and culture, the sovereign's banner, an occupier's pennant, a siege camp);
+- `site`;
+- `party` (its template's own troops, its banner, a stance ring, its facing);
+- `ghost` and `company`.
+
+Icons keep about their old size on screen, so taps and labels stay put. Every miniature is baked once per kind, culture, side, facing, step and scale.
+
 ## What it costs
 
 Drawing in code costs more than stamping sprites. Measure before and after a change:

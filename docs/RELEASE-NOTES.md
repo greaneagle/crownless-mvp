@@ -1,5 +1,36 @@
 # Crownless — Release Notes
 
+## v4.13.0 — The world map in the new art (P10-G4) · 2026-11-26
+
+The fourth step toward the code-drawn art (D-P10k): the world map is drawn by it. What it shows, and when, is as before.
+
+### New
+- **The land as a miniature:**
+  - grass with soft variation and fields round the villages;
+  - the sea with its sand and shallows;
+  - marsh pools and reeds, hills as mounds, mountains as shaded peaks with snow;
+  - forests of grouped trees on a darker floor;
+  - rivers with banks, stepping-stone fords and stone bridges;
+  - roads that curve.
+- **Places you recognise at a glance:**
+  - walled towns, bigger for a capital, with their towers;
+  - castles with a keep and towers on a rise;
+  - villages in their culture's style, from Hrothmark's long halls to the south's terracotta;
+  - harbours with a pier and a boat;
+  - bandit camps with a tent and a fire, cold once cleared.
+- **Banners and sieges:** every place flies the banner of the realm it belongs to, with a pennant beside it when another holds its gates. A besieged place has the besiegers' camp round it: tents, a ram and a ladder.
+- **Parties as little bands of their own troops:**
+  - patrols on foot under their banner, lords mounted under a gold plume, armies under a bigger banner;
+  - caravans as covered wagons, bandits under a dark banner, your own detachments in gold.
+
+  A ring under each says friend (blue), neutral (cream) or foe (red). They face the way they go, and one you saw but can't see now is a faded banner.
+- **Your company:** you, up to two of your soldiers and your banner, walking as you travel.
+- **Unchanged:** the fog of sight, night, the labels, count badges, quest rings, edge markers and every tap.
+
+### Under the hood
+- **The map module:** `js/art/worldmap.js` draws the terrain into the renderer's cached layer (one per zoom step, as before), and the settlements, sites, parties, siege camps and your company. Each miniature is drawn once per kind, culture, side, facing, step and scale and then stamped. With 200 parties and the lords on the map, drawing costs 8–20% more than before zoomed out and the same zoomed in.
+- **Gone:** the map's old shapes and the hero's map sprite. Only the creator's and the party sheet's hero sprite is left, for P10-G5.
+
 ## v4.12.0 — Towns in the new art (P10-G3) · 2026-11-25
 
 The third step toward the code-drawn art (D-P10k): all eight walkable towns are drawn by it. Their layouts, their people and where everything stands are as before.

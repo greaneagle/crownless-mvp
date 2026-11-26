@@ -3760,7 +3760,7 @@ The owner played the graphics demo (`docs/GRAPHICS-DEMO.md`, commit e5bae98) and
 - **Checks:** 934 fast pass; lint clean but the 2 old warnings; typecheck clean; browser 275 passed, 9 skipped, none failed.
 - **Seen** in screenshots of every town by day and at night at 1280×720 and 812×375 @3×. Not played by hand on a phone.
 
-### P10-G4 · The world map in the new art (L)
+### P10-G4 · The world map in the new art (L) — ✅ Done in 4.13.0
 
 **Build.**
 - **The terrain** from the world's data, in the kit's language:
@@ -3811,6 +3811,48 @@ The owner played the graphics demo (`docs/GRAPHICS-DEMO.md`, commit e5bae98) and
 - The stress test against the budget.
 
 **Version.** 4.13.0.
+
+**Done (4.13.0).**
+- **The map module** `js/art/worldmap.js`, called by `js/render.js`.
+- **The renderer keeps everything else:** what shows (sight, the fog, the last-seen marks), where a party stands (beside a landmark), the labels and their placing, count badges, the gold rings of contract and quest targets, "under siege", the edge markers, night and every tap target. Icons are about the size they were on screen.
+- **Terrain,** drawn into the cached layer per zoom step:
+  - grass with soft blobs of variation;
+  - fields round every village (looks only, on grass);
+  - the sea past each coast with a sand rim, shallows and ripples;
+  - marsh tint, pools and reeds; hills as mounds; mountain peaks with shaded faces and snow (baked and stamped);
+  - forests on a darker floor with stamped trees (pines in the north, some birch);
+  - the river and the waters with banks and a light thread; fords as shallows and stepping stones, bridges as stone spans across the water;
+  - roads with an edge, curving through their points.
+- **Settlements:**
+  - a miniature by type and culture: towns walled with roofs and a tower (a capital bigger, with a taller keep), forts as castles on a rise, villages of the culture's houses with a tree and a fence;
+  - a pier and a boat where the place is on a coast;
+  - the banner of the realm it belongs to (`sovereignOf`), and a pennant of who holds its gates when another does (asset row 9);
+  - a besieged place inside the besiegers' camp: tents in their colours behind and before it, a ram shed and a ladder at the gate, smoke (asset row 13).
+- **Sites:** a tent, a fire and a dark banner while active; faded, cold ashes once cleared.
+- **Parties:**
+  - two figures of the template's own troops under its realm's banner (patrols); a mounted lord under a gold plume and a bigger banner (lords); a mounted commander and two soldiers under the biggest banner (armies); a covered wagon and a merchant (caravans); hooded figures under the outlaws' banner (bands); your detachments in gold;
+  - a stance ring (blue friendly to you, cream neutral, red hostile) beside the colours and shapes;
+  - facing and a four-step walk from how each moved;
+  - a faded banner where one was last seen.
+- **Your company:** you, up to two of your soldiers and your banner (your cloak's colour, a gold edge), a gold ring, walking while you travel, standing beside a settlement's icon when you are at one. It replaces the last map sprite.
+- **Removed:** the old settlement, site and party shapes; the map's hero sprite and `drawHeroFrame`; the terrain's old drawing (`drawTerrainFeatures`, `polyBox`, `polyPath`); `emblem` and `fixedFont`. Only the creator's and party sheet's hero sprite remains (`heroSprite`, P10-G5).
+- **The budget** (map stress test, 200 parties and the lords, Balanced, headless desktop Chromium; P10-G1's baseline in brackets; two runs):
+
+  | Device | Zoomed out (0.30×): fps, draw ms | 2.4×: fps, draw ms |
+  |---|---|---|
+  | desktop 1280×720 | 58–59, 2.85–3.15 (59, 2.63) | 60, 1.89–1.96 (60, 1.92) |
+  | phone 812×375 @3× | 58, 2.74–2.90 (60, 2.51) | 60, 1.71–1.81 (60, 1.81) |
+
+  Zoomed out the drawing is 8–20% slower (the budget allows 25%); at 2.4× it is the same. `npm run bench:map` measures the simulation only and is untouched.
+- **Found:** the world-neutrality check (`tests/world-package.test.js`) caught the siege camp naming the outlaws in `js/render.js`; the camp now takes the besieger's realm or the outlaws' look inside the art module.
+- **Tests:**
+  - `tests/art-map.test.js`: the terrain draws with stamped trees and peaks; every settlement draws with its banner, and an occupied, besieged one with a pennant and a camp; both kinds of site; every party template as a miniature of its own troops; the company with its box for labels.
+  - `tests/browser/art.spec.js`: the map draws no sprite.
+  - `world-map.spec`'s founded-realm banner test looks for the realm's colour in a filled shape now (the banner is a path, not an 11×9 rectangle).
+- **Checks:**
+  - 938 fast pass; lint clean but the 2 old warnings; typecheck clean.
+  - Browser: 274 passed, 9 skipped, 3 failed. Two were the banner test (updated, then passing). The third, the battle benchmark's report, failed once under load reading the battle size mid-run, and passes alone (world-map and battle-size: 24 of 24).
+- **Seen** in screenshots of the whole world, 1×, 2.4×, the north, the coast and at night, at 1280×720 and 812×375 @3×. Not played by hand on a phone.
 
 ### P10-G5 · The UI and portraits in the new art (M–L)
 

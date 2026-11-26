@@ -7,7 +7,6 @@
   // letters that are part of an icon's art (the emblem on a flag or a party marker).
   const font = (px, opts) => CL.settings?.font(px, opts) ?? `bold ${px}px Georgia`;
   const ts = () => CL.settings?.textScale() ?? 1;
-  const fixedFont = (px, family = 'system-ui') => `bold ${px}px ${family}`;
   /** The top-left HUD's short form, at the Larger text size. */
   const compactHud = () => ts() >= 1.3;
 
@@ -50,10 +49,6 @@
     return backing;
   }
 
-  function drawHeroFrame(key, x, y, w, h) {
-    const sprite = CL.assets.heroSprite(key, CL.campaign?.character?.cloak);
-    if (sprite) ctx.drawImage(sprite, Math.round(x), Math.round(y), w, h);
-  }
 
   /** Battle ground for the current map: base colour, tiled texture, patches, decor (no collision). */
   /**
@@ -112,19 +107,7 @@
 
   // ---- Strategic map ----
 
-  /** A faction's banner letter (W-04: data/factions.js `emblem`). */
-  const emblem = (f) => CL.realm.faction(f)?.emblem || '?';
 
-  /** A path through map points, in world pixels (the terrain layer is drawn in them; W-02). */
-  function polyPath(points) {
-    const { toPx } = CL.world;
-    ctx.beginPath();
-    points.forEach(([x, y], i) => {
-      const [px, py] = toPx(x, y);
-      if (i) ctx.lineTo(px, py);
-      else ctx.moveTo(px, py);
-    });
-  }
 
   // On the world map, labels are queued while icons are drawn and placed last, most important first,
   // so names don't pile on top of each other (see placeLabels). Null outside the world map.
@@ -156,59 +139,20 @@
     if (!CL.mapView.inView(s.mapX, s.mapY, 60)) return; // culled: off the screen (W-02)
     const [x, y] = CL.mapView.toScreen(s.mapX, s.mapY);
     const holder = CL.realm.owner(s.id);
-    const color = CL.realm.faction(holder)?.color;
     ctx.save();
-    // P8-06a: a fort under siege: a red ring of the besiegers' camp around it, and the words.
+    // P8-06a: a fort under siege: the besiegers' camp round it (P10-G4: tents, a ram, ladders), and the words.
     const siege = CL.sieges?.at(CL.campaign, s.id);
     if (siege?.phase === 'encircled') {
-      ctx.strokeStyle = '#d0402f';
-      ctx.lineWidth = 3;
-      ctx.setLineDash([5, 4]);
-      ctx.beginPath();
-      ctx.arc(x, y - 2, 24, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.setLineDash([]);
       ctx.font = font(10);
       ctx.textAlign = 'center';
       ctx.fillStyle = '#ffb3a1';
       ctx.fillText('under siege', x, y + 34); // below the fort: its name is above it
       ctx.textAlign = 'left';
     }
-    ctx.fillStyle = '#00000044';
-    ctx.beginPath();
-    ctx.ellipse(x, y + 9, 15, 5, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#e9dcc0';
-    ctx.strokeStyle = '#2a2116';
-    ctx.lineWidth = 2;
-    if (s.type === 'fort') {
-      ctx.fillRect(x - 11, y - 12, 22, 20);
-      ctx.strokeRect(x - 11, y - 12, 22, 20);
-      for (const dx of [-11, -4, 3]) ctx.fillRect(x + dx, y - 17, 5, 5);
-    } else {
-      const houses = s.type === 'town' ? [[-9, 0], [3, -4], [-2, 4]] : [[-5, 0]];
-      for (const [dx, dy] of houses) {
-        ctx.fillRect(x + dx, y + dy - 5, 11, 9);
-        ctx.strokeRect(x + dx, y + dy - 5, 11, 9);
-        ctx.beginPath();
-        ctx.moveTo(x + dx - 1, y + dy - 5);
-        ctx.lineTo(x + dx + 5.5, y + dy - 11);
-        ctx.lineTo(x + dx + 12, y + dy - 5);
-        ctx.closePath();
-        ctx.fillStyle = '#8b4a32';
-        ctx.fill();
-        ctx.stroke();
-        ctx.fillStyle = '#e9dcc0';
-      }
-    }
-    // Banner with faction letter.
-    ctx.fillStyle = color;
-    ctx.fillRect(x + 10, y - 22, 11, 9);
-    ctx.fillStyle = '#2a2116';
-    ctx.fillRect(x + 9, y - 22, 2, 18);
-    ctx.fillStyle = '#fff';
-    ctx.font = fixedFont(8); // the flag's emblem: part of the icon
-    ctx.fillText(emblem(holder), x + 13, y - 14.5);
+    // P10-G4: the settlement's miniature (by type and culture), its holder's banner, an occupier's pennant.
+    // The banner is the realm it belongs to; a pennant beside it shows who holds the gates, when another does.
+    const sovereign = CL.realm.sovereignOf?.(s.id, CL.campaign) || holder;
+    CL.gfx.worldmap.settlement(ctx, x, y, s, backing, { holder: sovereign, controller: holder, t: performance.now() / 1000, siege: siege?.phase === 'encircled' ? siege.realm || true : null });
     if (here) {
       ctx.strokeStyle = '#ffe7a8';
       ctx.lineWidth = 2;
@@ -225,24 +169,7 @@
     if (!CL.mapView.inView(st.mapX, st.mapY, 60)) return;
     const [x, y] = CL.mapView.toScreen(st.mapX, st.mapY);
     const active = CL.world.siteActive(st.id);
-    ctx.save();
-    ctx.globalAlpha = active ? 1 : 0.45;
-    ctx.fillStyle = '#5b2a20';
-    ctx.beginPath();
-    ctx.moveTo(x - 12, y + 7);
-    ctx.lineTo(x, y - 12);
-    ctx.lineTo(x + 12, y + 7);
-    ctx.closePath();
-    ctx.fill();
-    ctx.strokeStyle = active ? '#ff6a4a' : '#9b8a78';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo(x - 6, y - 4);
-    ctx.lineTo(x + 6, y + 6);
-    ctx.moveTo(x + 6, y - 4);
-    ctx.lineTo(x - 6, y + 6);
-    ctx.stroke();
-    ctx.restore();
+    CL.gfx.worldmap.site(ctx, x, y, active, backing, performance.now() / 1000); // P10-G4: a camp, a fire while it is active
     if (CL.mapView.showMinorLabels()) label(active ? st.name : `${st.name} (cleared)`, x, y + 22, active ? '#ffb3a1' : '#c9bda8', { prio: LABEL_PRIORITY.site, iy: y });
   }
 
@@ -262,71 +189,12 @@
       ctx.stroke();
       ctx.restore();
     }
-    const color = t.kind === 'bandit' ? '#7a1e16' : t.kind === 'detachment' ? '#c9a24a' : CL.realm.faction(t.faction)?.color; // your patrols: gold (P7-05)
     const n = army ? CL.armies.soldiers(CL.campaign, army) : CL.parties.troopCount(p);
     const hostile = CL.parties.hostileTo(CL.campaign, t);
     ctx.save();
-    ctx.fillStyle = '#00000055';
-    ctx.beginPath();
-    ctx.ellipse(x, y + 7, 11, 4, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = '#1b1208';
-    ctx.lineWidth = 2;
-    if (t.kind === 'caravan') {
-      // Wagon with two wheels.
-      ctx.fillStyle = '#8a6a3c';
-      ctx.fillRect(x - 10, y - 6, 20, 9);
-      ctx.strokeRect(x - 10, y - 6, 20, 9);
-      ctx.fillStyle = '#e9dcc0';
-      ctx.fillRect(x - 8, y - 12, 16, 6);
-      for (const dx of [-6, 6]) {
-        ctx.beginPath();
-        ctx.arc(x + dx, y + 4, 3, 0, Math.PI * 2);
-        ctx.fillStyle = '#3b2a18';
-        ctx.fill();
-      }
-    } else {
-      // Shield for patrols, jagged pennant for bandits.
-      if (army) {
-        // An army: a second banner behind the first.
-        ctx.fillStyle = color;
-        ctx.beginPath();
-        ctx.moveTo(x - 13, y - 14);
-        ctx.lineTo(x + 3, y - 14);
-        ctx.lineTo(x + 3, y - 5);
-        ctx.lineTo(x - 5, y + 2);
-        ctx.lineTo(x - 13, y - 5);
-        ctx.closePath();
-        ctx.fill();
-        ctx.strokeStyle = '#f1c75b';
-        ctx.stroke();
-        ctx.strokeStyle = '#1b1208';
-      }
-      ctx.fillStyle = color;
-      ctx.beginPath();
-      if (t.kind === 'patrol' || t.kind === 'detachment' || t.kind === 'lord') {
-        ctx.moveTo(x - 8, y - 10);
-        ctx.lineTo(x + 8, y - 10);
-        ctx.lineTo(x + 8, y - 1);
-        ctx.lineTo(x, y + 6);
-        ctx.lineTo(x - 8, y - 1);
-      } else {
-        ctx.moveTo(x - 9, y - 10);
-        ctx.lineTo(x + 9, y - 10);
-        ctx.lineTo(x + 4, y - 3);
-        ctx.lineTo(x + 9, y + 5);
-        ctx.lineTo(x - 9, y + 5);
-      }
-      ctx.closePath();
-      ctx.fill();
-      if (t.kind === 'lord') ctx.strokeStyle = '#f1c75b'; // a lord's banner has a gold edge (P8-01)
-      ctx.stroke();
-      ctx.fillStyle = '#fff';
-      ctx.font = fixedFont(9); // the marker's emblem: part of the icon
-      ctx.textAlign = 'center';
-      ctx.fillText(t.kind === 'detachment' ? (CL.detachments.find(CL.campaign, p.detachment)?.captainName || '?')[0] : emblem(t.faction), x - 1, y - 1);
-      ctx.textAlign = 'left';
-    }
+    // P10-G4: the party as a miniature: its figures and banner by kind, a ring by stance.
+    const friendly = !hostile && (t.kind === 'detachment' || CL.realm.faction(t.faction)?.id === (CL.allegiance?.sworn?.(CL.campaign) || CL.allegiance?.serves?.(CL.campaign)));
+    CL.gfx.worldmap.party(ctx, x, y, p, { kind: t.kind, realm: t.kind === 'bandit' ? 'reavers' : t.faction, template: t, hostile, friendly, army: Boolean(army) }, backing, performance.now() / 1000);
     if (p.chasing === 'player') {
       ctx.fillStyle = '#ffd34d';
       ctx.font = font(16);
@@ -403,166 +271,9 @@
   let terrainLayersOf = null; // the map they were drawn for
   const LAYER_MAX_PX = 4096; // a canvas side limit that phones accept
 
-  /** Grass, mottling, forests, hills, the river and roads, in world pixels (map coordinates). */
-  function drawTerrain(m, e) {
-    ctx.fillStyle = '#6f8f4e';
-    ctx.fillRect(0, 0, e.w, e.h);
-    // Grass mottling, fixed to the map (it used to be fixed to the screen).
-    ctx.fillStyle = '#7d9a59';
-    const dots = Math.round((140 * e.w * e.h) / (W * H));
-    for (let i = 0; i < dots; i++) ctx.fillRect((i * 211 + 37) % Math.round(e.w), (i * 97 + 11) % Math.round(e.h), 7, 3);
-    const { toPx } = CL.world;
-
-    // Forests.
-    for (const poly of m.forests) {
-      polyPath(poly);
-      ctx.closePath();
-      ctx.fillStyle = '#3f6334';
-      ctx.fill();
-      ctx.fillStyle = '#2f5128';
-      const xs = poly.map((p) => p[0]);
-      const ys = poly.map((p) => p[1]);
-      for (let x = Math.min(...xs); x <= Math.max(...xs); x += 3.2) {
-        for (let y = Math.min(...ys); y <= Math.max(...ys); y += 5) {
-          if (CL.world.terrainAt(x, y) !== 'forest') continue;
-          const [px, py] = toPx(x + ((y * 7) % 2), y);
-          ctx.beginPath();
-          ctx.arc(px, py, 6, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      }
-    }
-    drawTerrainFeatures(m, e);
-    // Hills.
-    ctx.strokeStyle = '#5b5236';
-    ctx.lineWidth = 3;
-    for (const [hx, hy] of m.hills) {
-      const [px, py] = toPx(hx, hy);
-      ctx.beginPath();
-      ctx.arc(px, py + 8, 14, Math.PI * 1.15, Math.PI * 1.85);
-      ctx.stroke();
-    }
-    // River.
-    polyPath(m.river);
-    ctx.strokeStyle = '#3c6f93';
-    ctx.lineWidth = 9;
-    ctx.lineJoin = 'round';
-    ctx.stroke();
-    ctx.strokeStyle = '#5d93b5';
-    ctx.lineWidth = 4;
-    ctx.stroke();
-    // Roads.
-    for (const road of m.roads) {
-      const pts = road.map((id) => {
-        const s = CL.content.get('settlements', id);
-        return [s.mapX, s.mapY];
-      });
-      polyPath(pts);
-      ctx.strokeStyle = '#4a3a24';
-      ctx.lineWidth = 7;
-      ctx.stroke();
-      ctx.strokeStyle = '#b39a6a';
-      ctx.lineWidth = 4;
-      ctx.setLineDash([]);
-      ctx.stroke();
-    }
-  }
-
-  /** A map polygon's bounding box in map units, for scattering marks inside it. */
-  function polyBox(poly) {
-    const xs = poly.map((p) => p[0]);
-    const ys = poly.map((p) => p[1]);
-    return { x0: Math.min(...xs), x1: Math.max(...xs), y0: Math.min(...ys), y1: Math.max(...ys) };
-  }
-
-  /**
-   * W-05a terrain, in world pixels: the sea along coasts (in the margin past the map's edge), areas
-   * of marsh, hills and mountain, rivers that cost travel, and their fords and bridges. Drawn into the
-   * cached terrain layer, under the roads.
-   */
-  function drawTerrainFeatures(m, e) {
-    const { toPx, terrainAt } = CL.world;
-    const b = CL.world.bounds();
-    const [left, top] = toPx(0, 0);
-    const [right, bottom] = toPx(b.w, b.h);
-    ctx.fillStyle = '#3c6f93';
-    for (const side of m.coast || []) {
-      if (side === 'north') ctx.fillRect(0, 0, e.w, top);
-      if (side === 'south') ctx.fillRect(0, bottom, e.w, e.h - bottom);
-      if (side === 'west') ctx.fillRect(0, 0, left, e.h);
-      if (side === 'east') ctx.fillRect(right, 0, e.w - right, e.h);
-    }
-    const LOOK = { marsh: ['#58745a', '#7aa08f'], hills: ['#7d8a4f', '#5b5236'], mountain: ['#8b8678', '#5e5a50'] };
-    for (const a of m.areas || []) {
-      const [fill, mark] = LOOK[a.kind];
-      polyPath(a.poly);
-      ctx.closePath();
-      ctx.fillStyle = fill;
-      ctx.fill();
-      const box = polyBox(a.poly);
-      ctx.strokeStyle = mark;
-      ctx.fillStyle = mark;
-      ctx.lineWidth = 2;
-      for (let x = box.x0; x <= box.x1; x += a.kind === 'marsh' ? 2.4 : 4.4) {
-        for (let y = box.y0; y <= box.y1; y += a.kind === 'marsh' ? 4 : 6) {
-          if (terrainAt(x, y) !== a.kind) continue;
-          const [px, py] = toPx(x + ((y * 3) % 2), y);
-          ctx.beginPath();
-          if (a.kind === 'marsh') {
-            ctx.moveTo(px - 3, py);
-            ctx.lineTo(px - 3, py - 6);
-            ctx.moveTo(px + 1, py);
-            ctx.lineTo(px + 1, py - 8);
-            ctx.stroke();
-          } else if (a.kind === 'hills') {
-            ctx.arc(px, py + 6, 11, Math.PI * 1.15, Math.PI * 1.85);
-            ctx.stroke();
-          } else {
-            ctx.moveTo(px - 10, py + 6);
-            ctx.lineTo(px, py - 9);
-            ctx.lineTo(px + 10, py + 6);
-            ctx.closePath();
-            ctx.fill();
-            ctx.fillStyle = '#e8e4da';
-            ctx.beginPath();
-            ctx.moveTo(px - 3, py - 4);
-            ctx.lineTo(px, py - 9);
-            ctx.lineTo(px + 3, py - 4);
-            ctx.closePath();
-            ctx.fill();
-            ctx.fillStyle = mark;
-          }
-        }
-      }
-    }
-    for (const w of m.waters || []) {
-      const px = CL.world.VIEW.sx; // map units → world px, across
-      polyPath(w.line);
-      ctx.lineJoin = 'round';
-      ctx.strokeStyle = '#3c6f93';
-      ctx.lineWidth = w.width * 2 * px * 0.6;
-      ctx.stroke();
-      ctx.strokeStyle = '#5d93b5';
-      ctx.lineWidth = w.width * 2 * px * 0.3;
-      ctx.stroke();
-      for (const c of w.crossings || []) {
-        const [cx, cy] = toPx(c.x, c.y);
-        const r = c.r * px * 0.7;
-        if (c.kind === 'ford') {
-          ctx.fillStyle = '#c9b58a';
-          for (let i = -2; i <= 2; i++) {
-            ctx.beginPath();
-            ctx.arc(cx + i * r * 0.35, cy + (i % 2) * 2, 2.5, 0, Math.PI * 2);
-            ctx.fill();
-          }
-        } else {
-          ctx.fillStyle = '#6b4a2a';
-          ctx.fillRect(cx - r, cy - 4, r * 2, 8);
-          ctx.fillStyle = '#a07a4a';
-          for (let x = cx - r + 2; x < cx + r - 2; x += 5) ctx.fillRect(x, cy - 3, 3, 6);
-        }
-      }
-    }
+  /** The terrain in world pixels (map coordinates), in the art kit (P10-G4, js/art/worldmap.js). */
+  function drawTerrain(m, e, k) {
+    CL.gfx.worldmap.terrain(ctx, m, e, k);
   }
 
   /**
@@ -590,7 +301,7 @@
     const main = ctx;
     ctx = layer;
     try {
-      drawTerrain(m, e);
+      drawTerrain(m, e, k);
     } finally {
       ctx = main;
     }
@@ -609,14 +320,7 @@
     const [x, y] = CL.world.toScreen(at.x, at.y);
     const t = CL.content.get('party_templates', p.template);
     ctx.save();
-    ctx.globalAlpha = 0.45;
-    ctx.fillStyle = t.kind === 'bandit' ? '#7a1e16' : CL.realm.faction(t.faction)?.color;
-    ctx.strokeStyle = '#1b1208';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.arc(x, y - 2, 9, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
+    CL.gfx.worldmap.ghost(ctx, x, y, { kind: t.kind, realm: t.faction }); // P10-G4: its banner, faded
     ctx.globalAlpha = 0.9;
     ctx.fillStyle = '#fff3cf';
     ctx.font = font(13);
@@ -719,7 +423,7 @@
     const layer = terrainLayer(z);
     const [ox, oy] = V.toScreen(...CL.world.fromPx(0, 0));
     const scale = z / layer.k;
-    ctx.fillStyle = '#6f8f4e'; // the map's own ground beyond its edge, when it is smaller than the view
+    ctx.fillStyle = CL.gfx.PAL.grass; // the map's own ground beyond its edge, when it is smaller than the view
     ctx.fillRect(0, 0, W, H);
     const exact = Math.abs(scale * backing - 1) < 1e-6;
     ctx.imageSmoothingEnabled = !exact;
@@ -769,16 +473,11 @@
       ctx.arc(tx, ty, 5, 0, Math.PI * 2);
       ctx.stroke();
     }
-    // Party marker: the hero sprite, walking while travelling; stands beside a settlement's icon.
-    const [mx, my] = w.location ? [px - 22, py + 4] : [px, py];
-    const frames = CL.assets.heroFrames[g.travel ? g.travelFace : 'down'];
-    const frame = g.travel ? frames[Math.floor(performance.now() / 160) % frames.length] : frames[0];
-    ctx.fillStyle = '#00000055';
-    ctx.beginPath();
-    ctx.ellipse(mx, my + 2, 10, 4, 0, 0, Math.PI * 2);
-    ctx.fill();
-    drawHeroFrame(CL.assets.key('u', frame), mx - 13, my - 32, 26, 33);
-    placeLabels([{ x: mx - 13, y: my - 32, w: 26, h: 33 }]);
+    // Your company (P10-G4): you, two of your soldiers, your banner; walking while travelling; beside a
+    // settlement's icon when you are at one.
+    const [mx, my] = w.location ? [px - 26, py + 6] : [px, py];
+    const box = CL.gfx.worldmap.company(ctx, mx, my, Boolean(g.travel), g.travel ? g.travelFace : 'down', backing, performance.now() / 1000);
+    placeLabels([box]);
     drawEdgeMarkers(w);
 
     updateMapHud();

@@ -127,12 +127,12 @@ test('P9-03: a realm founded in play flies its own banner on the map', async ({ 
     const id = CL.founding.declare(c, 'player', 'westholt_castle', { free: true });
     const s = CL.content.get('settlements', 'westholt_castle');
     Object.assign(c.world, { x: s.mapX, y: s.mapY - 3 });
-    // Every banner-sized rectangle drawn, with its colour.
+    // Every colour a shape is filled with (P10-G4: the banners are the art kit's, filled paths).
     window.__banners = [];
-    const fill = CanvasRenderingContext2D.prototype.fillRect;
-    CanvasRenderingContext2D.prototype.fillRect = function (x, y, w, h) {
-      if (w === 11 && h === 9) window.__banners.push(String(this.fillStyle).toLowerCase());
-      return fill.call(this, x, y, w, h);
+    const fill = CanvasRenderingContext2D.prototype.fill;
+    CanvasRenderingContext2D.prototype.fill = function (...args) {
+      window.__banners.push(String(this.fillStyle).toLowerCase());
+      return fill.apply(this, args);
     };
     return CL.realm.faction(id).color.toLowerCase();
   });
