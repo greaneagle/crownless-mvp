@@ -644,13 +644,10 @@
     if (win) lines.push(`Loot: ${describeItems(r.loot) || 'nothing of value'}`);
     else if (r.lostItem) lines.push(`Taken by your captors: ${CL.content.item(r.lostItem).name}`);
     if (!win && r.medicineTaken) lines.push(`Your captors took ${r.medicineTaken} medicine`);
-    lines.push(
-      wounded.length
-        ? `<small>Wounded soldiers can't fight until day ${recoverDay}. Travel or rest in a settlement to pass the time.</small>`
-        : '<small>No soldiers wounded.</small>',
-    );
-    if (report) lines.push(`<details class="reportMore"><summary>▸ More: your divisions, you, who did what</summary><p>${more.join('<br>')}</p></details>`);
-    return lines.join('<br>');
+    if (wounded.length) lines.push(`<small>Wounded soldiers can't fight until day ${recoverDay}. Travel or rest in a settlement to pass the time.</small>`);
+    else more.push('<small>No soldiers wounded.</small>');
+    if (!report) return lines.join('<br>');
+    return `${lines.join('<br>')}<details class="reportMore"><summary>▸ More: your divisions, you, who did what</summary><p>${more.join('<br>')}</p></details>`;
   }
 
   CL.party = {

@@ -435,7 +435,7 @@
     const p = e.party;
     const hidden = e.kind === 'site' || p?.ambush || (ambush && !(p && CL.sight?.playerSees(c, p)));
     if (hidden && !scout) return unknown;
-    const n = Object.values(e.troops).reduce((a, b) => a + (b > 0 ? b : 0), 0);
+    const n = Object.values(e.troops).reduce((a, b) => a + Math.max(b, 0), 0);
     const seen = seenFoe();
     const count = CL.scout.about(n);
     return {
@@ -446,8 +446,8 @@
     };
   }
 
-  /** A remembered loadout's key: the kind of field (the map's id). @param {any} map */
-  const kindOf = (map) => (/^[a-z_]{1,24}$/.test(map?.id || '') ? map.id : 'field');
+  /** A remembered loadout's key: the kind of field (the map's id; every fort's walls are one kind). @param {any} map */
+  const kindOf = (map) => (map?.wall ? 'walls' : /^[a-z_]{1,24}$/.test(map?.id || '') ? map.id : 'field');
 
   /**
    * P11-02's `loadout.last`: the loadout last chosen on this kind of field becomes this battle's start
