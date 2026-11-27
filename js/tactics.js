@@ -236,7 +236,11 @@
     }
     for (const div of Object.keys(g.falling || {})) {
       const units = CL.divisions.members(g, div);
-      if (!units.length || units.every((u) => Math.hypot(u.x - u.holdX, u.y - u.holdY) <= FALLBACK_DONE)) delete g.falling[div];
+      if (!units.length || units.every((u) => Math.hypot(u.x - u.holdX, u.y - u.holdY) <= FALLBACK_DONE)) {
+        delete g.falling[div];
+        g.doneAt ??= {};
+        g.doneAt[div] = g.t; // P11-13: the order's flag says done for a moment
+      }
     }
   }
 

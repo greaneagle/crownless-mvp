@@ -109,6 +109,7 @@
   const deployCap = (role) => Math.round(DEPLOY_CAP[role] * scaleOf());
   const DEFAULT_ENCOUNTER = 'captains_trial';
   const GUARD_SPEED = 0.65;
+  const USE_AIM = { on: true }; // P11-13: soldiers' blows aimed at their foe (off: the four facings, for measuring)
   const MAX_DT = 0.05;
 
   // AI distances (px). goal = stopping distance from destination.
@@ -463,6 +464,7 @@
    */
   function enemyPlan(g) {
     g.enemyOrders = null;
+    g.enemyFormations = null;
     if (!g.share || !g.enemies.length || g.wagon || g.siege || g.enemies.length + g.enemyReserve.length <= ARMY.from) return;
     const A = CL.autoresolve;
     const theirs = {};
@@ -470,6 +472,8 @@
     const odds = A.winChance(A.playerPower(CL.campaign), A.troopsPower(theirs));
     const weak = odds >= CL.prep.AUTO.strong;
     g.enemyOrders = { infantry: weak ? 'hold' : 'charge', archer: weak ? 'hold' : 'charge', cavalry: weak ? 'hold' : 'charge' };
+    // P11-13: by the same rules as the company's: its foot in a line (formed on Hold; on Charge it breaks up).
+    g.enemyFormations = { infantry: 'line' };
     // Blocks on their side (facing the company, -x): foot in front, archers behind, horse on the flanks.
     const box = g.battleMap.spawn.enemies;
     const cx = (box.x0 + box.x1) / 2;
@@ -478,7 +482,7 @@
     for (const role of ['infantry', 'archer', 'cavalry']) {
       const list = g.enemies.filter((e) => e.role === role);
       list.forEach((e, i) => {
-        const o = CL.divisions.turn(CL.divisions.shape('loose', i, list.length), 'left');
+        const o = CL.divisions.turn(CL.divisions.shape(g.enemyFormations[role] || 'loose', i, list.length), 'left');
         const flank = role === 'cavalry' && i % 2 ? box.y1 - box.y0 : 0;
         e.x = at[role].x + o.dx;
         e.y = at[role].y + flank + o.dy;
@@ -556,7 +560,9 @@
   function press(u, source, shot = false) {
     const g = game();
     const skill = 1 + SHIELD.skill * (P.of(u)?.shieldSkill || 0);
-    u.press = (u.press || 0) + (shot ? SHIELD.shot : (P.of(source)?.shieldPressure ?? 1));
+    const amount = shot ? SHIELD.shot : (P.of(source)?.shieldPressure ?? 1);
+    // P11-13: in a shield wall the shields beside take part of it (a wall holds longer than one shield).
+    u.press = (u.press || 0) + amount * CL.formations.sharePressure(g, u, amount, SHIELD.capacity * skill);
     if (u.press < SHIELD.capacity * skill) return false;
     u.press = 0;
     u.guard = false;
@@ -641,6 +647,12 @@
       g.effects.push({ x: target.x, y: target.y - 17, t: 0.15, color: '#e8eef2', kind: 'block' });
     }
     if (g.practice && g.practice.firstHit == null) g.practice.firstHit = g.t; // camera test: time to contact
+    // P11-13: a blow from a formed division's side or rear lands harder and shakes it more (morale).
+    const flank = source ? CL.formations.flankOf(g, target, source) : 1;
+    if (flank > 1) {
+      raw *= flank;
+      target.formFlankedAt = g.t;
+    }
     const dealt = mitigate(CL.traits.blow(raw, source, target), target.armor, P.of(source)?.pierce || 0); // traits (P7-07); P11-06: pierce
     if (target.mounted && target.steed) {
       // P11-08 (D-P11f): half of it falls on the horse; if the horse falls, the rider is thrown.
@@ -718,6 +730,10 @@
     if (u.role !== 'hero' && u.target?.alive) aim(u, u.target);
     u.attackCooldown = P.cooldownOf(u);
     u.swing = { t: 0, hit: [] };
+    // P11-13: a soldier's blow goes along the line to its foe, not only along one of the four facings
+    // (a spear's 40° thrust at a foe standing at an angle missed: the crowd effect P11-11 found).
+    // A rider is struck as before (P11-08's saddle fighting, accepted at M2): along the facing.
+    if (u.role !== 'hero' && USE_AIM.on && u.target?.alive && !CL.units.mounted(u.target)) u.swing.dir = normalize(u.target.x - u.x, u.target.y - u.y);
     sound('swing', u);
     return true;
   }
@@ -733,25 +749,35 @@
     for (const v of opponentsOf(u)) {
       if (!v?.alive || u.swing.hit.includes(v.id)) continue;
       const d = dist(u, v);
-      if (d > u.reach || !inArc(u, v, arc)) continue;
+      if (d > u.reach || !(u.swing.dir ? alongArc(u, v, u.swing.dir, d, arc) : inArc(u, v, arc))) continue;
       near.push([d, v]);
     }
     if (near.length > 1) near.sort((a, b) => a[0] - b[0]);
     for (const [, v] of near) {
       if (u.swing.hit.length >= most) break;
+      if (u.swing.hit.length && !CL.formations.frontage(game(), v, u)) continue; // P11-13: a formed front meets one blow a slot
       const share = u.swing.hit.length ? MELEE.second : 1;
       u.swing.hit.push(v.id);
-      hit(v, u.damage * (u.chargeBonus || 1) * (u.moraleMul || 1) * wedge * share, u);
-      if (wedge > 1) v.flankedAt = game().t; // the wedge's blow shakes them as a flank blow does
+      const landed = hit(v, u.damage * (u.chargeBonus || 1) * (u.moraleMul || 1) * wedge * share, u);
+      if (landed === 'hit') CL.formations.atBay(game(), u, v); // P11-13: a formed line's longer weapons hold the foe off
+      if (wedge > 1) {
+        v.flankedAt = game().t; // the wedge's blow shakes them as a flank blow does
+        CL.formations.breakRanks(game(), v); // P11-13: and breaks a formed line's ranks where it lands
+      }
       u.wedgeArmed = false;
       if (!u.swing) return; // the striker fell or was interrupted by what it struck (a guard broken back)
     }
   }
 
+  /** P11-13: is v inside the cone of a blow aimed along dir? */
+  const alongArc = (u, v, dir, d, arc) => (v.x - u.x) * dir[0] + (v.y - u.y) * dir[1] > d * arc;
+
   function advanceSwing(u, dt) {
     if (!u.swing) return;
     u.swing.t += dt;
     const phase = swingPhase(u);
+    // P11-13: through the windup the aimed blow follows its foe (it is fixed once it lands).
+    if (phase === 'windup' && u.swing.dir && u.target?.alive) u.swing.dir = normalize(u.target.x - u.x, u.target.y - u.y);
     if (phase === 'active') resolveSwing(u);
     else if (phase === 'recovery' && !u.swing.done) whiff(u);
     else if (phase === null) u.swing = null;
@@ -862,7 +888,13 @@
     let dest = target;
     let goal = p.chase;
 
-    if (u.team === 'enemy' && game().enemyOrders?.[u.role] === 'hold' && dist(u, target) >= p.holdEngage) {
+    // P11-13: a formed soldier on Hold fights only what comes within its leash of its slot (and never
+    // steps further than the leash from it); on Follow it breaks ranks only for that. Loose as before.
+    const tether = u.outside || u.companion || u.morale === 'fallback' ? null : CL.formations.leash(game(), u);
+    const given = u.team === 'ally' ? CL.divisions.orderOf(game(), u) : game().enemyOrders?.[u.role];
+    const home = tether == null ? null : given === 'hold' ? { x: u.holdX, y: u.holdY } : given === 'follow' && u.team === 'ally' ? CL.groups.followSlot(game(), u) : null;
+    const inLeash = home ? dist(home, target) < tether + (u.reach || 40) + 6 : false;
+    if (u.team === 'enemy' && game().enemyOrders?.[u.role] === 'hold' && (home ? !inLeash : dist(u, target) >= p.holdEngage)) {
       // P9-B4: an enemy on Hold (its plan) keeps its place until the company comes within reach.
       dest = { x: u.holdX, y: u.holdY };
       goal = 5;
@@ -871,14 +903,14 @@
       const cmd = CL.divisions.orderOf(game(), u);
       if (cmd === 'follow') {
         // Loose ranks around the hero (V2-08a); break ranks to fight anything close.
-        dest = u.companion ? game().hero : CL.groups.followSlot(game(), u);
+        dest = u.companion ? game().hero : home || CL.groups.followSlot(game(), u);
         goal = u.companion ? p.followGoal : 6;
-        if (dist(u, target) < CL.objective.reach(game(), target, p.followEngage * CL.traits.engage(u))) {
+        if (home ? inLeash : dist(u, target) < CL.objective.reach(game(), target, p.followEngage * CL.traits.engage(u))) {
           dest = target;
           goal = p.followFight;
         }
       } else if (cmd === 'hold') {
-        if (dist(u, target) < CL.objective.reach(game(), target, p.holdEngage * CL.traits.engage(u))) {
+        if (home ? inLeash : dist(u, target) < CL.objective.reach(game(), target, p.holdEngage * CL.traits.engage(u))) {
           dest = target;
           goal = p.holdFight;
         } else {
@@ -914,6 +946,7 @@
     const top = CL.assault?.ladderTop(game(), u);
     if (top) [dest, goal, backFrom] = [top, 0, null];
     const d = dist(u, dest);
+    const was = home && given === 'hold' ? dist(u, home) : null; // P11-13: the leash (below)
     if (backFrom || (plan?.keep && dest === target && d < goal - CL.styles.OPEN.keepBack)) {
       // Step back: from the foot soldier at an archer, or to the edge it keeps.
       const from = backFrom || target;
@@ -937,6 +970,17 @@
       if (!CL.assault?.waitAtLadder(game(), u, via)) move(u, via.x - u.x, via.y - u.y, dt); // P9-B5: two on a ladder at a time
       u.speed = s;
     } else if (dest === target) aim(u, target);
+    if (was != null && !top) {
+      // P11-13: the leash: a formed soldier on Hold never steps further than it from their slot (going
+      // back is always allowed: a crowd's shove beyond it is walked back, not followed). Hold holds.
+      const away = dist(u, home);
+      const most = Math.max(tether, was);
+      if (away > most) {
+        u.x = home.x + ((u.x - home.x) * most) / away;
+        u.y = home.y + ((u.y - home.y) * most) / away;
+        if (dest === target) aim(u, target);
+      }
+    }
     if (dist(u, target) < fireRange(u)) {
       if (u.ranged && !CL.groups.clearShot(u, target)) {
         // A tree or wall in the way: step aside for a clear shot instead of wasting arrows (V2-08a).
@@ -1417,7 +1461,10 @@
     CL.tactics.scan(g, dt); // what the company can see (V2-06)
     CL.tactics.tickOrders(g); // timed orders, and divisions falling back (P9-B4)
     const before = g.groupState;
-    if (CL.groups.updateStates(g, dt) !== before) CL.ui.groupStates?.(g.groupState); // forming · formed · advancing · engaged
+    const states = CL.groups.updateStates(g, dt) !== before; // forming · formed · advancing · engaged
+    const formedNow = CL.formations.tick(g, dt) !== g.formWas; // P11-13: cohesion and the orders' states, every 0.25 s
+    g.formWas = g.formState;
+    if (states || formedNow) CL.ui.groupStates?.(g.groupState);
     CL.camera.follow(g, dt);
     heroDownOrders(g);
     stallGuard(g);
@@ -1524,6 +1571,7 @@
     aimTarget,
     lead,
     MELEE,
+    USE_AIM,
     STAGGER,
     KNOCK,
     SHIELD,

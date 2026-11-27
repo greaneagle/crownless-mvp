@@ -3108,7 +3108,13 @@
     const role = D.roleOf(group);
     const state = g.groupState?.[group]; // forming · formed · advancing · engaged (V2-08a)
     const mood = CL.morale?.word(g, 'ally', role); // wavering · falling back · routing (V2-08b)
-    $('#selectedGroup').textContent = D.name(c, group) + (state && mood !== 'routing' ? ` · ${state}` : '') + (mood ? ` · ${mood}` : '');
+    // P11-13: the order's state (moving, holding, engaged, done, can't: why) and a formation's ranks.
+    const os = g.orderState?.[group];
+    const ranks = os?.cohesion != null ? ` · ranks ${Math.round(os.cohesion * 100)}%` : '';
+    const doing = os ? (os.state === 'cant' ? `can't: ${os.reason}` : os.word) : state;
+    $('#selectedGroup').textContent = D.name(c, group) + (doing && !(os?.state === 'cant' && mood) && mood !== 'routing' ? ` · ${doing}` : '') + (os?.state !== 'cant' ? ranks : '') + (mood ? ` · ${mood}` : '');
+    $('#selectedGroup').dataset.state = os?.state || state || '';
+    for (const b of document.querySelectorAll('#groupRow [data-group]')) b.dataset.state = g.orderState?.[b.dataset.group]?.state || '';
     const wait = g.mode === 'battle' ? Math.ceil(CL.morale?.rallyIn(g) || 0) : 0;
     const rb = $('#rallyBtn');
     if (rb) {
