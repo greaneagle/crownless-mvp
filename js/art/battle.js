@@ -218,7 +218,10 @@
     const L = lookOf(B, u);
     const tr = B.track.get(u);
     const P = poseOf(u, tr, t, reduced);
-    P.reducedGlint = reduced; // the glint goes with Reduced effects (the windup pose still reads)
+    // P11-09: the glint is a setting (on); with Reduced effects it stays, as a still mark on the windup's
+    // weapon (part of the pose), not one that grows to the strike.
+    P.glint = CL.settings?.get?.('glint') !== false;
+    P.reducedGlint = reduced;
     const busy = CL.render?.busyBattle?.();
     if (busy) P.reduced = true; // no blade trail in a big battle
     const y = u.y + 5;
@@ -230,7 +233,7 @@
       body(ctx, u, L, P);
       if (L.lord) pennant(ctx, u, t);
     }
-    if (P.atk?.phase === 'windup' && !P.reducedGlint && glints(B, u)) glint(ctx, L, P, P.atk.k);
+    if (P.atk?.phase === 'windup' && P.glint && glints(B, u)) glint(ctx, L, P, P.reducedGlint ? 0.6 : P.atk.k);
     ctx.restore();
     marks(ctx, u, y);
   }
@@ -644,12 +647,16 @@
 
   /**
    * The game's effects, restrained: a burst for a hit, a pale arc for a block, a puff for an arrow in the
-   * ground, the rally's and a brace's ring. Reduced effects and big battles keep only the rally.
+   * ground, the rally's and a brace's ring. Reduced effects and big battles keep the rally and (P11-09)
+   * the hero's own fight's cues: a miss, a block, a broken guard, a stagger, within reach of the hero.
    */
+  /** P11-09: the cues the hero always sees, near the hero (px): their own fight's. */
+  const ESSENTIAL = new Set(['whiff', 'block', 'break', 'stagger']);
+  const ESSENTIAL_NEAR = 90;
   function effects(ctx, list, seen, only) {
     for (const e of list) {
       if (!seen(e.x, e.y, 60)) continue;
-      if (only && e.kind !== only) continue;
+      if (only && !only(e)) continue;
       const life = e.life || { hit: 0.35, rally: 0.6, whiff: 0.3, break: 0.45, stagger: 0.35 }[e.kind] || 0.2;
       const k = 1 - Math.max(0, e.t) / life;
       ctx.save();
@@ -808,7 +815,9 @@
     }
     aimRings(ctx, g);
     arrows(ctx, g.arrows, seen);
-    effects(ctx, g.effects, seen, reduced || busy ? 'rally' : null);
+    const h = g.hero;
+    const mine = (e) => e.kind === 'rally' || (ESSENTIAL.has(e.kind) && h && Math.hypot(e.x - h.x, e.y - h.y) < ESSENTIAL_NEAR);
+    effects(ctx, g.effects, seen, reduced || busy ? mine : null);
   }
 
   /** The small painted field for the minimap, the overview and the Prepare screen (cached per map). */

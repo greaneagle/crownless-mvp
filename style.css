@@ -239,7 +239,7 @@
 #tipCard p{margin:4px 0 2px;line-height:1.35}
 #tipCard .row{margin-top:4px;justify-content:flex-end}
 #tipCard button{min-height:calc(40px * var(--ui-grow));padding:calc(6px * var(--ui-scale)) calc(12px * var(--ui-scale))}
-#stage[data-mode="battle"] #tipCard{bottom:auto;top:24%}
+#stage[data-mode="battle"] #tipCard{bottom:auto;top:21%} /* P11-09: just under the small map, clear of the joystick and ATTACK */
 /* Over a menu, the tip sits at the top so it never covers the menu's buttons. */
 #stage:not([data-mode="map"]):not([data-mode="town"]):not([data-mode="battle"]) #tipCard{bottom:auto;top:2%;z-index:9}
 #helpPanel{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(620px,calc(100vw - 24px));max-height:calc(100vh - 24px);overflow:auto;background:#132333f8;border:3px double #d4b784;z-index:23;box-shadow:0 0 0 100vmax #0009;padding:calc(12px * var(--ui-scale)) calc(16px * var(--ui-scale));font:calc(15px * var(--ui-scale)) Georgia;touch-action:auto}
@@ -248,6 +248,7 @@
 .helpTopic{border-top:1px solid #3e5168;padding:calc(6px * var(--ui-scale)) 0}
 .helpTopic summary{cursor:pointer;font-weight:bold;color:#ecd6a4;min-height:calc(32px * var(--ui-grow));line-height:calc(32px * var(--ui-scale))}
 .helpTopic p{margin:6px 0;line-height:1.4;font-size:calc(14px * var(--ui-scale))}
+.helpTopic h4.helpSection{margin:10px 0 2px;color:#ecd6a4;font-size:calc(14px * var(--ui-scale))}
 .helpKeys{border-collapse:collapse;width:100%;font-size:calc(13px * var(--ui-scale));margin:6px 0}
 .helpKeys th{text-align:left;color:#d9c8a2;font-weight:normal;border-bottom:1px solid #3e5168;padding:calc(3px * var(--ui-scale)) calc(6px * var(--ui-scale))}
 .helpKeys td{padding:calc(3px * var(--ui-scale)) calc(6px * var(--ui-scale));border-bottom:1px solid #22344a}
@@ -305,7 +306,14 @@
 /* 1.9.0 — minimap and tactical overview (V2-06) */
 #stage:not([data-field="large"]) #mapBtn,#stage[data-mode="town"] #mapBtn{display:none}
 #rightControls #mapBtn{align-self:flex-start;width:clamp(50px,6.6vw,82px);height:clamp(50px,6.6vw,82px);font-size:calc(clamp(9px,1.1vw,14px) * var(--ui-scale))}
-#rightControls #switchBtn{align-self:flex-start;width:clamp(50px,6.6vw,82px);height:clamp(50px,6.6vw,82px);font-size:calc(clamp(9px,1.1vw,14px) * var(--ui-scale))}
+/* P11-09: ATTACK and BLOCK show what is in hand (the kit's icons, above the word); the switch control is a
+   small badge on ATTACK's upper edge with the other weapon's icon (44 px or more, growing with the text). */
+#rightControls button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+#rightControls .btnIco{display:block;width:34%;height:34%;margin:0;background-position:center;background-size:contain;background-repeat:no-repeat}
+#attackWrap{position:relative;display:flex}
+#rightControls #switchBtn{position:absolute;left:50%;transform:translateX(-50%);top:calc(-30px * var(--ui-grow));width:max(44px,calc(48px * var(--ui-grow)));height:max(44px,calc(48px * var(--ui-grow)));z-index:2;border-width:2px;box-shadow:0 2px 6px #000a}
+#rightControls #switchBtn .btnIco{width:64%;height:64%}
+#stage[data-mode="town"] #rightControls .btnIco{display:none}
 #stage:not([data-mode="battle"]) #switchBtn{display:none}
 #rightControls #mapBtn.active{background:#5c4a28;color:#fff3d6}
 #rightControls:has(#mapBtn.active){opacity:1}

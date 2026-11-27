@@ -440,12 +440,20 @@
   function switchWeapon(g) {
     const L = g.loadout;
     const h = g.hero;
-    if (!L?.can || L.switching || !h?.alive || h.swing || g.mode !== 'battle') return false;
+    if (!L?.can || L.switching || !h?.alive || g.mode !== 'battle') return false;
+    if (h.swing) {
+      // P11-09: asked for mid-swing (a tap on the badge, a swipe, Q): it comes when the swing is done.
+      L.wanted = true;
+      CL.input?.releaseAttack?.();
+      return false;
+    }
+    L.wanted = false;
     const to = L.which === 'primary' ? 'secondary' : 'primary';
     L.ready[L.which] = g.t + h.attackCooldown; // this weapon is ready again no sooner than it would have been
     const p = CL.profile.weaponOf(weaponIn(L.kit, to));
     L.switching = { to, at: g.t + (p.item?.combat?.switch ?? p.family.switch ?? 0.4) };
     h.guard = false;
+    CL.input?.releaseAttack?.(); // P11-09: a held Attack lets go; press again with the weapon in hand
     // P11-07: a draw or a crossbow's reload is lost on a switch (it can't be shortened by switching).
     h.drawT = 0;
     h.loaded = false;

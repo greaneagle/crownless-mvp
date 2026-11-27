@@ -92,6 +92,9 @@
     whiff: () => Boolean(CL.game.whiffed),
     bowInHand: () => Boolean(CL.game.hero?.ranged), // P11-07
     shieldPressure: () => Boolean(CL.game.brokeGuard),
+    // P11-09: a second weapon to bring to hand; riders on the field (yours, the enemy's, or you).
+    secondWeapon: () => Boolean(CL.game.loadout?.can),
+    riders: () => Boolean(CL.game.hero?.mounted || CL.game.enemies?.some((e) => e.alive && CL.units.mounted(e))),
   };
 
   /** The text for this device: touch phones get the touch wording, keyboards the key wording. */
@@ -187,6 +190,7 @@
     for (const h of Object.values(C.help_topics || {})) {
       if (!h.title || !Array.isArray(h.body) || !h.body.length) err(`help ${h.id}: needs a title and text`);
       for (const row of h.controls || []) if (!Array.isArray(row) || row.length !== 3) err(`help ${h.id}: controls rows are [touch, keys, action]`);
+      for (const sec of h.sections || []) if (!sec?.title || !Array.isArray(sec.body) || !sec.body.length) err(`help ${h.id}: a section needs a title and text`); // P11-09
     }
   }
 

@@ -18,6 +18,8 @@
   const BATTLE_DEFAULT = { touch: 150, desktop: 150, old: { touch: 30, desktop: 40 } };
   const SLOW = { fps: 30, seconds: 10 }; // a battle slower than this, for at least this long, offers a smaller size
   const BATTLEFIELDS = ['large', 'small']; // V2-05: large maps with a following camera, or one screen
+  /** P11-09: the switch control on the phone: a badge on ATTACK's edge, or a swipe across ATTACK. */
+  const SWITCH_CONTROLS = ['edge', 'swipe'];
   const PREP_PRESETS = ['auto', 'balanced', 'defensive', 'aggressive', 'custom']; // V2-07; P9-B4: Auto (the plan chosen for you)
   const PREP_ORDERS = ['follow', 'hold', 'charge'];
   // W-01: text size, the substitute for the browser's pinch-zoom (the page blocks it, because pinch
@@ -80,7 +82,7 @@
   function defaults() {
     const touch = isTouch();
     // Full screen is on by default on phones, where the address bar costs the most room.
-    return { music: 50, sfx: 70, battleSize: touch ? BATTLE_DEFAULT.touch : BATTLE_DEFAULT.desktop, battleSizeChosen: false, slowOffered: false, battlefield: 'large', prepPreset: 'auto', prepSkip: false, prepCustom: null, prepPlans: [], reducedEffects: false, parry: false, aimMouse: true, aimTouch: false, healthBars: true, tips: true, fullscreen: touch, textSize: 'normal', mapZoom: null, battleZoom: 1, mapSpeed: 'normal', sharpness: 'balanced' };
+    return { music: 50, sfx: 70, battleSize: touch ? BATTLE_DEFAULT.touch : BATTLE_DEFAULT.desktop, battleSizeChosen: false, slowOffered: false, battlefield: 'large', prepPreset: 'auto', prepSkip: false, prepCustom: null, prepPlans: [], reducedEffects: false, parry: false, aimAssist: true, aimMouse: true, aimTouch: false, glint: true, switchControl: 'edge', healthBars: true, tips: true, fullscreen: touch, textSize: 'normal', mapZoom: null, battleZoom: 1, mapSpeed: 'normal', sharpness: 'balanced' };
   }
 
   let current = defaults();
@@ -103,6 +105,9 @@
       prepPlans: savedPlans(r.prepPlans),
       reducedEffects: typeof r.reducedEffects === 'boolean' ? r.reducedEffects : d.reducedEffects,
       parry: typeof r.parry === 'boolean' ? r.parry : d.parry, // P11-05: the timed parry experiment (D-P11j), off by default
+      aimAssist: typeof r.aimAssist === 'boolean' ? r.aimAssist : d.aimAssist, // P11-09: the game picks a bow's target (the ring); off, it shoots where you face
+      glint: typeof r.glint === 'boolean' ? r.glint : d.glint, // P11-09: a glint on a weapon wound up at you
+      switchControl: SWITCH_CONTROLS.includes(r.switchControl) ? r.switchControl : d.switchControl, // P11-09: the switch on ATTACK's edge, or a swipe across it
       aimMouse: typeof r.aimMouse === 'boolean' ? r.aimMouse : d.aimMouse, // P11-07: a bow aims at the mouse pointer (desktop)
       aimTouch: typeof r.aimTouch === 'boolean' ? r.aimTouch : d.aimTouch, // P11-07: a finger on the field aims (phones), off by default
       healthBars: typeof r.healthBars === 'boolean' ? r.healthBars : d.healthBars,

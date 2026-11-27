@@ -278,15 +278,19 @@ test('switching weapons in battle: takes its time, not while swinging, and never
   const L = g.loadout;
   assert.deepEqual([L.which, L.can, h.canBlock], ['primary', true, true]);
   const swordDamage = h.damage;
-  // Not while swinging.
+  // Not while swinging: asked for mid-swing (P11-09), it waits for the swing to end, then starts by itself.
   CL.combat.startAttack(h);
   assert.equal(CL.gear.switchWeapon(g), false);
+  assert.equal(L.wanted, true, 'kept for after the swing');
+  assert.equal(CL.gear.switching(g), false);
   // Wait out the swing; the sword's cooldown is still running when the switch starts.
   while (h.swing) CL.combat.update(0.02);
   const left = h.attackCooldown;
   assert.ok(left >= 0);
   const t0 = g.t;
-  assert.equal(CL.gear.switchWeapon(g), true);
+  if (!CL.gear.switching(g)) CL.combat.update(0.02);
+  assert.equal(CL.gear.switching(g), true, 'it started as the swing ended');
+  assert.equal(L.wanted, false);
   assert.equal(CL.gear.switchWeapon(g), false, 'one at a time');
   g.attackHeld = true;
   // No blow and no block while drawing.

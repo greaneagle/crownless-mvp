@@ -200,7 +200,9 @@
     if (CL.tips?.showing()) hideTip();
     setTimeout(() => CL.tips?.check(), 400);
     if (mode === 'result') CL.audio?.play(g.result?.win ? 'win' : 'capture');
-    $('#attackBtn').textContent = mode === 'town' ? 'TALK' : 'ATTACK';
+    $('#attackBtn .btnLabel').textContent = mode === 'town' ? 'TALK' : 'ATTACK';
+    if (mode === 'town') $('#attackBtn').setAttribute('aria-label', 'Talk');
+    CL.input?.releaseHeld?.(); // P11-09: nothing stays held across a change of screen (a battle's end among them)
     $('#ordersPanel').classList.add('hidden');
     $('#prepPanel').classList.toggle('hidden', mode !== 'prepare');
     if (mode === 'prepare') renderPrep();
@@ -2218,20 +2220,45 @@
     );
   }
 
+  /** P11-09: a battle button's icon (one of the kit's, or none), named in its label. */
+  function setBtnIcon(btn, name) {
+    const ic = btn.querySelector('.btnIco');
+    if (!ic) return;
+    ic.className = `btnIco ico${name ? ` ico-${name}` : ''}`;
+    ic.classList.toggle('hidden', !name);
+  }
+
   /**
-   * P11-02: the battle's gear buttons: SWITCH only when a second weapon can be brought to hand (its name
-   * on it), BLOCK only with a shield in hand (no shield, no block).
+   * P11-02, P11-09: the battle's gear buttons. ATTACK's icon is the weapon in hand (sword, axe, bow,
+   * lance...); BLOCK's the shield, or the weapon that guards (disabled with neither). The switch control
+   * sits on ATTACK's edge with the other weapon's icon, only when there is one to bring to hand (with the
+   * swipe setting, it is hidden and a swipe across ATTACK switches).
    */
   function gearButtons() {
     const g = CL.game;
-    $('#dismountBtn').classList.toggle('hidden', !g.hero?.mounted); // P11-08: only while riding
-    $('#blockBtn').disabled = (g.hero?.guardKind || (g.hero?.canBlock === false ? 'none' : 'shield')) === 'none'; // P11-05: a weapon guard blocks too
+    const h = g.hero;
+    $('#dismountBtn').classList.toggle('hidden', !h?.mounted); // P11-08: only while riding
+    const guard = h?.guardKind || (h?.canBlock === false ? 'none' : 'shield');
+    const block = $('#blockBtn');
+    block.disabled = guard === 'none'; // P11-05: a weapon guard blocks too
     const L = g.loadout;
+    const inHand = L?.kit ? (L.which === 'secondary' ? L.kit.weapon2 : L.kit.weapon) : CL.campaign?.equipment?.weapon;
+    const weaponIcon = (id) => (id ? CL.gfx?.ui?.itemIcon?.(id) : null);
+    const lance = h?.profile?.family === 'lance';
+    const atk = weaponIcon(inHand);
+    setBtnIcon($('#attackBtn'), lance ? 'lance' : atk?.name || 'fist');
+    const atkName = inHand ? CL.content.item(inHand)?.name : 'your fists';
+    $('#attackBtn').setAttribute('aria-label', g.mode === 'town' ? 'Talk' : `Attack with ${atkName}${h?.ranged ? ' (hold to draw)' : ''}`);
+    setBtnIcon(block, guard === 'none' ? null : guard === 'shield' ? 'shield' : lance ? 'lance' : atk?.name);
+    block.setAttribute('aria-label', guard === 'none' ? 'Block (nothing to block with)' : guard === 'shield' ? 'Block with your shield' : `Guard with ${atkName}`);
     const sw = $('#switchBtn');
-    sw.classList.toggle('hidden', !L?.can);
+    const swipe = CL.settings?.get?.('switchControl') === 'swipe';
+    sw.classList.toggle('hidden', !L?.can || swipe);
+    $('#attackWrap').classList.toggle('canSwitch', Boolean(L?.can));
     if (L?.can) {
       const other = L.which === 'primary' ? L.kit?.weapon2 : L.kit?.weapon;
       sw.disabled = Boolean(L.switching);
+      setBtnIcon(sw, weaponIcon(other)?.name || 'fist');
       sw.setAttribute('aria-label', `Switch to ${other ? CL.content.item(other).name : 'fists'} (Q)`);
     }
   }
@@ -3052,7 +3079,8 @@
     if (CL.tips?.showing()) hideTip();
     setTimeout(() => CL.tips?.check('battle'), 0); // at once: the first battle waits on its card (battles don't start through changeMode)
     requestAnimationFrame(fitHud);
-    $('#attackBtn').textContent = 'ATTACK';
+    $('#attackBtn .btnLabel').textContent = 'ATTACK';
+    CL.input?.releaseHeld?.(); // P11-09: a battle starts with nothing held
     gearButtons();
     $('#overlay').classList.add('hidden');
     $('#ordersPanel').classList.add('hidden');
@@ -3125,6 +3153,7 @@
     const g = CL.game;
     if (g.mode !== 'battle' || g.paused === paused) return;
     g.paused = paused;
+    if (paused) CL.input?.releaseHeld?.(); // P11-09: a pause (or a card, Help, Settings) lets go of everything
     $('#pauseBtn').textContent = paused ? 'Resume' : 'Pause';
     CL.diag.log('info', paused ? 'Paused' : 'Resumed', reason ? { reason } : undefined);
   }
@@ -3662,6 +3691,9 @@
     $('#setReduced').checked = s.reducedEffects;
     $('#setParry').checked = s.parry; // P11-05 (D-P11j)
     $('#setAimMouse').checked = s.aimMouse; // P11-07
+    $('#setAimAssist').checked = s.aimAssist; // P11-09
+    $('#setGlint').checked = s.glint;
+    $('#setSwitch').value = s.switchControl;
     $('#setAimTouch').checked = s.aimTouch;
     $('#setTips').checked = s.tips;
     $('#setMapSpeed').value = s.mapSpeed;
@@ -3727,6 +3759,12 @@
     $('#setReduced').onchange = () => CL.settings.set('reducedEffects', $('#setReduced').checked);
     $('#setParry').onchange = () => CL.settings.set('parry', $('#setParry').checked);
     $('#setAimMouse').onchange = () => CL.settings.set('aimMouse', $('#setAimMouse').checked);
+    $('#setAimAssist').onchange = () => CL.settings.set('aimAssist', $('#setAimAssist').checked); // P11-09
+    $('#setGlint').onchange = () => CL.settings.set('glint', $('#setGlint').checked);
+    $('#setSwitch').onchange = () => {
+      CL.settings.set('switchControl', $('#setSwitch').value);
+      if (CL.game.mode === 'battle') gearButtons();
+    };
     $('#setAimTouch').onchange = () => CL.settings.set('aimTouch', $('#setAimTouch').checked);
     // P9-07: content packs (js/packs.js), kept in this browser.
     $('#packImportBtn').onclick = () => $('#packFile').click();
@@ -3820,6 +3858,7 @@
         const d = el('details', 'helpTopic');
         d.open = h.id === first;
         d.append(el('summary', '', h.title), ...h.body.map((p) => el('p', '', p)));
+        for (const s of h.sections || []) d.append(el('h4', 'helpSection', s.title), ...s.body.map((p) => el('p', '', p))); // P11-09: a topic by stage
         if (h.controls?.length) {
           const table = el('table', 'helpKeys');
           const head = el('tr');

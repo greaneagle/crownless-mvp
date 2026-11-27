@@ -82,14 +82,14 @@
       "t": 13.12
     },
     "assault:attack": {
-      "frames": 1438,
-      "digest": "bf85ecf9ef9d17f934b34777c96661ab30e00d02fa2e8d5e88cabf33eb420cf4",
+      "frames": 1455,
+      "digest": "bae969d7a63d05971fbcdfe7b0ed1b1c21fd2e6b7444bd32c0cbc11686d3abdc",
       "mode": "result",
       "win": false,
       "heroHp": 0,
       "allies": 0,
-      "enemies": 6,
-      "t": 28.76
+      "enemies": 12,
+      "t": 29.1
     }
   }
 }

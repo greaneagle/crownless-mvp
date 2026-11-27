@@ -117,7 +117,7 @@
         ['Joystick', 'WASD / arrows', 'Move'],
         ['ATTACK', 'Space / left click', 'Swing'],
         ['Hold BLOCK', 'Shift / right click', 'Block (a shield, or a two-handed weapon or spear)'],
-        ['SWITCH', 'Q', 'Bring your second weapon to hand (if you carry one)'],
+        ['The badge on ATTACK (or a swipe)', 'Q', 'Bring your second weapon to hand (if you carry one)'],
         ['ORDERS → Dismount', 'X', 'Get off your horse (no getting back on)'],
         ['ORDERS → group', '1 / 2 / 3', 'Infantry / Archers / Cavalry'],
         ['ORDERS → order', 'F / H / C', 'Follow / Hold / Charge'],
@@ -142,6 +142,13 @@
         'What you wear and wield is your load (Party shows it, against what your Strength carries easily). Light costs nothing; medium slows you a little; heavy makes you slower to walk, to get going and to recover after a blow; too heavy, much slower. Agility lessens all of it. Armour still protects, and mail steadies you against blows that would interrupt you. A mace hits through some of the armour. Your pack never counts, nor your horse.',
         'With a two-handed weapon or a spear and no shield, Block raises the weapon: it takes part of a frontal blow, in a narrower arc. Each weapon is trained by its skill (One-Handed, Two-Handed or Polearm): more damage and a slightly quicker recovery a point.',
         'You will hear and read what happened: a miss, a blow out of reach, a block, a broken guard, an interruption. A glint on a weapon tip warns you of a blow being wound up at you.'
+      ],
+      // P11-09: by stage, as a fighter meets each.
+      sections: [
+        { title: 'Your first fight', body: ['Move with the joystick (WASD), tap ATTACK (Space or the left button) to strike, and hold BLOCK (Shift or the right button) to raise your shield. Strike when they have missed, not before; a glint on a weapon means it is coming at you.'] },
+        { title: 'Your second weapon', body: ['Carry a second weapon from the Party screen, and choose which one a battle starts with. In battle, the small badge on ATTACK’s edge shows it: tap it, or press Q, to bring it to hand (Settings can make it a swipe across ATTACK). It takes a moment and never comes mid-swing; a two-handed weapon slings your shield on your back.'] },
+        { title: 'Bows', body: ['Hold ATTACK to draw and let go to loose; the ring under a foe shows your target (Settings: assisted aim, or the mouse pointer, or a finger on the field). See Bows and crossbows.'] },
+        { title: 'Horses', body: ['A battle horse carries you in where the field allows. It turns at its own rate and gathers speed: turn early, keep moving, and keep away from braced spears. Dismount in Orders (X). See On horseback.'] },
       ]
     },
     archery: {
@@ -315,6 +322,8 @@
     draw: { id: 'draw', on: 'battle', when: 'bowInHand', help: 'archery', title: 'Drawing a bow', textTouch: 'Hold ATTACK to draw, let go to loose. The game picks the target (the ring under them); a tap looses as soon as you have drawn.', textKeys: 'Hold Space or the left button to draw, let go to loose. The game picks the target (the ring under them), or aim with the mouse pointer.' },
     whiff: { id: 'whiff', on: 'battle', when: 'whiff', help: 'fighting', title: 'A miss costs time', text: 'A swing that hits nobody takes longer to recover. Step in until they are in reach, or wait for their own swing to miss and strike while they recover.' },
     shieldPressure: { id: 'shieldPressure', on: 'battle', when: 'shieldPressure', help: 'fighting', title: 'Shields give way', text: 'Every blow a shield stops wears it down; enough of them break the guard and lower it for a moment. Axes press hardest. Strike while it is down.' },
+    switch: { id: 'switch', on: 'battle', when: 'secondWeapon', help: 'fighting', title: 'Your second weapon', textTouch: 'Tap the badge on ATTACK (it shows your other weapon) to bring that weapon to hand. It takes a moment, never mid-swing. Settings can make it a swipe.', textKeys: 'Q brings your other weapon to hand. It takes a moment, and never mid-swing; a bow’s draw is lost.' },
+    riders: { id: 'riders', on: 'battle', when: 'riders', help: 'horseback', title: 'Riders turn slowly', text: 'A horse gathers speed and turns wide. Step aside as a rider comes and strike as it passes; spears held still stop a charge. On horseback, keep moving and turn early.' },
     character: { id: 'character', on: 'character', help: 'party', title: 'Party and gear', text: 'Equip what you find, spend skill and attribute points, and upgrade soldiers who have earned it.' },
     ransom: { id: 'ransom', on: 'ransom', help: 'lands', title: 'A ransom', text: 'A lord you beat is your prisoner. Accept the ransom, hold them for later (they may slip away), or let them go for nothing: renown, and a lord who remembers it.' },
     allegiance: { id: 'allegiance', on: 'contracts', when: 'atCapital', help: 'lands', title: 'Service and fealty', text: 'A capital’s board also offers Service: a month as the kingdom’s mercenary, paid weekly. Serve it well and you may swear fealty. Each card says first what will change and what stays yours.' },

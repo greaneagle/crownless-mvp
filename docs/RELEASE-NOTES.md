@@ -1,5 +1,27 @@
 # Crownless — Release Notes
 
+## v5.9.0 — Controls, feedback and teaching (P11-09) · 2026-11-27
+
+The controls for swords, bows and horses made whole, on the phone and the PC. With this, milestone M2, "Bow and horse", is ready to play.
+
+### New
+- **Switching weapons on the phone:** a small badge on ATTACK's top edge shows your other weapon; tap it to bring that weapon to hand. Settings can make it a **swipe across ATTACK** instead. On a computer, Q. Asked for mid-swing, the switch comes as soon as the swing is done.
+- **ATTACK and BLOCK show what's in your hands:** a sword, an axe, a bow, a lance, your fists; BLOCK your shield, or the weapon you guard with (greyed out with neither).
+- **Hints when they matter:** after your first fight's controls card, one short card the first time each comes up: a swing that misses, a shield giving way, drawing a bow, and now **your second weapon** and **riders**. Each shows once and pauses nothing.
+- **How to Play → Fighting** now goes by stage: your first fight, your second weapon, bows, horses.
+- **Settings:** Switch weapon (the badge or a swipe), **Assisted aim** (on: the game picks a bow's target; off: you shoot where you face) and **the glint** on a weapon wound up at you (on).
+
+### Fixed
+- **Nothing stays held by mistake:** a pause, a card, Help, Settings, the tactical map, the battle ending, a weapon switch, the page going to the background or the phone turned upright now let go of ATTACK, BLOCK, the keys and the stick. A drawn bow is let down, not loosed.
+- **Two thumbs:** lifting your thumb off the stick no longer lets go of ATTACK held by the other (it loosed a drawn bow). With a thumb on the stick, a tap on MAP, ORDERS, Pause, zoom or the switch badge now works (it did nothing).
+- **With Reduced effects, and in battles of more than 80,** you still see your own fight's cues (a miss, a block, a broken guard, a stagger), and the glint stays, as a still mark.
+- **Sieges defended on the walls** were lost almost every time once your hero no longer cut down attackers by the dozen. Now a soldier on a ladder is off balance: no guard, and blows land far harder. Defending is won about as often as Simulate promises, or a little more; storming is a little harder than it was.
+- **The escort's wagon** burned in a second, before your soldiers could turn back for it. It now holds out long enough for them: saved in about half the fights when they mind it.
+
+### Under the hood
+- `js/input.js` `releaseAttack`, `releaseHeld`, `tapOnRelease`; hold buttons count their pointers; `CL.gear.switchWeapon` keeps a switch asked for mid-swing (`loadout.wanted`). `js/combat.js` `CLIMB`; `CL.objective.WAGON.hp` 120. Settings `switchControl`, `aimAssist`, `glint`. Tips `switch`, `riders`; help topics' `sections`. Icons `lance` and `fist`.
+- `tests/browser/controls.spec.js` (new, 19); `tests/tips.test.js` (+2), `assault.test.js` (+1), `art-battle.test.js` (+1). Golden battles recorded again (the assault). To confirm on the next long run: the siege parity, the battle extras and the whole battle parity (`docs/PENDING-CHECKS.md`).
+
 ## v5.8.0 — Fighting from the saddle (P11-08) · 2026-11-27
 
 You can ride into battle. With M2's last task (P11-09) still to come, this is the horse half of milestone M2, "Bow and horse".

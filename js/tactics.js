@@ -117,6 +117,7 @@
   function overview(g, on = !g.overview) {
     if (on && !active(g)) return false;
     g.overview = Boolean(on);
+    if (g.overview) CL.input?.releaseHeld?.(); // P11-09: the battle is held, and so is nothing else
     CL.ui?.showOverview?.(g.overview);
     if (g.overview) CL.ui?.message?.('Tactical overview, battle held: pick a group in Orders, then tap where it should go. MAP, Tab or M closes it.');
     CL.diag.log('info', g.overview ? 'Tactical overview opened' : 'Tactical overview closed');

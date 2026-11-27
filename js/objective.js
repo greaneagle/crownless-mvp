@@ -2,7 +2,7 @@
 /* Crownless battle objective (P7-11): protect the wagon, in an escort contract's ambush.
  *
  * When the Reavers lying in wait on the escort road spring (js/contracts.js), the battle has the
- * caravan's wagon on the field, behind the company. It doesn't move or fight; it has 40 HP and a
+ * caravan's wagon on the field, behind the company. It doesn't move or fight; it has 120 HP (P11-09: long enough for its guards to get back) and a
  * little armour (2), and it is solid (an obstacle: nobody walks through it, arrows fly over it).
  *   - The raiders go for it: every third one that takes the field is out for the wagon and nothing
  *     else (it counts as 1,000 px nearer than it is), unless someone stands in its way (within 60 px:
@@ -24,7 +24,7 @@
   'use strict';
   const CL = root.Crownless;
 
-  const WAGON = { hp: 40, armor: 2, w: 46, h: 28, back: 130, pull: 160, raidPull: 1000, raidEvery: 3, blocked: 60, lurk: 0, springAt: 95, fromFlank: true, guardRadius: 180, guardPull: 150, guardReach: 420, spring: [420, 640], spread: 300, rear: [420, 560], flank: [330, 460] };
+  const WAGON = { hp: 120, armor: 2, w: 46, h: 28, back: 130, pull: 160, raidPull: 1000, raidEvery: 3, blocked: 60, lurk: 0, springAt: 95, fromFlank: true, guardRadius: 180, guardPull: 150, guardReach: 420, spring: [420, 640], spread: 300, rear: [420, 560], flank: [330, 460] };
   const USE = { guard: true };
 
   /** Put the wagon on the field if this battle has one (before the company forms up around it). @param {any} g @param {any} enc */

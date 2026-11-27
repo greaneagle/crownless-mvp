@@ -267,3 +267,23 @@ test('a stalled shared battle: the whole army withdraws, its reserves with it', 
   assert.equal(g.enemyReserve.length, 0, 'the reserve goes too');
   assert.equal(g.enemies.some((e) => e.alive), false);
 });
+
+test('P11-09: a climber is off balance: no guard on the ladder, and a blow lands harder than on the ground', () => {
+  const { CL } = loadGame();
+  CL.ui = headlessUi(CL);
+  const g = CL.game;
+  CL.combat.startBattle(CL.assault.practice(20, 'attack'));
+  const w = g.battleMap.wall;
+  const ladder = w.gaps.find((x) => x.kind === 'ladder');
+  const e = g.enemies[0];
+  const taken = (x) => {
+    const a = g.allies[0];
+    Object.assign(a, { x, y: ladder.y, hp: a.maxhp, guard: true, alive: true });
+    CL.combat.hit(a, 10, e);
+    return a.maxhp - a.hp;
+  };
+  const ground = taken(w.centre - 300);
+  const up = taken(w.centre);
+  assert.ok(up >= ground * 2, `${up} on the ladder against ${ground} on the ground`);
+  assert.equal(CL.combat.CLIMB.exposed > 1, true);
+});

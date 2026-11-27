@@ -144,7 +144,7 @@ The fix is not to make input unresponsive or to punish repeated presses, but to 
 | **P11-06** | Armour, weight and movement | M | P2 | P11-05 | 5.6.0 | M2 | ✅ Done |
 | **P11-07** | Bows and crossbows in your hands | L | P1 | P11-05, P11-06 | 5.7.0 | M2 | ✅ Done |
 | **P11-08** | Fighting from the saddle | L | P1 | P11-06, P11-07 | 5.8.0 | **M2 "Bow and horse"** | ✅ Done |
-| **P11-09** | Controls, feedback and teaching (consolidation) | M | P1 | P11-05, P11-07, P11-08 | 5.9.0 | M2 | Specified |
+| **P11-09** | Controls, feedback and teaching (consolidation) | M | P1 | P11-05, P11-07, P11-08 | 5.9.0 | M2 | ✅ Done |
 | **P11-10** | Fighters who think: individual AI and styles | L | P1 | P11-05, P11-07, P11-08 | 5.10.0 | M3 | Specified |
 | **P11-11** | Troops by their weapons | M–L | P1 | P11-10 | 5.11.0 | M3 | Specified |
 | **P11-12** | Performance and art-cache checkpoint | M | P1 | P11-11 | 5.12.0 | **M3 "Soldiers who fight like it"** | Specified |

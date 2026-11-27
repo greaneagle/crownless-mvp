@@ -108,3 +108,24 @@ test('a big battle bakes blows too, a few steps to each phase, never off the rea
   assert.equal(ctx.calls.drawImage, 1, 'stamped');
   assert.ok(ctx.calls.fill < 10, 'not drawn part by part');
 });
+
+test('P11-09: Reduced effects keeps the hero’s own cues (a miss, a block, a broken guard, a stagger), not others’', () => {
+  const { CL } = game();
+  CL.settings.set('reducedEffects', true);
+  CL.combat.startBattle('captains_trial');
+  const g = CL.game;
+  const h = g.hero;
+  const all = { x: 0, y: 0, ...(({ w, h: hh }) => ({ w, h: hh }))(CL.camera.worldSize(g.battleMap)) };
+  const strokes = (effects) => {
+    g.effects = effects;
+    const ctx = fakeCtx();
+    CL.gfx.battle.draw(ctx, g, all, 1.33);
+    return ctx.calls.stroke + ctx.calls.fill;
+  };
+  const none = strokes([]);
+  for (const kind of ['whiff', 'block', 'break', 'stagger']) {
+    assert.ok(strokes([{ x: h.x, y: h.y - 10, t: 0.2, kind, face: 'right' }]) > none, `${kind} by the hero is drawn`);
+    assert.equal(strokes([{ x: h.x + 600, y: h.y, t: 0.2, kind, face: 'right' }]), none, `${kind} far off is not`);
+  }
+  assert.equal(strokes([{ x: h.x, y: h.y, t: 0.2, kind: 'hit' }]), none, 'a hit ring stays off');
+});

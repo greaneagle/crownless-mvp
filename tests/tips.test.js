@@ -127,3 +127,51 @@ test('W-05c: leaving the March shows "Beyond the March" once, and How to Play de
   assert.match(CL.content.get('help_topics', 'map').body.join(' '), /zoom all the way out to see the whole realm/);
   assert.equal(new Set(topics.map((id) => CL.content.get('help_topics', id).order)).size, topics.length, 'no two topics share a place');
 });
+
+test('P11-09: the fighting hints come one at a time, each once, when first relevant, and pause nothing', () => {
+  const { CL } = setup();
+  const start = (setup2) => {
+    setup2?.();
+    CL.combat.startBattle({ id: 't', name: 'T', map: 'grass_field', waves: [{ looter: 2 }], reward: { goldBase: 0, goldPerKill: 0, renown: 0 }, loot: 'low' });
+  };
+  start();
+  assert.equal(CL.tips.check().id, 'battle', 'the first fight: the controls card first');
+  CL.tips.dismiss();
+  assert.equal(CL.tips.check(), null, 'nothing new is relevant yet');
+  // Each when it comes, once; none pauses the battle.
+  const hint = (id, make) => {
+    make();
+    const t = CL.tips.check();
+    assert.equal(t?.id, id);
+    assert.equal(CL.game.paused, false, `${id} pauses nothing`);
+    CL.tips.dismiss();
+    assert.equal(CL.tips.check(), null, `${id}: once`);
+  };
+  hint('whiff', () => (CL.game.whiffed = true));
+  hint('shieldPressure', () => (CL.game.brokeGuard = true));
+  // A second weapon carried: the next battle has one to bring to hand.
+  CL.campaign.equipment.weapon2 = 'hunting_spear' in CL.content.table('items') ? 'hunting_spear' : 'ash_spear';
+  start();
+  hint('switch', () => assert.equal(CL.game.loadout.can, true));
+  hint('riders', () => CL.game.enemies.push(Object.assign(CL.units.makeUnit(400, 300, 'enemy', 'looter'), { mounted: true, mount: { speed: 140 } })));
+  CL.game.hero.ranged = { range: 200 };
+  assert.equal(CL.tips.check()?.id, 'draw');
+  CL.tips.dismiss();
+  // Never again, in a later battle.
+  start();
+  assert.equal(CL.tips.check(), null);
+  // The new hints have touch and key wording, and their topics exist.
+  for (const id of ['switch', 'riders', 'draw', 'whiff', 'shieldPressure']) {
+    const t = CL.content.get('tips', id);
+    assert.ok(t.text || (t.textTouch && t.textKeys), id);
+    assert.ok(CL.content.get('help_topics', t.help), id);
+  }
+});
+
+test('P11-09: How to Play has Fighting by stage: the first fight, the second weapon, bows, horses', () => {
+  const { CL } = setup();
+  const f = CL.content.get('help_topics', 'fighting');
+  assert.deepEqual(JSON.parse(JSON.stringify(f.sections.map((s) => s.title))), ['Your first fight', 'Your second weapon', 'Bows', 'Horses']);
+  assert.match(f.sections[1].body.join(' '), /badge on ATTACK.*Q/);
+  assert.deepEqual(Array.from(CL.content.validate()), []);
+});

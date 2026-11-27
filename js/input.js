@@ -146,8 +146,11 @@
       CL.morale.rally(game);
       ui.showSelectedGroup(game.group);
     };
-    // P11-02: a temporary button for the second weapon (P11-09 settles the controls).
+    // P11-09: the switch control on ATTACK's edge (or a swipe across ATTACK, a setting; PC Q).
     $('#switchBtn').onclick = () => CL.gear.switchWeapon(game);
+    // P11-09: the battle's tap buttons act on a finger's release, so a second finger works while the
+    // first holds the joystick or ATTACK (the browser makes no click of a second finger's tap).
+    for (const sel of ['#switchBtn', '#mapBtn', '#ordersBtn', '#pauseBtn']) tapOnRelease($(sel));
   }
 
   /** Save & export screen: manual save, export file, copy text, import file/text, restore. */
@@ -302,7 +305,10 @@
       }
       if (e.button === 2) g.blockHeld = true;
     });
-    root.addEventListener('pointerup', () => {
+    root.addEventListener('pointerup', (e) => {
+      // The mouse's hold on the field ends wherever it is let go. P11-09: only the mouse's, and not a
+      // button's: a finger lifted from the joystick no longer lets go of ATTACK held by the other thumb.
+      if (e.pointerType !== 'mouse' || [...holding.values()].some((s) => s.has(e.pointerId))) return;
       g.attackHeld = false;
       g.blockHeld = false;
     });
@@ -459,22 +465,67 @@
     $('#zoomBtn').onclick = () => {
       if (CL.game.mode === 'battle') CL.camera.toggleZoom(CL.game);
     };
+    tapOnRelease($('#zoomBtn')); // P11-09: with a thumb on the joystick too
   }
 
   const MAP_KEYS = { Equal: 1, NumpadAdd: 1, Minus: -1, NumpadSubtract: -1 };
 
-  /** Press-and-hold touch button with pointer capture. */
-  function bindHold($, selector, start, end) {
+  /**
+   * P11-09: a button that acts when a finger (or the mouse) lifts on it, as well as on a keyboard click;
+   * the click that follows a pointer's own release is not counted twice. @param {HTMLElement} b
+   */
+  function tapOnRelease(b) {
+    const handler = b.onclick;
+    if (!handler) return;
+    const down = new Set();
+    let tapped = 0;
+    b.addEventListener('pointerdown', (e) => down.add(e.pointerId));
+    b.addEventListener('pointercancel', (e) => down.delete(e.pointerId));
+    b.addEventListener('pointerup', (e) => {
+      if (!down.delete(e.pointerId) || b.disabled) return;
+      const r = b.getBoundingClientRect();
+      if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) return; // slid off: no tap
+      tapped = performance.now();
+      handler.call(b, e);
+    });
+    b.onclick = (e) => {
+      if (tapped && performance.now() - tapped < 700) {
+        tapped = 0;
+        return; // the pointer's own release already acted
+      }
+      handler.call(b, e);
+    };
+  }
+
+  /** The fingers (or the mouse) down on each hold button: it stays held until the last is lifted. */
+  const holding = new Map();
+
+  /**
+   * Press-and-hold touch button with pointer capture. A second finger on it adds to the hold; lifting
+   * one of two keeps it held; a cancelled or lost pointer lets go (P11-09). `onMove` sees each move.
+   */
+  function bindHold($, selector, start, end, onMove) {
     const b = $(selector);
+    const down = new Set();
+    holding.set(selector, down);
     b.addEventListener('pointerdown', (e) => {
       e.preventDefault();
       b.setPointerCapture(e.pointerId);
-      start();
+      down.add(e.pointerId);
+      start(e);
     });
-    b.addEventListener('pointerup', end);
-    b.addEventListener('pointercancel', end);
-    b.addEventListener('lostpointercapture', end);
+    const up = (e) => {
+      if (!down.delete(e.pointerId) || down.size) return;
+      end(e);
+    };
+    b.addEventListener('pointerup', up);
+    b.addEventListener('pointercancel', up);
+    b.addEventListener('lostpointercapture', up);
+    if (onMove) b.addEventListener('pointermove', (e) => down.has(e.pointerId) && onMove(e));
   }
+
+  /** P11-09: a swipe across ATTACK, this far sideways (a share of its width), switches weapons. */
+  const SWIPE = { across: 0.55, straight: 0.6 };
 
   function bindJoystick($) {
     const g = CL.game;
@@ -521,14 +572,40 @@
 
   let resetJoystick = () => {};
 
-  /** Drop every held input — used on blur, tab hide and orientation change. */
-  function releaseAll() {
+  /**
+   * P11-09: let go of Attack: the button, Space, the queued tap, and a bow's draw (let down, not loosed;
+   * a crossbow keeps its load). For a weapon switch, and with everything else below.
+   */
+  function releaseAttack() {
     const g = CL.game;
-    g.hold = {};
     g.attackHeld = false;
-    g.blockHeld = false;
     g.attackQueuedAt = null;
+    g.attackWas = false;
+    g.attackWasDown = false;
+    g.looseQueued = false;
+    if (g.hold) g.hold.Space = false;
+    const h = g.hero;
+    if (h?.ranged && !h.ranged.crossbow) h.drawT = 0;
+    holding.get('#attackBtn')?.clear();
+  }
+
+  /**
+   * P11-09: drop every held battle input (Attack and the draw, Block, the keys, the joystick): on a pause,
+   * a modal, the overview, a mode change (a battle starting or ending) — the plan's §12 stuck-input cases.
+   */
+  function releaseHeld() {
+    const g = CL.game;
+    releaseAttack();
+    g.hold = {};
+    g.blockHeld = false;
+    g.blockWasHeld = false;
+    for (const s of holding.values()) s.clear();
     resetJoystick();
+  }
+
+  /** Drop every held input and any gesture: on blur, the page hidden and an orientation change. */
+  function releaseAll() {
+    releaseHeld();
     mapGestures.cancel(); // a lost window ends a drag or pinch with no tap
     battleGestures.cancel();
   }
@@ -569,19 +646,31 @@
     bindMapGestures(canvas);
     bindBattleGestures();
     bindMapView($);
+    let swipe = null; // P11-09: where a press on ATTACK began, for the swipe that switches
     bindHold(
       $,
       '#attackBtn',
-      () => {
+      (e) => {
         if (g.mode === 'town') {
           CL.town.interact(); // the ATTACK button reads TALK in town
           return;
         }
+        swipe = { id: e.pointerId, x: e.clientX, y: e.clientY, done: false };
         g.attackHeld = true;
         CL.combat.queueAttack();
       },
       () => {
         g.attackHeld = false;
+        swipe = null;
+      },
+      (e) => {
+        if (!swipe || swipe.done || swipe.id !== e.pointerId || CL.settings.get('switchControl') !== 'swipe') return;
+        const w = $('#attackBtn').getBoundingClientRect().width || 1;
+        const [dx, dy] = [e.clientX - swipe.x, e.clientY - swipe.y];
+        if (Math.abs(dx) < w * SWIPE.across || Math.abs(dy) > Math.abs(dx) * SWIPE.straight) return;
+        swipe.done = true; // one switch a swipe (after the swing it began, if any)
+        CL.input.releaseAttack();
+        CL.gear.switchWeapon(g);
       },
     );
     bindHold(
@@ -598,5 +687,5 @@
     bindLifecycle();
   }
 
-  CL.input = { bind, releaseAll };
+  CL.input = { bind, releaseAll, releaseHeld, releaseAttack, SWIPE };
 })(typeof window !== 'undefined' ? window : globalThis);

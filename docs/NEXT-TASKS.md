@@ -4048,7 +4048,7 @@ The aim: easy to fight, rewarding to fight well, meaningful to command. The play
 | P11-06 | Armour, weight and movement | M | 5.6.0 | ✅ Done |
 | P11-07 | Bows and crossbows in your hands | L | 5.7.0 | ✅ Done |
 | P11-08 | Fighting from the saddle | L | 5.8.0 | ✅ Done |
-| P11-09 | Controls, feedback and teaching | M | 5.9.0 | Specified |
+| P11-09 | Controls, feedback and teaching | M | 5.9.0 | ✅ Done |
 | P11-10 | Fighters who think: individual AI and styles | L | 5.10.0 | Specified |
 | P11-11 | Troops by their weapons | M–L | 5.11.0 | Specified |
 | P11-12 | Performance and art-cache checkpoint | M | 5.12.0 | Specified |
@@ -4800,7 +4800,7 @@ The aim: easy to fight, rewarding to fight well, meaningful to command. The play
 
 ---
 
-### P11-09 · Controls, feedback and teaching (M) — 5.9.0, Specified — **Milestone M2**
+### P11-09 · Controls, feedback and teaching (M) — 5.9.0, ✅ Done — **Milestone M2**
 
 **First (the owner's rule: the next task fixes what a run found):** the night run's open items in `docs/PENDING-CHECKS.md` "Pending": the siege defence on the walls (0% fought against odds of 65), the escort's wagon never saved, and close's simulated gap (27 against 25).
 
@@ -4858,6 +4858,20 @@ The aim: easy to fight, rewarding to fight well, meaningful to command. The play
 - **Play:** M2.
 - **Explain:** as above.
 - **Not here:** new mechanics.
+
+**Done (5.9.0).**
+- **The night run's open items first** (`docs/PENDING-CHECKS.md`):
+  - **The siege defence** (0% fought against odds of 65). A kill log through `hit()` showed why: on 5.4.0 the hero alone cut down 44 attackers a defence, and the defenders' soldiers killed about as many as now; D-P11d (the hero under everyone's rules) took that away and the walls gave the garrison nothing of their own. Now **a climber is off balance** (`CLIMB.exposed` 3.2, `js/combat.js` `hit()`): no guard on a ladder (`CL.assault.climbing`), and a blow lands 3.2 times as hard. Measured on 15 seeds (`siegeSetup`/`siegeFight`): defending **13 of 15 against odds of 65**, storming **8 of 15 against odds of 41** (it was +29 over its odds). 1.6 gave 1 of 5 defending; 2.5, 3 of 5. The golden assault recorded again.
+  - **The escort's wagon** (never saved since 5.5.0). Frame by frame: the four raiders reach it at 6.5 s and burned its 40 HP in about a second, before and after P11-05; on 5.4.0 it came through only when the main fight happened to end first (by about 9.5 s), and P11-05's slower rhythm made that fight end later. Its guards turn back for it and reach it about three seconds after the raiders. Now **the wagon has 120 HP** (`WAGON.hp`), long enough for them: on 20 seeds saved in **45% of fights with the soldiers minding it, 10% without** (5.4.0: 45%, and the guarding made no clear difference then). 100 HP: 30% / 0%; 140: 70% / 20%.
+  - **close's simulated gap** (27 against 25): left for P11-20, as the pending check allowed: the cheap fix is the auto-resolve reading Phase 11's profiles, which moves every scenario's odds and needs the full parity to measure.
+- **The switch control** (plan §12): a small round badge on ATTACK's upper edge with the other weapon's icon (44 px or more at every text size, growing with it), shown only when there is a second weapon to bring to hand; or, a setting (Settings → Switch weapon), **a swipe across ATTACK** (55% of its width sideways, mostly straight): the badge hidden. PC: **Q only** (the mouse wheel already zooms the battle). A switch asked for mid-swing (the badge, a swipe or Q) now waits for the swing to end and starts by itself (`loadout.wanted`), never while committed; it lets go of a held Attack and a bow's draw.
+- **Context:** ATTACK shows the weapon in hand (the kit's icons: sword, axe, mace, spear, bow, crossbow; a **lance** and a **fist**, new); BLOCK the shield or the weapon that guards, disabled with neither; each with its accessible name ("Attack with Shortbow (hold to draw)", "Block with your shield", "Guard with Greatsword"). ATTACK still reads TALK in town.
+- **Stuck input** (`js/input.js`): `releaseAttack` (Attack, Space, the queued tap, a bow's draw let down, never loosed; a crossbow keeps its load), `releaseHeld` (that, Block, the keys, the joystick, every hold button's fingers) and `releaseAll` (and the gestures). Called on a pause (and so a guide card, Help and Settings), every change of screen (a battle starting or ending), the overview, a weapon switch (Attack only), the page hidden, blur and the phone turned upright. ATTACK and BLOCK count their fingers: a second finger adds to the hold and lifting one of two keeps it; a cancelled or lost pointer lets go. **Two bugs found by the new tests and fixed:** a finger lifted anywhere (the joystick thumb) let go of ATTACK held by the other thumb, loosing a drawn bow (the window's `pointerup` now only ends the mouse's hold on the field); and a second finger's tap on MAP, ORDERS, Pause, zoom or the badge did nothing while the first held the joystick (the browser makes no click of it): those buttons now act on the finger's release (`tapOnRelease`), once.
+- **Feedback audit** (812×375): every cue of plan §10 has a shape and a sound and its words (a miss: a dust arc and a soft sound; a block: the pale arc; a broken guard: the split arc and its sound; an interruption: the wheeling marks and its sound; the glint: a shape). **Reduced effects and battles of more than 80** dropped all of them but the rally's ring: now they keep the hero's own fight's (a miss, a block, a broken guard, a stagger within 90 px of the hero). The glint is a setting (on); with Reduced effects it stays as a still mark on the windup (part of the pose).
+- **Teaching** (`data/help.js`, `js/tips.js`): after the first fight's controls card, single hints when first relevant: `whiff`, `shieldPressure`, `draw` (P11-05, P11-07) and now **`switch`** (a second weapon carried) and **`riders`** (a rider on the field, or you); each once, none pauses the battle. In battle the hint card sits just under the small map (21%), clear of the joystick, ATTACK and the badge at every text size (at Larger it touches MAP and the HP panel). How to Play → **Fighting by stage**: Your first fight, Your second weapon, Bows, Horses (`help_topics` `sections`, checked).
+- **Settings:** Switch weapon (the badge or a swipe), **Assisted aim** (on; off, a bow shoots where you face, with no ring), the **glint** (on), manual aim (P11-07) and the parry experiment (P11-05) as they were.
+- **Not done:** "attack on release" (optional, for the owner's M2 play); the mouse wheel for switching (it zooms).
+- **Tests:** `tests/browser/controls.spec.js` (new, 19: each stuck-input case, two thumbs, the badge at four text sizes, the icons, no badge without a second weapon, the swipe, the hint's place); `tests/tips.test.js` (+2: the hints once each, Fighting by stage); `tests/assault.test.js` (+1, the climber); `tests/art-battle.test.js` (+1, Reduced effects keeps the hero's cues). Changed: `gear.test.js` (a switch asked for mid-swing comes after it), `settings-audio.test.js` (three settings). `npm test` 1,039 pass; lint and typecheck clean; the full browser suite 329 passed, 12 skipped, 1 failed (`world-map.spec.js:93`, the load flake named at P10-T: 10 of 10 alone).
 
 ---
 

@@ -112,8 +112,8 @@ async function touch(page) {
     down: (fingers) => cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: points(fingers) }),
     move: (fingers) => cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: points(fingers) }),
     up: () => cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }),
-    /** Lift some fingers and keep `staying` down (W-02: the end of a pinch). */
-    lift: (staying) => cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: points(staying) }),
+    /** Lift the fingers listed; the others stay down (P11-09: as Chrome reads it; W-02: the end of a pinch). */
+    lift: (lifted) => cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: points(lifted) }),
     cancel: () => cdp.send('Input.dispatchTouchEvent', { type: 'touchCancel', touchPoints: [] }),
   };
 }

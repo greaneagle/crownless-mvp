@@ -40,6 +40,9 @@
     shot: 0.25, // an arrow or bolt stopped presses a shield a quarter as hard as a sword's blow (measured: the night run of 5.7.0, the walls' defenders' shields broken by volleys)
   };
   const WEAPON_GUARD = { arc: Math.cos(Math.PI / 4), take: 0.45 }; // a 90° guard that lets 45% through
+  // P11-09 (the night run of 5.7.0): a soldier on a ladder is off balance: no guard, and a blow lands
+  // harder. The walls' edge for their defenders, once the hero no longer sweeps the ladder heads alone.
+  const CLIMB = { exposed: 3.2 }; // measured: defending 13 of 15 against odds of 65, storming 8 of 15 against 41
   const PARRY = { window: 0.15 }; // D-P11j, an experiment behind a setting (off): Block raised this soon before a blow
   const GUARD_DELAY = { T1: 0.2, T2: 0.13, T3: 0.1 }; // an AI shield's reaction (by tier; by style from P11-10)
   const FEEDBACK = { every: 1.5 }; // the hero's own whiff and out-of-reach words, at most this often (s)
@@ -601,7 +604,9 @@
     const g = game();
     if (!target.alive) return null;
     if (target === g.hero && g.godMode) return 'blocked'; // debug panel
-    const guard = target.guard ? guardOf(target) : 'none';
+    const climbing = Boolean(CL.assault?.climbing?.(g, target));
+    if (climbing) raw *= CLIMB.exposed;
+    const guard = target.guard && !climbing ? guardOf(target) : 'none';
     // D-P11j (an experiment, off by default): Block raised just before the blow lands deflects it.
     if (target === g.hero && source && guard !== 'none' && CL.settings?.get?.('parry') && g.t - (g.blockPressedAt ?? -99) <= PARRY.window && inArc(target, source, ARC.block)) {
       sound('block', target, source);
@@ -1089,6 +1094,7 @@
     // Block input cannot interrupt a committed swing (GDD §6); it takes effect in recovery.
     const blockInput = Boolean(g.blockHeld || k.ShiftLeft || k.ShiftRight);
     // P11-02: bringing the other weapon to hand: no blow and no block until it is.
+    if (g.loadout?.wanted && !h.swing) CL.gear.switchWeapon(g); // P11-09: a switch asked for mid-swing
     if (g.loadout?.switching) CL.gear.tick(g);
     const drawing = CL.gear.switching(g);
     // GDD §6: blocking needs a shield equipped; P11-05: or a weapon that guards (two-handed, a spear).
@@ -1241,6 +1247,7 @@
     const r = h.ranged;
     const far = r.maxRange ?? r.range * FLIGHT.far;
     const ok = (v) => v?.alive && !v.wagon && dist(h, v) <= far && inArc(h, v, BOW.cone) && CL.groups.clearShot(h, v);
+    if (CL.settings?.get?.('aimAssist') === false) return null; // P11-09: assisted aim off: where you face
     if (ok(h.lastShot)) return h.lastShot;
     let best = null;
     let bd = Infinity;
@@ -1340,7 +1347,7 @@
     let to = point || (v ? lead(h, v) : null);
     if (!to) {
       // Nothing in the cone in reach: say why (too far, or nothing to shoot at), and shoot ahead.
-      const near = nearestAlive(h, g.enemies);
+      const near = CL.settings?.get?.('aimAssist') === false ? null : nearestAlive(h, g.enemies);
       if (near && inArc(h, near, BOW.cone)) {
         const far = r.maxRange ?? r.range * FLIGHT.far;
         feedback('far', dist(h, near) > far ? 'Too far' : 'No clear shot');
@@ -1483,6 +1490,7 @@
   }
 
   CL.combat = {
+    CLIMB,
     SADDLE,
     dismount,
     unhorse,

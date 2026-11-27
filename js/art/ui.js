@@ -550,6 +550,9 @@
     horse: [['M5 21.5 L8 13 C6 11 6 7.5 9 5.5 L11 2.5 L12.5 5 C16 5 19 8 21 13 L18.5 14.5 L15 11.5 L14 21.5 Z', GOLD], ['M9 5.5 L11 2.5 L12.5 5 Z', GOLD_LO]],
     ring: [['M12 6 A7.5 7.5 0 1 1 11.99 6 Z M12 9 A4.5 4.5 0 1 0 12.01 9 Z', GOLD], ['M9.5 2 L14.5 2 L13.5 5.5 L10.5 5.5 Z', HI]],
     quiver: [['M8 6 L14 6 L15.5 21.5 L9.5 21.5 Z', GOLD_LO], ['M9 6 L10 1.5 M11.5 6 L12 1.5 M13.5 6 L14.5 2', null], ['M8.5 10 L14.5 10', null]],
+    // P11-09: the battle buttons' own: a lance (long, with its hand guard) and a fist (no weapon).
+    lance: [['M2.5 22.5 L3.8 23.5 L19 5.5 L17.7 4.5 Z', GOLD_LO], ['M17 4 L22.5 1.5 L20 7 Z', GOLD], ['M5.5 13.5 C8 13 11 16 10.5 18.5 L7.5 18 L6 16.5 Z', GOLD]],
+    fist: [['M6 10 C6 7.5 8 7 9 8 C9.5 6 12 6 12.5 8 C13 6.3 15.5 6.3 16 8.3 C16.8 7 19 7.6 19 9.8 L19 15 C19 19 16.5 21.5 12.5 21.5 C9 21.5 6 19 6 15.5 Z', GOLD], ['M6 12 C8 11 10.5 11.5 11 13.5', null]],
   };
 
   /** P11-04: the icon for each weapon family. */
@@ -558,7 +561,7 @@
   const SLOT_ICON = { offhand: 'shield', head: 'helmet', hands: 'glove', feet: 'boot', horse: 'horse', ring: 'ring', ammo: 'quiver' };
   const ARMOUR_ICON = { cloth: 'tunic', gambeson: 'tunic', leather: 'jerkin', mail: 'mail' };
   /** What each item icon is called (its accessible name). */
-  const ICON_NAMES = { sword: 'Sword', axe: 'Axe', mace: 'Mace', spear: 'Spear', bow: 'Bow', crossbow: 'Crossbow', shield: 'Shield', helmet: 'Helmet', tunic: 'Clothing', jerkin: 'Leather armour', mail: 'Mail', glove: 'Gloves', boot: 'Boots', horse: 'Horse', ring: 'Ring', quiver: 'Quiver' };
+  const ICON_NAMES = { sword: 'Sword', axe: 'Axe', mace: 'Mace', spear: 'Spear', bow: 'Bow', crossbow: 'Crossbow', shield: 'Shield', helmet: 'Helmet', tunic: 'Clothing', jerkin: 'Leather armour', mail: 'Mail', glove: 'Gloves', boot: 'Boots', horse: 'Horse', ring: 'Ring', quiver: 'Quiver', lance: 'Lance', fist: 'Fists' };
 
   /** P11-04: an item's icon: its name in ICONS, and what it shows in words. @param {string} id */
   function itemIcon(id) {
