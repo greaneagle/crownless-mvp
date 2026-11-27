@@ -50,6 +50,7 @@ const SCENES = {
     CL.game.godMode = true;
   },
   map: (CL) => CL.ui.changeMode('map'),
+  party: () => document.querySelector('#partyBtn')?.click(),
   gallery: () => gallery([]),
   'gallery-east': () => gallery(['ArrowRight']),
   'gallery-back': () => gallery(['ArrowRight', 'ArrowRight']),

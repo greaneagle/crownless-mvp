@@ -260,18 +260,69 @@
   };
 
   /** P11-04: the icon for each weapon family. */
-  const FAMILY_ICON = { sword: 'sword', greatsword: 'sword', axe: 'axe', greataxe: 'axe', mace: 'mace', spear: 'spear', pike: 'spear', lance: 'spear', shortbow: 'bow', longbow: 'bow', composite: 'bow', crossbow: 'crossbow' };
+  const FAMILY_ICON = { sword: 'sword', greatsword: 'greatsword', axe: 'axe', greataxe: 'greataxe', mace: 'mace', spear: 'spear', pike: 'pike', lance: 'spear', shortbow: 'bow', longbow: 'longbow', composite: 'bow', crossbow: 'crossbow' };
   /** And for each slot (body armour by its class). */
   const SLOT_ICON = { offhand: 'shield', head: 'helmet', hands: 'glove', feet: 'boot', horse: 'horse', ring: 'ring', ammo: 'quiver' };
   const ARMOUR_ICON = { cloth: 'tunic', gambeson: 'tunic', leather: 'jerkin', mail: 'mail' };
   /** What each item icon is called (its accessible name). */
-  const ICON_NAMES = { sword: 'Sword', axe: 'Axe', mace: 'Mace', spear: 'Spear', bow: 'Bow', crossbow: 'Crossbow', shield: 'Shield', helmet: 'Helmet', tunic: 'Clothing', jerkin: 'Leather armour', mail: 'Mail', glove: 'Gloves', boot: 'Boots', horse: 'Horse', ring: 'Ring', quiver: 'Quiver', lance: 'Lance', fist: 'Fists' };
+  const ICON_NAMES = { sword: 'Sword', axe: 'Axe', mace: 'Mace', spear: 'Spear', bow: 'Bow', crossbow: 'Crossbow', shield: 'Shield', helmet: 'Helmet', tunic: 'Clothing', jerkin: 'Leather armour', mail: 'Mail', glove: 'Gloves', boot: 'Boots', horse: 'Horse', ring: 'Ring', quiver: 'Quiver', lance: 'Lance', fist: 'Fists', greatsword: 'Greatsword', greataxe: 'Greataxe', pike: 'Pike', longbow: 'Longbow', round_shield: 'Round shield', kettle: 'Kettle hat', greathelm: 'Great helm' };
+
+  /**
+   * P11-12d (D-P11m): items and goods in colour, 32×32, from the handoff's family icons (steel, wood,
+   * leather, cloth, a gold accent, the people's warm ink), with variants by the item's look. The stats
+   * and the HUD keep the gold icons above.
+   */
+  const C32 = { steel: '#c3cdd4', dark: '#788694', wood: '#a77949', leather: '#a06b42', gold: '#e4bc66', cloth: '#e6d6b4', blue: '#547ba4', red: '#ad5945', ink: '#49352a' };
+  const p32 = (d, f) => `<path d="${d}" fill="${f}" stroke="${C32.ink}" stroke-width="1.35" stroke-linejoin="round" stroke-linecap="round"/>`;
+  const e32 = (x, y, rx, ry, f) => `<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" fill="${f}" stroke="${C32.ink}" stroke-width="1.2"/>`;
+  const l32 = (d) => p32(d, 'none');
+  const { steel, dark, wood, leather, gold, cloth, blue, red } = C32;
+  const COLOUR = {
+    sword: p32('M27 3 L29 5 L13 22 L10 19 Z', steel) + p32('M27 3 L29 5 L13 22 L12 20 Z', dark) + p32('M7 16 L16 25 L14 27 L5 18 Z', gold) + p32('M10 22 L5 28 L3 26 L8 20 Z', leather),
+    greatsword: p32('M29 1 L31 3 L13 21 L11 19 Z', steel) + p32('M29 1 L31 3 L13 21 L12 20 Z', dark) + p32('M6 15 L17 26 L15 28 L4 17 Z', gold) + p32('M11 21 L3 30 L1 28 L9 19 Z', leather),
+    axe: p32('M12 11 L15 12 L7 29 L4 27 Z', wood) + p32('M13 6 Q22 8 26 3 L29 13 Q25 20 13 15 Z', steel) + p32('M26 4 L29 13 L25 16 L23 8 Z', dark),
+    greataxe: p32('M14 8 L17 9 L6 31 L3 29 Z', wood) + p32('M12 2 Q22 5 27 0 L31 14 Q26 22 12 15 Z', steel) + p32('M27 1 L31 14 L26 17 L24 6 Z', dark),
+    mace: p32('M12 13 L16 14 L9 29 L5 27 Z', wood) + p32('M14 4 L21 2 L27 7 L27 14 L20 19 L13 15 L11 9 Z', steel) + p32('M14 4 L18 8 L17 14 L13 15 L11 9 Z', dark) + l32('M21 2 L21 8 L27 7 M21 8 L20 19'),
+    spear: p32('M7 28 L21 9 L23 11 L9 30 Z', wood) + p32('M29 2 L26 14 L20 12 L18 8 Z', steel) + p32('M29 2 L26 14 L23 11 Z', dark),
+    pike: p32('M2 31 L23 7 L25 9 L4 32 Z', wood) + p32('M31 0 L29 10 L24 9 L22 5 Z', steel) + p32('M31 0 L29 10 L26 8 Z', dark),
+    bow: p32('M6 3 Q28 4 28 26 L25 27 Q23 10 5 6 Z', wood) + l32('M6 5 L27 26 M5 23 L22 7 M18 7 L22 7 L22 12'),
+    longbow: p32('M3 2 Q31 2 30 29 L27 30 Q26 6 2 5 Z', wood) + l32('M3 4 L29 29 M4 25 L23 6 M19 6 L23 6 L23 11'),
+    crossbow: p32('M4 28 L22 8 L25 11 L8 30 Z', wood) + p32('M4 6 Q20 1 28 23 L25 25 Q18 9 5 10 Z', dark) + l32('M5 9 L26 24 M10 22 L25 7'),
+    shield: p32('M5 4 Q16 7 27 4 L26 16 Q23 25 16 29 Q9 25 6 16 Z', blue) + p32('M16 7 L26 5 L25 16 Q23 24 16 28 Z', '#3e6287') + p32('M7 12 L16 7 L25 12 L25 16 L16 12 L7 17 Z', cloth),
+    round_shield: e32(16, 16, 13, 13, wood) + l32('M9 5 L9 27 M16 3 L16 29 M23 5 L23 27') + e32(16, 16, 13, 13, 'none') + e32(16, 16, 4, 4, steel),
+    helmet: p32('M5 17 Q5 4 16 3 Q27 4 27 17 L25 22 L7 22 Z', steel) + p32('M5 17 L27 17 L27 22 L5 22 Z', dark) + p32('M14 16 L18 16 L18 28 L14 28 Z', steel) + l32('M11 10 Q13 6 17 6'),
+    kettle: p32('M8 18 Q8 6 16 6 Q24 6 24 18 Z', steel) + p32('M2 18 Q16 14 30 18 L29 22 Q16 19 3 22 Z', dark) + l32('M12 11 Q14 8 17 8'),
+    greathelm: p32('M6 6 Q6 3 16 3 Q26 3 26 6 L26 27 L6 27 Z', steel) + p32('M17 3 Q26 3 26 6 L26 27 L17 27 Z', dark) + p32('M8 13 L24 13 L24 15.5 L8 15.5 Z', '#2f343b') + p32('M15 15.5 L17 15.5 L17 24 L15 24 Z', '#2f343b'),
+    tunic: p32('M11 5 L6 7 L2 15 L8 19 L10 15 L9 28 L23 28 L22 15 L24 19 L30 15 L26 7 L21 5 L16 10 Z', blue) + l32('M11 5 L16 12 L21 5 M10 22 L22 22'),
+    jerkin: p32('M11 4 L6 6 L7 15 L10 17 L9 28 L23 28 L22 17 L25 15 L26 6 L21 4 L16 10 Z', leather) + l32('M16 10 L16 28 M10 21 L22 21'),
+    mail: p32('M10 4 L5 7 L2 15 L8 19 L10 15 L9 28 L23 28 L22 15 L24 19 L30 15 L27 7 L22 4 L16 8 Z', dark) + [0, 1, 2, 3].map((i) => [0, 1, 2].map((j) => e32(12 + j * 4 + (i % 2), 12 + i * 4, 1.35, 1.35, steel)).join('')).join(''),
+    boot: p32('M9 3 L18 3 L18 17 L27 22 Q30 24 28 28 L5 28 L5 23 L9 17 Z', leather) + p32('M5 25 L29 25 L28 29 L5 29 Z', '#61452f') + l32('M10 7 L17 7 M10 12 L17 12'),
+    glove: p32('M8 29 L6 19 L3 13 Q4 10 7 13 L10 16 L9 5 Q11 2 13 5 L14 13 L15 3 Q18 1 19 4 L19 13 L21 5 Q24 4 24 7 L23 15 L25 10 Q28 10 27 14 L23 24 L22 29 Z', leather) + l32('M8 24 L23 24'),
+    horse: p32('M7 28 L8 14 L14 7 L14 2 L18 7 L23 4 L22 10 L29 18 L24 23 L17 20 L18 28 Z', wood) + p32('M7 28 L8 14 L14 7 L16 10 L12 18 L12 28 Z', '#60432f') + e32(21, 13, 1.5, 1.5, C32.ink),
+    ring: e32(16, 19, 10, 10, gold) + e32(16, 19, 6.4, 6.4, '#263746') + p32('M10 8 L13 3 L19 3 L22 8 L16 13 Z', '#6fa1ad'),
+    quiver: p32('M10 10 L23 10 L20 29 L12 29 Z', leather) + l32('M12 10 L9 2 M17 10 L18 2 M21 10 L25 2') + p32('M9 9 L24 9 L23 13 L10 13 Z', gold),
+    grain: p32('M9 29 L22 4 L23 5 L11 29 Z', wood) + [0, 1, 2, 3].map((i) => e32(19 - i * 2, 8 + i * 4, 4, 2.5, gold) + e32(23 - i * 2, 12 + i * 4, 4, 2.5, gold)).join(''),
+    salt: p32('M5 27 L4 16 L10 9 L11 4 L21 4 L22 9 L28 16 L27 27 Q16 31 5 27 Z', cloth) + l32('M10 9 L22 9') + e32(16, 18, 5, 3, '#f4f0df'),
+    wool: e32(11, 14, 7, 7, cloth) + e32(20, 13, 7, 7, '#eee4cd') + e32(19, 21, 8, 7, cloth) + e32(10, 21, 7, 7, '#f0e5ce'),
+    iron: p32('M4 20 L10 8 L25 8 L29 20 L23 26 L5 26 Z', steel) + p32('M4 20 L29 20 L23 26 L5 26 Z', dark),
+    cloth: p32('M4 10 L25 5 L29 23 L8 28 Z', red) + p32('M8 28 L4 10 L9 8 L13 26 Z', '#874634') + l32('M12 9 L16 26 M21 7 L25 24'),
+    tools: p32('M5 27 L19 11 L22 13 L8 30 Z', wood) + p32('M13 5 L26 3 L29 8 L17 15 L12 11 Z', steel) + p32('M3 14 L7 10 L18 26 L14 29 Z', dark),
+    timber: p32('M4 10 L23 4 L28 9 L25 23 L6 29 Z', wood) + e32(6, 20, 5, 9, '#c29760') + e32(6, 20, 2.5, 5, wood) + l32('M12 12 L25 8 M12 19 L26 15'),
+    wine: p32('M13 3 L19 3 L19 10 Q26 14 25 24 Q23 29 16 29 Q9 29 7 24 Q6 14 13 10 Z', '#754b56') + p32('M12 3 L20 3 L20 7 L12 7 Z', gold) + p32('M8 17 L24 17 L24 23 L8 23 Z', cloth),
+    flour: p32('M5 27 L4 17 L11 8 L10 4 L22 4 L21 8 L28 17 L27 27 Q16 31 5 27 Z', cloth) + l32('M11 8 L21 8 M12 24 L20 24'),
+    food_ration: p32('M3 22 Q2 7 16 7 Q30 7 29 22 Q26 28 5 27 Z', '#d3a15e') + l32('M8 12 L12 17 M15 10 L19 16 M22 11 L26 17'),
+    medicine: p32('M12 3 L20 3 L20 10 L25 15 L25 28 L7 28 L7 15 L12 10 Z', '#6e9b83') + p32('M11 3 L21 3 L21 7 L11 7 Z', wood) + p32('M9 17 L23 17 L23 25 L9 25 Z', cloth) + p32('M14 18 L18 18 L18 20 L21 20 L21 23 L18 23 L18 25 L14 25 L14 23 L11 23 L11 20 L14 20 Z', red),
+  };
+  for (const k of ['greatsword', 'greataxe', 'pike', 'longbow', 'round_shield', 'kettle', 'greathelm']) if (!ICONS[k]) ICONS[k] = ICONS[{ greatsword: 'sword', greataxe: 'axe', pike: 'spear', longbow: 'bow', round_shield: 'shield', kettle: 'helmet', greathelm: 'helmet' }[k]];
 
   /** P11-04: an item's icon: its name in ICONS, and what it shows in words. @param {string} id */
   function itemIcon(id) {
     const it = CL.content.table('items')[id];
     if (!it?.slot) return null;
-    const name = it.slot === 'weapon' ? FAMILY_ICON[it.family] || 'sword' : it.slot === 'body' ? ARMOUR_ICON[G.fig.itemLook(id).armour] || 'tunic' : SLOT_ICON[it.slot];
+    const lk = G.fig.itemLook(id);
+    // P11-12d: variants by the item's look (a round shield, a kettle hat, a great helm).
+    const variant = it.slot === 'offhand' && (lk.shield === 'round' || lk.shield === 'wood') ? 'round_shield' : it.slot === 'head' && lk.helmet === 'kettle' ? 'kettle' : it.slot === 'head' && lk.helmet === 'great' ? 'greathelm' : null;
+    const name = variant || (it.slot === 'weapon' ? FAMILY_ICON[it.family] || 'sword' : it.slot === 'body' ? ARMOUR_ICON[lk.armour] || 'tunic' : SLOT_ICON[it.slot]);
     return name ? { name, label: ICON_NAMES[name] } : null;
   }
 
@@ -288,11 +339,23 @@
     const svg = iconSvg(name);
     return svg ? `url("data:image/svg+xml,${encodeURIComponent(svg)}")` : null;
   };
-  /** The stylesheet for `.ico-<name>` (installed once at boot, so the icons live in one place). */
+  /** P11-12d: an item's or a good's icon in colour (32×32), or null. @param {string} name */
+  function colourSvg(name) {
+    return COLOUR[name] ? `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">${COLOUR[name]}</svg>` : null;
+  }
+  const GOODS = ['grain', 'salt', 'wool', 'iron', 'cloth', 'tools', 'timber', 'wine', 'flour', 'food_ration', 'medicine'];
+  /**
+   * The stylesheet for `.ico-<name>` (installed once at boot, so the icons live in one place): the gold
+   * icons of the stats and the HUD; P11-12d: items (`.itemIco`) and trade goods in colour.
+   */
   function iconCss() {
-    return Object.keys(ICONS)
-      .map((n) => `.ico-${n}{background-image:${iconUrl(n)}}`)
-      .join('\n');
+    const colour = (n) => `url("data:image/svg+xml,${encodeURIComponent(colourSvg(n))}")`;
+    return [
+      ...Object.keys(ICONS).map((n) => `.ico-${n}{background-image:${GOODS.includes(n) && COLOUR[n] ? colour(n) : iconUrl(n)}}`),
+      ...Object.keys(COLOUR)
+        .filter((n) => !GOODS.includes(n))
+        .map((n) => `.itemIco.ico-${n}{background-image:${colour(n)}}`),
+    ].join('\n');
   }
   function installIcons(doc = root.document) {
     if (!doc || doc.getElementById('artIcons')) return;
@@ -302,5 +365,5 @@
     doc.head.append(st);
   }
 
-  G.ui = { itemIcon, ICON_NAMES, faceOf, portrait, soldierLook, lordLook, speakerLook, heroLook, houseArms, arms, DEVICES, canvas, url, portraitUrl, figure, troopUrl, ICONS, iconSvg, iconCss, installIcons };
+  G.ui = { itemIcon, ICON_NAMES, faceOf, portrait, soldierLook, lordLook, speakerLook, heroLook, houseArms, arms, DEVICES, canvas, url, portraitUrl, figure, troopUrl, ICONS, iconSvg, colourSvg, iconCss, installIcons };
 })(typeof window !== 'undefined' ? window : globalThis);

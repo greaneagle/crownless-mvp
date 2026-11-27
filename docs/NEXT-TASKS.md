@@ -4054,8 +4054,8 @@ The aim: easy to fight, rewarding to fight well, meaningful to command. The play
 | P11-12a | The storybook look: baseline and integration analysis | M | 5.11.1 | ✅ Done |
 | P11-12b | The Stonebridge vertical slice: characters and Stonebridge (owner's visual gate) | L–XL | 5.12.0 | ✅ Done (accepted 2026-11-27) |
 | P11-12c | The environments: towns, battlefields, sieges, the map | XL | 5.12.1 | ✅ Done |
-| P11-12d | One UI language across every screen | L | 5.12.2 | Ready |
-| P11-12e | Performance, caches, visual regression, acceptance (owner's final gate) | M–L | 5.12.3 | Specified |
+| P11-12d | One UI language across every screen | L | 5.12.2 | ✅ Done |
+| P11-12e | Performance, caches, visual regression, acceptance (owner's final gate) | M–L | 5.12.3 | Ready (needs the owner's phone) |
 | P11-13 | Formations and orders that hold | L | 5.13.0 | Specified |
 | P11-14 | Combined arms and the tactics lab | M–L | 5.14.0 | Specified |
 | P11-15 | Prepare and the battle report | M | 5.15.0 | Specified |
@@ -5143,7 +5143,7 @@ _Expanded 2026-11-27 at 5.11.0 (commit ff54781) by the owner's approval of a gra
 
 ---
 
-#### P11-12d · One UI language across every screen (L) — 5.12.2
+#### P11-12d · One UI language across every screen (L) — 5.12.2, ✅ Done
 
 **Build.**
 - **Required:**
@@ -5155,6 +5155,14 @@ _Expanded 2026-11-27 at 5.11.0 (commit ff54781) by the owner's approval of a gra
 - **Tests.** Browser `text-size` (every screen at four sizes and five phone sizes), `layout`, `controls`, every spec whose screen changed; `art-ui`.
 
 **Acceptance.** Every screen at 960×540 and 812×375 beside the references; no function lost (the browser suite).
+
+**Done (5.12.2).**
+- **The language:** P10-08's tokens carry it, so every screen (title, creator, menus, dialogue, Party, the armoury, blacksmith, market, troop tree, Journal, Realms, Accounts, Wait, Settings, How to Play, the encounter, Prepare and the result as they are) changes together: navy `#152638`, warm gold `#e5bd67`, cream `#f1e2c1`, the concept's wine; panels and modals on the same rim.
+- **Compact HUD on every screen** (the town's from P11-12b): the status box at most 46% wide, smaller navy-and-gold buttons (44 px on touch); **quieter controls:** the joystick smaller and translucent, the battle's round buttons about 15% smaller (56 px at least) in translucent navy, ATTACK in wine.
+- **The dev drawer:** Logs and Debug leave the screen during a conversation (F3 still opens the logs); elsewhere as before.
+- **Icons:** items and trade goods in colour, 32×32, from the handoff's family icons (`COLOUR`, `colourSvg` in `js/art/ui.js`; `.itemIco.ico-<name>` and the goods' `.ico-<good>`), with variants by look: greatsword, greataxe, pike, longbow, round shield, kettle hat, great helm; the stats and the HUD keep the gold icons; a pack's item falls back to its family's.
+- **Not here (as specified):** Prepare's redesign and the report (P11-15), formation controls (P11-13). **Smaller than the spec:** per-item icon variants beyond those seven, and quest-item symbols, are left for P11-12e's consistency pass if the owner wants them; no screen's layout was rebuilt (the screens already followed the tokens).
+- **Tests:** `npm test` 1,069 pass, lint clean; browser `layout`, `text-size` (four sizes, five phone sizes), `controls`, `settlement`, `battle`, `gear`, `blacksmith`, `company`, `look`, `startup`, `business`: 146 pass.
 
 ---
 

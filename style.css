@@ -497,3 +497,19 @@ input[type="checkbox"]{accent-color:var(--gold)}
 #stage[data-art="storybook"][data-mode="town"] #rightControls{right:2.5%;bottom:4%}
 #stage[data-art="storybook"][data-mode="town"] #rightControls #attackBtn{width:auto;min-width:max(44px,calc(92px * var(--ui-grow)));height:max(44px,calc(46px * var(--ui-grow)));border-radius:10px;padding:0 calc(16px * var(--ui-scale));background:#152638;border:1.5px solid #e5bd67;box-shadow:0 2px 6px #0006;font-size:calc(clamp(11px,1.3vw,16px) * var(--ui-scale));letter-spacing:1px}
 @media(hover:none),(pointer:coarse){#stage[data-art="storybook"][data-mode="town"] #topRight button{min-height:44px;min-width:44px}}
+
+/* ==== P11-12d (D-P11m): one UI language, the approved concept's. Navy panels, a thin warm-gold rim, cream
+   serif text; the same compact status box and buttons on every screen; quieter, smaller touch controls
+   that leave the field in view on a landscape phone (44 px or more everywhere); the developer buttons
+   never over a conversation. Functions, order and what each screen shows are unchanged. ==== */
+:root{--ink:#f1e2c1;--ink-dim:#cbb994;--gold:#e5bd67;--gold-hi:#f2d58e;--gold-lo:#7a6233;--navy:#152638;--navy-2:#1b2f44;--navy-3:#24394f;--wine:#7a3328;--wine-hi:#9b4535}
+#topLeft{min-width:0;max-width:46%;padding:calc(4px * var(--ui-scale)) calc(10px * var(--ui-scale));font-size:calc(clamp(9px,1.05vw,13px) * var(--ui-scale));line-height:1.3;background:#152638eb;border:1.5px solid var(--gold);border-radius:6px;box-shadow:0 2px 6px #0006}
+#topRight{gap:5px}
+#topRight button{padding:calc(4px * var(--ui-scale)) calc(10px * var(--ui-scale));font-size:calc(clamp(9px,1.05vw,13px) * var(--ui-scale));background:var(--navy);border:1.5px solid var(--gold);border-radius:6px;color:var(--ink);box-shadow:0 2px 5px #0005}
+@media(hover:none),(pointer:coarse){#topRight button{min-height:44px;min-width:44px}}
+#joystick{width:clamp(72px,11vw,120px);border:2px solid #f1e2c166;background:#15263826}
+#knob{border:1.5px solid #f1e2c1aa;background:#f1e2c140}
+#rightControls button{width:clamp(56px,8vw,96px);height:clamp(56px,8vw,96px);background:#152638c4;border:1.5px solid var(--gold);color:var(--ink)}
+#rightControls #attackBtn{width:clamp(70px,10vw,116px);height:clamp(70px,10vw,116px);background:linear-gradient(#9b4535d9,#7a3328d9);border-color:var(--gold-hi)}
+.modal,.panel{border-color:var(--gold)}
+#stage[data-mode="talk"] #debugBtn,#stage[data-mode="talk"] #cheatBtn{display:none} /* the dev drawer stays off a conversation (F3 still opens the logs) */

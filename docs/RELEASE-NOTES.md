@@ -1,5 +1,13 @@
 # Crownless — Release Notes
 
+## v5.12.2 — One look for every screen (P11-12d) · 2026-11-27
+
+### Changed
+- **Every screen** in the storybook colours: deep navy panels with a warm gold rim and cream text, from the title to the market, the Party sheet and the dialogues. Every screen does what it did.
+- **A smaller, quieter HUD everywhere:** the status box and the buttons are compact, the joystick and the battle buttons smaller and see-through, so more of the town, the map and the field shows on a phone. Every control is still easy to tap.
+- **Coloured icons** for weapons, armour, shields, helmets, horses, quivers and trade goods, with their own shapes for greatswords, greataxes, pikes, longbows, round shields, kettle hats and great helms.
+- **Logs and Debug** (testing tools) no longer sit on top of a conversation.
+
 ## v5.12.1 — The storybook look everywhere (P11-12c) · 2026-11-27
 
 The owner accepted the Stonebridge slice, so the look now reaches the rest of the world. Nothing in play has changed.
