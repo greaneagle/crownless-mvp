@@ -485,7 +485,7 @@
   }
 
   /** P11-12c (owner, 2026-11-27): the head sits a little higher, on a neck that shows. */
-  const NECK = 3.5;
+  const NECK = 0; // owner, 2026-11-27: the head where it was; the neck only fills the small gap
   function head(ctx, L, F, face, P) {
     const view = face === 'up' ? 'back' : face === 'down' ? 'front' : 'side';
     ctx.save();
@@ -506,9 +506,9 @@
     const skin = L.skin || SKINS[1];
     const side = face === 'left' || face === 'right';
     const x = side ? -1.5 : 0;
-    sh(ctx, `M${x - 4.6} -72 L${x + 4.6} -72 L${x + 5.4} -59 Q${x} -56 ${x - 5.4} -59Z`, face === 'up' ? tone(skin, -0.04) : skin, 1.6);
-    sh(ctx, `M${x + 1.6} -72 L${x + 4.6} -72 L${x + 5.4} -59 L${x + 2} -58Z`, tone(skin, -0.14), 0);
-    if (face === 'down') ln(ctx, `M${x - 3} -66 Q${x} -64.5 ${x + 3} -66`, tone(skin, -0.22), 0.9);
+    sh(ctx, `M${x - 4.4} -68 L${x + 4.4} -68 L${x + 5} -60 Q${x} -56 ${x - 5.4} -59Z`, face === 'up' ? tone(skin, -0.04) : skin, 1.6);
+    sh(ctx, `M${x + 1.5} -68 L${x + 4.4} -68 L${x + 5} -60 L${x + 2} -59.5Z`, tone(skin, -0.14), 0);
+    if (face === 'down') ln(ctx, `M${x - 3} -63.5 Q${x} -62.5 ${x + 3} -63.5`, tone(skin, -0.22), 0.9);
   }
 
   // ---- Bodies (v0.7 units) ----

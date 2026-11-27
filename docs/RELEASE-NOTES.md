@@ -4,6 +4,7 @@
 
 ### Changed
 - **Battles draw lighter again:** grass and trees on the field cost about as much as in 5.11 (they had doubled the drawing time with the new look).
+- **Shorter necks:** heads are back where they were; the neck just joins head and shoulders.
 - **The old 5.11 figures are gone** (Debug → "Old figures" with them), and so are the old buildings, trees and props the storybook ones replaced.
 
 ### Still to come before Phase 11 goes on
