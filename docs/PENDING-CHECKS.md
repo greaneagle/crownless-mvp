@@ -4,6 +4,13 @@ _The owner's rule (D-P10f, 2026-11-24). A task that needs a run over 20 minutes 
 
 ## Pending
 
+**For P11-13 (5.13.0):**
+
+| Run | What to look for |
+|---|---|
+| `node --test --test-concurrency=1 tests/slow/battle-parity.test.js tests/slow/battle-extras.test.js` (about 26–45 minutes; the night run) | Combat changed (aimed blows, flanks, leash): every case inside its bounds; the wall, wedge and ford effects keep their direction |
+| The owner's phone play: a shield wall that holds and is flanked; a square against riders | The flags readable at 812×375; Hold holds; the square stops horse |
+
 **To confirm P11-09's fixes** (measured on short runs, 15 and 20 seeds; each needs its long run):
 
 | Run | What to look for |

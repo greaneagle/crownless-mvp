@@ -4059,7 +4059,7 @@ The aim: easy to fight, rewarding to fight well, meaningful to command. The play
 | P11-12c | The environments: towns, battlefields, sieges, the map | XL | 5.12.1 | ✅ Done |
 | P11-12d | One UI language across every screen | L | 5.12.2 | ✅ Done |
 | P11-12e | Performance, caches, visual regression, acceptance (owner's final gate) | M–L | 5.12.3 | ✅ Done (approved 2026-11-27) |
-| P11-13 | Formations and orders that hold | L | 5.13.0 | Specified |
+| P11-13 | Formations and orders that hold | L | 5.13.0 | ✅ Done |
 | P11-14 | Combined arms and the tactics lab | M–L | 5.14.0 | Specified |
 | P11-15 | Prepare and the battle report | M | 5.15.0 | Specified |
 | P11-16 | Regional arms | M | 5.16.0 | Specified |
@@ -5205,7 +5205,7 @@ _Expanded 2026-11-27 at 5.11.0 (commit ff54781) by the owner's approval of a gra
 
 ---
 
-### P11-13 · Formations and orders that hold (L) — ✅ Done (version at merge; owner to accept)
+### P11-13 · Formations and orders that hold (L) — ✅ Done in 5.13.0
 
 **Carried from P11-11 (measured, `docs/PHASE-11-VALIDATION.md`):** one against one a pikeman, a spearman and a huscarl win (65–100%); three against three the same lines lose (0–15%), with or without P11-10's styles. A held line (here) and combined arms (P11-14) should give the long weapons their reach and the axes their shield-breaking; `scripts/realm-lab.js` measures it.
 
@@ -5267,7 +5267,7 @@ _Expanded 2026-11-27 at 5.11.0 (commit ff54781) by the owner's approval of a gra
 - **Explain:** "Orders and formations".
 - **Not here:** combined-arms acceptance (P11-14).
 
-**Done (version at merge, branch `claude/p11-13-formations`).**
+**Done (5.13.0).**
 - **The crowd effect, found:** facing is four-way, and a soldier's blow went only along it, so a spear's 40° or a pike's 30° thrust missed a foe standing at an angle: 24–34% of their blows at 3v3, none one against one (`scripts/crowd-lab.js`, new). Soldiers' blows now go along the line to their foe (`combat.USE_AIM`; a rider is struck as before). The rest is the sword's sweep (1.6 foes a swing in a scrum): kept, the sword's strength.
 - **Slots and leash** (`formations.LEASH`): a formed soldier on Hold fights only within its leash and reach of its slot and never steps out of it; Follow breaks ranks only that close; Charge leaves them. **Frontage:** a sweep meets one soldier of a formed line, wall or square from the front. **Flanks:** ×1.25–1.35 from the side or rear of a formed division, and more shaken (a square has none). **Wedge** breaks the struck ranks for 3 s; **loose** ranks 36 px; the **wall** shares a blocked blow's pressure with two shields beside; **at bay:** a formed long weapon pushes a shorter foe back to its reach.
 - **Cohesion** every 0.25 s (under 50% a formation's effects lapse); **too few** (under 4) stay loose and say so; **thick forest** breaks all but a column; an enemy army's foot holds in a line.

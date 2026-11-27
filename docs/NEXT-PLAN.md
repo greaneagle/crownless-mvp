@@ -362,7 +362,7 @@ Every Phase 9 task is **Specified** (2026-11-22; NEXT-TASKS has each in full). T
 | **P11-12c** | **The environments:** the other seven towns, every battlefield and siege, the world map and its miniatures, layouts and collision unchanged. 5.12.1 | XL | P11-12b accepted |
 | **P11-12d** | **One UI language** across every existing screen, icons by item look, landscape phones first; Prepare and the report stay for P11-15. 5.12.2 | L | P11-12b |
 | **P11-12e** | **Performance, caches, visual regression and acceptance** (M3): the original P11-12's budget (60 fps at 40 at Balanced, 30 at 200 on the phone, or the owner accepts the measured size), bounded caches, identical results at every Sharpness; **the owner accepts the graphics and the phone**. 5.12.3 | M–L | P11-12c, P11-12d |
-| **P11-13** | **Formations and orders that hold:** slots and leash, frontage, flanks, each formation's character, cohesion, order states on the field | L | P11-11 |
+| **P11-13** ✅ | **Formations and orders that hold:** slots and leash, frontage, flanks, each formation's character, cohesion, order states on the field | L | P11-11 |
 | **P11-14** | **Combined arms and the tactics lab:** terrain, screens, counters, Auto and presets, the enemy's plan; seven controlled comparisons | M–L | P11-13 |
 | **P11-15** | **Prepare and the battle report** (M4): the hero's loadout and mount, known enemy information, terrain notes, a one-screen report with more on request | M | P11-14 |
 | **P11-16** | **Regional arms:** six to eight pieces from the realms' identities (D-P11g for the horse bow) | M | P11-11, P11-03 |

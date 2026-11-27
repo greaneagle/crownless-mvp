@@ -557,3 +557,45 @@ P11-03's curve holds where the company prospers: level 20 between days 281 and 3
 ### Sieges, long runs and the slow suite
 
 `parity.js --siege 30`: storming 70% against odds of 41 (+29), defending 0% against 65 (−65). The 30-year long runs: every invariant held every day except a realm past half the land (seeds 1–3; the same on 5.0.0). The rest, and what was fixed: `docs/PENDING-CHECKS.md` ("Done", "Pending").
+
+## Formations and orders that hold (5.13.0, P11-13)
+
+**The crowd effect** (`node scripts/crowd-lab.js 20`; the long weapon's win %, both loose, both sides of the field):
+
+| pair | 1v1 | 3v3 | 5v5 | 3v3 before |
+|---|---|---|---|---|
+| pikeman v footman | 68 | 3 | 20 | 0 |
+| spearman v footman | 100 | 15 | 18 | 0 |
+| huscarl v guard | 100 | 13 | 13 | 5 |
+
+Why (traced): facing is four-way and a blow went only along it; a spear's 40° or pike's 30° thrust missed a foe at an angle, 24–34% of their blows at 3v3 (0% one against one). Aimed blows: 0%. What is left is the sword's sweep, 1.6 foes a swing in a crowd (one target a swing for everyone: the long weapons win 40–70% at 3v3). Toggled and ruled out: shield cover, shields, morale, styles, knockback, the enemy's line, crowding, the weapon guard.
+
+Held (`--formed <kind> --sizes 5,8`; the long weapon's win %, long side holding / short side holding):
+
+| pair | line 5v5 | line 8v8 | wall 5v5 | wall 8v8 |
+|---|---|---|---|---|
+| pikeman v footman | 45 / 25 | 0 / 95 | 25 / 0 | 0 / 0 |
+| spearman v footman | 55 / 65 | 0 / 85 | 45 / 0 | 0 / 0 |
+| huscarl v guard | 15 / 20 | 0 / 50 | 100 / 0 | 100 / 0 |
+
+(In this lab the holder is always the company and the enemy has its steadiness bonus, so read across a row, not down.) Tries: 1, a formed long weapon holds a shorter foe at bay (kept: neutral, right in kind); 2, deeper ranks for long-weapon lines (22 px; no gain, dropped).
+
+**Formations** (`tactics-lab.js 20 --hero passive --maps open_country`, `form:<kind>`, win % / lost %, main → branch):
+
+| held in | against the same army | against horse (`--enemy horse`) | against bows (`--enemy bows`) |
+|---|---|---|---|
+| charge (all) | 10/95 → 0/100 | 5/97 → 0/99 | 85/44 → 85/43 |
+| loose | 70/67 → 80/65 | 60/71 → 90/65 | 15/83 → 35/80 |
+| wall | 100/22 → 100/18 (136 → 116 s) | 100/24 → 100/18 | 70/57 → 100/22 |
+| line | 70/68 → 100/53 | 75/69 → 100/35 | 0/87 → 25/79 |
+| column | 40/81 → 50/75 | 60/73 → 90/63 | 5/85 → 5/85 |
+| square | 45/82 → 60/70 | 95/56 → 100/33 | 0/85 → 15/83 |
+| wedge (on Charge) | 30/88 → 25/87 | 10/89 → 15/91 | 100/52 → 100/46 |
+
+**Parity** (`parity.js 40`, main → branch, over the odds): lone hero +14 → +11, small +11 → +11, close +21 → +21, veterans +21 → +21, outnumbered +11 → +1; the close fights' average 17.7 → 14.3 (2–18 allowed). `--big`: close×8@40 +24 → +24, veterans×6@40 +13 → +13, close×8@100 +19 → +22 (lost 7.3 → 13.1), veterans×6@100 +13 → +13.
+
+**Extras** (`extras.js 40`, on/off win %, main → branch): wall against reavers 100/98 → 93/85; wall against crossbows 3/0 → 13/0; wedge 100/100 → 98/100; hill 28/25 → 23/13; ford 98/100 → 100/93; wagon 83/88 → 85/88.
+
+**Duels** (`duel-lab.js 40`): identical to main in every row.
+
+**Realms** (`realm-lab.js 6`, means): T2 valedorn 71 → 73, aurelian 27 → 31, hrothmark 55 → 51, vessaro 20 → 40, ostrand 88 → 86, saltreach 20 → 40, outlaws 33 → 20, free 95 → 92; T3 valedorn 58 → 44, aurelian 65 → 65, hrothmark 23 → 38, vessaro 44 → 38, free 90 → 90.
