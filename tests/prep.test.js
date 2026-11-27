@@ -36,7 +36,9 @@ test('SC-06: Balanced in two taps: infantry in front, archers behind, cavalry on
   assert.ok(centre(by('archer')).x < hero.x, 'archers behind');
   assert.ok(centre(by('cavalry')).y < hero.y - 100, 'cavalry out on a flank');
   const { infantry, archer, cavalry } = g.orders; // the three divisions this company has (P9-B4: six slots)
-  assert.deepEqual({ infantry, archer, cavalry }, { infantry: 'follow', archer: 'follow', cavalry: 'follow' }, 'everyone goes with the hero (V2-T2)');
+  assert.deepEqual({ infantry, archer, cavalry }, { infantry: 'follow', archer: 'follow', cavalry: 'hold' }, 'foot and archers go with the hero (V2-T2); the horse waits on the flank (P11-14)');
+  assert.equal(g.formation, 'line', 'P11-14: the infantry in a line, a screen for the archers');
+  assert.equal(JSON.stringify(g.timed.map((t) => [t.div, t.kind, t.volley, t.at])), JSON.stringify([['cavalry', 'charge', -1, CL.prep.AUTO.cavalryBy]]), 'the horse goes in on the first volley, or after a few seconds');
   for (const u of g.allies) assert.equal(CL.units.blocked(u.x, u.y), false, `${u.troop} placed clear`);
   const z = CL.prep.zone(map);
   for (const u of g.allies) assert.ok(u.x >= z.x0 - 70 && u.x <= z.x1 && u.y >= z.y0 - 70 && u.y <= z.y1 + 70, 'inside the deployment zone (ranks may step back a little)');
@@ -179,4 +181,25 @@ test('SC-36: ten ordinary fights on the default setup, never opening tactics: th
     if (fight(CL)) wins++;
   }
   assert.ok(wins >= 8, `${wins}/10 won`);
+});
+
+test('P11-14: the setups choose from what is seen of the foe: Defensive a square against horse, else a wall; Aggressive a wedge; Balanced a line with its horse held for the volley', () => {
+  const { CL, map, p } = band();
+  const P = CL.prep;
+  assert.deepEqual({ ...P.choose('defensive', { horse: 0.4 }) }, { formation: 'square', cavalryWaits: false });
+  assert.deepEqual({ ...P.choose('defensive', { horse: 0.1 }) }, { formation: 'wall', cavalryWaits: false });
+  assert.deepEqual({ ...P.choose('aggressive', { horse: 0.5 }) }, { formation: 'wedge', cavalryWaits: false });
+  assert.deepEqual({ ...P.choose('balanced', { horse: 0 }) }, { formation: 'line', cavalryWaits: true });
+  // What is seen: the band on the map.
+  p.troops = { rider: 6, looter: 4 }; // the band on the map (parties.current reads it)
+  assert.equal(P.seenFoe().horse, 0.6);
+  assert.equal(P.plan('defensive', map).formation, 'square', 'riders seen: a square');
+  p.troops = { looter: 10 };
+  assert.equal(P.plan('defensive', map).formation, 'wall');
+  assert.equal(P.plan('aggressive', map).formation, 'wedge');
+  assert.equal(P.plan('custom', map).formation, 'loose', 'Custom is yours');
+  assert.equal(P.plan('custom', map).timed.length, 0);
+  // Auto picks the setup from the odds, then the same choices.
+  const auto = P.plan('auto', map);
+  assert.equal(auto.formation, P.choose(auto.auto, P.seenFoe()).formation);
 });

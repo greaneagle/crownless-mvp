@@ -465,6 +465,8 @@
   function enemyPlan(g) {
     g.enemyOrders = null;
     g.enemyFormations = null;
+    g.enemyHorseWaits = null;
+    g.enemyVolley = null;
     if (!g.share || !g.enemies.length || g.wagon || g.siege || g.enemies.length + g.enemyReserve.length <= ARMY.from) return;
     const A = CL.autoresolve;
     const theirs = {};
@@ -472,8 +474,16 @@
     const odds = A.winChance(A.playerPower(CL.campaign), A.troopsPower(theirs));
     const weak = odds >= CL.prep.AUTO.strong;
     g.enemyOrders = { infantry: weak ? 'hold' : 'charge', archer: weak ? 'hold' : 'charge', cavalry: weak ? 'hold' : 'charge' };
-    // P11-13: by the same rules as the company's: its foot in a line (formed on Hold; on Charge it breaks up).
-    g.enemyFormations = { infantry: 'line' };
+    // P11-14: by the same choices as the company's setups (js/prep.js choose), from what it sees of the
+    // company: the weaker holds in a wall (a square against horse); the much stronger comes on in a wedge;
+    // between, a line with its horse held on the flank until its archers' first volley.
+    const mine = [...g.allies, ...g.allyReserve.map((r) => ({ role: CL.content.troop(r.troop).role }))];
+    const horse = mine.length ? mine.filter((u) => u.role === 'cavalry').length / mine.length : 0;
+    const setup = weak ? 'defensive' : odds <= CL.prep.AUTO.weak ? 'aggressive' : 'balanced';
+    const pick = CL.prep.choose(setup, { horse });
+    g.enemyFormations = { infantry: pick.formation };
+    g.enemyHorseWaits = pick.cavalryWaits && g.enemies.some((e) => e.role === 'cavalry') ? CL.prep.AUTO.cavalryBy : null;
+    if (g.enemyHorseWaits != null) g.enemyOrders.cavalry = 'hold';
     // Blocks on their side (facing the company, -x): foot in front, archers behind, horse on the flanks.
     const box = g.battleMap.spawn.enemies;
     const cx = (box.x0 + box.x1) / 2;
@@ -490,7 +500,7 @@
         Object.assign(e, { holdX: e.x, holdY: e.y, face: 'left' });
       });
     }
-    CL.diag.log('info', 'Enemy plan', { odds: Math.round(odds * 100), orders: g.enemyOrders });
+    CL.diag.log('info', 'Enemy plan', { odds: Math.round(odds * 100), orders: g.enemyOrders, formation: g.enemyFormations.infantry });
   }
 
   /**
@@ -723,6 +733,7 @@
         }
         loose(u, dx, dy, u.damage * (u.moraleMul || 1));
         if (u.team === 'ally' && !u.outside) game().lastVolley = game().t; // the company's archers loose (P9-B4's timed orders)
+        if (u.team === 'enemy') game().enemyVolley = game().t; // P11-14: the enemy's horse goes in on it
       }
       return true;
     }
@@ -879,7 +890,7 @@
     }
     const target = u.target;
     if (u.routing) return; // running: js/morale.js moves them (V2-08b)
-    if (u.team === 'ally') CL.formations.arm(game(), u); // a wedge ready for its first blow (P7-11)
+    CL.formations.arm(game(), u); // a wedge ready for its first blow (P7-11; P11-14: the enemy's too)
     // Shield troops raise their shields against a swing coming at them (V2-08a), and a shield wall
     // against archers too (P7-11).
     u.guard = !broken(u) && (CL.groups.shouldGuard(u, opponentsOf(u)) || (u.team === 'ally' && CL.formations.guard(game(), u, opponentsOf(u))));
@@ -905,7 +916,9 @@
         // Loose ranks around the hero (V2-08a); break ranks to fight anything close.
         dest = u.companion ? game().hero : home || CL.groups.followSlot(game(), u);
         goal = u.companion ? p.followGoal : 6;
-        if (home ? inLeash : dist(u, target) < CL.objective.reach(game(), target, p.followEngage * CL.traits.engage(u))) {
+        // P11-14: on Follow a formed soldier breaks off for what comes as close as it always did (75 px) and goes
+        // back to its place after; the strict leash is Hold's (the line held back while the hero fought: parity veterans).
+        if (dist(u, target) < CL.objective.reach(game(), target, p.followEngage * CL.traits.engage(u))) {
           dest = target;
           goal = p.followFight;
         }
@@ -1020,7 +1033,8 @@
       }
       if (d > nearest + ENEMY.preferRange) continue;
       let pull = 0;
-      if (v.role === 'archer') pull = Math.max(pull, ENEMY.prefer.archer);
+      // P11-14: an archer behind a formed line is no easy mark: the line is in the way.
+      if (v.role === 'archer') pull = v.screened ? -CL.formations.SCREEN.penalty : Math.max(pull, ENEMY.prefer.archer);
       if (v.hp < v.maxhp * ENEMY.woundedAt) pull = Math.max(pull, ENEMY.prefer.wounded);
       if (v === h && heroAlone) pull = Math.max(pull, ENEMY.prefer.heroAlone);
       if (d - pull < score) [best, score] = [v, d - pull];
@@ -1285,6 +1299,14 @@
       a.x = x0 + (x1 - x0) * bt;
       a.y = y0 + (y1 - y0) * bt;
       a.flown = (a.flown || 0) + len * bt;
+      const cover = best ? CL.formations.coverOf(best) : 0;
+      if (cover > 0 && Math.random() < cover) {
+        // P11-14: the trees round the target take it.
+        a.life = 0;
+        sound('thunk');
+        g.effects.push({ x: a.x, y: a.y, t: 0.15, color: '#d9c8a2', kind: 'thunk' });
+        continue;
+      }
       if (best) {
         const past = Math.max(0, a.flown - (a.range ?? Infinity));
         const span = Math.max(1, (a.far ?? Infinity) - (a.range ?? 0));
@@ -1460,6 +1482,10 @@
     reinforce(g);
     CL.tactics.scan(g, dt); // what the company can see (V2-06)
     CL.tactics.tickOrders(g); // timed orders, and divisions falling back (P9-B4)
+    if (g.enemyHorseWaits != null && (g.enemyVolley != null || g.t >= g.enemyHorseWaits)) {
+      g.enemyOrders.cavalry = 'charge'; // P11-14: the enemy's horse goes in on its first volley
+      g.enemyHorseWaits = null;
+    }
     const before = g.groupState;
     const states = CL.groups.updateStates(g, dt) !== before; // forming · formed · advancing · engaged
     const formedNow = CL.formations.tick(g, dt) !== g.formWas; // P11-13: cohesion and the orders' states, every 0.25 s

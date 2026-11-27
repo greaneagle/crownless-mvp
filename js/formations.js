@@ -54,9 +54,13 @@
   const FOREST = { radius: 56, trees: 3 };
   const MIN_SIZE = 4;
   const BAY = { longer: 12, inside: 0.6, margin: 4 }; // the points hold them off (atBay)
-  const SHARE = { neighbours: 2, keep: 0.5 }; // a wall's blocked blow: half on the shield struck, half beside
+  const SHARE = { neighbours: 2, keep: 0.5 };
+  // P11-14: combined arms. An archer with a formed friendly line between it and the foe is screened (the
+  // foe's foot and riders don't single it out); a fighter among trees is in cover (arrows find fewer).
+  const SCREEN = { ahead: 220, width: 46, behind: 12, penalty: 40 };
+  const COVER = { radius: 48, perTree: 0.2, most: 0.5 }; // a wall's blocked blow: half on the shield struck, half beside
   Object.assign(WEDGE, { breaks: 3, breakRadius: 44 });
-  Object.assign(USE, { bay: true, leash: true, frontage: true, flanks: true, cohesion: true, share: true, forest: true });
+  Object.assign(USE, { screen: true, cover: true, bay: true, leash: true, frontage: true, flanks: true, cohesion: true, share: true, forest: true });
 
   const isSoldier = (u) => u && u.team === 'ally' && !u.companion && !u.outside;
   /** P11-13: an enemy that takes its army's formation (its plan's, js/combat.js enemyPlan). */
@@ -258,8 +262,49 @@
       }
     }
     g.formState = out;
+    screens(g);
     orderStates(g);
     return out;
+  }
+
+  /** P11-14: how many trees stand near (x, y) (cover from arrows). */
+  function treesAt(x, y) {
+    let n = 0;
+    for (const o of CL.game?.battleMap?.obstacles || []) if (o.look === 'tree' && Math.hypot(o.x - x, o.y - y) < COVER.radius) n++;
+    return n;
+  }
+
+  /** P11-14: the chance an arrow at this fighter is stopped by the trees around them. @param {Unit} u */
+  const coverOf = (u) => (USE.cover ? Math.min(COVER.most, (u.trees || 0) * COVER.perTree) : 0);
+
+  /**
+   * P11-14: every 0.25 s with cohesion: each archer's screen (a formed friend between it and the middle
+   * of its foes) and each fighter's trees. @param {any} g
+   */
+  function screens(g) {
+    const forest = (g.battleMap?.obstacles || []).some((o) => o.look === 'tree');
+    for (const [own, foes] of [
+      [g.allies, g.enemies],
+      [g.enemies, [g.hero, ...g.allies]],
+    ]) {
+      const live = foes.filter((f) => f?.alive && !f.routing);
+      const n = live.length || 1;
+      const fc = { x: live.reduce((s, f) => s + f.x, 0) / n, y: live.reduce((s, f) => s + f.y, 0) / n };
+      const wall = USE.screen ? own.filter((w) => w.alive && !w.ranged && formed(g, w)) : [];
+      for (const u of own) {
+        if (!u.alive) continue;
+        u.trees = forest ? treesAt(u.x, u.y) : 0;
+        if (u.role !== 'archer') continue;
+        const L = Math.hypot(fc.x - u.x, fc.y - u.y) || 1;
+        const [dx, dy] = [(fc.x - u.x) / L, (fc.y - u.y) / L];
+        u.screened =
+          live.length > 0 &&
+          wall.some((w) => {
+            const t = (w.x - u.x) * dx + (w.y - u.y) * dy;
+            return t > SCREEN.behind && t < Math.min(SCREEN.ahead, L) && Math.abs((w.x - u.x) * dy - (w.y - u.y) * dx) < SCREEN.width;
+          });
+      }
+    }
   }
 
   // ---- P11-13: order states (the flags on the field and the minimap, the Orders panel) ----
@@ -436,5 +481,5 @@
     return u.ranged.range * (USE.hill && highAt(u.x, u.y) ? HILL.range : 1);
   }
 
-  CL.formations = { KINDS, NAMES, MARCH, WALL, WEDGE, HILL, USE, LEASH, FLANK, COHESION, LOOSE, FOREST, MIN_SIZE, SHARE, BAY, STATE_WORDS, atBay, chosenFor, squared, of, formed, leash, flankOf, frontage, breakRanks, sharePressure, slotOf, denseAt, tick, note, orderStates, speed, guard, strikesOver, cover, arm, blow, slot, closeUp, set, highAt, rangeOf };
+  CL.formations = { KINDS, NAMES, MARCH, WALL, WEDGE, HILL, USE, LEASH, FLANK, COHESION, LOOSE, FOREST, MIN_SIZE, SHARE, BAY, SCREEN, COVER, STATE_WORDS, screens, treesAt, coverOf, atBay, chosenFor, squared, of, formed, leash, flankOf, frontage, breakRanks, sharePressure, slotOf, denseAt, tick, note, orderStates, speed, guard, strikesOver, cover, arm, blow, slot, closeUp, set, highAt, rangeOf };
 })(typeof window !== 'undefined' ? window : globalThis);

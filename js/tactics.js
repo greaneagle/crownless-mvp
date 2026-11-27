@@ -228,10 +228,11 @@
   /** Each frame: timed orders whose moment has come, and divisions falling back that have arrived. @param {any} g */
   function tickOrders(g) {
     if (g.timed?.length) {
-      const due = g.timed.filter((t) => (t.at != null ? g.t >= t.at : (g.lastVolley ?? -1) > t.volley));
+      // P11-14: an order may have both (the volley, or a time at the latest).
+      const due = g.timed.filter((t) => (t.at != null && g.t >= t.at) || (t.volley != null && (g.lastVolley ?? -1) > t.volley));
       if (due.length) {
         g.timed = g.timed.filter((t) => !due.includes(t));
-        for (const t of due) carry(g, t);
+        for (const t of due) carry(g, t.aimAtEnemy ? { ...t, ...enemyMiddle(g, t) } : t);
       }
     }
     for (const div of Object.keys(g.falling || {})) {
@@ -242,6 +243,14 @@
         g.doneAt[div] = g.t; // P11-13: the order's flag says done for a moment
       }
     }
+  }
+
+  /** P11-14: the middle of the enemies the company can see (a plan's timed charge aims there). @param {any} g */
+  function enemyMiddle(g, t) {
+    const seen = knownEnemies(g).filter((k) => k.live);
+    const list = seen.length ? seen : g.enemies.filter((e) => e.alive && !e.routing);
+    if (!list.length) return { x: t.x, y: t.y };
+    return { x: list.reduce((n, e) => n + e.x, 0) / list.length, y: list.reduce((n, e) => n + e.y, 0) / list.length };
   }
 
   function tap(g, sx, sy) {

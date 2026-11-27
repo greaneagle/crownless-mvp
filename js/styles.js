@@ -181,7 +181,7 @@
     for (const v of foes) {
       if (!v?.alive) continue;
       let s = Math.hypot(v.x - u.x, v.y - u.y);
-      if (v.role === 'archer') s -= RIDE.archer;
+      if (v.role === 'archer') s -= v.screened ? -(CL.formations?.SCREEN.penalty ?? 0) : RIDE.archer; // P11-14: not behind a formed line
       if ((CL.groups.braces?.(v) || CL.formations?.squared?.(g, v)) && CL.units.inArc(v, u, CL.units.ARC.block)) s += RIDE.braced;
       if (v.routing && (of(u).pursue ?? 1) < 0.5) s += RIDE.braced;
       if (s < score) [best, score] = [v, s];
