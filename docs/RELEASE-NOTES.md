@@ -1,5 +1,23 @@
 # Crownless — Release Notes
 
+## v5.10.0 — Fighters who think (P11-10) · 2026-11-27
+
+Enemies, your soldiers and tournament fighters no longer all fight the same way. The first task of milestone M3, "The armies of the realms".
+
+### New
+- **Fighting styles:** a looter brawls (wild, slow to guard); a trained soldier keeps its guard; a veteran waits, guards well and strikes when you miss; a spearman keeps you at the end of its spear; a heavy fighter waits for an opening, then hits hard; archers keep their distance and step back from anyone who closes; riders hunt archers, stay clear of spears facing them, and ride out to charge again when they get stuck.
+- **Everyone plays by your rules:** they see only what you see (a swing wound up, a stumble, a lowered shield) and react a moment later, never at once. Holding Attack still beats a brawler; against a veteran it gets you hurt. Step out of reach, let them miss, and strike while they recover.
+- **Tournament fighters** each have a way of fighting: the first comes straight at you, the second hides behind a shield, the finalist waits for your mistake. Your rival always fights the same way.
+- **The soldier's card and the troop tree** say how each troop fights ("In battle: fights patiently, guards well…").
+
+### Changed
+- The semi-final's fighter is a little less tough (the shield-wall makes up for it).
+- Big battles at a size of 100 between equal-ish armies are no longer lost far more often than Simulate says.
+
+### Under the hood
+- `data/styles.js` (`fighting_styles`, a pack table, checked; a troop's or a round's `style`), `js/styles.js` (`CL.styles`: `melee`, `archer`, `riderTarget`, `rideOut`, `detailed`, `reaction`, `guardUse`). The full style within 360 px of you and in every duel. `duel-lab.js --ai`.
+- `tests/ai-styles.test.js` (11). Golden battles recorded again. Measured in `docs/PHASE-11-VALIDATION.md` "Fighting styles".
+
 ## v5.9.0 — Controls, feedback and teaching (P11-09) · 2026-11-27
 
 The controls for swords, bows and horses made whole, on the phone and the PC. With this, milestone M2, "Bow and horse", is ready to play.

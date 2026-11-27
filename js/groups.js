@@ -72,8 +72,12 @@
       u.threatSince = null;
       return false;
     }
-    if (u.threatSince == null) u.threatSince = t;
-    const delay = CL.combat?.GUARD_DELAY?.[CL.content.table('troops')[u.troop]?.tier] ?? CL.combat?.GUARD_DELAY?.T2 ?? 0.22;
+    if (u.threatSince == null) {
+      u.threatSince = t;
+      u.guardTake = CL.styles ? Math.random() < CL.styles.guardUse(u) : true; // P11-10: by style, once a threat
+    }
+    if (!u.guardTake) return false;
+    const delay = CL.styles ? CL.styles.reaction(u) : (CL.combat?.GUARD_DELAY?.[CL.content.table('troops')[u.troop]?.tier] ?? 0.15);
     return t - u.threatSince >= delay - 1e-9;
   }
 

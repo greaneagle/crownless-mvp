@@ -67,12 +67,14 @@ test('shield troops raise their shields at a swing coming at them from the front
   const e = g.enemies[0];
   Object.assign(f, { x: 300, y: 300, face: 'right' });
   Object.assign(e, { x: 340, y: 300, face: 'left', swing: { t: 0.05, hit: [] } }); // winding up
-  // P11-05: honestly: not in the same frame, but a reaction later (a footman, T2: 0.13 s).
+  // P11-05: honestly: not in the same frame, but a reaction later (P11-10: the footman's style's).
+  CL.content.table('fighting_styles')[CL.styles.of(f).id].guardUse = 1; // test setup: it always guards
+  const react = CL.styles.reaction(f);
   g.t = 10;
   assert.equal(CL.groups.shouldGuard(f, g.enemies), false, 'not the instant it is seen');
-  g.t = 10 + CL.combat.GUARD_DELAY.T2 - 0.01;
+  g.t = 10 + react - 0.01;
   assert.equal(CL.groups.shouldGuard(f, g.enemies), false, 'still reacting');
-  g.t = 10 + CL.combat.GUARD_DELAY.T2;
+  g.t = 10 + react;
   assert.equal(CL.groups.shouldGuard(f, g.enemies), true, 'up a reaction later');
   assert.equal(CL.groups.shouldGuard(one(g.allies, 'hunter'), g.enemies), false, 'no shield, no block');
   Object.assign(e, { x: 260, y: 300, face: 'right' }); // behind the footman

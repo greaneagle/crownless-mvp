@@ -7,7 +7,7 @@ const vm = require('node:vm');
 const ROOT = path.join(__dirname, '..', '..');
 
 // Logic modules only (no render/input/main — those need a real DOM).
-const LOGIC_MODULES = ['core', 'content', 'worlds', 'state', 'storage', 'packs', 'events', 'clock', 'soldiers', 'traits', 'chronicle', 'accounts', 'quartermaster', 'surgeon', 'blacksmith', 'scout', 'detachments', 'retinue', 'merchant', 'troops', 'save', 'camera', 'arena', 'tactics', 'prep', 'groups', 'formations', 'divisions', 'objective', 'morale', 'reinforce', 'profile', 'units', 'combat', 'party', 'upkeep', 'trade', 'autoresolve', 'spatial', 'sight', 'parties', 'contracts', 'realm', 'crowns', 'diplomacy', 'founding', 'rebellion', 'armies', 'houses', 'rights', 'lords', 'allegiance', 'fiefs', 'sieges', 'assault', 'nobles', 'claims', 'story', 'companion', 'news', 'happenings', 'tourney', 'business', 'portable', 'world', 'mapview', 'gestures', 'encounter', 'town', 'character', 'gear', 'art/kit', 'art/figures', 'art/battle', 'art/town', 'art/worldmap', 'art/ui', 'debug', 'settings', 'audio', 'tips', 'fullscreen'];
+const LOGIC_MODULES = ['core', 'content', 'worlds', 'state', 'storage', 'packs', 'events', 'clock', 'soldiers', 'traits', 'chronicle', 'accounts', 'quartermaster', 'surgeon', 'blacksmith', 'scout', 'detachments', 'retinue', 'merchant', 'troops', 'save', 'camera', 'arena', 'tactics', 'prep', 'groups', 'formations', 'divisions', 'objective', 'morale', 'reinforce', 'profile', 'units', 'styles', 'combat', 'party', 'upkeep', 'trade', 'autoresolve', 'spatial', 'sight', 'parties', 'contracts', 'realm', 'crowns', 'diplomacy', 'founding', 'rebellion', 'armies', 'houses', 'rights', 'lords', 'allegiance', 'fiefs', 'sieges', 'assault', 'nobles', 'claims', 'story', 'companion', 'news', 'happenings', 'tourney', 'business', 'portable', 'world', 'mapview', 'gestures', 'encounter', 'town', 'character', 'gear', 'art/kit', 'art/figures', 'art/battle', 'art/town', 'art/worldmap', 'art/ui', 'debug', 'settings', 'audio', 'tips', 'fullscreen'];
 const CONTENT_MODULES = [
   'factions',
   'settlements',
@@ -33,6 +33,7 @@ const CONTENT_MODULES = [
   'businesses',
   'help',
   'names',
+  'styles', // P11-10
 ];
 // P9-08: the other official worlds (data/worlds/*.js), loaded beside the built-in one.
 const WORLD_MODULES = fs

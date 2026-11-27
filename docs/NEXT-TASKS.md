@@ -4049,7 +4049,7 @@ The aim: easy to fight, rewarding to fight well, meaningful to command. The play
 | P11-07 | Bows and crossbows in your hands | L | 5.7.0 | ✅ Done |
 | P11-08 | Fighting from the saddle | L | 5.8.0 | ✅ Done |
 | P11-09 | Controls, feedback and teaching | M | 5.9.0 | ✅ Done |
-| P11-10 | Fighters who think: individual AI and styles | L | 5.10.0 | Specified |
+| P11-10 | Fighters who think: individual AI and styles | L | 5.10.0 | ✅ Done |
 | P11-11 | Troops by their weapons | M–L | 5.11.0 | Specified |
 | P11-12 | Performance and art-cache checkpoint | M | 5.12.0 | Specified |
 | P11-13 | Formations and orders that hold | L | 5.13.0 | Specified |
@@ -4875,7 +4875,7 @@ The aim: easy to fight, rewarding to fight well, meaningful to command. The play
 
 ---
 
-### P11-10 · Fighters who think: individual AI and styles (L) — 5.10.0, Specified
+### P11-10 · Fighters who think: individual AI and styles (L) — 5.10.0, ✅ Done
 
 **Now.** The AI retargets every 0.17–0.41 s, walks to the nearest (the enemy prefers archers, the wounded and a lone hero), swings in reach; shield troops guard on an opponent's windup (after P11-05, with a delay); archers step aside for a clear shot; cavalry charge, ride through and wheel; nothing waits for an opening or keeps a distance; tournament opponents differ by multipliers.
 
@@ -4932,6 +4932,19 @@ The aim: easy to fight, rewarding to fight well, meaningful to command. The play
 - **Play:** as above.
 - **Explain:** the troop card's style word.
 - **Not here:** troop data changes (P11-11).
+
+**Done (5.10.0).** Started without the owner's M2 play, at the owner's word ("start a task and just chose the best option"): both switch controls kept (the badge by default, the swipe a setting) and no "attack on release" until play asks for it.
+- **Styles** (`data/styles.js`, `C.fighting_styles`, a pack table; `js/styles.js`, `CL.styles`): brawler, soldier, veteran, spear, heavy, skirmisher, rider, and the tournament's rusher, shield-wall, counter-striker, reach-keeper; each `{ reaction, patience, spacing, opportunism, guardUse, retreatAt, pursue, preferRange }` and its words, checked (`CL.styles.validate`, with a troop's and a round's `style`). A troop's style by kind (`forTroop`), no troop data changed (P11-11).
+- **Reactions:** the guard (`groups.shouldGuard`) a style's reaction after the blow is seen (never under 0.05 s) and only as often as its guardUse (rolled once a threat); `GUARD_DELAY` is the fallback for a unit with no style.
+- **Foot** (`CL.styles.melee`, from `combat.ai` when a fighter goes for its target): opportunity (an opening: recovery, a stagger, a broken guard, running; struck a reaction after it is seen), spacing (a longer weapon at its reach's edge, decided once a target), patience (just outside a ready opponent's reach, for its patience, striking one who steps in), a step back to the edge kept. A foe busy with someone else is pressed at once. Formations, orders, morale and the walls keep their rules (a fight only when the order sends it to its target; never falling back).
+- **Archers** (`CL.styles.archer`): back from foot inside `retreatAt` (at 70% pace), held at `preferRange`; looked for five times a second.
+- **Riders** (`cavalryAi`): `riderTarget` (archers 90 px nearer, a braced front or a square facing them 160 further, runners only by `pursue`); `rideOut` after 1.2 s ground down among foot.
+- **Detail by distance:** the full style within 360 px of the hero and in every duel (`DETAIL.radius`, set by the bench); further off, the simple rule.
+- **Tournaments:** the rounds' styles (rusher, shield-wall, counter-striker); a rival's by name (`rivalStyle`). Two tries at lowering the rounds' numbers measured too easy (the masher champion 67% and 43%, against 17%): kept, the semi-final's HP 1.3 → 1.15 only.
+- **Words:** "In battle: fights patiently, guards well…" on the soldier's card and in the troop tree.
+- **Measured** (`docs/PHASE-11-VALIDATION.md` "Fighting styles"; `duel-lab.js --ai`, new): each style's signature; **the masher against a huscarl's body: a brawler 20 of 20, a veteran 15, a heavy 1**; parity's close fights 17.2 over the odds (2–18 allowed; 5.9.0: 15.3), close×8 at 100 from 60% to 95% (odds 76; it was under the slow test's floor); the lists' masher champion 17% as before; `npm run bench` at 200 +6% (the first version +29%: the archers' look and the style lookup, fixed).
+- **Not done:** the optional Debug overlay of a unit's style and intent.
+- **Tests:** `tests/ai-styles.test.js` (new, 11: styles by kind and checked; reaction never zero; a spear's distance; patience and its limit; an opening struck a reaction later; an archer's retreat; riders avoid a braced front and hunt archers; riding out; tournament styles and a rival's; the detail radius; the same seed, the same fight). Changed: `groups` and `melee` (the guard's reaction by style), `content` (25 modules), `traits.spec.js` (the card's style line). Golden battles recorded again. `npm test` 1,050 pass; lint and typecheck clean; browser `battle`, `tourney`, `company`, `controls`, `traits` pass. **Slow:** `battle-extras` passes; the **Phase 7 exit fails on seed 2** (the bot's company in a spiral: 15 won, 81 lost; seed 1 passes). It failed on seed 2 before (money, P11-20); 5.9.0 spirals the same way on seed 4, and over four other seeds 5.10.0's company does better, so it is recorded for P11-20 (`docs/PENDING-CHECKS.md`), not tuned away. `CL.styles.USE` switches each part off for measuring; `prototype-g.js` takes a `tweak`.
 
 ---
 

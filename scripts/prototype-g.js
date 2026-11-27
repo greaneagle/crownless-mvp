@@ -49,13 +49,14 @@ function ruleSetup(CL, c) {
 
 /** One campaign in one style: play half, save, reload from storage, play the rest. */
 // P9-08: `world` plays another official world (data/worlds/*.js), as `--world <id>` does.
-function run(seed, style, days, { world } = {}) {
+function run(seed, style, days, { world, tweak } = {}) {
   const storage = memoryStorage();
   const messages = [];
   const boot = (fresh) => {
     const env = loadGame({ party: false, worldEvents: true, random: mulberry(seed * 7919), seed, storage, world });
     const { CL } = env;
     CL.ui = headlessUi(CL, messages);
+    tweak?.(CL); // a measuring switch (P11-10: CL.styles.USE), on every boot
     if (fresh) {
       CL.game.newGame = true;
       CL.character.begin({ name: `G${seed}`, origin: 'farmhand', plain: true });

@@ -145,7 +145,7 @@ The fix is not to make input unresponsive or to punish repeated presses, but to 
 | **P11-07** | Bows and crossbows in your hands | L | P1 | P11-05, P11-06 | 5.7.0 | M2 | ✅ Done |
 | **P11-08** | Fighting from the saddle | L | P1 | P11-06, P11-07 | 5.8.0 | **M2 "Bow and horse"** | ✅ Done |
 | **P11-09** | Controls, feedback and teaching (consolidation) | M | P1 | P11-05, P11-07, P11-08 | 5.9.0 | M2 | ✅ Done |
-| **P11-10** | Fighters who think: individual AI and styles | L | P1 | P11-05, P11-07, P11-08 | 5.10.0 | M3 | Specified |
+| **P11-10** | Fighters who think: individual AI and styles | L | P1 | P11-05, P11-07, P11-08 | 5.10.0 | M3 | ✅ Done |
 | **P11-11** | Troops by their weapons | M–L | P1 | P11-10 | 5.11.0 | M3 | Specified |
 | **P11-12** | Performance and art-cache checkpoint | M | P1 | P11-11 | 5.12.0 | **M3 "Soldiers who fight like it"** | Specified |
 | **P11-13** | Formations and orders that hold | L | P1 | P11-11 | 5.13.0 | M4 | Specified |
@@ -447,6 +447,13 @@ P11-05 to P11-08 each fill a matrix of `duel-lab` and `tactics-lab` results: fam
 - **Controls:** the same joystick steers; the horse keeps momentum (a lighter touch turns, holding a direction builds speed); Attack strikes on the side the horse faces (or the aimed side on PC).
 
 ---
+
+### 10.8 Fighting styles (P11-10, 5.10.0)
+- **Data:** `data/styles.js` (`C.fighting_styles`): reaction (s, never under 0.05), patience (s), spacing, opportunism, guardUse (0–1), retreatAt and preferRange (px), pursue, and `duel` for the tournament's. A troop's style is its `style` (checked), else by kind (`CL.styles.forTroop`): T1 foot brawler, T2 soldier, T3 veteran (heavy with an axe or mace), spears and pikes spear, archers skirmisher, riders rider.
+- **The rules, all from what is drawn:** the guard comes up a reaction after a blow is seen, and only as often as guardUse; a foe recovering, staggered, with a broken guard or running is an opening, struck a reaction after it is seen by opportunism; a longer weapon keeps at its reach's edge (decided once a target); a patient fighter waits just outside a ready opponent's reach (for its patience, then closes) and strikes one who steps into its own; a foe busy with someone else is pressed at once; archers step back from foot inside retreatAt and hold preferRange; riders count archers nearer and a braced front (or a square) facing them much further, and ride out after a grind among foot.
+- **Detail by distance:** the full style within 360 px of the hero and in every duel; further off, the simple rule. The guard's reaction and use everywhere.
+- **Tournaments:** the rounds' styles (rusher, shield-wall, counter-striker); a rival keeps one by name. The semi-final's HP 1.3 → 1.15.
+- **Measured:** `docs/PHASE-11-VALIDATION.md` "Fighting styles".
 
 ## 11. Code-drawn art adaptation plan
 

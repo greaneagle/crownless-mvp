@@ -250,18 +250,19 @@ test('the weapon guard: a two-hander’s Block takes part of a frontal blow, in 
   assert.equal(L2.game.hero.guard, true);
 });
 
-test('AI shields come up a reaction after the threat, by tier, and never in their own recovery', () => {
+test('AI shields come up a reaction after the threat, by style (P11-10), and never in their own recovery', () => {
   const { CL, g } = fight([['footman', 40, 0]]);
   const e = g.enemies[0];
   const h = g.hero;
-  const tier = CL.content.troop('footman').tier;
+  const S = CL.content.table('fighting_styles');
+  S[CL.styles.of(e).id].guardUse = 1; // test setup: it always guards
   h.swing = { t: 0.01, hit: [] };
   g.t = 3;
   assert.equal(CL.groups.shouldGuard(e, [h]), false, 'not in the same frame');
-  g.t = 3 + CL.combat.GUARD_DELAY[tier];
+  g.t = 3 + CL.styles.reaction(e);
   assert.equal(CL.groups.shouldGuard(e, [h]), true);
-  assert.ok(CL.combat.GUARD_DELAY.T3 < CL.combat.GUARD_DELAY.T2 && CL.combat.GUARD_DELAY.T2 < CL.combat.GUARD_DELAY.T1, 'the better, the quicker');
-  assert.ok(CL.combat.GUARD_DELAY.T2 < CL.profile.of(h).timing.windup, 'a trained soldier blocks a sword seen coming…');
+  assert.ok(S.veteran.reaction < S.soldier.reaction && S.soldier.reaction < S.brawler.reaction, 'the better, the quicker');
+  assert.ok(CL.styles.reaction(e) < CL.profile.of(h).timing.windup, 'a trained soldier blocks a sword seen coming…');
   e.swing = { t: 0.4, hit: [] };
   g.t = 10;
   CL.groups.shouldGuard(e, [h]);

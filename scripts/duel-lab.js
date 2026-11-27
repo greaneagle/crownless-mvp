@@ -17,6 +17,10 @@
 //                rider, on the open field; with `--wall`, against a shield wall of three footmen
 //   --mounted    P11-08: a knight (lance and destrier, or sword and rouncey) and a horse archer (shortbow,
 //                rouncey), the rider, archer and circler pilots, against foot, spears, archers and riders
+//   --ai         P11-10: each fighting style (data/styles.js) in one body (a footman's, a spearman's for
+//                spear and reach_keeper) against each pilot, with its signature: the share of its blows
+//                struck into an opening (the hero recovering, staggered or guard broken), the distance it
+//                keeps, how often its shield came up against a blow, and blows landed
 //   --styles     P11-06: the foot styles of docs/PHASE-11-PLAN.md §10.3 (light duelist, shield infantry,
 //                heavy infantry, spearman, two-hander), each in its own weapon and armour
 //
@@ -80,6 +84,44 @@ function duel({ seed, pilot, opponent, weapon = DEFAULT.weapon, armour = DEFAULT
   const CL = game(seed, weapon, armour);
   CL.combat.startBattle({ id: 'duel_lab', name: 'Duel lab', map: field ? 'grass_field' : 'tourney_lists', waves: [{ [opponent]: count }], practice: [], reward: { goldBase: 0, goldPerKill: 0, renown: 0 }, loot: 'low' });
   return fly(CL, pilot);
+}
+
+/** P11-10: the opponent's style's signature, sampled each frame of a duel. */
+function watchStyle(CL) {
+  const g = CL.game;
+  const m = { blows: 0, intoOpening: 0, dist: 0, frames: 0, threats: 0, guarded: 0 };
+  const update = CL.combat.update;
+  let was = null;
+  let threat = false;
+  CL.combat.update = (dt) => {
+    update(dt);
+    const e = g.enemies[0];
+    const h = g.hero;
+    if (!e?.alive || !h?.alive) return;
+    if (e.swing && e.swing !== was) {
+      m.blows++;
+      if (CL.styles.open(g, h)) m.intoOpening++;
+    }
+    was = e.swing;
+    m.dist += Math.hypot(e.x - h.x, e.y - h.y);
+    m.frames++;
+    const coming = Boolean(h.swing && CL.units.swingPhase(h) === 'active');
+    if (coming && !threat) {
+      m.threats++;
+      if (e.guard) m.guarded++;
+    }
+    threat = coming;
+  };
+  return m;
+}
+
+/** P11-10: one duel against a fighter of this body fighting in this style. */
+function styleDuel({ seed, pilot, body, style }) {
+  const CL = game(seed, DEFAULT.weapon, DEFAULT.armour);
+  CL.combat.startBattle({ id: 'duel_lab', name: 'Duel lab', map: 'tourney_lists', waves: [{ [body]: 1 }], practice: [], reward: { goldBase: 0, goldPerKill: 0, renown: 0 }, loot: 'low' });
+  for (const e of CL.game.enemies) e.styleId = style;
+  const m = watchStyle(CL);
+  return { ...fly(CL, pilot), sig: m };
 }
 
 /** The three rounds of the lists (the real bracket and loaner kit), with `townWins` earlier wins in the town. */
@@ -169,6 +211,21 @@ function runDuels({ seeds = 40, pilots = PILOTS, opponents = OPPONENTS, kits = [
   return out;
 }
 
+const AI_STYLES = [['brawler', 'footman'], ['soldier', 'footman'], ['veteran', 'footman'], ['heavy', 'footman'], ['spear', 'spearman'], ['brawler', 'spearman'], ['rusher', 'footman'], ['shield_wall', 'footman'], ['counter', 'footman'], ['reach_keeper', 'spearman']];
+
+function runStyles({ seeds = 40, pilots = PILOTS, styles = AI_STYLES } = {}) {
+  const out = [];
+  for (const [style, body] of styles) {
+    for (const pilot of pilots) {
+      const rows = [];
+      for (let i = 1; i <= seeds; i++) rows.push(styleDuel({ seed: spread(i), pilot, body, style }));
+      const tot = (k) => rows.reduce((n, r) => n + r.sig[k], 0);
+      out.push({ style, body, pilot, ...sum(rows), intoOpening: tot('blows') ? (100 * tot('intoOpening')) / tot('blows') : 0, keeps: tot('frames') ? tot('dist') / tot('frames') : 0, guarded: tot('threats') ? (100 * tot('guarded')) / tot('threats') : 0 });
+    }
+  }
+  return out;
+}
+
 function runTourney({ seeds = 40, pilots = PILOTS, townWins = [0, 1, 2, 3] } = {}) {
   const out = [];
   for (const tw of townWins) {
@@ -212,7 +269,15 @@ if (require.main === module) {
   const json = args.includes('--json');
   const f = (n, d = 0) => (n == null ? '–' : n.toFixed(d)).padStart(6);
   const t0 = Date.now();
-  if (args.includes('--series')) {
+  if (args.includes('--ai')) {
+    const out = runStyles({ seeds, pilots });
+    if (json) console.log(JSON.stringify({ seeds, styles: out }, null, 2));
+    else {
+      console.log(`Fighting styles against the pilots, the tournament ground, ${seeds} seeds each (the hero: Arming Sword, medium)`);
+      console.log(`${'style'.padEnd(13)}${'body'.padEnd(9)}${'pilot'.padEnd(8)}  win%  secs  hp-left%  taken  into-opening%  keeps-px  guarded%`);
+      for (const r of out) console.log(`${r.style.padEnd(13)}${r.body.padEnd(9)}${r.pilot.padEnd(8)}${f(r.win)}${f(r.seconds, 1)}${f(r.hpLeft).padStart(10)}${f(r.taken, 1).padStart(7)}${f(r.intoOpening).padStart(15)}${f(r.keeps).padStart(10)}${f(r.guarded).padStart(10)}`);
+    }
+  } else if (args.includes('--series')) {
     const out = runSeries({ seeds, pilots });
     if (json) console.log(JSON.stringify({ seeds, series: out }, null, 2));
     else {
@@ -244,4 +309,4 @@ if (require.main === module) {
   if (!json) console.log(`(${((Date.now() - t0) / 1000).toFixed(0)} s)`);
 }
 
-module.exports = { STYLES, PILOTS, OPPONENTS, WEAPONS, ARMOUR, DEFAULT, duel, tourney, series, runDuels, runTourney, runSeries };
+module.exports = { AI_STYLES, styleDuel, runStyles, STYLES, PILOTS, OPPONENTS, WEAPONS, ARMOUR, DEFAULT, duel, tourney, series, runDuels, runTourney, runSeries };

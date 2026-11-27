@@ -334,6 +334,7 @@
       const f = g.enemies[0];
       P.apply(f, P.resolve({ troop: f.troop }, { duel: g.duel.opponent }), ['hp', 'maxhp', 'damage', 'armor']); // the round's fighter (js/tourney.js)
       f.duelist = g.duel.opponent.name;
+      if (g.duel.opponent.style) f.styleId = g.duel.opponent.style; // P11-10: the bout's style (a rival keeps theirs)
     }
     CL.reinforce.begin(g); // nearby parties that will join, and when (V2-09)
     Object.assign(g, { overview: false, cameraFocus: null, scanIn: 0 });
@@ -795,7 +796,7 @@
     u.aiTimer -= dt;
     if (u.aiTimer <= 0 || (u.target && !u.target.alive)) {
       u.aiTimer = rand(0.17, 0.41);
-      u.target = nearestAlive(u, opponentsOf(u)) || null;
+      u.target = CL.styles.riderTarget(game(), u, opponentsOf(u)) || nearestAlive(u, opponentsOf(u)) || null; // P11-10: archers first, braced spears last
     }
     u.momentum ??= 0;
     const target = u.target;
@@ -821,6 +822,7 @@
       if (u.overrun <= 0) u.momentum *= 0.4;
       return;
     }
+    if (CL.styles.rideOut(g, u, target, dt)) return; // P11-10: ground down among foot: ride out to charge again
     const way = CL.arena.wayThrough(g.battleMap, u.x, u.y, target.x, target.y) || target; // P8-06b: through a gap in the wall
     const [dx, dy] = normalize(way.x - u.x, way.y - u.y);
     u.runDir = [dx, dy];
@@ -896,11 +898,31 @@
       goal = 30;
     }
 
+    // P11-10: by style, against the one it fights: hold at a longer weapon's reach, wait outside a ready
+    // opponent's, strike into an opening; an archer keeps its distance and steps back from foot.
+    let strike = true;
+    let backFrom = null;
+    const plan = dest === target && u.morale !== 'fallback' ? (u.ranged ? null : CL.styles.melee(game(), u, target, dt)) : null;
+    if (plan) [goal, strike] = [plan.goal, plan.strike];
+    if (u.ranged && u.morale !== 'fallback') {
+      const A = CL.styles.archer(game(), u);
+      if (A?.range && dest === target) goal = A.range;
+      backFrom = A?.back || null;
+    }
     // P9-B5: a climber keeps climbing: up and off the ladder before anything else.
     const top = CL.assault?.ladderTop(game(), u);
-    if (top) [dest, goal] = [top, 0];
+    if (top) [dest, goal, backFrom] = [top, 0, null];
     const d = dist(u, dest);
-    if (d > goal + 5) {
+    if (backFrom || (plan?.keep && dest === target && d < goal - CL.styles.OPEN.keepBack)) {
+      // Step back: from the foot soldier at an archer, or to the edge it keeps.
+      const from = backFrom || target;
+      const s = u.speed;
+      u.speed *= CL.styles.OPEN.back * (u.guard ? GUARD_SPEED : 1);
+      if (isCommitted(u)) u.speed *= P.of(u)?.moveDuringAttack ?? 1;
+      move(u, u.x - from.x, u.y - from.y, dt);
+      u.speed = s;
+      if (!backFrom) aim(u, target);
+    } else if (d > goal + 5) {
       const s = u.speed;
       if (u.guard) u.speed *= GUARD_SPEED; // a raised shield slows you, as it does the hero
       if (isCommitted(u)) u.speed *= P.of(u)?.moveDuringAttack ?? 1; // P11-05: committed to a swing
@@ -924,7 +946,7 @@
         }
       } else {
         u.losBlocked = 0;
-        if ((!u.guard || CL.formations.strikesOver(game(), u)) && !CL.assault?.climbing(game(), u)) startAttack(u); // no swinging behind a raised shield, except over a shield wall (P7-11)
+        if (strike && (!u.guard || CL.formations.strikesOver(game(), u)) && !CL.assault?.climbing(game(), u)) startAttack(u); // no swinging behind a raised shield, except over a shield wall (P7-11)
       }
     }
   }

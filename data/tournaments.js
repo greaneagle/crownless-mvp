@@ -35,9 +35,9 @@
       rivalRenown: 2, // besting your rival in a bout
       kit: { weapon: 'arming_sword', offhand: 'kite_shield', head: 'iron_helm', body: 'gambeson', feet: 'boots' },
       rounds: [
-        { name: 'first bout', troop: 'mercenary', hp: 1.0, damage: 0.9, armor: 0 },
-        { name: 'semi-final', troop: 'mercenary', hp: 1.3, damage: 1.05, armor: 1 },
-        { name: 'final', troop: 'sellsword', hp: 1.25, damage: 1.1, armor: 1 }
+        { name: 'first bout', troop: 'mercenary', hp: 1.0, damage: 0.9, armor: 0, style: 'rusher' },
+        { name: 'semi-final', troop: 'mercenary', hp: 1.15, damage: 1.05, armor: 1, style: 'shield_wall' },
+        { name: 'final', troop: 'sellsword', hp: 1.25, damage: 1.1, armor: 1, style: 'counter' }
       ],
       townWins: 0.08,
       skill: [0.8, 1.2],

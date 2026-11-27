@@ -25,6 +25,7 @@ test('Traits: earned at a milestone, shown on the soldier list, the card and the
   const card = page.locator('.soldierCard');
   await expect(card.locator('.soldierTrait')).toHaveText(/^Steadfast: Holds the group together/);
   await expect(card.locator('.soldierNotes')).toContainText('Became Steadfast after 8 battles with the company.');
+  await expect(card.locator('.soldierStyle')).toHaveText('In battle: fights steadily, keeps its guard'); // P11-10: the footman's style
   const box = await card.locator('.soldierTrait').boundingBox();
   expect(box.x + box.width).toBeLessThanOrEqual(page.viewportSize().width + 1);
   // Retired with honour, the trait goes onto the roll.

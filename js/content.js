@@ -567,6 +567,7 @@
     CL.business?.validate(C, err); // businesses: the mill (P7-10)
     CL.realm?.validate(C, err); // seats, story forts and the nobles of the realms (P8-02)
     CL.tips?.validate(C, err);
+    CL.styles?.validate(C, err); // P11-10: fighting styles, and a troop's or a round's style
     for (const e of Object.values(C.encounters || {})) {
       if (!C.battle_maps?.[e.map]) err(`encounter ${e.id}: unknown map ${e.map}`);
       if (!e.waves?.length) err(`encounter ${e.id}: no waves`);

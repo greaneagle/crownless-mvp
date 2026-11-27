@@ -2558,7 +2558,7 @@
       'div',
       { className: 'soldierCard' },
       back,
-      el('div', { className: 'soldierHead' }, portrait, el('div', {}, nameRow, el('p', { textContent: `${t.name} · ${t.tier} ${t.role} · ${xpText(s)}` }), el('p', { textContent: `${status} · ${culture} · ${joined}` }))),
+      el('div', { className: 'soldierHead' }, portrait, el('div', {}, nameRow, el('p', { textContent: `${t.name} · ${t.tier} ${t.role} · ${xpText(s)}` }), el('p', { textContent: `${status} · ${culture} · ${joined}` }), CL.styles?.words(t.id) ? el('p', { className: 'soldierStyle muted', textContent: `In battle: ${CL.styles.words(t.id)}` }) : null)), // P11-10: the style's words
       el(
         'p',
         { className: 'soldierStats' },
@@ -2744,6 +2744,7 @@
         el('b', { textContent: n.name }),
         el('span', { textContent: ` · ${n.tier} ${n.role} · HP ${st.hp} · damage ${st.damage} · armour ${st.armor} · wage ${st.wage}/week` }),
         el('div', { className: 'muted', textContent: `${company} · ${ways}` }),
+        CL.styles?.words(n.id) ? el('div', { className: 'muted treeStyle', textContent: `In battle: ${CL.styles.words(n.id)}` }) : null, // P11-10
         n.count && !n.maxTier ? el('div', { className: 'treeButtons' }, ...typeUpgradeButtons(n.id, list)) : null,
         kids,
       );

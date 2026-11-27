@@ -196,7 +196,17 @@
       hp: Math.round(t.hp * r.hp * town * sk),
       damage: Number((t.damage * r.damage * town * (0.5 + 0.5 * sk)).toFixed(2)),
       armor: t.armor + r.armor,
+      style: f?.rival ? rivalStyle(f.name) : r.style || null, // P11-10: by round; a rival keeps theirs
     };
+  }
+
+  /** P11-10: a rival's own style, the same every time (from their name), among the tournament styles. */
+  function rivalStyle(name) {
+    const duel = Object.values(CL.content.table('fighting_styles')).filter((s) => s.duel).map((s) => s.id);
+    if (!duel.length) return null;
+    let h = 0;
+    for (const ch of String(name)) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+    return duel[h % duel.length];
   }
 
   /** Settle the other bouts of a round by skill, once the hero's is decided; returns the winners. */

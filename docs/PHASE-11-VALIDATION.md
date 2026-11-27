@@ -364,6 +364,70 @@ The brace stops and hurts the charge (`tests/mounted.test.js`), but a spearman i
 
 A hero who gallops at the enemy with a company on foot arrives alone and is cut down (a horse at 135 px/s against soldiers' 90; with a slower horse, 105, 35%). Faster interruption resistance or more of each blow on the horse changed nothing (0 of 20 each); only arriving together does. For P11-13 (a company that keeps pace with its rider) and P11-20; Prepare's line warns meanwhile.
 
+## Fighting styles (5.10.0, P11-10)
+
+### Each style against each pilot (`duel-lab.js 20 --ai`, the tournament ground; the hero: Arming Sword, medium)
+
+The opponent's body is a footman's (a spearman's for `spear` and `reach_keeper`, and a brawler in it to compare). *into-opening%*: its blows struck while the hero was recovering, staggered or had a broken guard; *keeps-px*: the mean distance between them over the duel (from the start, so the approach counts); *guarded%*: the hero's blows its shield was already up for.
+
+```
+style        body     pilot     win%  secs  hp-left%  taken  into-opening%  keeps-px  guarded%
+brawler      footman  masher     100   3.6        91    1.0              0       101         0
+brawler      footman  timer      100   4.2       100    0.0             60        94         0
+brawler      footman  turtle     100   3.7        92    0.9              8        99         0
+soldier      footman  masher     100   3.6        82    2.0             33       103        53
+soldier      footman  timer      100  15.0       100    0.0             43        67         0
+soldier      footman  turtle     100   3.9       100    0.0              5       100         0
+veteran      footman  masher     100   4.4        63    4.2             93        94        25
+veteran      footman  timer      100  13.5       100    0.0             17        66         7
+veteran      footman  turtle     100   4.2       100    0.0             12        97        11
+heavy        footman  masher     100   4.9        57    4.8             73        89        18
+heavy        footman  timer      100  11.3       100    0.0             94        71        18
+heavy        footman  turtle     100   5.7       100    0.0             85        86        25
+spear        spearman masher     100   4.4        50    5.0             20        95         0
+spear        spearman timer        0  14.5         0   10.0              2        75         0
+spear        spearman turtle     100   5.7        82    1.9             15        87         0
+brawler      spearman masher     100   3.6        86    1.4              0       102         0
+brawler      spearman timer      100   4.1        70    3.0              0        99         0
+brawler      spearman turtle     100   4.0       100    0.0             75        97         0
+rusher       footman  masher     100   3.6        91    1.0              0       101         0
+rusher       footman  timer      100   4.2       100    0.0             60        94         0
+rusher       footman  turtle     100   3.7        92    0.9              8        99         0
+shield_wall  footman  masher     100   5.4        51    5.5             45        86        25
+shield_wall  footman  timer      100  13.7       100    0.0             40        67        28
+shield_wall  footman  turtle     100   5.4       100    0.0             51        88        31
+counter      footman  masher     100   4.3        64    4.0            100        95        23
+counter      footman  timer      100  10.5       100    0.0            100        72        30
+counter      footman  turtle     100   6.2       100    0.0            100        82        65
+reach_keeper spearman masher     100   4.4        50    5.0             20        95         0
+reach_keeper spearman timer        0  14.4         0   10.0              2        75         0
+reach_keeper spearman turtle     100   5.6        81    1.9             16        88         0
+```
+
+- **The signatures:** veterans, heavies and counter-strikers strike into openings (73–100% of their blows against the masher; the timer gives few); a spear keeps the timer at its reach and wins every time (a brawler in the same body: 0); a brawler hardly ever guards in time (its reaction, 0.22 s, is slower than a sword's windup).
+- **The acceptance (a huscarl's body, 20 seeds):** the masher beats it as a **brawler 20 of 20**, a soldier 20, a **veteran 15**, a **heavy 1** (the huscarl's own style). The timer beats every style, unhurt: strikes into recovery are what the styles leave open.
+
+### Parity (`parity.js 40`, and `--big`), against 5.9.0
+
+| scenario | odds | fought 5.9.0 | fought 5.10.0 | lost 5.9.0 → 5.10.0 |
+|---|---|---|---|---|
+| close | 79 | 100 | 100 | 0.45 → 0.93 |
+| veterans | 79 | 100 | 100 | 1.02 → 0.65 |
+| outnumbered | 61 | 65 | 70 | 2.90 → 2.63 |
+| close×8 at 40 | 76 | 100 | 100 | 3.95 → 1.60 |
+| close×8 at 100 | 76 | **60** | **95** | 16.85 → 8.22 |
+| veterans×6 at 40 and 100 | 87 | 100 | 100 | 0.55 → 0.10, 0 → 0 |
+
+The close fights' average is 17.2 over the odds (the slow test allows 2–18; 5.9.0: 15.3). Two rules found here: **patience is for the one who faces you** (a foe busy with someone else is pressed at once: with patience everywhere, your soldiers alone won the outnumbered fight 10% of the time, the enemy's alone 98%); and **a patient fighter strikes a foe who steps into its reach** (it had stood and been cut down by the masher). On 5.9.0 close×8 at 100 was 16 under its odds, below the slow test's floor of −15; now inside.
+
+### The lists (`duel-lab.js 30 --tourney`)
+
+Champion of a new town (and after one win there): masher 17% (0%), as on 5.9.0; timer 100% (100%); turtle 100% (100%; 5.9.0: 97% and 33%). The rounds' styles: a rusher, a shield-wall, a counter-striker; a rival keeps one of the four by name. **Two tries at the multipliers:** the semi-final at HP 1.15 and the final at 1.15 / 1.0 made the masher champion 67%; the final at 1.2 / 1.05, 43%. Kept: only the semi-final's HP lowered (1.3 → 1.15: its shield-wall carries that difficulty now); the final as it was (the counter-striker added none for the masher). Careful play now wins the final: the counter-striker waits for misses that a turtle never makes.
+
+### Cost (`npm run bench`, 20 s each, simulation per frame)
+
+At 200: 3.51 ms against 3.29–3.32 on 5.9.0 (+6%; the budget is 15%); at 100: 1.40 against 1.33. The first version cost +29%: every archer near the hero looked over every foe each frame (now a few times a second, the foes' own lists walked in place) and each unit's style was looked up each call (now kept on the unit). The detail radius, 360 px: 240 and 160 saved little once those were fixed.
+
 ## The night run (2026-11-27, 5.7.0)
 
 ### XP pace over a long campaign (`progression.js 360 3`, 98 min under the run's load)
