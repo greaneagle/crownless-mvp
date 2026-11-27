@@ -73,10 +73,10 @@
     footman: { tunic: '#c6b38c', armour: 'gambeson', tabard: true, helmet: 'nasal', shield: 'kite', weapon: 'sword' },
     guard: { armour: 'mail', pauldrons: true, tabard: true, helmet: 'great', shield: 'kite', weapon: 'sword' },
     hunter: { tunic: '#7a6e4a', armour: 'leather', helmet: 'hood', hoodColor: '#5f6a45', weapon: 'bow', quiver: true },
-    longbowman: { tunic: '#c6b38c', armour: 'gambeson', tabard: true, helmet: 'kettle', weapon: 'bow', bowSize: 1.15, quiver: true },
-    rider: { armour: 'mail', tabard: true, helmet: 'nasal', weapon: 'lance', mount: { coat: '#8a5a3a', mane: '#2e2119' } },
+    longbowman: { tunic: '#c6b38c', armour: 'gambeson', tabard: true, helmet: 'kettle', weapon: 'bow', bowSize: 1.32, quiver: true },
+    rider: { armour: 'mail', tabard: true, helmet: 'nasal', weapon: 'lance', len: 1.15, mount: { coat: '#62463a', mane: '#251c18' } },
     recruit: { tunic: '#c9b48e', helmet: 'cap', capColor: '#8a3b32', weapon: 'sword' },
-    spearman: { tunic: '#b8a582', armour: 'leather', tabard: true, helmet: 'crest', plume: '#b0453a', weapon: 'spear' },
+    spearman: { tunic: '#b8a582', armour: 'leather', tabard: true, helmet: 'crest', plume: '#b0453a', weapon: 'spear', len: 1.05 },
     legionary: { armour: 'mail', pauldrons: true, tabard: true, helmet: 'crest', plume: '#b0453a', shield: 'heater', weapon: 'sword' },
     skirmisher: { tunic: '#c9b48e', armour: 'leather', helmet: 'cap', capColor: '#8a3b32', weapon: 'bow', quiver: true },
     marksman: { tunic: '#c9b48e', armour: 'gambeson', tabard: true, helmet: 'kettle', weapon: 'bow', bowSize: 1.15, quiver: true },
@@ -97,7 +97,7 @@
     pikeman: { tunic: '#d8c48e', armour: 'gambeson', tabard: true, helmet: 'sallet', weapon: 'pike' },
     pavisier: { armour: 'mail', tabard: true, helmet: 'sallet', shield: 'pavise', weapon: 'sword' },
     crossbowman: { tunic: '#d8c48e', armour: 'leather', helmet: 'kettle', weapon: 'crossbow', quiver: true },
-    arbalester: { armour: 'mail', tabard: true, helmet: 'sallet', weapon: 'crossbow', quiver: true },
+    arbalester: { armour: 'mail', tabard: true, helmet: 'sallet', weapon: 'arbalest', quiver: true },
     light_horse: { tunic: '#d8c48e', armour: 'leather', tabard: true, hat: 'brim', hatColor: '#8a6a3a', band: '#b5862a', weapon: 'spear', mount: { coat: '#b08a5a', mane: '#4a3626' } },
     outlaw_huntress: { tunic: '#6a5a40', armour: 'leather', helmet: 'hood', hoodColor: '#4a4a32', weapon: 'bow', quiver: true },
     looter: { tunic: '#9a8462', armour: 'rags', helmet: 'hood', hoodColor: '#7d6a50', weapon: 'club' },
@@ -106,16 +106,29 @@
     sellsword: { armour: 'mail', pauldrons: true, helmet: 'great', shield: 'heater', weapon: 'sword' },
     ostrand_levy: { tunic: '#8a8f94', armour: 'fur', helmet: 'cap', capColor: '#5a6470', weapon: 'axe' },
     ostrand_shieldman: { tunic: '#7d858c', armour: 'mail', tabard: true, helmet: 'nasal', shield: 'kite', weapon: 'sword' },
-    ostrand_bowman: { tunic: '#7d858c', armour: 'leather', fur: true, helmet: 'hood', hoodColor: '#5a6470', weapon: 'bow', quiver: true },
+    ostrand_bowman: { tunic: '#7d858c', armour: 'leather', fur: true, helmet: 'hood', hoodColor: '#5a6470', weapon: 'bow', bowSize: 1.1, quiver: true },
     saltreach_militia: { tunic: '#e2d2a8', hat: 'brim', hatColor: '#c9a55e', band: '#b0782a', weapon: 'club' },
-    saltreach_pikeman: { tunic: '#e2d2a8', armour: 'gambeson', tabard: true, helmet: 'kettle', weapon: 'pike' },
+    saltreach_pikeman: { tunic: '#e2d2a8', armour: 'gambeson', tabard: true, helmet: 'kettle', weapon: 'pike', len: 1.22 },
     saltreach_crossbow: { tunic: '#e2d2a8', armour: 'leather', hat: 'brim', hatColor: '#c9a55e', band: '#b0782a', weapon: 'crossbow', quiver: true },
   };
   for (var lookId in LOOKS) C.troops[lookId].look = LOOKS[lookId];
+  // The card points to the armoury pattern without changing the troop's combat profile.
+  var REGIONAL_GEAR = {
+    rider: ['knights_lance', 'valedorn_warhorse'],
+    longbowman: ['valedorn_warbow'],
+    spearman: ['legion_spear'],
+    huscarl: ['hrothmark_longaxe'],
+    arbalester: ['league_arbalest'],
+    light_horse: ['league_light_horse'],
+    ostrand_bowman: ['cliff_bow'],
+    ostrand_shieldman: ['ostrand_kite'],
+    saltreach_pikeman: ['flats_pike'],
+  };
+  for (var troopId in REGIONAL_GEAR) C.troops[troopId].regionalGear = REGIONAL_GEAR[troopId];
   // P11-01: each troop's weapon (a family of data/weapons.js), the one its look carries: a club or a
   // hammer is a mace; a bow of size 1.15 a longbow, a smaller one a shortbow. The troop's own damage,
   // reach and shot still override the family's (P11-11 moves troops onto their weapons).
-  var LOOK_WEAPON = { sword: 'sword', axe: 'axe', greataxe: 'greataxe', spear: 'spear', pike: 'pike', lance: 'lance', crossbow: 'crossbow', club: 'mace', hammer: 'mace' };
+  var LOOK_WEAPON = { sword: 'sword', axe: 'axe', greataxe: 'greataxe', spear: 'spear', pike: 'pike', lance: 'lance', crossbow: 'crossbow', arbalest: 'crossbow', club: 'mace', hammer: 'mace' };
   Object.keys(C.troops).forEach(function (tid) {
     var t = C.troops[tid];
     var w = t.look?.weapon;

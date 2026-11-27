@@ -177,3 +177,39 @@ test('in battle: SWITCH (Q) brings the second weapon to hand, the shield slung, 
   await expect.poll(state).toEqual({ which: 'primary', family: await game(page, (CL) => CL.content.item(CL.campaign.equipment.weapon).family), block: true, guard: 'shield', switching: false });
   await expect(page.locator('#blockBtn')).toBeEnabled();
 });
+
+test('regional arms in two town armouries and on the Arbalester’s card', async ({ page }, info) => {
+  await open(page);
+  await newGame(page);
+  for (const { town, item, finding } of [
+    { town: 'hrothgard', item: 'Hrothmark Longaxe', finding: 'needs a master’s training' },
+    { town: 'vessara', item: 'League Arbalest', finding: 'needs Strength 8' },
+  ]) {
+    await game(page, (CL, sid) => {
+      CL.campaign.world.location = sid;
+      CL.town.enterPlace();
+    }, town);
+    await waitMode(page, 'settlement');
+    await press(page, '#tradeBtn');
+    await waitMode(page, 'trade');
+    const row = page.locator('#tradeArmoury li', { hasText: item });
+    await row.scrollIntoViewIfNeeded();
+    await expect(row.getByText('Made here')).toBeVisible();
+    await expect(row.getByText(finding, { exact: false })).toBeVisible();
+    if (town === 'vessara') {
+      await expect(row.getByText('reloads while standing still', { exact: false })).toBeVisible();
+      if (isTouch(page)) await page.screenshot({ path: info.outputPath('vessara-armoury.png') });
+    }
+    await press(page, '#primaryBtn');
+  }
+  await game(page, (CL) => CL.save.addSoldier(CL.campaign, 'arbalester'));
+  await press(page, '#gearBtn');
+  await waitMode(page, 'character');
+  const soldier = page.locator('.soldierRow', { hasText: 'Arbalester' });
+  await press(page, soldier);
+  const card = page.locator('.soldierCard');
+  const link = card.getByRole('button', { name: 'League Arbalest', exact: true });
+  await press(page, link);
+  await expect(link).toHaveAttribute('aria-expanded', 'true');
+  await expect(card.getByText('Sold at Vessara.')).toBeVisible();
+});

@@ -235,3 +235,24 @@ test('a troop’s look is checked against its profile’s family (not its shot�
   assert.deepEqual(agree(xbow.id, { weapon: 'arbalest' }, { ranged: { ...xbow.ranged, projectileSpeed: 200 } }), []);
   assert.deepEqual(plain(CL.content.validate()), []);
 });
+
+test('regional kit draws the three specialist silhouettes, and every piece has a colour icon', () => {
+  const { CL } = game();
+  const { fig, ui } = CL.gfx;
+  const kitLook = (kit) => fig.heroFrom({ cloak: 'ash' }, kit, { campaign: null });
+  for (const it of Object.values(CL.content.table('items')).filter((it) => it.region && !it.forgedFrom)) {
+    const icon = ui.itemIcon(it.id);
+    assert.ok(icon?.label && ui.colourSvg(icon.name), it.id);
+  }
+  const axe = kitLook({ weapon: 'hrothmark_longaxe', offhand: 'ostrand_kite' });
+  assert.deepEqual([axe.weapon, axe.twoHanded, axe.shieldBack], ['longaxe', true, 'kite']);
+  const tip = (L) => fig.weaponTip(L, { face: 'right' });
+  const great = kitLook({ weapon: 'great_axe' });
+  assert.ok(tip(axe).x > tip(great).x, 'the longaxe head extends farther with the same grip');
+  assert.equal(kitLook({ weapon: 'league_arbalest' }).weapon, 'arbalest');
+  const bow = kitLook({ weapon: 'compact_horse_bow' });
+  assert.equal(bow.weapon, 'recurve');
+  assert.ok(bow.bowSize < kitLook({ weapon: 'short_bow' }).bowSize);
+  assert.equal(fig.troopLook('arbalester', 'vessaro').weapon, 'arbalest');
+  assert.deepEqual(plain(kitLook({ horse: 'league_light_horse' }).mount), plain(fig.troopLook('light_horse', 'vessaro').mount));
+});

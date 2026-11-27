@@ -315,9 +315,16 @@
     if (b) {
       const d = a.damage - b.damage;
       parts.push(Math.abs(d) < 0.05 ? 'the same damage' : d > 0 ? 'more damage' : 'less damage');
-      parts.push(a.reach === b.reach ? 'the same reach' : a.reach > b.reach ? 'longer reach' : 'shorter reach');
+      if (a.ranged && b.ranged) {
+        const range = a.ranged.range - b.ranged.range;
+        parts.push(range === 0 ? 'the same shot range' : range > 0 ? 'longer shot range' : 'shorter shot range');
+        const ready = a.ranged.draw - b.ranged.draw;
+        parts.push(Math.abs(ready) < 0.01 ? 'the same time to ready' : ready > 0 ? 'slower to ready' : 'quicker to ready');
+      } else if (!a.ranged && !b.ranged) {
+        parts.push(a.reach === b.reach ? 'the same reach' : a.reach > b.reach ? 'longer reach' : 'shorter reach');
+      }
     }
-    parts.push(speedWord(a));
+    parts.push(a.ranged ? (a.ranged.crossbow ? 'reloads while standing still' : 'slows you while drawing') : speedWord(a));
     parts.push(a.hands === 2 ? 'both hands' : 'one hand');
     const line = parts.join(', ');
     return b ? `Against your ${nameOf(against)}: ${line}` : line[0].toUpperCase() + line.slice(1);

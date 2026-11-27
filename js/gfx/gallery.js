@@ -17,7 +17,8 @@
   function pages() {
     const troops = Object.values(CL.content.table('troops')).filter((t) => t.role !== 'hero');
     const realms = [...new Set(troops.map((t) => t.faction))];
-    return [{ kind: 'storybook' }, { kind: 'mounted' }, ...realms.map((f) => ({ kind: 'troops', realm: f, troops: troops.filter((t) => t.faction === f) })), { kind: 'people' }, { kind: 'arms' }, { kind: 'buildings' }, { kind: 'props' }];
+    const regional = Object.values(CL.content.table('items')).filter((it) => it.region && !it.forgedFrom);
+    return [{ kind: 'storybook' }, { kind: 'mounted' }, ...realms.map((f) => ({ kind: 'troops', realm: f, troops: troops.filter((t) => t.faction === f) })), { kind: 'people' }, { kind: 'arms' }, ...(regional.length ? [{ kind: 'regional', items: regional }] : []), { kind: 'buildings' }, { kind: 'props' }];
   }
 
   const scene = {
@@ -66,6 +67,7 @@
       else if (pg.kind === 'troops') troopsPage(ctx, q, pg, face, pose, api);
       else if (pg.kind === 'people') peoplePage(ctx, q, face, pose, api);
       else if (pg.kind === 'arms') armsPage(ctx, q, face, pose, api);
+      else if (pg.kind === 'regional') regionalPage(ctx, q, pg.items, face, pose, api);
       else if (pg.kind === 'buildings') buildingsPage(ctx, q, api);
       else propsPage(ctx, q, api);
       label(ctx, `Page ${q.page + 1} of ${all.length}: ${title(pg)} · pose ${pose}, facing ${face}`, 480, 506, api);
@@ -76,7 +78,7 @@
 
   function title(pg) {
     if (pg.kind === 'troops') return `${CL.content.table('factions')[pg.realm]?.name || pg.realm}'s troops`;
-    return { storybook: 'the Stonebridge slice (P11-12b): its people, faces and parts', mounted: 'riders and horses, every weapon', people: 'the hero, companions and townsfolk', arms: 'arms and armour', buildings: 'buildings by culture', props: 'nature and props' }[pg.kind];
+    return { storybook: 'the Stonebridge slice (P11-12b): its people, faces and parts', mounted: 'riders and horses, every weapon', people: 'the hero, companions and townsfolk', arms: 'arms and armour', regional: 'regional arms', buildings: 'buildings by culture', props: 'nature and props' }[pg.kind];
   }
 
   /** A pose for the gallery: the same parts a battle drives from its state, cycled by time. */
@@ -322,6 +324,29 @@
       ctx.restore();
       G.fig.horse(ctx, x, 400, { ...H, cloth: 'valedorn' }, P, () => G.fig.figure(ctx, x, 400, L, { ...P, face: side, mounted: true }));
       small(ctx, ['sword and shield', 'lance', 'bow from the saddle'][i], x, 430, api);
+    });
+  }
+
+  function regionalPage(ctx, q, items, face, pose, api) {
+    const who = { cloak: 'ash', name: 'Aldo' };
+    const columns = 6;
+    const rows = Math.ceil(items.length / columns);
+    items.forEach((it, i) => {
+      const kit = { body: 'gambeson', [it.slot]: it.id };
+      const L = G.fig.heroFrom(who, kit, { campaign: null });
+      const x = (i % columns + 0.5) * (960 / columns);
+      const y = 75 + (Math.floor(i / columns) + 0.65) * (360 / rows);
+      const P = poseFor(pose, face, q.t + i * 0.2, L);
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.scale(1.45, 1.45);
+      if (L.mount) {
+        G.fig.horse(ctx, 0, 0, L.mount, P, () => G.fig.figure(ctx, 0, 0, L, { ...P, mounted: true }));
+      } else {
+        G.fig.figure(ctx, 0, 0, L, P);
+      }
+      ctx.restore();
+      small(ctx, it.name, x, y + 22, api);
     });
   }
 

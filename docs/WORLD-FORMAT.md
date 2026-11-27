@@ -74,6 +74,8 @@ The official world has these (`js/content.js` `TABLES`, plus `forge`, `realm_pal
 | `cultures` | Name lists (`given`, `givenFemale`, `trades`, `epithets`) and `forms` |
 | `realm_palette` | The colours of realms founded in play |
 
+A regional item gives a `region` key and a slot-appropriate `look`. List its id in the producing towns’ `gear` arrays. Those markets keep selling it after a change of ruler. Give a troop `regionalGear: [itemId, …]` to point from its card to the armouries. The reference leaves the troop’s combat profile intact. A specialist item’s `req.training` names an entry in `training`. P11-17 supplies the instructors.
+
 ## The checks
 
 A pack is checked before it is kept and again when it is applied. Each problem says which file, which entry and what is wrong, for example `sample.json › sample:cairn_spear: troop sample:cairn_spear: unknown upgrade sample:nobody`.

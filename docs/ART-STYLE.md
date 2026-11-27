@@ -44,12 +44,12 @@ The vocabulary is `CL.content.LOOK` (`js/content.js`), and the content checks re
 | `helmet` | nasal, kettle, great, cap, hood, spangen, crest, plumed, furhat, sallet, bascinet (P11-04: a pointed skull, an open face, a mail aventail) |
 | `hat` | brim, cap, kerchief, coif (townsfolk, and some militia) |
 | `shield` | kite, round, heater, wood, pavise (only on a troop with `shield: true`) |
-| `weapon` | sword, axe, greataxe, spear, pike, lance, bow, crossbow, hammer, staff, club; P11-04: mace (a flanged iron head, not the club), greatsword (a long grip and blade), recurve (the tips curl forward), arbalest (a crossbow with its windlass) |
+| `weapon` | sword, axe, greataxe, spear, pike, lance, bow, crossbow, hammer, staff, club; P11-04: mace (a flanged iron head, not the club), greatsword (a long grip and blade), recurve (the tips curl forward), arbalest (a crossbow with its windlass); P11-16: longaxe (a long haft and a swept blade, held in two hands) |
 | `hairStyle` | short, long, braid, bun, bald, tied |
 | colours (`#rrggbb`) | tunic, legs, boots, hoodColor, capColor, hatColor, band, cloak, cloakTrim, plume, apron, hair, skin |
 | flags (`true`/`false`) | tabard (in the side's colours, with its device), quiver, fur (a collar), pauldrons, beard, female (companions and townsfolk; a troop's comes from its `gender`) |
-| others | `bowSize` (0.8–1.4), `mount { coat, mane, pony }` (cavalry only) |
-| from gear (P11-04; set by `dress`, not in data) | `len` (a blade's length), `twoHanded` (the other hand on the grip), `shieldBack` (a shield slung on the back), `gloves` (the hands' colour), `sig` (the kit's signature) |
+| others | `bowSize` (0.8–1.4), `len` (regional weapon length), `mount { coat, mane, pony }` (cavalry only) |
+| from gear (P11-04; set by `dress`, not in data) | `twoHanded` (the other hand on the grip), `shieldBack` (a shield slung on the back), `gloves` (the hands' colour), `sig` (the kit's signature) |
 
 ### Items (P11-04)
 

@@ -132,8 +132,11 @@
     return Math.max(1, Math.round(it.value * GEAR_SELL_FACTOR * (1 + 0.01 * tradeSkill(c))));
   }
 
-  /** What a settlement's armoury stocks (only where there is a market). */
+  /** Local stock comes from the town's gear list, independent of who holds its gates. */
   const gearStock = (sid) => (hasMarket(sid) ? settlement(sid).gear || [] : []);
+
+  /** The market towns that sell a piece, for a soldier's gear notes. */
+  const gearTowns = (id) => Object.values(CL.content.table('settlements')).filter((s) => s.type === 'town' && gearStock(s.id).includes(id));
 
   function gearBuyPrice(c, itemId) {
     const it = CL.content.item(itemId);
@@ -224,6 +227,7 @@
     gearPrice,
     sellGear,
     gearStock,
+    gearTowns,
     gearBuyPrice,
     buyGear,
     drift,

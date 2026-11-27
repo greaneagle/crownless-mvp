@@ -54,7 +54,7 @@ test('the Art gallery: every realm’s troops and more, page by page; it closes 
   await page.waitForFunction(() => window.Crownless.artGallery?.active === true);
   await expect(page.locator('#galleryCanvas')).toBeVisible();
   const pages = await game(page, (CL) => CL.gfx.scenes.gallery.pages().map((p) => p.realm || p.kind));
-  expect(pages).toEqual(['storybook', 'mounted', 'valedorn', 'aurelian', 'hrothmark', 'vessaro', 'neutral', 'ostrand', 'saltreach', 'people', 'arms', 'buildings', 'props']); // P11-04: arms and armour; P11-12b: the slice and the riders first
+  expect(pages).toEqual(['storybook', 'mounted', 'valedorn', 'aurelian', 'hrothmark', 'vessaro', 'neutral', 'ostrand', 'saltreach', 'people', 'arms', 'regional', 'buildings', 'props']);
   // Next page: a tap on the bottom line (phone) or Tab (desktop).
   if (isTouch(page)) {
     const b = await page.locator('#galleryCanvas').boundingBox();

@@ -105,3 +105,38 @@ test('heavy gear makes the hero much harder to hurt (GDD armor formula)', () => 
   assert.equal(h.armor, 3 + 5 + 1 + 2 + 2);
   assert.equal(CL.combat.mitigate(7, h.armor), 5, 'a looter hits for 5 instead of 7');
 });
+
+test('regional arms stay in their home markets when a town changes hands', () => {
+  const { CL } = loadGame();
+  const { trade, realm, campaign } = CL;
+  const towns = {
+    knights_lance: ['stonebridge'],
+    valedorn_warhorse: ['stonebridge'],
+    valedorn_warbow: ['stonebridge'],
+    legion_spear: ['eastwatch'],
+    hrothmark_longaxe: ['hrothgard'],
+    league_arbalest: ['vessara'],
+    league_light_horse: ['vessara'],
+    cliff_bow: ['harrowgate'],
+    ostrand_kite: ['harrowgate'],
+    flats_pike: ['calder'],
+    compact_horse_bow: ['merrow', 'gullhaven'],
+  };
+  const check = () => {
+    for (const [id, sellers] of Object.entries(towns)) {
+      assert.ok(CL.content.item(id).region, id);
+      assert.deepEqual(Array.from(trade.gearTowns(id), (s) => s.id), sellers, id);
+      for (const sid of sellers) assert.ok(trade.gearStock(sid).includes(id), sid);
+      const high = C.loot_tables.high.table.find((e) => e.item === id);
+      assert.ok(high?.weight > 0 && high.weight < 1, `${id}: rare high loot`);
+      assert.ok(['low', 'mid'].every((tier) => !C.loot_tables[tier].table.some((e) => e.item === id)), id);
+    }
+  };
+  check();
+  assert.equal(realm.transfer(campaign, 'hrothgard', { controller: 'valedorn', capital: true }), true);
+  assert.equal(realm.owner('hrothgard', campaign), 'valedorn');
+  check();
+  campaign.gold = 1000;
+  assert.equal(trade.buyGear(campaign, 'hrothgard', 'hrothmark_longaxe').ok, true);
+  assert.equal(campaign.inventory.hrothmark_longaxe, 1);
+});

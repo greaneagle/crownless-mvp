@@ -14,7 +14,7 @@ const { spread } = require('../scripts/parity');
 const want = JSON.parse(fs.readFileSync(PROFILES, 'utf8'));
 const plain = (v) => JSON.parse(JSON.stringify(v));
 
-test('every family and every weapon resolves, each on its own family’s rhythm (P11-05), the hero on everyone’s cooldown', () => {
+test('every weapon resolves its family’s rhythm and item overrides, with the same cooldown for the hero and AI', () => {
   const { CL } = loadGame();
   const P = CL.profile;
   const F = CL.content.table('weapon_families');
@@ -25,14 +25,16 @@ test('every family and every weapon resolves, each on its own family’s rhythm 
   }
   const weapons = Object.values(CL.content.table('items')).filter((it) => it.slot === 'weapon');
   assert.ok(weapons.length >= 5);
+  CL.campaign.character.skills = Object.fromEntries(Object.keys(CL.campaign.character.skills).map((k) => [k, 0]));
   for (const it of weapons) {
-    CL.campaign.character.skills = Object.fromEntries(Object.keys(CL.campaign.character.skills).map((k) => [k, 0])); // untrained: the family's own numbers
-    const p = P.resolve({ hero: CL.campaign, equipment: { ...CL.campaign.equipment, weapon: it.id } });
+    const p = P.resolve({ hero: CL.campaign, equipment: { weapon: it.id } });
     const f = F[it.family];
+    const { windup, active, recovery, maxTargets, miss, reach } = { ...f, ...it.combat };
     assert.equal(p.family, it.family, it.id);
-    assert.deepEqual(plain(p.timing), { windup: f.windup, active: f.active, recovery: f.recovery, total: f.windup + f.active + f.recovery }, it.id);
+    assert.deepEqual(plain(p.timing), { windup, active, recovery, total: windup + active + recovery }, it.id);
     assert.equal(p.cooldown.hero, p.cooldown.ai, `${it.id}: D-P11d, the hero on the same cooldown as everyone`);
-    assert.deepEqual([p.cooldown.hero, p.maxTargets, p.miss, p.reach], [f.cooldown.hero, f.maxTargets || Infinity, f.miss, f.reach], it.id);
+    const cooldown = it.combat?.cooldown?.hero ?? f.cooldown.hero;
+    assert.deepEqual([p.cooldown.hero, p.maxTargets, p.miss, p.reach], [cooldown, maxTargets || Infinity, miss, reach], it.id);
   }
   // Each melee family has its own rhythm; the bows and the lance keep 5.0.0's sword until their tasks.
   assert.notDeepEqual([F.sword.windup, F.sword.recovery], [F.greataxe.windup, F.greataxe.recovery]);

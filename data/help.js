@@ -233,6 +233,7 @@
       body: [
         'You can carry two weapons: equip one as your weapon and another as your second weapon (Carry second, in Party). A battle starts with the one you choose on the sheet; SWITCH (Q) brings the other to hand in a moment, and neither is ready again any sooner for it. A weapon that needs both hands, or a bow, slings your shield on your back until you switch back.',
         'Party and the armoury say in words what a piece of gear means for you: what it can’t do, what it needs, what it does less well, and anything you might not expect. You can still buy a piece you can’t use yet, after a second tap.',
+        'Look for “Made here” at town armouries and open the gear notes on a soldier’s card to find the local arms.',
         'A piece you don’t yet meet the needs of is never taken from you: it stays on you or in your pack, and in battle it stays with the baggage. A weapon you can’t wield yet gives way to your other one, or to your fists if neither will do, and the battle says so.'
       ]
     },
