@@ -198,7 +198,7 @@ test('P11-04: the hero is drawn in what they carry: the sheet, a battle and a to
   await expect(page.locator('#sheetStats .heroPortrait')).toHaveAttribute('data-sig', 'hand_axe|on|leather_cap|gambeson|none');
   // The sheet's gear rows have their icons, named in words.
   await expect(page.locator('#sheetEquip li', { hasText: 'Hand Axe' }).locator('.itemIco')).toHaveAttribute('aria-label', 'Axe');
-  await expect(page.locator('#sheetEquip li', { hasText: 'Oak Shield' }).locator('.itemIco')).toHaveAttribute('aria-label', 'Shield');
+  await expect(page.locator('#sheetEquip li', { hasText: 'Oak Shield' }).locator('.itemIco')).toHaveAttribute('aria-label', 'Round shield'); // P11-12d: the icon by the shield's look
   // Another kit, and the portrait follows.
   await game(page, (CL) => {
     Object.assign(CL.campaign.equipment, { head: null, body: 'clothing' });

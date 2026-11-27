@@ -460,7 +460,16 @@
   function obstacle(ctx, o, t, g) {
     const k = lookName(o);
     const seed = o.seed ?? Math.abs(Math.round(o.x * 7 + o.y * 13)) % 997;
-    if (k === 'tree' || k === 'pine' || k === 'birch') G.tree(ctx, o.x, o.y + o.r * 0.5, (o.r / 20) * 1.2, seed, k === 'tree' ? 'broad' : k, Math.sin(t * 0.7 + o.x) * 0.02);
+    if (k === 'tree' || k === 'pine' || k === 'birch') {
+      // P11-12e: a tree is still (its sway was a hair's breadth): stamped from the bake cache at the
+      // canvas's scale, drawn live only where there is no canvas to bake on (Node's tests).
+      const sc = (o.r / 20) * 1.2;
+      const kind = k === 'tree' ? 'broad' : k;
+      const m = ctx.getTransform?.();
+      const px = m && m.a ? Math.round(Math.hypot(m.a, m.b) * 10) / 10 : 0;
+      if (px && root.document) ctx.drawImage(G.cached(`tree:${kind}:${seed}:${sc.toFixed(2)}`, px, 70 * sc, 72 * sc, 35 * sc, 62 * sc, (c) => G.tree(c, 0, 0, sc, seed, kind, 0), BAKE_MAX), o.x - 35 * sc, o.y + o.r * 0.5 - 62 * sc, 70 * sc, 72 * sc);
+      else G.tree(ctx, o.x, o.y + o.r * 0.5, sc, seed, kind, 0);
+    }
     else if (k === 'bush') G.bush(ctx, o.x, o.y + o.r * 0.5, (o.r / 14) * 1.15, seed);
     else if (k === 'rock') G.rock(ctx, o.x, o.y + o.r * 0.5, (o.r / 15) * 1.1, seed);
     else if (k === 'wall') wallBlock(ctx, o, seed);

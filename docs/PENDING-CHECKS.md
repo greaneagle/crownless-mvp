@@ -11,6 +11,14 @@ _The owner's rule (D-P10f, 2026-11-24). A task that needs a run over 20 minutes 
 | `node scripts/parity.js --siege 30` (about 28 min) | **Defending** 5–25 points over its odds (short run: 13 of 15 against 65) and **storming** within the band (8 of 15 against 41). Climbers are off balance since 5.9.0 (`CLIMB.exposed` 3.2) |
 | `tests/slow/battle-parity.test.js` (the whole) | The escort ambushes' fought wins (a wagon that comes through more often counts) still inside 0–25 over the odds; nothing else moves (the climber rule is the walls' only). Since 5.10.0 also the fighting styles: the close fights measured 17.2 over the odds (2–18 allowed), the sieges not yet with styles |
 
+**For P11-12e's acceptance (5.12.3, the storybook look)** (none is a long run; each needs something this machine lacks):
+
+| Check | What to look for |
+|---|---|
+| `npm run test:visual:docker` (Docker Desktop's engine running), then `-- --check` | Re-record the 28 Linux `@visual` baselines for the storybook look (they are 5.8's and fail on Linux CI until then); review every image in the diff before committing |
+| The owner's phone: Debug → "Benchmark: P11-12 scenarios" and "Scenarios at 0.75×" (about 15 minutes each) | 60 fps at 40 at Balanced, 30 fps or better at 200 (or the owner accepts the measured size); p95 recorded in `docs/PHASE-11-VALIDATION.md` |
+| The full browser suite on Linux | `archery.spec.js` "hold ATTACK to draw a bow" failed once in four under parallel load on Windows (8/8 alone); also `battle-size`, `battle-zoom` once each in 5.12.0's full run: confirm they are load flakes |
+
 **Still open** (each needs a measured retune, not a guess):
 
 | Found | What | Where it goes |

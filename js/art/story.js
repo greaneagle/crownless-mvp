@@ -526,21 +526,18 @@
     ctx.restore();
   }
 
+  /** A tuft of grass: five blades in one stroke (P11-12e: one path, no save, as a field draws hundreds). */
   function tuft(ctx, x, y, s = 1, color = SPAL.meadowDark, flower = null) {
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.scale(s, s);
+    ctx.beginPath();
     for (let i = -2; i <= 2; i++) {
-      ctx.beginPath();
-      ctx.moveTo(i * 1.6, 1);
-      ctx.quadraticCurveTo(i * 2.3, -3, i * 3.4, -6 - Math.abs(i % 2) * 2);
-      ctx.strokeStyle = color;
-      ctx.lineWidth = 1.2;
-      ctx.lineCap = 'round';
-      ctx.stroke();
+      ctx.moveTo(x + i * 1.6 * s, y + s);
+      ctx.quadraticCurveTo(x + i * 2.3 * s, y - 3 * s, x + i * 3.4 * s, y - (6 + Math.abs(i % 2) * 2) * s);
     }
-    if (flower) oval(ctx, 0, -8, 2, 2, flower, 0.4);
-    ctx.restore();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.2 * s;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+    if (flower) oval(ctx, x, y - 8 * s, 2 * s, 2 * s, flower, 0.4);
   }
 
   function barrel(ctx, x, y, s = 1) {

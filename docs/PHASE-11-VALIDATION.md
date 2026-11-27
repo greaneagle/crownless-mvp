@@ -538,6 +538,10 @@ _Measured 2026-11-27 on 5.11.0's drawing (the code of ff54781 plus P11-12a's mea
 
 The same headless runs (phone profile, Balanced, 8 s): **drawing ms a frame** mixed 1.0 / 0.7 / 0.8 / 1.0 at 40 / 100 / 150 / 200 (baseline 0.8 / 0.6 / 0.7 / 0.9); every realm 1.1 / 0.9 / 1.0 / 1.5 (0.8 / 0.9 / 0.9 / 1.3); mounted 1.0 / 0.7 / 0.8 / 1.0 (0.8 / 0.7 / 0.7 / 0.9); siege 1.0 / 0.8 / 0.8 / 0.9 (0.7 / 0.7 / 0.8 / 0.9). Every frame still at the 60 fps cap (p95 16.7–16.8 ms); the bake cache at most 1,355 (bound 3,000), 98–100% hits. The new figures cost about 0.1–0.3 ms more a frame here, over the handoff's proposed 10% at some sizes: P11-12e measures it on the phone and fixes it if it shows. The parity guard (`tests/sharpness-parity.test.js`) and the golden battles are unchanged.
 
+### After P11-12e (5.12.3: everything in the new look)
+
+Headless, phone profile, Balanced, 8 s, drawing ms a frame at 40 / 100 / 150 / 200, zoom 1× · 0.75× (5.11's in brackets, zoom 1×): **mixed** 1.1 / 0.8 / 0.8 / 1.0 · 1.2 / 0.8 / 0.9 / 1.1 (0.8 / 0.6 / 0.7 / 0.9); **every realm** 1.3 / 1.1 / 1.2 / 1.6 · 1.3 / 1.1 / 1.2 / 1.6 (0.8 / 0.9 / 0.9 / 1.3); **siege** 1.1 / 0.9 / 0.9 / 1.0 · 1.8 / 1.2 / 1.3 / 1.5 (0.7 / 0.7 / 0.8 / 0.9). Before the fix (after P11-12c) mixed was 1.5 / 1.2 / 1.1 / 1.3 and the zoomed siege 2.3 at 40: the grass tufts (five strokes each, hundreds a frame) and the trees drawn live. Every frame at the 60 fps cap in all 56 rows (mounted, archer, cavalry and archers rows too, before the fix: 1.0–1.8 ms); the bake cache at most 1,333 of 3,000. **The phone's numbers are still to come** (Debug → Benchmark: P11-12 scenarios); the budget is 60 fps at 40 at Balanced and 30 fps at 200.
+
 ## The night run (2026-11-27, 5.7.0)
 
 ### XP pace over a long campaign (`progression.js 360 3`, 98 min under the run's load)

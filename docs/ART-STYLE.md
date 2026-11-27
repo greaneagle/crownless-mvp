@@ -186,6 +186,8 @@ Drawing in code costs more than stamping sprites. Measure before and after a cha
 
 The numbers from the demo and P10-G1 are in `docs/GRAPHICS-DEMO.md` and `docs/NEXT-TASKS.md` (P10-G1's Done paragraph). On a phone the canvas resolution is the biggest lever (Sharpness). In big battles, simplify figures and stamp the still ones (P10-G2).
 
+**P11-12e (5.12.3):** anything still and repeated on a field is baked (a battlefield's trees are stamps from `G.cached`, keyed by kind, seed and size), and small repeated marks are one path each (a grass tuft is five blades in a single stroke). The storybook figures cost about 0.1–0.4 ms more a frame than 5.11's headless; the numbers are in `docs/PHASE-11-VALIDATION.md` ("The P11-12 baseline" and after), the phone's to come.
+
 ## The storybook rig (P11-12b, 5.12.0)
 
 **People** (`js/art/figures.js`, same API as before: `figure`, `horse`, `fallen`, `weaponTip`, the looks):

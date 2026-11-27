@@ -990,11 +990,7 @@
 
   // ---- The figure ----
 
-  /** Debug → Old figures (P11-12b): the 5.11 renderer, for side-by-side screenshots until P11-12e. */
-  const classic = () => Boolean(G.fig?.classic && G.figClassic);
-
   function figure(ctx, x, y, L, P) {
-    if (classic()) return G.figClassic.figure(ctx, x, y, L, P);
     const s = (L.scale || 1) * (P.scale || 1);
     const face = P.face || 'down';
     const side = face === 'left' || face === 'right';
@@ -1184,7 +1180,6 @@
    * keeps the side it last turned to (P.hface).
    */
   function horse(ctx, x, y, H, P, rider) {
-    if (classic()) return G.figClassic.horse(ctx, x, y, H, P, rider);
     const face = P.face === 'left' || P.face === 'right' ? P.face : P.hface || 'right';
     const s = (H.scale || 1) * (P.scale || 1) * (H.pony ? 0.9 : 1) * HORSE;
     const coat = H.coat || '#8a5a3a';
@@ -1328,7 +1323,6 @@
 
   /** A fallen figure: lying on its side, faded and still. No blood: the game stays accessible. */
   function fallen(ctx, x, y, L, alpha, dir = 1) {
-    if (classic()) return G.figClassic.fallen(ctx, x, y, L, alpha, dir);
     ctx.save();
     ctx.globalAlpha = alpha;
     ctx.translate(x, y);
@@ -1545,5 +1539,5 @@
     };
   }
 
-  G.fig = { K, KY, INK, weaponTip, weaponArm, shieldPos, SKINS, HAIRS, EYES, BODY, CLOAKS, ROLE_LOOKS, SHOOTS, figure, horse, fallen, bust, features, faceOf, num, defaultLook, troopLook, companionLook, heroLook, heroFrom, itemLook, dress, townLook, weapon, bow, crossbow, classic: false };
+  G.fig = { K, KY, INK, weaponTip, weaponArm, shieldPos, SKINS, HAIRS, EYES, BODY, CLOAKS, ROLE_LOOKS, SHOOTS, figure, horse, fallen, bust, features, faceOf, num, defaultLook, troopLook, companionLook, heroLook, heroFrom, itemLook, dress, townLook, weapon, bow, crossbow };
 })(typeof window !== 'undefined' ? window : globalThis);

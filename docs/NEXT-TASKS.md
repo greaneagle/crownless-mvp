@@ -4055,7 +4055,7 @@ The aim: easy to fight, rewarding to fight well, meaningful to command. The play
 | P11-12b | The Stonebridge vertical slice: characters and Stonebridge (owner's visual gate) | L–XL | 5.12.0 | ✅ Done (accepted 2026-11-27) |
 | P11-12c | The environments: towns, battlefields, sieges, the map | XL | 5.12.1 | ✅ Done |
 | P11-12d | One UI language across every screen | L | 5.12.2 | ✅ Done |
-| P11-12e | Performance, caches, visual regression, acceptance (owner's final gate) | M–L | 5.12.3 | Ready (needs the owner's phone) |
+| P11-12e | Performance, caches, visual regression, acceptance (owner's final gate) | M–L | 5.12.3 | ✅ Built; awaiting the owner's phone and acceptance |
 | P11-13 | Formations and orders that hold | L | 5.13.0 | Specified |
 | P11-14 | Combined arms and the tactics lab | M–L | 5.14.0 | Specified |
 | P11-15 | Prepare and the battle report | M | 5.15.0 | Specified |
@@ -5166,7 +5166,7 @@ _Expanded 2026-11-27 at 5.11.0 (commit ff54781) by the owner's approval of a gra
 
 ---
 
-#### P11-12e · Performance, caches, visual regression and acceptance (M–L) — 5.12.3 — **owner's final gate; M3**
+#### P11-12e · Performance, caches, visual regression and acceptance (M–L) — 5.12.3, ✅ Built — **waiting for the owner's phone numbers and final acceptance; M3**
 
 **Build.**
 - **Required (all of the original P11-12):**
@@ -5180,6 +5180,14 @@ _Expanded 2026-11-27 at 5.11.0 (commit ff54781) by the owner's approval of a gra
 **Performance (the phase's budget, plan §19 criterion 16, unchanged).** **60 fps at 40 fighters on the owner's phone at Balanced; 30 fps or better at 200**, or the owner accepts the measured largest size; p95 recorded. Headless numbers never stand in for the phone.
 
 **Acceptance.** The budget holds on the phone (or the owner accepts the measured numbers); caches bounded; identical simulation at every Sharpness; the owner's final acceptance of the graphics and the phone performance. Then M3 (H-07, H-08) and P11-13.
+
+**Done so far (5.12.3); open: the owner's phone and final acceptance, the Linux baselines.**
+- **Measured again** (headless, phone profile, Balanced, all seven scenarios × 40/100/150/200 × zoom 1× and 0.75×; `docs/PHASE-11-VALIDATION.md` "After P11-12e"): every frame at the 60 fps cap (p95 16.7–16.8, p99 16.8), bake cache at most 1,333 (bound 3,000, kept), 98–100% hits, heap 13–20 MB.
+- **Fixed** (two tries): after P11-12c drawing had doubled (0.8 → 1.5 ms at 40), from grass tufts and trees drawn live each frame: a tuft is now one path, a battlefield's tree a baked stamp (`js/art/battle.js` `obstacle`, `js/art/story.js` `tuft`). Mixed back to 1.1 / 0.8 / 0.8 / 1.0 ms (5.11: 0.8 / 0.6 / 0.7 / 0.9); every realm 1.3–1.6; the siege at 0.75× still 1.8 ms at 40 (0.7): recorded, not guessed at further; the phone decides.
+- **Removed:** `js/art/classic.js` and Debug → "Old figures"; the kit's own `building`, `tree`, `bush`, `tuft`, `barrel`, `crate`, `well`, `stall` (and `roofLines`, `hangingSign`), replaced since P11-12c by the storybook kit's.
+- **Identical simulation** at every Sharpness and zoom (`tests/sharpness-parity.test.js`), golden battles unchanged; readability at 812×375 with 100 and 200 reviewed in the screenshots (rings, routing pennants, wounded bars, lords' plumes and pennants legible).
+- **Not done here:** the Linux `@visual` baselines (Docker's engine isn't running on this machine: `docs/PENDING-CHECKS.md`); the owner's phone run (Debug → "Benchmark: P11-12 scenarios" and "at 0.75×"). **No phone result is claimed.**
+- **Tests:** `npm test` 1,069 pass, lint clean; browser `art` (the oak shield's icon now "Round shield"), `battle`, `battle-zoom`, `sieges`, `assault`, `ford`, `battle-size`, `mounted`, `archery` pass; `archery`'s draw test failed once in four under parallel load and passes 8/8 alone (a flake, noted).
 
 **Docs (across the subtasks).** `docs/ART-STYLE.md` (the storybook rules, the rig, "What it costs"), `docs/STORYBOOK-INTEGRATION.md`, `docs/PHASE-11-VALIDATION.md` (the performance section), `docs/RELEASE-NOTES.md`, `docs/ASSETS.md`, this section's Done paragraphs.
 

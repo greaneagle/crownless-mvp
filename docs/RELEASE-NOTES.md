@@ -1,5 +1,14 @@
 # Crownless — Release Notes
 
+## v5.12.3 — The storybook look, measured (P11-12e) · 2026-11-27
+
+### Changed
+- **Battles draw lighter again:** grass and trees on the field cost about as much as in 5.11 (they had doubled the drawing time with the new look).
+- **The old 5.11 figures are gone** (Debug → "Old figures" with them), and so are the old buildings, trees and props the storybook ones replaced.
+
+### Still to come before Phase 11 goes on
+- The owner's phone numbers (Debug → "Benchmark: P11-12 scenarios") and the owner's final look at the graphics; then the Linux screenshot baselines.
+
 ## v5.12.2 — One look for every screen (P11-12d) · 2026-11-27
 
 ### Changed
