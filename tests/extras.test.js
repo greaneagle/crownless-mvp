@@ -52,9 +52,9 @@ test('a formation holds only where it can: the wall on Hold and Follow, the wedg
   assert.equal(F.of(g, u), 'loose');
 });
 
-test('the battle setups: Defensive starts in a shield wall closed up on Hold; Balanced a line, Aggressive a wedge (P11-14), Custom loose', () => {
+test('the battle setups: Defensive starts in a shield wall closed up on Hold; Aggressive a wedge (P11-14); Balanced and Custom loose', () => {
   const { CL } = loadGame();
-  for (const [preset, want] of [['balanced', 'line'], ['aggressive', 'wedge'], ['custom', 'loose'], ['defensive', 'wall']]) {
+  for (const [preset, want] of [['balanced', 'loose'], ['aggressive', 'wedge'], ['custom', 'loose'], ['defensive', 'wall']]) {
     const g = battle(CL, ['footman', 'footman', 'footman', 'levy', 'levy', 'hunter'], [{ looter: 3 }], { preset });
     assert.equal(g.formation, want, preset);
   }

@@ -111,14 +111,16 @@
 
   /**
    * P11-14: a setup's formation and its horse, from what is seen of the foe (the company's presets and
-   * Auto, and the enemy's plan by the same rule): Balanced a line that screens the archers, its horse held
-   * on a flank until the first volley; Defensive a shield wall, or a square against horse; Aggressive a
-   * wedge. @param {string} setup @param {{ horse: number }} foe
+   * Auto, and the enemy's plan by the same rule): Balanced loose ranks in front of the archers, its horse
+   * held on a flank until the first volley; Defensive a shield wall, or a square against horse; Aggressive
+   * a wedge. Balanced in a line was tried and dropped: on Follow, with a hero who charges in, it cost the
+   * big battles (scripts/parity.js --big, close×8@100: 100% → 85% won, 4.4 → 15 lost; 20 seeds).
+   * @param {string} setup @param {{ horse: number }} foe
    */
   function choose(setup, foe) {
     if (setup === 'aggressive') return { formation: 'wedge', cavalryWaits: false };
     if (setup === 'defensive') return { formation: (foe?.horse || 0) >= AUTO.horse ? 'square' : 'wall', cavalryWaits: false };
-    return { formation: 'line', cavalryWaits: true };
+    return { formation: 'loose', cavalryWaits: true };
   }
 
   /** Auto's choice for this encounter: 'aggressive', 'defensive' or 'balanced'. */
@@ -190,7 +192,7 @@
   /**
    * Put the deployed company in place for a plan: each group in a block around its anchor, ranks one
    * behind another away from the enemy, and the plan's starting orders. Called by combat.startBattle.
-   * @param {any} g @param {{ preset: string, ambush?: boolean, formation?: string, formations?: Record<string, string>, facings?: Record<string, string>, captains?: Record<string, any>, orders: Record<string, string>, anchors: Record<string, { x: number, y: number }> }} p
+   * @param {any} g @param {{ preset: string, ambush?: boolean, formation?: string, formations?: Record<string, string>, facings?: Record<string, string>, captains?: Record<string, any>, timed?: any[], orders: Record<string, string>, anchors: Record<string, { x: number, y: number }> }} p
    */
   function place(g, p) {
     for (const grp of CL.divisions.SLOTS) {

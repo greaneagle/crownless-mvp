@@ -140,7 +140,9 @@
         'Flanks: a blow from the side or behind a formed division lands harder and shakes it more than one from the front. Turn a division to face (on the tactical map) where the danger comes from.',
         'Ranks: ORDERS shows how much of a formed division is in its places. Below half, the ranks are broken and the formation helps nobody until they close up again; its flag over it is frayed. A division of fewer than four stays loose. Wading a ford breaks every formation, and thick trees every one but a column.',
         'Every order shows what it is doing: in ORDERS beside the division’s name, and by the mark on its flag over it on the field and on the small map: a square holding, a ring following, an arrow moving, a double arrow charging, a cross engaged, an hourglass waiting for its time, a tick done, and ! when it can’t, with the reason in ORDERS.',
-        'Long weapons, spears and pikes, do best in a held line: their points keep shorter blades at bay. In a loose scrum a sword, catching several at once, does better.'
+        'Long weapons, spears and pikes, do best in a held line: their points keep shorter blades at bay. In a loose scrum a sword, catching several at once, does better.',
+        'Arms work together. Archers behind a formed line are screened: enemy foot and riders have to get past the line to reach them, and stop singling them out. Riders hunt archers left in the open. Trees give cover: an arrow at someone standing among them is often stopped by the trunks. Spears and squares stop horse, a shield wall stands under arrows, and horse kept back and sent in on the first volley strikes a line already busy.',
+        'The setups use all this from what you can see of the enemy: Balanced puts the infantry before the archers and holds the horse on a flank until the first volley; Defensive makes a shield wall, or a square against horse; Aggressive goes in a wedge. Auto picks one from the odds, and an enemy army plans the same way.'
       ]
     },
     fighting: {

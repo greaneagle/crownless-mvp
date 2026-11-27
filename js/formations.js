@@ -53,6 +53,7 @@
   const LOOSE = { fileGap: 36, rankGap: 36 };
   const FOREST = { radius: 56, trees: 3 };
   const MIN_SIZE = 4;
+  const COLUMN = { deploy: 110 }; // P11-14: px from its foe where a column on Charge breaks into loose ranks
   const BAY = { longer: 12, inside: 0.6, margin: 4 }; // the points hold them off (atBay)
   const SHARE = { neighbours: 2, keep: 0.5 };
   // P11-14: combined arms. An archer with a formed friendly line between it and the foe is screened (the
@@ -87,7 +88,9 @@
     const order = orderFor(g, u);
     if (f === 'wall') return USE.wall && order !== 'charge' ? 'wall' : 'loose';
     if (f === 'wedge') return USE.wedge && order !== 'hold' ? 'wedge' : 'loose';
-    if (f === 'column') return 'column';
+    // P11-14: a column on Charge marches formed and breaks into loose ranks once it is in the fight (a
+    // column met in the flank in melee lost: the forest comparison).
+    if (f === 'column') return order === 'charge' && u.target?.alive && Math.hypot(u.target.x - u.x, u.target.y - u.y) < COLUMN.deploy ? 'loose' : 'column';
     return order !== 'charge' ? f : 'loose';
   }
 
@@ -481,5 +484,5 @@
     return u.ranged.range * (USE.hill && highAt(u.x, u.y) ? HILL.range : 1);
   }
 
-  CL.formations = { KINDS, NAMES, MARCH, WALL, WEDGE, HILL, USE, LEASH, FLANK, COHESION, LOOSE, FOREST, MIN_SIZE, SHARE, BAY, SCREEN, COVER, STATE_WORDS, screens, treesAt, coverOf, atBay, chosenFor, squared, of, formed, leash, flankOf, frontage, breakRanks, sharePressure, slotOf, denseAt, tick, note, orderStates, speed, guard, strikesOver, cover, arm, blow, slot, closeUp, set, highAt, rangeOf };
+  CL.formations = { KINDS, NAMES, MARCH, WALL, WEDGE, HILL, USE, LEASH, FLANK, COHESION, LOOSE, FOREST, MIN_SIZE, COLUMN, SHARE, BAY, SCREEN, COVER, STATE_WORDS, screens, treesAt, coverOf, atBay, chosenFor, squared, of, formed, leash, flankOf, frontage, breakRanks, sharePressure, slotOf, denseAt, tick, note, orderStates, speed, guard, strikesOver, cover, arm, blow, slot, closeUp, set, highAt, rangeOf };
 })(typeof window !== 'undefined' ? window : globalThis);

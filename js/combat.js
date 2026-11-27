@@ -476,7 +476,7 @@
     g.enemyOrders = { infantry: weak ? 'hold' : 'charge', archer: weak ? 'hold' : 'charge', cavalry: weak ? 'hold' : 'charge' };
     // P11-14: by the same choices as the company's setups (js/prep.js choose), from what it sees of the
     // company: the weaker holds in a wall (a square against horse); the much stronger comes on in a wedge;
-    // between, a line with its horse held on the flank until its archers' first volley.
+    // between, loose with its horse held on the flank until its archers' first volley.
     const mine = [...g.allies, ...g.allyReserve.map((r) => ({ role: CL.content.troop(r.troop).role }))];
     const horse = mine.length ? mine.filter((u) => u.role === 'cavalry').length / mine.length : 0;
     const setup = weak ? 'defensive' : odds <= CL.prep.AUTO.weak ? 'aggressive' : 'balanced';

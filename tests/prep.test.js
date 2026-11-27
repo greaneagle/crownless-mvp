@@ -37,7 +37,7 @@ test('SC-06: Balanced in two taps: infantry in front, archers behind, cavalry on
   assert.ok(centre(by('cavalry')).y < hero.y - 100, 'cavalry out on a flank');
   const { infantry, archer, cavalry } = g.orders; // the three divisions this company has (P9-B4: six slots)
   assert.deepEqual({ infantry, archer, cavalry }, { infantry: 'follow', archer: 'follow', cavalry: 'hold' }, 'foot and archers go with the hero (V2-T2); the horse waits on the flank (P11-14)');
-  assert.equal(g.formation, 'line', 'P11-14: the infantry in a line, a screen for the archers');
+  assert.equal(g.formation, 'loose', 'P11-14: loose ranks in front of the archers (a line was tried: it cost the big battles)');
   assert.equal(JSON.stringify(g.timed.map((t) => [t.div, t.kind, t.volley, t.at])), JSON.stringify([['cavalry', 'charge', -1, CL.prep.AUTO.cavalryBy]]), 'the horse goes in on the first volley, or after a few seconds');
   for (const u of g.allies) assert.equal(CL.units.blocked(u.x, u.y), false, `${u.troop} placed clear`);
   const z = CL.prep.zone(map);
@@ -189,7 +189,7 @@ test('P11-14: the setups choose from what is seen of the foe: Defensive a square
   assert.deepEqual({ ...P.choose('defensive', { horse: 0.4 }) }, { formation: 'square', cavalryWaits: false });
   assert.deepEqual({ ...P.choose('defensive', { horse: 0.1 }) }, { formation: 'wall', cavalryWaits: false });
   assert.deepEqual({ ...P.choose('aggressive', { horse: 0.5 }) }, { formation: 'wedge', cavalryWaits: false });
-  assert.deepEqual({ ...P.choose('balanced', { horse: 0 }) }, { formation: 'line', cavalryWaits: true });
+  assert.deepEqual({ ...P.choose('balanced', { horse: 0 }) }, { formation: 'loose', cavalryWaits: true });
   // What is seen: the band on the map.
   p.troops = { rider: 6, looter: 4 }; // the band on the map (parties.current reads it)
   assert.equal(P.seenFoe().horse, 0.6);

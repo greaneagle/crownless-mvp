@@ -213,7 +213,7 @@ test("order states: holding, following, charging, waiting, done, and can't with 
   assert.equal(g.orderState.infantry.reason, "can't form a square");
 });
 
-test('the enemy plans by the same choices as the company (P11-14): a wedge when much the stronger, a line between with its horse held, a wall or a square when the weaker', () => {
+test('the enemy plans by the same choices as the company (P11-14): a wedge when much the stronger, loose between with its horse held, a wall or a square when the weaker', () => {
   /** An army band against a company; returns the battle. */
   const army = (company, troops) => {
     const { CL } = loadGame({ seed: 5 });
@@ -235,9 +235,9 @@ test('the enemy plans by the same choices as the company (P11-14): a wedge when 
   const foot = g.enemies.find((x) => x.role === 'infantry');
   CL.formations.tick(g, 1);
   assert.equal(CL.formations.of(g, foot), 'wedge', 'formed on Charge');
-  // Between: a line, its horse held until its first volley (or a few seconds).
+  // Between: loose ranks, its horse held until its first volley (or a few seconds).
   ({ CL, g } = army({ footman: 12, hunter: 6 }, { reaver: 12, rider: 6, hunter: 6 }));
-  assert.equal(g.enemyFormations.infantry, 'line');
+  assert.equal(g.enemyFormations.infantry, 'loose');
   assert.equal(g.enemyOrders.cavalry, 'hold');
   g.enemyVolley = g.t;
   CL.combat.update(0.02);

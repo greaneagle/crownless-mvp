@@ -74,7 +74,8 @@ test('the tactical map: a division, an action and a time chosen by tapping; the 
   const p = await canvasToPage(page, spot.x, spot.y);
   await pressAt(page, p.x, p.y);
   await expect(page.locator('#message')).toContainText('Archers: fall back, in 5 s');
-  expect(await game(page, (CL) => CL.game.timed.map((t) => [t.div, t.kind]))).toEqual([['archer', 'fallback']]);
+  // (P11-14: Balanced's own order, the horse in on the first volley, may still be waiting beside it.)
+  expect(await game(page, (CL) => CL.game.timed.filter((t) => t.div === 'archer').map((t) => [t.div, t.kind]))).toEqual([['archer', 'fallback']]);
   // Back to the battle; five seconds later the archers go.
   await press(page, '#mapBtn');
   await game(page, (CL) => {
