@@ -4060,7 +4060,7 @@ The aim: easy to fight, rewarding to fight well, meaningful to command. The play
 | P11-12d | One UI language across every screen | L | 5.12.2 | ✅ Done |
 | P11-12e | Performance, caches, visual regression, acceptance (owner's final gate) | M–L | 5.12.3 | ✅ Done (approved 2026-11-27) |
 | P11-13 | Formations and orders that hold | L | 5.13.0 | ✅ Done |
-| P11-14 | Combined arms and the tactics lab | M–L | 5.14.0 | Specified |
+| P11-14 | Combined arms and the tactics lab | M–L | 5.15.0 | ✅ Done |
 | P11-15 | Prepare and the battle report | M | 5.15.0 | Specified |
 | P11-16 | Regional arms | M | 5.14.0 | ✅ Done |
 | P11-17 | Masters at arms: specialist training and the practice yard | L | 5.17.0 | Specified |
@@ -5278,7 +5278,7 @@ _Expanded 2026-11-27 at 5.11.0 (commit ff54781) by the owner's approval of a gra
 
 ---
 
-### P11-14 · Combined arms and the tactics lab (M–L) — ✅ Done (version at merge; owner to accept)
+### P11-14 · Combined arms and the tactics lab (M–L) — ✅ Done in 5.15.0
 
 **Now.** Archers on high ground shoot 25% further; fords break formations; braced spears stop horse; enemies prefer archers; Auto picks a plan from the odds; the enemy's army plan forms blocks; P11-13 made formations real.
 
@@ -5335,7 +5335,7 @@ _Expanded 2026-11-27 at 5.11.0 (commit ff54781) by the owner's approval of a gra
 - **Explain:** none new.
 - **Not here:** Prepare's screens (P11-15).
 
-**Done (version at merge, branch `claude/p11-14-combined-arms`).**
+**Done (5.15.0).**
 - **The comparisons** (`node scripts/tactics-lab.js 40 --compare`, new): the seven, each on the same armies, map and seeds, the counter against the other way and against every division charging; `tests/tactics-lab.test.js` guards each one's direction at 2 seeds.
 - **Terrain:** forest cover (an arrow at a fighter among trees is stopped 20% a tree, at most 50%). High ground's range kept; a melee edge for the higher, marsh and horse's open ground not built (not measured useful here).
 - **Screens:** an archer with a formed friend between it and the foe is screened (`formations.screens`, every 0.25 s): enemy foot and riders stop singling it out. **Counters** kept and measured: braced spears and squares against horse, horse in on the volley, walls under arrows.

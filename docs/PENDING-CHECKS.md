@@ -4,6 +4,13 @@ _The owner's rule (D-P10f, 2026-11-24). A task that needs a run over 20 minutes 
 
 ## Pending
 
+**For P11-14 (5.15.0):**
+
+| Run | What to look for |
+|---|---|
+| `node --test --test-concurrency=1 tests/slow/battle-parity.test.js tests/slow/battle-extras.test.js` (about 26–45 minutes; the owner's yes or the night run) | Every case inside its bounds after the setups' and the enemy plan's changes |
+| M4 part 1 (H-09 to H-11), the owner's play | Balanced's horse going in on the volley; Defensive's square against horse; an enemy army in a wedge or a wall |
+
 **For P11-16 (5.14.0):**
 
 | Run | What to look for |
