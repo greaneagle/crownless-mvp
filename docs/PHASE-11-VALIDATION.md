@@ -676,3 +676,9 @@ Tries: Balanced in a line (close×8@100, 20 seeds: 85% won, 15.1 lost; loose 100
 | Selim | 2 | 3.32 s + 3.74 s |
 
 Times are simulated combat seconds from the scripted pilots. Travel, dialogue and rest are outside the measurement.
+
+## Prepare and the battle report (5.17.0, P11-15)
+
+- Taps from Attack to Fight: two by default; one with "Skip this screen" (browser `prep.spec.js`).
+- The report's summary fits one screen at 812×375, Larger text (played); the spec checks that the modal does not scroll before More, on both projects.
+- Combat unchanged: `tests/golden-battles.test.js` passes with the hooks in.

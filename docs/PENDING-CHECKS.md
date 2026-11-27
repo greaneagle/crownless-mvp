@@ -4,6 +4,14 @@ _The owner's rule (D-P10f, 2026-11-24). A task that needs a run over 20 minutes 
 
 ## Pending
 
+**For P11-15 (5.17.0):**
+
+| Run | What to look for |
+|---|---|
+| **The night run (owner, 2026-11-27):** on Linux Chromium, after `main` is brought in: `npm run test:visual:update`, then `CROWNLESS_VISUAL=1 npx playwright test tests/browser/screens.visual.spec.js` | `prepare.png` (desktop and phone) changes: the foe line, your soldiers line, the hero line, the field line. `result.png` may change: the masked report block is a different size. Look at both before keeping them; nothing else should change. |
+| No other new run | The report only counts. `battle-parity` and `battle-extras`, already pending from P11-13 and P11-14, cover combat. |
+| Owner M4 (H-09 to H-11) with Prepare and the report | Prepare shows only what the company knows; a minor battle starts in two taps; the report's summary fits one screen at 812×375; More on request. |
+
 **For P11-17 (5.16.0):**
 
 | Run | What to look for |

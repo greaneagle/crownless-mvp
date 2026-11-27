@@ -4061,7 +4061,7 @@ The aim: easy to fight, rewarding to fight well, meaningful to command. The play
 | P11-12e | Performance, caches, visual regression, acceptance (owner's final gate) | M–L | 5.12.3 | ✅ Done (approved 2026-11-27) |
 | P11-13 | Formations and orders that hold | L | 5.13.0 | ✅ Done |
 | P11-14 | Combined arms and the tactics lab | M–L | 5.15.0 | ✅ Done |
-| P11-15 | Prepare and the battle report | M | 5.15.0 | Specified |
+| P11-15 | Prepare and the battle report | M | 5.17.0 | ✅ Done (merged at the owner's word; M4 play to come) |
 | P11-16 | Regional arms | M | 5.14.0 | ✅ Done |
 | P11-17 | Masters at arms: specialist training and the practice yard | L | 5.16.0 | ✅ Done |
 | P11-18 | The walls and other special fields | M | 5.18.0 | Specified |
@@ -5347,7 +5347,7 @@ _Expanded 2026-11-27 at 5.11.0 (commit ff54781) by the owner's approval of a gra
 
 ---
 
-### P11-15 · Prepare and the battle report (M) — Built on `claude/p11-15-prepare-report`, waiting for M4 (version at merge) — **Milestone M4**
+### P11-15 · Prepare and the battle report (M) — ✅ Done in 5.17.0 — **Milestone M4**
 
 **Now.** Prepare (V2-07, P9-B4): the real field, presets, Custom flags, captains, facings, three plans, Fight in two taps, Simulate with reasons, remember and skip; the result screen lists loot, casualties and "Who did what".
 
@@ -5404,7 +5404,7 @@ _Expanded 2026-11-27 at 5.11.0 (commit ff54781) by the owner's approval of a gra
 - **Explain:** "Preparing for battle".
 - **Not here:** new tactics.
 
-**Done (built; the version at merge, after M4).**
+**Done (5.17.0).** Merged at the owner's word (2026-11-27); the M4 play (H-09 to H-11) comes after.
 - **The hero line:** the weapon and shield drawn, riding or on foot, the shots of a bow; "Use <other weapon>" and "Fight on foot" in one tap each. The loadout chosen is remembered for that kind of field (P11-02's `loadout.last`, by the map's id; the walls are one kind) and used when Prepare opens and when there is no time to prepare (`parties.attack`). The character sheet's choice clears it.
 - **Findings for this field:** the gear check from the saddle when you ride, a field that refuses horses, a preferred loadout that can't be used; each said once.
 - **The enemy only as known** (`prep.known`): seen on the map, "about 20, mostly foot and some archers"; with a scout, "about 20, mostly axes, some maces and some bows (your scout’s estimate)"; a lair, a band from cover or one that caught you unseen, "unknown". Never the exact number. News is not a source: no news line carries a band's make-up.
