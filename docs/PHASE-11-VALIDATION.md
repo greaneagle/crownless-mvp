@@ -428,6 +428,50 @@ Champion of a new town (and after one win there): masher 17% (0%), as on 5.9.0; 
 
 At 200: 3.51 ms against 3.29–3.32 on 5.9.0 (+6%; the budget is 15%); at 100: 1.40 against 1.33. The first version cost +29%: every archer near the hero looked over every foe each frame (now a few times a second, the foes' own lists walked in place) and each unit's style was looked up each call (now kept on the unit). The detail radius, 360 px: 240 and 160 saved little once those were fixed.
 
+## Troops by their weapons (5.11.0, P11-11)
+
+### Tiers (`parity.js 40`; the close fights' average over the odds, 2–18 allowed)
+
+| try | T2 HP | T3 HP | T3 armour | close | veterans | outnumbered | average |
+|---|---|---|---|---|---|---|---|
+| weapons only (5.10.0's numbers) | ×1 | ×1 | +0 | +21 | +21 | +12 | 17.7 |
+| 1 | ×0.92 | ×0.82 | +1 | +21 | +21 | +19 | 20.3 |
+| 2 | ×0.96 | ×0.88 | +1 | +21 | +21 | +17 | 19.3 |
+| kept | ×1 | ×0.88 | +1 | +21 | +21 | +12 | 17.7 |
+
+Both tries made fighting easier: the enemy's commonest troops are T2 (reavers). Kept: the T3 gives HP for armour (12% less, one more point), the T2 as it was. Big battles (`--big`): close×8 at 40 and 100 won 100% and 95% (odds 76), the veterans' 100% (87).
+
+### The realms' lines, AI against AI (`node scripts/realm-lab.js 6`, new: each realm's squad, three foot and two archers at T2, two foot, two archers and a rider at T3; the free companies five mercenaries or sellswords; from both sides of the field)
+
+```
+             valedorn  aurelian hrothmark   vessaro   ostrand saltreach   outlaws      free   mean
+valedorn            ·       100        92        83        42        83       100         0     71
+aurelian            8         ·         8        58         0        58        58         0     27
+hrothmark          33        92         ·        75        17        75        92         0     55
+vessaro             0        42         8         ·         8        50        33         0     20
+ostrand           100        92       100        92         ·        92       100        42     88
+saltreach           0        42         8        50         8         ·        33         0     20
+outlaws             0        50        25        75         8        75         ·         0     33
+free              100       100        92       100        75       100       100         ·     95
+```
+
+```
+             valedorn  aurelian hrothmark   vessaro      free   mean
+valedorn            ·        67        83        58        25     58
+aurelian           92         ·        75        75        17     65
+hrothmark          25        33         ·        33         0     23
+vessaro            50        50        75         ·         0     44
+free               75        83       100       100         ·     90
+```
+
+- **Strengths and weaknesses:** at T2 Valedorn beats all but Ostrand and the free companies; Aurelia beats the League, Saltreach and the outlaws and loses to the rest; Hrothmark beats the spear and pike realms and the outlaws; Ostrand loses only to the free companies. **Not met:** the League and Saltreach have no strength in these squads (one tie between them), Hrothmark's T3 none, the free companies (all shields) no weakness.
+- **Why (found here, for P11-13 and P11-14):** one against one, a pikeman beats a footman 65%, a spearman 100%, a huscarl a guard 100%; **three against three** the same lines win 0–15%, and so they do **with no styles at all** (huscarls 15%, pikes 0%): a crowd effect of the shared melee rules, not of P11-10. Tried and dropped: a sword striking two (not three) at 70% (huscarls 15%, the outnumbered company 55%), the second target at 50% (no change), long weapons closing only to their own reach (no change), the heavy style's patience 0.8 s (no change). Spears and pikes are meant to fight in a held line (P11-13's formations) and beside others (P11-14's combined arms).
+- **Kept from the reviews:** a pike or two-handed weapon guards with the weapon for troops too (plan §10.2); the Legionary's and Pavisier's brace kept as a shield line's skill (no look changes, so no decision needed).
+
+### Lords and fine kit
+
+A lord in person (a guard's body, `duel-lab`'s kit, 20 seeds): the masher wins 0 and the timer 20 at HP ×2, and the same with +2 armour and the veteran style at ×2, ×1.7 and ×1.5: kept ×1.6. Fine kit: +10% damage (a better weapon of the family), +1 armour, +4 HP (was +1 armour, +8 HP).
+
 ## The night run (2026-11-27, 5.7.0)
 
 ### XP pace over a long campaign (`progression.js 360 3`, 98 min under the run's load)

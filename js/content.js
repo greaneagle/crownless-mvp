@@ -188,6 +188,7 @@
       maxTargets: (v) => Number.isInteger(v) && v >= 0 && v <= 20,
       cooldown: (v) => v && typeof v === 'object' && ['hero', 'ai'].every((k) => (partial && v[k] == null) || (Number.isFinite(v[k]) && v[k] > 0 && v[k] <= 5)),
       shield: (v) => typeof v === 'boolean',
+      brace: (v) => typeof v === 'boolean', // P11-11
       switch: (v) => Number.isFinite(v) && v >= 0 && v <= 3, // P11-02: seconds to bring it to hand
       mounted: (v) => ['yes', 'no', 'penalty'].includes(v), // from horseback (P11-08 sets them)
       armourLimit: (v) => Number.isFinite(v) && v >= 0, // the heaviest armour it works well with (P11-06)
@@ -204,7 +205,7 @@
     };
     for (const [k, ok] of Object.entries(RULES)) {
       if (f[k] == null) {
-        if (!partial && !['look', 'mounted', 'armourLimit', 'skill', 'pierce'].includes(k)) out.push(`${at}: needs ${k}`);
+        if (!partial && !['look', 'mounted', 'armourLimit', 'skill', 'pierce', 'brace'].includes(k)) out.push(`${at}: needs ${k}`);
         continue;
       }
       if (!ok(f[k])) out.push(`${at}: bad ${k}`);
@@ -322,14 +323,16 @@
       // P10-G1: a troop's look, when it has one, is the kit's vocabulary and agrees with the troop. A pack's
       // troop may leave it out: the kit then draws one from its role, reach, shot and shield (figures.js).
       if (t.look != null) for (const e of [...checkLook(t.look, `troop ${t.id}`), ...lookAgrees(t, C)]) err(e);
-      for (const s of ['hp', 'damage', 'armor', 'speed', 'reach']) {
+      for (const s of ['hp', 'damage', 'armor', 'speed']) {
         if (!(Number.isFinite(t[s]) && t[s] >= 0)) err(`troop ${t.id}: bad ${s}`);
       }
-      if (t.role === 'archer') {
+      // P11-11: reach and the shot are the weapon family's; a row's own only where it is deliberately different.
+      if (t.reach != null && !(Number.isFinite(t.reach) && t.reach > 0)) err(`troop ${t.id}: bad reach`);
+      if (t.ranged != null) {
         const r = t.ranged;
-        if (!r || !(r.range > 0 && r.projectileSpeed > 0 && r.cooldown > 0 && r.accuracy > 0 && r.accuracy <= 1)) {
-          err(`troop ${t.id}: archer needs ranged {range, projectileSpeed, cooldown, accuracy}`);
-        }
+        for (const k of Object.keys(r)) if (!['range', 'maxRange', 'projectileSpeed', 'cooldown', 'accuracy'].includes(k)) err(`troop ${t.id}: ranged has no ${k}`);
+        for (const k of ['range', 'maxRange', 'projectileSpeed', 'cooldown']) if (r[k] != null && !(r[k] > 0)) err(`troop ${t.id}: bad ranged.${k}`);
+        if (r.accuracy != null && !(r.accuracy > 0 && r.accuracy <= 1)) err(`troop ${t.id}: bad ranged.accuracy`);
       }
     }
 

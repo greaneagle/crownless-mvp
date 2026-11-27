@@ -198,10 +198,11 @@ test('the content and pack checks cover families, item overrides and troop weapo
   // A pack's troop without a weapon gets one from its look or role.
   const { CL: L3 } = loadGame({
     content: (C) => {
-      C.troops.footman = { ...C.troops.footman, weapon: undefined, look: undefined };
-      C.troops.spearman = { ...C.troops.spearman, weapon: undefined, look: undefined };
-      C.troops.hunter = { ...C.troops.hunter, weapon: undefined, look: undefined };
-      C.troops.rider = { ...C.troops.rider, weapon: undefined, look: undefined };
+      // An old pack's rows, before P11-11: a reach and a shot of their own.
+      C.troops.footman = { ...C.troops.footman, weapon: undefined, look: undefined, reach: 48 };
+      C.troops.spearman = { ...C.troops.spearman, weapon: undefined, look: undefined, reach: 70 };
+      C.troops.hunter = { ...C.troops.hunter, weapon: undefined, look: undefined, ranged: { projectileSpeed: 240, range: 225, cooldown: 1.6, accuracy: 0.6 } };
+      C.troops.rider = { ...C.troops.rider, weapon: undefined, look: undefined, reach: 70 };
     },
   });
   assert.deepEqual(['footman', 'spearman', 'hunter', 'rider'].map((id) => L3.units.makeUnit(0, 0, 'enemy', id).profile.family), ['sword', 'spear', 'shortbow', 'lance']);

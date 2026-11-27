@@ -81,8 +81,9 @@
   // cargo. Forged pieces are items of their own ("Arming Sword +1", id `arming_sword+1`), made from these
   // rules when the content loads; no armoury sells them, and they sell for half their value like any
   // gear, which stays below what the plain piece costs to buy (no buying, forging and selling for profit).
-  // Fine kit: better-fitted gear for up to `kit.max` named soldiers (more armour and hit points, a little
-  // more strength in auto-resolve) for kit.cost crowns and kit.iron iron each.
+  // Fine kit: better-fitted gear for up to `kit.max` named soldiers for kit.cost crowns and kit.iron iron
+  // each. P11-11: a better weapon of their own family (`damage`, a factor) and an armour step, with a
+  // little more HP (8 before); a little more strength in auto-resolve (`power`, until P11-20).
   C.forge = {
     maxLevel: 2,
     slots: { weapon: { damage: 2 }, body: { armor: 2 }, head: { armor: 1 }, offhand: { armor: 1 }, hands: { armor: 1 }, feet: { armor: 1 } },
@@ -90,7 +91,7 @@
     valuePerLevel: 0.3,
     costPerLevel: 0.3,
     minCost: 10,
-    kit: { max: 5, cost: 40, iron: 2, armor: 1, hp: 8, power: 1.15 }
+    kit: { max: 5, cost: 40, iron: 2, armor: 1, hp: 4, damage: 1.1, power: 1.15 }
   };
   // GDD §9: small weighted loot tables tied to encounter tier. Encounters name a table by id.
   C.loot_tables = {

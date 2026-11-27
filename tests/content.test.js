@@ -28,9 +28,10 @@ test('troops reference known factions and upgrade targets', () => {
     for (const u of [t.upgradeTo, t.altUpgradeTo]) {
       if (u) assert.ok(C.troops[u], `${t.id}: unknown upgrade ${u}`);
     }
-    for (const stat of ['hp', 'damage', 'armor', 'speed', 'reach']) {
+    for (const stat of ['hp', 'damage', 'armor', 'speed']) {
       assert.ok(Number.isFinite(t[stat]) && t[stat] >= 0, `${t.id}.${stat} invalid`);
     }
+    if (t.role !== 'hero') assert.ok(C.weapon_families[t.weapon], `${t.id}: its weapon is a family (P11-11)`);
   }
 });
 

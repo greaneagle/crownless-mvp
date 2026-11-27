@@ -81,7 +81,8 @@ test('the new kingdoms have full tier 1–3 troop trees in their own style, with
     return l.reduce((a, t) => a + t[stat], 0) / l.length;
   };
   assert.ok(avg('hrothmark', 'armor', 'infantry') > avg('vessaro', 'armor', 'infantry'), 'northern heavy infantry');
-  assert.ok(T.crossbowman.damage > T.hunter.damage && T.crossbowman.ranged.cooldown > T.hunter.ranged.cooldown, 'crossbows hit hard, load slowly');
+  const shot = (id) => CL.profile.resolve({ troop: id }).ranged; // P11-11: the weapon's
+  assert.ok(T.crossbowman.damage > T.hunter.damage && shot('crossbowman').cooldown > shot('hunter').cooldown, 'crossbows hit hard, load slowly');
   assert.ok(T.light_horse.speed > T.rider.speed && T.light_horse.armor < T.rider.armor, 'light horse');
   // Hrothgard hires its own.
   const { CL: G } = loadGame();

@@ -1,5 +1,23 @@
 # Crownless — Release Notes
 
+## v5.11.0 — Troops by their weapons (P11-11) · 2026-11-27
+
+Every soldier now fights with the weapon you see in their hands.
+
+### Changed
+- **A troop's reach and shot are its weapon's:** Valedorn's longbowmen outrange shortbows, the League's crossbows fly fastest and punch through armour, maces and axes are a little shorter than swords, spears and pikes reach furthest.
+- **Spears and pikes brace against horse by their weapon;** the Legionaries and Pavisiers still brace behind their shields. Pikemen now parry with the pike.
+- **Veterans are better equipped rather than just tougher:** tier 3 troops have a little less HP and more armour (and, since 5.10, a better way of fighting).
+- **Fine kit** from your blacksmith is a better weapon and a step of armour: more damage and armour, a little less HP than before.
+- **Lords fight in their realm's best kit, as veterans,** with less raw toughness.
+- **Companions** reach as far as their weapon, and block only with a shield.
+- **The soldier's card and the troop tree** now say what each troop carries, wears and how it fights: "Sword and shield, mail. In battle: fights patiently, guards well…".
+
+### Under the hood
+- `data/troops.js`: every troop names its `weapon`; reach, shots and braces from `data/weapons.js` (a family's `brace`). Packs: a troop's weapon is checked (one without gets one from its look, with a warning). `docs/WORLD-FORMAT.md`.
+- `scripts/realm-lab.js`: each realm's lines against each other. Found: spears, pikes and axes win alone and lose in packs, for formations and combined arms (P11-13, P11-14).
+- `tests/troops.test.js` (+8). Golden battles recorded again.
+
 ## v5.10.0 — Fighters who think (P11-10) · 2026-11-27
 
 Enemies, your soldiers and tournament fighters no longer all fight the same way. The first task of milestone M3, "The armies of the realms".

@@ -34,7 +34,9 @@
   /** P9-L1: a lord held by a realm is ransomed by their own: the payer's fiefs pay the captor's crown. */
   const KIN_RANSOM = { retry: 7, rulerAfter: 30, letGo: 60 };
   const REGROUP = 0.4; // a lord back from captivity or defeat rides out with this share of their ranks
-  const LEADER = { hp: 2, damage: 1.35 };
+  // P11-11: a lord in person wears their realm's best kit (+2 armour) and fights as a veteran; their HP
+  // multiplier came down from 2 (measured: the masher never beats one, the timer always does, at 1.5 to 2).
+  const LEADER = { hp: 1.6, damage: 1.35, armor: 2, style: 'veteran' };
   const REFILL_COST = 3; // crowns a man, from a landed lord's fiefs (P8-05) // the lord in battle: their realm's best foot soldier, stronger
   const DEEDS_MAX = 12;
   const PRISONERS_MAX = 40;
@@ -431,7 +433,7 @@
   /** The lord in battle: the realm's best foot soldier, with their name and more of everything. */
   function leaderFor(c, p) {
     const t = CL.content.get('party_templates', p.template);
-    return { troop: t.leader, name: R().titled(p.lordId, c), hp: LEADER.hp, damage: LEADER.damage, house: CL.houses?.houseOf(c, p.lordId)?.id || null };
+    return { troop: t.leader, name: R().titled(p.lordId, c), hp: LEADER.hp, damage: LEADER.damage, armor: LEADER.armor, style: LEADER.style, house: CL.houses?.houseOf(c, p.lordId)?.id || null };
   }
 
   /** What breaks the lords' rules (P8-01), for the daily invariants: [] when all hold. */

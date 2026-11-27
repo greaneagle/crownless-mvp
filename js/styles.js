@@ -59,6 +59,21 @@
     return id ? styles()[id]?.words || '' : '';
   }
 
+  const ARMOUR_WORDS = { rags: 'rags', cloth: 'cloth', gambeson: 'a gambeson', fur: 'furs', leather: 'leather', mail: 'mail' };
+  /**
+   * P11-11: the troop card's whole line: its weapon (and shield), its armour and how it fights:
+   * "Sword and shield, mail. In battle: fights patiently, guards well". @param {string} troopId
+   */
+  function card(troopId) {
+    const t = CL.content.table('troops')[troopId];
+    if (!t || t.role === 'hero') return '';
+    const fam = CL.content.table('weapon_families')[CL.profile.resolve({ troop: troopId }).family];
+    const kit = fam ? `${fam.name}${t.shield ? ' and shield' : ''}` : '';
+    const armour = ARMOUR_WORDS[t.look?.armour] || null;
+    const how = words(troopId);
+    return `${[kit, armour].filter(Boolean).join(', ')}${how ? `. In battle: ${how}` : ''}`;
+  }
+
   /** Does this fighter think in full this frame (near the hero, or in a duel)? @param {any} g @param {any} u */
   function detailed(g, u) {
     if (g.duel) return true;
@@ -204,5 +219,5 @@
     for (const T of Object.values(C.tournaments || {})) for (const r of T.rounds || []) if (r.style != null && !S[r.style]) err(`tournament ${T.id}: unknown style ${r.style}`);
   }
 
-  CL.styles = { USE, DETAIL, OPEN, RIDE, forTroop, of, words, detailed, reaction, guardUse, open, melee, archer, riderTarget, rideOut, validate };
+  CL.styles = { card, USE, DETAIL, OPEN, RIDE, forTroop, of, words, detailed, reaction, guardUse, open, melee, archer, riderTarget, rideOut, validate };
 })(typeof window !== 'undefined' ? window : globalThis);

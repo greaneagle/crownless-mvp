@@ -4050,7 +4050,7 @@ The aim: easy to fight, rewarding to fight well, meaningful to command. The play
 | P11-08 | Fighting from the saddle | L | 5.8.0 | ✅ Done |
 | P11-09 | Controls, feedback and teaching | M | 5.9.0 | ✅ Done |
 | P11-10 | Fighters who think: individual AI and styles | L | 5.10.0 | ✅ Done |
-| P11-11 | Troops by their weapons | M–L | 5.11.0 | Specified |
+| P11-11 | Troops by their weapons | M–L | 5.11.0 | ✅ Done |
 | P11-12 | Performance and art-cache checkpoint | M | 5.12.0 | Specified |
 | P11-13 | Formations and orders that hold | L | 5.13.0 | Specified |
 | P11-14 | Combined arms and the tactics lab | M–L | 5.14.0 | Specified |
@@ -4948,7 +4948,7 @@ The aim: easy to fight, rewarding to fight well, meaningful to command. The play
 
 ---
 
-### P11-11 · Troops by their weapons (M–L) — 5.11.0, Specified
+### P11-11 · Troops by their weapons (M–L) — 5.11.0, ✅ Done
 
 **Now.** 41 troops whose weapon is drawing only; their damage, reach and speed are per-row numbers; `shield` and `brace` flags; fine kit adds armour and HP; traits modify blows; companions have their own numbers; women's lines are their own troops (D-P10d).
 
@@ -5008,6 +5008,19 @@ The aim: easy to fight, rewarding to fight well, meaningful to command. The play
 - **Explain:** the troop card's words.
 - **Not here:** formations.
 
+**Done (5.11.0).**
+- **Weapons authoritative:** every troop names its `weapon` (the family its look carries: no look changed); its reach, shot (range, far end, pace, cooldown, accuracy; a crossbow's pierce) and brace are the family's (`profile.resolve`); the row keeps `hp`, `damage`, `armor`, `speed` and its shield, with `reach` or `ranged` only where deliberately different (none in the game). So Valedorn's longbows reach 270 against a shortbow's 225, crossbows fly at 420 and go through 30% of armour.
+- **Capabilities:** spears and pikes brace by their family (`brace`); the Legionary and Pavisier keep theirs as a shield line's skill (reviewed: no look changes); a pike or two-hander guards with the weapon for troops too (`groups.canGuard`; plan §10.2).
+- **Tiers:** T3s give 12% of their HP for one more point of armour (and P11-10's better styles); T2 unchanged (both tries that lowered it made fighting easier, `docs/PHASE-11-VALIDATION.md`).
+- **Fine kit** (`forge.kit`): +10% damage, +1 armour, +4 HP (was +8); auto-resolve's `power` kept until P11-20.
+- **Companions:** their weapon's reach; a shield they carry blocks (`canBlock`), none no guard.
+- **Lords in person** (`lords.LEADER`): +2 armour, the veteran style, HP ×1.6 (was ×2; measured: no change at either end).
+- **Words:** the soldier's card and the troop tree: "Sword and shield, mail. In battle: fights patiently, guards well…" (`CL.styles.card`).
+- **Packs:** a troop's `weapon`, `reach`, `ranged` and `brace` checked; one with no weapon gets one from its look or role, with a warning; an unknown weapon refused by name. `docs/WORLD-FORMAT.md` (troops, `fighting_styles`, a family's `brace`).
+- **Measured** (`docs/PHASE-11-VALIDATION.md` "Troops by their weapons"; `scripts/realm-lab.js`, new): parity unchanged (the close fights 17.7 over the odds); the realms' matchup tables at T2 and T3. **Acceptance in part:** most realms have a strength and a weakness; the League and Saltreach (T2), Hrothmark (T3) have no strength and the free companies no weakness in these squads, because of a **crowd effect found here and carried to P11-13 and P11-14**: one against one a pike, a spear and a huscarl win; three against three they lose, with or without styles.
+- **Investigated:** a line's equipment emphasis (a T2 trained with spear or sword) would need a choice the upgrade screen doesn't have: Phase 12.
+- **Tests:** `tests/troops.test.js` (+8: weapons authoritative; capabilities; tiers; the women's lines' shape; fine kit and lords; companions; the card; a pack's troop with no or an unknown weapon). Changed: `combat`, `archery`, `content`, `profile`, `realm-world` (the family's numbers), `lords` (the lord's kit), `troops` (the Guard's numbers); golden battles and fighters recorded again. `npm test` 1,058 pass; lint clean; browser `company`, `battle`, `art`, `traits`, `look` pass.
+
 ---
 
 ### P11-12 · Performance and art-cache checkpoint (M) — 5.12.0, Specified — **Milestone M3**
@@ -5064,6 +5077,8 @@ The aim: easy to fight, rewarding to fight well, meaningful to command. The play
 ---
 
 ### P11-13 · Formations and orders that hold (L) — 5.13.0, Specified
+
+**Carried from P11-11 (measured, `docs/PHASE-11-VALIDATION.md`):** one against one a pikeman, a spearman and a huscarl win (65–100%); three against three the same lines lose (0–15%), with or without P11-10's styles. A held line (here) and combined arms (P11-14) should give the long weapons their reach and the axes their shield-breaking; `scripts/realm-lab.js` measures it.
 
 **Now.** Plan §2.1 and §3.8: loose, shield wall, wedge, line, column and square per division; line and column only change speed; Hold engages anything within 85 px (it chases); Follow keeps loose ranks; Charge goes to the nearest; timed orders on the tactical map; group states (forming, formed, advancing, engaged) reported to the Orders panel.
 

@@ -115,7 +115,7 @@ test('meeting a lord: their words, a −25 reputation cost to attack, sides like
   const e = CL.parties.current(c);
   assert.equal(e.name, 'Lord Hamon Greymantle');
   assert.match(e.text, /^Lord Hamon Greymantle, holder of Greywall Fort and Highmere, resting at Greywall Fort\. "Hold there\. You ride on Lord Hamon Greymantle’s land/);
-  assert.deepEqual(plain(e.def.leader), { troop: 'guard', name: 'Lord Hamon Greymantle', hp: 2, damage: 1.35, house: e.def.leader.house });
+  assert.deepEqual(plain(e.def.leader), { troop: 'guard', name: 'Lord Hamon Greymantle', hp: 1.6, damage: 1.35, armor: 2, style: 'veteran', house: e.def.leader.house }); // P11-11: the best kit and a veteran's style, less HP
   assert.equal(typeof e.def.leader.house, 'string', 'P10-G5: the lord rides under their house’s arms');
   const rep = c.reputation.valedorn;
   CL.parties.attack();
@@ -123,7 +123,9 @@ test('meeting a lord: their words, a −25 reputation cost to attack, sides like
   const lead = CL.game.enemies.find((u) => u.named);
   assert.equal(lead.named, 'Lord Hamon Greymantle');
   assert.equal(lead.troop, 'guard');
-  assert.equal(lead.maxhp, Math.round(CL.content.troop('guard').hp * 2));
+  assert.equal(lead.maxhp, Math.round(CL.content.troop('guard').hp * CL.lords.LEADER.hp));
+  assert.equal(lead.armor, CL.content.troop('guard').armor + CL.lords.LEADER.armor, 'P11-11: the best kit');
+  assert.equal(lead.styleId, 'veteran');
   CL.debugTools.endBattleNow(true);
   CL.world.returnToMap();
   // Sides: a lord stands with their realm, as a patrol does.

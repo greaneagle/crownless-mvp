@@ -141,7 +141,7 @@ test('the tree: owned troops in full with paths and the company, unknown ones in
   assert.deepEqual(plain(footman.children.map((n) => n.id)), ['guard'], 'the Rider branch is unknown, so it is left out');
   const guard = footman.children[0];
   assert.deepEqual([guard.level, guard.name, guard.maxTier, guard.count], ['owned', 'Guard', true, 0]);
-  assert.deepEqual(plain(guard.stats), { hp: 80, damage: 14, armor: 6, wage: 12 });
+  assert.deepEqual(plain(guard.stats), { hp: 70, damage: 14, armor: 7, wage: 12 }); // P11-11: a T3 by its kit (armour) more than its HP
   assert.equal(line.nodes.some((n) => n.id === 'hunter'), false);
 });
 
@@ -190,4 +190,111 @@ test('a soldier hired at a fort is "of Greywall", not "of Greywall Fort"', () =>
   // rand 0 picks the first form, "{given} of {origin}", and the first given name.
   assert.equal(CL.soldiers.makeName('valedorn', 'greywall_fort', () => 0, new Set()), 'Edric of Greywall');
   assert.equal(CL.soldiers.makeName('valedorn', 'oakford', () => 0, new Set()), 'Edric of Oakford');
+});
+
+// ---- P11-11: troops by their weapons ----
+
+test('P11-11: a troop’s weapon is authoritative: its family’s reach, shot and brace; the row its own damage, HP and armour', () => {
+  const { CL } = loadGame();
+  const F = CL.content.table('weapon_families');
+  for (const t of Object.values(CL.content.table('troops'))) {
+    if (t.role === 'hero') continue;
+    assert.ok(F[t.weapon], `${t.id} names its weapon`);
+    assert.equal(t.reach, undefined, `${t.id}: no reach of its own`);
+    assert.equal(t.ranged, undefined, `${t.id}: no shot of its own`);
+    const u = CL.units.makeUnit(0, 0, 'ally', t.id);
+    assert.equal(u.reach, F[t.weapon].reach, `${t.id}: its ${t.weapon}'s reach`);
+    assert.deepEqual([u.hp, u.damage, u.armor], [t.hp, t.damage, t.armor], t.id);
+    if (F[t.weapon].ranged) assert.equal(u.ranged.range, F[t.weapon].ranged.range, `${t.id}: its ${t.weapon}'s range`);
+  }
+  // Valedorn's longbows outrange the hunters' shortbows; crossbows fly fastest and go through armour.
+  const shot = (id) => CL.units.makeUnit(0, 0, 'ally', id);
+  assert.ok(shot('longbowman').ranged.range > shot('hunter').ranged.range);
+  assert.ok(shot('crossbowman').ranged.projectileSpeed > shot('hunter').ranged.projectileSpeed && shot('crossbowman').profile.pierce > 0);
+});
+
+test('P11-11: capabilities: spears and pikes brace by their weapon; the shield lines keep theirs; a pike guards with the weapon', () => {
+  const { CL } = loadGame();
+  const u = (id) => CL.units.makeUnit(0, 0, 'ally', id);
+  for (const id of ['spearman', 'pikeman', 'saltreach_pikeman']) assert.equal(CL.groups.braces(u(id)), true, id);
+  for (const id of ['legionary', 'pavisier']) assert.equal(CL.groups.braces(u(id)), true, `${id}: a shield line's skill (reviewed: no look changes)`);
+  for (const id of ['footman', 'huscarl', 'reaver']) assert.equal(CL.groups.braces(u(id)), false, id);
+  assert.equal(u('pikeman').profile.guardKind, 'weapon');
+  assert.equal(CL.groups.canGuard(u('pikeman')), true, 'the AI raises a pike (plan §10.2)');
+  assert.equal(CL.groups.canGuard(u('spearman')), false, 'a one-handed spear with no shield has no guard');
+  assert.equal(u('footman').profile.guardKind, 'shield');
+});
+
+test('P11-11: tiers by kit before HP: a T3 has more armour than its T2, and its HP rises less than it did', () => {
+  const { CL } = loadGame();
+  const T = CL.content.table('troops');
+  for (const t of Object.values(T)) {
+    const from = Object.values(T).find((x) => x.upgradeTo === t.id || x.altUpgradeTo === t.id);
+    if (t.tier !== 'T3' || !from || from.tier !== 'T2' || from.role !== t.role) continue;
+    assert.ok(t.armor > from.armor, `${from.id} → ${t.id}: more armour`);
+    assert.ok(t.hp / from.hp < 80 / 60, `${from.id} → ${t.id}: HP up by less than 5.10's third (${t.hp} from ${from.hp})`);
+  }
+});
+
+test('P11-11: the women’s lines are unchanged in shape: their trees, shares and gender', () => {
+  const { CL } = loadGame();
+  const T = CL.content.table('troops');
+  const line = (id) => {
+    const out = [];
+    for (let x = T[id]; x; x = T[x.upgradeTo]) out.push(x.id);
+    return out;
+  };
+  assert.deepEqual(plain(line('shieldmaiden')), ['shieldmaiden', 'shield_sister', 'hearth_maiden']);
+  assert.deepEqual(plain(line('popolana')), ['popolana', 'balestriera', 'arbalestriera']);
+  for (const id of ['shieldmaiden', 'shield_sister', 'hearth_maiden', 'popolana', 'balestriera', 'arbalestriera', 'outlaw_huntress']) assert.equal(T[id].gender, 'female', id);
+  assert.deepEqual(plain(T.clansman.women), { troop: 'shieldmaiden', share: 0.15 });
+  assert.deepEqual(plain(T.militia.women), { troop: 'popolana', share: 0.15 });
+});
+
+test('P11-11: fine kit is a better weapon and an armour step; a lord fights in the best kit, as a veteran', () => {
+  const { CL } = loadGame();
+  const K = CL.content.table('forge').kit;
+  const u = CL.units.makeUnit(0, 0, 'ally', 'footman');
+  const [hp, dmg, arm] = [u.hp, u.damage, u.armor];
+  CL.blacksmith.applyKit(u, { kit: true });
+  assert.deepEqual([u.hp - hp, Number((u.damage / dmg).toFixed(2)), u.armor - arm], [K.hp, K.damage, K.armor]);
+  assert.ok(K.hp < 8, 'less HP than it was: the kit is gear');
+  const L = CL.lords.LEADER;
+  const p = CL.profile.resolve({ troop: 'guard' }, { leader: L });
+  assert.equal(p.armor, CL.content.troop('guard').armor + L.armor);
+  assert.equal(L.style, 'veteran');
+  assert.ok(L.hp < 2, 'their HP multiplier came down');
+});
+
+test('P11-11: companions on profiles: their weapon’s reach; a shield blocks, none no guard', () => {
+  const { CL } = loadGame();
+  const d = CL.content.table('companions').mara;
+  const p = (equipment) => CL.profile.resolve({ companion: d, equipment });
+  assert.equal(p({ weapon: 'arming_sword' }).reach, CL.content.table('weapon_families').sword.reach);
+  assert.equal(p({ weapon: 'ash_spear' }).reach, CL.content.table('weapon_families').spear.reach);
+  assert.equal(p({ weapon: 'arming_sword', offhand: 'oak_shield' }).canBlock, true);
+  assert.equal(p({ weapon: 'arming_sword' }).canBlock, false);
+});
+
+test('P11-11: the troop card says its weapon, armour and style', () => {
+  const { CL } = loadGame();
+  assert.equal(CL.styles.card('legionary'), 'Sword and shield, mail. In battle: fights patiently, guards well, strikes when you miss');
+  assert.equal(CL.styles.card('pikeman'), 'Pike, a gambeson. In battle: keeps you at the end of its spear');
+  assert.equal(CL.styles.card('hero'), '');
+});
+
+test('P11-11: a pack troop with no weapon gets one from its look or role, with a warning; an unknown one is refused by name', () => {
+  const { CL } = loadGame({
+    content: (C) => {
+      C.troops.levy = { ...C.troops.levy, weapon: undefined };
+    },
+  });
+  const before = CL.diag.events.length;
+  assert.equal(CL.units.makeUnit(0, 0, 'ally', 'levy').profile.family, 'mace', 'from its look');
+  assert.ok(CL.diag.events.slice(before).some((e) => e.level === 'warn' && /without a weapon/.test(e.msg)));
+  const errs = [];
+  const C = JSON.parse(JSON.stringify({ troops: CL.content.table('troops'), weapon_families: CL.content.table('weapon_families'), items: CL.content.table('items') }));
+  C.troops.levy.weapon = 'flail';
+  for (const e of CL.content.validate({ ...C, factions: CL.content.table('factions') })) errs.push(e);
+  assert.ok(errs.some((e) => /troop levy: unknown weapon flail/.test(e)));
 });

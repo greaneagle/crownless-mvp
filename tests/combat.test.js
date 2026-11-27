@@ -19,13 +19,13 @@ test('units are built from troop definitions', () => {
   const levy = CL.units.makeUnit(0, 0, 'ally', 'levy', 3);
   assert.deepEqual(
     [levy.troop, levy.role, levy.hp, levy.maxhp, levy.damage, levy.armor, levy.reach, levy.soldierId],
-    ['levy', 'infantry', 45, 45, 7, 1, 48, 3],
+    ['levy', 'infantry', 45, 45, 7, 1, 46, 3], // P11-11: the reach is the levy's mace's
   );
   const hero = CL.units.makeUnit(0, 0, 'ally', 'hero');
   assert.deepEqual([hero.role, hero.hp, hero.damage, hero.reach], ['hero', 85, 18, 67]);
   const hunter = CL.units.makeUnit(0, 0, 'ally', 'hunter');
   assert.equal(hunter.role, 'archer');
-  assert.deepEqual({ ...hunter.ranged }, { projectileSpeed: 240, range: 225, cooldown: 1.6, accuracy: 0.6 });
+  assert.deepEqual(JSON.parse(JSON.stringify(hunter.ranged)), { range: 225, maxRange: 330, projectileSpeed: 260, cooldown: 1.6, accuracy: 0.6 }); // P11-11: the shortbow's shot
   assert.throws(() => CL.units.makeUnit(0, 0, 'enemy', 'dragon'), /Unknown troops id: dragon/);
 });
 
@@ -235,7 +235,7 @@ test('archers fire within troop range (+20 px slack) on their troop cooldown', (
   assert.equal(CL.game.arrows.length, 1, '240 px is in range');
   const a = CL.game.arrows[0];
   assert.equal(a.damage, 10);
-  assert.equal(a.speed, 240);
+  assert.equal(a.speed, 260); // P11-11: the shortbow's
   assert.equal(archer.attackCooldown, 1.6);
 });
 

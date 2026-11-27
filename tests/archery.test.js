@@ -258,6 +258,6 @@ test('troops’ shots fly by the same rule: their far end from their range', () 
   const a = g.arrows[0];
   if (a) {
     assert.equal(a.range, archer.ranged.range);
-    assert.equal(a.far, archer.ranged.range * CL.combat.FLIGHT.far);
+    assert.equal(a.far, archer.ranged.maxRange ?? archer.ranged.range * CL.combat.FLIGHT.far); // P11-11: the bow's own far end
   }
 });

@@ -325,7 +325,8 @@
     // P8-01: a lord fights in person, at the head of the first wave: their realm's best foot soldier, stronger, with their name.
     const lead = enc.leader && !g.duel ? g.enemies.find((u) => u.troop === enc.leader.troop) || g.enemies[0] : null;
     if (lead) {
-      P.apply(lead, P.resolve({ troop: lead.troop }, { leader: enc.leader }), ['hp', 'maxhp', 'damage']); // a lord's profile: their troop's, stronger
+      P.apply(lead, P.resolve({ troop: lead.troop }, { leader: enc.leader }), ['hp', 'maxhp', 'damage', 'armor']); // a lord's profile: their troop's, stronger, in the best kit (P11-11)
+      if (enc.leader.style) lead.styleId = enc.leader.style; // P11-11: a lord fights as a veteran
       Object.assign(lead, { named: enc.leader.name, house: enc.leader.house || null });
     }
     if (g.wagon) CL.ui.message('Keep the Reavers off the wagon: if it burns, the caravan is lost');

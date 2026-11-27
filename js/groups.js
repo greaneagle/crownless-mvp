@@ -36,8 +36,10 @@
 
   const troopOf = (u) => CL.content.table('troops')[u.troop] || {};
   /** Does this unit carry a shield it can raise? (The player's hero is steered by the player.) */
-  const hasShield = (u) => u.role !== 'hero' && (Boolean(troopOf(u).shield) || Boolean(u.companion));
-  const braces = (u) => Boolean(troopOf(u).brace);
+  const hasShield = (u) => u.role !== 'hero' && (u.companion ? Boolean(u.profile?.canBlock ?? true) : Boolean(troopOf(u).shield)); // P11-11: a companion with a shield
+  /** P11-11: can it guard at all: a shield, or a weapon that guards (a pike, a two-handed weapon). */
+  const canGuard = (u) => hasShield(u) || (u.role !== 'hero' && u.profile?.guardKind === 'weapon');
+  const braces = (u) => Boolean(u.profile?.brace ?? troopOf(u).brace); // P11-11: the weapon's (spears, pikes), or the troop's skill
 
   // ---- Shields ----
 
@@ -49,7 +51,7 @@
   function shouldGuard(u, opponents) {
     // P11-05: not during its own swing at all: its recovery (longer after a whiff) is the opening a
     // patient fighter strikes into (docs/PHASE-11-PLAN.md §10.2).
-    if (!u.alive || !hasShield(u) || u.swing) {
+    if (!u.alive || !canGuard(u) || u.swing) {
       u.threatSince = null;
       return false;
     }
@@ -209,5 +211,5 @@
     return state;
   }
 
-  CL.groups = { COVER_REACH, BRACE, FORM, hasShield, braces, shouldGuard, coverFor, braceAgainst, clearShot, seekShot, followAnchor, followSlot, updateStates };
+  CL.groups = { COVER_REACH, BRACE, FORM, hasShield, canGuard, braces, shouldGuard, coverFor, braceAgainst, clearShot, seekShot, followAnchor, followSlot, updateStates };
 })(typeof window !== 'undefined' ? window : globalThis);

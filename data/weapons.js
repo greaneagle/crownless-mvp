@@ -1,7 +1,8 @@
 /* Crownless content: weapon families (P11-01; docs/PHASE-11-PLAN.md §6). Plain classic script; no modules, no fetch.
  * A family is the default for a kind of weapon; an item (data/items.js `family`, an optional `combat`
- * block of overrides) or a troop (data/troops.js `weapon`, with its own damage, reach and ranged, which
- * still override the family) picks one, and js/profile.js resolves a fighter's combat profile from it.
+ * block of overrides) or a troop (data/troops.js `weapon`: P11-11, the family's timing, reach, shot and
+ * brace are the troop's, a row giving only its own damage, HP and armour, and `reach` or `ranged` where
+ * it is deliberately different) picks one, and js/profile.js resolves a fighter's combat profile from it.
  * P11-05: each melee family has its own rhythm (docs/PHASE-11-PLAN.md §10.1–§10.2, the numbers measured
  * with scripts/duel-lab.js); the bows' and the lance's are still 5.0.0's sword (P11-07, P11-08):
  *   hands       1 or 2
@@ -23,6 +24,7 @@
  *   skill       the skill that trains it (+3% damage a point, and `skillRecovery` less recovery a point)
  *   mounted     P11-08: its use from the saddle: 'yes', 'penalty' (less damage, slower; Riding eases it) or 'no'
  *   pierce      P11-06: the share of the target's armour a blow ignores (a mace's weight, a crossbow's bolt)
+ *   brace       P11-11: it braces against a charge (spears and pikes); a troop may add it (a shield line's skill)
  *   shield      whether a shield can be carried with it (a two-handed weapon or a bow slings it on the back)
  *   switch      seconds to bring it to hand from the other weapon (P11-02; 0.4 for every family until P11-05)
  *   ranged      a bow's or crossbow's shot when the troop gives none: `range` (effective: full damage to here),
@@ -40,6 +42,7 @@
   function family(id, name, hands, reach, look, rhythm, more) {
     var r = rhythm || OLD;
     var f = { id: id, name: name, hands: hands, reach: reach, windup: r.windup, active: r.active, recovery: r.recovery, miss: r.miss, arc: r.arc, maxTargets: r.maxTargets, cooldown: { hero: r.cooldown, ai: r.cooldown }, stagger: r.stagger, poise: r.poise, shieldPressure: r.shieldPressure, knockback: r.knockback, moveDuringAttack: r.moveDuringAttack, guard: r.guard, skill: r.skill, skillRecovery: r.skillRecovery, pierce: r.pierce || 0, shield: hands === 1, switch: 0.4, look: look };
+    if (r.brace) f.brace = true; // P11-11: spears and pikes brace against a charge
     for (var k in more || {}) f[k] = more[k];
     return f;
   }
@@ -56,9 +59,9 @@
     // Heavy impact and knockback, a long commitment.
     greataxe: { windup: 0.32, active: 0.16, recovery: 0.42, cooldown: 1.04, miss: 0.36, arc: 100, maxTargets: 2, stagger: 3, poise: 2.5, shieldPressure: 3.5, knockback: 14, moveDuringAttack: 0.25, guard: 'weapon', skill: 'two_handed', skillRecovery: 0.02 },
     // Reach and distance control; a quick, narrow thrust; a shield allowed (a weapon guard without one).
-    spear: { windup: 0.18, active: 0.1, recovery: 0.24, cooldown: 0.68, miss: 0.18, arc: 40, maxTargets: 1, stagger: 1.1, poise: 1, shieldPressure: 1, knockback: 5, moveDuringAttack: 0.5, guard: 'shield', skill: 'polearm', skillRecovery: 0.02 },
+    spear: { brace: true, windup: 0.18, active: 0.1, recovery: 0.24, cooldown: 0.68, miss: 0.18, arc: 40, maxTargets: 1, stagger: 1.1, poise: 1, shieldPressure: 1, knockback: 5, moveDuringAttack: 0.5, guard: 'shield', skill: 'polearm', skillRecovery: 0.02 },
     // The longest reach, the narrowest thrust; steady; no shield.
-    pike: { windup: 0.22, active: 0.12, recovery: 0.3, cooldown: 0.82, miss: 0.22, arc: 30, maxTargets: 1, stagger: 1, poise: 2, shieldPressure: 1, knockback: 4, moveDuringAttack: 0.3, guard: 'weapon', skill: 'polearm', skillRecovery: 0.02 },
+    pike: { brace: true, windup: 0.22, active: 0.12, recovery: 0.3, cooldown: 0.82, miss: 0.22, arc: 30, maxTargets: 1, stagger: 1, poise: 2, shieldPressure: 1, knockback: 4, moveDuringAttack: 0.3, guard: 'weapon', skill: 'polearm', skillRecovery: 0.02 },
     // Fists: quick and weak.
     unarmed: { windup: 0.14, active: 0.1, recovery: 0.2, cooldown: 0.6, miss: 0.15, arc: 90, maxTargets: 1, stagger: 0.5, poise: 1, shieldPressure: 0.5, knockback: 4, moveDuringAttack: 0.6, guard: 'none', skill: null, skillRecovery: 0 },
   };

@@ -34,9 +34,15 @@
    * (as the art's default look: a bow or crossbow by its shot, a spear or lance for a long reach).
    * @param {any} t a troop record
    */
+  const warned = new Set();
   function troopWeapon(t) {
     if (t.weapon) return t.weapon;
     if (t.role === 'hero') return 'unarmed';
+    // P11-11: every troop names its weapon; an old pack's that doesn't gets one from its look or role, with a warning.
+    if (!warned.has(t.id)) {
+      warned.add(t.id);
+      CL.diag?.log?.('warn', 'Troop without a weapon: one from its look or role', { troop: t.id });
+    }
     const fromLook = familyOfLook(t.look);
     if (fromLook) return fromLook;
     if (t.role === 'archer') return t.ranged?.projectileSpeed >= 300 ? 'crossbow' : 'shortbow';
@@ -85,6 +91,7 @@
       maxTargets: pick('maxTargets') || Infinity,
       cooldown: { hero: cd.hero, ai: cd.ai },
       shield: pick('shield'),
+      brace: Boolean(pick('brace')), // P11-11: spears and pikes brace against a charge
       switch: pick('switch'), // P11-02: seconds to bring this weapon to hand
       look: pick('look'),
       familyReach: pick('reach'),
@@ -109,8 +116,11 @@
       const t = CL.content.troop(source.troop);
       const w = weaponOf(troopWeapon(t));
       const part = weaponPart(w.family, w.item);
-      // A troop's own damage, reach and shot override the family (P11-11 moves troops onto profiles).
-      p = { ...part, hp: t.hp, maxhp: t.hp, damage: t.damage, armor: t.armor, speed: t.speed, reach: t.reach, ranged: t.ranged || null, canBlock: Boolean(t.shield), guardKind: t.shield ? 'shield' : 'none' };
+      // P11-11: the weapon is the troop's: its family's timing, reach, shot and brace; the row gives its own
+      // damage, HP, armour and pace, a shield (its kit), and a reach or shot only where deliberately different.
+      const ranged = part.familyRanged ? { ...part.familyRanged, ...(t.ranged || {}) } : t.ranged || null;
+      p = { ...part, hp: t.hp, maxhp: t.hp, damage: t.damage, armor: t.armor, speed: t.speed, reach: t.reach ?? part.familyReach, ranged, canBlock: Boolean(t.shield), guardKind: t.shield ? 'shield' : part.guardKind === 'weapon' ? 'weapon' : 'none', brace: t.brace ?? part.brace }; // a pike or two-hander guards with the weapon (plan §10.2), as the hero's does
+      if (ranged) for (const k of ['draw', 'ammo']) delete ranged[k]; // the hero's own (a troop shoots by its cooldown)
       p.poise += armourPoise(t.look?.armour); // P11-06: armour steadies (troops keep their data's speed)
     } else if (source.hero) {
       const c = source.hero;
@@ -186,9 +196,11 @@
       const enc = encumbrance(null, eq);
       const slower = part.timing.recovery * (enc.recovery - 1);
       const timing = { ...part.timing, recovery: part.timing.recovery + slower, total: part.timing.total + slower };
-      p = { ...part, timing, cooldown: { hero: part.cooldown.hero + slower, ai: part.cooldown.ai + slower }, hp: d.hp, maxhp: d.hp, damage: weapon ? weapon.stats.damage * d.weaponFactor : d.unarmedDamage, armor, speed: d.speed * enc.speed, reach: d.reach, ranged: null, canBlock: false, guardKind: 'none', poise: part.poise + armourPoise(armourClass(eq.body)), load: enc.load, capacity: enc.capacity, band: enc.band.id };
+      // P11-11: their reach is their weapon's; a shield they carry blocks (none, no guard).
+      const shield = Boolean(item('offhand')?.stats?.block);
+      p = { ...part, timing, cooldown: { hero: part.cooldown.hero + slower, ai: part.cooldown.ai + slower }, hp: d.hp, maxhp: d.hp, damage: weapon ? weapon.stats.damage * d.weaponFactor : d.unarmedDamage, armor, speed: d.speed * enc.speed, reach: weapon ? part.familyReach : d.reach, ranged: null, canBlock: shield, guardKind: shield ? 'shield' : 'none', poise: part.poise + armourPoise(armourClass(eq.body)), load: enc.load, capacity: enc.capacity, band: enc.band.id };
     } else throw new Error('A profile needs a troop, the hero or a companion');
-    if (ctx.leader) Object.assign(p, { hp: Math.round(p.hp * ctx.leader.hp), maxhp: Math.round(p.maxhp * ctx.leader.hp), damage: p.damage * ctx.leader.damage });
+    if (ctx.leader) Object.assign(p, { hp: Math.round(p.hp * ctx.leader.hp), maxhp: Math.round(p.maxhp * ctx.leader.hp), damage: p.damage * ctx.leader.damage, armor: p.armor + (ctx.leader.armor || 0) }); // P11-11: and the realm's best kit
     if (ctx.duel) Object.assign(p, { hp: ctx.duel.hp, maxhp: ctx.duel.hp, damage: ctx.duel.damage, armor: ctx.duel.armor });
     delete p.familyReach;
     delete p.familyRanged;

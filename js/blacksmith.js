@@ -162,6 +162,7 @@
     u.armor += K.armor;
     u.hp += K.hp;
     u.maxhp += K.hp;
+    u.damage *= K.damage || 1; // P11-11: a better weapon of the troop's own family
     return u;
   }
 
