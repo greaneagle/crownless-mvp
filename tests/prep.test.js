@@ -203,3 +203,87 @@ test('P11-14: the setups choose from what is seen of the foe: Defensive a square
   const auto = P.plan('auto', map);
   assert.equal(auto.formation, P.choose(auto.auto, P.seenFoe()).formation);
 });
+
+// ---- P11-15: what Prepare tells you (only what the company knows) ----
+
+test('P11-15: the foe as known: seen on the map gives about how many and by role; a scout names the weapons', () => {
+  const { CL, c, p } = band();
+  Object.assign(p, { troops: { reaver: 10, looter: 6, outlaw_huntress: 4 } });
+  const seen = CL.prep.known(c, CL.parties.current());
+  assert.equal(seen.level, 'seen');
+  assert.equal(seen.words, 'about 20, mostly foot and some archers', 'no weapons without a scout');
+  assert.equal(seen.bows, null, 'archers among foot are not counted without a scout');
+  c.followers.scout = { name: 'Odo', culture: 'valedorn', origin: null, hired: 0, unpaid: 0, log: [] };
+  const scouted = CL.prep.known(c, CL.parties.current());
+  assert.equal(scouted.level, 'scout');
+  assert.equal(scouted.words, 'about 20, mostly axes, some maces and some bows');
+  assert.ok(Math.abs(scouted.bows - 0.2) < 1e-9);
+  assert.doesNotMatch(scouted.words, /\b(10|6|4)\b/, 'never the exact numbers');
+});
+
+test('P11-15: the foe unknown: a lair, a band that bursts from cover, or one that caught you unseen', () => {
+  const { CL, c, p } = band({ caught: true });
+  const old = CL.sight.playerSees;
+  CL.sight.playerSees = () => false; // caught unseen (at night, from the trees)
+  assert.equal(CL.prep.known(c, CL.parties.current(), { ambush: true }).level, 'unknown');
+  CL.sight.playerSees = old;
+  assert.equal(CL.prep.known(c, CL.parties.current(), { ambush: true }).level, 'seen', 'caught by a band in sight: you see them');
+  p.ambush = true;
+  assert.equal(CL.prep.known(c, CL.parties.current()).words, 'unknown', 'Reavers bursting from cover');
+  const site = { kind: 'site', name: 'Looter Camp', troops: { looter: 8 } };
+  assert.equal(CL.prep.known(c, site).level, 'unknown', 'what waits in a lair');
+  c.followers.scout = { name: 'Odo', culture: 'valedorn', origin: null, hired: 0, unpaid: 0, log: [] };
+  assert.equal(CL.prep.known(c, site).words, 'about 8, all maces', 'a scout looks inside');
+  assert.equal(CL.prep.against('defensive', { level: 'unknown', horse: null, bows: null }), '', 'nothing said against a foe nothing is known of');
+});
+
+test('P11-15: make-up words: mostly, some, a few; riders by name', () => {
+  const { CL } = band();
+  assert.equal(CL.prep.makeUp({ spearman: 20, crossbowman: 8, rider: 2 }), 'mostly spears, some crossbows and a few riders');
+  assert.equal(CL.prep.makeUp({ reaver: 4, looter: 4, hunter: 1 }), 'axes, maces and a few bows');
+  assert.equal(CL.prep.makeUp({ rider: 5 }), 'all riders');
+  assert.equal(CL.prep.makeUp({}), '');
+});
+
+test('P11-15: the field in words: a rise, a ford, trees, open ground, the walls', () => {
+  const { CL } = band();
+  const notes = (id) => CL.prep.terrainNotes(CL.arena.mapFor(id)).join(' ');
+  assert.match(notes('hill_slopes'), /shoot a quarter further/);
+  assert.match(notes('river_ford'), /ford between you/);
+  assert.match(notes('forest_wilds'), /trees/i);
+  assert.match(notes('open_country'), /Open ground/);
+  const hills = CL.arena.mapFor('hill_slopes');
+  assert.match(CL.prep.terrainNotes(hills, CL.prep.plan('balanced', hills)).join(' '), /your archers start on it/);
+});
+
+test('P11-15: the setups against this enemy: a square against riders, a wall under shots', () => {
+  const { CL } = band();
+  const foe = (horse, bows) => ({ level: 'scout', horse, bows });
+  assert.match(CL.prep.against('defensive', foe(0.4, 0)), /square/);
+  assert.match(CL.prep.against('defensive', foe(0, 0.4)), /shield wall takes the arrows/);
+  assert.match(CL.prep.against('aggressive', foe(0.4, 0)), /no spears braced/);
+  assert.match(CL.prep.against('balanced', foe(0, 0.4), { cavalry: 2 }), /ride down their archers/);
+  assert.equal(CL.prep.against('balanced', foe(0, 0), { cavalry: 0 }), '');
+});
+
+test('P11-15: the loadout chosen on Prepare is remembered for that kind of field, and used with no time to prepare', () => {
+  const { CL, c, map } = band();
+  c.equipment.weapon2 = 'short_bow';
+  assert.equal(CL.prep.kindOf(map), map.id);
+  assert.ok(CL.prep.chooseLoadout(c, map, 'secondary'));
+  assert.equal(c.loadout.start, 'secondary');
+  assert.equal(c.loadout.last[map.id], 'secondary');
+  c.loadout.start = 'primary'; // chosen elsewhere since
+  CL.parties.attack(); // a failed retreat: straight in, no Prepare
+  assert.equal(c.loadout.start, 'secondary', 'the field’s remembered loadout');
+  assert.equal(CL.game.loadout.which, 'secondary');
+  const other = CL.arena.mapFor('river_ford');
+  c.loadout.start = 'primary';
+  CL.prep.useRemembered(c, other);
+  assert.equal(c.loadout.start, 'primary', 'another kind of field keeps the default');
+  c.equipment.weapon2 = null;
+  CL.prep.useRemembered(c, map);
+  assert.equal(c.loadout.start, 'primary', 'a remembered second weapon no longer carried is not used');
+  assert.equal(CL.prep.chooseLoadout(c, map, 'secondary'), false);
+  assert.equal(JSON.stringify(CL.gear.sanitize(JSON.parse(JSON.stringify(c.loadout)))), JSON.stringify(c.loadout), 'the saved shape is P11-02’s');
+});

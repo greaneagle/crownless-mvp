@@ -192,6 +192,7 @@
     g.heroDownNote = false;
     g.helpKills = 0; // enemies cut down by parties that rode in to help (V2-09): theirs, not yours
     delete g.prepPlan; // set again by the preparation screen's plan, if any (V2-07)
+    CL.report?.begin(g); // P11-15: the battle report's tally (it only counts)
     Object.assign(g, { routed: 0, allyRouted: 0, morale: {}, moraleState: {}, moraleIn: 0, routEvents: [], rallyReadyAt: 0, concededNote: false });
     g.allies = [];
     g.enemies = [];
@@ -602,6 +603,7 @@
     target.attackCooldown = Math.max(target.attackCooldown, STAGGER.sway);
     target.staggeredAt = g.t;
     target.staggerUntil = g.t + STAGGER.immune;
+    CL.report?.onStagger(g, target, source);
     sound('stagger', target, source);
     g.effects.push({ x: target.x, y: target.y - 26, t: 0.35, color: '#efe4c4', kind: 'stagger' });
     if (target.role === 'hero') feedback('staggered', 'Interrupted!');
@@ -618,7 +620,14 @@
     if (d > 0.5) push(target, source.x, source.y, d);
   }
 
+  /** A blow (or a shot) at a target: its outcome, told to the battle report (P11-15), which only counts it. */
   function hit(target, raw, source, shot = false) {
+    const result = strike(target, raw, source, shot);
+    CL.report?.onHit(game(), target, source, result, shot);
+    return result;
+  }
+
+  function strike(target, raw, source, shot = false) {
     const g = game();
     if (!target.alive) return null;
     if (target === g.hero && g.godMode) return 'blocked'; // debug panel
@@ -741,6 +750,7 @@
     if (u.role !== 'hero' && u.target?.alive) aim(u, u.target);
     u.attackCooldown = P.cooldownOf(u);
     u.swing = { t: 0, hit: [] };
+    CL.report?.onSwing(game(), u);
     // P11-13: a soldier's blow goes along the line to its foe, not only along one of the four facings
     // (a spear's 40° thrust at a foe standing at an angle missed: the crowd effect P11-11 found).
     // A rider is struck as before (P11-08's saddle fighting, accepted at M2): along the facing.
@@ -1220,6 +1230,7 @@
     // High ground (P7-11: a quarter further) lengthens the flight too, not only when they may shoot.
     const k = u.role === 'hero' ? 1 : Math.max(1, CL.formations.rangeOf(u) / (r.range || 1));
     const far = (r.maxRange ?? r.range * FLIGHT.far) * k;
+    CL.report?.onShot(game(), u);
     game().arrows.push({ x: u.x, y: u.y - 20, dx, dy, speed: r.projectileSpeed, team: u.team, life: far / r.projectileSpeed + 0.2, source: u, damage, flown: 0, range: r.range * k, far, shot: true });
   }
 

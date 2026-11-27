@@ -377,5 +377,145 @@
     return p;
   }
 
-  CL.prep = { seenFoe, choose, PRESETS, AUTO, SECOND, PLANS_MAX, GROUPS, ORDERS, SETUPS, anchorOf, zone, legal, autoChoice, openFlank, plan, place, remembered, remember, previewRect, flagAt, moveFlag, setOrder, setCaptain, setFormation, setFacing, savePlan, loadPlan };
+  // ---- P11-15: what Prepare tells you (only what the company knows) ----
+
+  /** Weapon families as a band's make-up says them ("spears", "crossbows"); riders are "riders". */
+  const ARMS = { sword: 'swords', axe: 'axes', mace: 'maces', greatsword: 'greatswords', greataxe: 'greataxes', spear: 'spears', pike: 'pikes', lance: 'lances', shortbow: 'bows', longbow: 'longbows', crossbow: 'crossbows', unarmed: 'bare hands' };
+  /** By role only, as a company sees a band without a scout. */
+  const ROLE_ARMS = { infantry: 'foot', archer: 'archers', cavalry: 'riders' };
+  /** Shares for the words: "mostly" at half or more, "some" at a fifth, "a few" below. */
+  const SHARE = { mostly: 0.5, some: 0.2 };
+
+  /** A troop's arms in a word: riders, or its weapon family's plural. @param {string} id */
+  function armsOf(id, byRole = false) {
+    const t = CL.content.table('troops')[id];
+    if (!t) return 'others';
+    if (t.role === 'cavalry') return 'riders';
+    if (byRole) return ROLE_ARMS[t.role] || 'foot';
+    const fam = CL.profile.weaponOf(CL.profile.troopWeapon(t)).family;
+    return ARMS[fam.id] || `${String(fam.name || fam.id).toLowerCase()}s`;
+  }
+
+  /**
+   * A band's make-up in words: "mostly spears and some crossbows", "axes and bows, a few riders".
+   * @param {Record<string, number>} troops @param {boolean} [byRole] what a company sees without a scout
+   */
+  function makeUp(troops, byRole = false) {
+    const by = new Map();
+    let n = 0;
+    for (const [t, k] of Object.entries(troops || {})) {
+      if (!(k > 0)) continue;
+      const w = armsOf(t, byRole);
+      by.set(w, (by.get(w) || 0) + k);
+      n += k;
+    }
+    if (!n) return '';
+    const parts = [...by.entries()].sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1));
+    const qual = (k) => (k / n >= SHARE.some ? 'some' : 'a few');
+    const [top, ...rest] = parts;
+    if (!rest.length) return `all ${top[0]}`;
+    const mostly = top[1] / n >= SHARE.mostly;
+    // "mostly axes, some maces and a few bows"; without a clear most, the two largest plainly: "axes, maces and a few bows".
+    const words = mostly ? [`mostly ${top[0]}`, ...rest.map(([w, k]) => `${qual(k)} ${w}`)] : [top[0], rest[0][0], ...rest.slice(1).map(([w, k]) => `${qual(k)} ${w}`)];
+    return words.length > 1 ? `${words.slice(0, -1).join(', ')} and ${words.at(-1)}` : words[0];
+  }
+
+  /**
+   * What the company knows of the foe it is about to fight (only what it could know):
+   *   scout    a scout rides with you: their estimate, the head count rounded and the weapons
+   *   seen     the band is in your sight on the map: about how many, and foot, archers or riders
+   *   unknown  a lair's inside, a band that burst from cover, or one that caught you unseen
+   * @param {any} c @param {any} e the open encounter (CL.parties.current()) @param {{ ambush?: boolean }} [opts]
+   * @returns {{ level: 'scout' | 'seen' | 'unknown', words: string, horse: number | null, bows: number | null }}
+   */
+  function known(c, e, { ambush = false } = {}) {
+    const unknown = { level: /** @type {'unknown'} */ ('unknown'), words: 'unknown', horse: null, bows: null };
+    if (!e?.troops) return unknown;
+    const scout = Boolean(CL.scout?.get(c));
+    const p = e.party;
+    const hidden = e.kind === 'site' || p?.ambush || (ambush && !(p && CL.sight?.playerSees(c, p)));
+    if (hidden && !scout) return unknown;
+    const n = Object.values(e.troops).reduce((a, b) => a + (b > 0 ? b : 0), 0);
+    const seen = seenFoe();
+    const count = CL.scout.about(n);
+    return {
+      level: scout ? 'scout' : 'seen',
+      words: `${count}, ${makeUp(e.troops, !scout)}`,
+      horse: seen.horse,
+      bows: scout ? seen.bows : null, // without a scout, archers among foot are guessed at, not counted
+    };
+  }
+
+  /** A remembered loadout's key: the kind of field (the map's id). @param {any} map */
+  const kindOf = (map) => (/^[a-z_]{1,24}$/.test(map?.id || '') ? map.id : 'field');
+
+  /**
+   * P11-02's `loadout.last`: the loadout last chosen on this kind of field becomes this battle's start
+   * (when it can still be used). Called as Prepare opens, and before a battle with no time to prepare.
+   * @param {any} c @param {any} map
+   */
+  function useRemembered(c, map) {
+    const which = c?.loadout?.last?.[kindOf(map)];
+    if (!which || !c.loadout) return;
+    if (which === 'secondary' && !c.equipment?.weapon2) return;
+    c.loadout.start = which;
+  }
+
+  /** Choose the loadout a battle on this field starts with, and remember it for the kind. @param {any} c @param {any} map @param {string} which */
+  function chooseLoadout(c, map, which) {
+    if (!CL.gear.LOADOUTS.includes(which) || (which === 'secondary' && !c.equipment?.weapon2)) return false;
+    c.loadout.start = which;
+    c.loadout.last = { ...(c.loadout.last || {}), [kindOf(map)]: which };
+    return true;
+  }
+
+  const TREE_LOOKS = ['tree', 'pine', 'birch'];
+  /** How thick the trees are around the field (trees within this of the hero's start). */
+  const TREES = { reach: 700, thick: 14, some: 5 };
+
+  /**
+   * The field in words: a rise for archers, a ford, the trees, the walls. @param {any} map @param {any} [plan]
+   * @returns {string[]}
+   */
+  function terrainNotes(map, plan = null) {
+    const out = [];
+    const a = anchorOf(map);
+    if (map.wall) out.push('Walls: the fight is at the gate and on the walkway. Archers on the walkway shoot further; horses stay below.');
+    if (map.high?.length) {
+      const prevMap = CL.game.battleMap;
+      CL.game.battleMap = map;
+      const on = plan?.anchors?.archer && CL.formations.highAt(plan.anchors.archer.x, plan.anchors.archer.y);
+      CL.game.battleMap = prevMap;
+      if (!map.wall) out.push(on ? 'A rise where you form up: your archers start on it and shoot a quarter further.' : 'Rises on the field: archers on high ground shoot a quarter further.');
+    }
+    if (map.slow?.length) out.push('A river ford between you: wading slows everyone and breaks formed ranks.');
+    const trees = (map.obstacles || []).filter((o) => TREE_LOOKS.includes(o.look) && Math.hypot(o.x - a.x, o.y - a.y) <= TREES.reach).length;
+    if (trees >= TREES.thick) out.push('Thick trees: they stop arrows and break formed ranks (a column keeps its order).');
+    else if (trees >= TREES.some) out.push('Some trees: cover from arrows for whoever stands among them.');
+    else if (!map.wall) out.push('Open ground: little cover from arrows.');
+    return out;
+  }
+
+  /**
+   * What a setup does against this enemy, in a few words (from what is known of them; nothing when
+   * nothing is known). @param {string} preset 'balanced' | 'defensive' | 'aggressive' (Auto: its choice)
+   * @param {{ level: string, horse: number | null, bows: number | null }} foe @param {{ cavalry?: number }} [own]
+   */
+  function against(preset, foe, own = {}) {
+    if (!foe || foe.level === 'unknown') return '';
+    const horse = (foe.horse || 0) >= AUTO.horse;
+    const bows = foe.bows != null && foe.bows >= SHARE.some;
+    if (preset === 'defensive') return horse ? 'Against their riders: a square, braced on every side.' : bows ? 'Against their shots: a shield wall takes the arrows.' : 'Here: a shield wall that waits for them.';
+    if (preset === 'aggressive') return horse ? 'Their riders hit a wedge hard: it has no spears braced.' : bows ? 'The wedge closes fast on their archers, under their shots on the way in.' : 'The wedge breaks a line of foot.';
+    if (preset === 'balanced') {
+      const bits = [];
+      if (bows) bits.push('Loose ranks spread their shots.');
+      if (own.cavalry && bows) bits.push('Your horse can ride down their archers.');
+      if (horse) bits.push('Their riders will look for your archers.');
+      return bits.join(' ');
+    }
+    return '';
+  }
+
+  CL.prep = { ARMS, SHARE, TREES, armsOf, makeUp, known, kindOf, useRemembered, chooseLoadout, terrainNotes, against, seenFoe, choose, PRESETS, AUTO, SECOND, PLANS_MAX, GROUPS, ORDERS, SETUPS, anchorOf, zone, legal, autoChoice, openFlank, plan, place, remembered, remember, previewRect, flagAt, moveFlag, setOrder, setCaptain, setFormation, setFacing, savePlan, loadPlan };
 })(typeof window !== 'undefined' ? window : globalThis);

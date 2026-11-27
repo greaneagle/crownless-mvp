@@ -145,6 +145,19 @@
         'The setups use all this from what you can see of the enemy: Balanced puts the infantry before the archers and holds the horse on a flank until the first volley; Defensive makes a shield wall, or a square against horse; Aggressive goes in a wedge. Auto picks one from the odds, and an enemy army plans the same way.'
       ]
     },
+    preparing: {
+      id: 'preparing',
+      stage: 'captain',
+      order: 5.3,
+      title: 'Preparing for battle',
+      body: [
+        'Attack, then Fight: two taps start a battle. Tick Skip this screen next time and Attack goes straight in with the setup you last chose.',
+        'The Prepare screen tells you only what your company knows. A band you can see on the map: about how many, and whether foot, archers or riders. With a scout riding with you: their estimate, and how they are armed ("about 20, mostly axes, some maces and some bows"). A lair, or a band that bursts from cover: unknown.',
+        'Your line shows what you will fight with, on horse or on foot, and your shots if you carry a bow. Use the other weapon, or fight on foot, with one tap; the weapon you choose is remembered for that kind of field. Below it, anything that stops or weakens you there: a horse that can’t go onto walls, a weapon you have not trained for.',
+        'The field in words: a rise where archers shoot further, a ford that slows everyone and breaks ranks, trees that stop arrows. Each setup says what it does against this enemy, when you know enough of them to say.',
+        'After a fought battle, the first lines say who won, the losses on each side and how long it took, with your crowns and loot. Tap More for each division’s kills, losses and breaks, your own blows, blocks, staggers and shots, what stood out (a wall that held against arrows, spears that stopped a charge, a flank that broke them) and who did what.'
+      ]
+    },
     fighting: {
       id: 'fighting',
       stage: 'captain',
