@@ -94,11 +94,11 @@ test('the rule fails what it should: too much, the wrong class, unreachable, unt
   }), /req can't name cha/);
   assert.match(errs((C) => {
     C.items.war_mace.req = { training: 'hrolf' };
-    C.training = { hrolf: { id: 'hrolf' } };
+    C.training.hrolf = { id: 'hrolf' };
   }), /only an elite piece may need training/);
   assert.equal(errs((C) => {
     C.items.knights_sword.req = { skills: { one_handed: 3 }, training: 'hrolf' };
-    C.training = { hrolf: { id: 'hrolf' } };
+    C.training.hrolf = { id: 'hrolf' };
   }), '', 'an elite piece with training someone teaches');
   assert.match(errs((C) => {
     C.weapon_families.axe.req = { str: 'six' };
@@ -120,12 +120,14 @@ test('the rule fails what it should: too much, the wrong class, unreachable, unt
 
 test('packs: an item’s requirement is checked by the same rule', () => {
   const { CL } = loadGame();
-  const pack = (req, tier = 3) => {
+  const pack = (req, tier = 3, region) => {
     const p = JSON.parse(JSON.stringify(SAMPLE));
-    p.items = { 'sample:cairn_blade': { id: 'sample:cairn_blade', family: 'sword', name: 'Cairn Blade', type: 'weapon', slot: 'weapon', tier, rarity: 'rare', value: 200, weight: 2, stats: { damage: 24 }, req, questItem: false } };
+    p.items = { 'sample:cairn_blade': { id: 'sample:cairn_blade', family: 'sword', name: 'Cairn Blade', type: 'weapon', slot: 'weapon', tier, rarity: 'rare', region, value: 200, weight: 2, stats: { damage: 24 }, req, questItem: false } };
     return CL.packs.parse(JSON.stringify(p), { file: 'p.json' }).errors;
   };
   assert.deepEqual(plain(pack({ str: 7, skills: { one_handed: 2 } })), []);
+  assert.deepEqual(plain(pack({ str: 8, training: 'longaxe' }, 2, 'sample:cairn')), [], 'a pack can add a regional piece with the late budget');
+  assert.ok(pack({}, 2, 42).some((e) => /cairn_blade: region must be/.test(e)));
   assert.ok(pack({ str: 12 }).some((e) => /cairn_blade: an elite piece may need 3 attribute points/.test(e)), 'too much for an elite piece');
   assert.ok(pack({ str: 6 }, 1).some((e) => /cairn_blade: ordinary gear/.test(e)), 'tier 1 needs nothing');
 });
@@ -219,4 +221,31 @@ test('what your points would unlock: the pieces you have, by the points you have
   assert.deepEqual(plain(CL.gear.unlocks(c)), [{ item: 'knights_sword', needs: 'One-Handed 3' }]);
   ch.attributePoints = 1;
   assert.deepEqual(plain(CL.gear.unlocks(c).map((u) => u.item)), ['knights_sword', 'war_mace']);
+});
+
+test('regional gear fits the late budget, and specialist training gates the four named weapons', () => {
+  const { CL } = loadGame();
+  const C = content(CL);
+  const c = CL.campaign;
+  const specialist = {
+    knights_lance: 'lance_couching',
+    hrothmark_longaxe: 'longaxe',
+    flats_pike: 'pike_brace',
+    compact_horse_bow: 'mounted_archery',
+  };
+  Object.assign(c.character.attributes, { str: 8 });
+  Object.assign(c.character.skills, { riding: 4, archery: 3, polearm: 3, two_handed: 3, shield: 1 });
+  for (const it of Object.values(C.items).filter((it) => it.region && !it.forgedFrom)) {
+    assert.equal(CL.gear.classOf(it, C), 'elite', it.id);
+    const training = specialist[it.id];
+    assert.equal(CL.gear.reqOf(it.id)?.training, training, it.id);
+    if (training) {
+      const [finding] = CL.gear.unmet(c, it.id);
+      assert.equal(finding?.code, 'training', it.id);
+      assert.equal(finding.stat, training);
+      c.character.training[training] = true;
+    }
+    assert.equal(CL.gear.meets(c, it.id), true, it.id);
+  }
+  assert.deepEqual(plain(CL.gear.reqOf('league_arbalest')), { str: 8 });
 });

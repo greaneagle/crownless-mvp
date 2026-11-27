@@ -17,6 +17,7 @@
 //                rider, on the open field; with `--wall`, against a shield wall of three footmen
 //   --mounted    P11-08: a knight (lance and destrier, or sword and rouncey) and a horse archer (shortbow,
 //                rouncey), the rider, archer and circler pilots, against foot, spears, archers and riders
+//   --regional   P11-16: each local piece and its baseline against comparable opponents
 //   --ai         P11-10: each fighting style (data/styles.js) in one body (a footman's, a spearman's for
 //                spear and reach_keeper) against each pilot, with its signature: the share of its blows
 //                struck into an opening (the hero recovering, staggered or guard broken), the distance it
@@ -62,26 +63,32 @@ const DEFAULT = { weapon: 'arming_sword', armour: 'medium' };
 const TOURNEY_TOWN = 'stonebridge';
 
 /** A seeded game with the hero in a kit. */
-function game(seed, weapon, armour) {
+function game(seed, weapon, armour, regional) {
   const { CL } = loadGame({ seed });
   CL.ui = headlessUi(CL);
   const c = CL.campaign;
   c.roster = [];
   c.companions = c.companions || {};
-  Object.assign(c.equipment, { weapon, ...ARMOUR[armour] });
+  Object.assign(c.equipment, { weapon, ...ARMOUR[armour], ...regional?.kit });
+  if (regional?.basePike) {
+    // The pike family has no common hero item. Measure its default profile at the Flats Pike's damage.
+    const pike = CL.content.item('flats_pike');
+    delete pike.combat;
+  }
   if (c.equipment.horse) c.character.skills.riding = Math.max(c.character.skills.riding || 0, 1); // P11-08
   // P11-05: what the kit needs (P11-03), given, so each piece is measured as worn (a lab).
-  for (const id of Object.values(c.equipment)) {
+  for (const id of [...Object.values(c.equipment), ...(regional?.requirements || [])]) {
     const r = id ? CL.gear.reqOf(id) || {} : {};
     for (const a of ['str', 'agi']) if (r[a]) c.character.attributes[a] = Math.max(c.character.attributes[a], r[a]);
     for (const [k, v] of Object.entries(r.skills || {})) c.character.skills[k] = Math.max(c.character.skills[k] || 0, v);
+    if (r.training) c.character.training[r.training] = true;
   }
   return CL;
 }
 
 /** One duel on the ground: the hero alone against one fighter (a practice battle: nothing in the campaign changes). */
-function duel({ seed, pilot, opponent, weapon = DEFAULT.weapon, armour = DEFAULT.armour, field = false, count = 1 }) {
-  const CL = game(seed, weapon, armour);
+function duel({ seed, pilot, opponent, weapon = DEFAULT.weapon, armour = DEFAULT.armour, field = false, count = 1, regional }) {
+  const CL = game(seed, weapon, armour, regional);
   CL.combat.startBattle({ id: 'duel_lab', name: 'Duel lab', map: field ? 'grass_field' : 'tourney_lists', waves: [{ [opponent]: count }], practice: [], reward: { goldBase: 0, goldPerKill: 0, renown: 0 }, loot: 'low' });
   return fly(CL, pilot);
 }
@@ -211,6 +218,37 @@ function runDuels({ seeds = 40, pilots = PILOTS, opponents = OPPONENTS, kits = [
   return out;
 }
 
+// Each pair shares the same attributes and skills, field, pilot and seeds.
+const REGIONAL = [
+  { item: 'knights_lance', base: 'war_lance', slot: 'weapon', armour: 'knight', matchups: [['rider', 'footman'], ['rider', 'spearman'], ['rider', 'rider']] },
+  { item: 'valedorn_warbow', base: 'hunting_longbow', slot: 'weapon', armour: 'light', matchups: [['archer', 'hunter'], ['archer', 'rider']] },
+  { item: 'legion_spear', base: 'ash_spear', slot: 'weapon', armour: 'medium', kit: { offhand: 'heater_shield' }, matchups: [['timer', 'rider'], ['timer', 'footman']] },
+  { item: 'hrothmark_longaxe', base: 'great_axe', slot: 'weapon', armour: 'leather', matchups: [['timer', 'footman'], ['timer', 'spearman'], ['timer', 'huscarl', 3]] },
+  { item: 'league_arbalest', base: 'light_crossbow', slot: 'weapon', armour: 'light', matchups: [['archer', 'huscarl'], ['archer', 'rider'], ['archer', 'arbalester'], ['archer', 'hunter']] },
+  { item: 'cliff_bow', base: 'short_bow', slot: 'weapon', armour: 'light', matchups: [['archer', 'hunter'], ['archer', 'rider']] },
+  { item: 'flats_pike', base: 'flats_pike', slot: 'weapon', armour: 'leather', matchups: [['timer', 'rider'], ['timer', 'footman'], ['timer', 'huscarl', 3]] },
+  { item: 'compact_horse_bow', base: 'short_bow', slot: 'weapon', armour: 'horseArcher', matchups: [['archer', 'footman'], ['archer', 'hunter'], ['archer', 'rider']] },
+  { item: 'ostrand_kite', base: 'kite_shield', slot: 'offhand', armour: 'bare', matchups: [['turtle', 'footman'], ['turtle', 'huscarl'], ['turtle', 'huscarl', 3]] },
+  { item: 'valedorn_warhorse', base: 'destrier', slot: 'horse', armour: 'knight', kit: { weapon: 'war_lance' }, matchups: [['rider', 'footman'], ['rider', 'spearman'], ['rider', 'rider']] },
+  { item: 'league_light_horse', base: 'courser', slot: 'horse', armour: 'lightHorse', matchups: [['rider', 'hunter'], ['rider', 'huscarl']] },
+];
+
+function runRegional(seeds) {
+  const out = [];
+  for (const { item, base, slot, armour, kit, matchups } of REGIONAL) {
+    for (const [pilot, opponent, count = 1] of matchups) {
+      const byItem = (id, basePike = false) => {
+        const regional = { kit: { ...kit, [slot]: id }, requirements: [item, base], basePike };
+        const rows = [];
+        for (let i = 1; i <= seeds; i++) rows.push(duel({ seed: spread(i), pilot, opponent, count, armour, field: true, regional }));
+        return sum(rows);
+      };
+      out.push({ item, base: item === base ? 'pike family' : base, pilot, opponent, count, regional: byItem(item), baseline: byItem(base, item === base) });
+    }
+  }
+  return out;
+}
+
 const AI_STYLES = [['brawler', 'footman'], ['soldier', 'footman'], ['veteran', 'footman'], ['heavy', 'footman'], ['spear', 'spearman'], ['brawler', 'spearman'], ['rusher', 'footman'], ['shield_wall', 'footman'], ['counter', 'footman'], ['reach_keeper', 'spearman']];
 
 function runStyles({ seeds = 40, pilots = PILOTS, styles = AI_STYLES } = {}) {
@@ -269,7 +307,14 @@ if (require.main === module) {
   const json = args.includes('--json');
   const f = (n, d = 0) => (n == null ? '–' : n.toFixed(d)).padStart(6);
   const t0 = Date.now();
-  if (args.includes('--ai')) {
+  if (args.includes('--regional')) {
+    const out = runRegional(seeds);
+    if (json) console.log(JSON.stringify({ seeds, regional: out }, null, 2));
+    else {
+      console.log(`Regional gear on the open field, ${seeds} paired seeds each (regional / baseline)`);
+      for (const r of out) console.log(`${r.item} / ${r.base}, ${r.pilot} vs ${r.count} ${r.opponent}: ${r.regional.win}% / ${r.baseline.win}% won; ${r.regional.seconds.toFixed(1)}s / ${r.baseline.seconds.toFixed(1)}s; ${r.regional.withdrew}% / ${r.baseline.withdrew}% left`);
+    }
+  } else if (args.includes('--ai')) {
     const out = runStyles({ seeds, pilots });
     if (json) console.log(JSON.stringify({ seeds, styles: out }, null, 2));
     else {

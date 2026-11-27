@@ -1833,6 +1833,7 @@
           tradeAction(() => T.buyGear(c, sid, id));
           if (it.slot) message(`Bought ${it.name} — equip it from Character & gear.`);
         };
+        if (it.region) row.append(el('small', { className: 'compare muted', textContent: 'Made here' }));
         if (it.slot === 'weapon') row.append(el('small', { className: 'compare muted', textContent: CL.gear.compare(c, id, c.equipment.weapon) }));
         row.append(...findingRows(findings, 'span'));
         return row;
@@ -2504,6 +2505,19 @@
   /** A troop's small figure (P10-G5): in the recruit screens, the troop tree and the soldiers' cards. */
   const troopImg = (id, side, cls = 'troopFig') => el('img', { className: cls, src: CL.gfx.ui.troopUrl(id, side), alt: '' });
 
+  /** The local patterns a known troop can point you to. */
+  function regionalGear(t) {
+    return (t.regionalGear || []).map((id) => {
+      const it = CL.content.item(id);
+      const towns = CL.trade.gearTowns(id).map((place) => place.name);
+      if (!towns.length) return null;
+      const button = el('button', { type: 'button', textContent: it.name, ariaExpanded: 'false' });
+      const info = el('p', { className: 'muted hidden', textContent: `Sold at ${towns.join(' and ')}.` });
+      button.onclick = () => button.setAttribute('aria-expanded', String(!info.classList.toggle('hidden')));
+      return el('div', {}, button, info);
+    });
+  }
+
   function soldierCard(s) {
     const g = CL.game;
     const c = CL.campaign;
@@ -2571,6 +2585,7 @@
         stat('captures', r.captures),
         stat('crowns paid', r.wagesPaid),
       ),
+      ...regionalGear(t),
       traitLine(s),
       divisionLine(s),
       el('ul', { className: 'soldierNotes' }, ...s.notes.map((n) => el('li', { textContent: `Day ${P.dayNumber(n.day)}: ${CL.soldiers.noteText(n)}` }))),
@@ -2746,6 +2761,7 @@
         el('span', { textContent: ` · ${n.tier} ${n.role} · HP ${st.hp} · damage ${st.damage} · armour ${st.armor} · wage ${st.wage}/week` }),
         el('div', { className: 'muted', textContent: `${company} · ${ways}` }),
         CL.styles?.card(n.id) ? el('div', { className: 'muted treeStyle', textContent: CL.styles.card(n.id) }) : null, // P11-10, P11-11
+        ...regionalGear(CL.content.troop(n.id)),
         n.count && !n.maxTier ? el('div', { className: 'treeButtons' }, ...typeUpgradeButtons(n.id, list)) : null,
         kids,
       );

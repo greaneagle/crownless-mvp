@@ -18,6 +18,7 @@
     'troops',
     'items',
     'weapon_families', // P11-01 (data/weapons.js)
+    'training', // P11-16: the specialist unlock ids
     'markets',
     'quests',
     'dialogue',
@@ -42,7 +43,7 @@
   ];
 
   /** P9-08: tables a world may leave empty (a sandbox world has no story or walkable town). */
-  const OPTIONAL = ['quests', 'dialogue', 'town_hubs'];
+  const OPTIONAL = ['quests', 'dialogue', 'town_hubs', 'training'];
 
   const raw = () => root.CROWNLESS_CONTENT || {};
 
@@ -160,7 +161,7 @@
     hat: ['brim', 'cap', 'kerchief', 'coif'],
     shield: ['kite', 'round', 'heater', 'wood', 'pavise'],
     // P11-04: a mace head (not the club), a greatsword, the recurve bow and the arbalest (P11-16's regional arms).
-    weapon: ['sword', 'axe', 'greataxe', 'spear', 'pike', 'lance', 'bow', 'crossbow', 'hammer', 'staff', 'club', 'mace', 'greatsword', 'recurve', 'arbalest'],
+    weapon: ['sword', 'axe', 'greataxe', 'longaxe', 'spear', 'pike', 'lance', 'bow', 'crossbow', 'hammer', 'staff', 'club', 'mace', 'greatsword', 'recurve', 'arbalest'],
     hairStyle: ['short', 'long', 'braid', 'bun', 'bald', 'tied'],
     colours: ['tunic', 'legs', 'boots', 'hoodColor', 'capColor', 'hatColor', 'band', 'cloak', 'cloakTrim', 'plume', 'apron', 'hair', 'skin'],
     flags: ['tabard', 'quiver', 'fur', 'pauldrons', 'beard', 'female'],
@@ -237,6 +238,8 @@
         if (!isColour(v)) out.push(`${at}: ${k} must be a colour like '#a59273'`);
       } else if (LOOK.flags.includes(k)) {
         if (typeof v !== 'boolean') out.push(`${at}: ${k} must be true or false`);
+      } else if (k === 'len') {
+        if (!(Number.isFinite(v) && v >= 0.6 && v <= 1.5)) out.push(`${at}: len between 0.6 and 1.5`);
       } else if (k === 'bowSize') {
         if (!(v >= 0.8 && v <= 1.4)) out.push(`${at}: bowSize between 0.8 and 1.4`);
       } else if (k === 'mount') {
@@ -319,6 +322,7 @@
       // P10-09: a woman's line upgrades within itself; a line's women's troop is a woman's, at a share.
       if (t.gender === 'female') for (const u of [t.upgradeTo, t.altUpgradeTo]) if (u && C.troops[u] && C.troops[u].gender !== 'female') err(`troop ${t.id}: a woman's line upgrades into her own line, not ${u}`);
       if (t.women != null && (C.troops[t.women.troop]?.gender !== 'female' || C.troops[t.women.troop].faction !== t.faction || !(t.women.share > 0 && t.women.share < 1))) err(`troop ${t.id}: women needs a woman's troop of its faction and a share between 0 and 1`);
+      if (t.regionalGear != null && !(Array.isArray(t.regionalGear) && t.regionalGear.every((id) => C.items?.[id]?.region))) err(`troop ${t.id}: regionalGear must list regional item ids`);
       if (t.shield && t.role === 'archer') err(`troop ${t.id}: archers carry no shield`);
       // P10-G1: a troop's look, when it has one, is the kit's vocabulary and agrees with the troop. A pack's
       // troop may leave it out: the kit then draws one from its role, reach, shot and shield (figures.js).
@@ -434,6 +438,7 @@
     }
     const SLOTS = ['weapon', 'offhand', 'head', 'body', 'hands', 'feet', 'horse', 'ring', 'ammo']; // P11-02: a quiver or bolt case (none yet); a second weapon is a 'weapon'
     for (const it of Object.values(C.items || {})) {
+      if (it.region != null && (typeof it.region !== 'string' || !it.region.trim())) err(`item ${it.id}: region must be a nonempty key`);
       if (it.slot && !SLOTS.includes(it.slot)) err(`item ${it.id}: unknown slot ${it.slot}`);
       if (it.slot === 'weapon' && !(it.stats?.damage > 0)) err(`item ${it.id}: weapon needs stats.damage`);
       if (it.weight != null && !(Number.isFinite(it.weight) && it.weight >= 0 && it.weight <= 20)) err(`item ${it.id}: weight must be from 0 to 20`); // P11-06: it's carried in battle now

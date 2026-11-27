@@ -35,10 +35,20 @@
     // P11-08: a lance for the hero: its damage comes from the horse's momentum (none standing still).
     war_lance: {id:'war_lance',family:'lance',name:'War Lance',type:'weapon',slot:'weapon',tier:2,rarity:'uncommon',value:90,weight:3,stats:{damage:30},look:{weapon:'lance'},questItem:false},
     knights_sword: {id:'knights_sword',family:'sword',name:"Knight's Sword",type:'weapon',slot:'weapon',tier:3,rarity:'rare',value:260,weight:2,stats:{damage:25},req:{skills:{one_handed:3}},look:{weapon:'sword',len:1.1},questItem:false},
+    // Regional weapons: local stock and high loot. Training ids are reserved for P11-17.
+    knights_lance: {id:'knights_lance',family:'lance',name:"Knight's Lance",type:'weapon',slot:'weapon',tier:3,rarity:'rare',region:'valedorn',value:210,weight:5,stats:{damage:38},req:{skills:{riding:3},training:'lance_couching'},combat:{reach:81,windup:0.26,recovery:0.46,cooldown:{hero:1.08,ai:1.08}},look:{weapon:'lance',len:1.15},questItem:false},
+    valedorn_warbow: {id:'valedorn_warbow',family:'longbow',name:'Valedorn Warbow',type:'weapon',slot:'weapon',tier:3,rarity:'rare',region:'valedorn',value:245,weight:3,stats:{damage:27},req:{str:8,skills:{archery:3}},combat:{ranged:{range:295,maxRange:460,projectileSpeed:295,cooldown:1.85,accuracy:0.6,draw:1.2,ammo:16}},look:{weapon:'bow',len:1.1},questItem:false},
+    legion_spear: {id:'legion_spear',family:'spear',name:'Legion Spear',type:'weapon',slot:'weapon',tier:3,rarity:'rare',region:'aurelian',value:125,weight:4,stats:{damage:20},req:{skills:{polearm:2}},combat:{reach:74,arc:52,poise:2,recovery:0.36},look:{weapon:'spear',len:1.05},questItem:false},
+    hrothmark_longaxe: {id:'hrothmark_longaxe',family:'greataxe',name:'Hrothmark Longaxe',type:'weapon',slot:'weapon',tier:3,rarity:'rare',region:'hrothmark',value:275,weight:7,stats:{damage:40},req:{str:8,skills:{two_handed:3},training:'longaxe'},combat:{reach:72,windup:0.42,recovery:0.55,cooldown:{hero:1.27,ai:1.27},shieldPressure:4.2,moveDuringAttack:0.24},look:{weapon:'longaxe'},questItem:false},
+    league_arbalest: {id:'league_arbalest',family:'crossbow',name:'League Arbalest',type:'weapon',slot:'weapon',tier:3,rarity:'rare',region:'vessaro',value:290,weight:7,stats:{damage:36},req:{str:8},combat:{pierce:0.55,ranged:{range:290,maxRange:475,projectileSpeed:500,cooldown:3,accuracy:0.75,draw:3,ammo:12}},look:{weapon:'arbalest'},questItem:false},
+    cliff_bow: {id:'cliff_bow',family:'shortbow',name:'Cliff Bow',type:'weapon',slot:'weapon',tier:3,rarity:'rare',region:'ostrand',value:165,weight:2,stats:{damage:16},req:{skills:{archery:2}},combat:{mounted:'no',ranged:{range:265,maxRange:385,projectileSpeed:280,cooldown:1.7,accuracy:0.65,draw:0.74,ammo:20}},look:{weapon:'bow',len:1.1},questItem:false},
+    flats_pike: {id:'flats_pike',family:'pike',name:'Flats Pike',type:'weapon',slot:'weapon',tier:3,rarity:'rare',region:'saltreach',value:195,weight:6,stats:{damage:22},req:{str:7,skills:{polearm:3},training:'pike_brace'},combat:{reach:89,arc:36,windup:0.35,recovery:0.56,cooldown:{hero:1.08,ai:1.08},moveDuringAttack:0.25},look:{weapon:'pike',len:1.22},questItem:false},
+    compact_horse_bow: {id:'compact_horse_bow',family:'composite',name:'Compact Horse Bow',type:'weapon',slot:'weapon',tier:3,rarity:'rare',region:'free_ports',value:230,weight:1,stats:{damage:13},req:{skills:{archery:2,riding:2},training:'mounted_archery'},look:{weapon:'recurve',len:0.85},questItem:false},
     // Shields (needed to block)
     oak_shield: {id:'oak_shield',name:'Oak Shield',type:'shield',slot:'offhand',tier:1,rarity:'common',value:25,weight:3,stats:{block:true},look:{shield:'wood'},questItem:false},
     kite_shield: {id:'kite_shield',name:'Kite Shield',type:'shield',slot:'offhand',tier:2,rarity:'uncommon',value:70,weight:4,stats:{block:true,armor:1},look:{shield:'kite'},questItem:false},
     heater_shield: {id:'heater_shield',name:'Iron-Rimmed Heater',type:'shield',slot:'offhand',tier:3,rarity:'rare',value:150,weight:4,stats:{block:true,armor:2},req:{skills:{shield:2}},look:{shield:'heater'},questItem:false},
+    ostrand_kite: {id:'ostrand_kite',name:'Ostrand Kite',type:'shield',slot:'offhand',tier:3,rarity:'rare',region:'ostrand',value:115,weight:2,stats:{block:true,armor:1},req:{skills:{shield:1}},look:{shield:'kite'},questItem:false},
     // Helmets
     leather_cap: {id:'leather_cap',name:'Leather Cap',type:'armor',slot:'head',tier:1,rarity:'common',value:12,weight:1,stats:{armor:1},look:{helmet:'cap'},questItem:false},
     iron_helm: {id:'iron_helm',name:'Iron Helm',type:'armor',slot:'head',tier:2,rarity:'uncommon',value:55,weight:2,stats:{armor:2},look:{helmet:'nasal'},questItem:false},
@@ -63,6 +73,8 @@
     rouncey: {id:'rouncey',name:'Rouncey',type:'horse',slot:'horse',tier:2,rarity:'uncommon',value:120,weight:0,stats:{travel:0.2},mount:{battle:'light',speed:135,accel:0.8,turn:3.2,hp:60,charge:1},req:{skills:{riding:1}},look:{coat:'#8a5a3a',mane:'#2e2119'},questItem:false},
     courser: {id:'courser',name:'Courser',type:'horse',slot:'horse',tier:3,rarity:'rare',value:300,weight:0,stats:{travel:0.35},mount:{battle:'light',speed:165,accel:0.7,turn:2.8,hp:55,charge:1.05},req:{skills:{riding:3}},look:{coat:'#3a2a22',mane:'#1e1612'},questItem:false},
     destrier: {id:'destrier',name:'Destrier',type:'horse',slot:'horse',tier:3,rarity:'rare',value:450,weight:0,stats:{travel:0.15},mount:{battle:'war',speed:140,accel:1.1,turn:2.2,hp:110,charge:1.4},req:{str:7,skills:{riding:3}},look:{coat:'#4a3a30',mane:'#1a1410'},questItem:false},
+    valedorn_warhorse: {id:'valedorn_warhorse',name:'Valedorn Warhorse',type:'horse',slot:'horse',tier:3,rarity:'rare',region:'valedorn',value:490,weight:0,stats:{travel:0.17},mount:{battle:'war',speed:135,accel:1.3,turn:1.85,hp:135,charge:1.55},req:{str:7,skills:{riding:4}},look:{coat:'#62463a',mane:'#251c18'},questItem:false},
+    league_light_horse: {id:'league_light_horse',name:'League Light Horse',type:'horse',slot:'horse',tier:3,rarity:'rare',region:'vessaro',value:290,weight:0,stats:{travel:0.3},mount:{battle:'light',speed:175,accel:0.62,turn:3.4,hp:45,charge:0.9},req:{skills:{riding:3}},look:{coat:'#b08a5a',mane:'#4a3626'},questItem:false},
     // Accessory
     arrow_quiver: {id:'arrow_quiver',name:'Full Quiver',type:'accessory',slot:'ammo',tier:1,rarity:'common',value:20,weight:1,stats:{ammo:12},look:{quiver:true},questItem:false},
     ring_of_roads: {id:'ring_of_roads',name:'Ring of Roads',type:'accessory',slot:'ring',tier:2,rarity:'uncommon',value:40,weight:0,stats:{pathfinding:1},questItem:false},
@@ -73,6 +85,14 @@
     charter_fragment: {id:'charter_fragment',name:'Charter Fragment',type:'quest',slot:null,tier:0,rarity:'quest',value:0,weight:0,stats:{},questItem:true},
     courier_packet: {id:'courier_packet',name:'Courier Packet',type:'quest',slot:null,tier:0,rarity:'quest',value:0,weight:1,stats:{},questItem:true},
     mara_token: {id:'mara_token',name:"Mara's Token",type:'quest',slot:null,tier:0,rarity:'quest',value:0,weight:0,stats:{},questItem:true}
+  };
+
+  // P11-17 will provide the masters and the way to earn these unlocks.
+  C.training = {
+    lance_couching: { id: 'lance_couching' },
+    longaxe: { id: 'longaxe' },
+    pike_brace: { id: 'pike_brace' },
+    mounted_archery: { id: 'mounted_archery' }
   };
 
   // P7-03: the blacksmith's forging (js/blacksmith.js). Each piece of the hero's gear in these slots can
@@ -147,7 +167,18 @@
         { item: 'great_sword', weight: 1 }, // P11-05
         { item: 'hunting_longbow', weight: 1 }, // P11-07
         { item: 'rouncey', weight: 1 },
-        { item: 'ring_of_roads', weight: 1 }
+        { item: 'ring_of_roads', weight: 1 },
+        { item: 'knights_lance', weight: 0.2 },
+        { item: 'valedorn_warbow', weight: 0.2 },
+        { item: 'legion_spear', weight: 0.2 },
+        { item: 'hrothmark_longaxe', weight: 0.2 },
+        { item: 'league_arbalest', weight: 0.2 },
+        { item: 'cliff_bow', weight: 0.2 },
+        { item: 'flats_pike', weight: 0.2 },
+        { item: 'compact_horse_bow', weight: 0.2 },
+        { item: 'ostrand_kite', weight: 0.2 },
+        { item: 'valedorn_warhorse', weight: 0.2 },
+        { item: 'league_light_horse', weight: 0.2 }
       ]
     }
   };

@@ -5387,7 +5387,15 @@ _Expanded 2026-11-27 at 5.11.0 (commit ff54781) by the owner's approval of a gra
 
 ---
 
-### P11-16 · Regional arms (M) — 5.16.0, Specified
+### P11-16 · Regional arms (M) — built on the task branch
+
+**Done (version at merge).**
+- Eight regional weapons, two mounts and one shield. Armouries keep their local stock after a conquest. High-tier loot can also drop the pieces.
+- Soldier cards point to local arms. Debug → Art gallery shows the gear with the longaxe, recurve and arbalest.
+- All eleven pieces won and lost in the paired duel lab (12 seeds per matchup). The longaxe beat the footman in 6.2 s against 24.1 s for the greataxe, and took 31.1 s against the spearman where the greataxe took 5.3 s.
+- Parity (40 seeds): fought wins 100%, 100%, 100%, 100% and 73%. The close and veteran fights are 21 points over the odds. The full numbers are in the change note.
+- All 1,072 Node tests passed on the full rerun. Lint and both browser specs passed on desktop and phone. The phone pass checked Hrothgard and Vessara.
+- Four specialist weapons require training. P11-17 adds the masters.
 
 **Now.** Every town armoury sells the same five weapons and three shields (by tier); realms differ in troops, not gear.
 
