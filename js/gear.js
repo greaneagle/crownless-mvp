@@ -14,7 +14,7 @@
 
   const LOADOUTS = ['primary', 'secondary'];
   /** The findings' codes (data/gear_text.js has a line for each, and no other). */
-  const CODES = ['two_hands', 'shoots', 'unarmed', 'no_second', 'fallback', 'loaner', 'mounted', 'heavy', 'attribute', 'skill', 'training', 'no_weapon', 'load_heavy', 'load_over'];
+  const CODES = ['two_hands', 'shoots', 'unarmed', 'no_second', 'fallback', 'loaner', 'mounted', 'heavy', 'attribute', 'skill', 'training', 'no_weapon', 'load_heavy', 'load_over', 'horse_travel', 'horse_field', 'ride_weapon', 'horse_down', 'lance'];
   /** P11-03: the ways to meet a requirement, the last sentence of its finding (data/gear_text.js too). */
   const FIXES = ['fix_spend', 'fix_level', 'fix_untaught', 'fix_teacher'];
   /** Every line data/gear_text.js has, and no other. */
@@ -119,6 +119,30 @@
     return out.sort((a, b) => nameOf(a.item).localeCompare(nameOf(b.item)));
   }
 
+  // ---- Riding (P11-08; docs/PHASE-11-PLAN.md §10.7) ----
+
+  /** A horse's battle profile (data/items.js `mount`), or null. @param {string | null} id */
+  const mountOf = (id) => item(id)?.mount || null;
+
+  /**
+   * Whether the hero rides in this battle, and if not, why (in words): a horse that can fight, its
+   * requirement met, a field that allows horses, the weapon in hand usable from the saddle, and the
+   * preference (`c.loadout.ride`, chosen on Prepare). @param {any} c @param {any} kit @param {string} which @param {any} map
+   * @returns {{ ride: boolean, reason: string | null, mount: any }}
+   */
+  function rideState(c, kit, which, map) {
+    const horse = kit?.horse || null;
+    const m = mountOf(horse);
+    if (!horse || !m) return { ride: false, reason: null, mount: null };
+    if (m.battle === 'no') return { ride: false, reason: words('horse_travel', { item: nameOf(horse) }), mount: null };
+    if (map?.mounts === false) return { ride: false, reason: words('horse_field', { place: map.mountsWhere || 'this field' }), mount: null };
+    const u = unmet(c, horse);
+    if (u.length) return { ride: false, reason: u[0].text, mount: null };
+    if (!usable(c, kit, which, { mounted: true })) return { ride: false, reason: words('ride_weapon', { item: nameOf(weaponIn(kit, which)) }), mount: null };
+    if (c?.loadout?.ride === false) return { ride: false, reason: null, mount: null }; // chosen: on foot
+    return { ride: true, reason: null, mount: m };
+  }
+
   /** The weapon a loadout holds. @param {any} kit equipment @param {string} which */
   const weaponIn = (kit, which) => (which === 'secondary' ? kit?.weapon2 : kit?.weapon) || null;
 
@@ -187,6 +211,10 @@
     const body = item(kit?.body);
     if (limit != null && body && (body.stats.armor || 0) > limit) out.push(finding('penalty', 'heavy', a.weapon, { item: nameOf(a.weapon) }, { have: body.stats.armor || 0, need: limit }));
     if (context.loaner) out.push(finding('note', 'loaner', a.weapon, { item: nameOf(kit?.weapon), shield: nameOf(kit?.offhand) }));
+    // P11-08: a horse that can't be ridden into battle.
+    if (kit?.horse && mountOf(kit.horse)?.battle === 'no') out.push(finding('note', 'horse_travel', kit.horse, { item: nameOf(kit.horse) }));
+    // P11-08: a lance on foot does next to nothing (its damage is the horse's momentum).
+    if (!context.mounted && w.family.id === 'lance') out.push(finding('penalty', 'lance', a.weapon, { item: nameOf(a.weapon) }));
     // P11-06: the load of everything carried.
     const enc = CL.profile.encumbrance(c, kit);
     if (enc.band.id === 'heavy' || enc.band.id === 'overloaded') out.push(finding('penalty', enc.band.id === 'heavy' ? 'load_heavy' : 'load_over', null, { load: String(enc.load), capacity: String(Math.round(enc.capacity)) }, { have: enc.load, need: Math.round(enc.capacity) }));
@@ -470,5 +498,5 @@
     return 'You carry no second weapon now: battles start with your first.';
   }
 
-  CL.gear = { ammoOf, FIXES, LINES, REQ_KEYS, CLASSES, ALWAYS, reqOf, unmet, meets, unlocks, classOf, ruleProblems, blocked, LOADOUTS, CODES, TEXT_MAX, KINDS, ICONS, KIND_NAMES, LOADOUT_NAMES, words, active, kitFor, check, checkAll, checkItem, usable, bestLoadout, battleLoadout, stops, describe, speedWord, compare, begin, switchWeapon, tick, switching, sanitize, repair };
+  CL.gear = { mountOf, rideState, ammoOf, FIXES, LINES, REQ_KEYS, CLASSES, ALWAYS, reqOf, unmet, meets, unlocks, classOf, ruleProblems, blocked, LOADOUTS, CODES, TEXT_MAX, KINDS, ICONS, KIND_NAMES, LOADOUT_NAMES, words, active, kitFor, check, checkAll, checkItem, usable, bestLoadout, battleLoadout, stops, describe, speedWord, compare, begin, switchWeapon, tick, switching, sanitize, repair };
 })(typeof window !== 'undefined' ? window : globalThis);

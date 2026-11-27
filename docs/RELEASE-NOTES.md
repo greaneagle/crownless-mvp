@@ -1,5 +1,34 @@
 # Crownless — Release Notes
 
+## v5.8.0 — Fighting from the saddle (P11-08) · 2026-11-27
+
+You can ride into battle. With M2's last task (P11-09) still to come, this is the horse half of milestone M2, "Bow and horse".
+
+### New
+- **Ride into battle** on a horse trained for it: the **Rouncey** (light, Riding 1), the **Courser** (the fastest and frailest, Riding 3) or the new **Destrier** (a warhorse: the heaviest, slowest to turn, hardest to bring down, the hardest charge; Strength 7 and Riding 3). A **Nag** only carries you on the road.
+- **Steering a horse:** it turns toward the stick at its own rate and gathers speed while you hold a direction; let go and it slows. At a gallop you ride through foot soldiers and your blow lands harder. Braced spears and squares stop the charge, and the horse rears and is hurt.
+- **The War Lance:** its damage comes from the horse's momentum, next to nothing standing still.
+- **Your horse can be hurt:** half of every blow that lands on you falls on it; if it goes down you are thrown and fight on foot. It is fine after the battle.
+- **Dismount** in the Orders panel (or X): on foot for the rest of the battle, no getting back on.
+- **Where you can't ride:** the walls, a courtyard and the lists; Prepare says whether you will ride, with a choice to fight on foot (remembered), and warns that a company on foot can't keep up with a gallop.
+- **From the saddle:** a sword, axe, mace, spear or lance works; a greatsword and a shortbow less well; a greataxe, pike, longbow or crossbow not at all (you fight on foot with them). A gallop throws a bow's aim.
+- **Riding** now works: a horse turns and gathers speed faster, and a weapon's or bow's penalty from the saddle is smaller. How to Play → **On horseback**.
+
+### Measured
+- Mounted styles are viable and distinct: a lance knight beats foot soldiers and an archer and loses to a rider; a horse archer beats archers and riders and loses to shielded foot. Riding circles round a foe never cuts anyone down (spears and riders kill the circler; otherwise the stall rule ends it).
+- **Riding ahead of a company on foot is costly:** with the hero on a rouncey, the outnumbered skirmish is lost every time (on foot 58%): the hero gallops in alone. For P11-13 (orders that hold) and P11-20.
+
+### Fixed (the night run of 5.7.0)
+- **Armour steadied too much:** mailed soldiers were all but impossible for a sword to interrupt while they still interrupted you, and a company that fought a lot lost far more often. Armour's steadiness is now gentler (mail +0.5, leather +0.25, a gambeson +0.1) and a sword interrupts a little harder.
+- **High ground** let archers shoot further but their arrows still weakened and fell at the usual range: now the flight is longer too.
+- **An arrow** a shield stops wears it down a quarter as much as a sword's blow.
+- **Still open, for the next task:** a siege defended on the walls is lost far too often, the escort's wagon is never saved, and the bots earn less (`docs/PENDING-CHECKS.md`).
+- The screenshot baselines are recorded (and no longer break on a new version number).
+
+### Under the hood
+- Horse items' `mount` (battle, speed, accel, turn, hp, charge), checked; each family's `mounted` use; maps' `mounts: false` (the lists, the courtyard, the walls). `CL.gear.rideState`; `js/combat.js` `mountHero`, `rideHero`, `saddleBlow`, `unhorse`, `dismount`. Companions don't ride yet (P11-11).
+- `tests/mounted.test.js` (10), `tests/browser/mounted.spec.js` (2); the rider and circler pilots; `duel-lab.js --mounted`.
+
 ## v5.7.0 — Bows and crossbows in your hands (P11-07) · 2026-11-27
 
 You can fight as an archer. Every shot now flies by its range, and nothing passes through a target however fast it flies.

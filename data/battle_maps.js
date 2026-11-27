@@ -61,6 +61,8 @@
     tourney_lists: {
       id: 'tourney_lists',
       name: 'The Lists',
+      mounts: false, // P11-08: a bout is fought on foot (P11-19's formats may allow horses)
+      mountsWhere: 'the lists',
       tileset: '16x16',
       ground: { base: '#6f8a4c', patch: { color: '#b49a68', x: 480, y: 275, rx: 300, ry: 150 } },
       decor: [['fence', 90, 90, 52, 37], ['fence', 860, 90, 52, 37], ['fence', 90, 450, 52, 37], ['fence', 860, 450, 52, 37]],
@@ -75,6 +77,8 @@
     greywall_courtyard: {
       id: 'greywall_courtyard',
       name: 'Greywall Courtyard',
+      mounts: false, // P11-08: no horses in a courtyard
+      mountsWhere: 'a courtyard',
       tileset: '16x16',
       ground: { base: '#7a7055', stone: { x: 580, y: 110, w: 330, h: 320, color: '#8d8a80' } },
       decor: [['fence', 120, 120, 52, 37], ['fence', 120, 400, 52, 37], ['stones', 300, 460, 34, 25]],

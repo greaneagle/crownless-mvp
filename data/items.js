@@ -32,6 +32,8 @@
     short_bow: {id:'short_bow',family:'shortbow',name:'Shortbow',type:'weapon',slot:'weapon',tier:1,rarity:'common',value:45,weight:1,stats:{damage:14},look:{weapon:'bow'},questItem:false},
     hunting_longbow: {id:'hunting_longbow',family:'longbow',name:'Hunting Longbow',type:'weapon',slot:'weapon',tier:2,rarity:'uncommon',value:120,weight:2,stats:{damage:20},look:{weapon:'bow'},questItem:false},
     light_crossbow: {id:'light_crossbow',family:'crossbow',name:'Light Crossbow',type:'weapon',slot:'weapon',tier:2,rarity:'uncommon',value:130,weight:4,stats:{damage:26},req:{},look:{weapon:'crossbow'},questItem:false},
+    // P11-08: a lance for the hero: its damage comes from the horse's momentum (none standing still).
+    war_lance: {id:'war_lance',family:'lance',name:'War Lance',type:'weapon',slot:'weapon',tier:2,rarity:'uncommon',value:90,weight:3,stats:{damage:30},look:{weapon:'lance'},questItem:false},
     knights_sword: {id:'knights_sword',family:'sword',name:"Knight's Sword",type:'weapon',slot:'weapon',tier:3,rarity:'rare',value:260,weight:2,stats:{damage:25},req:{skills:{one_handed:3}},look:{weapon:'sword',len:1.1},questItem:false},
     // Shields (needed to block)
     oak_shield: {id:'oak_shield',name:'Oak Shield',type:'shield',slot:'offhand',tier:1,rarity:'common',value:25,weight:3,stats:{block:true},look:{shield:'wood'},questItem:false},
@@ -53,9 +55,14 @@
     boots: {id:'boots',name:'Boots',type:'armor',slot:'feet',tier:1,rarity:'common',value:15,weight:1,stats:{armor:1},look:{boots:'#4a3424'},questItem:false},
     greaves: {id:'greaves',name:'Iron Greaves',type:'armor',slot:'feet',tier:3,rarity:'rare',value:70,weight:3,stats:{armor:2},look:{boots:'#8a939b'},questItem:false},
     // Horses (passive travel bonus and carrying capacity; mounted combat is later)
-    nag: {id:'nag',name:'Nag',type:'horse',slot:'horse',tier:1,rarity:'common',value:35,weight:0,stats:{travel:0.1},look:{coat:'#8a7a66',mane:'#4a3e32'},questItem:false},
-    rouncey: {id:'rouncey',name:'Rouncey',type:'horse',slot:'horse',tier:2,rarity:'uncommon',value:120,weight:0,stats:{travel:0.2},look:{coat:'#8a5a3a',mane:'#2e2119'},questItem:false},
-    courser: {id:'courser',name:'Courser',type:'horse',slot:'horse',tier:3,rarity:'rare',value:300,weight:0,stats:{travel:0.35},look:{coat:'#3a2a22',mane:'#1e1612'},questItem:false},
+    // P11-08 `mount`: a horse in battle: `battle` (no: travel only; light; war), its pace (px/s), the
+    // seconds to full gallop (`accel`), how fast it turns (`turn`, radians a second), its own `hp` (D-P11f)
+    // and how hard its charge lands (`charge`). The dearest isn't best at everything: the courser is the
+    // fastest and frailest, the destrier the heaviest and slowest to turn.
+    nag: {id:'nag',name:'Nag',type:'horse',slot:'horse',tier:1,rarity:'common',value:35,weight:0,stats:{travel:0.1},mount:{battle:'no',speed:115,accel:1.2,turn:2.4,hp:40,charge:0.8},look:{coat:'#8a7a66',mane:'#4a3e32'},questItem:false},
+    rouncey: {id:'rouncey',name:'Rouncey',type:'horse',slot:'horse',tier:2,rarity:'uncommon',value:120,weight:0,stats:{travel:0.2},mount:{battle:'light',speed:135,accel:0.8,turn:3.2,hp:60,charge:1},req:{skills:{riding:1}},look:{coat:'#8a5a3a',mane:'#2e2119'},questItem:false},
+    courser: {id:'courser',name:'Courser',type:'horse',slot:'horse',tier:3,rarity:'rare',value:300,weight:0,stats:{travel:0.35},mount:{battle:'light',speed:165,accel:0.7,turn:2.8,hp:55,charge:1.05},req:{skills:{riding:3}},look:{coat:'#3a2a22',mane:'#1e1612'},questItem:false},
+    destrier: {id:'destrier',name:'Destrier',type:'horse',slot:'horse',tier:3,rarity:'rare',value:450,weight:0,stats:{travel:0.15},mount:{battle:'war',speed:140,accel:1.1,turn:2.2,hp:110,charge:1.4},req:{str:7,skills:{riding:3}},look:{coat:'#4a3a30',mane:'#1a1410'},questItem:false},
     // Accessory
     arrow_quiver: {id:'arrow_quiver',name:'Full Quiver',type:'accessory',slot:'ammo',tier:1,rarity:'common',value:20,weight:1,stats:{ammo:12},look:{quiver:true},questItem:false},
     ring_of_roads: {id:'ring_of_roads',name:'Ring of Roads',type:'accessory',slot:'ring',tier:2,rarity:'uncommon',value:40,weight:0,stats:{pathfinding:1},questItem:false},

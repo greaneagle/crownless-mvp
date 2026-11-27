@@ -362,6 +362,8 @@
 
   CL.units = {
     mounted,
+    charging, // P11-08: the mounted hero rides through foot by the same rule
+    passesThrough,
     FACE_VECTORS,
     BOUNDS,
     proximity,

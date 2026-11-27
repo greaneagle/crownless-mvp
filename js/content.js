@@ -440,6 +440,12 @@
       if (C.weapon_families?.[it.id]) err(`item ${it.id}: an item's id can't be a weapon family's (a troop's weapon names either)`); // P11-05
       if (it.combat != null) for (const e of checkCombat(it.combat, `item ${it.id}: combat`, true)) err(e);
       for (const e of checkItemLook(it, C)) err(e); // P11-04
+      // P11-08: a horse's battle profile.
+      if (it.mount != null) {
+        const m = it.mount;
+        if (it.slot !== 'horse') err(`item ${it.id}: only a horse has a mount`);
+        else if (!['no', 'light', 'war'].includes(m.battle) || !(m.speed >= 60 && m.speed <= 260) || !(m.accel > 0 && m.accel <= 4) || !(m.turn > 0 && m.turn <= 8) || !(Number.isInteger(m.hp) && m.hp >= 1 && m.hp <= 400) || !(m.charge > 0 && m.charge <= 3)) err(`item ${it.id}: mount needs battle (no, light, war), speed 60–260, accel, turn, hp and charge in range`);
+      }
     }
     // P11-02: the gear check's words (data/gear_text.js): exactly its codes, each a line that fits.
     if (C.gear_text && CL.gear) {

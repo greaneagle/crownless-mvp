@@ -330,3 +330,52 @@ The hero can win a contract as an archer. The crossbow's 2 s reload, standing st
 ### Parity and performance
 
 `parity.js 40` (the masher, a sword): +14, +11, +21, +21 and −4 over the odds (outnumbered 58 against 61; inside the ±8 points of 40 seeds). Every troop's shot now flies by its range and is swept; the outnumbered company's hunters lose a little at the far end. `bench-battle.js 45 --sizes 200 --archers` (two in five shooting on each side): 3.30 ms a frame (P11-00's mixed battle 3.19).
+
+## On horseback (5.8.0, P11-08)
+
+### Mounted styles (`duel-lab.js 20 --mounted`, the open field): win % (the rider pilot / the circler)
+
+| Style | Looter | Footman | Spearman | Hunter | Rider |
+|---|---|---|---|---|---|
+| Lance knight (war lance, destrier, mail) | 100 / 0 | 100 / 0 | 100 / 0 | 100 / 0 | **5** / 0 |
+| Sword rider (arming sword, kite, rouncey) | 100 / 0 | 100 / 0 | 100 / 0 | 100 / 0 | **15** / 0 |
+| Horse archer (shortbow, rouncey) | 70 / 0 | **0** / 0 | **5** / 0 | 100 / 0 | 80 / 5 |
+
+Viable and distinct: the knight and the sword rider beat foot and archers and lose to riders; the horse archer beats archers and riders and loses to shielded foot. The circler never cuts anyone down: against spears and riders it dies; against the rest no blow lands for 45 s and the stall rule ends the bout (the opponent slips away).
+
+### Against a braced line (20 seeds, the rider pilot, three of each)
+
+| Style | 3 spearmen | 3 footmen |
+|---|---|---|
+| Lance knight | 85% (37% HP left) | 50% (29%) |
+| Sword rider | 60% (24%) | 0% |
+
+The brace stops and hurts the charge (`tests/mounted.test.js`), but a spearman in melee doesn't brace again, and without a shield it loses the melee that follows; three shield-bearing footmen are the harder wall. For P11-10 (AI that re-braces and holds its spears).
+
+### Parity with a mounted hero (`parity.js 40`, the masher on a rouncey)
+
+| Scenario | Odds | Fought (on foot) |
+|---|---|---|
+| lone-hero | 86 | 100 (100) |
+| small | 89 | 100 (100) |
+| close | 79 | 88 (100) |
+| veterans | 79 | 88 (100) |
+| outnumbered | 61 | **0** (58) |
+
+A hero who gallops at the enemy with a company on foot arrives alone and is cut down (a horse at 135 px/s against soldiers' 90; with a slower horse, 105, 35%). Faster interruption resistance or more of each blow on the horse changed nothing (0 of 20 each); only arriving together does. For P11-13 (a company that keeps pace with its rider) and P11-20; Prepare's line warns meanwhile.
+
+## The night run (2026-11-27, 5.7.0)
+
+### XP pace over a long campaign (`progression.js 360 3`, 98 min under the run's load)
+
+| Style | Seed | L10 | L15 | L20 | Level / XP at day 360 |
+|---|---|---|---|---|---|
+| hands-off | 1 / 2 / 3 | 56 / 56 / 57 | 157 / 150 / 157 | 340 / 281 / 321 | 20 / 57,674 · 20 / 73,464 · 20 / 61,984 |
+| presets | 1 / 2 / 3 | 103 / 114 / 235 | 194 / 198 / 331 | 329 / 325 / – | 20 · 20 · 16 / 31,218 |
+| expert | 1 / 2 / 3 | 73 / 240 / 85 | 157 / 343 / 178 | 288 / – / 324 | 20 · 15 / 28,802 · 20 |
+
+P11-03's curve holds where the company prospers: level 20 between days 281 and 340. The presets and expert bots fought and lost more on 5.7.0 (armour's poise, fixed in 5.8.0), and two of their runs stalled at 15–16.
+
+### Sieges, long runs and the slow suite
+
+`parity.js --siege 30`: storming 70% against odds of 41 (+29), defending 0% against 65 (−65). The 30-year long runs: every invariant held every day except a realm past half the land (seeds 1–3; the same on 5.0.0). The rest, and what was fixed: `docs/PENDING-CHECKS.md` ("Done", "Pending").

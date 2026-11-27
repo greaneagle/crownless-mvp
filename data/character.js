@@ -14,7 +14,7 @@
     polearm: { id: 'polearm', name: 'Polearm', effect: '+3% damage and a little quicker recovery a point with a spear or pike' },
     shield: { id: 'shield', name: 'Shield', effect: 'A shield takes 10% more before its guard breaks, recovers 10% sooner and covers a degree wider each side, a point' },
     archery: { id: 'archery', name: 'Archery', effect: 'From 5.7.0: a steadier aim and a quicker draw with a bow; a crossbow’s aim' },
-    riding: { id: 'riding', name: 'Riding', effect: 'From 5.8.0: fighting from the saddle, and the better horses' },
+    riding: { id: 'riding', name: 'Riding', effect: 'A horse turns 8% and gathers speed 5% faster a point; less lost to a weapon or bow from the saddle; the better horses need it' },
     leadership: { id: 'leadership', name: 'Leadership', effect: 'Five more soldiers in your company a point' },
     tactics: { id: 'tactics', name: 'Tactics', effect: 'Better odds when you simulate a battle' },
     pathfinding: { id: 'pathfinding', name: 'Pathfinding', effect: '+3% map travel speed a point' },
@@ -46,6 +46,8 @@
     ],
     agility: 0.06,
     floor: 0.6,
-    poise: { cloth: 0, rags: 0, gambeson: 0.25, fur: 0.25, leather: 0.5, mail: 1 }
+    // Measured (the night run of 5.7.0): mail at +1 made armoured troops nearly unstaggerable by a sword while
+    // they still staggered the hero, and the Phase 7 exit's company was beaten 38 times in 100 days.
+    poise: { cloth: 0, rags: 0, gambeson: 0.1, fur: 0.1, leather: 0.25, mail: 0.5 }
   };
 })(typeof window !== 'undefined' ? window : globalThis);

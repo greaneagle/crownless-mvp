@@ -118,6 +118,7 @@
         ['ATTACK', 'Space / left click', 'Swing'],
         ['Hold BLOCK', 'Shift / right click', 'Block (a shield, or a two-handed weapon or spear)'],
         ['SWITCH', 'Q', 'Bring your second weapon to hand (if you carry one)'],
+        ['ORDERS → Dismount', 'X', 'Get off your horse (no getting back on)'],
         ['ORDERS → group', '1 / 2 / 3', 'Infantry / Archers / Cavalry'],
         ['ORDERS → order', 'F / H / C', 'Follow / Hold / Charge'],
         ['ORDERS → Rally', 'R', 'Steady the soldiers near you (every 30 s)'],
@@ -153,6 +154,18 @@
         'The game picks the target for you: the nearest foe in front of you with a clear shot, or the one you last shot, shown by a ring of marks under them, and it aims ahead of anyone moving. On a computer you can aim with the mouse pointer instead (Settings); on a phone, a setting lets you drag a finger on the field to aim while the other thumb moves.',
         'A shot flies true to its range and then weakens, and falls at the end of its flight: a shortbow is quick and short, a longbow far and slow to draw, and poor in heavy armour. A crossbow loads itself while you stand still, then a press looses it: slow, but flat, fast, and it goes through some armour. Strength loads it faster; Archery draws a bow faster, aims truer and hits harder.',
         'You have a quiver for each battle (a Full Quiver in your quiver slot adds to it), filled again after: arrows are never bought. Your count is beside your health. When it runs out you draw your other weapon, or fight with your fists if you carry none. Switching weapons loses a draw or a crossbow’s reload.'
+      ]
+    },
+    horseback: {
+      id: 'horseback',
+      stage: 'captain',
+      order: 5.7,
+      title: 'On horseback',
+      body: [
+        'With a horse trained for battle in your horse slot (a Rouncey, a Courser or a Destrier; a Nag only carries you on the road), you ride into battle where the field allows: not onto walls, into a courtyard or in the lists. Prepare says whether you will ride, and lets you choose to fight on foot.',
+        'The stick steers: the horse turns toward it at its own rate and gathers speed while you hold a direction; let go and it slows. At a gallop you ride through foot soldiers, and a blow lands harder; a lance does its damage only from a moving horse. Braced spears and squares stop a charge and hurt the horse and rider.',
+        'Each horse is different: the Courser is the fastest and frailest, the Destrier the heaviest, slowest to turn and hardest to bring down. Half of every blow that lands on you falls on your horse; if it goes down you are thrown and fight on foot (it is fine after the battle). Dismount (Orders, or X) puts you on foot for the rest of the battle: there is no getting back on.',
+        'Some weapons don’t suit the saddle: a greatsword and a shortbow work less well, a greataxe, a pike, a longbow and a crossbow not at all (you fight on foot with them). A gallop throws a bow’s aim. Riding turns and gathers the horse faster and eases those penalties, and the better horses need it.'
       ]
     },
     party: {

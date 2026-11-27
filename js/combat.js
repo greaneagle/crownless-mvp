@@ -37,6 +37,7 @@
     broken: 1.0, // seconds the shield stays down once the guard breaks
     skill: 0.1, // the Shield skill: +10% capacity and recovery a point
     arcPerPoint: 2, // and a degree either side wider a point (from the 120° cover)
+    shot: 0.25, // an arrow or bolt stopped presses a shield a quarter as hard as a sword's blow (measured: the night run of 5.7.0, the walls' defenders' shields broken by volleys)
   };
   const WEAPON_GUARD = { arc: Math.cos(Math.PI / 4), take: 0.45 }; // a 90° guard that lets 45% through
   const PARRY = { window: 0.15 }; // D-P11j, an experiment behind a setting (off): Block raised this soon before a blow
@@ -45,6 +46,10 @@
   const INPUT_BUFFER = 0.1; // GDD §6: a press up to 100 ms before recovery ends still swings
   const DEPLOY_CAP = { infantry: 12, archer: 8, cavalry: 6 };
   // GDD §7: cavalry accelerate toward a target, pass through, and turn for another run.
+  // P11-08 (docs/PHASE-11-PLAN.md §10.7): the hero in the saddle. A horse's pace, gallop and turning are
+  // its own (data/items.js `mount`); Riding turns and gathers it faster and eases a weapon's or a bow's
+  // penalty from the saddle; half of each blow that lands on a mounted hero falls on the horse.
+  const SADDLE = { turnPerRiding: 0.08, accelPerRiding: 0.05, penaltyPerRiding: 0.04, penalty: 0.2, bowDraw: 1.2, gallopSpread: 0.25, horseShare: 0.5, slowest: 0.25, unhorsed: 0.6, lanceStill: 0.15, reared: 0.5, braceWound: 2 };
   const CAVALRY = {
     rampSeconds: 0.8, // from half to full speed while charging straight
     chargeBonus: 1.2, // GDD §6 AttackModifier for a simple cavalry charge (AI only)
@@ -218,6 +223,11 @@
     P.apply(g.hero, heroProfile);
     g.hero.canBlock = heroProfile.canBlock;
     g.hero.guardKind = heroProfile.guardKind; // P11-05: a shield, a weapon guard or none
+    // P11-08: in the saddle when the horse can fight, the field allows it, the weapon can be used from it
+    // and you chose to ride; said when you can't.
+    const rides = CL.gear.rideState(CL.campaign, kit, lo.which, g.battleMap);
+    if (rides.ride) mountHero(g.hero, kit.horse, rides.mount);
+    else if (rides.reason) CL.ui.message(rides.reason);
     CL.gear.begin(g, CL.campaign, kit, lo.which);
     if (lo.message) CL.ui.message(lo.message);
     g.hero.face = 'right';
@@ -538,10 +548,10 @@
    * (more with the Shield skill) the guard breaks: the shield goes down for a moment and any windup is
    * lost. The pressure drains while the shield is down (`tickTimers`).
    */
-  function press(u, source) {
+  function press(u, source, shot = false) {
     const g = game();
     const skill = 1 + SHIELD.skill * (P.of(u)?.shieldSkill || 0);
-    u.press = (u.press || 0) + (P.of(source)?.shieldPressure ?? 1);
+    u.press = (u.press || 0) + (shot ? SHIELD.shot : (P.of(source)?.shieldPressure ?? 1));
     if (u.press < SHIELD.capacity * skill) return false;
     u.press = 0;
     u.guard = false;
@@ -587,7 +597,7 @@
     if (d > 0.5) push(target, source.x, source.y, d);
   }
 
-  function hit(target, raw, source) {
+  function hit(target, raw, source, shot = false) {
     const g = game();
     if (!target.alive) return null;
     if (target === g.hero && g.godMode) return 'blocked'; // debug panel
@@ -604,8 +614,8 @@
     if (guard === 'shield' && source && inArc(target, source, blockArc(target))) {
       sound('block', target, source);
       g.effects.push({ x: target.x, y: target.y - 17, t: 0.2, color: '#f6daa6', kind: 'block' });
-      if (source.role === 'hero') feedback('blocked', 'Blocked');
-      press(target, source);
+      if (source.role === 'hero' && !shot) feedback('blocked', 'Blocked');
+      press(target, source, shot);
       return 'blocked';
     }
     // Shield cover (V2-08a, owner idea): a raised shield beside the target, on its shield side, takes a
@@ -614,7 +624,7 @@
     if (cover) {
       sound('block', cover, source);
       g.effects.push({ x: cover.x, y: cover.y - 17, t: 0.2, color: '#f6daa6', kind: 'block' });
-      press(cover, source);
+      press(cover, source, shot);
       return 'blocked';
     }
     // P11-05: a weapon guard takes part of a frontal blow, in a narrower arc, and isn't interrupted.
@@ -624,7 +634,14 @@
       g.effects.push({ x: target.x, y: target.y - 17, t: 0.15, color: '#e8eef2', kind: 'block' });
     }
     if (g.practice && g.practice.firstHit == null) g.practice.firstHit = g.t; // camera test: time to contact
-    target.hp = Math.max(0, target.hp - mitigate(CL.traits.blow(raw, source, target), target.armor, P.of(source)?.pierce || 0)); // traits (P7-07); P11-06: pierce
+    const dealt = mitigate(CL.traits.blow(raw, source, target), target.armor, P.of(source)?.pierce || 0); // traits (P7-07); P11-06: pierce
+    if (target.mounted && target.steed) {
+      // P11-08 (D-P11f): half of it falls on the horse; if the horse falls, the rider is thrown.
+      const horse = Math.round(dealt * SADDLE.horseShare);
+      target.steed.hp = Math.max(0, target.steed.hp - horse);
+      target.hp = Math.max(0, target.hp - (dealt - horse));
+      if (!target.steed.hp) unhorse(target, true);
+    } else target.hp = Math.max(0, target.hp - dealt);
     if (source && !inArc(target, source, ARC.block)) target.flankedAt = g.t; // hit from the flank or behind (morale, V2-08b)
     if (source && source.team !== target.team) {
       if (!target.hitBy) target.hitBy = new Set();
@@ -959,6 +976,97 @@
     g.enemyLine = foot.length > 1 && !swarm ? { x: foot.reduce((n, e) => n + e.x, 0) / foot.length, y: foot.reduce((n, e) => n + e.y, 0) / foot.length } : null;
   }
 
+  /** P11-08: put the hero on their horse for this battle. */
+  function mountHero(h, horseId, m) {
+    const look = CL.gfx?.fig?.itemLook?.(horseId) || {};
+    Object.assign(h, { mounted: true, mount: { coat: look.coat || '#8a5a3a', mane: look.mane || '#2e2119' }, footSpeed: h.speed, heading: { up: -Math.PI / 2, down: Math.PI / 2, left: Math.PI, right: 0 }[h.face] ?? 0, momentum: 0 });
+    h.steed = { id: horseId, ...m, maxhp: m.hp };
+    h.speed = m.speed;
+  }
+
+  /** P11-08: off the horse, for the rest of the battle (no remount, D-P11k): thrown (a stagger) or by choice. */
+  function unhorse(h, thrown) {
+    const g = game();
+    if (!h.mounted) return false;
+    h.mounted = false;
+    h.momentum = 0;
+    h.overrun = 0;
+    h.speed = h.footSpeed || h.speed;
+    if (thrown) {
+      h.swing = null;
+      h.staggeredAt = g.t;
+      h.attackCooldown = Math.max(h.attackCooldown, SADDLE.unhorsed);
+      g.effects.push({ x: h.x, y: h.y - 26, t: 0.35, color: '#efe4c4', kind: 'stagger' });
+      sound('down', h);
+      CL.ui.message(CL.gear.words('horse_down', { item: CL.content.item(h.steed.id).name }));
+    } else CL.ui.message('You dismount: you fight on foot');
+    CL.ui.gearButtons?.();
+    return true;
+  }
+
+  /** P11-08: Dismount (Orders, or X): no remount in a battle. */
+  function dismount() {
+    const g = game();
+    if (g.mode !== 'battle' || !g.hero?.alive) return false;
+    return unhorse(g.hero, false);
+  }
+
+  /**
+   * P11-08: steering a horse: the stick sets a heading the horse turns toward at its turning rate, and
+   * holding a direction gathers speed (a light touch turns it, letting go slows it). It rides through
+   * foot at a gallop, as cavalry do, and braced spears stop it.
+   */
+  function rideHero(h, x, y, dt) {
+    const g = game();
+    const S = h.steed;
+    const riding = CL.character.skill('riding', CL.campaign);
+    const turn = S.turn * (1 + SADDLE.turnPerRiding * riding);
+    const accel = S.accel / (1 + SADDLE.accelPerRiding * riding);
+    if (x || y) {
+      const want = Math.atan2(y, x);
+      let d = want - h.heading;
+      while (d > Math.PI) d -= Math.PI * 2;
+      while (d < -Math.PI) d += Math.PI * 2;
+      h.heading += Math.max(-turn * dt, Math.min(turn * dt, d));
+      // Turning hard sheds a little speed; going straight gathers it.
+      h.momentum = Math.max(0, Math.min(1, h.momentum + (Math.abs(d) < 0.6 ? dt / accel : -dt / (accel * 2))));
+    } else h.momentum = Math.max(0, h.momentum - dt / (accel * 0.7));
+    const speed = h.momentum;
+    const brace = CL.groups.braceAgainst(g, h, g.enemies, CAVALRY.chargeMomentum);
+    if (brace) {
+      // A braced spear stops the charge (as anyone's), and the horse rears: the blow is lost and the
+      // horse takes a wound by how fast it hit the spears (AI riders: P11-10).
+      h.swing = null;
+      h.attackCooldown = Math.max(h.attackCooldown, SADDLE.reared);
+      h.staggeredAt = g.t;
+      if (h.mounted && h.steed) {
+        h.steed.hp = Math.max(0, h.steed.hp - Math.round(brace.damage * SADDLE.braceWound * speed * (h.steed.charge || 1)));
+        if (!h.steed.hp) unhorse(h, true);
+      }
+      return;
+    }
+    if (h.momentum < 0.01 && !(x || y)) return;
+    const old = h.speed;
+    h.speed = S.speed * (SADDLE.slowest + (1 - SADDLE.slowest) * h.momentum);
+    move(h, Math.cos(h.heading), Math.sin(h.heading), dt);
+    h.speed = old;
+    if (h.momentum >= CAVALRY.chargeMomentum && !h.gallopHeard) {
+      h.gallopHeard = true;
+      sound('horse', h);
+    } else if (h.momentum < CAVALRY.chargeMomentum) h.gallopHeard = false;
+  }
+
+  /** P11-08: a blow from the saddle: a charge lands harder, a lance by momentum alone, a weapon with a penalty less. */
+  function saddleBlow(h) {
+    const S = h.steed;
+    const fam = P.of(h)?.family;
+    const use = CL.content.table('weapon_families')[fam]?.mounted || 'yes';
+    const riding = CL.character.skill('riding', CL.campaign);
+    const pen = use === 'penalty' ? 1 - SADDLE.penalty * Math.max(0, 1 - SADDLE.penaltyPerRiding * riding) : 1;
+    const charge = fam === 'lance' ? (SADDLE.lanceStill + (1 - SADDLE.lanceStill) * h.momentum) * S.charge * 1.5 : h.momentum >= CAVALRY.chargeMomentum ? CAVALRY.chargeBonus * S.charge : 1;
+    return pen * charge;
+  }
+
   /**
    * Record an attack press so a tap during late recovery is not lost. P11-05: the window is measured to
    * when the hero is next ready (the swing's end or the cooldown, whichever is later): a press up to
@@ -986,13 +1094,14 @@
     // GDD §6: blocking needs a shield equipped; P11-05: or a weapon that guards (two-handed, a spear).
     if (blockInput && !g.blockWasHeld) g.blockPressedAt = g.t; // for the parry experiment (D-P11j)
     g.blockWasHeld = blockInput;
-    h.guard = h.alive && blockInput && guardOf(h) !== 'none' && !isCommitted(h) && !drawing && !broken(h);
+    h.guard = h.alive && blockInput && guardOf(h) !== 'none' && !(h.mounted && guardOf(h) === 'weapon') && !isCommitted(h) && !drawing && !broken(h);
     if (g.attackQueuedAt !== null && g.t > (g.attackQueuedUntil ?? g.attackQueuedAt + INPUT_BUFFER)) g.attackQueuedAt = null;
     if (!h.alive) return;
     // P11-06: a loaded hero takes a moment to reach full pace (the band's ramp, less with Agility).
     const ramp = P.of(h)?.ramp || 0;
     h.walkFor = x || y ? (h.walkFor || 0) + dt : 0;
-    if (x || y) {
+    if (h.mounted) rideHero(h, x, y, dt); // P11-08
+    else if (x || y) {
       const old = h.speed;
       if (ramp > 0) h.speed *= Math.min(1, 0.4 + (0.6 * h.walkFor) / ramp);
       if (h.guard) h.speed *= GUARD_SPEED;
@@ -1011,6 +1120,7 @@
       if (!drawing) heroShoot(h, dt, Boolean(g.attackHeld || k.Space), Boolean(x || y));
       return;
     }
+    if (h.mounted) h.chargeBonus = saddleBlow(h); // P11-08: set as the swing starts (resolveSwing reads it)
     if (wantsAttack && !h.guard && !drawing && startAttack(h)) g.attackQueuedAt = null;
   }
 
@@ -1020,8 +1130,10 @@
    */
   function loose(u, dx, dy, damage) {
     const r = u.ranged;
-    const far = r.maxRange ?? r.range * FLIGHT.far;
-    game().arrows.push({ x: u.x, y: u.y - 20, dx, dy, speed: r.projectileSpeed, team: u.team, life: far / r.projectileSpeed + 0.2, source: u, damage, flown: 0, range: r.range, far });
+    // High ground (P7-11: a quarter further) lengthens the flight too, not only when they may shoot.
+    const k = u.role === 'hero' ? 1 : Math.max(1, CL.formations.rangeOf(u) / (r.range || 1));
+    const far = (r.maxRange ?? r.range * FLIGHT.far) * k;
+    game().arrows.push({ x: u.x, y: u.y - 20, dx, dy, speed: r.projectileSpeed, team: u.team, life: far / r.projectileSpeed + 0.2, source: u, damage, flown: 0, range: r.range * k, far, shot: true });
   }
 
   /** The units of a list in a grid of cells (P9-B1's idea), for the shots' swept test. */
@@ -1103,7 +1215,7 @@
       if (best) {
         const past = Math.max(0, a.flown - (a.range ?? Infinity));
         const span = Math.max(1, (a.far ?? Infinity) - (a.range ?? 0));
-        hit(best, a.damage * (1 - (1 - FLIGHT.farDamage) * Math.min(1, past / span)), a.source);
+        hit(best, a.damage * (1 - (1 - FLIGHT.farDamage) * Math.min(1, past / span)), a.source, true);
         a.life = 0;
         continue;
       }
@@ -1199,7 +1311,8 @@
         if (h.drawT >= r.draw - 1e-9) return shootNow(h); // let go at full draw: it flies
         g.looseQueued = true; // let go early (a tap): it flies as soon as the draw is full
       }
-      if (held || g.looseQueued) h.drawT = Math.min(r.draw, (h.drawT || 0) + dt);
+      const pace = h.mounted && CL.content.table('weapon_families')[P.of(h)?.family]?.mounted === 'penalty' ? 1 / SADDLE.bowDraw : 1; // P11-08: a bow with a penalty draws slower from the saddle
+      if (held || g.looseQueued) h.drawT = Math.min(r.draw, (h.drawT || 0) + dt * pace);
       else h.drawT = Math.max(0, (h.drawT || 0) - dt * 2); // eased off
       if (g.looseQueued && h.drawT >= r.draw - 1e-9) return shootNow(h);
     }
@@ -1236,7 +1349,9 @@
       to = { x: h.x + f[0] * 100, y: h.y + f[1] * 100 };
     }
     let [dx, dy] = normalize(to.x - h.x, to.y - h.y);
-    if (Math.random() > r.accuracy) {
+    // P11-08: from the saddle a gallop throws the aim (Riding steadies it).
+    const gallop = h.mounted ? SADDLE.gallopSpread * h.momentum * Math.max(0, 1 - SADDLE.penaltyPerRiding * CL.character.skill('riding', CL.campaign)) : 0;
+    if (Math.random() > r.accuracy - gallop) {
       const off = rand(MISS_ANGLE[0], MISS_ANGLE[1]) * (Math.random() < 0.5 ? -1 : 1);
       [dx, dy] = [dx * Math.cos(off) - dy * Math.sin(off), dx * Math.sin(off) + dy * Math.cos(off)];
     }
@@ -1368,6 +1483,10 @@
   }
 
   CL.combat = {
+    SADDLE,
+    dismount,
+    unhorse,
+    saddleBlow,
     FLIGHT,
     BOW,
     sweep,

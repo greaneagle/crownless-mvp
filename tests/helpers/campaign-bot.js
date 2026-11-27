@@ -105,6 +105,11 @@ function makeBot(CL, { log = () => {}, style = 'hands-off', roam = false } = {})
     for (const id of CL.trade.gearStock(sid)) {
       const it = CL.content.item(id);
       if (!it.slot || score(id) <= score(camp.equipment[it.slot])) continue;
+      // As a player would, it reads the gear check first (P11-03, P11-06): nothing it can't use yet, nothing
+      // that would leave it heavy or too heavy (found by the night run of 5.7.0: an unmet Greataxe meant
+      // fists, and mail overloaded the hero).
+      const findings = CL.gear.checkItem(camp, id);
+      if (CL.gear.stops(findings) || findings.some((f) => f.code === 'load_heavy' || f.code === 'load_over')) continue;
       const reserve = U().weeklyWages(camp) * 2 + 8 * U().dailyRations(camp) + 80;
       if (camp.gold < CL.trade.gearBuyPrice(camp, id) + reserve) continue;
       if (CL.trade.buyGear(camp, sid, id).ok && CL.character.equip(id)) stats.gearBought++;

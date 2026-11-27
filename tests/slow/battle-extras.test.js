@@ -8,7 +8,10 @@ const { run } = require('../../scripts/extras');
 test('battle extras: each effect, on and off, makes a measurable difference', () => {
   const out = Object.fromEntries(run({ seeds: 20 }).map((r) => [r.effect, r]));
   for (const r of Object.values(out)) assert.equal(r.on.unfinished + r.off.unfinished, 0, `${r.effect}: every fight ends`);
-  const { 'wall-melee': wm, 'wall-arrows': wa, wedge, hill, ford, wagon } = out;
+  const { 'wall-melee': wm, 'wall-arrows': wa, wedge, ford, wagon } = out;
+  // P11-08: the knoll's edge is about 8 points at win rates near 20% since Phase 11's faster melee; 20
+  // seeds can't tell it from noise (the night run of 5.7.0 read 25% against 30%), so it gets 40.
+  const [hill] = run({ seeds: 40, only: ['hill'] });
   assert.ok(wm.on.lost < wm.off.lost, `the shield wall loses fewer soldiers to Reavers (${wm.on.lost} vs ${wm.off.lost})`);
   assert.ok(wa.on.win > wa.off.win && wa.on.lost < wa.off.lost, `the shield wall stands up to crossbows (${wa.on.win}% vs ${wa.off.win}%)`);
   // P9-B2: against 8 at once (its scenario since 3.2.0). It loses more men than loose ranks, and against

@@ -1,6 +1,6 @@
 # Crownless — Project Status & Roadmap
 
-_Last reviewed: 2026-11-26 · Build 5.7.0 · Spec: `Crownless_MVP_GDD_v1.md` (engine overridden: HTML5 Canvas + classic JS, no bundler, GitHub Pages). §1 below is the picture at 0.3, kept as the record; the current state is in the plan's lines in §2 and in `docs/PHASE-10-VALIDATION.md`._
+_Last reviewed: 2026-11-26 · Build 5.8.0 · Spec: `Crownless_MVP_GDD_v1.md` (engine overridden: HTML5 Canvas + classic JS, no bundler, GitHub Pages). §1 below is the picture at 0.3, kept as the record; the current state is in the plan's lines in §2 and in `docs/PHASE-10-VALIDATION.md`._
 
 This replaces the opencode-swarm plan (`.swarm/plan.md`, removed). The gate structure (A→E) is kept from the GDD; the task list is condensed and re-ordered around what the code actually needs.
 
@@ -191,6 +191,7 @@ From the owner's v2.0 design (`Crownless_v2_0_Feature_and_Systems_Design_Part_1.
   - ✅ (3.7.0) P9-01 realms as organisations: a treasury per realm with its book, money only between real accounts; laws (a crown or a league, the crown's share, the fief cap, who makes war); a marshal, a steward and a chancellor
   - ✅ (3.6.0) P9-L1 the lords' loose ends: lords ransomed by their own kin from their fiefs; men lent between kin; land-hungry lords pressing claims and riding to sieges unsummoned; the escort petition; a lost fort back for a season's service
   - **Phase 9, "Kingdoms & Houses":** first, battles and the company at a bigger scale (owner, 2026-11-22): the battle size measured on the phone and raised to 100–150, adjustable (P9-B1); big armies sharing the field by size, both sides reinforcing (P9-B2); a company of up to 200 (P9-B3); command in layers, from none to live command on the field, with divisions and formations (P9-B4); the walls' assault re-fitted for armies (P9-B5). Then the lords' loose ends (P9-L1), realms, diplomacy and treaties, founding a kingdom, rebellion and deposition, armies, houses and marriage, modding and a second world.
+  - ✅ (5.8.0) P11-08 fighting from the saddle: horses in battle (momentum, turning, the charge, the lance, their own HP and unhorsing), where you can ride, dismount, bows from the saddle, Riding, the Destrier and the War Lance
   - ✅ (5.7.0) P11-07 bows and crossbows in your hands: hold to draw, release to loose, assisted aim with lead (manual by pointer or a phone setting), a quiver per battle, flight by range with swept hits, three bows and a quiver
   - ✅ (5.6.0) P11-06 armour, weight and movement: a load against a capacity from Strength in four bands (walk, start, recovery, draw), Agility's relief, armour's poise, the mace's pierce, the sheet's load bar
   - ✅ (5.5.0) P11-05 melee rhythm and defence (M1): each family's rhythm, whiffs, targets, stagger and its limits, shield pressure and the Shield skill, the weapon guard, honest guard reactions, the hero on everyone's body rules, a spear, greatsword and greataxe, feedback, a parry experiment

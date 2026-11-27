@@ -2224,6 +2224,7 @@
    */
   function gearButtons() {
     const g = CL.game;
+    $('#dismountBtn').classList.toggle('hidden', !g.hero?.mounted); // P11-08: only while riding
     $('#blockBtn').disabled = (g.hero?.guardKind || (g.hero?.canBlock === false ? 'none' : 'shield')) === 'none'; // P11-05: a weapon guard blocks too
     const L = g.loadout;
     const sw = $('#switchBtn');
@@ -2244,6 +2245,24 @@
     if (ic) line.prepend(ic);
     const box = el('div', { id: 'prepGear', className: 'setNote' }, line);
     box.append(...findingRows(CL.gear.check(c, c.equipment, { which: lo.which }), 'p'));
+    // P11-08: on horse or foot this battle, and the choice (remembered).
+    if (c.equipment.horse && CL.gear.mountOf(c.equipment.horse)?.battle !== 'no') {
+      const map = CL.game.prep?.map;
+      const st = CL.gear.rideState({ ...c, loadout: { ...c.loadout, ride: true } }, c.equipment, lo.which, map);
+      const name = CL.content.item(c.equipment.horse).name;
+      // Measured (P11-08): a hero who gallops ahead of a company on foot arrives alone; say so.
+      const foot = c.roster.length && c.roster.every((s) => CL.content.troop(s.troop)?.role !== 'cavalry');
+      const words = !st.ride ? st.reason : c.loadout.ride === false ? `You will fight on foot (your ${name} waits with the baggage).` : `You will ride your ${name}.${foot ? ' Your soldiers are on foot: gallop ahead and you arrive alone.' : ''}`;
+      const row = el('p', { className: 'rideRow', textContent: words });
+      if (st.ride) {
+        row.append(' ', el('button', { type: 'button', id: 'prepRide', textContent: c.loadout.ride === false ? 'Ride' : 'Fight on foot', onclick: () => {
+          c.loadout.ride = c.loadout.ride === false;
+          CL.save.write();
+          renderPrep();
+        } }));
+      }
+      box.append(row);
+    }
     return box;
   }
 

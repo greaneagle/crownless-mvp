@@ -141,6 +141,7 @@
         ui.showSelectedGroup(game.group);
       };
     }
+    $('#dismountBtn').onclick = () => CL.combat.dismount(); // P11-08
     $('#rallyBtn').onclick = () => {
       CL.morale.rally(game);
       ui.showSelectedGroup(game.group);
@@ -241,6 +242,7 @@
       if (g.mode === 'battle' && e.code === 'KeyZ' && !e.repeat && CL.camera.scrolls(g)) CL.camera.toggleZoom(g); // W-03
       if (g.mode === 'battle' && e.code === 'KeyR' && !e.repeat) CL.morale.rally(g); // V2-08b
       if (g.mode === 'battle' && e.code === 'KeyQ' && !e.repeat) CL.gear.switchWeapon(g); // P11-02: the other weapon to hand
+      if (g.mode === 'battle' && e.code === 'KeyX' && !e.repeat) CL.combat.dismount(); // P11-08: off the horse (no remount)
       const o = KEY_ORDERS[e.code];
       if (o) CL.combat.order(o[0], o[1]);
       if (g.mode === 'town' && ['Space', 'Enter', 'KeyE'].includes(e.code) && !e.repeat) {

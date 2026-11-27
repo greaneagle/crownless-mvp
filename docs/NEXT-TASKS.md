@@ -4047,7 +4047,7 @@ The aim: easy to fight, rewarding to fight well, meaningful to command. The play
 | P11-05 | Melee rhythm and defence | L | 5.5.0 | ✅ Done (M1 played: good) |
 | P11-06 | Armour, weight and movement | M | 5.6.0 | ✅ Done |
 | P11-07 | Bows and crossbows in your hands | L | 5.7.0 | ✅ Done |
-| P11-08 | Fighting from the saddle | L | 5.8.0 | Specified |
+| P11-08 | Fighting from the saddle | L | 5.8.0 | ✅ Done |
 | P11-09 | Controls, feedback and teaching | M | 5.9.0 | Specified |
 | P11-10 | Fighters who think: individual AI and styles | L | 5.10.0 | Specified |
 | P11-11 | Troops by their weapons | M–L | 5.11.0 | Specified |
@@ -4721,7 +4721,7 @@ The aim: easy to fight, rewarding to fight well, meaningful to command. The play
 
 ---
 
-### P11-08 · Fighting from the saddle (L) — 5.8.0, Specified — **Milestone M2 (with P11-09)**
+### P11-08 · Fighting from the saddle (L) — 5.8.0, ✅ Done — **Milestone M2 (with P11-09)**
 
 **Now.** The horse slot speeds the map only; AI cavalry ramp, charge (×1.2), ride through foot, wheel; braced spears and squares stop a charge in front; `u.mounted` exists from P11-04 (cavalry troops only).
 
@@ -4784,9 +4784,25 @@ The aim: easy to fight, rewarding to fight well, meaningful to command. The play
 - **Explain:** "On horseback".
 - **Not here:** AI against riders (P11-10).
 
+**Done (5.8.0).**
+- **Mounts** (`data/items.js` `mount`, checked by `content.validate`): Nag (`no`: travel only), Rouncey (light, 135 px/s, 0.8 s to a gallop, turn 3.2 rad/s, 60 HP, charge 1; Riding 1), Courser (light, 165, 0.7, 2.8, 55, 1.05; Riding 3), **Destrier** (new: war, 140, 1.1, 2.2, 110, 1.4; Strength 7 and Riding 3; 450 crowns, the bigger towns). The **War Lance** (`war_lance`, tier 2, 90: the lance family's Riding 2).
+- **Where:** `rideState` (`js/gear.js`): a battle horse, its requirement met, a field with horses (`mounts: false` on the lists, Greywall's courtyard and `arena.assault`'s walls, with `mountsWhere` for the words), the weapon in hand usable from the saddle (each family's `mounted`: yes / penalty / no), and `loadout.ride` (Prepare's Ride / Fight on foot, remembered). Each refusal said at the battle's start and on Prepare (codes `horse_travel`, `horse_field`, `ride_weapon`).
+- **Riding** (`js/combat.js` `rideHero`): the stick sets a heading the horse turns toward at its rate (+8% a point of Riding), speed gathers over its `accel` (5% faster a point) while the heading holds and sheds in a hard turn or when let go; 25% of the pace at the least. The gallop's `charging` rides through foot (`CL.units.charging`, `passesThrough`, now exported). Braces stop it (`braceAgainst`, as for cavalry) and the horse rears: the blow lost, 0.5 s, and a wound by the speed it hit them (`SADDLE.braceWound`).
+- **Blows from the saddle** (`saddleBlow`): at a gallop cavalry's ×1.2 × the horse's charge; a lance (0.15 + 0.85 × momentum) × charge × 1.5; a `penalty` weapon −20% (Riding −4% of it a point). A weapon guard can't be raised mounted; a shield can. On foot a lance says "does damage only from a moving horse".
+- **D-P11f:** half of each landed blow on the horse (`steed.hp`); at 0 `unhorse`: thrown (a stagger, 0.6 s), "Your Rouncey is down: you fight on foot". Next battle the horse is whole.
+- **D-P11k:** `dismount` (Orders' "X Dismount", shown only while riding, and X); no remount.
+- **Bows:** a `penalty` bow (the shortbow) draws 20% slower mounted; a gallop throws the aim (−25% × momentum, less with Riding); longbow and crossbow can't be used.
+- **Prepare:** "You will ride your Rouncey." (and, measured below, "Your soldiers are on foot: gallop ahead and you arrive alone.").
+- **Not done:** companions riding (`companion.combat` would need its own mount path: noted for P11-11); remounting (D-P11k).
+- **Measured** (`docs/PHASE-11-VALIDATION.md` "On horseback"): `duel-lab.js 20 --mounted` (the rider and circler pilots); three spearmen and three footmen against a mounted hero; `parity.js 40` with the hero on a rouncey. **Found:** braced spears stop and hurt the hero's charge, but once engaged a spearman doesn't brace again, so three spearmen are easier for a rider than three footmen (AI: P11-10); and a mounted hero gallops ahead of a company on foot and arrives alone: the outnumbered skirmish is lost every time (on foot 58%; a slower horse, 105 px/s, 35%). Recorded for P11-13 (a company that keeps pace with its rider) and P11-20; the Prepare line says so meanwhile. The circler never wins by itself.
+- **Tests:** `tests/mounted.test.js` (10); `tests/browser/mounted.spec.js` (2, desktop and phone). Changed: `items` (the horse ladder by riding and war horses), `requirements` (every skill requirement at once fits the cap's points: the horses' Riding 3 takes it past half). `npm test` 1,035 pass; lint and typecheck clean.
+- **The night run (2026-11-27, on 5.7.0; `docs/PENDING-CHECKS.md`), fixed here:** armour's poise (P11-06) made mailed troops unstaggerable by a sword and the Phase 7 exit's company lost 38 of 70 battles: now cloth 0, gambeson and fur 0.1, leather 0.25, mail 0.5 (was 0.25 / 0.5 / 1), and the sword's stagger 1.3 (was 1.2): 63 won, 20 lost, 20 soldiers; high ground's longer reach now lengthens the arrows' flight (`loose`); a stopped arrow presses a shield 0.25 (`SHIELD.shot`); the campaign bot reads the gear check before buying; `battle-extras` gives the knoll 40 seeds; `look.spec` counts the sheet's eight stats; the visual baselines recorded (with the version labels masked) and kept. Golden battles recorded again on 5.8.0 (the poise). Browser suite 293 passed (the two `look.spec` fixed). **Left open for P11-09:** the siege defence, the escort's wagon, close's simulated gap; the bots' money (P11-20); the runaway realm (inherited, Phase 12).
+
 ---
 
 ### P11-09 · Controls, feedback and teaching (M) — 5.9.0, Specified — **Milestone M2**
+
+**First (the owner's rule: the next task fixes what a run found):** the night run's open items in `docs/PENDING-CHECKS.md` "Pending": the siege defence on the walls (0% fought against odds of 65), the escort's wagon never saved, and close's simulated gap (27 against 25).
 
 **Now.** The battle's right side: Zoom, MAP, ORDERS, BLOCK, ATTACK; joystick left; keys for orders, R rally, Tab/M overview, Z zoom; input clears held buttons on blur (`input.js` 516–517). P11-02 to P11-08 added a switch (temporary Q and button), draw and release, aim, dismount.
 

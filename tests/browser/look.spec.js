@@ -78,8 +78,8 @@ test('the reworked screens: the dialogue box names the speaker and what they are
   await waitMode(page, 'character');
   await expect(page.locator('#overlayTitle')).toHaveText('PARTY');
   await expect(page.locator('.heroCard .who b')).toHaveText('Tester');
-  await expect(page.locator('.statGrid > div')).toHaveCount(7);
-  await expect(page.locator('.statGrid .ico')).toHaveCount(7);
+  await expect(page.locator('.statGrid > div')).toHaveCount(8); // P11-06: the Load line joined them
+  await expect(page.locator('.statGrid .ico')).toHaveCount(8);
   // The panels wear the new frame: a thin gold border on deep navy.
   const look = await page.locator('#overlay .modal').evaluate((m) => getComputedStyle(m).borderTopWidth);
   expect(look).toBe('1px');

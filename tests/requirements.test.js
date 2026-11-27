@@ -27,15 +27,15 @@ test('the budget: the cap is data/character.js’s, levels 1–10 are 5.0.0’s,
   assert.equal(Object.keys(CL.content.table('skills')).length, 10, 'D-P11c: the eight, Two-Handed and Polearm');
   for (let L = 1; L < 10; L++) assert.equal(C.xpToNext(L), Math.round(100 * L ** 1.35), `level ${L} costs what it did`);
   assert.equal(C.xpTotal(10), 8428, 'level 10 comes when it did (P11-00: day 49 to 55)');
-  // The points at the cap: enough for the dearest elite piece in each of the six combat skills' lines
-  // at once, with Phase 12's room (half the points) still free.
+  // The points at the cap: enough for the dearest piece in each of the combat skills' lines at once
+  // (P11-08's horses ask Riding 3: half the cap's points no longer hold them all, the cap's do).
   const pts = C.pointsAt(B.cap);
   assert.deepEqual(plain(pts), { skills: 19, attributes: 10 });
   const items = Object.values(CL.content.table('items')).filter((it) => it.slot);
   const dearest = {};
   for (const it of items) for (const [k, n] of Object.entries(CL.gear.reqOf(it.id)?.skills || {})) dearest[k] = Math.max(dearest[k] || 0, n);
   const all = Object.values(dearest).reduce((a, b) => a + b, 0);
-  assert.ok(all <= Math.floor(pts.skills / 2), `every skill requirement at once (${all}) fits half the cap's ${pts.skills} points`);
+  assert.ok(all <= pts.skills, `every skill requirement at once (${all}) fits the cap's ${pts.skills} points`);
   // Nothing needs more than the cap can give.
   const top = 5 + 1 + pts.attributes;
   for (const it of items) {

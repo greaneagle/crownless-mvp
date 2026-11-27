@@ -20,7 +20,10 @@ test('within a slot (a weapon: within its family), higher tiers cost more and do
   const power = (i) => (i.stats.damage || 0) + (i.stats.armor || 0) + (i.stats.travel || 0) * 10;
   // P11-05 (plan §6.4): weapons of different families trade off reach, tempo and weight against damage,
   // so the ladder is each family's (a greataxe hits harder than a knight's sword, and is slower).
-  const ladders = ['offhand', 'head', 'body', 'hands', 'feet', 'horse'].map((slot) => [slot, bySlot(slot)]);
+  const ladders = ['offhand', 'head', 'body', 'hands', 'feet'].map((slot) => [slot, bySlot(slot)]);
+  // P11-08: horses by what they are for (a warhorse trades travel for the charge).
+  const kindOf = (i) => (i.mount?.battle === 'war' ? 'war' : 'riding');
+  for (const kind of new Set(bySlot('horse').map(kindOf))) ladders.push([`horse (${kind})`, bySlot('horse').filter((i) => kindOf(i) === kind)]);
   for (const fam of new Set(bySlot('weapon').map((i) => i.family))) ladders.push([`weapon (${fam})`, bySlot('weapon').filter((i) => i.family === fam)]);
   for (const [slot, items] of ladders) {
     const ladder = items.sort((a, b) => a.tier - b.tier || a.value - b.value);

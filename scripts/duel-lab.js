@@ -15,6 +15,8 @@
 //                the fees and prizes
 //   --ranged     P11-07: each bow and the crossbow (the archer pilot, and the masher) against foot and a
 //                rider, on the open field; with `--wall`, against a shield wall of three footmen
+//   --mounted    P11-08: a knight (lance and destrier, or sword and rouncey) and a horse archer (shortbow,
+//                rouncey), the rider, archer and circler pilots, against foot, spears, archers and riders
 //   --styles     P11-06: the foot styles of docs/PHASE-11-PLAN.md §10.3 (light duelist, shield infantry,
 //                heavy infantry, spearman, two-hander), each in its own weapon and armour
 //
@@ -38,6 +40,10 @@ const ARMOUR = {
   heavy: { offhand: 'heater_shield', head: 'iron_helm', body: 'mail_hauberk', hands: 'mail_mittens', feet: 'greaves' },
   // P11-06: the styles' own (no shield for the duelist and the two-hander).
   bare: { offhand: null, head: null, body: 'clothing', hands: null, feet: 'boots' },
+  // P11-08: the mounted kits (their horse in the set).
+  knight: { offhand: 'kite_shield', head: 'iron_helm', body: 'mail_hauberk', hands: 'mail_mittens', feet: 'greaves', horse: 'destrier' },
+  lightHorse: { offhand: 'kite_shield', head: 'leather_cap', body: 'gambeson', hands: 'gloves', feet: 'boots', horse: 'rouncey' },
+  horseArcher: { offhand: null, head: 'leather_cap', body: 'gambeson', hands: 'gloves', feet: 'boots', horse: 'rouncey' },
   leather: { offhand: null, head: 'iron_helm', body: 'leather_chest', hands: 'gloves', feet: 'boots' },
 };
 /** P11-06: the foot styles (plan §10.3), each a weapon and an armour set. */
@@ -59,6 +65,7 @@ function game(seed, weapon, armour) {
   c.roster = [];
   c.companions = c.companions || {};
   Object.assign(c.equipment, { weapon, ...ARMOUR[armour] });
+  if (c.equipment.horse) c.character.skills.riding = Math.max(c.character.skills.riding || 0, 1); // P11-08
   // P11-05: what the kit needs (P11-03), given, so each piece is measured as worn (a lab).
   for (const id of Object.values(c.equipment)) {
     const r = id ? CL.gear.reqOf(id) || {} : {};
@@ -224,8 +231,9 @@ if (require.main === module) {
     const opponents = list('--opponents', OPPONENTS);
     const armours = list('--armour', null);
     const ranged = args.includes('--ranged');
-    const kits = ranged ? ['short_bow', 'hunting_longbow', 'light_crossbow'].map((weapon) => ({ weapon, armour: 'light' })) : args.includes('--styles') ? Object.entries(STYLES).map(([style, k]) => ({ ...k, style })) : args.includes('--weapons') ? [...WEAPONS.map((weapon) => ({ weapon, armour: DEFAULT.armour })), ...Object.keys(ARMOUR).filter((a) => a !== DEFAULT.armour).map((armour) => ({ weapon: DEFAULT.weapon, armour }))] : (armours || [DEFAULT.armour]).map((armour) => ({ weapon: DEFAULT.weapon, armour }));
-    const out = runDuels({ seeds, pilots: ranged && !opt('--pilots') ? ['archer', 'masher'] : pilots, opponents: ranged && !opt('--opponents') ? (args.includes('--wall') ? ['footman'] : ['looter', 'footman', 'huscarl', 'hunter', 'rider']) : opponents, kits, field: ranged || args.includes('--field'), wall: args.includes('--wall') });
+    const mounted = args.includes('--mounted');
+    const kits = mounted ? [{ weapon: 'war_lance', armour: 'knight', style: 'lance knight' }, { weapon: 'arming_sword', armour: 'lightHorse', style: 'sword rider' }, { weapon: 'short_bow', armour: 'horseArcher', style: 'horse archer' }] : ranged ? ['short_bow', 'hunting_longbow', 'light_crossbow'].map((weapon) => ({ weapon, armour: 'light' })) : args.includes('--styles') ? Object.entries(STYLES).map(([style, k]) => ({ ...k, style })) : args.includes('--weapons') ? [...WEAPONS.map((weapon) => ({ weapon, armour: DEFAULT.armour })), ...Object.keys(ARMOUR).filter((a) => a !== DEFAULT.armour).map((armour) => ({ weapon: DEFAULT.weapon, armour }))] : (armours || [DEFAULT.armour]).map((armour) => ({ weapon: DEFAULT.weapon, armour }));
+    const out = runDuels({ seeds, pilots: mounted && !opt('--pilots') ? ['rider', 'circler'] : ranged && !opt('--pilots') ? ['archer', 'masher'] : pilots, opponents: mounted && !opt('--opponents') ? ['looter', 'footman', 'spearman', 'hunter', 'rider'] : ranged && !opt('--opponents') ? (args.includes('--wall') ? ['footman'] : ['looter', 'footman', 'huscarl', 'hunter', 'rider']) : opponents, kits, field: ranged || mounted || args.includes('--field'), wall: args.includes('--wall') });
     if (json) console.log(JSON.stringify({ seeds, field: args.includes('--field'), duels: out }, null, 2));
     else {
       console.log(`Duels on the ${args.includes('--field') ? 'open field' : 'tournament ground'}, ${seeds} seeds each`);

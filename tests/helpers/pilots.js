@@ -18,6 +18,10 @@
 //   archer   P11-07: a bow or crossbow in hand: keeps its distance (steps back from anyone closer than
 //            the keep), draws to full (it sees the ring fill) and lets go; a crossbow loads standing still.
 //            With a melee weapon in hand (out of arrows) it fights as the masher.
+//   rider    P11-08: on a horse: rides straight at the nearest foe, strikes in reach, rides on through
+//            and wheels round (the horse's own turning does it); on foot it fights as the masher.
+//   circler  P11-08: rides circles round the nearest foe at a distance and never strikes (circling alone
+//            must not win: archers shoot it, riders catch it, or the stall guard ends the battle).
 
 const STEP = 0.02; // the same step as scripts/parity.js and the campaign bot
 const TIMER = { edge: 4, band: 5, after: 0.1, stale: 1.5 };
@@ -25,7 +29,7 @@ const TURTLE = { threat: 22 }; // px beyond the opponent's reach at which their 
 const PASSIVE = { back: 160, fight: 70 };
 const ARCHER = { keep: 130, close: 70 };
 
-const KINDS = ['masher', 'timer', 'turtle', 'passive', 'archer'];
+const KINDS = ['masher', 'timer', 'turtle', 'passive', 'archer', 'rider', 'circler'];
 
 /** The nearest opponent still fighting (or any left alive). */
 function nearestFoe(g, h) {
@@ -153,7 +157,26 @@ function makePilot(CL, kind = 'masher') {
     g.attackHeld = r.crossbow ? full && !g.attackHeld : !full;
   }
 
-  const drive = { masher, timer, turtle, passive, archer }[kind];
+  function rider(g, h, foe) {
+    if (!h.mounted) return masher(g, h, foe);
+    if (h.ranged) return archer(g, h, foe);
+    const d = Math.hypot(foe.x - h.x, foe.y - h.y);
+    g.joystick = toward(h, foe.x, foe.y);
+    g.attackHeld = d < 70;
+    g.blockHeld = false;
+  }
+
+  function circler(g, h, foe) {
+    const [dx, dy] = [h.x - foe.x, h.y - foe.y];
+    const d = Math.hypot(dx, dy) || 1;
+    // Round them, drifting out to 120 px.
+    const out = (d - 120) / 120;
+    g.joystick = { x: -dy / d - (dx / d) * out, y: dx / d - (dy / d) * out };
+    g.attackHeld = false;
+    g.blockHeld = false;
+  }
+
+  const drive = { masher, timer, turtle, passive, archer, rider, circler }[kind];
 
   return {
     kind,

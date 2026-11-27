@@ -30,7 +30,7 @@ test.describe('@visual key screens', () => {
       }
     }
     const hide = hideCanvas ? await page.addStyleTag({ content: '#game{visibility:hidden}' }) : null;
-    await expect(page).toHaveScreenshot(`${name}.png`, { fullPage: false, mask: [page.locator('#message'), ...mask] });
+    await expect(page).toHaveScreenshot(`${name}.png`, { fullPage: false, mask: [page.locator('#message'), page.locator('#version'), page.locator('#topLeft strong small'), ...mask] }); // the version labels change every release: masked, so a baseline outlives a version bump
     if (hide) await hide.evaluate((el) => el.remove());
   }
 

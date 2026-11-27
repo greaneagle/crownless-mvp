@@ -21,6 +21,7 @@
  *   guard       'shield' (a shield in the other hand blocks), 'weapon' (Block raises the weapon: it takes
  *               part of a frontal blow, in a narrower arc), 'none'
  *   skill       the skill that trains it (+3% damage a point, and `skillRecovery` less recovery a point)
+ *   mounted     P11-08: its use from the saddle: 'yes', 'penalty' (less damage, slower; Riding eases it) or 'no'
  *   pierce      P11-06: the share of the target's armour a blow ignores (a mace's weight, a crossbow's bolt)
  *   shield      whether a shield can be carried with it (a two-handed weapon or a bow slings it on the back)
  *   switch      seconds to bring it to hand from the other weapon (P11-02; 0.4 for every family until P11-05)
@@ -45,7 +46,7 @@
   // P11-05's rhythms: windup, active, recovery and the cooldown in seconds; the rest as the header says.
   var R = {
     // Versatile: middling reach and tempo, up to three targets (the second and third at less), a shield.
-    sword: { windup: 0.16, active: 0.12, recovery: 0.26, cooldown: 0.68, miss: 0.2, arc: 90, maxTargets: 3, stagger: 1.2, poise: 1, shieldPressure: 1, knockback: 6, moveDuringAttack: 0.5, guard: 'shield', skill: 'one_handed', skillRecovery: 0.02 },
+    sword: { windup: 0.16, active: 0.12, recovery: 0.26, cooldown: 0.68, miss: 0.2, arc: 90, maxTargets: 3, stagger: 1.3, poise: 1, shieldPressure: 1, knockback: 6, moveDuringAttack: 0.5, guard: 'shield', skill: 'one_handed', skillRecovery: 0.02 },
     // Shield pressure and impact; shorter, one target.
     axe: { windup: 0.2, active: 0.12, recovery: 0.28, cooldown: 0.74, miss: 0.24, arc: 80, maxTargets: 1, stagger: 1.6, poise: 1, shieldPressure: 2.5, knockback: 8, moveDuringAttack: 0.45, guard: 'shield', skill: 'one_handed', skillRecovery: 0.02 },
     // Staggers; short, one target.
@@ -78,4 +79,7 @@
     crossbow: family('crossbow', 'Crossbow', 2, 48, 'crossbow', null, { pierce: 0.3, req: { str: 6 }, shield: false, ranged: { range: 260, maxRange: 440, projectileSpeed: 420, cooldown: 2.2, accuracy: 0.7, draw: 2.0, ammo: 16 } }),
     unarmed: family('unarmed', 'Unarmed', 1, 40, null, R.unarmed)
   };
+  // P11-08: each family's use from the saddle ('yes', 'penalty': less damage and slower, Riding eases it; 'no').
+  var MOUNTED = { sword: 'yes', axe: 'yes', mace: 'yes', greatsword: 'penalty', greataxe: 'no', spear: 'yes', pike: 'no', lance: 'yes', shortbow: 'penalty', longbow: 'no', composite: 'yes', crossbow: 'no', unarmed: 'yes' };
+  for (var k in MOUNTED) C.weapon_families[k].mounted = MOUNTED[k];
 })(typeof window !== 'undefined' ? window : globalThis);

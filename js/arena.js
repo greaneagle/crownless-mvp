@@ -223,6 +223,8 @@
     return {
       id: `assault_${n}${gateOpen ? '_open' : ''}${defend ? '_defend' : ''}`,
       name: 'The walls',
+      mounts: false, // P11-08: horses can't go onto the walls or up the ladders
+      mountsWhere: 'the walls',
       tileset: '16x16',
       ground: { base: '#71904e', patches: [], stone, rises: high },
       decor: [],
