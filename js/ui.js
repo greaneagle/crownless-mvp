@@ -1559,10 +1559,10 @@
 
   const PRESET_NAMES = { auto: 'Auto', balanced: 'Balanced', defensive: 'Defensive', aggressive: 'Aggressive', custom: 'Custom' };
   const PRESET_ABOUT = {
-    auto: 'A plan chosen for you from the odds: forward and charging when you are much the stronger, a shield wall that holds when you are the weaker, Balanced between. You need give no orders.',
-    balanced: 'Infantry in front, archers behind, cavalry on a flank, and all of them go with you: the archers keep behind you, the cavalry rides out at anything close.',
-    defensive: 'A tight block. Everyone holds and fights what comes to them, the infantry in a shield wall.',
-    aggressive: 'Infantry and cavalry forward and charging, archers following you.',
+    auto: 'A plan chosen for you from the odds: Aggressive when you are much the stronger, Defensive when you are the weaker, Balanced between. You need give no orders.',
+    balanced: 'Infantry in front, archers behind; both go with you. The cavalry waits on a flank and charges when your archers first loose.',
+    defensive: 'A tight block. Everyone holds and fights what comes to them, the infantry in a shield wall, or a square if the enemy has horse.',
+    aggressive: 'Infantry in a wedge and cavalry forward and charging, archers following you.',
     custom: 'Drag the flags on the map to place each group, and choose each group’s starting order below.',
   };
   const GROUP_NAMES = { infantry: 'Infantry', archer: 'Archers', cavalry: 'Cavalry' };

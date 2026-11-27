@@ -645,3 +645,23 @@ Results are wins–losses–withdrawals out of 12. Times include all runs.
 | `valedorn_warhorse` / `destrier` | rider | 1 × rider | 3–9–0 | 4–8–0 | 17.8 / 17.8 |
 | `league_light_horse` / `courser` | rider | 1 × hunter | 12–0–0 | 12–0–0 | 6.2 / 7.0 |
 | `league_light_horse` / `courser` | rider | 1 × huscarl | 10–2–0 | 10–2–0 | 15.6 / 17.8 |
+
+## Combined arms and the tactics lab (5.15.0, P11-14)
+
+`node scripts/tactics-lab.js 40 --compare` (passive hero unless named; battle size 60; win % / your losses %):
+
+| comparison | plan | other | charge |
+|---|---|---|---|
+| screen: archers behind a formed line / in front | 100 / 1 | 83 / 56 | 100 / 15 |
+| brace: spears in a line / loose, against horse | 98 / 36 | 58 / 65 | 0 / 99 |
+| flank: horse in on the volley / sent first | 100 / 7 | 100 / 19 | 33 / 78 |
+| wall: a shield wall / loose, under arrows | 98 / 21 | 0 / 84 | 100 / 16 |
+| hill: archers on the rise / on the flat | 100 / 39 | 75 / 65 | 98 / 44 |
+| forest: a column / a line, on Charge | 93 / 28 | 95 / 25 | 98 / 21 |
+| hero: passive with a plan / active on Auto (active with a plan: 25 / 60) | 100 / 7 | 100 / 17 | 33 / 78 |
+
+Before the build (10 seeds): flank 100/18 against 100/19 (no difference); forest column 70/46 against line 90/35.
+
+`parity.js 40` (over the odds; 5.14.0 → branch): lone hero +11 → +11, small +11 → +11, close +21 → +21, veterans +21 → +21, outnumbered +1 → +4; the close fights 14.3 → 15.3. `--big`: close×8@40 +24 → +24 (lost 1.35 → 1.98), veterans×6@40 +13 → +13, close×8@100 +22 → +24 (lost 13.1 → 5.0), veterans×6@100 +13 → +13.
+
+Tries: Balanced in a line (close×8@100, 20 seeds: 85% won, 15.1 lost; loose 100%, 4.4) dropped; the horse's wait 10 s → 5 s (veterans, 40 seeds: lost 1.43 → 0.55; main 0.53); Follow's strict leash relaxed to 75 px (veterans 92.5% → 100%); the column deploying in the fight (forest 70 → 93).

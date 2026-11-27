@@ -1,5 +1,21 @@
 # Crownless — Release Notes
 
+## v5.15.0 — Combined arms and the tactics lab (P11-14) · 2026-11-27
+
+### New
+- Archers behind a formed line are screened: enemy foot and riders have to get past the line and stop singling them out. Riders still hunt archers left in the open.
+- Trees give cover: an arrow at someone standing among them is often stopped by the trunks.
+- The setups read the enemy you can see: Balanced keeps its cavalry on a flank and sends it in when your archers first loose (or after a few seconds); Defensive forms a square instead of a shield wall when the enemy has many riders; Aggressive goes in a wedge.
+- An enemy army plans the same way: a wedge when it is much the stronger, a wall or a square when it is the weaker, its horse sent in on its own first volley.
+### Changed
+- A column on Charge marches in its shape and breaks into loose ranks when it reaches the fight.
+- On Follow, a formed division breaks off for a foe as close as it always did (on Hold it keeps to its places).
+- Prepare's setup descriptions and How to Play "Orders and formations" say all this.
+### Under the hood
+- `scripts/tactics-lab.js --compare`: the seven comparisons (screen, brace, flank, wall, hill, forest, hero).
+- `js/formations.js` `screens`, `coverOf`; `js/prep.js` `choose`, `seenFoe`, a plan's `timed`; `js/combat.js` the enemy's choices, `enemyVolley`; `js/tactics.js` a timed order due on the volley or a time, aimed at the enemy's middle.
+- Tests: `tests/tactics-lab.test.js` (new, 7; about 47 s), `tests/prep.test.js` (+1), `tests/formations.test.js`, `tests/extras.test.js`, `tests/browser/divisions.spec.js`; golden battles recorded again. `npm test` 1,093 pass.
+
 ## v5.14.0 — Regional arms (P11-16) · 2026-11-27
 
 ### New
