@@ -276,6 +276,75 @@
     G.banner(ctx, -10, -2, 0.85, H ? { ...H, edge: PAL.gold } : { color: R.color, trim: PAL.gold, device: R.device }, t, mounted(u) ? 70 : 56);
   }
 
+  /**
+   * P11-13: a division's flag (the field, the minimap, the overview): a small pennant on a staff in the
+   * division's colour, its order's state as a mark on the cloth, frayed when its ranks are broken. Drawn at
+   * (x, y), the staff's foot; `s` its scale. Reads only the order state (js/formations.js orderStates).
+   * @param {CanvasRenderingContext2D} ctx @param {{ state: string, cohesion: number | null }} st
+   */
+  function flag(ctx, x, y, s, color, st) {
+    const frayed = st.state === 'cant' || (st.cohesion != null && st.cohesion < (CL.formations?.COHESION.formed ?? 0.5));
+    const [w, h, staff] = [16 * s, 11 * s, 26 * s];
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = PAL.ink || '#3b2a1c';
+    ctx.lineWidth = Math.max(1, 1.6 * s);
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(0, -staff);
+    ctx.stroke();
+    // The cloth: a swallow-tail edge, ragged when frayed.
+    ctx.beginPath();
+    ctx.moveTo(0, -staff);
+    ctx.lineTo(w, -staff + h * 0.08);
+    if (frayed) for (let i = 1; i <= 4; i++) ctx.lineTo(w - (i % 2 ? 4 : 0.5) * s, -staff + (h * i) / 4);
+    else {
+      ctx.lineTo(w - 4 * s, -staff + h / 2);
+      ctx.lineTo(w, -staff + h);
+    }
+    ctx.lineTo(0, -staff + h);
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.globalAlpha = frayed ? 0.75 : 1;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.stroke();
+    // The state's mark, in ink, on the cloth.
+    const [cx, cy] = [w * 0.42, -staff + h / 2];
+    const r = 2.6 * s;
+    ctx.lineWidth = Math.max(1, 1.4 * s);
+    ctx.beginPath();
+    const line = (...segs) => {
+      for (const seg of segs) {
+        ctx.moveTo(seg[0][0], seg[0][1]);
+        for (const [px, py] of seg.slice(1)) ctx.lineTo(px, py);
+      }
+    };
+    const mark = {
+      holding: () => ctx.rect(cx - r, cy - r, r * 2, r * 2),
+      following: () => ctx.arc(cx, cy, r, 0, Math.PI * 2),
+      moving: () => line([[cx - r, cy - r], [cx + r, cy], [cx - r, cy + r]]),
+      charging: () => line([[cx - r * 1.4, cy - r], [cx, cy], [cx - r * 1.4, cy + r]], [[cx, cy - r], [cx + r * 1.4, cy], [cx, cy + r]]),
+      engaged: () => line([[cx - r, cy - r], [cx + r, cy + r]], [[cx + r, cy - r], [cx - r, cy + r]]),
+      waiting: () => line([[cx - r, cy - r], [cx + r, cy - r], [cx - r, cy + r], [cx + r, cy + r], [cx - r, cy - r]]),
+      done: () => line([[cx - r, cy], [cx - r * 0.2, cy + r * 0.8], [cx + r * 1.2, cy - r]]),
+      cant: () => line([[cx, cy - r * 1.2], [cx, cy + r * 0.3]], [[cx, cy + r * 0.9], [cx, cy + r]]),
+    }[st.state];
+    if (mark) mark();
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  /** P11-13: each of the company's divisions' flags above it on the field. */
+  function flags(ctx, g, seen) {
+    for (const [div, st] of Object.entries(g.orderState || {})) {
+      if (!Number.isFinite(st.top) || !seen(st.cx, st.top, 80)) continue;
+      flag(ctx, st.cx, st.top - 50, 1, CL.divisions.color(div), st);
+    }
+  }
+
   /** Health, morale and a lord's name over the head. */
   function marks(ctx, u, y) {
     const hero = u.role === 'hero';
@@ -823,6 +892,7 @@
       else obstacle(ctx, x, t, g);
     }
     aimRings(ctx, g);
+    flags(ctx, g, seen); // P11-13: the divisions' flags: each order's state, frayed when broken
     arrows(ctx, g.arrows, seen);
     const h = g.hero;
     const mine = (e) => e.kind === 'rally' || (ESSENTIAL.has(e.kind) && h && Math.hypot(e.x - h.x, e.y - h.y) < ESSENTIAL_NEAR);
@@ -879,5 +949,5 @@
     return img;
   }
 
-  G.battle = { poseOf: (u) => poseOf(u, battle?.track.get(u), 0, false), FIG, TEAM, water, draw, unit, fallen, ground, obstacle, arrows, effects, miniature, lookOf: (u) => lookOf(state(CL.game), u), lookCount: () => (battle && battle.g === CL.game ? battle.lookCount || 0 : 0), sides, baseOf, lookName };
+  G.battle = { flag, flags, poseOf: (u) => poseOf(u, battle?.track.get(u), 0, false), FIG, TEAM, water, draw, unit, fallen, ground, obstacle, arrows, effects, miniature, lookOf: (u) => lookOf(state(CL.game), u), lookCount: () => (battle && battle.g === CL.game ? battle.lookCount || 0 : 0), sides, baseOf, lookName };
 })(typeof window !== 'undefined' ? window : globalThis);

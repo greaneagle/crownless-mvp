@@ -732,7 +732,8 @@
     u.swing = { t: 0, hit: [] };
     // P11-13: a soldier's blow goes along the line to its foe, not only along one of the four facings
     // (a spear's 40° thrust at a foe standing at an angle missed: the crowd effect P11-11 found).
-    if (u.role !== 'hero' && USE_AIM.on && u.target?.alive) u.swing.dir = normalize(u.target.x - u.x, u.target.y - u.y);
+    // A rider is struck as before (P11-08's saddle fighting, accepted at M2): along the facing.
+    if (u.role !== 'hero' && USE_AIM.on && u.target?.alive && !CL.units.mounted(u.target)) u.swing.dir = normalize(u.target.x - u.x, u.target.y - u.y);
     sound('swing', u);
     return true;
   }

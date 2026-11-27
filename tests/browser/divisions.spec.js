@@ -103,3 +103,27 @@ test('a soldier’s division, chosen on their card on the Party screen', async (
   const id = await game(page, (CL) => CL.game.soldierProfile);
   expect(await game(page, (CL, sid) => CL.campaign.divisions.soldiers[sid], id)).toBe('archer2');
 });
+
+test("P11-13: an order's state is shown (and its flag drawn); an impossible formation says why", async ({ page }) => {
+  await toPrepare(page);
+  await press(page, page.locator('#prepPanel button', { hasText: 'Fight' }));
+  await waitMode(page, 'battle');
+  await press(page, '#ordersBtn');
+  await expect(page.locator('#ordersPanel')).toBeVisible();
+  await press(page, page.locator('#ordersPanel [data-group="infantry"]'));
+  await press(page, page.locator('#ordersPanel [data-order="hold"]'));
+  await press(page, page.locator('#ordersPanel [data-formation="line"]'));
+  await game(page, (CL) => {
+    for (let i = 0; i < 10; i++) CL.combat.update(0.05); // test setup: half a second, the states measured
+  });
+  await expect(page.locator('#selectedGroup')).toContainText(/Infantry · (holding|moving|engaged)/);
+  await expect(page.locator('#selectedGroup')).toContainText('ranks');
+  expect(await game(page, (CL) => typeof CL.game.orderState.infantry.state)).toBe('string');
+  // A line can't form on Charge: the panel says why.
+  await press(page, page.locator('#ordersPanel [data-order="charge"]'));
+  await game(page, (CL) => {
+    for (let i = 0; i < 6; i++) CL.combat.update(0.05);
+  });
+  await expect(page.locator('#selectedGroup')).toContainText("can't: a line forms on Hold or Follow");
+  await expect(page.locator('#selectedGroup')).toHaveAttribute('data-state', 'cant');
+});

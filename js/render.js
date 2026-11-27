@@ -655,10 +655,20 @@
     ctx.fillRect(r.x - 3, r.y - 3, r.w + 6, r.h + 6);
     ctx.globalAlpha = 1;
     drawField(g, r, 2);
+    drawFlags(g, r, 0.5); // P11-13: each division's order state
     ctx.strokeStyle = '#c9a85c';
     ctx.lineWidth = 2;
     ctx.strokeRect(r.x - 2, r.y - 2, r.w + 4, r.h + 4);
     ctx.restore();
+  }
+
+  /** P11-13: the divisions' flags (js/art/battle.js flag) on a small map of the field. */
+  function drawFlags(g, r, s) {
+    for (const [div, st] of Object.entries(g.orderState || {})) {
+      if (!Number.isFinite(st.cy)) continue;
+      const p = CL.tactics.toScreen(r, st.cx, st.cy);
+      CL.gfx.battle.flag(ctx, p.x, p.y, s, CL.divisions.color(div), st);
+    }
   }
 
   /** The tactical overview: the whole field, the battle held, groups sent by tapping. */
@@ -668,6 +678,19 @@
     ctx.fillStyle = '#06101add';
     ctx.fillRect(0, 0, W, H);
     drawField(g, r, 4);
+    // P11-13: the formed divisions' slots, as small rings where each soldier should stand.
+    for (const u of g.allies) {
+      if (!u.alive || u.companion || u.outside || CL.formations.of(g, u) === 'loose') continue;
+      const s = CL.formations.slotOf(g, u);
+      if (!s) continue;
+      const p = CL.tactics.toScreen(r, s.x, s.y);
+      ctx.strokeStyle = CL.divisions.color(u.div || u.role);
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 2.5, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    drawFlags(g, r, 0.8);
     ctx.strokeStyle = '#c9a85c';
     ctx.lineWidth = 2;
     ctx.strokeRect(r.x - 1, r.y - 1, r.w + 2, r.h + 2);
