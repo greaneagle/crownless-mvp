@@ -43,6 +43,11 @@ function oldMarch(content) {
   // P10-03: only the walkable towns that lie in the March.
   C.town_hubs = Object.fromEntries(Object.entries(C.town_hubs || {}).filter(([, h]) => settlements[h.settlement]));
   const [world] = Object.values(C.world_map);
+  // Keep the inherited specialist lessons available in the smaller map used by these tests.
+  C.training = Object.fromEntries(Object.entries(C.training).map(([id, m]) => [
+    id,
+    m.teaches ? { ...m, place: settlements[m.place] ? m.place : world.start, alsoAt: m.alsoAt?.filter((sid) => settlements[sid]) } : m,
+  ]));
   const sites = {};
   for (const [id, st] of Object.entries(world.sites)) if (inMarch(st.mapX, st.mapY)) sites[id] = { ...st, mapX: st.mapX - OFFSET, mapY: st.mapY - OFFSET };
   const inside = (poly) => poly.every(([x, y]) => inMarch(x, y));
