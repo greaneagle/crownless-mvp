@@ -4,7 +4,10 @@
 //
 //   node scripts/tactics-lab.js [seeds=40] [--plans charge,auto,plan:line] (plan:fallback on request)
 //        [--hero passive,active] [--maps open_country,hill_slopes] [--army mixed|foot|<troop:n,...>]
-//        [--size 60] [--json]
+//        [--size 60] [--enemy <army>] [--json]
+//   form:<kind>    P11-13: as plan:line, the infantry in that formation (loose, wall, line, column, square on
+//                  Hold; a wedge on Charge), to show each formation's strength and weakness
+//   --enemy        the enemy's army (the company's by default): `horse`, `bows`, `foot` or troop:n,…
 //
 // Plans:
 //   charge         every division on Charge from the start
@@ -33,6 +36,8 @@ const MAPS = ['open_country', 'hill_slopes'];
 const ARMIES = {
   mixed: { footman: 8, spearman: 4, hunter: 6, rider: 4 },
   foot: { footman: 8, spearman: 6, levy: 6 },
+  horse: { rider: 10, footman: 6, hunter: 4 }, // P11-13: against cavalry
+  bows: { hunter: 12, footman: 6, rider: 2 }, // P11-13: against archers
 };
 const FALLBACK_AT = 140;
 const MAX_STEPS = 30000;
@@ -56,13 +61,15 @@ function setupFor(CL, plan, map) {
   if (plan === 'auto') return P.plan('auto', map);
   // plan:line and plan:fallback: hold, archers behind (Balanced's archers stand on the rise of the hills).
   const forward = plan === 'plan:fallback' ? 170 : 70;
-  const p = P.plan('custom', map, { custom: { infantry: { dx: forward, dy: 0, order: 'hold' }, archer: { dx: -90, dy: 0, order: 'hold' }, cavalry: { dx: -40, dy: -260, order: 'hold' } } });
-  Object.assign(p, { formation: 'wall', formations: { infantry: 'wall', infantry2: 'wall' } });
+  const kind = plan.startsWith('form:') ? plan.slice(5) : 'wall';
+  const foot = kind === 'wedge' ? 'charge' : 'hold';
+  const p = P.plan('custom', map, { custom: { infantry: { dx: forward, dy: 0, order: foot }, archer: { dx: -90, dy: 0, order: 'hold' }, cavalry: { dx: -40, dy: -260, order: 'hold' } } });
+  Object.assign(p, { formation: kind, formations: { infantry: kind, infantry2: kind } });
   return p;
 }
 
 /** A seeded game: the company and a band of the same troops open as an encounter. */
-function setup(seed, army, size) {
+function setup(seed, army, size, enemy = army) {
   const { CL } = loadGame({ seed });
   CL.ui = headlessUi(CL);
   CL.combat.setActiveCap(size);
@@ -72,7 +79,7 @@ function setup(seed, army, size) {
   c.world.location = null;
   CL.game.mode = 'map';
   const p = CL.parties.spawn(c, 'bandits');
-  Object.assign(p, { troops: { ...army }, x: c.world.x, y: c.world.y });
+  Object.assign(p, { troops: { ...enemy }, x: c.world.x, y: c.world.y });
   CL.parties.open(p.id);
   return CL;
 }
@@ -83,8 +90,8 @@ const centre = (units) => {
 };
 
 /** Fight one battle under a plan; returns the outcome. */
-function battle({ seed, plan, hero, map, army = ARMIES.mixed, size = 60 }) {
-  const CL = setup(seed, army, size);
+function battle({ seed, plan, hero, map, army = ARMIES.mixed, size = 60, enemy = army }) {
+  const CL = setup(seed, army, size, enemy);
   const g = CL.game;
   const e = CL.parties.current();
   const mapDef = CL.arena.mapFor(map);
@@ -92,7 +99,7 @@ function battle({ seed, plan, hero, map, army = ARMIES.mixed, size = 60 }) {
   const T = CL.tactics;
   const D = CL.divisions;
   const cavalry = D.members(g, 'cavalry').length > 0;
-  if (plan.startsWith('plan:') && cavalry) {
+  if ((plan.startsWith('plan:') || plan.startsWith('form:')) && cavalry) {
     // The cavalry go in on the first volley, at the enemy's middle as it is then (a timed order, layer 4).
     g.timed = [{ div: 'cavalry', kind: 'charge', x: 0, y: 0, volley: g.lastVolley ?? -1, aimAtEnemy: true }];
   }
@@ -138,13 +145,13 @@ function battle({ seed, plan, hero, map, army = ARMIES.mixed, size = 60 }) {
 
 const mean = (xs) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0);
 
-function run({ seeds = 40, plans = DEFAULT_PLANS, heroes = HEROES, maps = MAPS, army = ARMIES.mixed, size = 60 } = {}) {
+function run({ seeds = 40, plans = DEFAULT_PLANS, heroes = HEROES, maps = MAPS, army = ARMIES.mixed, size = 60, enemy = army } = {}) {
   const out = [];
   for (const map of maps) {
     for (const hero of heroes) {
       for (const plan of plans) {
         const rows = [];
-        for (let i = 1; i <= seeds; i++) rows.push(battle({ seed: spread(i), plan, hero, map, army, size }));
+        for (let i = 1; i <= seeds; i++) rows.push(battle({ seed: spread(i), plan, hero, map, army, size, enemy }));
         out.push({
           map,
           hero,
@@ -172,13 +179,15 @@ if (require.main === module) {
   const list = (name, d) => (opt(name) ? opt(name).split(',') : d);
   const seeds = Number(args.find((a, i) => /^\d+$/.test(a) && !String(args[i - 1]).startsWith('--')) ?? 40);
   const army = armyOf(opt('--army'));
+  const enemy = opt('--enemy') ? armyOf(opt('--enemy')) : army;
   const size = Number(opt('--size')) || 60;
   const t0 = Date.now();
-  const out = run({ seeds, plans: list('--plans', DEFAULT_PLANS), heroes: list('--hero', HEROES), maps: list('--maps', MAPS), army, size });
+  const out = run({ seeds, plans: list('--plans', DEFAULT_PLANS), heroes: list('--hero', HEROES), maps: list('--maps', MAPS), army, size, enemy });
   if (args.includes('--json')) console.log(JSON.stringify({ seeds, army, size, rows: out }, null, 2));
   else {
     const f = (n, d = 0) => n.toFixed(d).padStart(6);
-    console.log(`Equal armies (${Object.entries(army).map(([t, n]) => `${n} ${t}`).join(', ')} a side), battle size ${size}, ${seeds} seeds each`);
+    const list2 = (a) => Object.entries(a).map(([t, n]) => `${n} ${t}`).join(', ');
+    console.log(enemy === army ? `Equal armies (${list2(army)} a side), battle size ${size}, ${seeds} seeds each` : `The company (${list2(army)}) against ${list2(enemy)}, battle size ${size}, ${seeds} seeds each`);
     console.log(`${'map'.padEnd(14)}${'hero'.padEnd(9)}${'plan'.padEnd(15)}  win%  lost%  killed%  secs  held%  their-held%`);
     for (const r of out) console.log(`${r.map.padEnd(14)}${r.hero.padEnd(9)}${r.plan.padEnd(15)}${f(r.win)}${f(r.allyLost).padStart(7)}${f(r.enemyLost).padStart(9)}${f(r.seconds)}${f(r.heldAlly).padStart(7)}${f(r.heldEnemy).padStart(13)}${r.unfinished ? `  (${r.unfinished} never ended)` : ''}`);
     console.log('lost%: your side cut down (of everyone who fought); killed%: theirs. held%: the share of each side still fighting inside the middle third of the field at the end.');
