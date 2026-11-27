@@ -29,7 +29,8 @@
   const SHIELD_LOOKOUT = 1.6; // × the attacker's reach: how close a swing must be to raise a shield
   const BRACE = { reach: 62, damage: 1.6, cooldown: 1.0 };
   const LOS_STEP = 24;
-  const FORM = { rankGap: 30, fileGap: 28, perRank: 5, infantryAhead: 52, archersBehind: 72 };
+  const FORM = { rankGap: 36, fileGap: 36, perRank: 5, // P11-13: loose ranks are wider (30 and 28 before)
+    infantryAhead: 52, archersBehind: 72 };
   const STATE_EVERY = 0.25; // seconds between group-state updates
   const ENGAGE = 95; // px: a soldier this close to an enemy is engaged
   const FACE = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };

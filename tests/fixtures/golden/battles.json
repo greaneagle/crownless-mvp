@@ -1,65 +1,65 @@
 {
-  "recordedOn": "5.10.0",
+  "recordedOn": "5.12.4",
   "scenarios": {
     "bench@40": {
       "frames": 1800,
-      "digest": "447bb4513bc6413bf2753b8c2b1539e3f9ca65367cf4819eb8ae46d159f06843",
+      "digest": "d604ed6af6a0343f06d1ed637e91426e14eebeaf3159228545e6b633c8aa76d3",
       "mode": "battle",
       "win": null,
       "heroHp": 90,
       "allies": 19,
-      "enemies": 20,
+      "enemies": 19,
       "t": 30
     },
     "parity:lone-hero": {
-      "frames": 682,
-      "digest": "e1b237e49ed3eed82c07304d7ecfdea62c93115193677d7964db7149e40dfd34",
+      "frames": 750,
+      "digest": "07b57ee75142fe91e736ce451b033ea920b481ca3c5bd3b125c9840dba40eec8",
       "mode": "result",
       "win": true,
-      "heroHp": 69,
+      "heroHp": 43,
       "allies": 0,
       "enemies": 0,
-      "t": 13.64
+      "t": 15
     },
     "parity:small": {
-      "frames": 719,
-      "digest": "76a1c6c4e510b429d449ec8f922d6d8214b1a3f399e1463892c859f08ab93adb",
-      "mode": "result",
-      "win": true,
-      "heroHp": 90,
-      "allies": 5,
-      "enemies": 0,
-      "t": 14.38
-    },
-    "parity:close": {
-      "frames": 807,
-      "digest": "1ad22c100993a33da0ffce9e83ba1acf8430e3284c85107e0dbc1b228570a3bf",
+      "frames": 740,
+      "digest": "e21f2da80ea23262bf93b54fbb9b502f103b77c23c36392df5e317defe9d4f79",
       "mode": "result",
       "win": true,
       "heroHp": 83,
+      "allies": 5,
+      "enemies": 0,
+      "t": 14.8
+    },
+    "parity:close": {
+      "frames": 807,
+      "digest": "2708ddbb583193166c81b491b5fc2a64e5b7ab7554a14b29d7cdea87ad5398c9",
+      "mode": "result",
+      "win": true,
+      "heroHp": 71,
       "allies": 6,
       "enemies": 0,
       "t": 16.14
     },
     "parity:veterans": {
-      "frames": 768,
-      "digest": "72fe4615aa3dc8a101eac0dc558a6e9cf75124f774ca1840e2a71338336696b0",
+      "frames": 846,
+      "digest": "1ae956d86465edf56ca7e156542275ef0fe1437488ea83428e09319e4a03fb9a",
       "mode": "result",
       "win": true,
-      "heroHp": 72,
-      "allies": 9,
+      "heroHp": 63,
+      "allies": 8,
       "enemies": 0,
-      "t": 15.36
+      "t": 16.92
     },
     "parity:outnumbered": {
-      "frames": 911,
-      "digest": "ccdcb70878a435e8280ea93f033a4dde2346bff35fa1fbac5cb554d282c8b213",
+      "frames": 885,
+      "digest": "85ff7de308c3e3843e8562b2230d5a4997356f5cac1d9182ed321344439c8b93",
       "mode": "result",
       "win": true,
-      "heroHp": 47,
+      "heroHp": 44,
       "allies": 3,
       "enemies": 0,
-      "t": 18.22
+      "t": 17.7
     },
     "tourney:bout": {
       "frames": 147,
@@ -72,24 +72,24 @@
       "t": 2.94
     },
     "company:lord": {
-      "frames": 656,
-      "digest": "4b06371ebe21b8fc68c92110950ad654fa36ee570756e347040287f0e20d4c33",
+      "frames": 695,
+      "digest": "c2d19e86f0789505b048558a6b0696330af64f089dbd55f0c537412ae575dea1",
       "mode": "result",
       "win": false,
       "heroHp": 0,
       "allies": 0,
       "enemies": 6,
-      "t": 13.12
+      "t": 13.9
     },
     "assault:attack": {
-      "frames": 1631,
-      "digest": "6687af30788895c788c4fae3b07d7cdc55a7631e216426fe1f5bdc67b09eea02",
+      "frames": 1496,
+      "digest": "b463adbf2dacedf3507c769af587532780727061566075f2c38f6cf52fa22998",
       "mode": "result",
       "win": false,
       "heroHp": 0,
       "allies": 0,
-      "enemies": 19,
-      "t": 32.62
+      "enemies": 17,
+      "t": 29.92
     }
   }
 }

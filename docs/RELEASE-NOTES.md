@@ -1,5 +1,25 @@
 # Crownless — Release Notes
 
+## v5.13.0 — Formations and orders that hold (P11-13) · 2026-11-27
+
+### New
+- Formations hold. On Hold a formed division keeps its places: each soldier fights only what comes close to their place and steps back into it, instead of chasing. On Follow they keep their places beside you.
+- Each formation shows its character: a shield wall shares its blows along the shields and holds far longer, a line meets one foe a place (a sword can't catch several of you), a wedge's first blow breaks the ranks it strikes, a square has no flank, a column marches through trees, and loose ranks are wider so arrows find fewer.
+- Flanks: a blow from the side or behind a formed division lands harder and shakes it more.
+- Ranks: ORDERS shows how much of a formed division is in its places; below half, the formation helps nobody until it closes up.
+- Every order says what it is doing: a small flag over each division on the field, the small map and the tactical map (holding, following, moving, charging, engaged, waiting, done, or ! when it can't), and in ORDERS beside its name, with the reason when it can't ("a line forms on Hold or Follow", "too few to form a shield wall", "the ford breaks their ranks").
+- The tactical map shows where each soldier of a formed division should stand.
+- How to Play: "Orders and formations".
+### Changed
+- Soldiers aim their blows at the one they fight. Before, a blow could only go one of four ways, so a spear's or pike's narrow thrust missed a foe standing at an angle: in a crowd a quarter to a third of them missed. A rider is struck as before.
+- A division of fewer than four stays loose, and says so.
+- Thick forest breaks every formation but a column (fords break all, as before).
+- An enemy army forms its foot in a line when it holds.
+### Under the hood
+- `js/formations.js`: leash, frontage, flanks, `breakRanks`, `sharePressure`, `atBay`, cohesion (`tick`, every 0.25 s), `orderStates`; `js/combat.js`: aimed blows (`USE_AIM`), the leash in the AI, flank damage, the enemy's line.
+- `scripts/crowd-lab.js` (new): the pairs at n against n, loose or one side holding in a formation. `scripts/tactics-lab.js`: `form:<kind>` plans and `--enemy <army>` (`horse`, `bows`).
+- Tests: `tests/formations.test.js` (new, 13); `tests/browser/divisions.spec.js` (+1); `tests/extras.test.js` (a wall of four); golden battles recorded again. `npm test` 1,082 pass.
+
 ## v5.12.4 — Several agents at once (D-AG1) · 2026-11-27
 
 Nothing in the game changed. P11-12 is approved (the owner, after the phone's stress test), so milestone M3 is complete.

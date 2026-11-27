@@ -165,7 +165,7 @@
       const side = i === 0 ? 0 : i % 2 ? -1 : 1;
       return { dx: -k * 26, dy: side * k * 26 };
     }
-    return block(5, 28, 30); // loose ranks
+    return block(5, 36, 36); // loose ranks (P11-13: wider, 28 and 30 before; arrows find fewer)
   }
 
   /** Turn a shape offset (made facing +x) to a facing. @param {{ dx: number, dy: number }} o @param {string} facing */
