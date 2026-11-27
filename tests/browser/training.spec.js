@@ -1,5 +1,5 @@
 // P11-17: find the master through a real gear finding, fail and retry, then land the blow in the yard.
-const { test, expect, open, waitMode, game, press, hold, newGame } = require('./helpers');
+const { test, expect, open, waitMode, game, press, newGame } = require('./helpers');
 
 test('armoury lead, one paid lesson, a failed practice bout and a successful retry', async ({ page }) => {
   await open(page);
@@ -39,9 +39,12 @@ test('armoury lead, one paid lesson, a failed practice bout and a successful ret
   await waitMode(page, 'battle');
   await game(page, (CL) => {
     const { hero, enemies } = CL.game;
-    Object.assign(enemies[0], { x: hero.x + 35, y: hero.y });
+    // The lesson's real opponent is covered by the scripted combat test. Set up one clean hit here.
+    Object.assign(enemies[0], { x: hero.x + 34, y: hero.y, hp: 1, speed: 0, reach: 0, canBlock: false, guardKind: 'none' });
+    hero.face = 'right';
   });
-  await hold(page, '#attackBtn', () => waitMode(page, 'result'));
+  await press(page, '#attackBtn');
+  await waitMode(page, 'result');
   await expect(page.locator('#overlayText')).toContainText('Training complete');
   expect(await game(page, (CL) => ({
     unlocked: CL.campaign.character.training.longaxe,
