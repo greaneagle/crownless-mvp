@@ -366,7 +366,7 @@ Every Phase 9 task is **Specified** (2026-11-22; NEXT-TASKS has each in full). T
 | **P11-14** ✅ | **Combined arms and the tactics lab:** terrain, screens, counters, Auto and presets, the enemy's plan; seven controlled comparisons | M–L | P11-13 |
 | **P11-15** | **Prepare and the battle report** (M4): the hero's loadout and mount, known enemy information, terrain notes, a one-screen report with more on request | M | P11-14 |
 | **P11-16** ✅ | **Regional arms:** six to eight pieces from the realms' identities (D-P11g for the horse bow) | M | P11-11, P11-03 |
-| **P11-17** | **Masters at arms:** instructors, short practical training on the duel engine, permanent unlocks, paid retraining, the practice yard | L | P11-16 |
+| **P11-17** ✅ | **Masters at arms:** instructors, short practical training on the duel engine, permanent unlocks, paid retraining, the practice yard | L | P11-16 |
 | **P11-18** | **The walls and other special fields:** no horses on walls, long weapons on ladders, archers and shields on the walkway; siege parity re-measured | M | P11-13, P11-08 |
 | **P11-19** | **The lists** (M5): tournament formats as data, traditions by host (D-P11h), the standard lists, own-arms duels and an archery contest required; announced before the fee | L | P11-10, P11-17 |
 | **P11-20** | **Auto-resolve, military balance and the world:** troop power from profiles, measured composition effects, honest odds in words, parity, `landed`, the economy | M–L | P11-14, P11-18, P11-19 |
