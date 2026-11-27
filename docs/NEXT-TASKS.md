@@ -5205,7 +5205,7 @@ _Expanded 2026-11-27 at 5.11.0 (commit ff54781) by the owner's approval of a gra
 
 ---
 
-### P11-13 · Formations and orders that hold (L) — 5.13.0, Specified
+### P11-13 · Formations and orders that hold (L) — ✅ Done (version at merge; owner to accept)
 
 **Carried from P11-11 (measured, `docs/PHASE-11-VALIDATION.md`):** one against one a pikeman, a spearman and a huscarl win (65–100%); three against three the same lines lose (0–15%), with or without P11-10's styles. A held line (here) and combined arms (P11-14) should give the long weapons their reach and the axes their shield-breaking; `scripts/realm-lab.js` measures it.
 
@@ -5266,6 +5266,15 @@ _Expanded 2026-11-27 at 5.11.0 (commit ff54781) by the owner's approval of a gra
 - **Play:** as above.
 - **Explain:** "Orders and formations".
 - **Not here:** combined-arms acceptance (P11-14).
+
+**Done (version at merge, branch `claude/p11-13-formations`).**
+- **The crowd effect, found:** facing is four-way, and a soldier's blow went only along it, so a spear's 40° or a pike's 30° thrust missed a foe standing at an angle: 24–34% of their blows at 3v3, none one against one (`scripts/crowd-lab.js`, new). Soldiers' blows now go along the line to their foe (`combat.USE_AIM`; a rider is struck as before). The rest is the sword's sweep (1.6 foes a swing in a scrum): kept, the sword's strength.
+- **Slots and leash** (`formations.LEASH`): a formed soldier on Hold fights only within its leash and reach of its slot and never steps out of it; Follow breaks ranks only that close; Charge leaves them. **Frontage:** a sweep meets one soldier of a formed line, wall or square from the front. **Flanks:** ×1.25–1.35 from the side or rear of a formed division, and more shaken (a square has none). **Wedge** breaks the struck ranks for 3 s; **loose** ranks 36 px; the **wall** shares a blocked blow's pressure with two shields beside; **at bay:** a formed long weapon pushes a shorter foe back to its reach.
+- **Cohesion** every 0.25 s (under 50% a formation's effects lapse); **too few** (under 4) stay loose and say so; **thick forest** breaks all but a column; an enemy army's foot holds in a line.
+- **Order states and flags:** holding, following, moving, charging, engaged, waiting, done, can't (with the reason), on a code-drawn flag over each division (frayed when broken), on the minimap and the overview (with the formed slots), and in ORDERS with the ranks %. How to Play "Orders and formations".
+- **Measured** (`tactics-lab` 20 seeds, passive hero, open country, `main` → branch, win %): held in a line against foot 70 → 100, against horse 75 → 100; the square against horse 95 → 100 (lost 56 → 33%), against foot 45 → 60, against bows 0 → 15; the wedge best against bows (100) and worst against foot and horse (25, 15); the column weakest (50, 90, 5). `parity 40`: the close fights 14.3 over the odds (17.7 before; outnumbered +1, was +11); `--big` unchanged within a few points; `duel-lab` identical; `extras`: wall +8 against reavers, +13 against crossbows. `realm-lab` T2: the League and Saltreach 20 → 40 (each now beats the outlaws and Hrothmark), Hrothmark T3 23 → 38.
+- **Open (for P11-14):** the crowd effect in part: one against one the long weapons still win, but loose at 3v3 they win 3–18%, and a held line of pikes beats as many footmen at 5v5 (45%) but not at 8v8 (0%). Two tries: at bay (kept), deeper ranks (no gain, dropped). The wall wins every lab case (its flank weakness is not tested by a frontal enemy); the outnumbered parity case fell 10 points.
+- **Tests:** `tests/formations.test.js` (new, 13), `divisions.spec.js` (+1), `extras.test.js` (a wall of four); golden battles recorded again. `npm test` 1,082 pass; lint clean; browser `divisions`, `extras`, `battle` (28), `screens.visual`, `art` (18) pass. Played at 812×375: a wall on Hold (Defensive) and a square chosen in ORDERS against riders; both held and won.
 
 ---
 
