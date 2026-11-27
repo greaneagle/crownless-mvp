@@ -140,6 +140,7 @@ declare global {
     flags: Record<string, boolean | string | number>;
     quests: Record<ContentId, QuestRecord>;
     visits: Record<string, number>;
+    training: Record<ContentId, { step: number; heard: boolean; retryAt: number; attempt?: number }>;
     /** The story's cast, role → realm, settlement or site id (P10-04), or null. */
     cast: Record<string, string | null> | null;
   }

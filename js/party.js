@@ -298,6 +298,7 @@
     CL.fiefs?.tick(camp); // deserters, castellans home, grants due (P8-05)
     CL.nobles?.tick(camp); // promises, loans, your summons, petitions, and each week the lords' grumbling (P8-07)
     CL.claims?.tick(camp); // a claim on land your liege's crown holds becomes a grant offered to you (P8-08)
+    CL.training?.tick(camp);
     CL.news.tick(camp); // a regional news line every couple of days
     return healed;
   }
@@ -429,6 +430,7 @@
     if (g.mode !== 'battle') return;
     g.mode = 'result';
     if (g.practice) return endPractice(win);
+    if (g.duel && g.encounterDef?.lesson) return CL.training.end(win);
     if (g.duel) return CL.tourney.endBout(win); // a tournament bout: to the bracket, nothing else (P7-09)
     const { killed, wounded, saved, medicineUsed } = rollCasualties(g.allies);
     const deployed = g.allies.filter((a) => a.soldierId != null);

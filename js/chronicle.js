@@ -33,7 +33,7 @@
   const HONOUR_MAX = 60;
   const NOTABLE_KILLS = 8;
   const NAMES_MAX = 6; // names kept on one entry
-  const KINDS = ['founded', 'begun', 'recruited', 'promoted', 'battle', 'deserted', 'retired', 'quest', 'happening', 'tourney', 'business', 'holding', 'allegiance'];
+  const KINDS = ['founded', 'begun', 'recruited', 'promoted', 'battle', 'deserted', 'retired', 'quest', 'happening', 'tourney', 'practice', 'business', 'holding', 'allegiance'];
   const HOW = ['fell', 'deserted', 'retired'];
 
   /** @returns {HonourRoll} */
@@ -185,6 +185,11 @@
         const q = CL.content.table('quests')[e.quest];
         return `${e.status === 'done' ? 'Completed' : 'Failed'}: ${q ? CL.story.format(q.title) : e.quest}.`;
       }
+      case 'practice': {
+        const drill = CL.content.table('practice').names[e.event];
+        const place = CL.content.table('settlements')[e.place]?.name || 'the yard';
+        return `${e.win ? 'Completed' : 'Practised'}: ${drill} at ${place}.`;
+      }
       case 'tourney':
         return CL.tourney.chronicleText(e);
       case 'business':
@@ -277,6 +282,10 @@
       if (e.kind === 'quest') {
         if (!CL.content.table('quests')[e.quest] || !['done', 'failed'].includes(e.status)) continue;
         Object.assign(out, { quest: e.quest, status: e.status });
+      }
+      if (e.kind === 'practice') {
+        if (!settlements[e.place] || !Object.hasOwn(CL.content.table('practice').names, e.event)) continue;
+        Object.assign(out, { event: e.event, place: e.place, win: Boolean(e.win) });
       }
       if (e.kind === 'tourney') {
         if (!settlements[e.place] || !['champion', 'final', 'out'].includes(e.result)) continue;

@@ -162,6 +162,7 @@
     CL.accounts.spend(c, paid, `tournament entry at ${hostName(sid)}`);
     t.hosts[sid].entered = c.day;
     t.bracket = { host: sid, start: o.start, fee: paid, fighters: o.fighters.map((f) => ({ ...f })), rounds: [[0, 1, 2, 3, 4, 5, 6, 7]], round: 0, bout: null };
+    CL.training?.report(c, 'challenge', { host: sid, round: 1 });
     CL.diag.log('info', 'Tournament entered', { host: sid, fee: paid });
     CL.ui.message(`You pay ${paid} crowns and take your place in the lists of ${hostName(sid)}.`);
     return { ok: true };
@@ -290,6 +291,7 @@
     } else {
       lines.unshift(`You beat ${o.name} in the ${o.round}.`);
       b.round += 1;
+      CL.training?.report(c, 'challenge', { host: b.host, round: b.round + 1 });
       const n = boutFighter(c, b);
       lines.push(`Next, the ${n.round}: ${n.name}${n.rival ? ', your rival' : ''}.`);
     }

@@ -18,7 +18,7 @@
     'troops',
     'items',
     'weapon_families', // P11-01 (data/weapons.js)
-    'training', // P11-16: the specialist unlock ids
+    'training', // P11-17: specialist unlocks and instructors
     'markets',
     'quests',
     'dialogue',
@@ -571,6 +571,7 @@
     CL.story?.validate(C, err);
     CL.news?.validate(C, err);
     CL.happenings?.validate(C, err); // world events (P7-08)
+    CL.training?.validate(C, err); // P11-17: instructors and unlocks
     CL.tourney?.validate(C, err); // tournaments (P7-09)
     CL.business?.validate(C, err); // businesses: the mill (P7-10)
     CL.realm?.validate(C, err); // seats, story forts and the nobles of the realms (P8-02)

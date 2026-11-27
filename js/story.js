@@ -96,7 +96,7 @@
 
   /** A new campaign's story. P9-08: a sandbox world (no story) begins as the others are after theirs. */
   function blank(realm = null) {
-    return { flags: CL.world?.map().sandbox ? { ending: 'sandbox' } : {}, quests: {}, visits: {}, cast: castFor(realm) };
+    return { flags: CL.world?.map().sandbox ? { ending: 'sandbox' } : {}, quests: {}, visits: {}, training: {}, cast: castFor(realm) };
   }
 
   const state = (c = camp()) => {
@@ -894,6 +894,7 @@
       if (r.status === 'active' && r.expired === stage) s.story.quests[id].expired = stage;
       if (r.status !== 'active') s.story.quests[id].endedDay = day(r.endedDay);
     }
+    CL.training?.sanitize(s, src.training);
     for (const [id, n] of Object.entries(src.visits || {})) {
       if (tree(id) && Number.isInteger(n) && n >= 0) s.story.visits[id] = Math.min(n, 99999);
     }

@@ -15,6 +15,9 @@
       if (g.result.practice.bench) return { title: 'BATTLE BENCHMARK', text: 'How this device handled each battle size:', button: 'Continue' };
       return { title: g.result.practice.arena ? 'CAMERA TEST' : 'STRESS TEST', text: 'How this device handled the battle:', button: 'Continue' };
     }
+    if (mode === 'result' && g.result.training) {
+      return { title: g.result.win ? 'DRILL COMPLETE' : 'DRILL ENDED', text: g.result.training.text, button: 'Continue' };
+    }
     if (mode === 'result' && g.result.duel) {
       return { title: g.result.win ? 'BOUT WON' : 'BOUT LOST', text: 'The lists:', button: 'Continue' };
     }
@@ -193,6 +196,7 @@
     const g = CL.game;
     g.mode = mode;
     $('#stage').dataset.mode = mode;
+    $('#leavePracticeBtn').classList.add('hidden');
     $('#stage').dataset.art = mode === 'town' ? 'storybook' : ''; // P11-12b/c: the storybook town HUD (P11-12d: every screen)
     if (mode !== 'encounter') g.waitCut = null; // P10-01: the note belongs to the encounter it led to
     requestAnimationFrame(fitHud); // the top-right buttons change with the mode
@@ -200,7 +204,7 @@
     // A tip belongs to the screen it explains: a new screen closes it, then may bring its own.
     if (CL.tips?.showing()) hideTip();
     setTimeout(() => CL.tips?.check(), 400);
-    if (mode === 'result') CL.audio?.play(g.result?.win ? 'win' : 'capture');
+    if (mode === 'result' && (g.result?.win || !g.result?.training)) CL.audio?.play(g.result?.win ? 'win' : 'capture');
     $('#attackBtn .btnLabel').textContent = mode === 'town' ? 'TALK' : 'ATTACK';
     if (mode === 'town') $('#attackBtn').setAttribute('aria-label', 'Talk');
     CL.input?.releaseHeld?.(); // P11-09: nothing stays held across a change of screen (a battle's end among them)
@@ -492,6 +496,40 @@
     const services = !conv || conv.services;
     if (!services) {
       // a story moment: no shop menu here
+    } else if (n.action === 'training') {
+      const T = CL.training;
+      const m = T.table()[n.id];
+      const p = T.entry(c, m);
+      const why = T.qualification(c, m);
+      if (T.done(c, m)) opt(`Completed: ${m.title}`, () => {}, true);
+      else if (p.step === 0) opt(`Ask about ${m.title.toLowerCase()}`, () => T.hear(c, m) && redo());
+      else if (p.step === 1) {
+        opt(`Pay the lesson fee · ${m.fee} crowns`, () => T.pay(c, m) && redo(), Boolean(why || c.gold < m.fee), why);
+      } else {
+        const step = m.steps[p.step];
+        const blocked = p.retryAt > c.day ? 'Rest a day before retrying.' : why || T.readiness(c, step, true);
+        if (T.errands.includes(step.kind)) opt(T.objective(step), () => {}, true);
+        else opt(T.objective(step), () => T.lesson(c, m), Boolean(blocked), blocked);
+      }
+      if (p.step && !T.done(c, m)) opt('Abandon lesson', () => T.abandon(c, m) && redo(), false, 'The fee stays with the master.');
+      opt(`Retrain · ${CL.content.table('practice').retrain} crowns`, () => {
+        const points = T.retrain(c, m);
+        if (points) {
+          redo();
+          message(`Returned ${points.attributes} attribute and ${points.skills} skill points.`);
+        }
+      }, !T.canRetrain(c, m), 'Recover the points you spent. Training and other grants stay.');
+    } else if (n.action === 'practice') {
+      const T = CL.training;
+      const rules = CL.content.table('practice');
+      for (const id of rules.sparring) {
+        const style = CL.content.table('fighting_styles')[id];
+        opt(`Spar with a ${style.name.toLowerCase()}`, () => T.practice(c, 'bout', id), false, style.words);
+      }
+      for (const kind of ['range', 'course']) {
+        const why = T.readiness(c, { kind });
+        opt(rules.names[kind], () => T.practice(c, kind), Boolean(why), why);
+      }
     } else if (n.action === 'trade') {
       opt('See my wares', () => changeMode('trade'), false, `${c.gold} crowns · cargo ${CL.trade.cargoWeight(c)}/${CL.trade.capacity(c)}`);
     } else if (n.action === 'recruit') {
@@ -2879,6 +2917,12 @@
         b.onclick = () => talkTo(t.id);
         return b;
       }),
+      ...CL.training.here(c, c.world.location).map((m) => el('button', {
+        type: 'button', textContent: `Talk to ${m.master}`, onclick: () => CL.town.open(CL.training.npc(m))
+      })),
+      ...(CL.training.yard(c) ? [el('button', {
+        type: 'button', textContent: 'Practice', onclick: () => CL.town.open({ id: 'practice', name: 'Practice yard', action: 'practice', lines: ['Try your own kit in the yard. Your company and gear are safe.'] })
+      })] : []),
     );
     $('#happeningsHere').replaceChildren(...happeningCards(c, c.world.location));
     $('#tourneyHere').replaceChildren(...tourneyCard(c, c.world.location));
@@ -3093,6 +3137,7 @@
 
   function hideBattleOverlays() {
     $('#stage').dataset.mode = 'battle';
+    $('#leavePracticeBtn').classList.toggle('hidden', !CL.game.encounterDef?.lesson);
     $('#stage').toggleAttribute('data-duel', Boolean(CL.game.duel)); // a tournament bout: no orders (P7-09)
     if (CL.tips?.showing()) hideTip();
     setTimeout(() => CL.tips?.check('battle'), 0); // at once: the first battle waits on its card (battles don't start through changeMode)
@@ -3666,6 +3711,14 @@
       eventsCard.append(ul);
     }
     const extra = known.length ? [eventsCard] : [];
+    const masters = CL.training.journal(CL.campaign);
+    if (masters.length) {
+      const card = el('div', 'newsCard');
+      const ul = el('ul');
+      for (const line of masters) ul.append(el('li', '', line));
+      card.append(el('h3', '', 'Masters at arms'), ul);
+      extra.push(card);
+    }
     // The Realm screen (P8-02): who holds what, and the lords.
     const realmRow = el('div', 'row journalRealm');
     const realmBtn = el('button', '', 'The Realms: who holds what');

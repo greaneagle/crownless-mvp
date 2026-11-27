@@ -36,7 +36,11 @@
       const look = CL.story.lookOf(t);
       return { id: t.id, name: CL.story.speakerOf(t), tag: look.tag, role: look.role, companion: look.companion, gender: look.gender, x: spots[i].x, y: spots[i].y, action: 'talk', dialogue: t.id, visible: t.visible, lines: ['…'] };
     });
-    return [...own, ...story];
+    const masters = CL.campaign ? CL.training.here(CL.campaign, sid).map((m, i) => ({
+      ...CL.training.npc(m),
+      x: hub.spawn.x + 65 + 42 * i, y: hub.spawn.y - 24
+    })) : [];
+    return [...own, ...story, ...masters];
   }
 
   /** Enter a settlement's town scene (if it has one). Returns false for menu-only settlements. */
@@ -186,8 +190,9 @@
       const conv = CL.story.talk(n.dialogue);
       g().talk = { npc: n, conv, line: conv.text };
     } else {
-      const line = n.lines[n.lineIndex % n.lines.length];
-      n.lineIndex++;
+      const rumour = n.action === 'tavern' ? CL.training.townRumour(CL.campaign, CL.campaign.world.location) : '';
+      const line = rumour || n.lines[(n.lineIndex || 0) % n.lines.length];
+      n.lineIndex = (n.lineIndex || 0) + 1;
       g().talk = { npc: n, line };
     }
     CL.diag.log('info', 'Talk', { npc: n.id });

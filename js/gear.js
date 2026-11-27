@@ -87,7 +87,7 @@
       out.push(finding('requirement', 'skill', id, { item: name, stat: CL.content.table('skills')[k]?.name || k, need: String(n), have: String(have), fix }, { have, need: n, fix, stat: k }));
     }
     if (r.training && !ch.training?.[r.training]) {
-      const t = CL.content.table('training')[r.training];
+      const t = CL.training?.teacher(c, r.training) || CL.content.table('training')[r.training];
       const fix = t?.master ? words('fix_teacher', { master: t.master, place: CL.content.table('settlements')[t.place]?.name || t.place }) : words('fix_untaught');
       out.push(finding('requirement', 'training', id, { item: name, fix }, { have: 0, need: 1, fix, stat: r.training }));
     }
@@ -376,7 +376,7 @@
         if (!C.skills?.[k]) err(`${where}: req names an unknown skill ${k}`);
         if (!(isInt(n) && n >= 1 && n <= maxSkill)) err(`${where}: req.skills.${k} must be from 1 to ${maxSkill}`);
       }
-      if (r.training != null && !C.training?.[r.training]) err(`${where}: no one teaches the training ${r.training}`);
+      if (r.training != null && (!C.training?.[r.training] || C.training[r.training].teaches)) err(`${where}: no one teaches the training ${r.training}`);
     };
     for (const fam of Object.values(C.weapon_families || {})) shape(fam.req, `weapon family ${fam.id}`);
     const reqOfIn = (it) => it.req ?? (it.slot === 'weapon' ? C.weapon_families?.[it.family]?.req : null) ?? null;

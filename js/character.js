@@ -191,7 +191,7 @@
     const taught = CL.content.table('training');
     let n = ch.skills?.[id] ?? 0;
     for (const t of Object.keys(ch.training || {})) n += taught[t]?.skills?.[id] || 0;
-    return n;
+    return Math.min(MAX_SKILL, n);
   }
 
   /** P11-03: an attribute's base value (the same as `attribute`: nothing yet adds to one for a while). */
@@ -199,7 +199,7 @@
 
   /** Skill level including bonuses from equipped items (e.g. Ring of Roads → pathfinding): effective, for what a skill does. */
   function skill(id, c = camp()) {
-    const base = c.character?.skills?.[id] ?? 0;
+    const base = baseSkill(id, c);
     return base + equippedItems(c).reduce((sum, it) => sum + (it.stats[id] || 0), 0) + (CL.companion?.skillBonus(id, c) || 0) + (CL.retinue?.skillBonus(id, c) || 0);
   }
 
@@ -299,7 +299,7 @@
     // P11-03: what was spent on each (never more than it holds), and the training done.
     for (const a of ATTRIBUTES) if (isInt(d.spent?.attributes?.[a], 1, ch.attributes[a])) ch.spent.attributes[a] = d.spent.attributes[a];
     for (const k of skillIds()) if (isInt(d.spent?.skills?.[k], 1, ch.skills[k])) ch.spent.skills[k] = d.spent.skills[k];
-    if (d.training && typeof d.training === 'object') for (const [t, v] of Object.entries(d.training)) if (v === true && /^[a-z0-9_]{1,32}$/.test(t)) ch.training[t] = true;
+    if (d.training && typeof d.training === 'object') for (const [t, v] of Object.entries(d.training)) if (v === true && /^[a-z0-9_]{1,40}(?::[a-z0-9_]{1,40})?$/.test(t) && !CL.content.table('training')[t]?.teaches) ch.training[t] = true;
     return ch;
   }
 

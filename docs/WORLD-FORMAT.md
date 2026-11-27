@@ -69,12 +69,16 @@ The official world has these (`js/content.js` `TABLES`, plus `forge`, `realm_pal
 | `news` | News kinds: `priority`, `lines` (and by ending) |
 | `world_events` | Happenings in places: where, how often, choices and outcomes |
 | `tournaments` | Hosts, rounds, fees and prizes |
+| `training` | Specialist unlocks and instructors. An unlock holds `id` and may grant `skills { id: 1 }` up to the skill cap. An instructor holds `id`, `master` (name), `title` (lesson name), `place`, optional `alsoAt` (other town ids), `role` (a town role), `words`, `teaches` (unique unlock ids), `fee`, optional `needs { renown?, req?: { str?, agi?, skills? } }`, and `steps`. |
+| `practice` | Yard-wide rules for a whole world. `retrain` is the price in crowns, `sparring` lists fighting style ids, `targets` gives three `[x, y]` marks in the lists, and `names` labels the bout, range and course. |
 | `businesses` | The mill: price, input, output, managers, rules |
 | `help_topics`, `tips` | How to play, and the first-time tips |
 | `cultures` | Name lists (`given`, `givenFemale`, `trades`, `epithets`) and `forms` |
 | `realm_palette` | The colours of realms founded in play |
 
-A regional item gives a `region` key and a slot-appropriate `look`. List its id in the producing towns’ `gear` arrays. Those markets keep selling it after a change of ruler. Give a troop `regionalGear: [itemId, …]` to point from its card to the armouries. The reference leaves the troop’s combat profile intact. A specialist item’s `req.training` names an entry in `training`. P11-17 supplies the instructors.
+A regional item gives a `region` key and a slot-appropriate `look`. List its id in the producing towns’ `gear` arrays. Those markets keep selling it after a change of ruler. Give a troop `regionalGear: [itemId, …]` to point from its card to the armouries. The reference leaves the troop’s combat profile intact. A specialist item’s `req.training` names an unlock in `training`. One instructor teaches each regional unlock. Instructors serve the current owner of their listed towns. If the hero is barred from all of those towns, the instructor teaches at the nearest accessible free port, then the nearest accessible town if there is no free port.
+
+An instructor’s `steps` start with `{ kind: 'talk' }` and `{ kind: 'pay' }`. Use `bout` with a loaner `weapon` and optional `style` and `troop`, `range` with a ranged `weapon`, or `course` with a mounted `weapon` and a battle-ready `horse`. A `challenge` can name a lists `host` and a required `round` from 1 to 3. A `favour` names a contract `template` and passes when the hero collects the reward for that work from a town where the master teaches.
 
 ## The checks
 

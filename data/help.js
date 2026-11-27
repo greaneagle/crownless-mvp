@@ -237,6 +237,14 @@
         'A piece you don’t yet meet the needs of is never taken from you: it stays on you or in your pack, and in battle it stays with the baggage. A weapon you can’t wield yet gives way to your other one, or to your fists if neither will do, and the battle says so.'
       ]
     },
+    masters: {
+      id: 'masters', stage: 'captain', order: 6.7, title: 'Masters at arms',
+      body: [
+        'The armoury names the master for a specialist weapon. When you are ready, listen for word at the inn or in the Journal.',
+        'Speak to the master, pay for the lesson and try the drill. Rest a day after a failed attempt. You can try again on the same fee.',
+        'Choose Practice in a town with a yard to spar, shoot or ride. Practising costs nothing. A master can also return the points you spent for a fee.'
+      ]
+    },
     trade: {
       id: 'trade',
       stage: 'captain',
@@ -323,7 +331,7 @@
   C.tips = {
     // P10-07: the beginner guide, in its order (guide: true); then the hints.
     settlement: { id: 'settlement', guide: true, on: 'settlement', help: 'party', title: 'Towns and villages', text: 'Its people are under Talk to: they have work, news and the story. In a town, Walk the streets to meet them face to face. Hiring, food and the market are on this menu too.' },
-    town: { id: 'town', guide: true, on: 'town', help: 'towns', title: 'In the streets', textTouch: 'Tap a person to walk over and talk. Town menu has hiring, food, the market and contracts. Walk to "To the road" to leave.', textKeys: 'Click a person to walk over and talk, or walk with WASD and press Space. Town menu has hiring, food, the market and contracts.' },
+    town: { id: 'town', guide: true, on: 'town', help: 'towns', title: 'In the streets', textTouch: 'Tap a person to talk. The town menu sometimes offers Practice. Walk to "To the road" to leave.', textKeys: 'Click a person to talk, or walk with WASD and press Space. The town menu sometimes offers Practice.' },
     hire: { id: 'hire', guide: true, on: 'settlement', when: 'canHire', help: 'party', title: 'Hiring', text: 'Hire soldiers with the Hire buttons: each costs crowns now, then eats and draws a small weekly wage. Two or three will do to start; Party shows who you have.' },
     map: { id: 'map', guide: true, on: 'map', help: 'map', title: 'The map', text: 'Tap a place to travel there; time passes as you ride. Your Journal says where your work is.' },
     lowFood: { id: 'lowFood', guide: true, on: 'map', when: 'lowFood', help: 'party', title: 'Food', text: 'Your company eats every day, a ration for five. Buy food in any town or village (Buy food on its menu): hungry soldiers lose morale and may desert.' },
