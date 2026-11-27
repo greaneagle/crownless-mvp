@@ -5278,7 +5278,7 @@ _Expanded 2026-11-27 at 5.11.0 (commit ff54781) by the owner's approval of a gra
 
 ---
 
-### P11-14 · Combined arms and the tactics lab (M–L) — 5.14.0, Specified
+### P11-14 · Combined arms and the tactics lab (M–L) — ✅ Done (version at merge; owner to accept)
 
 **Now.** Archers on high ground shoot 25% further; fords break formations; braced spears stop horse; enemies prefer archers; Auto picks a plan from the odds; the enemy's army plan forms blocks; P11-13 made formations real.
 
@@ -5334,6 +5334,16 @@ _Expanded 2026-11-27 at 5.11.0 (commit ff54781) by the owner's approval of a gra
 - **Play:** M4 part 1.
 - **Explain:** none new.
 - **Not here:** Prepare's screens (P11-15).
+
+**Done (version at merge, branch `claude/p11-14-combined-arms`).**
+- **The comparisons** (`node scripts/tactics-lab.js 40 --compare`, new): the seven, each on the same armies, map and seeds, the counter against the other way and against every division charging; `tests/tactics-lab.test.js` guards each one's direction at 2 seeds.
+- **Terrain:** forest cover (an arrow at a fighter among trees is stopped 20% a tree, at most 50%). High ground's range kept; a melee edge for the higher, marsh and horse's open ground not built (not measured useful here).
+- **Screens:** an archer with a formed friend between it and the foe is screened (`formations.screens`, every 0.25 s): enemy foot and riders stop singling it out. **Counters** kept and measured: braced spears and squares against horse, horse in on the volley, walls under arrows.
+- **Setups** (`prep.choose`, from the band the company sees): Balanced holds its horse on a flank until the first volley (5 s at most); Defensive a shield wall, or a square against horse (30% riders or more); Aggressive a wedge. **The enemy's army plan** by the same choices (a wedge when much the stronger, a wall or a square when the weaker; its horse in on its own first volley). A column on Charge breaks into loose ranks in the fight; Follow breaks ranks at 75 px again (P11-13's leash is Hold's).
+- **Measured** (40 seeds, win % / losses %; plan, other, charge): screen 100/1, 83/56, 100/15; brace 98/36, 58/65, 0/99; flank 100/7, 100/19, 33/78; wall 98/21, 0/84, 100/16; hill 100/39, 75/65, 98/44; forest (column, line) 93/28, 95/25, 98/21; hero: passive with a plan 100/7, active on Auto 100/17, active with a plan 25/60, charge 33/78. `parity 40`: the close fights 15.3 over the odds (14.3 at 5.14.0); `--big` all 100%, close×8@100 lost 5.0 (13.1).
+- **Acceptance in part:** screen, brace, flank and the hero (a passive hero with a good plan wins) beat charging clearly; the wall, the hill and the forest only beat their other way (wall, hill) or not at all (forest), not charging, which wins these armies. Auto is not worse than before (`--big`).
+- **Tuning, two tries each:** Balanced in a line (cost the big battles: close×8@100 85% won, 15 lost) dropped for loose; the horse's wait 10 s → 5 s (veterans' losses 1.43 → 0.55). The column deploying (forest 70 → 93) kept. Open for P11-T: the active hero with a held plan (25%), the forest comparison.
+- **Tests:** `tests/tactics-lab.test.js` (new, 7), `tests/prep.test.js` (+1, Balanced's orders), `tests/formations.test.js` (the enemy's choices), `extras.test.js`, `divisions.spec.js`; golden battles recorded again. `npm test` 1,093 pass; lint clean; browser `battle`, `divisions`, `extras` (28), `screens.visual`, `art` (18) pass.
 
 ---
 
