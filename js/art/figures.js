@@ -19,7 +19,7 @@
  *   helmet 'nasal' | 'kettle' | 'great' | 'cap' | 'hood' | 'spangen' | 'crest' | 'plumed' | 'furhat' |
  *     'sallet' | 'bascinet'; hat 'brim' | 'cap' | 'kerchief' | 'coif'; apron, cloak, cloakTrim, plume
  *   shield 'kite' | 'round' | 'heater' | 'wood' | 'pavise', realm (whose colours the shield and tabard wear)
- *   weapon 'sword' | 'greatsword' | 'axe' | 'greataxe' | 'mace' | 'club' | 'hammer' | 'spear' | 'pike' |
+ *   weapon 'sword' | 'greatsword' | 'axe' | 'greataxe' | 'longaxe' | 'mace' | 'club' | 'hammer' | 'spear' | 'pike' |
  *     'lance' | 'staff' | 'bow' | 'recurve' | 'crossbow' | 'arbalest' | null; quiver, len, twoHanded,
  *     shieldBack, gloves, mount, sig; female, dress (a long dress, townsfolk), scale, crown
  *   features (P11-12b, all from `features(L)`): face { shape, brow, nose, mouth } (a portrait's faceOf),
@@ -787,6 +787,16 @@
       ctx.quadraticCurveTo(17, 7.5, 15, 1.2);
       ctx.closePath();
       out('#c6cece');
+    } else if (kind === 'longaxe') {
+      ctx.scale(len, 1);
+      stroke(-13, 28, 2, PAL.wood);
+      ctx.beginPath();
+      ctx.moveTo(23, 1.5);
+      ctx.quadraticCurveTo(19, -3.5, 20, -6);
+      ctx.quadraticCurveTo(26, -5.5, 30, -10);
+      ctx.quadraticCurveTo(34, -3.5, 29, 3);
+      ctx.closePath();
+      out('#c6cece');
     } else if (kind === 'spear' || kind === 'lance' || kind === 'pike') {
       const L = (kind === 'lance' ? 40 : kind === 'pike' ? 48 : 34) * len;
       stroke(-12 * len, L, kind === 'lance' ? 2.2 : 1.7, '#9a7048');
@@ -930,7 +940,7 @@
     if (kind === 'staff') a = -Math.PI / 2;
     if (P.mounted && spear) a = side ? -0.35 : up ? -1.4 : -1.75;
     const tilt = P.mounted && side ? (P.aim === 'up' ? -0.6 : P.aim === 'down' ? 0.5 : 0) : 0;
-    if (kind === 'greataxe' || kind === 'greatsword') {
+    if (kind === 'greataxe' || kind === 'longaxe' || kind === 'greatsword') {
       a = side ? -1.0 : up ? -1.0 : -2.1;
       hy = -14;
     }
@@ -1033,7 +1043,7 @@
       ctx.strokeStyle = P.trail || 'rgba(255,248,226,0.55)';
       ctx.lineWidth = 2.2;
       ctx.lineCap = 'round';
-      const r = L.weapon === 'greataxe' || L.weapon === 'greatsword' ? 22 : 15;
+      const r = L.weapon === 'greataxe' || L.weapon === 'longaxe' || L.weapon === 'greatsword' ? 22 : 15;
       const back = side ? -2.55 : up ? -0.35 : -2.75;
       ctx.beginPath();
       ctx.arc(wa.hx, wa.hy, r, Math.min(back, wa.a), Math.max(back, wa.a));
@@ -1145,7 +1155,7 @@
     if (!L.weapon || SHOOTS.includes(L.weapon)) return null;
     const face = P.face || 'down';
     const wa = weaponArm(L, P, face);
-    const long = { greatsword: 27, greataxe: 23, spear: 41, pike: 55, lance: 47 }[L.weapon] || 17;
+    const long = { greatsword: 27, greataxe: 23, longaxe: 30, spear: 41, pike: 55, lance: 47 }[L.weapon] || 17;
     const d = wa.ext + long * (wa.len || 1) * (L.len || 1);
     const x = wa.hx + Math.cos(wa.a) * d;
     const y = wa.hy + Math.sin(wa.a) * d - (P.mounted ? SEAT : 0);
@@ -1430,7 +1440,7 @@
       L.weapon = w ? wl.weapon || p.family.look || 'sword' : null;
       L.len = wl.len || 1;
       L.twoHanded = Boolean(w) && hands === 2 && !shoots;
-      L.bowSize = p.family.id === 'longbow' ? 1.2 : undefined;
+      L.bowSize = L.weapon === 'bow' || L.weapon === 'recurve' ? (p.family.id === 'longbow' ? 1.2 : 1) * L.len : undefined;
       L.quiver = shoots || has('ammo') || (only ? Boolean(L.quiver) : false);
     }
     if (!only || has('offhand') || back) {
