@@ -188,6 +188,7 @@
     u.moraleMul = 1;
     g.routEvents ??= [];
     g.routEvents.push({ team: u.team, x: u.x, y: u.y, t: g.t });
+    CL.report?.onRout(g, u); // P11-15: the battle report counts it
   }
 
   /** A routing unit gets clear away: it leaves the battle (not a body on the ground). @param {any} g @param {Unit} u */

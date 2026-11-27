@@ -125,6 +125,7 @@
       rider.bracedUntil = g.t + BRACE.cooldown;
       CL.combat.hit(rider, o.damage * BRACE.damage, o);
       g.effects.push({ x: rider.x, y: rider.y - 20, t: 0.3, color: '#f6daa6', kind: 'brace' });
+      CL.report?.onBrace(g, o); // P11-15: the battle report counts it
       return o;
     }
     return null;

@@ -1651,6 +1651,7 @@
     const map = CL.arena.mapFor(e.def.map || 'open_country');
     const ambush = Boolean(g.caught && e.hostile);
     const plan = CL.prep.remembered(map, ambush);
+    CL.prep.useRemembered(CL.campaign, map); // P11-15: the loadout last chosen on this kind of field
     if (CL.settings.get('prepSkip')) return CL.parties.attack(plan);
     g.prep = { map, plan, ambush, remember: CL.settings.get('prepPreset') !== 'balanced', skip: false, drag: null };
     changeMode('prepare');
@@ -1718,7 +1719,6 @@
     const fit = fitByGroup();
     const box = $('#prepPanel');
     const btn = (label, onclick, extra = {}) => Object.assign(document.createElement('button'), { type: 'button', textContent: label, onclick, ...extra });
-    const foes = Object.values(e.troops).reduce((a, b) => a + b, 0);
     const own = fit.infantry + fit.archer + fit.cavalry;
     const odds = Math.round(CL.autoresolve.winChance(CL.autoresolve.playerPower(), CL.autoresolve.troopsPower(e.troops)) * 100);
     const presets = document.createElement('div');
@@ -1776,14 +1776,19 @@
       }),
     );
     const auto = p.plan.preset === 'auto' && p.plan.auto ? ` (${PRESET_NAMES[p.plan.auto]} for this fight)` : '';
+    // P11-15: the enemy as far as the company knows it, the field in words, and what the setup does here.
+    const f = foeLines(e, p);
+    const here = CL.prep.against(p.plan.preset === 'auto' ? p.plan.auto || 'balanced' : p.plan.preset, f.known, fit);
     box.replaceChildren(
       Object.assign(document.createElement('h2'), { textContent: 'Prepare for battle' }),
-      Object.assign(document.createElement('p'), { textContent: `${e.name}: ${foes} against your ${own} fit soldier${own === 1 ? '' : 's'}.${p.ambush ? ' Ambush! Little room to form up.' : ''}` }),
+      f.foe,
+      Object.assign(document.createElement('p'), { className: 'setNote', textContent: `Your ${own} fit soldier${own === 1 ? '' : 's'}${fit.infantry + fit.archer + fit.cavalry ? `: ${CL.prep.GROUPS.filter((x) => fit[x]).map((x) => `${fit[x]} ${GROUP_NAMES[x].toLowerCase()}`).join(', ')}` : ''}.${p.ambush ? ' Ambush! Little room to form up.' : ''}` }),
       ...(e.def.share ? [Object.assign(document.createElement('p'), { id: 'prepShare', className: 'setNote', textContent: shareLine(e.def) })] : []),
       actions, // first, so Fight is always in reach (two taps from the encounter)
-      gearLine(), // P11-02: the loadout you fight with, and what the gear check finds
+      gearLine(), // P11-15: the hero line (loadout, horse, quiver) and the findings for this field
+      f.field,
       presets,
-      Object.assign(document.createElement('p'), { className: 'setNote', textContent: PRESET_ABOUT[p.plan.preset] + auto }),
+      Object.assign(document.createElement('p'), { id: 'prepAbout', className: 'setNote', textContent: `${PRESET_ABOUT[p.plan.preset]}${auto}${here ? ` ${here}` : ''}` }),
       ...rows,
       divisionsBox(p, () => renderPrep()),
       check('Remember this setup', 'remember'),
@@ -2303,34 +2308,70 @@
     }
   }
 
-  /** P11-02: Prepare's line: the loadout this battle starts with, and any finding (the full work is P11-15). */
+  /**
+   * P11-15: Prepare's hero line: what is in hand (drawn), on horse or on foot, the quiver, and the two
+   * choices (the other weapon, ride or walk), then what the gear check finds for this field. The
+   * loadout chosen here is remembered for this kind of field (`loadout.last`).
+   */
   function gearLine() {
     const c = CL.campaign;
-    const lo = CL.gear.battleLoadout(c);
-    const line = el('p', { textContent: `You fight with your ${CL.gear.LOADOUT_NAMES[lo.which]}: ${CL.gear.describe(c, c.equipment, lo.which)}.${lo.message ? ` ${lo.message}` : ''}` });
-    const ic = itemIco(CL.gear.active(c, c.equipment, lo.which).weapon); // P11-04: what's in hand, drawn
-    if (ic) line.prepend(ic);
-    const box = el('div', { id: 'prepGear', className: 'setNote' }, line);
-    box.append(...findingRows(CL.gear.check(c, c.equipment, { which: lo.which }), 'p'));
-    // P11-08: on horse or foot this battle, and the choice (remembered).
-    if (c.equipment.horse && CL.gear.mountOf(c.equipment.horse)?.battle !== 'no') {
-      const map = CL.game.prep?.map;
-      const st = CL.gear.rideState({ ...c, loadout: { ...c.loadout, ride: true } }, c.equipment, lo.which, map);
-      const name = CL.content.item(c.equipment.horse).name;
-      // Measured (P11-08): a hero who gallops ahead of a company on foot arrives alone; say so.
-      const foot = c.roster.length && c.roster.every((s) => CL.content.troop(s.troop)?.role !== 'cavalry');
-      const words = !st.ride ? st.reason : c.loadout.ride === false ? `You will fight on foot (your ${name} waits with the baggage).` : `You will ride your ${name}.${foot ? ' Your soldiers are on foot: gallop ahead and you arrive alone.' : ''}`;
-      const row = el('p', { className: 'rideRow', textContent: words });
-      if (st.ride) {
-        row.append(' ', el('button', { type: 'button', id: 'prepRide', textContent: c.loadout.ride === false ? 'Ride' : 'Fight on foot', onclick: () => {
-          c.loadout.ride = c.loadout.ride === false;
-          CL.save.write();
-          renderPrep();
-        } }));
-      }
-      box.append(row);
+    const G = CL.gear;
+    const map = CL.game.prep?.map;
+    const lo = G.battleLoadout(c);
+    const a = G.active(c, c.equipment, lo.which);
+    const ico = (name, label) => el('span', { className: `ico itemIco ico-${name}`, role: 'img', ariaLabel: label, title: label });
+    const line = el('p', { className: 'heroLine' });
+    const chip = (...kids) => el('span', { className: 'heroChip' }, ...kids);
+    const shield = a.shield ? itemIco(a.shield) : null;
+    line.append(chip(itemIco(a.weapon) || ico('fist', 'Fists'), shield, el('span', { className: 'handWord', textContent: G.describe(c, c.equipment, lo.which) })));
+    // On horse or on foot this battle (P11-08), and why not when you can't.
+    const horse = c.equipment.horse && G.mountOf(c.equipment.horse)?.battle !== 'no' ? c.equipment.horse : null;
+    const st = horse ? G.rideState({ ...c, loadout: { ...c.loadout, ride: true } }, c.equipment, lo.which, map) : null;
+    const rides = Boolean(st?.ride) && c.loadout.ride !== false;
+    line.append(chip(rides ? ico('horse', 'Riding') : ico('boot', 'On foot'), el('span', { className: 'rideWord', textContent: rides ? `Riding your ${CL.content.item(horse).name}` : 'On foot' })));
+    const shots = G.ammoOf(c.equipment, lo.which);
+    if (shots != null) line.append(chip(ico('quiver', 'Quiver'), el('span', { className: 'quiverWord', textContent: `${shots} shots` })));
+    const box = el('div', { id: 'prepGear', className: 'setNote prepHero' }, line);
+    const choices = el('div', { className: 'heroChoices' });
+    if (c.equipment.weapon2) {
+      const other = lo.which === 'primary' ? 'secondary' : 'primary';
+      const otherName = CL.content.item(other === 'secondary' ? c.equipment.weapon2 : c.equipment.weapon)?.name || 'fists';
+      choices.append(el('button', { type: 'button', id: 'prepLoadout', textContent: `Use ${otherName}`, title: `Start this battle with your ${G.LOADOUT_NAMES[other]}, and on this kind of field from now on`, onclick: () => {
+        CL.prep.chooseLoadout(c, map, other);
+        CL.save.write();
+        renderPrep();
+      } }));
     }
+    if (st?.ride) {
+      choices.append(el('button', { type: 'button', id: 'prepRide', textContent: c.loadout.ride === false ? 'Ride' : 'Fight on foot', onclick: () => {
+        c.loadout.ride = c.loadout.ride === false;
+        CL.save.write();
+        renderPrep();
+      } }));
+    }
+    if (choices.childElementCount) box.append(choices);
+    // What stops or weakens you here: the preferred loadout unusable, the field refusing horses, the gear check.
+    const findings = G.check(c, c.equipment, { which: lo.which, mounted: rides });
+    const notes = [];
+    if (lo.message) notes.push(lo.message);
+    if (horse && st && !st.ride && st.reason && !findings.some((x) => x.text === st.reason)) notes.push(st.reason); // the field or the weapon (a requirement is a finding already)
+    else if (rides && c.roster.length && c.roster.every((s) => CL.content.troop(s.troop)?.role !== 'cavalry')) notes.push('Your soldiers are on foot: gallop ahead and you arrive alone.'); // measured (P11-08)
+    for (const n of notes) box.append(el('p', { className: 'finding finding-note' }, el('b', { className: 'findingMark', ariaHidden: 'true', textContent: G.ICONS.note }), el('span', { className: 'findingText', textContent: n })));
+    box.append(...findingRows(findings, 'p'));
     return box;
+  }
+
+  /**
+   * P11-15: what the company knows of the foe (only that), and the field in words, for Prepare.
+   * @param {any} e the encounter @param {any} p the preparation state
+   */
+  function foeLines(e, p) {
+    const k = CL.prep.known(CL.campaign, e, { ambush: p.ambush });
+    const who = k.level === 'scout' ? ` (your scout’s estimate)` : '';
+    const foe = el('p', { id: 'prepFoe', className: `prepFoe known-${k.level}` }, el('b', { textContent: `${e.name}: ` }), k.level === 'unknown' ? 'how many and how armed, unknown.' : `${k.words}${who}.`);
+    const notes = CL.prep.terrainNotes(p.map, p.plan);
+    const field = el('p', { id: 'prepField', className: 'setNote' }, el('b', { textContent: `${p.map.name || 'The field'}: ` }), notes.join(' '));
+    return { known: k, foe, field };
   }
 
   /**
@@ -2345,6 +2386,7 @@
       row.append(
         el('button', { type: 'button', className: 'startWith', textContent: `Start with ${G.LOADOUT_NAMES[other]}`, onclick: () => {
           c.loadout.start = other;
+          c.loadout.last = {}; // P11-15: the sheet's choice is the default again on every field
           after();
         } }),
         el('button', { type: 'button', className: 'swapWeapons', textContent: 'Swap weapons', onclick: () => CL.character.swapWeapons(c) && after() }),

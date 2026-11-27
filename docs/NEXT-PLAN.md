@@ -364,7 +364,7 @@ Every Phase 9 task is **Specified** (2026-11-22; NEXT-TASKS has each in full). T
 | **P11-12e** | **Performance, caches, visual regression and acceptance** (M3): the original P11-12's budget (60 fps at 40 at Balanced, 30 at 200 on the phone, or the owner accepts the measured size), bounded caches, identical results at every Sharpness; **the owner accepts the graphics and the phone**. 5.12.3 | M–L | P11-12c, P11-12d |
 | **P11-13** ✅ | **Formations and orders that hold:** slots and leash, frontage, flanks, each formation's character, cohesion, order states on the field | L | P11-11 |
 | **P11-14** ✅ | **Combined arms and the tactics lab:** terrain, screens, counters, Auto and presets, the enemy's plan; seven controlled comparisons | M–L | P11-13 |
-| **P11-15** | **Prepare and the battle report** (M4): the hero's loadout and mount, known enemy information, terrain notes, a one-screen report with more on request | M | P11-14 |
+| **P11-15** ✅ | **Prepare and the battle report** (M4): the hero's loadout and mount, known enemy information, terrain notes, a one-screen report with more on request | M | P11-14 |
 | **P11-16** ✅ | **Regional arms:** six to eight pieces from the realms' identities (D-P11g for the horse bow) | M | P11-11, P11-03 |
 | **P11-17** ✅ | **Masters at arms:** instructors, short practical training on the duel engine, permanent unlocks, paid retraining, the practice yard | L | P11-16 |
 | **P11-18** | **The walls and other special fields:** no horses on walls, long weapons on ladders, archers and shields on the walkway; siege parity re-measured | M | P11-13, P11-08 |

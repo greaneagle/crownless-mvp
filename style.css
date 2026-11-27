@@ -333,6 +333,19 @@
 #stage[data-mode="prepare"] #touch,#stage[data-mode="prepare"] #topRight{display:none}
 @media(pointer:coarse){.prepPresets button,.prepGroup button{min-height:calc(44px * var(--ui-grow))}}
 #stage[data-mode="prepare"] #topLeft{display:none}
+/* P11-15: Prepare's hero line, the foe as known, and the battle report's More */
+.prepHero .heroLine{display:flex;flex-wrap:wrap;align-items:center;gap:2px 12px;margin:4px 0}
+.heroChip{display:inline-flex;align-items:center;gap:4px}
+.prepHero .heroLine .itemIco{width:calc(22px * var(--ui-scale));height:calc(22px * var(--ui-scale))}
+.heroChoices{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0}
+.heroChoices button{min-height:calc(44px * var(--ui-grow));flex:1 1 40%;font-size:calc(12px * var(--ui-scale))}
+.prepFoe{margin:4px 0}
+.prepFoe.known-unknown{font-style:italic}
+#result .reportSummary{font-weight:bold;color:#ecd6a4}
+#result details.reportMore{margin-top:4px;text-align:left}
+#result details.reportMore summary{min-height:calc(44px * var(--ui-grow));display:flex;align-items:center;justify-content:center;cursor:pointer;color:#ecd6a4;font-weight:bold;font-size:calc(13px * var(--ui-scale))}
+#result details.reportMore p{margin:0}
+#result .reportNotable{color:#f3e4c0}
 
 /* V2-10: roll of honour and retiring */
 .honourRow{display:flex;flex-direction:column;gap:2px;padding:calc(6px * var(--ui-scale)) calc(8px * var(--ui-scale));margin:4px 0;border-left:3px solid #8a6d3b;background:#ffffff0a}

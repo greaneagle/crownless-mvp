@@ -1,5 +1,23 @@
 # Crownless — Release Notes
 
+## v5.17.0 — Prepare and the battle report (P11-15, Milestone M4) · 2026-11-27
+
+### New
+- **Prepare shows your own line:** what you will fight with (drawn), on horse or on foot, and your shots if you carry a bow. One tap uses your other weapon, one tap fights on foot. The weapon you choose is remembered for that kind of field, and used when there is no time to prepare.
+- **Only what your company knows of the enemy:** a band you can see: about how many, and whether foot, archers or riders. With a scout: their estimate and how they are armed ("about 20, mostly axes, some maces and some bows"). A lair, or a band that bursts from cover: unknown.
+- **The field in words:** a rise where archers shoot further, a ford, thick or scattered trees, open ground, the walls. Each setup says what it does against this enemy, when enough is known of them.
+- **The battle report:** after a fought battle, one line says who won, the losses on each side and how long it took. Tap More for each division's kills, losses and breaks, your own blows, blocks, staggers, shots and hits, what stood out (a shield wall that held against arrows, spears that stopped a charge, a flank that broke them), and who did what.
+- How to Play: "Preparing for battle".
+### Changed
+- Prepare no longer shows the enemy's exact number. A finding is said once (a horse's requirement was said twice).
+- The result screen of a fought battle keeps crowns, renown, XP and loot on top; the counts, the names and the rest are under More. Auto-resolve's screen is as before.
+- Choosing on the character sheet which weapon battles start with makes it the default again on every field.
+### Under the hood
+- `js/report.js` (new): a battle's tally, fed by one-line hooks in `combat.hit`, `stagger`, `startAttack`, `loose`, `morale`'s rout and `groups.braceAgainst`. It only counts: the golden battles are unchanged.
+- `js/prep.js`: `known`, `makeUp`, `terrainNotes`, `against`, `kindOf`, `useRemembered`, `chooseLoadout`. The loadout memory is P11-02's saved `loadout.last`: no save change.
+- Tests: `tests/report.test.js` (new, 6), `tests/prep.test.js` (+6), `tests/browser/prep.spec.js` (new, 4 a project).
+- Checks: `npm test` 1,117 pass; lint clean; the full browser suite 344 pass, two load flakes (archery, battle-size) pass alone.
+
 ## v5.16.0 — Masters at arms and the practice yard (P11-17) · 2026-11-27
 
 ### New

@@ -811,6 +811,7 @@
     const e = current();
     if (!e) return;
     assaultPenalty(CL.campaign, e);
+    CL.prep?.useRemembered(CL.campaign, CL.arena.mapFor(e.def.map || 'open_country')); // P11-15: no time to prepare: the remembered loadout
     CL.combat.startBattle(e.def, { plan });
   }
 

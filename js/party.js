@@ -489,6 +489,7 @@
       waves: `${g.wave}/${g.totalWaves}`,
       names,
       wagon: CL.objective.fate(g, win),
+      report: CL.report?.read(g, { win, fallen: killed.length, wounded: wounded.length }), // P11-15
     });
     g.result = { win, html, ...r, slowOffer: slowOffer(g) };
     CL.diag.log('info', 'Battle ended', { ...outcome, result: r, day: CL.campaign.day });
@@ -595,29 +596,40 @@
   /**
    * Result screen text for a fought or auto-resolved battle. Only numbers and data names are interpolated.
    * @param {{ win: boolean, r: BattleResult | null, kills: number, routed?: number, fled?: number, helped?: number, standouts?: string[], killed: number[], wounded: number[], saved?: number[], medicineUsed?: number,
-   *   survivors: number, waves?: string, auto?: { pp: number, pe: number, reasons?: string[] }, names?: Record<number, string>, wagon?: 'saved' | 'lost' | null }} info
+   *   survivors: number, waves?: string, auto?: { pp: number, pe: number, reasons?: string[] }, names?: Record<number, string>, wagon?: 'saved' | 'lost' | null,
+   *   report?: { summary: string, divisions: string[], hero: string | null, notable: string[] } | null }} info
    *   names: soldier names by ID, taken before the battle (soldiers can be renamed, so they are escaped)
+   *   report: a fought battle's report (P11-15): its summary line on top, and the rest under "More"
    */
-  function resultHtml({ win, r, kills, routed = 0, fled = 0, helped = 0, standouts = [], killed, wounded, saved = [], medicineUsed = 0, survivors, waves, auto, names, wagon = null }) {
+  function resultHtml({ win, r, kills, routed = 0, fled = 0, helped = 0, standouts = [], killed, wounded, saved = [], medicineUsed = 0, survivors, waves, auto, names, wagon = null, report = null }) {
     const recoverDay = dayNumber(CL.campaign.day + CL.surgeon.woundDays(CL.campaign));
     const lines = [
       `<strong>${win ? `+${r.gold} crowns · +${r.renown} renown` : `${-r.gold} crowns lost (20%)`}</strong>`,
     ];
+    /** P11-15: lines that go under More (a fought battle's report); without a report they stay in the list. */
+    const more = report ? [] : lines;
+    if (report) lines.push(`<span class="reportSummary">${escapeHtml(report.summary)}</span>`);
     if (auto) {
       const odds = Math.round(CL.autoresolve.winChance(auto.pp, auto.pe) * 100);
       lines.push(`Auto-resolved: your strength ${auto.pp.toFixed(1)} vs ${auto.pe.toFixed(1)} (${odds}% odds)`);
       // Why those odds (V2-07): strength part by part, from before the fight.
       if (auto.reasons?.length) lines.push(`<small>${auto.reasons.map(escapeHtml).join('<br>')}</small>`);
     }
-    lines.push(`Enemies defeated: ${kills}${routed ? ` · ${routed} fled the field` : ''}${helped ? ` · ${helped} felled by those who came to help` : ''}`, `Killed: ${killed.length} · Wounded: ${wounded.length}${fled ? ` · ${fled} ran but came back` : ''}`);
+    more.push(`Enemies defeated: ${kills}${routed ? ` · ${routed} fled the field` : ''}${helped ? ` · ${helped} felled by those who came to help` : ''}`, `Killed: ${killed.length} · Wounded: ${wounded.length}${fled ? ` · ${fled} ran but came back` : ''}`);
     const who = (ids) => ids.map((id) => escapeHtml(names?.[id] || '')).filter(Boolean).join(', ');
-    if (standouts.length) lines.push(`Who did what: ${standouts.map(escapeHtml).join(' · ')}`); // V2-10
-    if (who(killed)) lines.push(`Fallen: ${who(killed)}`);
-    if (who(wounded)) lines.push(`Wounded: ${who(wounded)}`);
+    if (report) {
+      // P11-15: the divisions, the hero and what stood out.
+      for (const d of report.divisions) more.push(escapeHtml(d));
+      if (report.hero) more.push(escapeHtml(report.hero));
+      for (const n of report.notable) more.push(`<b class="reportNotable">${escapeHtml(n)}</b>`);
+    }
+    if (standouts.length) more.push(`Who did what: ${standouts.map(escapeHtml).join(' · ')}`); // V2-10
+    if (who(killed)) more.push(`Fallen: ${who(killed)}`);
+    if (who(wounded)) more.push(`Wounded: ${who(wounded)}`);
     // P7-01: the surgeon's triage, by name.
     const doc = CL.surgeon.get(CL.campaign);
-    if (doc && saved.length) lines.push(`Surgeon ${escapeHtml(doc.name)} saved ${who(saved) || `${saved.length}`}${medicineUsed ? ` (${medicineUsed} medicine used, ${CL.campaign.medicine} left)` : ' (no medicine left)'}`);
-    lines.push(`Survivors: ${survivors}${waves ? ` · Battle waves reached: ${waves}` : ''}`);
+    if (doc && saved.length) more.push(`Surgeon ${escapeHtml(doc.name)} saved ${who(saved) || `${saved.length}`}${medicineUsed ? ` (${medicineUsed} medicine used, ${CL.campaign.medicine} left)` : ' (no medicine left)'}`);
+    more.push(`Survivors: ${survivors}${waves ? ` · Battle waves reached: ${waves}` : ''}`);
     // P7-11: the escort's wagon.
     if (wagon === 'saved') lines.push('<strong>The wagon came through.</strong> The caravan rolls on');
     else if (wagon === 'lost') lines.push('<strong>The wagon is lost,</strong> and your escort contract with it');
@@ -632,12 +644,10 @@
     if (win) lines.push(`Loot: ${describeItems(r.loot) || 'nothing of value'}`);
     else if (r.lostItem) lines.push(`Taken by your captors: ${CL.content.item(r.lostItem).name}`);
     if (!win && r.medicineTaken) lines.push(`Your captors took ${r.medicineTaken} medicine`);
-    lines.push(
-      wounded.length
-        ? `<small>Wounded soldiers can't fight until day ${recoverDay}. Travel or rest in a settlement to pass the time.</small>`
-        : '<small>No soldiers wounded.</small>',
-    );
-    return lines.join('<br>');
+    if (wounded.length) lines.push(`<small>Wounded soldiers can't fight until day ${recoverDay}. Travel or rest in a settlement to pass the time.</small>`);
+    else more.push('<small>No soldiers wounded.</small>');
+    if (!report) return lines.join('<br>');
+    return `${lines.join('<br>')}<details class="reportMore"><summary>▸ More: your divisions, you, who did what</summary><p>${more.join('<br>')}</p></details>`;
   }
 
   CL.party = {
