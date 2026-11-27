@@ -33,7 +33,7 @@
    * stronger, Defensive (a shield wall on Hold) when clearly the weaker, Balanced between; archers on a
    * rise keep it (as every setup does), and the cavalry go to the flank with fewer trees and walls.
    */
-  const AUTO = { strong: 0.85, weak: 0.45, flankProbe: 190 }; // strong 0.85: at 79% charging a band of veterans cost more than following in ranks (scripts/parity.js)
+  const AUTO = { strong: 0.85, weak: 0.45, flankProbe: 190, horse: 0.3, cavalryBy: 5 }; // strong 0.85: at 79% charging a band of veterans cost more than following in ranks (scripts/parity.js)
   /** A second division of a role stands this far below its first (y), the same distance from the hero. */
   const SECOND = 150;
   const PLANS_MAX = 3; // plans of your own (layer 3), kept on the device
@@ -92,6 +92,37 @@
    * order (missing ones fall back to Balanced). Every anchor is made legal (inside the zone, clear).
    * @param {string} preset @param {any} map @param {{ ambush?: boolean, custom?: any }} [opts]
    */
+  /**
+   * P11-14: what the company can see of the foe it is about to fight: the share of its riders and of its
+   * archers (from the band on the map). @returns {{ horse: number, bows: number }}
+   */
+  function seenFoe() {
+    const troops = CL.parties?.current?.()?.troops;
+    if (!troops) return { horse: 0, bows: 0 };
+    let n = 0;
+    const by = { cavalry: 0, archer: 0 };
+    for (const [t, k] of Object.entries(troops)) {
+      const role = CL.content.table('troops')[t]?.role;
+      n += k;
+      if (role in by) by[role] += k;
+    }
+    return { horse: n ? by.cavalry / n : 0, bows: n ? by.archer / n : 0 };
+  }
+
+  /**
+   * P11-14: a setup's formation and its horse, from what is seen of the foe (the company's presets and
+   * Auto, and the enemy's plan by the same rule): Balanced loose ranks in front of the archers, its horse
+   * held on a flank until the first volley; Defensive a shield wall, or a square against horse; Aggressive
+   * a wedge. Balanced in a line was tried and dropped: on Follow, with a hero who charges in, it cost the
+   * big battles (scripts/parity.js --big, close×8@100: 100% → 85% won, 4.4 → 15 lost; 20 seeds).
+   * @param {string} setup @param {{ horse: number }} foe
+   */
+  function choose(setup, foe) {
+    if (setup === 'aggressive') return { formation: 'wedge', cavalryWaits: false };
+    if (setup === 'defensive') return { formation: (foe?.horse || 0) >= AUTO.horse ? 'square' : 'wall', cavalryWaits: false };
+    return { formation: 'loose', cavalryWaits: true };
+  }
+
   /** Auto's choice for this encounter: 'aggressive', 'defensive' or 'balanced'. */
   function autoChoice() {
     const e = CL.parties?.current?.();
@@ -147,14 +178,21 @@
       orders[`${grp}2`] = orders[grp];
     }
     CL.game.battleMap = prevMap;
-    const formation = p === 'custom' ? 'loose' : base.formation;
-    return { preset: p, auto: choice, ambush, orders, anchors, formation, formations: { infantry: formation, infantry2: formation }, facings: {}, captains: {} };
+    // P11-14: the formation and the horse by what is seen of the foe; on the walls, as before.
+    const picked = p === 'custom' || walls ? null : CL.prep.choose(choice || p, seenFoe()); // (through CL.prep: the labs switch it)
+    const formation = p === 'custom' ? 'loose' : picked?.formation || base.formation;
+    const timed = [];
+    if (picked?.cavalryWaits && !ambush) {
+      for (const div of ['cavalry', 'cavalry2']) if (orders[div] !== 'charge') orders[div] = 'hold';
+      for (const div of ['cavalry', 'cavalry2']) timed.push({ div, kind: 'charge', x: 0, y: 0, volley: -1, at: AUTO.cavalryBy, aimAtEnemy: true }); // in on the first volley (or after 10 s)
+    }
+    return { preset: p, auto: choice, ambush, orders, anchors, formation, formations: { infantry: formation, infantry2: formation }, facings: {}, captains: {}, timed };
   }
 
   /**
    * Put the deployed company in place for a plan: each group in a block around its anchor, ranks one
    * behind another away from the enemy, and the plan's starting orders. Called by combat.startBattle.
-   * @param {any} g @param {{ preset: string, ambush?: boolean, formation?: string, formations?: Record<string, string>, facings?: Record<string, string>, captains?: Record<string, any>, orders: Record<string, string>, anchors: Record<string, { x: number, y: number }> }} p
+   * @param {any} g @param {{ preset: string, ambush?: boolean, formation?: string, formations?: Record<string, string>, facings?: Record<string, string>, captains?: Record<string, any>, timed?: any[], orders: Record<string, string>, anchors: Record<string, { x: number, y: number }> }} p
    */
   function place(g, p) {
     for (const grp of CL.divisions.SLOTS) {
@@ -186,6 +224,8 @@
       const kind = p.formations?.[div] ?? (div === 'infantry' ? p.formation : null) ?? 'loose';
       CL.formations.set(g, kind, true, div);
     }
+    // P11-14: a plan's timed orders (Balanced's horse in on the first volley), for divisions on the field.
+    g.timed = (p.timed || []).filter((t) => CL.divisions.members(g, t.div).length).map((t) => ({ ...t }));
     // The companion stands by the hero, whatever the setup.
     g.prepPlan = p.preset;
     CL.diag.log('info', 'Battle setup', { preset: p.preset, ambush: Boolean(p.ambush), orders: { ...p.orders } });
@@ -337,5 +377,5 @@
     return p;
   }
 
-  CL.prep = { PRESETS, AUTO, SECOND, PLANS_MAX, GROUPS, ORDERS, SETUPS, anchorOf, zone, legal, autoChoice, openFlank, plan, place, remembered, remember, previewRect, flagAt, moveFlag, setOrder, setCaptain, setFormation, setFacing, savePlan, loadPlan };
+  CL.prep = { seenFoe, choose, PRESETS, AUTO, SECOND, PLANS_MAX, GROUPS, ORDERS, SETUPS, anchorOf, zone, legal, autoChoice, openFlank, plan, place, remembered, remember, previewRect, flagAt, moveFlag, setOrder, setCaptain, setFormation, setFacing, savePlan, loadPlan };
 })(typeof window !== 'undefined' ? window : globalThis);

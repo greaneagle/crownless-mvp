@@ -213,27 +213,39 @@ test("order states: holding, following, charging, waiting, done, and can't with 
   assert.equal(g.orderState.infantry.reason, "can't form a square");
 });
 
-test('the enemy plans its foot in a line by the same rules, formed on Hold', () => {
-  const { CL } = loadGame({ seed: 5 });
-  const c = CL.campaign;
-  c.roster = [];
-  for (let i = 0; i < 4; i++) CL.save.addSoldier(c, 'levy');
-  c.world.location = null;
-  CL.game.mode = 'map';
-  const p = CL.parties.spawn(c, 'bandits');
-  Object.assign(p, { troops: { reaver: 18, looter: 12 }, x: c.world.x, y: c.world.y });
-  CL.parties.open(p.id);
-  const e = CL.parties.current();
-  CL.combat.startBattle(e.def);
-  const g = CL.game;
-  assert.ok(g.enemyOrders, 'an army plans');
-  assert.equal(g.enemyFormations.infantry, 'line');
+test('the enemy plans by the same choices as the company (P11-14): a wedge when much the stronger, loose between with its horse held, a wall or a square when the weaker', () => {
+  /** An army band against a company; returns the battle. */
+  const army = (company, troops) => {
+    const { CL } = loadGame({ seed: 5 });
+    const c = CL.campaign;
+    c.roster = [];
+    for (const [t, n] of Object.entries(company)) for (let i = 0; i < n; i++) CL.save.addSoldier(c, t);
+    c.world.location = null;
+    CL.game.mode = 'map';
+    const p = CL.parties.spawn(c, 'bandits');
+    Object.assign(p, { troops, x: c.world.x, y: c.world.y });
+    CL.parties.open(p.id);
+    CL.combat.startBattle(CL.parties.current().def);
+    return { CL, g: CL.game };
+  };
+  // Much the stronger: it charges in a wedge.
+  let { CL, g } = army({ levy: 4 }, { reaver: 18, looter: 12 });
+  assert.equal(g.enemyOrders.infantry, 'charge');
+  assert.equal(g.enemyFormations.infantry, 'wedge');
   const foot = g.enemies.find((x) => x.role === 'infantry');
-  g.enemyOrders.infantry = 'hold';
   CL.formations.tick(g, 1);
-  assert.equal(CL.formations.of(g, foot), 'line');
-  g.enemyOrders.infantry = 'charge';
-  assert.equal(CL.formations.of(g, foot), 'loose', 'on Charge it breaks up');
+  assert.equal(CL.formations.of(g, foot), 'wedge', 'formed on Charge');
+  // Between: loose ranks, its horse held until its first volley (or a few seconds).
+  ({ CL, g } = army({ footman: 12, hunter: 6 }, { reaver: 12, rider: 6, hunter: 6 }));
+  assert.equal(g.enemyFormations.infantry, 'loose');
+  assert.equal(g.enemyOrders.cavalry, 'hold');
+  g.enemyVolley = g.t;
+  CL.combat.update(0.02);
+  assert.equal(g.enemyOrders.cavalry, 'charge', 'in on the volley');
+  // The weaker against a company with horse: it holds in a square.
+  ({ CL, g } = army({ footman: 30, hunter: 10, rider: 20 }, { looter: 22 }));
+  assert.equal(g.enemyOrders.infantry, 'hold');
+  assert.equal(g.enemyFormations.infantry, 'square');
 });
 
 test('the crowd effect: a soldier aims its blow at its foe, not along one of four facings', () => {

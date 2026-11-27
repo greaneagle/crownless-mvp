@@ -50,9 +50,93 @@ function armyOf(spec = 'mixed') {
   return Object.fromEntries(spec.split(',').map((p) => p.split(':')).map(([t, n]) => [t, Number(n) || 1]));
 }
 
+/** P11-14: a Custom plan: each group's place (dx, dy from the hero's start) and order, and the infantry's formation. */
+function custom(CL, map, groups, formation = 'loose') {
+  const p = CL.prep.plan('custom', map, { custom: groups });
+  Object.assign(p, { formation, formations: { infantry: formation, infantry2: formation } });
+  return p;
+}
+const HOLD_LINE = { infantry: { dx: 70, dy: 0, order: 'hold' }, archer: { dx: -90, dy: 0, order: 'hold' }, cavalry: { dx: -40, dy: -260, order: 'hold' } };
+
+/**
+ * P11-14: the seven comparisons (docs/NEXT-TASKS.md P11-14), each on the same armies, map and seeds: the
+ * counter (`plan`) against the other way (`other`), and every division charging (`charge`). A variant is
+ * { make(CL, map): a prep plan, timed: the cavalry go in on the first volley, hero: 'passive' | 'active' }.
+ */
+const COMPARISONS = {
+  screen: {
+    what: 'Archers behind a formed line, against archers in front',
+    map: 'open_country',
+    army: { footman: 8, spearman: 4, hunter: 8 },
+    enemy: { footman: 8, levy: 6, reaver: 6 },
+    plan: { make: (CL, m) => custom(CL, m, HOLD_LINE, 'line') },
+    other: { make: (CL, m) => custom(CL, m, { infantry: { dx: -60, dy: 0, order: 'hold' }, archer: { dx: 90, dy: 0, order: 'hold' }, cavalry: HOLD_LINE.cavalry }, 'line') },
+  },
+  brace: {
+    what: 'Spears braced in a line against a cavalry charge, against the same spears loose',
+    map: 'open_country',
+    army: { spearman: 10, footman: 4, hunter: 6 },
+    enemy: { rider: 10, footman: 4, hunter: 4 },
+    plan: { make: (CL, m) => custom(CL, m, HOLD_LINE, 'line') },
+    other: { make: (CL, m) => custom(CL, m, HOLD_LINE, 'loose') },
+  },
+  flank: {
+    what: 'Cavalry on the flank, in on the first volley, against cavalry charging first',
+    map: 'open_country',
+    army: ARMIES.mixed,
+    enemy: ARMIES.mixed,
+    plan: { make: (CL, m) => custom(CL, m, HOLD_LINE, 'wall'), timed: true },
+    other: { make: (CL, m) => custom(CL, m, { ...HOLD_LINE, cavalry: { dx: 60, dy: -120, order: 'charge' } }, 'wall') },
+  },
+  wall: {
+    what: 'A shield wall under archers, against loose ranks',
+    map: 'open_country',
+    army: { footman: 10, levy: 4, hunter: 4 },
+    enemy: { hunter: 12, footman: 6 },
+    plan: { make: (CL, m) => custom(CL, m, HOLD_LINE, 'wall') },
+    other: { make: (CL, m) => custom(CL, m, HOLD_LINE, 'loose') },
+  },
+  hill: {
+    what: 'Archers on high ground, against archers on the flat (Hill Slopes)',
+    map: 'hill_slopes',
+    army: { footman: 6, spearman: 2, hunter: 10 },
+    enemy: { hunter: 8, footman: 8 },
+    plan: { make: (CL, m) => custom(CL, m, HOLD_LINE, 'line'), high: true },
+    other: { make: (CL, m) => custom(CL, m, HOLD_LINE, 'line'), high: false },
+  },
+  forest: {
+    what: 'A column through the forest, against a line (Forest Wilds, both on Charge)',
+    map: 'forest_wilds',
+    army: { footman: 8, spearman: 6, hunter: 4 },
+    enemy: { footman: 8, spearman: 4, hunter: 6 },
+    plan: { make: (CL, m) => custom(CL, m, { ...HOLD_LINE, infantry: { dx: 70, dy: 0, order: 'charge' } }, 'column') },
+    other: { make: (CL, m) => custom(CL, m, { ...HOLD_LINE, infantry: { dx: 70, dy: 0, order: 'charge' } }, 'line') },
+  },
+  hero: {
+    what: 'A passive hero with a good plan, against an active hero with Auto, and an active hero with a plan',
+    map: 'open_country',
+    army: ARMIES.mixed,
+    enemy: ARMIES.mixed,
+    plan: { make: (CL, m) => custom(CL, m, HOLD_LINE, 'wall'), timed: true, hero: 'passive' },
+    other: { make: (CL, m) => CL.prep.plan('auto', m), hero: 'active' },
+    third: { make: (CL, m) => custom(CL, m, HOLD_LINE, 'wall'), timed: true, hero: 'active', label: 'active+plan' },
+  },
+};
+
 /** The plan's setup before the battle (layer 1–3): a prep plan for the company. */
 function setupFor(CL, plan, map) {
   const P = CL.prep;
+  if (typeof plan === 'object') {
+    const p = plan.make(CL, map);
+    // P11-14 (hill): the archers moved off the rise, or onto it.
+    if (plan.high === false) {
+      const prev = CL.game.battleMap;
+      CL.game.battleMap = map;
+      for (let k = 0; k < 40 && CL.formations.highAt(p.anchors.archer.x, p.anchors.archer.y); k++) p.anchors.archer.y += 25;
+      CL.game.battleMap = prev;
+    }
+    return p;
+  }
   if (plan === 'charge') {
     const p = P.plan('balanced', map);
     for (const k of Object.keys(p.orders)) p.orders[k] = 'charge';
@@ -91,6 +175,7 @@ const centre = (units) => {
 
 /** Fight one battle under a plan; returns the outcome. */
 function battle({ seed, plan, hero, map, army = ARMIES.mixed, size = 60, enemy = army }) {
+  if (typeof plan === 'object' && plan.hero) hero = plan.hero;
   const CL = setup(seed, army, size, enemy);
   const g = CL.game;
   const e = CL.parties.current();
@@ -99,7 +184,8 @@ function battle({ seed, plan, hero, map, army = ARMIES.mixed, size = 60, enemy =
   const T = CL.tactics;
   const D = CL.divisions;
   const cavalry = D.members(g, 'cavalry').length > 0;
-  if ((plan.startsWith('plan:') || plan.startsWith('form:')) && cavalry) {
+  const timed = typeof plan === 'object' ? plan.timed : plan.startsWith('plan:') || plan.startsWith('form:');
+  if (timed && cavalry) {
     // The cavalry go in on the first volley, at the enemy's middle as it is then (a timed order, layer 4).
     g.timed = [{ div: 'cavalry', kind: 'charge', x: 0, y: 0, volley: g.lastVolley ?? -1, aimAtEnemy: true }];
   }
@@ -145,6 +231,34 @@ function battle({ seed, plan, hero, map, army = ARMIES.mixed, size = 60, enemy =
 
 const mean = (xs) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0);
 
+/** The mean of a set of battles: win %, each side's losses %, seconds, ground held %. */
+function summary(rows) {
+  const n = rows.length || 1;
+  return {
+    win: (100 * rows.filter((r) => r.win).length) / n,
+    allyLost: 100 * mean(rows.map((r) => r.allyLost)),
+    enemyLost: 100 * mean(rows.map((r) => r.enemyLost)),
+    seconds: mean(rows.map((r) => r.seconds)),
+    heldAlly: 100 * mean(rows.map((r) => r.heldAlly)),
+    unfinished: rows.filter((r) => !r.ended).length,
+  };
+}
+
+/** P11-14: run comparisons (all by default): { id: { plan, other, third?, charge } } of summaries. */
+function compare({ seeds = 40, ids = Object.keys(COMPARISONS), size = 60, hero = 'passive' } = {}) {
+  const out = {};
+  for (const id of ids) {
+    const C = COMPARISONS[id];
+    out[id] = {};
+    for (const [k, variant] of Object.entries({ plan: C.plan, other: C.other, ...(C.third ? { third: C.third } : {}), charge: 'charge' })) {
+      const rows = [];
+      for (let i = 1; i <= seeds; i++) rows.push(battle({ seed: spread(i), plan: variant, hero, map: C.map, army: C.army, enemy: C.enemy, size }));
+      out[id][k] = summary(rows);
+    }
+  }
+  return out;
+}
+
 function run({ seeds = 40, plans = DEFAULT_PLANS, heroes = HEROES, maps = MAPS, army = ARMIES.mixed, size = 60, enemy = army } = {}) {
   const out = [];
   for (const map of maps) {
@@ -170,7 +284,24 @@ function run({ seeds = 40, plans = DEFAULT_PLANS, heroes = HEROES, maps = MAPS, 
   return out;
 }
 
-if (require.main === module) {
+if (require.main === module && process.argv.includes('--compare')) {
+  const args = process.argv.slice(2);
+  const seeds = Number(args.find((a, i) => /^\d+$/.test(a) && !String(args[i - 1]).startsWith('--')) ?? 40);
+  const pick = args[args.indexOf('--compare') + 1];
+  const ids = pick && COMPARISONS[pick.split(',')[0]] ? pick.split(',') : Object.keys(COMPARISONS);
+  const t0 = Date.now();
+  const out = compare({ seeds, ids });
+  if (args.includes('--json')) console.log(JSON.stringify({ seeds, out }, null, 2));
+  else {
+    const f = (n) => n.toFixed(0).padStart(6);
+    console.log(`The comparisons, ${seeds} seeds each (win %, your losses %, theirs %, seconds)`);
+    for (const id of ids) {
+      console.log(`${id}: ${COMPARISONS[id].what}`);
+      for (const [k, r] of Object.entries(out[id])) console.log(`  ${(COMPARISONS[id][k]?.label || k).padEnd(12)}${f(r.win)}${f(r.allyLost)}${f(r.enemyLost)}${f(r.seconds)}${r.unfinished ? `  (${r.unfinished} never ended)` : ''}`);
+    }
+    console.log(`(${((Date.now() - t0) / 1000).toFixed(0)} s)`);
+  }
+} else if (require.main === module) {
   const args = process.argv.slice(2);
   const opt = (name) => {
     const i = args.indexOf(name);
@@ -195,4 +326,4 @@ if (require.main === module) {
   }
 }
 
-module.exports = { PLANS, DEFAULT_PLANS, HEROES, MAPS, ARMIES, battle, run, setupFor };
+module.exports = { PLANS, DEFAULT_PLANS, HEROES, MAPS, ARMIES, COMPARISONS, battle, run, compare, summary, setupFor };

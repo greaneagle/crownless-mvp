@@ -153,7 +153,7 @@ The fix is not to make input unresponsive or to punish repeated presses, but to 
 | **P11-12d** | One UI language across every screen | L | P1 | P11-12b | 5.12.2 | M3 | ✅ Done |
 | **P11-12e** | Performance, caches, visual regression and acceptance (the original P11-12) | M–L | P1 | P11-12c, P11-12d | 5.12.3 | **M3 "Soldiers who fight like it"** (**the owner accepts the graphics and the phone**) | ✅ Done (approved 2026-11-27) |
 | **P11-13** | Formations and orders that hold | L | P1 | P11-11 | 5.13.0 | M4 | ✅ Done |
-| **P11-14** | Combined arms and the tactics lab | M–L | P1 | P11-13 | 5.14.0 | M4 | Specified |
+| **P11-14** | Combined arms and the tactics lab | M–L | P1 | P11-13 | 5.15.0 | M4 | ✅ Done |
 | **P11-15** | Prepare and the battle report | M | P2 | P11-14 | 5.15.0 | **M4 "Command that matters"** | Specified |
 | **P11-16** | Regional arms | M | P2 | P11-11, P11-03 | 5.14.0 | M5 | ✅ Done |
 | **P11-17** | Masters at arms: specialist training and the practice yard | L | P2 | P11-16 | 5.17.0 | M5 | Specified |
