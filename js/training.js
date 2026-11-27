@@ -248,9 +248,11 @@
 
   function validate(C, err) {
     const T = C.training || {};
-    const practice = C.practice || {};
+    // Partial validation copies omit these global tables. A whole world supplies its own overrides.
+    const practice = C.practice === undefined ? rules() : C.practice || {};
+    const styles = C.fighting_styles ?? CL.content.table('fighting_styles');
     if (!Number.isInteger(practice.retrain) || practice.retrain < 1 ||
-        !Array.isArray(practice.sparring) || !practice.sparring.length || practice.sparring.some((id) => !C.fighting_styles?.[id]) ||
+        !Array.isArray(practice.sparring) || !practice.sparring.length || practice.sparring.some((id) => !styles[id]) ||
         !Array.isArray(practice.targets) || practice.targets.length !== 3 ||
         practice.targets.some((p) => !Array.isArray(p) || p.length !== 2 || p.some((x) => !Number.isFinite(x))) ||
         drillKinds.some((k) => typeof practice.names?.[k] !== 'string' || !practice.names[k].trim())) err('practice: invalid yard rules');
@@ -292,7 +294,7 @@
         if (!step || !drillKinds.includes(step.kind) || item?.slot !== 'weapon' ||
           (step.kind === 'range' && !family?.ranged) ||
           (step.kind === 'course' && (!mount || mount.battle === 'no' || (item?.combat?.mounted ?? family?.mounted) === 'no')) ||
-          (step.style && !C.fighting_styles?.[step.style]) ||
+          (step.style && !styles[step.style]) ||
           (step.troop && (!C.troops?.[step.troop] || C.troops[step.troop].role === 'hero'))) err(`${at}: invalid drill`);
       }
     }
