@@ -69,7 +69,7 @@ test('the battle setups: Defensive starts in a shield wall closed up on Hold; th
 
 test('Orders: the formation buttons set it, say so, and an order of Hold closes a wall up', () => {
   const { CL, uiCalls } = loadGame();
-  const g = battle(CL, ['footman', 'footman', 'footman']);
+  const g = battle(CL, ['footman', 'footman', 'footman', 'footman']); // four: fewer stay loose (P11-13)
   g.orders.infantry = 'charge';
   assert.equal(CL.formations.set(g, 'wall'), true);
   assert.ok(uiCalls.some((x) => x[0] === 'message' && x[1] === 'Infantry: shield wall: it forms on Hold or Follow'));

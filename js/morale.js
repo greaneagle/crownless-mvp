@@ -144,7 +144,9 @@
       if (g.lairDefence) parts.outnumbered *= TERMS.lairOutnumbered;
     }
     const flanked = up.filter((u) => g.t - (u.flankedAt ?? -99) < TERMS.flankSeconds).length;
-    parts.flank = -TERMS.flank * (flanked / up.length);
+    // P11-13: a formed division struck in its flank or rear is shaken more (js/formations.js FLANK.morale).
+    const formedFlank = CL.formations ? up.filter((u) => g.t - (u.formFlankedAt ?? -99) < TERMS.flankSeconds).length * CL.formations.FLANK.morale : 0;
+    parts.flank = -TERMS.flank * ((flanked + formedFlank) / up.length);
     const runs = (g.routEvents || []).filter((e) => e.team === team && g.t - e.t < TERMS.routSeconds && Math.hypot(e.x - cx, e.y - cy) < TERMS.routRadius).length;
     parts.routsNearby = -Math.min(TERMS.routNearbyMax, TERMS.routNearby * runs);
     parts.veterans = up.reduce((n, u) => n + (TERMS.tier[CL.content.troop(u.troop).tier] || 0), 0) / up.length;
