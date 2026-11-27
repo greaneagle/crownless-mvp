@@ -484,12 +484,31 @@
     else sh(ctx, 'M-13 -88 L-14 -98 L-7 -93 L0 -101 L7 -93 L14 -98 L13 -88 Q0 -86 -13 -88Z', PAL.gold, 1.3);
   }
 
+  /** P11-12c (owner, 2026-11-27): the head sits a little higher, on a neck that shows. */
+  const NECK = 3.5;
   function head(ctx, L, F, face, P) {
     const view = face === 'up' ? 'back' : face === 'down' ? 'front' : 'side';
+    ctx.save();
+    ctx.translate(0, -NECK);
     if (view === 'side') headSide(ctx, L, F, P);
     else headFront(ctx, L, F, view === 'back', P);
     headgear(ctx, L, F, view, P.t || 0);
     if (L.crown) crown(ctx, view);
+    ctx.restore();
+  }
+
+  /**
+   * The neck (owner, 2026-11-27: "no necks"): skin from under the jaw down into the collar, shaded on
+   * the right, in every view; drawn before the torso so the collar laps over it. A closed helm's mail
+   * or a hood hides it as before.
+   */
+  function neck(ctx, L, face) {
+    const skin = L.skin || SKINS[1];
+    const side = face === 'left' || face === 'right';
+    const x = side ? -1.5 : 0;
+    sh(ctx, `M${x - 4.6} -72 L${x + 4.6} -72 L${x + 5.4} -59 Q${x} -56 ${x - 5.4} -59Z`, face === 'up' ? tone(skin, -0.04) : skin, 1.6);
+    sh(ctx, `M${x + 1.6} -72 L${x + 4.6} -72 L${x + 5.4} -59 L${x + 2} -58Z`, tone(skin, -0.14), 0);
+    if (face === 'down') ln(ctx, `M${x - 3} -66 Q${x} -64.5 ${x + 3} -66`, tone(skin, -0.22), 0.9);
   }
 
   // ---- Bodies (v0.7 units) ----
@@ -1042,6 +1061,7 @@
         else if (L.shield) limb(ctx, 4, -58, guard ? [sh0.x - 1, sh0.y] : [-3.5, -15], tone(C.sleeve, -0.18), skin, guard ? [-0.4, 1] : [0.3, 1]); // the shield arm, holding it
         else limb(ctx, 4, -58, [3 - swing * 3, -13.5], tone(C.sleeve, -0.18), skin, [-0.3, 1]);
         legSide(ctx, L, P, true, dress);
+        neck(ctx, L, face);
         torsoSide(ctx, L, P, C, dress, breathe);
         cloakOver(ctx, L, face, move, t);
       });
@@ -1067,6 +1087,7 @@
       if (ranged) shoot(-5.5, -17, P.draw || 0, -1);
       body(() => {
         legsFront(ctx, L, P, C.coat, dress);
+        neck(ctx, L, face);
         torsoFront(ctx, L, P, C, true, dress, breathe);
         if (L.quiver) quiver(ctx, 'back');
         cloakOver(ctx, L, face, move, t);
@@ -1085,6 +1106,7 @@
       body(() => {
         cloakBehind(ctx, L, face, move, t);
         legsFront(ctx, L, P, C.coat, dress);
+        neck(ctx, L, face);
         torsoFront(ctx, L, P, C, false, dress, breathe);
         if (L.quiver) quiver(ctx, 'front');
         cloakOver(ctx, L, face, move, t);
@@ -1146,10 +1168,10 @@
     ctx.translate(50, 192);
     ctx.scale(100 / 53, 100 / 53);
     if (look.cloak) sh(ctx, 'M-10 -62 Q-24 -60 -27 -40 L-28 -20 L28 -20 L27 -40 Q24 -60 10 -62Z', look.cloak);
+    neck(ctx, look, 'down');
     torsoFront(ctx, look, { t: 0 }, C, false, false, 0);
     for (const k of [-1, 1]) sh(ctx, `M${k * 12} -60 Q${k * 20} -57 ${k * 21} -47 L${k * 21} -30 L${k * 13} -30 L${k * 13} -46 L${k * 9} -52Z`, C.sleeve);
     cloakOver(ctx, look, 'down', 0, 0);
-    sh(ctx, 'M-5 -68 L5 -68 L6 -59 Q0 -54 -6 -59Z', tone(look.skin || SKINS[1], -0.06));
     head(ctx, look, F, 'down', { t: 0, reduced: true, talk: look.talk });
     ctx.restore();
   }

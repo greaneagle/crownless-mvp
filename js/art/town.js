@@ -25,7 +25,7 @@
   const ROLE_LOOK = { innkeeper: 'innkeeper', merchant: 'merchant', recruiter: 'recruiter', elder: 'elder', official: 'noble', guard: 'guard', caravan: 'merchant', agent: 'recruiter' };
 
   /** P11-12b: is this town drawn in the storybook look (the slice)? */
-  const story = (hub) => hub.art === 'storybook' && Boolean(G.story);
+  const story = (hub) => hub.art !== 'classic' && Boolean(G.story); // P11-12c: every town
 
   const culture = (hub) => {
     const s = CL.content.table('settlements')[hub.settlement];
@@ -89,7 +89,9 @@
     const S = G.story;
     const P = S.SPAL;
     const gr = hub.ground || {};
-    ctx.fillStyle = P.meadow;
+    // The meadow, leaning toward the town's own ground (Hrothgard's snow, Calder's salt): its identity kept.
+    const mix = (x, y, k) => `#${[1, 3, 5].map((i) => Math.round(parseInt(x.slice(i, i + 2), 16) * (1 - k) + parseInt(y.slice(i, i + 2), 16) * k).toString(16).padStart(2, '0')).join('')}`;
+    ctx.fillStyle = gr.base ? mix(P.meadow, G.tone(gr.base, 0.28), 0.5) : P.meadow;
     ctx.fillRect(0, 0, 960, 540);
     ctx.globalAlpha = 0.35;
     for (const p of gr.patches || []) {
@@ -470,12 +472,12 @@
       const cy = o.y + (o.h || 0);
       if (Math.hypot(h.x - cx, h.y - cy) > 190) continue;
       // P11-12b: in the storybook look a building's name sits on its front (the concept's), clear of the people.
-      pill(o.label, cx, hub.art === 'storybook' && o.shape === 'rect' ? o.y + o.h * (o.look === 'stall' ? 0.15 : 0.5) : cy + 12, '#f3e3b5', false);
+      pill(o.label, cx, story(hub) && o.shape === 'rect' ? o.y + o.h * (o.look === 'stall' ? 0.15 : 0.5) : cy + 12, '#f3e3b5', false);
     }
     for (const n of t.npcs) {
       if (t.near === n) continue;
       if (Math.hypot(h.x - n.x, h.y - n.y) > 230) continue;
-      pill(n.tag || n.name, n.x, hub.art === 'storybook' ? n.y - 52 : n.y + 22, '#e8f0ff', false);
+      pill(n.tag || n.name, n.x, story(hub) ? n.y - 52 : n.y + 22, '#e8f0ff', false);
     }
     if (t.near) {
       const n = t.near;

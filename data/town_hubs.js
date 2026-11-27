@@ -22,7 +22,7 @@
  *   obstacles[].spec:   optional art-kit building spec (js/art/kit.js `building`) over the one made from
  *                       its kind and its realm's culture: a landmark's tower, its roof form, its sign
  *   ground.road / ground.plaza.color: optional street and square colours
- *   art: 'storybook' (P11-12b): drawn with the storybook kit (js/art/story.js); drawing only, nothing else reads it
+ *   every town is drawn with the storybook kit (P11-12c, js/art/story.js); drawing only
  *   entry: 'menu' (default) or 'streets': what arriving opens. Menu first, with "Walk the streets"
  *          one tap away (owner playtest finding F-3); people with conversations are also listed there. */
 (function (root) {
@@ -69,7 +69,6 @@
       settlement: 'stonebridge',
       name: 'Stonebridge',
       entry: 'menu',
-      art: 'storybook', // P11-12b (D-P11m): the vertical slice of the storybook look; P11-12c brings the other towns
       ground: {
         base: '#6f8f4e',
         roads: [

@@ -148,8 +148,8 @@ The fix is not to make input unresponsive or to punish repeated presses, but to 
 | **P11-10** | Fighters who think: individual AI and styles | L | P1 | P11-05, P11-07, P11-08 | 5.10.0 | M3 | ✅ Done |
 | **P11-11** | Troops by their weapons | M–L | P1 | P11-10 | 5.11.0 | M3 | ✅ Done |
 | **P11-12a** | The storybook look: baseline and integration analysis (D-P11m) | M | P1 | P11-11 | 5.11.1 | M3 | ✅ Done |
-| **P11-12b** | The Stonebridge vertical slice: the character system and Stonebridge | L–XL | P1 | P11-12a | 5.12.0 | M3 (**the owner accepts the slice**) | ✅ Built; awaiting acceptance |
-| **P11-12c** | The environments: every town, battlefield, siege and the map | XL | P1 | P11-12b and its acceptance | 5.12.1 | M3 | Specified |
+| **P11-12b** | The Stonebridge vertical slice: the character system and Stonebridge | L–XL | P1 | P11-12a | 5.12.0 | M3 (**the owner accepts the slice**) | ✅ Done (accepted 2026-11-27) |
+| **P11-12c** | The environments: every town, battlefield, siege and the map | XL | P1 | P11-12b and its acceptance | 5.12.1 | M3 | ✅ Done |
 | **P11-12d** | One UI language across every screen | L | P1 | P11-12b | 5.12.2 | M3 | Specified |
 | **P11-12e** | Performance, caches, visual regression and acceptance (the original P11-12) | M–L | P1 | P11-12c, P11-12d | 5.12.3 | **M3 "Soldiers who fight like it"** (**the owner accepts the graphics and the phone**) | Specified |
 | **P11-13** | Formations and orders that hold | L | P1 | P11-11 | 5.13.0 | M4 | Specified |

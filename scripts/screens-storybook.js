@@ -58,6 +58,19 @@ const SCENES = {
   'gallery-mounted': () => gallery(['Tab', 'ArrowRight', 'Space', 'Space']),
 };
 
+// P11-12c: every walkable town by day and night, and every battlefield with a fight on it.
+for (const id of ['vessara', 'merrow', 'gullhaven', 'harrowgate', 'calder']) SCENES[`${id}-day`] = new Function('CL', `town(CL, '${id}', 13)`);
+for (const id of ['stonebridge', 'eastwatch', 'hrothgard', 'vessara', 'merrow', 'gullhaven', 'harrowgate', 'calder']) SCENES[`${id}-night`] = new Function('CL', `town(CL, '${id}', 23)`);
+for (const id of ['grass_field', 'forest_clearing', 'forest_wilds', 'river_ford', 'hill_slopes', 'tourney_lists', 'greywall_courtyard']) SCENES[`field-${id}`] = new Function('CL', `fieldOn(CL, '${id}')`);
+
+function fieldOn(CL, id) {
+  const m = CL.content.get('battle_maps', id);
+  CL.combat.setActiveCap(40);
+  const def = CL.debugTools.benchDef(40, { reserve: 0 });
+  CL.combat.startBattle({ ...def, mapDef: m.generate ? CL.arena.build(m, 40) : m });
+  CL.game.godMode = true;
+  for (const grp of ['infantry', 'archer', 'cavalry']) CL.game.orders[grp] = 'charge';
+}
 function town(CL, id, hour) {
   const c = CL.campaign;
   c.day = Math.floor(c.day) + hour / 24;
@@ -106,8 +119,8 @@ async function shoot(browser, profile, scene, dir) {
   await page.locator('#primaryBtn').click();
   await waitMode(page, 'settlement');
   // The scene and its helpers run in the page (they are plain functions of CL).
-  await page.evaluate(`(() => { document.querySelector('#stage').dataset.dev = 'off'; const town = ${town}; const battle = ${battle}; const gallery = ${gallery}; (${SCENES[scene]})(window.Crownless); })()`);
-  await page.waitForTimeout(scene.startsWith('battle') || scene.startsWith('siege') ? 6000 : 1500);
+  await page.evaluate(`(() => { document.querySelector('#stage').dataset.dev = 'off'; const town = ${town}; const battle = ${battle}; const gallery = ${gallery}; const fieldOn = ${fieldOn}; (${SCENES[scene]})(window.Crownless); })()`);
+  await page.waitForTimeout(scene.startsWith('battle') || scene.startsWith('siege') || scene.startsWith('field') ? 6000 : 1500);
   const file = path.join(dir, `${profile}-${scene}.png`);
   await page.screenshot({ path: file });
   await ctx.close();

@@ -6,8 +6,9 @@
  * windows, round-headed plank doors, a curved awning), cobbles laid as single stones, rounded trees and
  * bushes, the well with its winch, the market stall, barrels and crates. Same conventions as js/art/kit.js
  * (anchors at the foot, `s` a size, seeded variation, one light from the upper left, one shadow); a warmer
- * outline. In P11-12b only a town marked `art: 'storybook'` (Stonebridge, the vertical slice) draws with
- * it; P11-12c brings every scene over and folds this into the kit. */
+ * outline. P11-12b drew Stonebridge with it; from P11-12c (5.12.1) it is the kit's: its parts stand in for the
+ * kit's own (G.building, G.tree, G.bush, G.tuft, G.barrel, G.crate, G.well, G.stall), so every town, battlefield
+ * and the map draw with them. */
 (function (root) {
   'use strict';
   const CL = root.Crownless;
@@ -709,5 +710,7 @@
     ctx.restore();
   }
 
+  // P11-12c: the kit's parts are the storybook ones everywhere (same signatures, same anchors).
+  Object.assign(G, { building, tree, bush, tuft, barrel, crate, well, stall });
   G.story = { SPAL, INK, building, tower, tree, bush, tuft, barrel, crate, well, stall, plaza, paving, masonry, window4, door };
 })(typeof window !== 'undefined' ? window : globalThis);

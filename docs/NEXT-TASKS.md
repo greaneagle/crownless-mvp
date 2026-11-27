@@ -4052,9 +4052,9 @@ The aim: easy to fight, rewarding to fight well, meaningful to command. The play
 | P11-10 | Fighters who think: individual AI and styles | L | 5.10.0 | ✅ Done |
 | P11-11 | Troops by their weapons | M–L | 5.11.0 | ✅ Done |
 | P11-12a | The storybook look: baseline and integration analysis | M | 5.11.1 | ✅ Done |
-| P11-12b | The Stonebridge vertical slice: characters and Stonebridge (owner's visual gate) | L–XL | 5.12.0 | ✅ Built, awaiting the owner's acceptance |
-| P11-12c | The environments: towns, battlefields, sieges, the map | XL | 5.12.1 | After the owner's acceptance of P11-12b |
-| P11-12d | One UI language across every screen | L | 5.12.2 | Specified |
+| P11-12b | The Stonebridge vertical slice: characters and Stonebridge (owner's visual gate) | L–XL | 5.12.0 | ✅ Done (accepted 2026-11-27) |
+| P11-12c | The environments: towns, battlefields, sieges, the map | XL | 5.12.1 | ✅ Done |
+| P11-12d | One UI language across every screen | L | 5.12.2 | Ready |
 | P11-12e | Performance, caches, visual regression, acceptance (owner's final gate) | M–L | 5.12.3 | Specified |
 | P11-13 | Formations and orders that hold | L | 5.13.0 | Specified |
 | P11-14 | Combined arms and the tactics lab | M–L | 5.14.0 | Specified |
@@ -5087,7 +5087,7 @@ _Expanded 2026-11-27 at 5.11.0 (commit ff54781) by the owner's approval of a gra
 
 ---
 
-#### P11-12b · The Stonebridge vertical slice: characters and Stonebridge (L–XL) — 5.12.0, ✅ Built — **waiting for the owner's visual acceptance**
+#### P11-12b · The Stonebridge vertical slice: characters and Stonebridge (L–XL) — 5.12.0, ✅ Done — **accepted by the owner, 2026-11-27** ("it looks pretty good… accepted fully"; one request: necks, done in P11-12c)
 
 **Build.**
 - **Required:**
@@ -5118,7 +5118,7 @@ _Expanded 2026-11-27 at 5.11.0 (commit ff54781) by the owner's approval of a gra
 
 ---
 
-#### P11-12c · The environments: towns, battlefields, sieges and the map (XL) — 5.12.1
+#### P11-12c · The environments: towns, battlefields, sieges and the map (XL) — 5.12.1, ✅ Done
 
 **Needs.** The owner's acceptance of P11-12b.
 
@@ -5131,6 +5131,15 @@ _Expanded 2026-11-27 at 5.11.0 (commit ff54781) by the owner's approval of a gra
 - **Tests.** `art-town`, `art-battle`, `art-map`, `battlemaps` (footprints, obstacles and extents unchanged); browser `settlement` (two towns by real taps), `ford`, `sieges`, `assault`, `world-map`, `map-camera`; the parity guard.
 
 **Acceptance.** The screenshot matrix (ACCEPTANCE.md's) for every town by day and night, every battlefield, a siege, the map at each zoom, reviewed against the references.
+
+**Done (5.12.1).**
+- **Necks** (the owner's one request at the gate): every person's head sits 3.5 units higher on a shaded neck in every view and in the portraits (`neck`, `NECK` in `js/art/figures.js`); `tests/storybook.test.js` checks it in all four facings.
+- **One kit:** the concept's palette is the kit's (`PAL`, `STYLE`: warm ink, line 1.4), and the storybook parts stand in for the kit's own (`G.building`, `tree`, `bush`, `tuft`, `barrel`, `crate`, `well`, `stall`), so every scene draws with them; the kit's tower, walls, fences, rocks and wagons take the palette.
+- **Every town** in the storybook look (the `art` flag gone; `art: 'classic'` would opt a pack's town out), each keeping its culture's materials and the hub's own colours, its landmarks and its ground's tone (the meadow leans halfway to the hub's `ground.base`: Hrothgard's cold, Calder's salt); the compact HUD in every town. Layouts unchanged (fingerprints).
+- **Battlefields, sieges, the map:** ground, trees, bushes, props and the palette from the kit (terrain, crossings, obstacles and markers as they were); the map's forests, settlements and parties in the palette. No new geometry anywhere.
+- **Reviewed:** `scripts/screens-storybook.js` (new scenes: every town by day and night, every battlefield) to `docs/graphics-demo/p11-12/c1`, `c2` (local).
+- **Tests:** `npm test` 1,069 pass, lint clean; browser `settlement`, `ford`, `sieges`, `assault`, `world-map`, `map-camera`, `art`, `layout` 94 pass.
+- **For P11-12e:** the old kit functions the storybook parts replace, and `js/art/classic.js`, are removed there; the siege and the map's drawing cost measured there.
 
 ---
 

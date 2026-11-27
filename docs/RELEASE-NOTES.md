@@ -1,5 +1,14 @@
 # Crownless — Release Notes
 
+## v5.12.1 — The storybook look everywhere (P11-12c) · 2026-11-27
+
+The owner accepted the Stonebridge slice, so the look now reaches the rest of the world. Nothing in play has changed.
+
+### Changed
+- **Necks:** every person now has one, in every view and in their portrait (the owner's one request at the slice).
+- **All eight towns** in the storybook look, each in its own materials and colours: Eastwatch's whitewash and terracotta forum, Hrothgard's timber halls under turf on its cold hill, Vessara and Calder in pale plaster, Merrow on its river, Gullhaven's harbour, Harrowgate's grey stone on the cliff; by day and night. The compact HUD in every town.
+- **Battlefields, sieges and the map** in the same warm palette, with the new trees, bushes and props. The fields, the walls, the crossings and every place on the map are where they were.
+
 ## v5.12.0 — The storybook look: Stonebridge (P11-12b) · 2026-11-27
 
 The vertical slice of the new look the owner approved: every person in the game is redrawn after the approved character design, and Stonebridge's streets after the approved concept. **For the owner's eyes first:** the rest of the towns, the battlefields, the map and the screens wait until the owner accepts this slice. Nothing in play has changed: the same battles, the same rules, the same streets.

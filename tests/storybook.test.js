@@ -118,11 +118,11 @@ test('the street figure and the dialogue portrait are the same person', () => {
   assert.equal(hilde.dress, true);
 });
 
-test('Stonebridge is the slice: drawn in the storybook look, its layout and every town’s exactly as in 5.11', () => {
+test('every town in the storybook look (P11-12c), its layout exactly as in 5.11', () => {
   const { CL } = loadGame();
   const hubs = CL.content.table('town_hubs');
-  assert.equal(hubs.stonebridge.art, 'storybook');
-  for (const [id, h] of Object.entries(hubs)) if (id !== 'stonebridge') assert.notEqual(h.art, 'storybook', `${id} waits for P11-12c`);
+  for (const [id, h] of Object.entries(hubs)) assert.notEqual(h.art, 'classic', `${id} in the storybook look`);
+  assert.equal(CL.gfx.building, CL.gfx.story.building, 'the kit draws the storybook buildings');
   // Footprints, collision, spawns, exits, NPC anchors and streets, fingerprinted at 5.11.0 (ff54781).
   const AT_5_11 = { stonebridge: '9be2fa6461de', eastwatch: '1ad69e8b6f05', hrothgard: '20a9339f59ae', vessara: 'd8543b7db2d4', merrow: '74de2e85dbf4', gullhaven: 'b889f38c0489', harrowgate: '2e4201b6b743', calder: '100176af44bc' };
   for (const h of Object.values(hubs)) {
@@ -143,7 +143,20 @@ test('Stonebridge draws in the storybook kit, by day and night, and the drawing 
     const ctx = recCtx();
     CL.gfx.town.draw(ctx, t, { night });
     assert.ok(ctx.calls.fill > 400, `night ${night}: the streets draw`);
-    assert.ok([...ctx.calls.colours].includes(CL.gfx.story.SPAL.meadow), 'the storybook meadow');
+    assert.ok([...ctx.calls.colours].includes(night > 0.3 ? CL.gfx.story.SPAL.glassLit : CL.gfx.story.SPAL.glass), 'the storybook windows');
   }
   assert.equal(JSON.stringify({ hero: [t.hero.x, t.hero.y], npcs: t.npcs.map((n) => [n.x, n.y]) }), before);
+});
+
+test('a neck in every view (owner, 2026-11-27): its shaded side shows from the front, the back and the sides', () => {
+  const { CL } = loadGame();
+  const F = CL.gfx.fig;
+  for (const L of [F.heroLook(), F.townLook('innkeeper', 4), F.troopLook('footman', 'valedorn', 2)]) {
+    const shade = CL.gfx.tone(L.skin, -0.14);
+    for (const face of ['down', 'up', 'left', 'right']) {
+      const ctx = recCtx();
+      F.figure(ctx, 0, 0, { ...L, helmet: null }, { face, t: 1 });
+      assert.ok(ctx.calls.colours.has(shade), `${face}: the neck`);
+    }
+  }
 });
