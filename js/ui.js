@@ -193,6 +193,7 @@
     const g = CL.game;
     g.mode = mode;
     $('#stage').dataset.mode = mode;
+    $('#stage').dataset.art = mode === 'town' ? g.town?.hub?.art || '' : ''; // P11-12b: the storybook slice's HUD
     if (mode !== 'encounter') g.waitCut = null; // P10-01: the note belongs to the encounter it led to
     requestAnimationFrame(fitHud); // the top-right buttons change with the mode
     CL.audio?.onMode(mode);

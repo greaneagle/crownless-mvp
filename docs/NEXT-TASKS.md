@@ -4052,7 +4052,7 @@ The aim: easy to fight, rewarding to fight well, meaningful to command. The play
 | P11-10 | Fighters who think: individual AI and styles | L | 5.10.0 | ✅ Done |
 | P11-11 | Troops by their weapons | M–L | 5.11.0 | ✅ Done |
 | P11-12a | The storybook look: baseline and integration analysis | M | 5.11.1 | ✅ Done |
-| P11-12b | The Stonebridge vertical slice: characters and Stonebridge (owner's visual gate) | L–XL | 5.12.0 | Ready |
+| P11-12b | The Stonebridge vertical slice: characters and Stonebridge (owner's visual gate) | L–XL | 5.12.0 | ✅ Built, awaiting the owner's acceptance |
 | P11-12c | The environments: towns, battlefields, sieges, the map | XL | 5.12.1 | After the owner's acceptance of P11-12b |
 | P11-12d | One UI language across every screen | L | 5.12.2 | Specified |
 | P11-12e | Performance, caches, visual regression, acceptance (owner's final gate) | M–L | 5.12.3 | Specified |
@@ -5087,7 +5087,7 @@ _Expanded 2026-11-27 at 5.11.0 (commit ff54781) by the owner's approval of a gra
 
 ---
 
-#### P11-12b · The Stonebridge vertical slice: characters and Stonebridge (L–XL) — 5.12.0 — **owner's visual gate**
+#### P11-12b · The Stonebridge vertical slice: characters and Stonebridge (L–XL) — 5.12.0, ✅ Built — **waiting for the owner's visual acceptance**
 
 **Build.**
 - **Required:**
@@ -5106,6 +5106,15 @@ _Expanded 2026-11-27 at 5.11.0 (commit ff54781) by the owner's approval of a gra
 **Measure.** The baseline's scenarios again; the drawing time of 200 fighters within 10% of P11-12a's p95 or explained and fixed in P11-12e.
 
 **Acceptance (owner's visual gate).** Screenshots of the real game beside the approved target: Stonebridge by day and night at 960×540 and 812×375, the hero and the five townsfolk close up and at 1×, a battle at 40 and 200 with every pose, a mounted hero, an archer, a dialogue portrait. The owner accepts the look (or names what to change) before P11-12c begins.
+
+**Done (5.12.0), for the owner's acceptance.**
+- **The rig** (`js/art/figures.js`, its API and `weaponArm`/`weaponTip`/`shieldPos` kept): v0.7's anatomy in v0.7's units inside `scale(K 0.45, KY 0.394)`; front, back and east profile, west mirrored; **no ear in profile**; every helmet and hat in each view, a crown; tunic, dress, apron, gambeson, mail (rings, or a ring skirt and steel shoulders under a tabard), leather, fur, rags; cloaks with trim and clasp; two-segment arms to the rig's own hands; every weapon family restyled at its old length; the horse redrawn (1.14×, the seat at 15 px). Paths as parsed strings traced with canvas calls (no `Path2D`).
+- **One person:** `G.fig.features` for figure and portrait (`G.fig.bust`; `G.ui.portrait` now draws it; the old portrait parts removed); a townsperson's street look is their dialogue look (`G.town.personLook`, its seed and face the portrait's: before, the two differed); the hero's face from their name; plain clothes no longer wear the Valedorn tabard (only armour does).
+- **Stonebridge** (`hub.art: 'storybook'`; the cottage's thatch as a `spec`): `js/art/story.js` (new): the concept's palette, buildings, tower, trees, cobbles in rings, the well, the stall, props; people at 1.25 (about 48 px); building names on their fronts and townsfolk's titles over their heads; day, dusk and night. The compact HUD for a storybook town (`#stage[data-art]`). Layouts unchanged (every town fingerprinted).
+- **Comparison and review:** Debug → "Old figures" (`js/art/classic.js`, 5.11's, until P11-12e); the gallery opens on "the Stonebridge slice" and "riders and horses". Screenshots: `docs/graphics-demo/p11-12/after/` (and `before/`), local.
+- **Measured** (headless, phone profile, Balanced, 8 s): 60 fps everywhere; drawing 1.0 / 0.7 / 0.8 / 1.0 ms at 40 / 100 / 150 / 200 (mixed; was 0.8 / 0.6 / 0.7 / 0.9), every realm 1.5 ms at 200 (was 1.3); bake cache 1,355 at most (bound 3,000). Over the proposed 10% in drawing time at some sizes: for P11-12e. **No phone numbers yet.**
+- **Tests:** `tests/storybook.test.js` (new, 6); `art-gear` (the two-handed grip now checked by the hand's place: the far arm is always drawn in profile), the gallery spec's page list. `npm test` 1,068 pass; lint clean; the parity guard and golden battles unchanged; browser: the full suite 327 passed, 3 failed under its load (`archery`, `battle-size`, `battle-zoom`), each passing alone and 3× repeated (54/54).
+- **Open for the owner:** the look (the gate), and the phone (Debug → Benchmark: P11-12 scenarios).
 
 ---
 

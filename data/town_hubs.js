@@ -22,6 +22,7 @@
  *   obstacles[].spec:   optional art-kit building spec (js/art/kit.js `building`) over the one made from
  *                       its kind and its realm's culture: a landmark's tower, its roof form, its sign
  *   ground.road / ground.plaza.color: optional street and square colours
+ *   art: 'storybook' (P11-12b): drawn with the storybook kit (js/art/story.js); drawing only, nothing else reads it
  *   entry: 'menu' (default) or 'streets': what arriving opens. Menu first, with "Walk the streets"
  *          one tap away (owner playtest finding F-3); people with conversations are also listed there. */
 (function (root) {
@@ -68,6 +69,7 @@
       settlement: 'stonebridge',
       name: 'Stonebridge',
       entry: 'menu',
+      art: 'storybook', // P11-12b (D-P11m): the vertical slice of the storybook look; P11-12c brings the other towns
       ground: {
         base: '#6f8f4e',
         roads: [
@@ -83,7 +85,7 @@
         { shape: 'rect', x: 520, y: 100, w: 110, h: 60, look: 'stall', label: 'Market' },
         { shape: 'rect', x: 690, y: 80, w: 200, h: 120, look: 'barracks', label: 'Muster Hall' },
         { shape: 'rect', x: 680, y: 350, w: 190, h: 110, look: 'house', label: "Elder's House", spec: { wall: 'plaster', base: true, beams: true, roof: 'slate', form: 'hip', tower: 'right', windows: 3 } },
-        { shape: 'rect', x: 130, y: 370, w: 150, h: 95, look: 'house' },
+        { shape: 'rect', x: 130, y: 370, w: 150, h: 95, look: 'house', spec: { wall: 'plaster', base: true, beams: false, roof: 'thatch', form: 'gable', door: 'center', windows: 2, chimney: -0.45 } },
         { shape: 'circle', x: 470, y: 330, r: 22, look: 'well' },
         tree(60, 120), tree(370, 470), tree(900, 300), tree(620, 470)
       ],

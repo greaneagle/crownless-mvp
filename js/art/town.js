@@ -7,16 +7,25 @@
  * was. A building is drawn inside its footprint from a spec: its `spec` in the data when it has one
  * (a landmark), else one made from its kind (tavern, barracks, house), its town's colours (`colors`)
  * and its realm's culture (CULTURES in js/art/kit.js). A person is drawn from their role (and gender),
- * a companion from their look. */
+ * a companion from their look.
+ *
+ * P11-12b (D-P11m): a town marked `art: 'storybook'` in its hub (Stonebridge, the vertical slice) is drawn
+ * with the storybook kit (js/art/story.js): the approved concept's palette, buildings, cobbles, trees and
+ * props, in the same footprints. P11-12c brings the other towns over. */
 (function (root) {
   'use strict';
   const CL = root.Crownless;
   const G = CL.gfx;
   const { PAL, ellipse, fill } = G;
 
+  /** P11-12b: people in a storybook town are drawn at the concept's size (about 48 px); drawing only. */
+  const STORY_FIG = 1.25;
   const TALK_VERB = { trade: 'trade', recruit: 'recruit', tavern: 'drink', talk: 'talk', leave: 'leave' };
   /** A townsperson's role (town hubs and the story) to the kit's role looks. */
   const ROLE_LOOK = { innkeeper: 'innkeeper', merchant: 'merchant', recruiter: 'recruiter', elder: 'elder', official: 'noble', guard: 'guard', caravan: 'merchant', agent: 'recruiter' };
+
+  /** P11-12b: is this town drawn in the storybook look (the slice)? */
+  const story = (hub) => hub.art === 'storybook' && Boolean(G.story);
 
   const culture = (hub) => {
     const s = CL.content.table('settlements')[hub.settlement];
@@ -53,7 +62,9 @@
     if (kind === 'tavern') Object.assign(base, { form: S.forms.includes('long') ? 'long' : 'gable', base: wall !== 'stone', beams: true, sign: { kind: 'tavern', at: 'left' }, awning: '#a54f3a', door: 'left', chimney: 0.6 });
     if (kind === 'barracks') Object.assign(base, { wall: C.culture === 'hrothmark' ? 'timber' : 'stone', roof: pick(S.roofs, 1), form: 'long', beams: C.culture === 'hrothmark', sign: { kind: 'barracks', at: 'right' }, door: 'center', chimney: null, shields: true, banner: true });
     if (o.colors) Object.assign(base, { wallColor: o.colors.wall, roofColor: o.colors.roof, doorColor: o.colors.door });
-    return { ...base, ...(o.spec || {}) };
+    const b = { ...base, ...(o.spec || {}) };
+    if (C.story && b.banner) Object.assign(b, { banner: false, hanging: true, realm: C.realm });
+    return b;
   }
 
   /** Small things on a building's front: shields by the barracks door, a banner on its roof. */
@@ -65,14 +76,58 @@
   }
 
   /** Where a building's chimney smokes from (or null). */
-  function chimneyTop(b) {
+  function chimneyTop(b, storybook = false) {
     if (b.chimney == null || b.form === 'end') return null;
+    if (storybook) return { x: b.x + b.chimney * b.w * 0.3, y: b.y - b.h - b.d * 0.85 - 11 };
     return { x: b.x + b.chimney * b.w * 0.3, y: b.y - b.h - b.d + b.d * 0.2 - 8 };
   }
 
   // ---- The ground ----
 
+  /** P11-12b: the storybook ground: the meadow, soft patches, sandy roads with an edge, single cobbles. */
+  function storyGround(ctx, hub) {
+    const S = G.story;
+    const P = S.SPAL;
+    const gr = hub.ground || {};
+    ctx.fillStyle = P.meadow;
+    ctx.fillRect(0, 0, 960, 540);
+    ctx.globalAlpha = 0.35;
+    for (const p of gr.patches || []) {
+      ellipse(ctx, p.x, p.y, p.rx, p.ry);
+      fill(ctx, P.meadowLight);
+    }
+    ctx.globalAlpha = 1;
+    for (const w of gr.waters || []) G.battle.water(ctx, w, { x: 0, y: 0, w: 960, h: 540 }, 0);
+    if (gr.stone) S.paving(ctx, gr.stone, gr.stone.color || P.cobble);
+    for (const [pad, colour] of [[3, P.roadEdge], [0, gr.road ? G.tone(gr.road, 0.3) : P.road]]) {
+      for (const r of gr.roads || []) {
+        G.rrect(ctx, r.x - pad, r.y - pad, r.w + pad * 2, r.h + pad * 2, 12);
+        fill(ctx, colour);
+      }
+    }
+    if (gr.plaza) S.plaza(ctx, gr.plaza, gr.plaza.color ? G.tone(gr.plaza.color, 0.3) : P.cobble);
+    for (const [kind, x, y, w, h] of hub.decor || []) {
+      const cx = x + w / 2;
+      const cy = y + h * 0.8;
+      if (kind === 'fence') G.fence(ctx, x + 4, cy, x + w - 4, cy, 1);
+      else if (kind === 'planks') planks(ctx, x, y, w, h);
+      else if (kind === 'turf') turf(ctx, x, y, w, h);
+      else if (kind === 'ferns') for (let i = 0; i < 3; i++) S.tuft(ctx, cx + (i - 1) * 7, cy + (i % 2) * 3, 1.4, P.crownDark);
+      else for (let i = 0; i < 4; i++) S.tuft(ctx, cx + (i - 1.5) * 8, cy + (i % 2) * 4, 1.2, P.meadowDark, ['#f2e2a0', '#e9a6a0', '#ffffff', '#c9c2e8'][(i + x) % 4]);
+    }
+    // Grass tufts scattered off the streets and clear of the buildings (seeded: never flicker).
+    const r = G.rng(hub.id.length * 977 + 13);
+    const inBox = (x, y) => hub.obstacles.some((o) => (o.shape === 'rect' ? x > o.x - 6 && x < o.x + o.w + 6 && y > o.y - 6 && y < o.y + o.h + 8 : Math.hypot(x - o.x, y - o.y) < (o.r || 0) + 6));
+    for (let i = 0; i < 110; i++) {
+      const x = 14 + r() * 932;
+      const y = 14 + r() * 512;
+      if (onStreet(gr, x, y) || inBox(x, y)) continue;
+      S.tuft(ctx, x, y, 0.65 + r() * 0.45, P.meadowDark, i % 11 === 0 ? ['#efe5b7', '#f3d0c8', '#ffffff'][i % 3] : null);
+    }
+  }
+
   function ground(ctx, hub) {
+    if (story(hub)) return storyGround(ctx, hub);
     const gr = hub.ground || {};
     ctx.fillStyle = G.tone(gr.base || PAL.grass, 0.28);
     ctx.fillRect(0, 0, 960, 540);
@@ -178,13 +233,14 @@
   function personLook(n, realm) {
     let L = looks.get(n);
     if (L) return L;
-    const seed = [...String(n.id || n.name)].reduce((a, ch) => a * 31 + ch.charCodeAt(0), 7) >>> 0;
+    // P11-12b: the portrait's own seed and face (js/art/ui.js speakerLook), so the street and the dialogue agree.
+    const seed = G.fig.num(n.id || n.name);
     if (n.companion && CL.content.table('companions')[n.companion]) L = G.fig.companionLook(n.companion, realm);
     else {
       // A woman when the data says so (`gender`), else a man: never left to chance.
       const base = G.fig.townLook(ROLE_LOOK[n.role] || n.role || 'townsman', seed % 997, realm);
       const female = n.gender === 'female';
-      L = { ...base, female, beard: female ? null : base.beard, hairStyle: female ? (base.female ? base.hairStyle : seed % 2 ? 'bun' : 'braid') : ['bun', 'braid', 'long'].includes(base.hairStyle) ? 'short' : base.hairStyle, apron: base.apron && !female && n.role === 'innkeeper' ? '#e9dcc0' : base.apron };
+      L = { ...base, female, dress: female && base.dress !== false && !base.armour, beard: female ? null : base.beard, hairStyle: female ? (base.female ? base.hairStyle : seed % 2 ? 'bun' : 'braid') : ['bun', 'braid', 'long'].includes(base.hairStyle) ? 'short' : base.hairStyle, apron: base.apron && !female && n.role === 'innkeeper' ? '#e9dcc0' : base.apron, face: G.fig.faceOf(n.id || n.name) };
     }
     looks.set(n, L);
     return L;
@@ -217,7 +273,7 @@
       const x = wellO.x + Math.cos(a) * (wellO.r + 34);
       const y = wellO.y + Math.sin(a) * (wellO.r + 20) * 0.6 + 4;
       const face = Math.abs(Math.cos(a + Math.PI / 2)) > 0.6 ? (Math.cos(a + Math.PI / 2) < 0 ? 'left' : 'right') : Math.sin(a + Math.PI / 2) < 0 ? 'up' : 'down';
-      items.push([y, () => G.fig.figure(ctx, x, y, G.fig.townLook('child', hub.id.length), { face, move: 1, walk: t * 12, t })]);
+      items.push([y, () => G.fig.figure(ctx, x, y, G.fig.townLook('child', hub.id.length), { face, move: 1, walk: t * 12, t, scale: C.story ? STORY_FIG : 1 })]);
     }
     if (['hrothmark', 'ostrand', 'saltreach'].includes(C.culture)) {
       const house = hub.obstacles.find((o) => o.look === 'house');
@@ -289,13 +345,14 @@
   function draw(ctx, t, opts) {
     const hub = t.hub;
     const C = culture(hub);
+    C.story = story(hub);
     const time = performance.now() / 1000;
     const last = draw.last || time;
     const dt = Math.min(0.1, Math.max(0, time - last));
     draw.last = time;
     const night = opts.night ?? nightOf(CL.campaign?.day);
     // The ground never changes: drawn once per town and scale, then stamped (P10-G3's budget).
-    if (opts.k && root.document) ctx.drawImage(G.cached(`town-ground:${hub.id}`, opts.k, 960, 540, 0, 0, (c) => ground(c, hub)), 0, 0, 960, 540);
+    if (opts.k && root.document) ctx.drawImage(G.cached(`town-ground:${hub.id}${story(hub) ? ':sb' : ''}`, opts.k, 960, 540, 0, 0, (c) => ground(c, hub)), 0, 0, 960, 540);
     else ground(ctx, hub);
     const items = [];
     const chimneys = [];
@@ -305,9 +362,15 @@
       if (['tavern', 'barracks', 'house'].includes(o.look)) {
         const idx = i++;
         const b = specOf(o, idx, C);
-        const top = chimneyTop(b);
+        const top = chimneyTop(b, C.story);
         if (top) chimneys.push(top);
         const paint = (c, at) => {
+          if (C.story) {
+            if (b.tower) G.story.tower(c, b.x + (b.tower === 'left' ? -1 : 1) * b.w * 0.4, b.y - b.h * 0.1, 1, b.h + b.d * 0.9 + 22, 14, b.roof === 'thatch' ? 'slate' : b.roof, at, null);
+            G.story.building(c, b, at, night);
+            trimmings(c, { ...b, banner: false }, C.realm, at);
+            return;
+          }
           if (b.tower) G.tower(c, b.x + (b.tower === 'left' ? -1 : 1) * b.w * 0.36, b.y - b.h * 0.2, 1, b.h + b.d + 30, 13, b.roof === 'thatch' ? 'slate' : b.roof, 'cone', at, C.realm);
           G.building(c, b, at, night);
           trimmings(c, { ...b, banner: false }, C.realm, at);
@@ -316,21 +379,26 @@
         const [bx, by, bw, bh] = [o.x - 40, o.y - 110, o.w + o.h * 0.5 + 70, o.h + 140];
         items.push([o.y + o.h, () => {
           // A building is still: drawn once per town, scale and light, then stamped; its banner moves.
-          if (opts.k && root.document) ctx.drawImage(G.cached(`town-bld:${hub.id}:${idx}:${lit}`, opts.k, bw, bh, -bx, -by, (c) => paint(c, 0)), bx, by, bw, bh);
+          if (opts.k && root.document) ctx.drawImage(G.cached(`town-bld:${hub.id}:${idx}:${lit}${C.story ? ':sb' : ''}`, opts.k, bw, bh, -bx, -by, (c) => paint(c, 0)), bx, by, bw, bh);
           else paint(ctx, time);
           if (b.banner) G.banner(ctx, b.x + b.w * 0.42, b.y - b.h - b.d * 0.35, 0.9, C.realm, time, 30);
         }]);
       } else if (o.look === 'stall') {
         const s = o.w / 52;
         const awnings = { valedorn: '#3b6ea5', aurelian: '#a54f3a', hrothmark: '#6b8a4a', vessaro: '#c08a3e', border: '#8a5a8a', ostrand: '#5a6a7a', saltreach: '#b0782a' };
-        items.push([o.y + o.h, () => G.stall(ctx, o.x + o.w / 2, o.y + o.h, s, awnings[C.culture] || PAL.crimson)]);
-      } else if (o.look === 'well') items.push([o.y + o.r * 0.5, () => G.well(ctx, o.x, o.y + o.r * 0.6, o.r / 15)]);
-      else items.push([G.battle.baseOf(o), () => G.battle.obstacle(ctx, o, time, CL.game)]);
+        const kit = C.story ? G.story : G;
+        items.push([o.y + o.h, () => kit.stall(ctx, o.x + o.w / 2, o.y + o.h, s, awnings[C.culture] || PAL.crimson)]);
+      } else if (o.look === 'well') items.push([o.y + o.r * 0.5, () => (C.story ? G.story : G).well(ctx, o.x, o.y + o.r * 0.6, o.r / 15)]);
+      else if (C.story && (o.look === 'tree' || o.look === 'bush')) {
+        const seed = Math.round(o.x * 7 + o.y * 13);
+        if (o.look === 'tree') items.push([o.y + o.r * 0.5, () => G.story.tree(ctx, o.x, o.y + o.r * 0.5, (o.r / 20) * 1.25, seed, 'broad', Math.sin(time * 0.7 + o.x) * 0.02)]);
+        else items.push([o.y + o.r * 0.5, () => G.story.bush(ctx, o.x, o.y + o.r * 0.5, (o.r / 14) * 1.15, seed)]);
+      } else items.push([G.battle.baseOf(o), () => G.battle.obstacle(ctx, o, time, CL.game)]);
     }
     const hasWater = life(ctx, hub, C, time, items);
     for (const n of t.npcs) {
       const tr = stride(n, dt);
-      items.push([n.y, () => G.fig.figure(ctx, n.x, n.y + 4, personLook(n, C.realm), { face: n.face || 'down', walk: n.pace ? n.anim || tr.walk : tr.walk, move: tr.move, t: time + (n.x % 7) })]);
+      items.push([n.y, () => G.fig.figure(ctx, n.x, n.y + 4, personLook(n, C.realm), { face: n.face || 'down', walk: n.pace ? n.anim || tr.walk : tr.walk, move: tr.move, t: time + (n.x % 7), scale: C.story ? STORY_FIG : 1 })]);
     }
     const h = t.hero;
     const htr = stride(h, dt);
@@ -346,9 +414,9 @@
     items.push([h.y, () => {
       ctx.strokeStyle = 'rgba(216,178,90,0.85)';
       ctx.lineWidth = 1.6;
-      ellipse(ctx, h.x, h.y + 5, 11, 4.2);
+      ellipse(ctx, h.x, h.y + 5, C.story ? 14 : 11, C.story ? 5.2 : 4.2);
       ctx.stroke();
-      G.fig.figure(ctx, h.x, h.y + 5, heroInTown(), { face: h.face || 'down', walk: htr.walk, move: htr.move, t: time, scale: 1.05 });
+      G.fig.figure(ctx, h.x, h.y + 5, heroInTown(), { face: h.face || 'down', walk: htr.walk, move: htr.move, t: time, scale: C.story ? STORY_FIG * 1.04 : 1.05 });
     }]);
     items.sort((a, b) => a[0] - b[0]);
     for (const [, paint] of items) paint();
@@ -401,12 +469,13 @@
       const cx = o.x + (o.w || 0) / 2;
       const cy = o.y + (o.h || 0);
       if (Math.hypot(h.x - cx, h.y - cy) > 190) continue;
-      pill(o.label, cx, cy + 12, '#f3e3b5', false);
+      // P11-12b: in the storybook look a building's name sits on its front (the concept's), clear of the people.
+      pill(o.label, cx, hub.art === 'storybook' && o.shape === 'rect' ? o.y + o.h * (o.look === 'stall' ? 0.15 : 0.5) : cy + 12, '#f3e3b5', false);
     }
     for (const n of t.npcs) {
       if (t.near === n) continue;
       if (Math.hypot(h.x - n.x, h.y - n.y) > 230) continue;
-      pill(n.tag || n.name, n.x, n.y + 22, '#e8f0ff', false);
+      pill(n.tag || n.name, n.x, hub.art === 'storybook' ? n.y - 52 : n.y + 22, '#e8f0ff', false);
     }
     if (t.near) {
       const n = t.near;

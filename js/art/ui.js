@@ -1,11 +1,12 @@
 /* Crownless art kit: the UI's pictures (P10-G5, D-P10k). Portraits drawn from the figure parts at a larger
- * scale with a face, small troop figures, house arms and banners, and the vector icons (the stats and the
+ * scale with a face (P11-12b: the storybook figure's own bust and features, so a portrait is the same
+ * person as the figure in the streets and on the field), small troop figures, house arms and banners, and the vector icons (the stats and the
  * trade goods). Everything here is drawn in code; a screen asks for a canvas or an image URL, cached. */
 (function (root) {
   'use strict';
   const CL = root.Crownless;
   const G = CL.gfx;
-  const { PAL, STYLE, tone, ellipse, rrect, fillLine } = G;
+  const { PAL, tone, ellipse } = G;
 
   const num = (seed) => {
     let h = 2166136261;
@@ -15,330 +16,32 @@
 
   // ---- Faces ----
 
-  /**
-   * What a face is made of, by kind: its shape (0 round, 1 long, 2 broad), brows (0 straight, 1 arched,
-   * 2 heavy), nose (0 straight, 1 broad, 2 hooked) and mouth (0 level, 1 wide, 2 small).
-   */
-  function faceOf(seed, shape) {
-    const n = num(seed);
-    return { shape: shape ?? n % 3, brow: (n >>> 3) % 3, nose: (n >>> 6) % 3, mouth: (n >>> 9) % 3 };
-  }
-
-  const HEADS = [
-    { rx: 17, ry: 19.5 },
-    { rx: 15, ry: 21.5 },
-    { rx: 18.5, ry: 19 },
-  ];
-
-  /** The clothes on the shoulders: armour, a tabard or tunic, a cloak, a collar. */
-  function shoulders(ctx, L, R, female) {
-    const body = L.tabard ? R.color : L.tunic || PAL.wool || '#8a7a5a';
-    const armour = L.armour;
-    // The cloak behind, over the shoulders' ends.
-    if (L.cloak) {
-      ctx.beginPath();
-      ctx.moveTo(2, 100);
-      ctx.quadraticCurveTo(6, 74, 28, 70);
-      ctx.lineTo(72, 70);
-      ctx.quadraticCurveTo(94, 74, 98, 100);
-      ctx.closePath();
-      fillLine(ctx, L.cloak);
-    }
-    ctx.beginPath();
-    const w = female ? 32 : 36;
-    ctx.moveTo(50 - w - 4, 100);
-    ctx.quadraticCurveTo(50 - w, 76, 38, 72);
-    ctx.lineTo(62, 72);
-    ctx.quadraticCurveTo(50 + w, 76, 50 + w + 4, 100);
-    ctx.closePath();
-    const metal = armour === 'mail' ? PAL.steel || '#9aa3a8' : null;
-    fillLine(ctx, metal || (armour === 'leather' ? '#8a6240' : armour === 'fur' ? '#7a5a3c' : armour === 'rags' ? tone(body, -0.15) : body));
-    // One shade on the right shoulder.
-    ctx.save();
-    ctx.clip();
-    ctx.fillStyle = '#0000001f';
-    ctx.fillRect(60, 70, 40, 30);
-    if (metal) {
-      // Mail rings as a few rows of dots, a tabard over them.
-      ctx.fillStyle = '#ffffff26';
-      for (let yy = 78; yy < 100; yy += 4) for (let xx = 14 + (yy % 8); xx < 90; xx += 6) ctx.fillRect(xx, yy, 1.6, 1.6);
-      if (L.tabard) {
-        rrect(ctx, 34, 80, 32, 24, 3);
-        fillLine(ctx, R.color, STYLE.line * 0.8);
-        G.device(ctx, 50, 90, 6, R);
-      }
-    } else if (L.tabard) G.device(ctx, 50, 90, 6, R);
-    if (L.apron) {
-      ctx.fillStyle = L.apron;
-      ctx.fillRect(38, 86, 24, 14);
-    }
-    ctx.restore();
-    // The collar: fur, a mail coif's edge, a gambeson's padding, or a plain neck.
-    if (L.fur || armour === 'fur') {
-      ellipse(ctx, 50, 74, 22, 6);
-      fillLine(ctx, '#a08665');
-    } else if (armour === 'gambeson') {
-      ellipse(ctx, 50, 74, 17, 4.5);
-      fillLine(ctx, tone(body, 0.12));
-    }
-    if (L.pauldrons) {
-      for (const sx of [-1, 1]) {
-        ellipse(ctx, 50 + sx * 30, 80, 11, 7);
-        fillLine(ctx, PAL.steel || '#9aa3a8');
-      }
-    }
-    if (L.cloak && L.cloakTrim) {
-      ctx.strokeStyle = L.cloakTrim;
-      ctx.lineWidth = 2.2;
-      ctx.beginPath();
-      ctx.moveTo(26, 71);
-      ctx.lineTo(74, 71);
-      ctx.stroke();
-    }
-  }
-
-  function hairBack(ctx, L, H, hair) {
-    if (L.hairStyle === 'long' || L.hairStyle === 'braid') {
-      rrect(ctx, 50 - H.rx - 3, 36, (H.rx + 3) * 2, L.hairStyle === 'long' ? 40 : 30, 10);
-      fillLine(ctx, hair);
-    }
-  }
-
-  function features(ctx, L, F, H, cy) {
-    const skin = L.skin || G.fig.SKINS[1];
-    const ink = '#2c211b';
-    // Ears, then the shade on the right of the face and a highlight on the upper left.
-    for (const sx of [-1, 1]) {
-      ellipse(ctx, 50 + sx * H.rx, cy + 2, 3.2, 5);
-      fillLine(ctx, sx > 0 ? tone(skin, -0.08) : skin, STYLE.line * 0.8);
-    }
-    ellipse(ctx, 50, cy, H.rx, H.ry);
-    fillLine(ctx, skin);
-    ctx.save();
-    ellipse(ctx, 50, cy, H.rx, H.ry);
-    ctx.clip();
-    ctx.fillStyle = tone(skin, -0.1);
-    ellipse(ctx, 50 + H.rx * 0.95, cy + 3, H.rx * 0.55, H.ry * 1.05);
-    ctx.fill();
-    ctx.fillStyle = tone(skin, 0.1);
-    ellipse(ctx, 50 - H.rx * 0.45, cy - H.ry * 0.25, H.rx * 0.3, H.ry * 0.22);
-    ctx.fill();
-    ctx.restore();
-    // Eyes: a white, an iris, and the brows by kind.
-    const ey = cy + 1;
-    for (const sx of [-1, 1]) {
-      const ex = 50 + sx * 6.8;
-      ellipse(ctx, ex, ey, 3, 1.9);
-      ctx.fillStyle = '#efe6d6';
-      ctx.fill();
-      ellipse(ctx, ex + 0.4, ey + 0.1, 1.5, 1.6);
-      ctx.fillStyle = L.eyes || ink;
-      ctx.fill();
-      ctx.strokeStyle = L.brows || tone(L.hair || ink, -0.15);
-      ctx.lineWidth = F.brow === 2 ? 2.6 : 1.7;
-      ctx.lineCap = 'round';
-      ctx.beginPath();
-      if (F.brow === 1) {
-        ctx.moveTo(ex - 3.6, ey - 3.5);
-        ctx.quadraticCurveTo(ex, ey - 6.2, ex + 3.6, ey - 3.8);
-      } else {
-        ctx.moveTo(ex - 3.6, ey - (sx < 0 ? 4.6 : 4.2));
-        ctx.lineTo(ex + 3.6, ey - (sx < 0 ? 4.2 : 4.6));
-      }
-      ctx.stroke();
-    }
-    // The nose: a shade down its right side and the tip.
-    ctx.strokeStyle = tone(skin, -0.25);
-    ctx.lineWidth = 1.4;
-    ctx.beginPath();
-    const nw = F.nose === 1 ? 4 : 2.8;
-    if (F.nose === 2) {
-      ctx.moveTo(51, ey + 1);
-      ctx.quadraticCurveTo(54.5, ey + 6, 52.5, ey + 9.5);
-    } else {
-      ctx.moveTo(51.5, ey + 1);
-      ctx.lineTo(52, ey + 8.5);
-    }
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(50 - nw, ey + 9.6);
-    ctx.quadraticCurveTo(50, ey + 11.2, 50 + nw, ey + 9.6);
-    ctx.stroke();
-    // The mouth.
-    const my = cy + H.ry * 0.55;
-    const mw = F.mouth === 1 ? 6.5 : F.mouth === 2 ? 3.6 : 5;
-    ctx.strokeStyle = L.female ? '#9a4a42' : '#6e3b2e';
-    ctx.lineWidth = L.female ? 2 : 1.6;
-    ctx.beginPath();
-    ctx.moveTo(50 - mw, my);
-    ctx.quadraticCurveTo(50, my + (L.talk ? 2.4 : 1.4), 50 + mw, my);
-    ctx.stroke();
-  }
-
-  /** A man's beard: stubble, short or full, in the hair's colour. */
-  function beard(ctx, kind, H, cy, colour) {
-    if (!kind) return;
-    ctx.save();
-    ellipse(ctx, 50, cy, H.rx + 0.5, H.ry + 0.5);
-    ctx.clip();
-    ctx.beginPath();
-    const top = cy + (kind === 3 ? 3 : 6);
-    ctx.moveTo(50 - H.rx - 1, top - 2);
-    ctx.lineTo(50 - H.rx + 5, top);
-    ctx.quadraticCurveTo(50, top + 5, 50 + H.rx - 5, top);
-    ctx.lineTo(50 + H.rx + 1, top - 2);
-    ctx.lineTo(50 + H.rx + 1, cy + H.ry + 2);
-    ctx.lineTo(50 - H.rx - 1, cy + H.ry + 2);
-    ctx.closePath();
-    ctx.globalAlpha = kind === 1 ? 0.35 : 1;
-    ctx.fillStyle = colour;
-    ctx.fill();
-    ctx.restore();
-    if (kind === 3) {
-      ctx.beginPath();
-      ctx.moveTo(50 - H.rx + 2, cy + H.ry * 0.55);
-      ctx.quadraticCurveTo(50, cy + H.ry + 12, 50 + H.rx - 2, cy + H.ry * 0.55);
-      fillLine(ctx, colour, STYLE.line * 0.8);
-    }
-    if (kind >= 2) {
-      // The moustache over the mouth.
-      ctx.beginPath();
-      ctx.moveTo(43, cy + H.ry * 0.5);
-      ctx.quadraticCurveTo(50, cy + H.ry * 0.3, 57, cy + H.ry * 0.5);
-      ctx.quadraticCurveTo(50, cy + H.ry * 0.44, 43, cy + H.ry * 0.5);
-      ctx.strokeStyle = colour;
-      ctx.lineWidth = 2.6;
-      ctx.stroke();
-    }
-  }
-
-  function hairTop(ctx, L, H, cy, hair) {
-    if (L.hairStyle === 'bald') {
-      ctx.fillStyle = '#ffffff22';
-      ellipse(ctx, 45, cy - H.ry * 0.7, 5, 2.5);
-      ctx.fill();
-      return;
-    }
-    ctx.beginPath();
-    ctx.ellipse(50, cy - 2, H.rx + 1.5, H.ry * 0.95, 0, Math.PI * 1.03, Math.PI * 1.97);
-    ctx.quadraticCurveTo(50 + H.rx * 0.4, cy - H.ry * 0.55, 50 - H.rx * 0.1, cy - H.ry * 0.5);
-    ctx.quadraticCurveTo(50 - H.rx * 0.6, cy - H.ry * 0.4, 50 - H.rx - 1, cy - 1);
-    ctx.closePath();
-    fillLine(ctx, hair, STYLE.line * 0.9);
-    if (L.hairStyle === 'bun') {
-      ellipse(ctx, 50, cy - H.ry - 3, 6, 5);
-      fillLine(ctx, hair, STYLE.line * 0.8);
-    }
-    if (L.hairStyle === 'braid') {
-      rrect(ctx, 50 + H.rx - 2, cy + 2, 6, 30, 3);
-      fillLine(ctx, hair, STYLE.line * 0.8);
-    }
-  }
-
-  /** Headgear seen from the front: a hood, a cap or hat, a helm, a fur hat; a crown for a ruler. */
-  function headgear(ctx, L, H, cy, R) {
-    const k = L.helmet;
-    const metal = PAL.steel || '#9aa3a8';
-    if (k === 'hood' || L.hat === 'coif') {
-      ctx.beginPath();
-      ctx.moveTo(50 - H.rx - 6, cy + H.ry + 8);
-      ctx.quadraticCurveTo(50 - H.rx - 9, cy - H.ry - 9, 50, cy - H.ry - 8);
-      ctx.quadraticCurveTo(50 + H.rx + 9, cy - H.ry - 9, 50 + H.rx + 6, cy + H.ry + 8);
-      ctx.lineTo(50 + H.rx - 1, cy + H.ry * 0.3);
-      ctx.quadraticCurveTo(50, cy - H.ry - 1, 50 - H.rx + 1, cy + H.ry * 0.3);
-      ctx.closePath();
-      fillLine(ctx, k === 'hood' ? L.hoodColor || '#5c5a44' : '#e6dcc4');
-    } else if (k === 'furhat') {
-      rrect(ctx, 50 - H.rx - 3, cy - H.ry - 7, (H.rx + 3) * 2, 14, 6);
-      fillLine(ctx, '#8a6a48');
-    } else if (k === 'cap' || L.hat) {
-      const c = L.capColor || L.hatColor || tone(R.color, -0.1);
-      ctx.beginPath();
-      ctx.ellipse(50, cy - H.ry * 0.45, H.rx + 1.5, H.ry * 0.75, 0, Math.PI, Math.PI * 2);
-      ctx.closePath();
-      fillLine(ctx, c);
-      if (L.hat === 'brim') {
-        ellipse(ctx, 50, cy - H.ry * 0.45, H.rx + 9, 3.5);
-        fillLine(ctx, c);
-      } else if (L.hat === 'kerchief') {
-        ctx.fillStyle = tone(c, 0.15);
-        ctx.fillRect(50 - H.rx, cy - H.ry * 0.55, H.rx * 2, 3);
-      }
-    } else if (k && k !== 'great') {
-      // A helm: a dome with a band, a nasal for the northern and nasal helms, a brim for a kettle hat.
-      ctx.beginPath();
-      ctx.ellipse(50, cy - H.ry * 0.3, H.rx + 2.5, H.ry * 0.95, 0, Math.PI, Math.PI * 2);
-      ctx.closePath();
-      fillLine(ctx, metal);
-      ctx.fillStyle = '#ffffff40';
-      ellipse(ctx, 50 - H.rx * 0.4, cy - H.ry * 0.85, 4, 2.4);
-      ctx.fill();
-      ctx.fillStyle = tone(metal, -0.2);
-      ctx.fillRect(50 - H.rx - 2.5, cy - H.ry * 0.38, (H.rx + 2.5) * 2, 3.2);
-      if (k === 'kettle' || k === 'sallet') {
-        ellipse(ctx, 50, cy - H.ry * 0.3, H.rx + 10, 4);
-        fillLine(ctx, metal);
-      }
-      if (k === 'nasal' || k === 'spangen' || k === 'plumed' || k === 'crest') {
-        rrect(ctx, 48.4, cy - H.ry * 0.35, 3.2, 12, 1.4);
-        fillLine(ctx, metal, STYLE.line * 0.7);
-      }
-      if (k === 'plumed' || k === 'crest') {
-        ctx.beginPath();
-        ctx.moveTo(48, cy - H.ry * 1.2);
-        ctx.quadraticCurveTo(60, cy - H.ry * 2.2, 70, cy - H.ry * 1.25);
-        ctx.quadraticCurveTo(60, cy - H.ry * 1.5, 52, cy - H.ry * 1.05);
-        ctx.closePath();
-        fillLine(ctx, L.plume || R.color);
-      }
-    }
-    if (L.crown) {
-      // A ruler's circlet: gold, with three points.
-      ctx.beginPath();
-      const y0 = cy - H.ry * 0.62;
-      ctx.moveTo(50 - H.rx + 1, y0 + 4);
-      for (let i = 0; i <= 4; i++) ctx.lineTo(50 - H.rx + 1 + ((H.rx - 1) * 2 * i) / 4, y0 - (i % 2 ? 1 : 6));
-      ctx.lineTo(50 + H.rx - 1, y0 + 4);
-      ctx.closePath();
-      fillLine(ctx, PAL.gold, STYLE.line * 0.8);
-    }
-  }
+  /** What a face is made of (js/art/figures.js faceOf): the figures and the portraits share it. */
+  const faceOf = (seed, shape) => G.fig.faceOf(seed, shape);
 
   /**
-   * A portrait: a bust in a 100×100 box at (x, y), w wide. `L` is a figure look (`js/art/figures.js`) with,
-   * for the face, `face` (faceOf), `beardKind` (0 none, 1 stubble, 2 short, 3 full) and `crown`.
+   * A portrait: a bust in a 100×100 box at (x, y), w wide. `L` is a figure look (`js/art/figures.js`); its
+   * features (`face` from faceOf, `beardKind` 0 none, 1 stubble, 2 short, 3 full, `eyes`) and `crown` come
+   * through `G.fig.features`, as the figure's.
    * `helm` false shows the face bare; a portrait keeps its look's helmet otherwise.
    */
   function portrait(ctx, x, y, w, L, { helm = true, back = true } = {}) {
     const R = G.realm(L.realm || 'neutral');
-    const F = L.face || faceOf(L.seed || 1);
-    const H = HEADS[F.shape] || HEADS[0];
-    const hair = L.hair || G.fig.HAIRS[0];
-    const female = Boolean(L.female);
-    const look = helm ? L : { ...L, helmet: L.helmet === 'hood' ? 'hood' : null, hat: L.hat === 'coif' ? null : L.hat };
-    const cy = 46;
     ctx.save();
     ctx.translate(x, y);
     ctx.scale(w / 100, w / 100);
+    ctx.beginPath();
+    ctx.rect(0, 0, 100, 100);
+    ctx.clip();
     if (back) {
       // The backdrop: a dark wash of the realm's colour, and a lighter disc behind the head (one light).
       ctx.fillStyle = tone(R.color, -0.62);
       ctx.fillRect(0, 0, 100, 100);
-      ellipse(ctx, 44, 40, 40, 40);
+      ellipse(ctx, 47, 42, 39, 39);
       ctx.fillStyle = tone(R.color, -0.45);
       ctx.fill();
     }
-    shoulders(ctx, look, R, female);
-    // The neck, with the jaw's shadow.
-    rrect(ctx, 50 - 7, cy + H.ry - 6, 14, 18, 4);
-    fillLine(ctx, tone(look.skin || G.fig.SKINS[1], -0.08));
-    const hidden = ['hood', 'furhat'].includes(look.helmet) || (look.helmet && look.helmet !== 'cap' && look.helmet !== 'great');
-    if (!hidden) hairBack(ctx, look, H, hair);
-    features(ctx, look, F, H, cy);
-    const beardKind = female ? 0 : look.beardKind ?? (look.beard ? 2 : 0);
-    beard(ctx, beardKind, H, cy, typeof look.beard === 'string' ? look.beard : tone(hair, -0.05));
-    if (!hidden && !(look.hat && look.hat !== 'kerchief')) hairTop(ctx, look, H, cy, hair);
-    headgear(ctx, look, H, cy, R);
+    G.fig.bust(ctx, L, { helm });
     ctx.restore();
   }
 
@@ -397,6 +100,7 @@
     const realm = CL.realm.owner?.(c?.world?.location, c) || 'valedorn';
     const role = G.town?.ROLE_LOOK?.[npc.role] || npc.role || 'townsman';
     if (!G.fig.ROLE_LOOKS[role]) return null;
+    if (G.town?.personLook) return { ...G.town.personLook(npc, realm) }; // P11-12b: the streets' own look
     const L = G.fig.townLook(role, num(npc.id) % 997, realm);
     L.female = npc.gender === 'female'; // as in the streets: a woman only when the data says so
     if (L.female) Object.assign(L, { beard: null, beardKind: 0, hairStyle: L.hairStyle === 'short' || L.hairStyle === 'bald' ? 'long' : L.hairStyle });

@@ -12,6 +12,7 @@ const ROOT = path.join(__dirname, '..');
 const PORT = Number(process.env.CROWNLESS_SHOTS_PORT || 8141);
 const PROFILES = {
   desktop: { viewport: { width: 960, height: 540 }, deviceScaleFactor: 1 },
+  hires: { viewport: { width: 960, height: 540 }, deviceScaleFactor: 2 }, // for close review
   phone: { viewport: { width: 812, height: 375 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true },
 };
 const SETTINGS = { music: 0, sfx: 0, tips: false, fullscreen: false, battleSizeChosen: true, prepSkip: true, sharpness: 'sharp' };
@@ -49,7 +50,12 @@ const SCENES = {
     CL.game.godMode = true;
   },
   map: (CL) => CL.ui.changeMode('map'),
-  gallery: (CL) => CL.artGallery?.enter(),
+  gallery: () => gallery([]),
+  'gallery-east': () => gallery(['ArrowRight']),
+  'gallery-back': () => gallery(['ArrowRight', 'ArrowRight']),
+  'gallery-west': () => gallery(['ArrowLeft']),
+  'gallery-attack': () => gallery(['ArrowRight', 'Space', 'Space']),
+  'gallery-mounted': () => gallery(['Tab', 'ArrowRight', 'Space', 'Space']),
 };
 
 function town(CL, id, hour) {
@@ -57,6 +63,16 @@ function town(CL, id, hour) {
   c.day = Math.floor(c.day) + hour / 24;
   c.world.location = id;
   CL.town.enter(id);
+}
+/** The Art gallery (Debug → Art gallery), then keys: ← → turn, Space the next pose, Tab the next page. */
+function gallery(keys) {
+  document.querySelector('#stage').dataset.dev = 'on';
+  document.querySelector('#cheatBtn').click();
+  document.querySelector('#artGalleryBtn').click();
+  setTimeout(() => {
+    for (const code of keys) window.dispatchEvent(new KeyboardEvent('keydown', { code, key: code }));
+    document.querySelector('#stage').dataset.dev = 'off';
+  }, 700);
 }
 function battle(CL, size) {
   CL.combat.setActiveCap(size);
@@ -90,7 +106,7 @@ async function shoot(browser, profile, scene, dir) {
   await page.locator('#primaryBtn').click();
   await waitMode(page, 'settlement');
   // The scene and its helpers run in the page (they are plain functions of CL).
-  await page.evaluate(`(() => { document.querySelector('#stage').dataset.dev = 'off'; const town = ${town}; const battle = ${battle}; (${SCENES[scene]})(window.Crownless); })()`);
+  await page.evaluate(`(() => { document.querySelector('#stage').dataset.dev = 'off'; const town = ${town}; const battle = ${battle}; const gallery = ${gallery}; (${SCENES[scene]})(window.Crownless); })()`);
   await page.waitForTimeout(scene.startsWith('battle') || scene.startsWith('siege') ? 6000 : 1500);
   const file = path.join(dir, `${profile}-${scene}.png`);
   await page.screenshot({ path: file });

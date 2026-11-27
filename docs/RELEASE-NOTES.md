@@ -1,5 +1,23 @@
 # Crownless — Release Notes
 
+## v5.12.0 — The storybook look: Stonebridge (P11-12b) · 2026-11-27
+
+The vertical slice of the new look the owner approved: every person in the game is redrawn after the approved character design, and Stonebridge's streets after the approved concept. **For the owner's eyes first:** the rest of the towns, the battlefields, the map and the screens wait until the owner accepts this slice. Nothing in play has changed: the same battles, the same rules, the same streets.
+
+### Changed
+- **People everywhere** (streets, battles, the map's parties, the creator, the gallery): full-bodied storybook figures with soft round heads, little faces of their own (eyes, brows, noses, mouths, beards), side views with one eye and no ear, separate arms, hands, legs and boots, and the clothes, armour, helmets, weapons and shields they really carry, in every facing and every move: walking, swinging, thrusting, guarding, drawing a bow, winding a crossbow, staggering, falling, and on horseback.
+- **Horses** are redrawn to match, a little larger, the rider in the saddle.
+- **Portraits** are the same people as the figures: Hilde in her dialogue looks like Hilde in the street.
+- **Stonebridge:** a warm meadow, the Grey Ford Inn with its timber frame, tiled roof, front gable, awning and sign, the slate muster hall with its banner and shields, a thatched cottage, the elder's house and its round tower, a well with its winch, the market stall, a plaza of single cobbles, rounded trees; people at a friendlier size, names on the buildings and over the heads, by day, dusk and night.
+- **Stonebridge's HUD** is compact: a smaller status box and buttons, a quieter joystick and a small TALK button, so the town stays in view on a phone.
+
+### For testing
+- **Debug → "Old figures"** shows the 5.11 people for side-by-side comparison. **Debug → Art gallery** opens on the slice: Stonebridge's people enlarged in four facings and every pose, their portraits, and riders with every weapon.
+
+### Under the hood
+- `js/art/figures.js` rewritten inside its contract (the hand, the weapon tip and the glint unchanged); `js/art/story.js` (new) the storybook kit; `js/art/classic.js` the 5.11 figures for comparison.
+- `tests/storybook.test.js` (no ear in profile; every part in every facing and pose, mounted too; one set of features; street and portrait one person; every town's layout fingerprinted at 5.11). The parity guard and the golden battles unchanged and passing.
+
 ## v5.11.1 — The storybook look: the baseline (P11-12a) · 2026-11-27
 
 The first step of the graphics, UI and performance milestone the owner approved (P11-12, decision D-P11m): the warm, simple storybook look of the approved Stonebridge concept and the character workshop v0.7, built into the game's own renderer in five steps. This one measures the game as it is, so every later step can be compared. Nothing you see or play has changed.

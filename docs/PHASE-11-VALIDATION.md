@@ -534,6 +534,10 @@ _Measured 2026-11-27 on 5.11.0's drawing (the code of ff54781 plus P11-12a's mea
 
 **The visual baseline:** `node scripts/screens-storybook.js before` wrote 28 screenshots (Stonebridge by day, dusk and night, near the innkeeper and in her dialogue, Eastwatch, Hrothgard, battles of 40 and 200, a mounted and an archer hero, a siege of 60, the map, the Art gallery; desktop and phone) to `docs/graphics-demo/p11-12/before/` (local, git-ignored).
 
+### After P11-12b (5.12.0, the storybook rig and Stonebridge)
+
+The same headless runs (phone profile, Balanced, 8 s): **drawing ms a frame** mixed 1.0 / 0.7 / 0.8 / 1.0 at 40 / 100 / 150 / 200 (baseline 0.8 / 0.6 / 0.7 / 0.9); every realm 1.1 / 0.9 / 1.0 / 1.5 (0.8 / 0.9 / 0.9 / 1.3); mounted 1.0 / 0.7 / 0.8 / 1.0 (0.8 / 0.7 / 0.7 / 0.9); siege 1.0 / 0.8 / 0.8 / 0.9 (0.7 / 0.7 / 0.8 / 0.9). Every frame still at the 60 fps cap (p95 16.7–16.8 ms); the bake cache at most 1,355 (bound 3,000), 98–100% hits. The new figures cost about 0.1–0.3 ms more a frame here, over the handoff's proposed 10% at some sizes: P11-12e measures it on the phone and fixes it if it shows. The parity guard (`tests/sharpness-parity.test.js`) and the golden battles are unchanged.
+
 ## The night run (2026-11-27, 5.7.0)
 
 ### XP pace over a long campaign (`progression.js 360 3`, 98 min under the run's load)

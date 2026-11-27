@@ -113,8 +113,18 @@ test('a two-handed weapon slings the shield on the back, drawn in every facing; 
   assert.equal(L.sig, 'test_greatsword|back|none|none|none');
   const flat = { ...L, shieldBack: null };
   for (const face of ['down', 'up', 'left', 'right']) assert.ok(cost(paint(F, L, { face })) > cost(paint(F, flat, { face })), `${face}: the slung shield shows`);
-  // Two hands on the grip: one arm more is painted than with one hand.
-  assert.ok(cost(paint(F, L, { face: 'right' })) > cost(paint(F, { ...L, twoHanded: false }, { face: 'right' })));
+  // Two hands on the grip (P11-12b: the far arm is drawn in profile as v0.7 draws it; on a two-handed
+  // weapon its hand is on the grip, behind the weapon hand).
+  const wa = F.weaponArm(L, { face: 'right' }, 'right');
+  const grip = [(wa.hx + Math.cos(wa.a) * (wa.ext - 3.5)) / F.K, (wa.hy + Math.sin(wa.a) * (wa.ext - 3.5)) / F.KY];
+  const hands = (look) => {
+    const at = [];
+    const ctx = new Proxy({ ellipse: (x, y, rx) => rx === 3.7 && at.push([x, y]) }, { get: (o, k) => (k in o ? o[k] : () => {}), set: () => true });
+    F.figure(ctx, 0, 0, look, { face: 'right' });
+    return at;
+  };
+  const onGrip = (pts) => pts.some(([x, y]) => Math.hypot(x - grip[0], y - grip[1]) < 0.01);
+  assert.ok(onGrip(hands(L)) && !onGrip(hands({ ...L, twoHanded: false })), 'the other hand on the grip');
   // Its back faces the viewer from the front (the wood, not the device), its face from behind.
   const front = paint(F, L, { face: 'down' }).colours;
   const back = paint(F, L, { face: 'up' }).colours;

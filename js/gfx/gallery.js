@@ -17,7 +17,7 @@
   function pages() {
     const troops = Object.values(CL.content.table('troops')).filter((t) => t.role !== 'hero');
     const realms = [...new Set(troops.map((t) => t.faction))];
-    return [...realms.map((f) => ({ kind: 'troops', realm: f, troops: troops.filter((t) => t.faction === f) })), { kind: 'people' }, { kind: 'arms' }, { kind: 'buildings' }, { kind: 'props' }];
+    return [{ kind: 'storybook' }, { kind: 'mounted' }, ...realms.map((f) => ({ kind: 'troops', realm: f, troops: troops.filter((t) => t.faction === f) })), { kind: 'people' }, { kind: 'arms' }, { kind: 'buildings' }, { kind: 'props' }];
   }
 
   const scene = {
@@ -61,7 +61,9 @@
       const pg = all[q.page];
       const face = FACES[q.face];
       const pose = POSES[q.pose];
-      if (pg.kind === 'troops') troopsPage(ctx, q, pg, face, pose, api);
+      if (pg.kind === 'storybook') storybookPage(ctx, q, face, pose, api);
+      else if (pg.kind === 'mounted') mountedPage(ctx, q, face, pose, api);
+      else if (pg.kind === 'troops') troopsPage(ctx, q, pg, face, pose, api);
       else if (pg.kind === 'people') peoplePage(ctx, q, face, pose, api);
       else if (pg.kind === 'arms') armsPage(ctx, q, face, pose, api);
       else if (pg.kind === 'buildings') buildingsPage(ctx, q, api);
@@ -74,7 +76,7 @@
 
   function title(pg) {
     if (pg.kind === 'troops') return `${CL.content.table('factions')[pg.realm]?.name || pg.realm}'s troops`;
-    return { people: 'the hero, companions and townsfolk', arms: 'arms and armour', buildings: 'buildings by culture', props: 'nature and props' }[pg.kind];
+    return { storybook: 'the Stonebridge slice (P11-12b): its people, faces and parts', mounted: 'riders and horses, every weapon', people: 'the hero, companions and townsfolk', arms: 'arms and armour', buildings: 'buildings by culture', props: 'nature and props' }[pg.kind];
   }
 
   /** A pose for the gallery: the same parts a battle drives from its state, cycled by time. */
@@ -247,6 +249,79 @@
       ctx.scale(2.4, 2.4);
       G.fig.figure(ctx, 0, 0, L, poseFor(pose, face, t + i * 0.1, L));
       ctx.restore();
+    });
+  }
+
+  /**
+   * P11-12b (D-P11m): the vertical slice's people enlarged (the hero and Stonebridge's five), their portraits
+   * from the same features, the same people at 1× (as the town draws them), and the storybook kit's parts.
+   */
+  function storybookPage(ctx, q, face, pose, api) {
+    const t = q.t;
+    const hub = CL.content.table('town_hubs')?.stonebridge;
+    const who = { cloak: 'crimson', gender: 'man', name: 'Aldo' };
+    const hero = G.fig.heroFrom(who, { weapon: 'worn_sword', offhand: 'oak_shield', body: 'clothing' }, { campaign: null });
+    hero.cloak = '#355783';
+    const folk = (hub?.npcs || []).map((n) => G.town.personLook(n, 'valedorn'));
+    const child = G.fig.townLook('child', 6);
+    const all = [hero, ...folk, child];
+    label(ctx, 'Stonebridge’s people, enlarged ×2.2: four facings (← →), every pose (Space)', 480, 28, api);
+    all.forEach((L, i) => {
+      const x = 70 + i * 117;
+      ctx.save();
+      ctx.translate(x, 205);
+      ctx.scale(2.2, 2.2);
+      G.fig.figure(ctx, 0, 0, L, poseFor(pose, face, t + i * 0.2, L));
+      ctx.restore();
+      if (G.ui?.portrait) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(x, 262, 26, 0, Math.PI * 2);
+        ctx.clip();
+        G.ui.portrait(ctx, x - 26, 236, 52, L);
+        ctx.restore();
+      }
+      G.fig.figure(ctx, x, 330, L, poseFor(pose, face, t + i * 0.2, L));
+    });
+    small(ctx, 'their portraits (the same features) · and at 1×, as the streets draw them', 480, 350, api);
+    const S = G.story;
+    if (!S) return;
+    S.building(ctx, { x: 120, y: 470, s: 0.5, w: 220, h: 55, d: 60, wall: 'plaster', base: true, beams: true, roof: 'terracotta', form: 'gable', sign: { kind: 'tavern', at: 'right' }, awning: '#a64d3f', door: 'left', chimney: 0.6, windows: 3, seed: 2 }, t, 0);
+    S.building(ctx, { x: 300, y: 470, s: 0.5, w: 200, h: 55, d: 60, wall: 'stone', roof: 'slate', form: 'long', door: 'center', windows: 4, hanging: true, realm: 'valedorn', seed: 4 }, t, 0);
+    S.building(ctx, { x: 450, y: 470, s: 0.5, w: 150, h: 44, d: 48, wall: 'plaster', base: true, roof: 'thatch', form: 'gable', door: 'center', windows: 2, chimney: -0.4, seed: 6 }, t, 0);
+    S.tower(ctx, 560, 470, 0.6, 70, 14, 'slate', t);
+    S.building(ctx, { x: 545, y: 470, s: 0.5, w: 190, h: 50, d: 55, wall: 'plaster', base: true, beams: true, roof: 'slate', form: 'hip', door: 'center', windows: 3, seed: 8 }, t, 0);
+    S.well(ctx, 660, 470, 1);
+    S.stall(ctx, 730, 470, 1, '#3b6ea5');
+    S.tree(ctx, 810, 470, 1, 3, 'broad', Math.sin(t) * 0.03);
+    S.bush(ctx, 860, 470, 1, 4, '#b0453a');
+    S.barrel(ctx, 895, 470, 1);
+    S.crate(ctx, 925, 470, 1);
+  }
+
+  /** P11-12b: riders on horseback with every weapon, in the facing and pose chosen (the rig's mounted poses). */
+  function mountedPage(ctx, q, face, pose, api) {
+    const t = q.t;
+    label(ctx, 'Mounted: the rider’s seat and weapon on the storybook horse, enlarged ×1.8 and at 1×', 480, 40, api);
+    const who = { cloak: 'forest', gender: 'man', name: 'Aldo' };
+    const kits = [
+      { weapon: 'arming_sword', offhand: 'kite_shield', body: 'mail_hauberk', head: 'iron_helm', horse: 'rouncey' },
+      { weapon: 'war_lance', body: 'mail_hauberk', head: 'iron_helm', horse: 'destrier' },
+      { weapon: 'short_bow', body: 'clothing', horse: 'courser' },
+    ];
+    kits.forEach((kit, i) => {
+      const L = G.fig.heroFrom(who, kit, { campaign: null });
+      const H = L.mount || { coat: '#8a5a3a', mane: '#2e2119' };
+      const x = 170 + i * 310;
+      const side = face === 'left' || face === 'right' ? face : 'right';
+      const P = { ...poseFor(pose, face, t + i * 0.4, L), hface: side };
+      ctx.save();
+      ctx.translate(x, 270);
+      ctx.scale(1.8, 1.8);
+      G.fig.horse(ctx, 0, 0, { ...H, cloth: 'valedorn' }, P, () => G.fig.figure(ctx, 0, 0, L, { ...P, face: side, mounted: true }));
+      ctx.restore();
+      G.fig.horse(ctx, x, 400, { ...H, cloth: 'valedorn' }, P, () => G.fig.figure(ctx, x, 400, L, { ...P, face: side, mounted: true }));
+      small(ctx, ['sword and shield', 'lance', 'bow from the saddle'][i], x, 430, api);
     });
   }
 

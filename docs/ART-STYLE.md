@@ -1,5 +1,7 @@
 # Crownless art style: drawn in code
 
+> **P11-12 (D-P11m, 2026-11-27): the storybook look.** The owner approved the warm, simple, modular medieval-cartoon look of the approved Stonebridge concept and the character workshop v0.7 (`art-reference/storybook-v07/`, local) as **acceptance requirements**. The rules below stand (one palette, one outline, one light, the raised view, seeded, honest); the shapes are now the references'. From 5.12.0 (P11-12b) every person is drawn by the storybook rig, and Stonebridge's streets by the storybook kit (`js/art/story.js`); the other scenes follow in P11-12c, the screens in P11-12d. See "The storybook rig" at the end, and `docs/STORYBOOK-INTEGRATION.md`.
+
 _From P10-G1 (4.10.0), decision D-P10k._ Everything the game shows is drawn in code by the art kit in `js/art/`. There are no image files to make, generate, crop or recolour. To see every part, open **Debug → Art gallery**: each realm's troops at battle size and enlarged, turning and cycling poses, plus the hero, the companions, townsfolk, buildings by culture, nature and props.
 
 This guide is for whoever adds to the art next, human or agent.
@@ -183,3 +185,18 @@ Drawing in code costs more than stamping sprites. Measure before and after a cha
 - the demo's **Stats** (per frame, the update and drawing time).
 
 The numbers from the demo and P10-G1 are in `docs/GRAPHICS-DEMO.md` and `docs/NEXT-TASKS.md` (P10-G1's Done paragraph). On a phone the canvas resolution is the biggest lever (Sharpness). In big battles, simplify figures and stamp the still ones (P10-G2).
+
+## The storybook rig (P11-12b, 5.12.0)
+
+**People** (`js/art/figures.js`, same API as before: `figure`, `horse`, `fallen`, `weaponTip`, the looks):
+- **Anatomy (v0.7):** a soft, slightly large head with tiny features; a neck; rounded shoulders; two-segment arms with a bent elbow and a hand; hips; separate legs and boots; clothes overlapping the joints. Warm ink `#403025` (`G.fig.INK`), never black.
+- **Views:** front, back and east profile; west is the whole east view mirrored. **A profile has one eye, the nose in the outline and no ear** (the front keeps two small ears); `tests/storybook.test.js` checks it.
+- **Units:** the body is drawn in v0.7's 100-unit space inside `ctx.scale(K, KY)` (`K` 0.45, `KY` = 0.45 × 0.875: the raised view's foreshortening, drawing only). Hands, weapons, shields and horses stay in the rig's pixels; the hand is `weaponArm`'s, so the weapon, `weaponTip` and the glint agree. A person is still about 38 px at scale 1; a storybook town draws its people at 1.25 (about 48 px).
+- **Paths** are written as short SVG-style strings and traced with canvas calls (`trace`, parsed once and kept): no `Path2D`, nothing parsed per frame for a baked army.
+- **One person:** `G.fig.features(L)` gives the face shape, brows, nose, mouth, eye colour and beard (from the look's `face`, `beardKind`, `eyes`, else its seed); the figure in every view and the portrait (`G.fig.bust`, used by `G.ui.portrait`) both read it. A townsperson's street look and their dialogue portrait are one look (`G.town.personLook`); the hero's face comes from their name.
+- **Clothes from the look:** tunic, a dress to the ground (`dress`: townswomen), apron, gambeson quilting, mail rings (a ring skirt and steel shoulders under a tabard), leather, fur collars, rags; the tabard in the side's colour with its device; cloaks with trim and a gold clasp; belts with a gold buckle; every helmet and hat of the vocabulary in each view, and a ruler's crown.
+- **Poses** are the game's own (the swing's phases from `attackProgress`, guard, pressure, broken guard, stagger, draw and shot, hit, talk, work, walk from real movement, a breath and a blink at rest, none with Reduced effects).
+- **Horses:** a rounded storybook horse in profile, drawn 1.14× 5.11's, the rider's seat at 15 px.
+- **Comparison:** Debug → "Old figures" draws 5.11's people (`js/art/classic.js`) until P11-12e removes them.
+
+**Places** (`js/art/story.js`, `G.story`): the concept's palette (`SPAL`), `building` (the kit's spec; tile, slate and thatch covers, soft thatch eaves, timber frames with braces and windows in the bays, single-stone masonry, framed four-pane windows, round-headed plank doors, the curved awning, the tavern's cross gable, a hanging banner), `tower`, `tree`, `bush`, `tuft`, `well`, `stall`, `barrel`, `crate`, `plaza` (cobbles laid as single stones in rings) and `paving`. A town whose hub says `art: 'storybook'` is drawn with it (Stonebridge in 5.12.0), and its HUD is the compact one (`#stage[data-art="storybook"]` in `style.css`).

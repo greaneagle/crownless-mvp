@@ -495,6 +495,15 @@
         toggle(false);
         openGallery();
         return;
+      case 'classicFigures': {
+        // P11-12b (D-P11m): the 5.11 figures beside the storybook ones, for screenshots; drawing only.
+        const G = CL.gfx;
+        G.fig.classic = !G.fig.classic && Boolean(G.figClassic);
+        G.dropCaches?.();
+        btn.textContent = `Old figures: ${G.fig.classic ? 'on' : 'off'}`;
+        log('old figures', { on: G.fig.classic });
+        return;
+      }
       case 'gold':
         addGold(n);
         break;
