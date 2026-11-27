@@ -244,6 +244,10 @@
       const female = n.gender === 'female';
       L = { ...base, female, dress: female && base.dress !== false && !base.armour, beard: female ? null : base.beard, hairStyle: female ? (base.female ? base.hairStyle : seed % 2 ? 'bun' : 'braid') : ['bun', 'braid', 'long'].includes(base.hairStyle) ? 'short' : base.hairStyle, apron: base.apron && !female && n.role === 'innkeeper' ? '#e9dcc0' : base.apron, face: G.fig.faceOf(n.id || n.name) };
     }
+    if (n.weapon) {
+      G.fig.dress(L, { weapon: n.weapon }, null, { only: true });
+      L.shield = null;
+    }
     looks.set(n, L);
     return L;
   }
@@ -481,7 +485,7 @@
     }
     if (t.near) {
       const n = t.near;
-      pill(`${n.name} — TALK: ${(opts.verbs || TALK_VERB)[n.action]}`, n.x, n.y - 58, '#ffe7a8', true);
+      pill(`${n.name} — TALK: ${(opts.verbs || TALK_VERB)[n.action] || 'Talk'}`, n.x, n.y - 58, '#ffe7a8', true);
     }
     // "To the road" by the exit, pointing out of the town on whichever side the gate is.
     const z = hub.exitZone;

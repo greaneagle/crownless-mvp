@@ -856,6 +856,29 @@
 
   // ---- The whole field, from js/render.js ----
 
+  /** A straw target on a wooden stand, used by range and course drills. */
+  function drillTarget(ctx, u) {
+    ctx.save();
+    ctx.translate(u.x, u.y);
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = PAL.woodShade;
+    ctx.beginPath();
+    ctx.moveTo(-8, 1);
+    ctx.lineTo(0, -27);
+    ctx.lineTo(8, 1);
+    if (u.drillTarget === 'course') {
+      ctx.moveTo(0, 0);
+      ctx.lineTo(0, -34);
+    }
+    ctx.stroke();
+    const height = u.drillTarget === 'course' ? -29 : -19;
+    for (const [radius, colour] of [[12, '#5e4028'], [10, '#caa66a'], [7, '#9e4e44'], [4, '#e7c785']]) {
+      ellipse(ctx, 0, height, radius, radius);
+      fill(ctx, colour);
+    }
+    ctx.restore();
+  }
+
   /**
    * Draw the battle in world pixels (the caller has set the camera transform). `k` is device pixels per
    * world pixel (the canvas's backing scale × zoom), for the baked frames.
@@ -878,7 +901,7 @@
       fill(ctx, '#e8dcc0');
     }
     ctx.globalAlpha = 1;
-    const bodies = chars.filter((u) => !u.alive && u.ground && seen(u.x, u.y, 60)).sort((a, b) => a.y - b.y);
+    const bodies = chars.filter((u) => !u.alive && !u.drillTarget && u.ground && seen(u.x, u.y, 60)).sort((a, b) => a.y - b.y);
     for (const u of bodies) {
       const a = CL.render.bodyAlpha(u);
       if (a > 0) fallen(ctx, u, a, k);
@@ -888,7 +911,8 @@
     for (const o of g.battleMap?.obstacles || []) if (seen(o.x + (o.w || 0) / 2, o.y + (o.h || 0) / 2, 120 + Math.max(o.w || 0, o.h || 0))) scene.push([baseOf(o), o]);
     scene.sort((p, q) => p[0] - q[0]);
     for (const [, x] of scene) {
-      if (x.team) unit(ctx, x, t, k, reduced);
+      if (x.drillTarget) drillTarget(ctx, x);
+      else if (x.team) unit(ctx, x, t, k, reduced);
       else obstacle(ctx, x, t, g);
     }
     aimRings(ctx, g);
