@@ -200,26 +200,44 @@
    * The same open-field battle at each size (40 to 200), 30 seconds of fighting each, one after another. Each side
    * has twice its share waiting in reserve, so the field stays full while the fallen are replaced.
    */
-  const BENCH = { sizes: [40, 60, 80, 100, 120, 150, 200], seconds: 30, reserve: 2, map: 'open_country', target: 30 };
+  const BENCH = { sizes: [40, 60, 80, 100, 120, 150, 200], seconds: 30, reserve: 2, map: 'open_country', target: 30, scenario: 'mixed', zoom: 1 };
+  /**
+   * P11-12a: the benchmark's scenarios (the original P11-12's list), each at every size: `mixed` (the usual
+   * foot, archers and riders against Reavers; fallen replaced from the reserves as reinforcements),
+   * `realms` (every realm's troops on both sides), `mounted` and `archer` (the hero on a rouncey, or with a
+   * bow), `cavalry` and `archers` (fields heavy in one arm), `siege` (the assault on the walls).
+   */
+  const SCENARIOS = ['mixed', 'realms', 'mounted', 'archer', 'cavalry', 'archers', 'siege'];
   let bench = null; // { queue, rows, was } while the benchmark runs
+
+  /** Every realm's own troops (their lines' tiers 1–3), for the `realms` scenario. */
+  function realmTroops() {
+    const all = Object.values(CL.content.table('troops'));
+    return all.filter((t) => t.role !== 'hero' && t.faction && CL.realm.faction(t.faction)).map((t) => t.id);
+  }
 
   /**
    * The benchmark's battle at a size: half the field yours, half Reavers, in the usual mix of foot,
    * archers and riders, on the large open field grown for that size (whatever the Battlefield setting).
    * Also used by `scripts/bench-battle.js` and the tests, so Node measures the same battle.
-   * @param {number} size @param {{ reserve?: number }} [opts] reserve: each side's reserve, in shares of the field (0: none)
+   * @param {number} size @param {{ reserve?: number, scenario?: string }} [opts] reserve: each side's reserve, in shares of the field (0: none)
    */
-  function benchDef(size, { reserve = BENCH.reserve } = {}) {
+  function benchDef(size, { reserve = BENCH.reserve, scenario = 'mixed' } = {}) {
+    if (scenario === 'siege') {
+      const d = CL.assault.practice(size, 'attack');
+      return { ...d, id: `bench_siege_${size}`, name: `Battle benchmark (siege, ${size})` };
+    }
     const share = Math.floor(size / 2);
     const allies = (share - 1) * (1 + reserve);
     const enemies = (size - share) * (1 + reserve);
-    const mix = ['footman', 'footman', 'hunter', 'levy', 'rider', 'guard', 'longbowman', 'spearman'];
-    const emix = ['reaver', 'looter', 'skirmisher', 'reaver', 'horse_scout', 'mercenary'];
+    const realms = scenario === 'realms' ? realmTroops() : null;
+    const mix = realms || { cavalry: ['rider', 'rider', 'footman', 'horse_scout'], archers: ['hunter', 'longbowman', 'hunter', 'footman'] }[scenario] || ['footman', 'footman', 'hunter', 'levy', 'rider', 'guard', 'longbowman', 'spearman'];
+    const emix = realms ? [...realms].reverse() : { cavalry: ['horse_scout', 'reaver', 'horse_scout', 'mercenary'], archers: ['skirmisher', 'skirmisher', 'reaver', 'looter'] }[scenario] || ['reaver', 'looter', 'skirmisher', 'reaver', 'horse_scout', 'mercenary'];
     const wave = {};
     for (let i = 0; i < enemies; i++) wave[emix[i % emix.length]] = (wave[emix[i % emix.length]] || 0) + 1;
     return {
-      id: `bench_${size}`,
-      name: `Battle benchmark (${size})`,
+      id: `bench_${scenario === 'mixed' ? '' : `${scenario}_`}${size}`,
+      name: `Battle benchmark (${scenario === 'mixed' ? '' : `${scenario}, `}${size})`,
       mapDef: CL.arena.build(CL.content.get('battle_maps', BENCH.map), size),
       waves: [wave],
       practice: Array.from({ length: allies }, (_, i) => mix[i % mix.length]),
@@ -228,23 +246,46 @@
     };
   }
 
+  /** The hero's gear for a scenario (put back when the benchmark ends: the campaign is untouched). */
+  function benchGear(scenario) {
+    const c = CL.campaign;
+    if (!c || !bench) return;
+    Object.assign(c.equipment, bench.was.equipment);
+    c.character.skills.riding = bench.was.riding;
+    if (scenario === 'mounted') {
+      Object.assign(c.equipment, { horse: 'rouncey' });
+      c.character.skills.riding = Math.max(3, bench.was.riding || 0);
+    } else if (scenario === 'archer') Object.assign(c.equipment, { weapon: 'short_bow', offhand: null });
+  }
+
   /**
    * Start one size of the benchmark. The hero can't fall, and the company follows them, so the fight
    * comes to the hero and stays in view (the drawing is measured where the battle is). @param {number} size
    */
-  function benchStart(size) {
+  function benchStart(item) {
+    const size = typeof item === 'number' ? item : item.size;
+    if (typeof item === 'object') BENCH.scenario = item.scenario;
     CL.game.siteId = null;
     CL.game.partyId = null;
     CL.combat.setActiveCap(size);
-    CL.combat.startBattle(benchDef(size));
+    benchGear(BENCH.scenario);
+    CL.combat.startBattle(benchDef(size, { scenario: BENCH.scenario }));
+    if (CL.game.camera && BENCH.zoom !== 1) CL.camera?.setZoom?.(CL.game, BENCH.zoom);
     CL.game.godMode = true;
     for (const grp of ['infantry', 'archer', 'cavalry']) CL.game.orders[grp] = 'follow';
-    CL.ui.message(`Battle benchmark: ${size} at once (${bench.rows.length + 1} of ${BENCH.sizes.length}), ${BENCH.seconds} s…`);
+    CL.ui.message(`Battle benchmark${BENCH.scenario === 'mixed' ? '' : ` (${BENCH.scenario})`}: ${size} at once (${bench.rows.length + 1} of ${BENCH.sizes.length}), ${BENCH.seconds} s…`);
   }
 
-  /** Debug → Battle benchmark: every size in turn; the result screen and the Logs get the numbers. */
-  function benchmark() {
-    bench = { queue: [...BENCH.sizes], rows: [], was: { cap: CL.combat.BATTLE.activeCap, god: Boolean(CL.game.godMode) } };
+  /**
+   * Debug → Battle benchmark: every size in turn; the result screen and the Logs get the numbers. P11-12a:
+   * `scenes` runs each of them at 40, 100, 150 and 200 (`zoom` the battle zoom), one after another.
+   * @param {{ scenes?: boolean, zoom?: number }} [opts]
+   */
+  function benchmark({ scenes = false, zoom = BENCH.zoom } = {}) {
+    BENCH.zoom = zoom;
+    const c = CL.campaign;
+    bench = { queue: scenes ? SCENARIOS.flatMap((scenario) => [40, 100, 150, 200].map((size) => ({ scenario, size }))) : [...BENCH.sizes], rows: [], scenes, scenario: BENCH.scenario, was: { cap: CL.combat.BATTLE.activeCap, god: Boolean(CL.game.godMode), equipment: { ...(c?.equipment || {}) }, riding: c?.character?.skills?.riding ?? 0, zoom: CL.settings?.get?.('battleZoom') ?? 1 } };
+    if (BENCH.zoom !== 1) CL.settings?.set?.('battleZoom', BENCH.zoom);
     log('battle benchmark started', { sizes: BENCH.sizes, seconds: BENCH.seconds });
     benchStart(bench.queue.shift());
   }
@@ -261,22 +302,22 @@
 
   /** A size's battle ended (its time, or one side ran out): record it, then the next or the report. @param {any} stats */
   function benchDone(stats) {
-    bench.rows.push(stats);
+    bench.rows.push({ ...stats, scenario: BENCH.scenario, zoom: BENCH.zoom });
     if (bench.queue.length) return benchStart(bench.queue.shift());
     const rows = bench.rows;
     benchStop(null);
     const ok = rows.filter((r) => r.fps >= BENCH.target);
     const best = ok.length ? ok[ok.length - 1].cap : null;
-    const line = (r) => `${r.cap}: ${r.fps} fps, slowest ${r.worstFrameMs} ms, sim ${r.simMs} + draw ${r.drawMs} ms, p50/p95/p99 ${r.frameP50}/${r.frameP95}/${r.frameP99} ms, over 16.7/33 ${r.over16}/${r.over33}, cache ${r.cacheEntries ?? '–'} (${r.cacheHitRate == null ? '–' : `${Math.round(r.cacheHitRate * 100)}%`}), looks ${r.looks ?? '–'}, heap ${r.heapMB ?? '–'} MB`;
+    const line = (r) => `${bench?.scenes || r.scenario !== 'mixed' ? `${r.scenario} ` : ''}${r.cap}: ${r.fps} fps, slowest ${r.worstFrameMs} ms, sim ${r.simMs} + draw ${r.drawMs} ms, p50/p95/p99 ${r.frameP50}/${r.frameP95}/${r.frameP99} ms, over 16.7/33 ${r.over16}/${r.over33}, cache ${r.cacheEntries ?? '–'} (${r.cacheHitRate == null ? '–' : `${Math.round(r.cacheHitRate * 100)}%`}), looks ${r.looks ?? '–'}, heap ${r.heapMB ?? '–'} MB`;
     const summary = `Battle benchmark: ${rows.map(line).join(' · ')} · best at ${BENCH.target} fps: ${best ?? 'none'} (canvas ${Math.round(960 * rows[0].canvas)}×${Math.round(540 * rows[0].canvas)}, ${rows[0].sharpness}, text ${rows[0].textSize})`;
     CL.diag.log('info', summary, { rows, best });
     const g = CL.game;
     g.result = {
       win: true,
-      practice: { bench: true, rows, best },
+      practice: { bench: true, rows, best, scenario: BENCH.scenario, zoom: BENCH.zoom },
       html: [
-        `<strong>Largest size at ${BENCH.target} fps or better: ${best ?? 'none of them'}</strong>`,
-        ...rows.map((r) => `${r.cap} at once (up to ${r.peak} on the field, those running away included): ${r.fps} fps · slowest frame ${r.worstFrameMs} ms · simulation ${r.simMs} ms, drawing ${r.drawMs} ms a frame · frames p50 ${r.frameP50}, p95 ${r.frameP95}, p99 ${r.frameP99} ms, ${r.over16} over 16.7 ms, ${r.over33} over 33 ms · bake cache ${r.cacheEntries ?? '–'}, ${r.cacheHitRate == null ? '–' : `${Math.round(r.cacheHitRate * 100)}%`} hits · looks ${r.looks ?? '–'} · heap ${r.heapMB ?? '–'} MB`),
+        `<strong>Largest size at ${BENCH.target} fps or better: ${best ?? 'none of them'}</strong>${BENCH.scenario === 'mixed' ? '' : ` (${BENCH.scenario})`}${BENCH.zoom === 1 ? '' : ` at zoom ${BENCH.zoom}×`}`,
+        ...rows.map((r) => `${r.scenario && r.scenario !== 'mixed' ? `${r.scenario}, ` : ''}${r.cap} at once (up to ${r.peak} on the field, those running away included): ${r.fps} fps · slowest frame ${r.worstFrameMs} ms · simulation ${r.simMs} ms, drawing ${r.drawMs} ms a frame · frames p50 ${r.frameP50}, p95 ${r.frameP95}, p99 ${r.frameP99} ms, ${r.over16} over 16.7 ms, ${r.over33} over 33 ms · bake cache ${r.cacheEntries ?? '–'}, ${r.cacheHitRate == null ? '–' : `${Math.round(r.cacheHitRate * 100)}%`} hits · looks ${r.looks ?? '–'} · heap ${r.heapMB ?? '–'} MB`),
         'The same line is in Logs (F3). Nothing in your campaign changed.',
       ].join('<br>'),
     };
@@ -288,7 +329,15 @@
     if (!bench) return;
     CL.combat.setActiveCap(bench.was.cap);
     CL.game.godMode = bench.was.god;
+    const c = CL.campaign;
+    if (c) {
+      for (const k of Object.keys(c.equipment)) if (!(k in bench.was.equipment)) delete c.equipment[k];
+      Object.assign(c.equipment, bench.was.equipment);
+      c.character.skills.riding = bench.was.riding;
+    }
+    if (BENCH.zoom !== 1) CL.settings?.set?.('battleZoom', bench.was.zoom);
     if (why) log('battle benchmark stopped', { why, done: bench.rows.length });
+    if (bench.scenes) Object.assign(BENCH, { scenario: bench.scenario, zoom: 1 });
     bench = null;
   }
 
@@ -965,6 +1014,11 @@
         toggle(false);
         benchmark();
         return;
+      case 'benchScenes': // P11-12a: the P11-12 scenarios, at a zoom
+        if (mode === 'battle' || mode === 'result') return CL.ui.message('Finish the battle first');
+        toggle(false);
+        benchmark({ scenes: true, zoom: n || 1 });
+        return;
       case 'camera':
         if (mode === 'battle' || mode === 'result') return CL.ui.message('Finish the battle first');
         toggle(false);
@@ -1074,6 +1128,7 @@
     endBattleNow,
     stressBattle,
     BENCH,
+    SCENARIOS,
     benchDef,
     benchmark,
     benching,

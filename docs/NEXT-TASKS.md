@@ -4035,7 +4035,7 @@ The aim: easy to fight, rewarding to fight well, meaningful to command. The play
 - **Phones first:** every screen at 812×375 and desktop; every control 44 px or more; Larger text; no colour-only meaning; the battle benchmark against the task's budget.
 - **Versions:** P11-00 is 5.0.1; each task after it a minor version in build order from 5.1.0; P11-T ships 6.0.0 (D-P11l).
 
-**Order:** P11-00 → P11-01 → P11-02 → P11-03 (P11-04 may run beside it) → P11-04 → P11-05 (M1) → P11-06 → P11-07 → P11-08 → P11-09 (M2) → P11-10 → P11-11 → P11-12 (M3) → P11-13 → P11-14 → P11-15 (M4) → P11-16 → P11-17 → P11-18 → P11-19 (M5) → P11-20 → P11-T (M6). The owner plays each milestone (plan §5, §13) before the next task starts.
+**Order:** P11-00 → P11-01 → P11-02 → P11-03 (P11-04 may run beside it) → P11-04 → P11-05 (M1) → P11-06 → P11-07 → P11-08 → P11-09 (M2) → P11-10 → P11-11 → P11-12a → P11-12b (the owner accepts the slice) → P11-12c → P11-12d → P11-12e (M3; the owner accepts the graphics and the phone) → P11-13 → P11-14 → P11-15 (M4) → P11-16 → P11-17 → P11-18 → P11-19 (M5) → P11-20 → P11-T (M6). The owner plays each milestone (plan §5, §13) before the next task starts.
 
 | ID | Task | Size | Version | Readiness |
 |---|---|---|---|---|
@@ -4051,7 +4051,11 @@ The aim: easy to fight, rewarding to fight well, meaningful to command. The play
 | P11-09 | Controls, feedback and teaching | M | 5.9.0 | ✅ Done |
 | P11-10 | Fighters who think: individual AI and styles | L | 5.10.0 | ✅ Done |
 | P11-11 | Troops by their weapons | M–L | 5.11.0 | ✅ Done |
-| P11-12 | Performance and art-cache checkpoint | M | 5.12.0 | Specified |
+| P11-12a | The storybook look: baseline and integration analysis | M | 5.11.1 | ✅ Done |
+| P11-12b | The Stonebridge vertical slice: characters and Stonebridge (owner's visual gate) | L–XL | 5.12.0 | Ready |
+| P11-12c | The environments: towns, battlefields, sieges, the map | XL | 5.12.1 | After the owner's acceptance of P11-12b |
+| P11-12d | One UI language across every screen | L | 5.12.2 | Specified |
+| P11-12e | Performance, caches, visual regression, acceptance (owner's final gate) | M–L | 5.12.3 | Specified |
 | P11-13 | Formations and orders that hold | L | 5.13.0 | Specified |
 | P11-14 | Combined arms and the tactics lab | M–L | 5.14.0 | Specified |
 | P11-15 | Prepare and the battle report | M | 5.15.0 | Specified |
@@ -5023,56 +5027,144 @@ The aim: easy to fight, rewarding to fight well, meaningful to command. The play
 
 ---
 
-### P11-12 · Performance and art-cache checkpoint (M) — 5.12.0, Specified — **Milestone M3**
+### P11-12 · The storybook look, the UI and performance (XL, five subtasks) — 5.11.1 to 5.12.3 — **Milestone M3**
 
-**Now.** P11-00's baseline (percentiles, caches, memory); P11-04 to P11-11 added gear signatures, styles, mounted heroes and archers, each measured against its own budget.
+_Expanded 2026-11-27 at 5.11.0 (commit ff54781) by the owner's approval of a graphics and visual UI overhaul (decision **D-P11m**), from the developer handoff `crownless-developer-handoff-v07.zip` (kept on the owner's machine with its references unpacked in `art-reference/storybook-v07/`, both local only). The original P11-12, "Performance and art-cache checkpoint", is kept whole inside it: its benchmarks, readability check, bounded caches, Sharpness parity and phone budget are now P11-12a's baseline and P11-12e's acceptance. P11-13 does not start before the owner accepts P11-12e._
 
-**Problem.** The variety added in M1–M3 must hold on the phone before formations and sieges add more.
+**Now.** Since P10-G1 to P10-G6 (D-P10k) everything is drawn in code by `js/art/`: a 38 px figure from separate parts (`G.fig.figure(ctx, x, y, look, pose)`), its poses read from the simulation only (`CL.profile.attackProgress`, guard, draw, shot, flash, stagger, mounted), baked per look, facing, step and scale in an LRU of 3,000 (`G.cached`); buildings from specs inside their collision footprints (`G.building`, `js/art/town.js` `specOf`); a painted world map; portraits as separate busts (`js/art/ui.js`); navy-and-gold DOM screens. P11-00 measured the frame-time percentiles, the cache and the heap headless; nobody has measured the new art on a phone. P11-04 to P11-11 added gear signatures, styles, mounted heroes and archers.
 
-**Outcome.** Plan §11's caching rules confirmed under load, the frame-time distribution at 40, 100 and 200 with mixed weapons, cavalry, archers, reinforcements, sieges and the hero's loadouts, on the owner's phone and the PC; any regression fixed.
+**Problem.** The variety added in M1–M3 must hold on the phone before formations and sieges add more (the original P11-12). And the owner has approved a new look: the warm, simple, modular medieval-cartoon "storybook" style of the approved Stonebridge concept and the character workshop v0.7, which today's figures, buildings and screens do not yet match (stiff, small, very similar faces; flat roofs and walls; a large HUD and oversized touch controls covering the town).
+
+**Outcome.** The whole game in the approved look, built from reusable code-drawn components inside the native renderer, with everything the game does unchanged (proved by identical seeded results), on budget on the phone, in five separately built, validated and committed subtasks:
+
+| Sub | Task | Version | Gate |
+|---|---|---|---|
+| **P11-12a** | Baseline and integration analysis | 5.11.1 | — |
+| **P11-12b** | The Stonebridge vertical slice: characters and Stonebridge | 5.12.0 | **Owner's visual acceptance of the slice before P11-12c** |
+| **P11-12c** | The environments: towns, battlefields, sieges, the map | 5.12.1 | — |
+| **P11-12d** | One UI language across every screen | 5.12.2 | — |
+| **P11-12e** | Performance, caches, visual regression, acceptance | 5.12.3 | **Owner's final acceptance of the graphics and the phone numbers before P11-13** |
+
+**The references are acceptance requirements, not inspiration** (D-P11m):
+- **Environment:** the approved Stonebridge concept (`art-reference/storybook-v07/approved-stonebridge-target.png`) is the definitive environmental direction: warm meadow, rounded organic trees, a broad timber-and-plaster inn with a red tile roof, a curved awning and framed amber windows, a slate muster hall with an arched door and the realm's banner, a thatched cottage with a soft eave, the elder's house with its round tower, a cobbled plaza of individual stones, a stone well with its winch, restrained props (barrels, crates, a market stall), compact HUD.
+- **Characters:** the character workshop v0.7 (`character-workshop.html`) is the definitive character design: full-body figures (neck, rounded shoulders, two-segment arms with hands, hips, separate legs and boots), slightly oversized soft heads with tiny clear features, warm dark-brown outlines (`#403025`), interchangeable face shape, eyes, brows, nose, mouth, facial hair, hair, hats, helmets, clothing and equipment, **side profiles with one eye, the nose in the outline and no ear**, the west view the mirrored east view, and the slightly raised top-down view (crowns, shoulders and feet seen a little from above; the 0.875 vertical foreshortening applies to the drawing only, never to positions, hitboxes or aim).
+- **Rejected, never to return:** portraits on legs, oversized or any ears in side views, flat horizontal side views, overly geometric silhouettes, unnecessarily complex illustration, imported painting or images.
+- **Not requirements:** the concept's HUD numbers and positions, the prototype's preview animation timings (never combat logic), the handoff's illustrative town layouts and static HUD stats, its Python installer and monkey-patches (not used: the geometry is ported into the native functions).
+
+**Rules for every subtask.**
+- **Gameplay is untouched.** The drawing only reads the game (ART-STYLE "Honest"). No change to combat, weapon profiles, attack timings, hit detection, reach, equipment rules, mounted combat, AI, collision, camera, controls, simulation, content packs or saves; town footprints, spawns, exits and NPC anchors as they are. A graphical improvement and a gameplay change never share a commit; a gameplay bug found on the way is noted for its own task, not fixed here.
+- **Identical seeded outcomes:** a seeded battle (and a seeded campaign day) gives the same result at every Sharpness and with the old or the new art (`tests/sharpness-parity.test.js` from P11-12a; golden battles unchanged).
+- **Procedural only:** code-drawn, modular, cached; no image file, no new runtime dependency, no external asset (`tests/assets.test.js`, the no-image browser test).
+- **Components first:** a part is built and checked in the Art gallery (every facing, pose and item) before it is used across the game; P11-12c and P11-12d only reuse and extend what P11-12b established.
+- **Native fallback:** a look part the new drawing does not know (a pack's) still draws through a family or slot default, never nothing.
+- **Phones first:** 812×375 landscape at every step; 44 px touch targets; Larger text; nothing important hidden behind the HUD.
+- **Tests and runs:** `npm test`, lint, the browser specs each subtask touches, the visual screenshots reviewed by hand (the Linux baselines are re-recorded only after the owner's visual acceptance and only for intended changes), the benchmarks; long runs by D-P10a/D-P10f (asked, or written in `docs/PENDING-CHECKS.md`). No physical-device result is ever claimed unless it was measured on the device.
+
+---
+
+#### P11-12a · Baseline and integration analysis (M) — 5.11.1, ✅ Done
 
 **Build.**
 - **Required:**
-  - Benchmarks extended to new scenarios: mixed-weapon armies of every realm, a mounted hero, an archer hero, cavalry-heavy, archer-heavy, a siege at 150, reinforcements arriving, at each Sharpness, zoom 1× and 0.75×.
-  - **Readability check** at 812×375 with 100 and 200: the live cues for the hero's attackers drawn (plan §11), the baked steps elsewhere.
-  - Fixes for what the measurements show (examples: bake keys, the AI detail radius, swept collision's grid, look rebuilds).
-  - Identical simulation at Sharp, Balanced and Fast (a seeded battle's results equal at each).
-- **Optional:** a Debug "frame graph".
+  - **Performance baseline at 5.11.0:** the original P11-12 scenarios measured before any art changes: 40, 100, 150 and 200 fighters; mixed armies of every realm; a mounted hero; an archer hero; cavalry-heavy and archer-heavy fields; a siege assault at 150; reinforcements arriving; zoom 1× and 0.75×; Sharp, Balanced and Fast; desktop and phone profiles. Frame time p50/p95/p99, frames over 16.7 and 33 ms, simulation and drawing per frame, bake-cache size and hit rate, looks built, heap (`scripts/bench-browser.js` extended with `--scenarios`; Debug → Battle benchmark gains the same scenarios for the owner's phone).
+  - **Simulation parity guard:** `tests/sharpness-parity.test.js`: the same seeded battles (a field fight, a mounted hero, archers, a siege) give identical results (winner, survivors' HP, kills, time) at Sharp, Balanced and Fast and at zoom 1× and 0.75×, drawn every frame through the art with a counting context. It guards every later subtask.
+  - **Visual baseline:** screenshots of the current game (Stonebridge day and night, two other towns, four battlefields, a siege, the map at three zooms, the creator, the sheet, the dialogue, the market, Prepare, the result) at 960×540 and 812×375, kept locally in `docs/graphics-demo/p11-12/before/` (git-ignored, as the demo's).
+  - **Integration analysis** (`docs/STORYBOOK-INTEGRATION.md`): the handoff's contents and status; the native contracts that must not move (`figure`/`horse`/`fallen`, `weaponArm`/`weaponTip`/`shieldPos`, `BODY`, the bake boxes, the look vocabulary, `specOf`, the portrait API, icons); how the prototype's 100-unit geometry maps onto the 38 px rig; the gaps the prototype leaves (native combat timing, mounted riders and horses, directional equipment, all items, both hands, slung shields, quivers, fallen, every helmet and hat, rear dress motion, siege and terrain overlays, large-battle cost); the reference checklist each later subtask is judged against.
+- **Not here:** any change to what is drawn.
 
-**Layers.** None.
+**Tests.** `tests/sharpness-parity.test.js` (new). **Run.** `npm test`, lint; `npm run bench`; `node scripts/bench-browser.js` (the scenarios, headless; the phone numbers are the owner's).
 
-**Art.** Readability fixes only.
+**Acceptance.** The baseline table in `docs/PHASE-11-VALIDATION.md` ("P11-12 baseline"); the parity guard passing; the analysis written.
 
-**Information and controls.** The benchmark report.
+**Done (5.11.1).**
+- **The plan:** P11-12 expanded into P11-12a–e (this section), D-P11m in the plan, NEXT-PLAN §6c; the handoff's references unpacked locally to `art-reference/storybook-v07/` (git-ignored, as `art-reference/`; the zip ignored too).
+- **Benchmarks:** Debug → "Benchmark: P11-12 scenarios" (and "at 0.75×"): mixed, every realm, a mounted hero, an archer hero, cavalry-heavy, archer-heavy, a siege, each at 40, 100, 150 and 200 (`js/debug.js` `SCENARIOS`, `benchDef(size, { scenario })`; the hero's gear put back afterwards); `scripts/bench-browser.js --scenarios --zoom`.
+- **Measured** (`docs/PHASE-11-VALIDATION.md` "The P11-12 baseline"): headless on the PC, every scenario 60 fps, drawing 0.6–1.3 ms a frame, the bake cache 100–1,343 frames (97–100% hits); the simulation 0.58 ms at 40 to 3.36 ms at 200. **The phone's numbers are the owner's to run** (the new Debug buttons); none is claimed.
+- **The parity guard:** `tests/sharpness-parity.test.js` (field, mounted hero, archer hero, siege; Sharp, Balanced, Fast; zoom 1× and 0.75×): identical.
+- **The visual baseline:** `scripts/screens-storybook.js` (new): 28 screenshots of 5.11 in `docs/graphics-demo/p11-12/before/` (local).
+- **The analysis:** `docs/STORYBOOK-INTEGRATION.md`. The towns' geometry fingerprinted at 5.11 (for P11-12b's test).
+- **Checks:** `npm test` 1,062 pass (after fixing a faction lookup the new benchmark had made outside `CL.realm`), lint clean, browser `startup` and `battle-size` pass; the bench scripts ran (about 20 minutes in all, in short runs). No long run needed.
 
-**Save and packs.** None.
+---
 
-**Measure.** The benchmarks above; the owner's phone (Debug → Battle benchmark at 40, 100, 150, 200; H-08).
+#### P11-12b · The Stonebridge vertical slice: characters and Stonebridge (L–XL) — 5.12.0 — **owner's visual gate**
 
-**Tests.** `tests/art-gear.test.js` (the key bound under the new scenarios); `tests/sharpness-parity.test.js` (new): identical results at each Sharpness.
+**Build.**
+- **Required:**
+  - **The character system** (`js/art/figures.js`, in place: `figure`, `horse`, `fallen`, `weaponTip` keep their signatures): the v0.7 anatomy and features ported into the native rig: directional heads (front, back, east profile, west mirrored) with no ear in profile; face shapes, eyes and iris colours, brows, noses, mouths, facial hair (stubble, moustache, short, full, goatee); hairstyles (short, long, braid, bun, bald, tied); every helmet and hat in the vocabulary in each view; tunic, dress and apron, gambeson, mail, leather, fur, rags, tabards in the side's colours and device, cloaks with trim; boots, gloves; every weapon family and item part (sword, greatsword, axe, greataxe, mace, club, hammer, spear, pike, lance, staff, bow, recurve, crossbow, arbalest), shields of every shape on the arm or slung, quivers; two-handed grips.
+  - **Animation from the native game only:** idle (breath, planted feet), walk and run from the unit's real movement (`move`, `walk`), the swing's windup, active and recovery from `attackProgress`, the thrust along `weaponTip`, the bow's draw, hold and loose and the crossbow's reload from the real cooldowns, guard, shield pressure, broken guard, stagger, hit, fallen, talk, the smith's work; **mounted** rider and horse redrawn in the same language (profile horse, seat, the rider's weapon, couched lance, mounted bow), with the same anchors. `weaponTip`, the glint and the shield follow the same hand.
+  - **One appearance for body and portrait:** a person's features come from one function of their look (`G.fig.features`), so the street figure, the battle figure, the portrait and the creator agree; the hero's from the creator and their gear; no role or gender guess overriding the data.
+  - **Portraits** (`js/art/ui.js` `portrait`): v0.7's framing of the same parts (bust, front view), in the portrait cache keys as now.
+  - **The Stonebridge slice:** Stonebridge's streets in the new look inside its unchanged layout: the kit's parts it uses (buildings with gable, end, hip and long roofs, tile, slate and thatch textures, timber framing and braces, masonry courses, framed windows, plank doors, the curved awning, the tavern's sign, barrels, crates, the stall, the well, rounded trees, bushes, tufts), the cobbled plaza of individual stones and the roads, day, dusk and night, smoke, banners, the child at the well. Gated by a town art flag (`hub.art: 'storybook'`) so the other seven towns stay as they are until P11-12c.
+  - **Stonebridge's HUD in the slice:** the town's status box and buttons compact and the joystick and TALK lower in contrast and smaller (within 44 px), so the inn, the market and the elder's house are not covered at 812×375; nothing removed; the rest of the UI language waits for P11-12d.
+  - **The Art gallery** shows every new part: each look in four facings and every pose, enlarged and at 1×, the horse, the portraits, Stonebridge's buildings.
+  - **A development comparison:** Debug → "Old figures" draws the 5.11 figures for side-by-side screenshots until P11-12e removes them.
+- **Not here:** the other towns, battlefields, the map, the rest of the UI (P11-12c, P11-12d).
 
-**Play.** **M3** (H-07, H-08).
+**Tests.** `tests/art.test.js` (every part draws in every facing and pose; no ear in profile: the side head draws no ear shape; features stable by seed; body and portrait share features); `tests/art-gear.test.js` (the bake-key bound); `tests/art-town.test.js` (Stonebridge's footprints, spawns and exits unchanged; the flag); `tests/sharpness-parity.test.js` unchanged and passing; golden battles unchanged. Browser: `art`, `look`, `settlement`, `battle`, `mounted`, `layout`, `text-size` (Stonebridge).
 
-**Performance.** The phase's budget (plan §19 criterion 16): 60 fps at 40 on the phone at Balanced; the largest size at 30 fps or better not lower than 200, or the owner accepts the measured size; p95 recorded.
+**Measure.** The baseline's scenarios again; the drawing time of 200 fighters within 10% of P11-12a's p95 or explained and fixed in P11-12e.
 
-**Acceptance.** The budget holds on the phone (or the owner accepts the numbers); caches bounded; identical simulation at every Sharpness.
+**Acceptance (owner's visual gate).** Screenshots of the real game beside the approved target: Stonebridge by day and night at 960×540 and 812×375, the hero and the five townsfolk close up and at 1×, a battle at 40 and 200 with every pose, a mounted hero, an archer, a dialogue portrait. The owner accepts the look (or names what to change) before P11-12c begins.
 
-**Docs.** `docs/PHASE-11-VALIDATION.md` (performance section); ART-STYLE ("What it costs"); RELEASE-NOTES.
+---
 
-**Out.** Raising the battle size.
+#### P11-12c · The environments: towns, battlefields, sieges and the map (XL) — 5.12.1
 
-**Decisions.** The owner's acceptance of the phone numbers.
+**Needs.** The owner's acceptance of P11-12b.
 
-**Brief.**
-- **Start from:** `scripts/bench-battle.js`, `js/debug.js`, `js/art/battle.js` (`baked`, `lookOf`, `BAKE_MAX`), `js/art/kit.js` (`cached`), `js/combat.js` (`ai`'s detail radius), `js/render.js` (`busyBattle`).
-- **Decided:** the scenarios above; the budget as plan §19.
-- **Save:** none.
-- **Build order:** measure → fix → measure again (two tries) → the owner's phone.
-- **Write tests in:** `tests/sharpness-parity.test.js`, `tests/art-gear.test.js`.
-- **Run:** those; `npm test`, lint; browser `art`, `battle-size`; the benchmarks.
-- **Play:** M3.
-- **Explain:** none.
-- **Not here:** new features.
+**Build.**
+- **Required:**
+  - **The seven other walkable towns** in the accepted look, their layouts, collision, footprints, exits and NPC anchors unchanged, each with its culture's identity and landmark (ART-DIRECTION's table): Eastwatch (whitewashed forum, terracotta hips, basilica tower), Hrothgard (long timber halls, turf and shingle, pines, log piles), Vessara (cream plaster, terracotta, guild hall, docks), Merrow (river, bridge, mixed timber and stone, wool and salt stalls), Gullhaven (warehouses, slate and timber, boardwalk), Harrowgate (grey stone and slate, keep, terraces, gate walls), Calder (pale salt-town houses, slate, exchange tower, colourful stalls). The flag goes; every town is storybook.
+  - **Every battlefield and siege template:** grass field, forest clearing and wilds, open country, river ford, hill slopes, the lists, Greywall's courtyard, the siege assault (walls, ladders, gate, camp), the wagon's road: ground, rises, water, crossings, obstacles by their `look` (trees, rocks, crates, carts, stakes, walls, tents) in the same palette and line; terrain cues, elevation, crossings, obstacles, projectiles and team markers kept legible; generated fields by their own extents and seeds.
+  - **The world map:** terrain, forests, hills and mountains, fields, coasts and water, roads and crossings in the palette; settlement miniatures (village, town, castle, fort, harbour, camp) by culture with the sovereign's banner; parties, the company and ghosts with the new figures; fog, labels, zoom steps, tap targets and political colours unchanged; no new geography.
+  - **Horses, props and nature** across all scenes reuse P11-12b's parts.
+- **Tests.** `art-town`, `art-battle`, `art-map`, `battlemaps` (footprints, obstacles and extents unchanged); browser `settlement` (two towns by real taps), `ford`, `sieges`, `assault`, `world-map`, `map-camera`; the parity guard.
+
+**Acceptance.** The screenshot matrix (ACCEPTANCE.md's) for every town by day and night, every battlefield, a siege, the map at each zoom, reviewed against the references.
+
+---
+
+#### P11-12d · One UI language across every screen (L) — 5.12.2
+
+**Build.**
+- **Required:**
+  - **The language:** dark navy panels, thin warm-gold borders, cream serif headings, the palette's accents, one button, panel, list, tab, tooltip and badge style (`style.css`), scoped and shared.
+  - **Every existing screen** in it, with its functions, order and progressive disclosure as they are: the title, character creation (with the new figure and portrait), the map HUD and its controls, the settlement menu, the streets' HUD, dialogue (portrait, long options, scrolling, Larger text), the Party sheet, inventory and equipment, the armoury, the blacksmith, the market and trade goods, recruitment, the troop tree, the Journal, the Realms and Accounts screens, Wait, Settings, How to Play, the encounter, Prepare **as it is** (its redesign is P11-15), the battle HUD and Orders, the result **as it is** (the report is P11-15), the Debug panel moved to a distinct drawer that never covers dialogue.
+  - **Icons:** colourful 32×32 code-drawn family icons with variants by item look (sword length, axes, maces, polearms, bows, crossbows, helmet forms, shield forms, armour classes, gloves, boots, horses by coat, quivers), the trade goods, food, quest items (scroll, charter, token, packet); accessible names kept; a pack's item falls back to its family's.
+  - **Landscape phones:** the HUD compact (status in one line that expands), the touch controls smaller and lower in contrast, nothing important covered at 812×375 and 667×375; 44 px targets and Larger text everywhere.
+- **Not here:** the functional Prepare redesign and the battle report (P11-15); formation controls (P11-13).
+- **Tests.** Browser `text-size` (every screen at four sizes and five phone sizes), `layout`, `controls`, every spec whose screen changed; `art-ui`.
+
+**Acceptance.** Every screen at 960×540 and 812×375 beside the references; no function lost (the browser suite).
+
+---
+
+#### P11-12e · Performance, caches, visual regression and acceptance (M–L) — 5.12.3 — **owner's final gate; M3**
+
+**Build.**
+- **Required (all of the original P11-12):**
+  - The baseline's scenarios measured again (40, 100, 150, 200; mixed armies of every realm, a mounted hero, an archer hero, cavalry-heavy, archer-heavy, a siege at 150, reinforcements arriving; each Sharpness; zoom 1× and 0.75×; desktop and phone), against P11-12a.
+  - **Fixes for what the measurements show:** art caching (static scenes, buildings and miniatures baked per scale and light; figures baked per look, facing, step and scale; the LRU bound kept at 3,000 unless the measurement says otherwise; the look rebuilds; Path data precompiled, never parsed per frame for armies), the AI detail radius, swept collision's grid, as needed. Two tries a fix.
+  - **Readability check** at 812×375 with 100 and 200: the live cues for the hero's attackers drawn, the baked steps elsewhere; teams, routing, wounded and lords legible.
+  - **Identical simulation** at Sharp, Balanced and Fast (the parity guard) and with Debug's old figures; then the old figures removed.
+  - **Visual regression:** the screenshot baselines re-recorded in Linux (Docker, or the workflow) only after the owner's visual acceptance, reviewed image by image; graphical consistency checks (every look, item and building draws; no ear in profile; outline and palette checks).
+- **Optional:** a Debug frame graph.
+
+**Performance (the phase's budget, plan §19 criterion 16, unchanged).** **60 fps at 40 fighters on the owner's phone at Balanced; 30 fps or better at 200**, or the owner accepts the measured largest size; p95 recorded. Headless numbers never stand in for the phone.
+
+**Acceptance.** The budget holds on the phone (or the owner accepts the measured numbers); caches bounded; identical simulation at every Sharpness; the owner's final acceptance of the graphics and the phone performance. Then M3 (H-07, H-08) and P11-13.
+
+**Docs (across the subtasks).** `docs/ART-STYLE.md` (the storybook rules, the rig, "What it costs"), `docs/STORYBOOK-INTEGRATION.md`, `docs/PHASE-11-VALIDATION.md` (the performance section), `docs/RELEASE-NOTES.md`, `docs/ASSETS.md`, this section's Done paragraphs.
+
+**Decisions.** D-P11m (the overhaul, its references and its gates; owner, 2026-11-27). The owner's acceptance of the slice (after P11-12b) and of the graphics and phone numbers (after P11-12e).
+
+**Brief (for each subtask).**
+- **Start from:** `docs/STORYBOOK-INTEGRATION.md`; the references in `art-reference/storybook-v07/`; `js/art/figures.js`, `kit.js`, `town.js`, `battle.js`, `worldmap.js`, `ui.js`, `js/gfx/gallery.js`; `style.css`, `index.html`; `scripts/bench-browser.js`, `js/debug.js`.
+- **Decided:** the references are acceptance requirements; native contracts and gameplay unchanged; components before propagation; the two owner gates.
+- **Save:** none (appearance comes from what the save already holds).
+- **Build order:** a → b → (owner) → c → d → e → (owner) → P11-13.
+- **Out:** raising the battle size; new gameplay; formations (P11-13); the Prepare and report redesign (P11-15).
 
 ---
 

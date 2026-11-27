@@ -1,6 +1,6 @@
 {
   "files": {
-    "includes": ["**/*.js", "!!**/node_modules", "!!**/dist", "!!**/build", "!!**/playwright-report", "!!**/test-results", "!!**/blob-report"]
+    "includes": ["**/*.js", "!!**/node_modules", "!!**/dist", "!!**/build", "!!**/playwright-report", "!!**/test-results", "!!**/blob-report", "!!art-reference"]
   },
   "formatter": {
     "enabled": false

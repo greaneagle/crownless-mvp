@@ -1,5 +1,17 @@
 # Crownless — Release Notes
 
+## v5.11.1 — The storybook look: the baseline (P11-12a) · 2026-11-27
+
+The first step of the graphics, UI and performance milestone the owner approved (P11-12, decision D-P11m): the warm, simple storybook look of the approved Stonebridge concept and the character workshop v0.7, built into the game's own renderer in five steps. This one measures the game as it is, so every later step can be compared. Nothing you see or play has changed.
+
+### New (for testing)
+- **Debug → "Benchmark: P11-12 scenarios"** (and "at 0.75×"): the battle benchmark for a mixed field, every realm's troops, a mounted hero, an archer hero, a cavalry-heavy and an archer-heavy field and a siege, at 40, 100, 150 and 200 at once (about 15 minutes); frame-time percentiles, simulation and drawing per frame, the bake cache. For the owner's phone.
+
+### Under the hood
+- `scripts/bench-browser.js --scenarios … --zoom 1,0.75`: the same headless; `scripts/screens-storybook.js <label>`: before-and-after screenshots of the real game (local, git-ignored).
+- `tests/sharpness-parity.test.js`: the same seeded battles end exactly alike at Sharp, Balanced and Fast and at both zooms, drawn through the art: the guard for the whole overhaul.
+- The plan: `docs/NEXT-TASKS.md` P11-12a–e, `docs/PHASE-11-PLAN.md` D-P11m, `docs/STORYBOOK-INTEGRATION.md` (the handoff, the native contracts, the gaps); the baseline in `docs/PHASE-11-VALIDATION.md`.
+
 ## v5.11.0 — Troops by their weapons (P11-11) · 2026-11-27
 
 Every soldier now fights with the weapon you see in their hands.

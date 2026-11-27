@@ -146,8 +146,12 @@ The fix is not to make input unresponsive or to punish repeated presses, but to 
 | **P11-08** | Fighting from the saddle | L | P1 | P11-06, P11-07 | 5.8.0 | **M2 "Bow and horse"** | ✅ Done |
 | **P11-09** | Controls, feedback and teaching (consolidation) | M | P1 | P11-05, P11-07, P11-08 | 5.9.0 | M2 | ✅ Done |
 | **P11-10** | Fighters who think: individual AI and styles | L | P1 | P11-05, P11-07, P11-08 | 5.10.0 | M3 | ✅ Done |
-| **P11-11** | Troops by their weapons | M–L | P1 | P11-10 | 5.11.0 | M3 | Specified |
-| **P11-12** | Performance and art-cache checkpoint | M | P1 | P11-11 | 5.12.0 | **M3 "Soldiers who fight like it"** | Specified |
+| **P11-11** | Troops by their weapons | M–L | P1 | P11-10 | 5.11.0 | M3 | ✅ Done |
+| **P11-12a** | The storybook look: baseline and integration analysis (D-P11m) | M | P1 | P11-11 | 5.11.1 | M3 | ✅ Done |
+| **P11-12b** | The Stonebridge vertical slice: the character system and Stonebridge | L–XL | P1 | P11-12a | 5.12.0 | M3 (**the owner accepts the slice**) | Specified |
+| **P11-12c** | The environments: every town, battlefield, siege and the map | XL | P1 | P11-12b and its acceptance | 5.12.1 | M3 | Specified |
+| **P11-12d** | One UI language across every screen | L | P1 | P11-12b | 5.12.2 | M3 | Specified |
+| **P11-12e** | Performance, caches, visual regression and acceptance (the original P11-12) | M–L | P1 | P11-12c, P11-12d | 5.12.3 | **M3 "Soldiers who fight like it"** (**the owner accepts the graphics and the phone**) | Specified |
 | **P11-13** | Formations and orders that hold | L | P1 | P11-11 | 5.13.0 | M4 | Specified |
 | **P11-14** | Combined arms and the tactics lab | M–L | P1 | P11-13 | 5.14.0 | M4 | Specified |
 | **P11-15** | Prepare and the battle report | M | P2 | P11-14 | 5.15.0 | **M4 "Command that matters"** | Specified |
@@ -165,7 +169,7 @@ The fix is not to make input unresponsive or to punish repeated presses, but to 
 - **Melee, then armour, then ranged, then mounted** (P11-05 to P11-08): ranged and mounted both depend on commitment and movement rules, and mounted archery needs both.
 - **Controls consolidated mid-phase** (P11-09), after the three new input families exist, not at the end.
 - **AI after the player's mechanics** (P11-10), so the AI follows the same rules; **troops after the AI** (P11-11), because a troop is a profile plus a style.
-- **A performance checkpoint** (P11-12) once the variety of looks and AI exists, before formations multiply the work.
+- **A performance checkpoint** (P11-12) once the variety of looks and AI exists, before formations multiply the work. **Expanded (D-P11m, 2026-11-27)** into the storybook graphics, UI and performance milestone P11-12a to P11-12e: a baseline, a Stonebridge vertical slice the owner accepts, then every environment, one UI language, and the performance and visual acceptance; P11-13 waits for the owner's final acceptance.
 - **Formations, then combined arms, then Prepare** (P11-13 to P11-15).
 - **Regional arms, then training, sieges, tournaments** (P11-16 to P11-19): instructors teach regional arms; tournament formats use the training, the styles and the mounted and ranged rules.
 - **Balance and auto-resolve last** (P11-20), but every task measures its own effect against P11-00 and keeps parity inside the band it was in.
@@ -176,7 +180,7 @@ The fix is not to make input unresponsive or to punish repeated presses, but to 
 | M0 Baseline | P11-00 | 5.0.0 as it is: the phone list and the combat questionnaire |
 | M1 The weapon in your hand | P11-05 (5.5.0) | Duels and small fights with a sword and shield, an axe, a mace, a two-handed weapon and a spear; switching weapons; seeing the gear on the hero; the requirement messages in a shop |
 | M2 Bow and horse | P11-09 (5.9.0) | A contract fought as an archer, as a mounted knight and as a horse archer; the new controls on the phone |
-| M3 Soldiers who fight like it | P11-12 (5.12.0) | Battles against each realm's troops; bandits against veterans; the frame rate at 40, 100, 200 |
+| M3 Soldiers who fight like it | P11-12e (5.12.3) | Battles against each realm's troops; bandits against veterans; the frame rate at 40, 100, 150, 200; the storybook look everywhere (the Stonebridge slice accepted first, after P11-12b) |
 | M4 Command that matters | P11-15 (5.15.0) | The same battle won by charging and by a plan; Prepare and the report |
 | M5 Masters and lists | P11-19 (5.19.0) | A specialist training quest; a siege; three tournament formats |
 | M6 The Art of War | P11-T (6.0.0) | The acceptance sessions (§13) |
@@ -475,6 +479,8 @@ P11-05 to P11-08 each fill a matrix of `duel-lab` and `tactics-lab` results: fam
 | Portraits | The hero's portrait and the party sheet show the helmet (or bare head) and armour worn | P11-04 |
 | The Art gallery | A Phase 11 page: every family and item in four facings and each pose (windup, active, recovery, guard, stagger, draw, reload, mounted) at 1× and enlarged | P11-04, extended by each art task |
 
+**The storybook look (D-P11m, P11-12a to P11-12e).** The rules above stand; the shapes change to the approved references: the v0.7 full-body figures (rounded heads with tiny features, two-segment arms, separate legs, no ear in profile, the drawing foreshortened by 0.875 for the raised view, never the positions), warmer outlines, the concept's buildings, cobbles and trees, and one UI language. The work is ported into the native functions (`figure`, `horse`, `building`, `portrait`…) with their contracts kept; NEXT-TASKS P11-12 has the subtasks and `docs/STORYBOOK-INTEGRATION.md` the analysis.
+
 **Caching (required, P11-04 and P11-12):**
 - The look key gains an **equipment signature** (the active weapon, shield state, helmet, armour class, mount) so different gear never collides in the bake cache.
 - A look is rebuilt when its signature changes (a weapon switch, a shield stowed, unhorsed): the per-battle `WeakMap` stores the signature with the look and compares it each frame (a cheap string compare).
@@ -614,7 +620,8 @@ Each is played by the owner on the phone (Zenfone 10, Chrome) and once on a PC, 
 | D-P11i | Retraining | Retraining for crowns at a master (no free retraining: old saves are ignored, D-P11a) | P11-17 |
 | D-P11j | Timed parry | An experiment in P11-05, kept only if the owner likes it at M1; never required. **M1 (owner, 2026-11-26): "everything is good"**; the parry stays as built (a setting, off by default) until the owner says otherwise | P11-05 |
 | D-P11k | Mid-battle remount | No remount in a battle in the first version (dismount only) | P11-08 |
-| D-P11l | Versions | Each task a minor version from 5.1.0 in build order; P11-00 the patch 5.0.1; P11-T ships 6.0.0 (as D-V1) | all |
+| D-P11l | Versions | Each task a minor version from 5.1.0 in build order; P11-00 the patch 5.0.1; P11-T ships 6.0.0 (as D-V1). **P11-12's subtasks** (D-P11m): P11-12a 5.11.1, P11-12b 5.12.0, P11-12c 5.12.1, P11-12d 5.12.2, P11-12e 5.12.3, so no later task is renumbered | all |
+| **D-P11m** | The storybook graphics and UI overhaul | **Owner, 2026-11-27: approved,** from the developer handoff v0.7: the approved Stonebridge concept is the definitive environmental direction and the character workshop v0.7 the definitive character design (acceptance requirements, not inspiration); integrated into the native renderer (no prototype installed or copied over the game), procedural and code-drawn (D-P10k kept), gameplay untouched; the owner accepts the Stonebridge slice before the rest of the game is converted, and the finished graphics and the phone numbers before P11-13. Prepare and the report stay for P11-15, formations for P11-13 | P11-12a–e |
 
 **Decisions carried over and kept:** D-P10a/D-P10f (long runs only on the owner's yes; pending checks; the night run), D-P10k (code-drawn art), D-P10d (women soldiers in their lines, 15%), D-P9a (battle size 20–200, default 150; not raised in Phase 11), D-P9e (command in layers, every one optional), D-P9d (save size up to 10 MB), the per-task contract and the Brief way of working (NEXT-PLAN §7, NEXT-TASKS "How each task runs"), commit only when asked, never push.
 

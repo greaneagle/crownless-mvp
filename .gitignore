@@ -22,3 +22,6 @@ ComfyUI_windows_portable/
 
 # The graphics demo's screenshots (docs/GRAPHICS-DEMO.md): about 11 MB, kept on this machine
 docs/graphics-demo/
+
+# The owner's developer handoffs (local reference packages; unpacked into art-reference/)
+crownless-developer-handoff-*.zip

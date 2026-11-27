@@ -472,6 +472,68 @@ free               75        83       100       100         ·     90
 
 A lord in person (a guard's body, `duel-lab`'s kit, 20 seeds): the masher wins 0 and the timer 20 at HP ×2, and the same with +2 armour and the veteran style at ×2, ×1.7 and ×1.5: kept ×1.6. Fine kit: +10% damage (a better weapon of the family), +1 armour, +4 HP (was +1 armour, +8 HP).
 
+## The P11-12 baseline (5.11.1, P11-12a; the storybook overhaul's reference, D-P11m)
+
+_Measured 2026-11-27 on 5.11.0's drawing (the code of ff54781 plus P11-12a's measuring tools only), on the development PC in headless Chromium (`scripts/bench-browser.js`, 8 s a size, software drawing, capped at 60 fps by the page's frame clock). **Not phone numbers:** the "phone" profile is an 812×375 viewport at device scale 3 on the PC. The owner's phone runs the same scenarios from Debug → "Benchmark: P11-12 scenarios" (and "at 0.75×"); P11-12e compares the finished art against these rows and the phone._
+
+**The scenarios at Balanced, the phone profile, zoom 1×** (`--scenarios mixed,realms,mounted,archer,cavalry,archers,siege --sizes 40,100,150,200 --profiles phone --sharpness balanced`):
+
+| Scenario | Size | fps | sim ms | draw ms | frame p50 | p95 | p99 | >16.7 | >33 | bake cache | hit % | looks | heap MB |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| mixed | 40 | 60 | 0.4 | 0.8 | 16.7 | 16.8 | 16.8 | 0 | 0 | 132 | 99 | 20 | 13.6 |
+| mixed | 100 | 60 | 0.6 | 0.6 | 16.7 | 16.7 | 16.8 | 0 | 0 | 179 | 100 | 50 | 13.6 |
+| mixed | 150 | 60 | 0.8 | 0.7 | 16.7 | 16.8 | 16.8 | 0 | 0 | 208 | 100 | 75 | 13.6 |
+| mixed | 200 | 60 | 1 | 0.9 | 16.7 | 16.8 | 16.8 | 0 | 0 | 337 | 100 | 100 | 13.6 |
+| realms | 40 | 60 | 0.4 | 0.8 | 16.7 | 16.7 | 16.8 | 0 | 0 | 161 | 98 | 20 | 11.3 |
+| realms | 100 | 60 | 0.6 | 0.9 | 16.7 | 16.8 | 16.8 | 0 | 0 | 450 | 99 | 50 | 11.3 |
+| realms | 150 | 60 | 0.8 | 0.9 | 16.7 | 16.7 | 16.8 | 0 | 0 | 727 | 99 | 75 | 11.3 |
+| realms | 200 | 60 | 1.1 | 1.3 | 16.7 | 16.7 | 16.8 | 0 | 0 | 1343 | 99 | 100 | 11.3 |
+| mounted | 40 | 60 | 0.4 | 0.8 | 16.7 | 16.7 | 16.8 | 0 | 0 | 132 | 99 | 20 | 12.8 |
+| mounted | 100 | 60 | 0.6 | 0.7 | 16.7 | 16.7 | 16.8 | 0 | 0 | 176 | 100 | 50 | 12.8 |
+| mounted | 150 | 60 | 0.8 | 0.7 | 16.7 | 16.8 | 16.8 | 0 | 0 | 199 | 100 | 75 | 12.8 |
+| mounted | 200 | 60 | 1.1 | 0.9 | 16.7 | 16.8 | 16.8 | 0 | 0 | 329 | 100 | 100 | 12.8 |
+| archer | 40 | 60 | 0.4 | 0.7 | 16.7 | 16.7 | 16.8 | 0 | 0 | 126 | 99 | 20 | 13.6 |
+| archer | 100 | 60 | 0.6 | 0.7 | 16.7 | 16.8 | 16.8 | 0 | 0 | 172 | 100 | 50 | 13.6 |
+| archer | 150 | 60 | 0.8 | 0.7 | 16.7 | 16.7 | 16.8 | 0 | 0 | 195 | 100 | 75 | 13.6 |
+| archer | 200 | 60 | 1.1 | 0.9 | 16.7 | 16.7 | 16.8 | 0 | 0 | 332 | 100 | 100 | 13.6 |
+| cavalry | 40 | 60 | 0.4 | 0.6 | 16.7 | 16.7 | 16.8 | 0 | 0 | 121 | 99 | 19 | 13.6 |
+| cavalry | 100 | 60 | 0.8 | 0.7 | 16.7 | 16.7 | 16.8 | 0 | 0 | 187 | 100 | 50 | 13.6 |
+| cavalry | 150 | 60 | 1 | 0.7 | 16.7 | 16.8 | 16.8 | 0 | 0 | 202 | 100 | 74 | 13.6 |
+| cavalry | 200 | 60 | 1.3 | 0.8 | 16.7 | 16.7 | 16.8 | 0 | 0 | 231 | 100 | 95 | 13.6 |
+| archers | 40 | 60 | 0.3 | 0.8 | 16.7 | 16.8 | 16.8 | 0 | 0 | 100 | 99 | 20 | 13.6 |
+| archers | 100 | 60 | 0.6 | 0.6 | 16.7 | 16.7 | 16.8 | 0 | 0 | 145 | 100 | 50 | 13.6 |
+| archers | 150 | 60 | 0.9 | 0.8 | 16.7 | 16.8 | 16.8 | 0 | 0 | 164 | 100 | 75 | 13.6 |
+| archers | 200 | 60 | 1.1 | 0.8 | 16.7 | 16.7 | 16.8 | 0 | 0 | 188 | 100 | 100 | 13.6 |
+| siege | 40 | 60 | 0.4 | 0.7 | 16.7 | 16.7 | 16.8 | 0 | 0 | 103 | 99 | 19 | 12.8 |
+| siege | 100 | 60 | 0.8 | 0.7 | 16.7 | 16.7 | 16.8 | 0 | 0 | 213 | 100 | 63 | 12.8 |
+| siege | 150 | 60 | 1.1 | 0.8 | 16.7 | 16.8 | 16.8 | 0 | 0 | 249 | 100 | 88 | 12.8 |
+| siege | 200 | 60 | 1.4 | 0.9 | 16.7 | 16.8 | 16.8 | 0 | 0 | 269 | 100 | 119 | 12.8 |
+
+**Every Sharpness and both zooms, the mixed scenario** (`--sharpness sharp,balanced,fast --profiles desktop,phone --zoom 1,0.75`): fps · drawing ms a frame · frame p95 ms:
+
+| Profile | Sharpness | Zoom | 40 | 100 | 150 | 200 |
+|---|---|---|---|---|---|---|
+| desktop | sharp | 1× | 60 · 0.8 · 16.7 | 60 · 0.7 · 16.7 | 60 · 0.7 · 16.8 | 60 · 0.9 · 16.8 |
+| desktop | balanced | 1× | 60 · 0.8 · 16.7 | 60 · 0.7 · 16.7 | 60 · 0.7 · 16.8 | 60 · 0.9 · 16.8 |
+| desktop | fast | 1× | 60 · 0.7 · 16.8 | 60 · 0.6 · 16.7 | 60 · 0.7 · 16.7 | 60 · 0.9 · 16.7 |
+| phone | sharp | 1× | 60 · 0.8 · 16.8 | 60 · 0.7 · 16.7 | 60 · 0.8 · 16.7 | 60 · 1 · 16.7 |
+| phone | balanced | 1× | 60 · 0.7 · 16.8 | 60 · 0.6 · 16.7 | 60 · 0.7 · 16.8 | 60 · 0.9 · 16.7 |
+| phone | fast | 1× | 60 · 0.7 · 16.7 | 60 · 0.6 · 16.7 | 60 · 0.6 · 16.7 | 60 · 0.8 · 16.8 |
+| desktop | sharp | 0.75× | 60 · 0.9 · 16.7 | 60 · 0.7 · 16.8 | 60 · 0.8 · 16.7 | 60 · 1 · 16.7 |
+| desktop | balanced | 0.75× | 60 · 0.9 · 16.7 | 60 · 0.7 · 16.7 | 60 · 0.7 · 16.7 | 60 · 0.9 · 16.7 |
+| desktop | fast | 0.75× | 60 · 0.8 · 16.8 | 60 · 0.7 · 16.7 | 60 · 0.7 · 16.7 | 60 · 0.9 · 16.7 |
+| phone | sharp | 0.75× | 60 · 0.9 · 16.8 | 60 · 0.8 · 16.7 | 60 · 0.8 · 16.8 | 60 · 1 · 16.7 |
+| phone | balanced | 0.75× | 60 · 0.8 · 16.7 | 60 · 0.7 · 16.7 | 60 · 0.8 · 16.7 | 60 · 0.9 · 16.8 |
+| phone | fast | 0.75× | 60 · 0.8 · 16.8 | 60 · 0.6 · 16.7 | 60 · 0.6 · 16.8 | 60 · 0.8 · 16.8 |
+
+**The simulation alone** (`npm run bench`, 20 s of the same battle, mean / p95 / p99 ms a frame): 40: 0.58 / 0.93 / 1.26 · 60: 0.87 / 1.44 / 1.88 · 80: 1.13 / 1.71 / 2.17 · 100: 1.31 / 1.89 / 2.34 · 120: 1.61 / 2.24 / 2.77 · 150: 2.04 / 2.76 / 3.35 · 200: 3.36 / 4.55 / 6.67 (max 10.3); heap 21–83 MB.
+
+**What it says.** On this machine every scenario holds 60 fps with drawing under 1.5 ms a frame (the bake cache hits 97–100%; "every realm" bakes the most frames, 1,343 at 200, under the 3,000 bound). Sharpness and zoom move the drawing by tenths of a millisecond here because headless Chromium draws in software at a fixed cost per call; the phone's GPU is where Sharpness matters, which is why the phone's own run decides. As P11-00 found, an 8 s run is mostly the march (the armies meet after about 20 s), so P11-12e also reads the 30 s Debug runs.
+
+**Identical simulation at every Sharpness and zoom** (`tests/sharpness-parity.test.js`, new): a field fight of mixed troops, a mounted hero, an archer hero and a siege assault, each drawn through the art every other frame, end alike (winner, every fighter's HP to a thousandth, kills, frames) at Sharp, Balanced and Fast and at zoom 1× and 0.75×.
+
+**The visual baseline:** `node scripts/screens-storybook.js before` wrote 28 screenshots (Stonebridge by day, dusk and night, near the innkeeper and in her dialogue, Eastwatch, Hrothgard, battles of 40 and 200, a mounted and an archer hero, a siege of 60, the map, the Art gallery; desktop and phone) to `docs/graphics-demo/p11-12/before/` (local, git-ignored).
+
 ## The night run (2026-11-27, 5.7.0)
 
 ### XP pace over a long campaign (`progression.js 360 3`, 98 min under the run's load)
