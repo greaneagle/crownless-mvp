@@ -1,5 +1,21 @@
 # Crownless — Release Notes
 
+## v5.14.0 — Regional arms (P11-16) · 2026-11-27
+
+### New
+
+- Town armouries stock eight regional weapons, two horses and the Ostrand Kite. Find the compact horse bow in Merrow and Gullhaven.
+- Look for “Made here” in the armoury and open the gear notes on a soldier’s card to find the local arms.
+
+### Changed
+
+- Regional gear can turn up in high-tier loot. Its home markets keep selling it when their towns change hands.
+
+### Under the hood
+
+- The Art gallery shows the new equipment. The longaxe has its own silhouette. The horse bow and arbalest use the kit’s recurve and windlass parts.
+- The knight’s lance, longaxe, flats pike and compact horse bow need specialist training. P11-17 adds the masters.
+
 ## v5.13.0 — Formations and orders that hold (P11-13) · 2026-11-27
 
 ### New

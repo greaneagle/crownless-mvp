@@ -4,6 +4,12 @@ _The owner's rule (D-P10f, 2026-11-24). A task that needs a run over 20 minutes 
 
 ## Pending
 
+**For P11-16 (5.14.0):**
+
+| Run | What to look for |
+|---|---|
+| `node --test --test-concurrency=1 tests/slow/battle-parity.test.js` | Full field and siege parity at the owner’s night run. The Phase 11 estimate is 26–45 minutes. |
+
 **For P11-13 (5.13.0):**
 
 | Run | What to look for |
