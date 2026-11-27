@@ -1313,6 +1313,8 @@ _Re-specified 2026-11-20 at build 2.23.0 (commit 09176e8); NEXT-PLAN §5 has the
 
 ### How each task runs from P9-L1 (owner, 2026-11-23)
 
+> **From D-AG1 (owner, 2026-11-27): several agents at once.** The steps below still hold, on the task's own branch and worktree (`AGENTS.md`, `docs/AGENTS-WORKFLOW.md`). Two changes: in step 7, the version and the shared files (RELEASE-NOTES, ROADMAP, the readiness tables, PENDING-CHECKS) are not edited on the branch but written in `docs/changes/<task-id>.md` and folded in at merge; in step 8, the agent commits on its branch and merges once the owner has accepted the task, instead of asking to commit on `main`.
+
 The battle tasks took long and spent most of their effort around the task: reading the whole plan, re-running suites, and tuning loops. From P9-L1 a task is done by its section alone. Each task below ends with a **Brief**: where to start in the code, the defaults already decided, the save step, the build order, the tests to write, the checks to run, what to play and what to leave out. The owner's rules (commit only when asked; never push, tag, open pull requests or publish; same rules for the AI; only what a character could know; plain short sentences) are unchanged.
 
 1. **Read** this section, the task's own section and the files its Brief names. Not the rest of this file, NEXT-PLAN, ROADMAP, the release notes or the review log, unless the Brief points there. The Brief's numbers and names are the defaults: use them; nothing in a Brief needs the owner's answer.
@@ -4033,7 +4035,8 @@ The aim: easy to fight, rewarding to fight well, meaningful to command. The play
 - **Art:** by D-P10k and `docs/ART-STYLE.md`. New looks and parts go into the kit and the Art gallery; no image; the drawing only reads the game. Art is part of each mechanic task, not a later pass.
 - **Every combat task measures** against P11-00's baseline with `scripts/duel-lab.js` (three pilots), `scripts/parity.js` (40 seeds) and, from P11-14, `scripts/tactics-lab.js`, and writes the numbers in its Done paragraph. The whole `battle-parity` only on the night run or at the owner's yes.
 - **Phones first:** every screen at 812×375 and desktop; every control 44 px or more; Larger text; no colour-only meaning; the battle benchmark against the task's budget.
-- **Versions:** P11-00 is 5.0.1; each task after it a minor version in build order from 5.1.0; P11-T ships 6.0.0 (D-P11l).
+- **Versions:** P11-00 is 5.0.1; each task after it a minor version in build order from 5.1.0; P11-T ships 6.0.0 (D-P11l). **From P11-13 (D-AG1):** given at merge, in merge order, so two tasks built side by side never claim one number.
+- **Several agents (D-AG1):** each task on its own branch and worktree by `AGENTS.md`; parallel pairs in `docs/AGENTS-WORKFLOW.md` §3 (first: P11-13 beside P11-16).
 
 **Order:** P11-00 → P11-01 → P11-02 → P11-03 (P11-04 may run beside it) → P11-04 → P11-05 (M1) → P11-06 → P11-07 → P11-08 → P11-09 (M2) → P11-10 → P11-11 → P11-12a → P11-12b (the owner accepts the slice) → P11-12c → P11-12d → P11-12e (M3; the owner accepts the graphics and the phone) → P11-13 → P11-14 → P11-15 (M4) → P11-16 → P11-17 → P11-18 → P11-19 (M5) → P11-20 → P11-T (M6). The owner plays each milestone (plan §5, §13) before the next task starts.
 
@@ -4055,7 +4058,7 @@ The aim: easy to fight, rewarding to fight well, meaningful to command. The play
 | P11-12b | The Stonebridge vertical slice: characters and Stonebridge (owner's visual gate) | L–XL | 5.12.0 | ✅ Done (accepted 2026-11-27) |
 | P11-12c | The environments: towns, battlefields, sieges, the map | XL | 5.12.1 | ✅ Done |
 | P11-12d | One UI language across every screen | L | 5.12.2 | ✅ Done |
-| P11-12e | Performance, caches, visual regression, acceptance (owner's final gate) | M–L | 5.12.3 | ✅ Built; awaiting the owner's phone and acceptance |
+| P11-12e | Performance, caches, visual regression, acceptance (owner's final gate) | M–L | 5.12.3 | ✅ Done (approved 2026-11-27) |
 | P11-13 | Formations and orders that hold | L | 5.13.0 | Specified |
 | P11-14 | Combined arms and the tactics lab | M–L | 5.14.0 | Specified |
 | P11-15 | Prepare and the battle report | M | 5.15.0 | Specified |
@@ -5166,7 +5169,7 @@ _Expanded 2026-11-27 at 5.11.0 (commit ff54781) by the owner's approval of a gra
 
 ---
 
-#### P11-12e · Performance, caches, visual regression and acceptance (M–L) — 5.12.3, ✅ Built — **waiting for the owner's phone numbers and final acceptance; M3**
+#### P11-12e · Performance, caches, visual regression and acceptance (M–L) — 5.12.3, ✅ Done — **approved by the owner, 2026-11-27** (the graphics, and the phone's stress test: "passed insanely good"); **milestone M3**
 
 **Build.**
 - **Required (all of the original P11-12):**
@@ -5181,7 +5184,7 @@ _Expanded 2026-11-27 at 5.11.0 (commit ff54781) by the owner's approval of a gra
 
 **Acceptance.** The budget holds on the phone (or the owner accepts the measured numbers); caches bounded; identical simulation at every Sharpness; the owner's final acceptance of the graphics and the phone performance. Then M3 (H-07, H-08) and P11-13.
 
-**Done so far (5.12.3); open: the owner's phone and final acceptance, the Linux baselines.**
+**Done (5.12.3).** The owner approved it on 2026-11-27 after running the phone stress test ("approved and stress test passed insanely good"; the numbers themselves were not passed on, so none are recorded here). Still open: the Linux baselines.
 - **Measured again** (headless, phone profile, Balanced, all seven scenarios × 40/100/150/200 × zoom 1× and 0.75×; `docs/PHASE-11-VALIDATION.md` "After P11-12e"): every frame at the 60 fps cap (p95 16.7–16.8, p99 16.8), bake cache at most 1,333 (bound 3,000, kept), 98–100% hits, heap 13–20 MB.
 - **Fixed** (two tries): after P11-12c drawing had doubled (0.8 → 1.5 ms at 40), from grass tufts and trees drawn live each frame: a tuft is now one path, a battlefield's tree a baked stamp (`js/art/battle.js` `obstacle`, `js/art/story.js` `tuft`). Mixed back to 1.1 / 0.8 / 0.8 / 1.0 ms (5.11: 0.8 / 0.6 / 0.7 / 0.9); every realm 1.3–1.6; the siege at 0.75× still 1.8 ms at 40 (0.7): recorded, not guessed at further; the phone decides.
 - **Removed:** `js/art/classic.js` and Debug → "Old figures"; the kit's own `building`, `tree`, `bush`, `tuft`, `barrel`, `crate`, `well`, `stall` (and `roofLines`, `hangingSign`), replaced since P11-12c by the storybook kit's.

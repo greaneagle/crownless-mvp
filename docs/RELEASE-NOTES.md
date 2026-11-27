@@ -1,5 +1,14 @@
 # Crownless — Release Notes
 
+## v5.12.4 — Several agents at once (D-AG1) · 2026-11-27
+
+Nothing in the game changed. P11-12 is approved (the owner, after the phone's stress test), so milestone M3 is complete.
+
+### Under the hood
+- `AGENTS.md`: one rulebook for every agent (Claude Code reads it through `CLAUDE.md`, OpenAI Codex directly), with the owner's standing rules that had lived only in one agent's memory.
+- `docs/AGENTS-WORKFLOW.md`: one task a branch and worktree, the branch as the claim, which tasks may run side by side (first P11-13 beside P11-16), separate ports, a per-task change note (`docs/changes/`) so shared files are written once at merge, versions in merge order, how any agent merges.
+- `npm run agents` (`scripts/agents-status.js`): every agent branch, its worktree, how far ahead and behind `main`, its files, and overlaps between branches.
+
 ## v5.12.3 — The storybook look, measured (P11-12e) · 2026-11-27
 
 ### Changed

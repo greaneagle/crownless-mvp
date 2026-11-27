@@ -156,6 +156,8 @@ Script order in `index.html` matters, because each module uses the ones loaded b
 
 ## Develop
 
+**Agents (Claude Code, OpenAI Codex or a person):** the rules are in [`AGENTS.md`](AGENTS.md) (Claude reads them through `CLAUDE.md`); several agents work at once on their own branches and worktrees by [`docs/AGENTS-WORKFLOW.md`](docs/AGENTS-WORKFLOW.md); `npm run agents` shows who is on what.
+
 You need Node 22 or later, and only for the dev tools. The game itself needs nothing.
 
 ```bash

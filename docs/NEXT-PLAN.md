@@ -395,6 +395,7 @@ Every Phase 9 task is **Specified** (2026-11-22; NEXT-TASKS has each in full). T
 12. **Phase 12** (preliminary): specified after 6.0.0, from a baseline task (P12-00).
 
 ### Versions (owner decision D-V1)
+- **From D-AG1 (2026-11-27):** a version is given when a task's branch is merged into `main`, the next minor in merge order (the plan's numbers are only the expected order); branches never bump it.
 - Proposed: each finished task bumps the minor version (2.1.0, 2.2.0, …); fixes bump the patch.
 - The end of Phase 8 ships **3.0.0**, the end of Phase 9 **4.0.0**, the end of Phase 10 **5.0.0**; the end of Phase 11 is planned as **6.0.0** (P11-00 5.0.1, then 5.1.0 to 5.20.0; D-P11l) and Phase 12 as 7.0.0.
 - H-01 and documentation-only work bump the patch.
@@ -436,7 +437,7 @@ Every Phase 9 task is **Specified** (2026-11-22; NEXT-TASKS has each in full). T
 - **Explained:** How to Play and the first-time tips cover new player-facing systems. Debug tools cover new state, so testers can reach it.
 - **Art:** tasks that add places, troops or icons write an **asset request list** for the art team (`docs/ASSETS.md`) and ship with placeholders. Art never blocks a task.
 - **Versioned:** the version in its five places; ROADMAP, this plan, NEXT-TASKS (marked done), README and the v1 documentation updated; SAVE-FORMAT for schema steps.
-- **Owner-gated:** commits only when the owner asks; never push, tag, open pull requests or publish releases.
+- **Owner-gated:** never push, tag, open pull requests or publish releases. From D-AG1 (2026-11-27): an agent commits its own validated work on its own branch and merges it into `main` by `docs/AGENTS-WORKFLOW.md` once the owner has accepted what needs accepting; before that, commits only when the owner asked.
 
 ### The test tiers (owner, 2026-11-20)
 The slow suite takes about 28 minutes, nearly all of it the 60-campaign story check (`tests/slow/gate-d-campaigns.test.js`, about 27 minutes; the other eleven take 1–2½ minutes each and run beside it). The full browser suite takes about 3 minutes. So, from P8-01 on:
@@ -469,6 +470,7 @@ Decisions marked **blocking** must be made before the named task starts. The oth
 
 | ID | Question | Proposed default | Blocks |
 |---|---|---|---|
+| **D-AG1** | Several agents at once (Claude Code and OpenAI Codex, interchangeable) | **Decided (owner, 2026-11-27):** one rulebook for all agents (`AGENTS.md`; `CLAUDE.md` imports it); one task a branch (`<agent>/<task-id>-<slug>`) in its own worktree, the branch being the claim; parallel only for tasks whose Needs are on `main` and whose files don't overlap; shared files (versions, release notes, ROADMAP, readiness tables, pending checks) written once at merge from a per-task change note (`docs/changes/`); versions given in merge order; any agent may merge a validated, accepted branch with `--no-ff`; still never push. `docs/AGENTS-WORKFLOW.md` | all tasks from P11-13 |
 | **D-T1** | Add Playwright as the project's first **development** dependency (with a `package-lock.json`)? | **Decided yes (owner, 2026-11-18):** `@playwright/test` 1.64.1, pinned, Chromium only; the game itself stays dependency-free | W-00 (done) |
 | **D-T2** | Where are screenshot baselines authoritative? | CI's Linux Chromium; local runs check behaviour and skip pixel comparison unless asked (fonts and rendering differ between machines) | W-00 |
 | **D-W1** | How big should the world be? | About 4× today's area (200 × 200 map units), four kingdoms plus the Reavers and a free city, about 32 settlements. **Owner, 2026-11-18: the default.** | **W-05a, W-05b (blocking)** |
