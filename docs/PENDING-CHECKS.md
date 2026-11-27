@@ -4,6 +4,13 @@ _The owner's rule (D-P10f, 2026-11-24). A task that needs a run over 20 minutes 
 
 ## Pending
 
+**For P11-17 (5.16.0):**
+
+| Run | What to look for |
+|---|---|
+| Owner H-12 at M5 | Find a teacher through a rumour or the armoury, fail and retry a lesson, then confirm the permanent unlock. |
+| `CROWNLESS_TEST_PORT=8133 npm run test:browser` | Rerun the full nonvisual browser suite on desktop and phone after integration. The 350-test run needs more than this task’s 20-minute budget on this runner. |
+
 **For P11-14 (5.15.0):**
 
 | Run | What to look for |

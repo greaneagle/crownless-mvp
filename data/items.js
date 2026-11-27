@@ -35,7 +35,7 @@
     // P11-08: a lance for the hero: its damage comes from the horse's momentum (none standing still).
     war_lance: {id:'war_lance',family:'lance',name:'War Lance',type:'weapon',slot:'weapon',tier:2,rarity:'uncommon',value:90,weight:3,stats:{damage:30},look:{weapon:'lance'},questItem:false},
     knights_sword: {id:'knights_sword',family:'sword',name:"Knight's Sword",type:'weapon',slot:'weapon',tier:3,rarity:'rare',value:260,weight:2,stats:{damage:25},req:{skills:{one_handed:3}},look:{weapon:'sword',len:1.1},questItem:false},
-    // Regional weapons: local stock and high loot. Training ids are reserved for P11-17.
+    // Regional weapons: local stock and high loot. Specialist unlocks are taught by the masters in data/training.js.
     knights_lance: {id:'knights_lance',family:'lance',name:"Knight's Lance",type:'weapon',slot:'weapon',tier:3,rarity:'rare',region:'valedorn',value:210,weight:5,stats:{damage:38},req:{skills:{riding:3},training:'lance_couching'},combat:{reach:81,windup:0.26,recovery:0.46,cooldown:{hero:1.08,ai:1.08}},look:{weapon:'lance',len:1.15},questItem:false},
     valedorn_warbow: {id:'valedorn_warbow',family:'longbow',name:'Valedorn Warbow',type:'weapon',slot:'weapon',tier:3,rarity:'rare',region:'valedorn',value:245,weight:3,stats:{damage:27},req:{str:8,skills:{archery:3}},combat:{ranged:{range:295,maxRange:460,projectileSpeed:295,cooldown:1.85,accuracy:0.6,draw:1.2,ammo:16}},look:{weapon:'bow',len:1.1},questItem:false},
     legion_spear: {id:'legion_spear',family:'spear',name:'Legion Spear',type:'weapon',slot:'weapon',tier:3,rarity:'rare',region:'aurelian',value:125,weight:4,stats:{damage:20},req:{skills:{polearm:2}},combat:{reach:74,arc:52,poise:2,recovery:0.36},look:{weapon:'spear',len:1.05},questItem:false},
@@ -85,14 +85,6 @@
     charter_fragment: {id:'charter_fragment',name:'Charter Fragment',type:'quest',slot:null,tier:0,rarity:'quest',value:0,weight:0,stats:{},questItem:true},
     courier_packet: {id:'courier_packet',name:'Courier Packet',type:'quest',slot:null,tier:0,rarity:'quest',value:0,weight:1,stats:{},questItem:true},
     mara_token: {id:'mara_token',name:"Mara's Token",type:'quest',slot:null,tier:0,rarity:'quest',value:0,weight:0,stats:{},questItem:true}
-  };
-
-  // P11-17 will provide the masters and the way to earn these unlocks.
-  C.training = {
-    lance_couching: { id: 'lance_couching' },
-    longaxe: { id: 'longaxe' },
-    pike_brace: { id: 'pike_brace' },
-    mounted_archery: { id: 'mounted_archery' }
   };
 
   // P7-03: the blacksmith's forging (js/blacksmith.js). Each piece of the hero's gear in these slots can

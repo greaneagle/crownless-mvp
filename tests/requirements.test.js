@@ -93,12 +93,10 @@ test('the rule fails what it should: too much, the wrong class, unreachable, unt
     C.items.knights_sword.req = { cha: 6 };
   }), /req can't name cha/);
   assert.match(errs((C) => {
-    C.items.war_mace.req = { training: 'hrolf' };
-    C.training.hrolf = { id: 'hrolf' };
+    C.items.war_mace.req = { training: 'longaxe' };
   }), /only an elite piece may need training/);
   assert.equal(errs((C) => {
-    C.items.knights_sword.req = { skills: { one_handed: 3 }, training: 'hrolf' };
-    C.training.hrolf = { id: 'hrolf' };
+    C.items.knights_sword.req = { skills: { one_handed: 3 }, training: 'longaxe' };
   }), '', 'an elite piece with training someone teaches');
   assert.match(errs((C) => {
     C.weapon_families.axe.req = { str: 'six' };

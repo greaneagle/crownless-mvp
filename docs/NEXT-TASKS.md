@@ -4063,7 +4063,7 @@ The aim: easy to fight, rewarding to fight well, meaningful to command. The play
 | P11-14 | Combined arms and the tactics lab | M–L | 5.15.0 | ✅ Done |
 | P11-15 | Prepare and the battle report | M | 5.15.0 | Specified |
 | P11-16 | Regional arms | M | 5.14.0 | ✅ Done |
-| P11-17 | Masters at arms: specialist training and the practice yard | L | 5.17.0 | Specified |
+| P11-17 | Masters at arms: specialist training and the practice yard | L | 5.16.0 | ✅ Done |
 | P11-18 | The walls and other special fields | M | 5.18.0 | Specified |
 | P11-19 | The lists: tournament formats | L | 5.19.0 | Specified |
 | P11-20 | Auto-resolve, military balance and the world | M–L | 5.20.0 | Specified |
@@ -5468,7 +5468,7 @@ _Expanded 2026-11-27 at 5.11.0 (commit ff54781) by the owner's approval of a gra
 
 ---
 
-### P11-17 · Masters at arms: specialist training and the practice yard (L) — 5.17.0, Specified
+### P11-17 · Masters at arms: specialist training and the practice yard (L) — ✅ Done in 5.16.0
 
 **Now.** Quests and dialogue run on `js/story.js`'s interpreter; town hubs have people by role; the tournament's duel runs a bout with no risk to the company; errands exist; nothing teaches a skill.
 
@@ -5525,6 +5525,8 @@ _Expanded 2026-11-27 at 5.11.0 (commit ff54781) by the owner's approval of a gra
 - **Play:** H-12 in the preview.
 - **Explain:** "Masters at arms".
 - **Not here:** tournaments' formats.
+
+**Done (5.16.0).** Hrolf (Hrothgard), Alda (Stonebridge), Verrin (Calder) and Selim (Merrow and Gullhaven) teach the four regional unlocks in one or two drills. The lessons include a spar, a range and a mounted course using the existing duel engine. A failed drill can be retried the next day on the paid fee. The armoury, rumours and Journal lead to the master, including a free-port fallback when war bars the home town. The practice yard uses the hero’s own kit and only adds a record entry. Masters offer retraining for 100 crowns. Scripted drill times are in `docs/PHASE-11-VALIDATION.md`. Owner H-12 play is pending.
 
 ---
 

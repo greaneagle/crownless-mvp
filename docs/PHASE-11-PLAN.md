@@ -156,7 +156,7 @@ The fix is not to make input unresponsive or to punish repeated presses, but to 
 | **P11-14** | Combined arms and the tactics lab | M–L | P1 | P11-13 | 5.15.0 | M4 | ✅ Done |
 | **P11-15** | Prepare and the battle report | M | P2 | P11-14 | 5.15.0 | **M4 "Command that matters"** | Specified |
 | **P11-16** | Regional arms | M | P2 | P11-11, P11-03 | 5.14.0 | M5 | ✅ Done |
-| **P11-17** | Masters at arms: specialist training and the practice yard | L | P2 | P11-16 | 5.17.0 | M5 | Specified |
+| **P11-17** | Masters at arms: specialist training and the practice yard | L | P2 | P11-16 | 5.16.0 | M5 | ✅ Done |
 | **P11-18** | The walls and other special fields | M | P1 | P11-13, P11-08 | 5.18.0 | M5 | Specified |
 | **P11-19** | The lists: tournament formats | L | P1 | P11-10, P11-17 | 5.19.0 | **M5 "Masters and lists"** | Specified |
 | **P11-20** | Auto-resolve, military balance and the world | M–L | P1 | P11-14, P11-18, P11-19 | 5.20.0 | M6 | Specified |

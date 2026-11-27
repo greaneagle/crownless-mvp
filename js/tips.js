@@ -152,6 +152,7 @@
 
   /** Show a due tip for this screen, if any and none is showing. Returns the tip shown. */
   function check(mode = CL.game.mode) {
+    if ((mode === 'battle' && CL.game.encounterDef?.lesson) || (mode === 'result' && CL.game.result?.training)) return null;
     if (showing || CL.game.practice) return null;
     const t = due(mode);
     if (!t) return null;

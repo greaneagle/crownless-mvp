@@ -1,5 +1,22 @@
 # Crownless — Release Notes
 
+## v5.16.0 — Masters at arms and the practice yard (P11-17) · 2026-11-27
+
+### New
+
+- Learn lance couching in Stonebridge, the longaxe in Hrothgard, pike bracing in Calder, and the horse bow in Merrow or Gullhaven. The armoury tells you who teaches each weapon and the Journal tracks your next step.
+- Use the practice yard to spar, shoot at targets or ride a course in your own kit. You can leave at any time. Only the hero’s record changes.
+- Pay a master 100 crowns to reclaim points you spent. You keep your completed training.
+
+### Changed
+
+- If war closes a master’s town, look for the lesson at an accessible free port. A failed drill can be retried after a day on the fee you already paid.
+
+### Under the hood
+
+- Specialist lessons use the duel engine. World data can also require a tournament round or contract reward.
+- Lesson progress and practice records have save defaults. There is no schema step.
+
 ## v5.15.0 — Combined arms and the tactics lab (P11-14) · 2026-11-27
 
 ### New

@@ -13,6 +13,7 @@
   root.CROWNLESS_CONTENT = root.CROWNLESS_CONTENT || {};
   var C = root.CROWNLESS_CONTENT;
   C.news = {
+    master_training: { id: 'master_training', priority: 3, lines: ['A master at arms is teaching in {place}.'] },
     // P7-08: world events (data/world_events.js) write their own line; these are only fallbacks.
     happening: {
       id: 'happening',

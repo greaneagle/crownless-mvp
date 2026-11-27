@@ -665,3 +665,14 @@ Before the build (10 seeds): flank 100/18 against 100/19 (no difference); forest
 `parity.js 40` (over the odds; 5.14.0 → branch): lone hero +11 → +11, small +11 → +11, close +21 → +21, veterans +21 → +21, outnumbered +1 → +4; the close fights 14.3 → 15.3. `--big`: close×8@40 +24 → +24 (lost 1.35 → 1.98), veterans×6@40 +13 → +13, close×8@100 +22 → +24 (lost 13.1 → 5.0), veterans×6@100 +13 → +13.
 
 Tries: Balanced in a line (close×8@100, 20 seeds: 85% won, 15.1 lost; loose 100%, 4.4) dropped; the horse's wait 10 s → 5 s (veterans, 40 seeds: lost 1.43 → 0.55; main 0.53); Follow's strict leash relaxed to 75 px (veterans 92.5% → 100%); the column deploying in the fight (forest 70 → 93).
+
+## Masters at arms and the practice yard (5.16.0, P11-17)
+
+| Master | Sessions | Scripted battle time |
+|---|---:|---:|
+| Hrolf | 1 | 3.04 s |
+| Alda | 1 | 3.08 s |
+| Verrin | 1 | 1.66 s |
+| Selim | 2 | 3.32 s + 3.74 s |
+
+Times are simulated combat seconds from the scripted pilots. Travel, dialogue and rest are outside the measurement.
