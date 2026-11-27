@@ -148,7 +148,8 @@ test('every finding fits two lines with the longest names; the words are the gam
   }
   assert.deepEqual(Object.keys(CL.content.table('gear_text')).sort(), [...G.LINES].sort());
   // The checks hold a world's words to the codes and the length.
-  const C = plain({ ...Object.fromEntries(CL.content.TABLES.map((t) => [t, CL.content.table(t)])), forge: CL.content.table('forge'), gear_text: CL.content.table('gear_text') });
+  const tables = [...CL.content.TABLES, 'forge', 'gear_text', 'fighting_styles', 'practice'];
+  const C = plain(Object.fromEntries(tables.map((t) => [t, CL.content.table(t)])));
   assert.deepEqual(plain(CL.content.validate(C)), []);
   C.gear_text.shout = 'Hello';
   C.gear_text.two_hands = 'x'.repeat(120);
