@@ -5412,7 +5412,7 @@ _Expanded 2026-11-27 at 5.11.0 (commit ff54781) by the owner's approval of a gra
 - **The battle report** (`js/report.js`, new): one-line hooks only count (the golden battles unchanged). The result screen: crowns, then "Victory in 42 s. You lost 4 (1 fallen, 3 wounded); they lost 40 (12 fled).", XP and loot; under "▸ More": every division's kills, losses and breaks, the enemy's, "You: 14 blows, 9 landed · 3 blocked · 2 staggered · 20 shots, 11 hit (55%)", the notable moments, Who did what, the names. Auto-resolve's screen as before.
 - **Measured:** Attack to Fight in two taps (one with Skip); the summary fits one screen at 812×375 at Larger (played).
 - **Open:** the encounter screen's own text still gives a band's exact number (since P7); sieges have no Prepare, so no loadout choice for the walls; the optional "lessons" line not built.
-- **Tests:** `tests/report.test.js` (new, 6), `tests/prep.test.js` (+6), browser `prep.spec.js` (new, 4). The checks' results are in the change note `docs/changes/p11-15.md`.
+- **Tests:** `tests/report.test.js` (new, 6), `tests/prep.test.js` (+6), browser `prep.spec.js` (new, 4). `npm test` 1,117 pass; lint clean; the full browser suite 344 pass, two load flakes (archery, battle-size) pass alone; `screens.visual`'s Linux baselines `prepare` and `result` to re-record at merge. Details in `docs/changes/p11-15.md`.
 
 ---
 
